@@ -14,8 +14,8 @@ function getData() {
     supplier.code = code;
     supplier.name = `name[${code}]`;
     supplier.description = `description for ${code}`;
-    supplier.phone = 'phone[${code}]';
-    supplier.address = 'Solo [${code}]';
+    supplier.phone = `phone[${code}]`;
+    supplier.address = `Solo [${code}]`;
     supplier.local = true;
 
     return supplier;
