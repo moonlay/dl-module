@@ -8,5 +8,5 @@ module.exports = {
             TextileManager: require('./src/managers/core/textile-manager'),
             FabricManager: require('./src/managers/core/fabric-manager')
         }
-    }
+    },
 }

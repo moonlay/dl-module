@@ -15,7 +15,8 @@
                 "--nolazy"
             ],
             "env": {
-                "NODE_ENV": "development"
+                "NODE_ENV": "development",
+                "DB_CONNECTIONSTRING": "mongodb://app:Admin-pwd@ds139985.mlab.com:39985/dl-unit-test"
             },
             "externalConsole": false,
             "sourceMaps": false,

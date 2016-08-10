@@ -1,3 +1,5 @@
+'use strict'
+
 var ObjectId = require("mongodb").ObjectId;
 require("mongodb-toolkit");
 

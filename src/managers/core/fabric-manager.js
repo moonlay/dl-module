@@ -1,18 +1,22 @@
 'use strict'
 
-var ObjectId= require("mongodb").ObjectId;
-require ("mongodb-toolkit");
+// external deps 
+var ObjectId = require("mongodb").ObjectId;
 
-var Buyer= require("dl-models").core.Buyer;
+// internal deps
+require('mongodb-toolkit');
+var DLModels = require('dl-models');
+var map = DLModels.map;
+var Fabric = DLModels.core.Fabric;
 
-module.exports = class BuyerManager {
-    constructor(db, user) {
+module.exports = class FabricManager{
+    constructor(db, user){
         this.db = db;
         this.user = user;
-        this.buyerCollection = this.db.use("buyers");
+        this.fabricCollection = this.db.use(map.core.Fabric);
     }
 
-    read(paging) {
+    read(paging){
         var _paging = Object.assign({
             page: 1,
             size: 20,
@@ -20,9 +24,9 @@ module.exports = class BuyerManager {
             asc: true
         }, paging);
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject)=>{
             var deleted = {
-                _deleted: false
+                _deleted : false
             };
             var query = _paging.keyword ? {
                 '$and': [deleted]
@@ -47,13 +51,67 @@ module.exports = class BuyerManager {
                 query['$and'].push($or);
             }
 
-            this.buyerCollection
+
+            this.fabricCollection
                 .where(query)
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
-                .then(modules => {
-                    resolve(modules);
+                .then(fabrics => {
+                    resolve(fabrics);
+                })
+                .catch(e => {
+                    reject(e);
+            });
+        });
+    }
+
+    readByFabricId(fabricId, paging) {
+        var _paging = Object.assign({
+            page: 1,
+            size: 20,
+            order: '_id',
+            asc: true
+        }, paging);
+
+        return new Promise((resolve, reject) => {
+            var deleted = {
+                _deleted: false
+            };
+            var fabric = {
+                fabricId: new ObjectId(fabricId)
+            };
+            var query = {
+                '$and': [deleted, module]
+            };
+
+            if (_paging.keyword) {
+                var regex = new RegExp(_paging.keyword, "i");
+                var filterCode = {
+                    'code': {
+                        '$regex': regex
+                    }
+                };
+                var filterName = {
+                    'name': {
+                        '$regex': regex
+                    }
+                };
+                var $or = {
+                    '$or': [filterCode, filterName]
+                };
+
+                query['$and'].push($or);
+            }
+
+
+            this.fabricCollection
+                .where(query)
+                .page(_paging.page, _paging.size)
+                .orderBy(_paging.order, _paging.asc)
+                .execute()
+                .then(fabric => {
+                    resolve(fabric);
                 })
                 .catch(e => {
                     reject(e);
@@ -61,7 +119,7 @@ module.exports = class BuyerManager {
         });
     }
 
-    getById(id) {
+   getById(id) {
         return new Promise((resolve, reject) => {
             if (id === '')
                 resolve(null);
@@ -117,7 +175,7 @@ module.exports = class BuyerManager {
 
     getSingleByQuery(query) {
         return new Promise((resolve, reject) => {
-            this.buyerCollection
+            this.fabricCollection
                 .single(query)
                 .then(module => {
                     resolve(module);
@@ -128,12 +186,12 @@ module.exports = class BuyerManager {
         })
     }
 
-    getSingleOrDefaultByQuery(query) {
+     getSingleOrDefaultByQuery(query) {
         return new Promise((resolve, reject) => {
-            this.buyerCollection
+            this.fabricCollection
                 .singleOrDefault(query)
-                .then(module => {
-                    resolve(module);
+                .then(fabric => {
+                    resolve(fabric);
                 })
                 .catch(e => {
                     reject(e);
@@ -141,12 +199,11 @@ module.exports = class BuyerManager {
         })
     }
 
-    create(module) {
+     create(fabric) {
         return new Promise((resolve, reject) => {
-            this._validate(module)
-                .then(validModule => {
-
-                    this.buyerCollection.insert(validModule)
+            this._validate(fabric)
+                .then(validFabric => {
+                    this.fabricCollection.insert(validFabric)
                         .then(id => {
                             resolve(id);
                         })
@@ -160,49 +217,50 @@ module.exports = class BuyerManager {
         });
     }
 
-    update(module) {
+    update(fabric) {
         return new Promise((resolve, reject) => {
-            this._validate(module)
-                .then(validModule => {
-                    this.buyerCollection.update(validModule)
+            this._validate(fabric)
+                .then(validFabric => {
+                    this.fabricCollection.update(validFabric)
                         .then(id => {
                             resolve(id);
                         })
                         .catch(e => {
                             reject(e);
-                        })
+                        });
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
 
-    delete(module) {
+    delete(fabric) {
         return new Promise((resolve, reject) => {
-            this._validate(module)
-                .then(validModule => {
-                    validModule._deleted = true;
-                    this.buyerCollection.update(validModule)
+            this._validate(fabric)
+                .then(validFabric => {
+                    validFabric._deleted = true;
+                    this.fabricCollection.update(validFabric)
                         .then(id => {
                             resolve(id);
                         })
                         .catch(e => {
                             reject(e);
-                        })
+                        });
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
 
-    _validate(buyer) {
+ _validate(fabric) {
         var errors = {};
         return new Promise((resolve, reject) => {
-            var valid = buyer;
+            var valid = new Fabric(fabric);
+           
             // 1. begin: Declare promises.
-            var getBuyerPromise = this.buyerCollection.singleOrDefault({
+            var getFabricPromise = this.fabricCollection.singleOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
@@ -214,8 +272,8 @@ module.exports = class BuyerManager {
             // 1. end: Declare promises.
 
             // 2. begin: Validation.
-            Promise.all([getBuyerPromise])
-                .then(results => {
+            Promise.all([getFabricPromise])
+                   .then(results => {
                     var _module = results[0];
 
                     if (!valid.code || valid.code == '')
@@ -225,7 +283,7 @@ module.exports = class BuyerManager {
                     }
 
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required";
+                        errors["name"] = "name is required"; 
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
@@ -233,7 +291,6 @@ module.exports = class BuyerManager {
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 
-                    valid=new Buyer(buyer);
                     valid.stamp(this.user.username, 'manager');
                     resolve(valid);
                 })

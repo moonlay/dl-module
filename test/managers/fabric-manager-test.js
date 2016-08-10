@@ -1,31 +1,49 @@
+'use strict';
+
+var should = require('should');
 var helper = require("../helper");
-var SupplierManager = require("../../src/managers/core/supplier-manager");
+var FabricManager = require("../../src/managers/core/fabric-manager");
 var instanceManager = null;
-require("should");
 
 function getData() {
-    var Supplier = require('dl-models').core.Supplier;
-    var supplier = new Supplier();
+    var Fabric = require('dl-models').core.Fabric;
+    var UoM = require('dl-models').core.UoM;
+    var UoM_Template = require('dl-models').core.UoM_Template;
+
+    var fabric = new Fabric();
+    var uom_template = new UoM_Template({
+        mainValue: 1,
+        mainUnit: 'M',
+        convertedValue: 1,
+        convertedUnit: 'M'
+    });
+    var _uom_units = [];
+    _uom_units.push(uom_template);
+
+    var uom = new UoM({
+        category: 'UoM_Unit_Test',
+        default: uom_template,
+        units: _uom_units
+    });
 
     var now = new Date();
     var stamp = now / 1000 | 0;
     var code = stamp.toString(36);
 
-    supplier.code = code;
-    supplier.name = `name[${code}]`;
-    supplier.description = `description for ${code}`;
-    supplier.phone = `phone[${code}]`;
-    supplier.address = `Solo [${code}]`;
-    supplier.local = true;
-
-    return supplier;
+    fabric.code = code;
+    fabric.name = `name[${code}]`;
+    fabric.composition = `composition for ${code}`;
+    fabric.construction = `construction for ${code}`;
+    fabric.thread = `thread for ${code}`;
+    fabric.width = 0;
+    fabric.UoM = uom;
+    return fabric;
 }
-
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            instanceManager = new SupplierManager(db, {
+            instanceManager = new FabricManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -48,7 +66,7 @@ it('#01. should success when read data', function (done) {
 });
 
 var createdId;
-it('#02. should success when create new data', function(done) {
+it('#02. should success when create new data', function (done) {
     var data = getData();
     instanceManager.create(data)
         .then(id => {
@@ -62,8 +80,8 @@ it('#02. should success when create new data', function(done) {
 });
 
 var createdData;
-it(`#03. should success when get created data with id`, function(done) {
-    instanceManager.getSingleByQuery({_id:createdId})
+it(`#03. should success when get created data with id`, function (done) {
+    instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             // validate.product(data);
             data.should.instanceof(Object);
@@ -75,15 +93,12 @@ it(`#03. should success when get created data with id`, function(done) {
         })
 });
 
-
-it(`#03. should success when update created data`, function(done) {
-
+it(`#03. should success when update created data`, function (done) {
     createdData.code += '[updated]';
     createdData.name += '[updated]';
-    createdData.description += '[updated]';
-    createdData.phone += '[updated]';
-    createdData.address += '[updated]';
-    createdData.local += '[updated]';
+    createdData.composition += '[updated]';
+    createdData.construction += '[updated]';
+    createdData.thread += '[updated]';
 
     instanceManager.update(createdData)
         .then(id => {
@@ -95,13 +110,14 @@ it(`#03. should success when update created data`, function(done) {
         });
 });
 
-it(`#04. should success when get updated data with id`, function(done) {
-    instanceManager.getSingleByQuery({_id:createdId})
+it(`#04. should success when get updated data with id`, function (done) {
+    instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
-            // validate.product(data);
             data.code.should.equal(createdData.code);
             data.name.should.equal(createdData.name);
-            data.description.should.equal(createdData.description);
+            data.composition.should.equal(createdData.composition);
+            data.construction.should.equal(createdData.construction);
+            data.thread.should.equal(createdData.thread);
             done();
         })
         .catch(e => {
@@ -109,7 +125,7 @@ it(`#04. should success when get updated data with id`, function(done) {
         })
 });
 
-it(`#05. should success when delete data`, function(done) { 
+it(`#05. should success when delete data`, function (done) {
     instanceManager.delete(createdData)
         .then(id => {
             createdId.toString().should.equal(id.toString());
@@ -120,8 +136,8 @@ it(`#05. should success when delete data`, function(done) {
         });
 });
 
-it(`#06. should _deleted=true`, function(done) {
-    instanceManager.getSingleByQuery({_id:createdId})
+it(`#06. should _deleted=true`, function (done) {
+    instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             // validate.product(data);
             data._deleted.should.be.Boolean();
@@ -134,7 +150,7 @@ it(`#06. should _deleted=true`, function(done) {
 });
 
 
-it('#07. should error when create new data with same code', function(done) {
+it('#07. should error when create new data with same code', function (done) {
     var data = Object.assign({}, createdData);
     delete data._id;
     instanceManager.create(data)
@@ -149,20 +165,18 @@ it('#07. should error when create new data with same code', function(done) {
         })
 });
 
-it('#08. should error with property code and name ', function(done) { 
-   instanceManager.create({})
-       .then(id => { 
-           done("Should not be error with property code and name");
-       })
-       .catch(e => { 
-          try
-          {
-              e.errors.should.have.property('code');
-              e.errors.should.have.property('name'); 
-              done();
-          }catch(ex)
-          {
-              done(ex);
-          } 
-       })
+it('#08. should error with property code and name ', function (done) {
+    instanceManager.create({})
+        .then(id => {
+            done("Should not be error with property code and name");
+        })
+        .catch(e => {
+            try {
+                e.errors.should.have.property('code');
+                e.errors.should.have.property('name');
+                done();
+            } catch (ex) {
+                done(ex);
+            }
+        })
 });
