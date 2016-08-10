@@ -63,7 +63,7 @@ module.exports = class TextileManager {
         });
     }   
 
-    readByFabricId(textileId, paging) {
+    readByTextileId(textileId, paging) {
         var _paging = Object.assign({
             page: 1,
             size: 20,
