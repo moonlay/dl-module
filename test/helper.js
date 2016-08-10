@@ -1,5 +1,5 @@
 module.exports = {
-    getDb: function() {
+    getDb: function () {
         return new Promise((resolve, reject) => {
             var factory = require('mongo-factory');
             factory.getConnection(process.env.DB_CONNECTIONSTRING)
