@@ -4,12 +4,27 @@ var should = require('should');
 var helper = require("../helper");
 var AccessoriesManager = require("../../src/managers/core/accessories-manager");
 var instanceManager = null;
-//var validate = require('dl-models').validator.core;
-//var manager;
 
 function getData() {
     var Accessories = require('dl-models').core.Accessories;
+    var UoM = require('dl-models').core.UoM;
+    var UoM_Template = require('dl-models').core.UoM_Template;
+
     var accessories = new Accessories();
+    var uom_template = new UoM_Template({
+        mainValue: 1,
+        mainUnit: 'M',
+        convertedValue: 1,
+        convertedUnit: 'M'
+    });
+
+    var _uom_units = [];
+    _uom_units.push(uom_template);
+    var uom = new UoM({
+        category: 'UoM_Unit_Test',
+        default: uom_template,
+        units: _uom_units
+    });
 
     var now = new Date();
     var stamp = now / 1000 | 0;
@@ -18,7 +33,7 @@ function getData() {
     accessories.code = code;
     accessories.name = `name[${code}]`;
     accessories.description = `description for ${code}`;
-
+    accessories.UoM = uom;
     return accessories;
 }
 
