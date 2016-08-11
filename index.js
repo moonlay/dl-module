@@ -6,7 +6,8 @@ module.exports = {
             SparepartManager: require("./src/managers/core/sparepart-manager"),
             AccessoriesManager: require("./src/managers/core/accessories-manager"),
             TextileManager: require('./src/managers/core/textile-manager'),
-            FabricManager: require('./src/managers/core/fabric-manager')
+            FabricManager: require('./src/managers/core/fabric-manager'),
+            GeneralMerchandiseManager: require('./src/managers/core/general-merchandise-manager')
         }
     }
 }

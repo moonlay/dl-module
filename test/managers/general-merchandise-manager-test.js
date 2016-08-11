@@ -1,14 +1,16 @@
+'use strict';
+
+var should = require('should');
 var helper = require("../helper");
-var TextileManager = require("../../src/managers/core/textile-manager");
+var GeneralMerchandiseManager = require("../../src/managers/core/general-merchandise-manager");
 var instanceManager = null;
-require("should");
 
 function getData() {
-    var Textile = require('dl-models').core.Textile;
+    var GeneralMerchandise = require('dl-models').core.GeneralMerchandise;
     var UoM = require('dl-models').core.UoM;
     var UoM_Template = require('dl-models').core.UoM_Template;
 
-    var textile = new Textile();
+    var generalMerchandise = new GeneralMerchandise();
     var uom_template = new UoM_Template({
         mainValue: 1,
         mainUnit: 'M',
@@ -28,18 +30,20 @@ function getData() {
     var stamp = now / 1000 | 0;
     var code = stamp.toString(36);
 
-    textile.code = code;
-    textile.name = `name[${code}]`;
-    textile.description = `description for ${code}`;
-    textile.UoM = uom;
-
-    return textile;
+    generalMerchandise.code = code;
+    generalMerchandise.name = `name[${code}]`;
+    generalMerchandise.composition = `composition for ${code}`;
+    generalMerchandise.construction = `construction for ${code}`;
+    generalMerchandise.thread = `thread for ${code}`;
+    generalMerchandise.width = 0;
+    generalMerchandise.UoM = uom;
+    return generalMerchandise;
 }
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            instanceManager = new TextileManager(db, {
+            instanceManager = new GeneralMerchandiseManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -79,6 +83,7 @@ var createdData;
 it(`#03. should success when get created data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
+            // validate.product(data);
             data.should.instanceof(Object);
             createdData = data;
             done();
@@ -88,9 +93,7 @@ it(`#03. should success when get created data with id`, function (done) {
         })
 });
 
-
 it(`#03. should success when update created data`, function (done) {
-
     createdData.code += '[updated]';
     createdData.name += '[updated]';
     createdData.description += '[updated]';
@@ -132,6 +135,7 @@ it(`#05. should success when delete data`, function (done) {
 it(`#06. should _deleted=true`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
+            // validate.product(data);
             data._deleted.should.be.Boolean();
             data._deleted.should.equal(true);
             done();
