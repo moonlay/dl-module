@@ -34,6 +34,7 @@ function getData() {
     accessories.name = `name[${code}]`;
     accessories.description = `description for ${code}`;
     accessories.UoM = uom;
+
     return accessories;
 }
 
