@@ -8,7 +8,7 @@ module.exports = class UoMManager {
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.UoMCollection = this.db.collection("UoM");
+        this.UoMCollection = this.db.use(map.core.UoM);
     }
 
     read(paging) {
