@@ -191,7 +191,6 @@ module.exports = class TextileManager {
             Promise.all([getTextilePromise])
                 .then(results => {
                     var _textile = results[0];
-                     console.log('valid',valid);
                     if (!valid.code || valid.code == '')
                         errors["code"] = "code is required";
                     else if (_textile) {

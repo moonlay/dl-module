@@ -7,6 +7,8 @@ function test(name, path) {
 describe('#dl-module', function (done) {
     this.timeout(2 * 60000);
 
+
+    test('@manager/UoM-manager', './managers/UoM-manager-test');
     test('@manager/supplier-manager', './managers/supplier-manager-test');
     test('@manager/buyer-manager', './managers/buyer-manager-test');
     test('@manager/accessories-manager', './managers/accessories-manager-test');
