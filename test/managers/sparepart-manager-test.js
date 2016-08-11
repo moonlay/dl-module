@@ -1,32 +1,45 @@
 var helper = require("../helper");
-var BuyerManager = require("../../src/managers/core/buyer-manager");
+var SparepartManager = require("../../src/managers/core/sparepart-manager");
 var instanceManager = null;
-require("should");
+var should = require("should");
 
 function getData() {
-    var Buyer = require('dl-models').core.Buyer;
-    var buyer = new Buyer();
+    var Sparepart = require('dl-models').core.Sparepart;
+    var UoM = require('dl-models').core.UoM;
+    var UoM_Template = require('dl-models').core.UoM_Template;
+
+    var sparepart = new Sparepart();
+    var uom_template = new UoM_Template({
+        mainValue: 1,
+        mainUnit: 'M',
+        convertedValue: 1,
+        convertedUnit: 'M'
+    });
+    var _uom_units = [];
+    _uom_units.push(uom_template);
+
+    var uom = new UoM({
+        category: 'UoM_Unit_Test',
+        default: uom_template,
+        units: _uom_units
+    });
 
     var now = new Date();
     var stamp = now / 1000 | 0;
     var code = stamp.toString(36);
 
-    buyer.code = code;
-    buyer.name = `name[${code}]`;
-    buyer.description = `description for ${code}`;
-    buyer.contact = `phone[${code}]`;
-    buyer.address = `Solo [${code}]`;
-    buyer.tempo = `tempo for ${code}`;
-    buyer.local = true;
+    sparepart.code = code;
+    sparepart.name = `name[${code}]`;
+    sparepart.description = `description for ${code}`;
+    sparepart.UoM = uom;
 
-    return buyer;
+    return sparepart;
+
 }
-
-
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            instanceManager = new BuyerManager(db, {
+            instanceManager = new SparepartManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -66,7 +79,6 @@ var createdData;
 it(`#03. should success when get created data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
-            // validate.product(data);
             data.should.instanceof(Object);
             createdData = data;
             done();
@@ -81,9 +93,7 @@ it(`#03. should success when update created data`, function (done) {
 
     createdData.code += '[updated]';
     createdData.name += '[updated]';
-    createdData.address += '[updated]';
-    createdData.contact += '[updated]';
-    createdData.tempo += '[updated]';
+    createdData.description += '[updated]';
 
     instanceManager.update(createdData)
         .then(id => {
@@ -98,10 +108,10 @@ it(`#03. should success when update created data`, function (done) {
 it(`#04. should success when get updated data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
+            // validate.product(data);
             data.code.should.equal(createdData.code);
             data.name.should.equal(createdData.name);
-            data.address.should.equal(createdData.address);
-            // data.contact.should.equal(createdData.contact);
+            data.description.should.equal(createdData.description);
             done();
         })
         .catch(e => {

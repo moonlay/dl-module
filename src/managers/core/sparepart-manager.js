@@ -1,19 +1,18 @@
 'use strict'
 
 var ObjectId = require("mongodb").ObjectId;
+
 require("mongodb-toolkit");
 
-var dlModel = require("dl-models");
-var Textile = dlModel.core.Textile;
-var map = dlModel.map;
+var Sparepart = require("dl-models").core.Sparepart;
 
-module.exports = class TextileManager {
+module.exports = class SparepartManager {
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.textileCollection = this.db.collection(map.core.Textile);
+        this.sparepartCollection = this.db.collection("sparepart");
     }
-
+    
     read(paging) {
         var _paging = Object.assign({
             page: 1,
@@ -21,15 +20,15 @@ module.exports = class TextileManager {
             order: '_id',
             asc: true
         }, paging);
-
-        return new Promise((resolve, reject) => {
+     
+     return new Promise((resolve, reject) => {
             var deleted = {
                 _deleted: false
             };
             var query = _paging.keyword ? {
                 '$and': [deleted]
             } : deleted;
-
+            
             if (_paging.keyword) {
                 var regex = new RegExp(_paging.keyword, "i");
                 var filterCode = {
@@ -48,79 +47,27 @@ module.exports = class TextileManager {
 
                 query['$and'].push($or);
             }
-
-            this.textileCollection
+            
+             this.sparepartCollection
                 .where(query)
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
-                .then(textiles => {
-                    resolve(textiles);
+                .then(spareparts => {
+                    resolve(spareparts);
                 })
                 .catch(e => {
                     reject(e);
                 });
-        });
+        });    
     }
-
-    readByTextileId(textileId, paging) {
-        var _paging = Object.assign({
-            page: 1,
-            size: 20,
-            order: '_id',
-            asc: true
-        }, paging);
-
+    
+     create(sparepart) {
         return new Promise((resolve, reject) => {
-            var deleted = {
-                _deleted: false
-            };
-            var textile = {
-                textileId: new ObjectId(textileId)
-            };
-            var query = {
-                '$and': [deleted, module]
-            };
+            this._validate(sparepart)
+                .then(validSparepart => {
 
-            if (_paging.keyword) {
-                var regex = new RegExp(_paging.keyword, "i");
-                var filterCode = {
-                    'code': {
-                        '$regex': regex
-                    }
-                };
-                var filterName = {
-                    'name': {
-                        '$regex': regex
-                    }
-                };
-                var $or = {
-                    '$or': [filterCode, filterName]
-                };
-
-                query['$and'].push($or);
-            }
-
-            this.textileCollection
-                .where(query)
-                .page(_paging.page, _paging.size)
-                .orderBy(_paging.order, _paging.asc)
-                .execute()
-                .then(textile => {
-                    resolve(textile);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    create(textile) {
-        return new Promise((resolve, reject) => {
-            this._validate(textile)
-                .then(validTextile => {
-
-                    this.textileCollection.insert(validTextile)
+                    this.sparepartCollection.insert(validSparepart)
                         .then(id => {
                             resolve(id);
                         })
@@ -134,11 +81,11 @@ module.exports = class TextileManager {
         });
     }
 
-    update(textile) {
+    update(sparepart) {
         return new Promise((resolve, reject) => {
-            this._validate(textile)
-                .then(validTextile => {
-                    this.textileCollection.update(validTextile)
+            this._validate(sparepart)
+                .then(validSparepart => {
+                    this.sparepartCollection.update(validSparepart)
                         .then(id => {
                             resolve(id);
                         })
@@ -152,12 +99,12 @@ module.exports = class TextileManager {
         });
     }
 
-    delete(textile) {
+    delete(sparepart) {
         return new Promise((resolve, reject) => {
-            this._validate(textile)
-                .then(validTextile => {
-                    validTextile._deleted = true;
-                    this.textileCollection.update(validTextile)
+            this._validate(sparepart)
+                .then(validSparepart => {
+                    validSparepart._deleted = true;
+                    this.sparepartCollection.update(validSparepart)
                         .then(id => {
                             resolve(id);
                         })
@@ -170,13 +117,13 @@ module.exports = class TextileManager {
                 })
         });
     }
-
-    _validate(textile) {
+    
+    _validate(sparepart) {
         var errors = {};
         return new Promise((resolve, reject) => {
-            var valid = textile;
+            var valid = sparepart;
             // 1. begin: Declare promises.
-            var getTextilePromise = this.textileCollection.singleOrDefault({
+            var getSparepartPromise = this.sparepartCollection.singleOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
@@ -188,28 +135,26 @@ module.exports = class TextileManager {
             // 1. end: Declare promises.
 
             // 2. begin: Validation.
-            Promise.all([getTextilePromise])
+            Promise.all([getSparepartPromise])
                 .then(results => {
-                    var _textile = results[0];
+                    var _sparepart = results[0];
 
                     if (!valid.code || valid.code == '')
                         errors["code"] = "code is required";
-                    else if (_textile) {
+                    else if (_sparepart) {
                         errors["code"] = "code already exists";
                     }
 
                     if (!valid.name || valid.name == '')
                         errors["name"] = "name is required";
 
-                    if (!valid.description || valid.description == '')
-                        errors["description"] = "description is required";
-
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
                         var ValidationError = require('../../validation-error');
                         reject(new ValidationError('data does not pass validation', errors));
                     }
-                    valid = new Textile(textile);
+
+                    valid = new Sparepart(sparepart);
                     valid.stamp(this.user.username, 'manager');
                     resolve(valid);
                 })
@@ -218,9 +163,7 @@ module.exports = class TextileManager {
                 })
         });
     }
-
-
-
+    
     getById(id) {
         return new Promise((resolve, reject) => {
             if (id === '')
@@ -230,15 +173,15 @@ module.exports = class TextileManager {
                 _deleted: false
             };
             this.getSingleByQuery(query)
-                .then(module => {
-                    resolve(module);
+                .then(sparepart => {
+                    resolve(sparepart);
                 })
                 .catch(e => {
                     reject(e);
                 });
         });
     }
-
+    
     getByIdOrDefault(id) {
         return new Promise((resolve, reject) => {
             if (id === '')
@@ -248,52 +191,34 @@ module.exports = class TextileManager {
                 _deleted: false
             };
             this.getSingleByQueryOrDefault(query)
-                .then(module => {
-                    resolve(module);
+                .then(sparepart => {
+                    resolve(sparepart);
                 })
                 .catch(e => {
                     reject(e);
                 });
         });
     }
-
-    getByCode(code) {
-        return new Promise((resolve, reject) => {
-            if (code === '')
-                resolve(null);
-            var query = {
-                code: code,
-                _deleted: false
-            };
-            this.getSingleByQuery(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
+    
     getSingleByQuery(query) {
         return new Promise((resolve, reject) => {
-            this.textileCollection
+            this.sparepartCollection
                 .single(query)
-                .then(module => {
-                    resolve(module);
+                .then(sparepart => {
+                    resolve(sparepart);
                 })
                 .catch(e => {
                     reject(e);
                 });
         })
     }
-
-    getSingleByQueryOrDefault(query) {
+    
+     getSingleByQueryOrDefault(query) {
         return new Promise((resolve, reject) => {
-            this.textileCollection
+            this.sparepartCollection
                 .singleOrDefault(query)
-                .then(textile => {
-                    resolve(textile);
+                .then(sparepart => {
+                    resolve(sparepart);
                 })
                 .catch(e => {
                     reject(e);
