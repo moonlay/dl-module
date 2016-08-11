@@ -1,32 +1,49 @@
+'use strict';
+
+var should = require('should');
 var helper = require("../helper");
-var BuyerManager = require("../../src/managers/core/buyer-manager");
+var GeneralMerchandiseManager = require("../../src/managers/core/general-merchandise-manager");
 var instanceManager = null;
-require("should");
 
 function getData() {
-    var Buyer = require('dl-models').core.Buyer;
-    var buyer = new Buyer();
+    var GeneralMerchandise = require('dl-models').core.GeneralMerchandise;
+    var UoM = require('dl-models').core.UoM;
+    var UoM_Template = require('dl-models').core.UoM_Template;
+
+    var generalMerchandise = new GeneralMerchandise();
+    var uom_template = new UoM_Template({
+        mainValue: 1,
+        mainUnit: 'M',
+        convertedValue: 1,
+        convertedUnit: 'M'
+    });
+    var _uom_units = [];
+    _uom_units.push(uom_template);
+
+    var uom = new UoM({
+        category: 'UoM_Unit_Test',
+        default: uom_template,
+        units: _uom_units
+    });
 
     var now = new Date();
     var stamp = now / 1000 | 0;
     var code = stamp.toString(36);
 
-    buyer.code = code;
-    buyer.name = `name[${code}]`;
-    buyer.description = `description for ${code}`;
-    buyer.contact = `phone[${code}]`;
-    buyer.address = `Solo [${code}]`;
-    buyer.tempo = `tempo for ${code}`;
-    buyer.local = true;
-
-    return buyer;
+    generalMerchandise.code = code;
+    generalMerchandise.name = `name[${code}]`;
+    generalMerchandise.composition = `composition for ${code}`;
+    generalMerchandise.construction = `construction for ${code}`;
+    generalMerchandise.thread = `thread for ${code}`;
+    generalMerchandise.width = 0;
+    generalMerchandise.UoM = uom;
+    return generalMerchandise;
 }
-
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            instanceManager = new BuyerManager(db, {
+            instanceManager = new GeneralMerchandiseManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -76,14 +93,10 @@ it(`#03. should success when get created data with id`, function (done) {
         })
 });
 
-
 it(`#03. should success when update created data`, function (done) {
-
     createdData.code += '[updated]';
     createdData.name += '[updated]';
-    createdData.address += '[updated]';
-    createdData.contact += '[updated]';
-    createdData.tempo += '[updated]';
+    createdData.description += '[updated]';
 
     instanceManager.update(createdData)
         .then(id => {
@@ -100,8 +113,7 @@ it(`#04. should success when get updated data with id`, function (done) {
         .then(data => {
             data.code.should.equal(createdData.code);
             data.name.should.equal(createdData.name);
-            data.address.should.equal(createdData.address);
-            // data.contact.should.equal(createdData.contact);
+            data.description.should.equal(createdData.description);
             done();
         })
         .catch(e => {

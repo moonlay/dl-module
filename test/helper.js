@@ -5,8 +5,7 @@ module.exports = {
             factory.getConnection(process.env.DB_CONNECTIONSTRING)
                 .then(dbInstance => {
                     resolve(dbInstance);
-                })
-                .catch(e => {
+                }).catch(e => {
                     reject(e);
                 });
         });

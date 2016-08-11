@@ -61,7 +61,7 @@ module.exports = class TextileManager {
                     reject(e);
                 });
         });
-    }   
+    }
 
     readByTextileId(textileId, paging) {
         var _paging = Object.assign({
@@ -75,8 +75,8 @@ module.exports = class TextileManager {
             var deleted = {
                 _deleted: false
             };
-            var textile={
-                textileId:new ObjectId(textileId)
+            var textile = {
+                textileId: new ObjectId(textileId)
             };
             var query = {
                 '$and': [deleted, module]
@@ -97,7 +97,7 @@ module.exports = class TextileManager {
                 var $or = {
                     '$or': [filterCode, filterName]
                 };
-
+                
                 query['$and'].push($or);
             }
 
@@ -113,7 +113,7 @@ module.exports = class TextileManager {
                     reject(e);
                 });
         });
-    }   
+    }
 
     create(textile) {
         return new Promise((resolve, reject) => {
@@ -191,13 +191,13 @@ module.exports = class TextileManager {
             Promise.all([getTextilePromise])
                 .then(results => {
                     var _textile = results[0];
-
+                     console.log('valid',valid);
                     if (!valid.code || valid.code == '')
                         errors["code"] = "code is required";
                     else if (_textile) {
                         errors["code"] = "code already exists";
                     }
-                    
+
                     if (!valid.name || valid.name == '')
                         errors["name"] = "name is required";
 
@@ -238,7 +238,7 @@ module.exports = class TextileManager {
                 });
         });
     }
-    
+
     getByIdOrDefault(id) {
         return new Promise((resolve, reject) => {
             if (id === '')
@@ -256,7 +256,7 @@ module.exports = class TextileManager {
                 });
         });
     }
-    
+
     getByCode(code) {
         return new Promise((resolve, reject) => {
             if (code === '')
@@ -274,7 +274,7 @@ module.exports = class TextileManager {
                 });
         });
     }
-    
+
     getSingleByQuery(query) {
         return new Promise((resolve, reject) => {
             this.textileCollection

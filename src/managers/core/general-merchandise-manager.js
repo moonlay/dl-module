@@ -7,13 +7,13 @@ var ObjectId = require("mongodb").ObjectId;
 require('mongodb-toolkit');
 var DLModels = require('dl-models');
 var map = DLModels.map;
-var Accessories = DLModels.core.Accessories;
+var GeneralMerchandise = DLModels.core.GeneralMerchandise;
 
-module.exports = class AccessoriesManager{
+module.exports = class GeneralMerchandiseManager{
     constructor(db, user){
         this.db = db;
         this.user = user;
-        this.accessoriesCollection = this.db.use(map.core.Accessories);
+        this.generalMerchandiseCollection = this.db.use(map.core.GeneralMerchandise);
     }
 
     read(paging){
@@ -52,13 +52,13 @@ module.exports = class AccessoriesManager{
             }
 
 
-            this.accessoriesCollection
+            this.generalMerchandiseCollection
                 .where(query)
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
-                .then(accessories => {
-                    resolve(accessories);
+                .then(generalMerchandises => {
+                    resolve(generalMerchandises);
                 })
                 .catch(e => {
                     reject(e);
@@ -66,7 +66,7 @@ module.exports = class AccessoriesManager{
         });
     }
 
-    readByAccessoriesId(accessoriesId, paging) {
+    readByGeneralMerchandiseId(generalMerchandiseId, paging) {
         var _paging = Object.assign({
             page: 1,
             size: 20,
@@ -78,8 +78,8 @@ module.exports = class AccessoriesManager{
             var deleted = {
                 _deleted: false
             };
-            var accessories = {
-                accessoriesId: new ObjectId(accessoriesId)
+            var generalMerchandise = {
+                generalMerchandiseId: new ObjectId(generalMerchandiseId)
             };
             var query = {
                 '$and': [deleted, module]
@@ -105,13 +105,13 @@ module.exports = class AccessoriesManager{
             }
 
 
-            this.accessoriesCollection
+            this.generalMerchandiseCollection
                 .where(query)
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
-                .then(accessories => {
-                    resolve(accessories);
+                .then(generalMerchandise => {
+                    resolve(generalMerchandise);
                 })
                 .catch(e => {
                     reject(e);
@@ -175,7 +175,7 @@ module.exports = class AccessoriesManager{
 
     getSingleByQuery(query) {
         return new Promise((resolve, reject) => {
-            this.accessoriesCollection
+            this.generalMerchandiseCollection
                 .single(query)
                 .then(module => {
                     resolve(module);
@@ -188,10 +188,10 @@ module.exports = class AccessoriesManager{
 
      getSingleOrDefaultByQuery(query) {
         return new Promise((resolve, reject) => {
-            this.accessoriesCollection
+            this.generalMerchandiseCollection
                 .singleOrDefault(query)
-                .then(accessories => {
-                    resolve(accessories);
+                .then(generalMerchandise => {
+                    resolve(generalMerchandise);
                 })
                 .catch(e => {
                     reject(e);
@@ -199,11 +199,11 @@ module.exports = class AccessoriesManager{
         })
     }
 
-     create(accessories) {
+     create(generalMerchandise) {
         return new Promise((resolve, reject) => {
-            this._validate(accessories)
-                .then(validAccessories => {
-                    this.accessoriesCollection.insert(validAccessories)
+            this._validate(generalMerchandise)
+                .then(validGeneralMerchandise => {
+                    this.generalMerchandiseCollection.insert(validGeneralMerchandise)
                         .then(id => {
                             resolve(id);
                         })
@@ -217,30 +217,11 @@ module.exports = class AccessoriesManager{
         });
     }
 
-    update(accessories) {
+    update(generalMerchandise) {
         return new Promise((resolve, reject) => {
-            this._validate(accessories)
-                .then(validAccessories => {
-                    this.accessoriesCollection.update(validAccessories)
-                        .then(id => {
-                            resolve(id);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    delete(accessories) {
-        return new Promise((resolve, reject) => {
-            this._validate(accessories)
-                .then(validAccessories => {
-                    validAccessories._deleted = true;
-                    this.accessoriesCollection.update(validAccessories)
+            this._validate(generalMerchandise)
+                .then(validGeneralMerchandise => {
+                    this.generalMerchandiseCollection.update(validGeneralMerchandise)
                         .then(id => {
                             resolve(id);
                         })
@@ -254,13 +235,32 @@ module.exports = class AccessoriesManager{
         });
     }
 
- _validate(accessories) {
+    delete(generalMerchandise) {
+        return new Promise((resolve, reject) => {
+            this._validate(generalMerchandise)
+                .then(validGeneralMerchandise => {
+                    validGeneralMerchandise._deleted = true;
+                    this.generalMerchandiseCollection.update(validGeneralMerchandise)
+                        .then(id => {
+                            resolve(id);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+ _validate(generalMerchandise) {
         var errors = {};
         return new Promise((resolve, reject) => {
-            var valid = new Accessories(accessories);
+            var valid = new GeneralMerchandise(generalMerchandise);
            
             // 1. begin: Declare promises.
-            var getAccessoriesPromise = this.accessoriesCollection.singleOrDefault({
+            var getGeneralMerchandisePromise = this.generalMerchandiseCollection.singleOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
@@ -272,7 +272,7 @@ module.exports = class AccessoriesManager{
             // 1. end: Declare promises.
 
             // 2. begin: Validation.
-            Promise.all([getAccessoriesPromise])
+            Promise.all([getGeneralMerchandisePromise])
                    .then(results => {
                     var _module = results[0];
 

@@ -14,13 +14,12 @@ function getData() {
     supplier.code = code;
     supplier.name = `name[${code}]`;
     supplier.description = `description for ${code}`;
-    supplier.phone = `phone[${code}]`;
+    supplier.contact = `phone[${code}]`;
     supplier.address = `Solo [${code}]`;
-    supplier.local = true;
+    supplier.import = true;
 
     return supplier;
 }
-
 
 before('#00. connect db', function (done) {
     helper.getDb()
@@ -48,7 +47,7 @@ it('#01. should success when read data', function (done) {
 });
 
 var createdId;
-it('#02. should success when create new data', function(done) {
+it('#02. should success when create new data', function (done) {
     var data = getData();
     instanceManager.create(data)
         .then(id => {
@@ -62,8 +61,8 @@ it('#02. should success when create new data', function(done) {
 });
 
 var createdData;
-it(`#03. should success when get created data with id`, function(done) {
-    instanceManager.getSingleByQuery({_id:createdId})
+it(`#03. should success when get created data with id`, function (done) {
+    instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             // validate.product(data);
             data.should.instanceof(Object);
@@ -76,14 +75,13 @@ it(`#03. should success when get created data with id`, function(done) {
 });
 
 
-it(`#03. should success when update created data`, function(done) {
+it(`#03. should success when update created data`, function (done) {
 
     createdData.code += '[updated]';
     createdData.name += '[updated]';
-    createdData.description += '[updated]';
-    createdData.phone += '[updated]';
     createdData.address += '[updated]';
-    createdData.local += '[updated]';
+    createdData.contact += '[updated]';
+    createdData.import += '[updated]';
 
     instanceManager.update(createdData)
         .then(id => {
@@ -95,13 +93,15 @@ it(`#03. should success when update created data`, function(done) {
         });
 });
 
-it(`#04. should success when get updated data with id`, function(done) {
-    instanceManager.getSingleByQuery({_id:createdId})
+it(`#04. should success when get updated data with id`, function (done) {
+    instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             // validate.product(data);
             data.code.should.equal(createdData.code);
             data.name.should.equal(createdData.name);
-            data.description.should.equal(createdData.description);
+            data.contact.should.equal(createdData.contact);
+            data.address.should.equal(createdData.address);
+            data.import.should.equal(createdData.import);
             done();
         })
         .catch(e => {
@@ -109,7 +109,7 @@ it(`#04. should success when get updated data with id`, function(done) {
         })
 });
 
-it(`#05. should success when delete data`, function(done) { 
+it(`#05. should success when delete data`, function (done) {
     instanceManager.delete(createdData)
         .then(id => {
             createdId.toString().should.equal(id.toString());
@@ -120,8 +120,8 @@ it(`#05. should success when delete data`, function(done) {
         });
 });
 
-it(`#06. should _deleted=true`, function(done) {
-    instanceManager.getSingleByQuery({_id:createdId})
+it(`#06. should _deleted=true`, function (done) {
+    instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             // validate.product(data);
             data._deleted.should.be.Boolean();
@@ -134,7 +134,7 @@ it(`#06. should _deleted=true`, function(done) {
 });
 
 
-it('#07. should error when create new data with same code', function(done) {
+it('#07. should error when create new data with same code', function (done) {
     var data = Object.assign({}, createdData);
     delete data._id;
     instanceManager.create(data)
@@ -149,20 +149,18 @@ it('#07. should error when create new data with same code', function(done) {
         })
 });
 
-it('#08. should error with property code and name ', function(done) { 
-   instanceManager.create({})
-       .then(id => { 
-           done("Should not be error with property code and name");
-       })
-       .catch(e => { 
-          try
-          {
-              e.errors.should.have.property('code');
-              e.errors.should.have.property('name'); 
-              done();
-          }catch(ex)
-          {
-              done(ex);
-          } 
-       })
+it('#08. should error with property code and name ', function (done) {
+    instanceManager.create({})
+        .then(id => {
+            done("Should not be error with property code and name");
+        })
+        .catch(e => {
+            try {
+                e.errors.should.have.property('code');
+                e.errors.should.have.property('name');
+                done();
+            } catch (ex) {
+                done(ex);
+            }
+        })
 });

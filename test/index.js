@@ -13,4 +13,5 @@ describe('#dl-module', function (done) {
     test('@manager/fabric-manager', './managers/fabric-manager-test');
     test('@manager/textile-manager', './managers/textile-manager-test');
     test('@manager/sparepart-manager', './managers/sparepart-manager-test');
+    test('@manager/general-merchandise-manager', './managers/general-merchandise-manager-test');
 })
