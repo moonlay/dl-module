@@ -174,16 +174,16 @@ it('#08. should error when create new data with same category', function(done) {
         })
 });
 
-it('#09. should error with property code and name ', function(done) { 
+it('#09. should error with property category, default, and units ', function(done) { 
    instanceManager.create({})
        .then(id => { 
-           done("Should not be error with property code and name");
+           done("Should not be error with category, default, and units");
        })
        .catch(e => { 
           try
           {
               e.errors.should.have.property('category');
-              //e.errors.should.have.property('name'); 
+              e.errors.should.have.property('default');
               done();
           }catch(ex)
           {
