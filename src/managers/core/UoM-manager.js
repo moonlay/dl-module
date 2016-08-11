@@ -1,3 +1,5 @@
+'use strict'
+
 var ObjectId = require("mongodb").ObjectId;
 
 require("mongodb-toolkit");
@@ -5,6 +7,7 @@ require("mongodb-toolkit");
 var UoM = require("dl-models").core.UoM;
 
 module.exports = class UoMManager {
+    
     constructor(db, user) {
         this.db = db;
         this.user = user;
