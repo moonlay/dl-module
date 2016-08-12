@@ -7,7 +7,8 @@ module.exports = {
             AccessoriesManager: require("./src/managers/core/accessories-manager"),
             TextileManager: require('./src/managers/core/textile-manager'),
             FabricManager: require('./src/managers/core/fabric-manager'),
-            GeneralMerchandiseManager: require('./src/managers/core/general-merchandise-manager')
+            GeneralMerchandiseManager: require('./src/managers/core/general-merchandise-manager'),
+            UoMManager: require('./src/managers/core/UoM-manager')
         }
     }
 }

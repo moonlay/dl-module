@@ -1,14 +1,18 @@
+'use strict'
+
 var ObjectId = require("mongodb").ObjectId;
 
 require("mongodb-toolkit");
-
-var UoM = require("dl-models").core.UoM;
+var DLModels = require('dl-models');
+var map = DLModels.map;
+var UoM = DLModels.core.UoM;
 
 module.exports = class UoMManager {
+    
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.UoMCollection = this.db.collection("UoM");
+        this.UoMCollection = this.db.use(map.core.UoM);
     }
 
     read(paging) {
