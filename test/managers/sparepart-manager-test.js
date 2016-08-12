@@ -1,10 +1,12 @@
 var helper = require("../helper");
 var SparepartManager = require("../../src/managers/core/sparepart-manager");
+
 var instanceManager = null;
 var should = require("should");
 
 function getData() {
     var Sparepart = require('dl-models').core.Sparepart;
+    var Supplier = require('dl-models').core.Supplier;
     var UoM = require('dl-models').core.UoM;
     var UoM_Template = require('dl-models').core.UoM_Template;
 
@@ -15,6 +17,8 @@ function getData() {
         convertedValue: 1,
         convertedUnit: 'M'
     });
+    
+    
     var _uom_units = [];
     
     _uom_units.push(uom_template);
@@ -33,6 +37,7 @@ function getData() {
     sparepart.name = `name[${code}]`;
     sparepart.description = `description for ${code}`;
     sparepart.UoM = uom;
+    sparepart.supplierId= "57a07e4c2b059d16dc5864f6";
 
     return sparepart;
 
@@ -169,6 +174,7 @@ it('#08. should error with property code and name ', function (done) {
         })
         .catch(e => {
             try {
+                console.log("Error",e.errors);
                 e.errors.should.have.property('code');
                 e.errors.should.have.property('name');
                 done();
