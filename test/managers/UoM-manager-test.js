@@ -191,3 +191,15 @@ it('#09. should error with property category, default, and units ', function(don
           } 
        })
 });
+
+it('#10. should success when read category list', function (done) {
+    instanceManager.readListCategory()
+        .then(documents => {
+            //process documents
+            documents.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});

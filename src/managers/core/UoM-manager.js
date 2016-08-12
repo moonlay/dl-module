@@ -63,6 +63,65 @@ module.exports = class UoMManager {
                 });
         });
     }
+    
+    readListCategory(paging) {
+        var _paging = Object.assign({
+            page: 1,
+            size: 20,
+            order: '_id',
+            asc: true
+        }, paging);
+
+        return new Promise((resolve, reject) => {
+            var deleted = {
+                _deleted: false
+            };
+            var query = _paging.keyword ? {
+                '$and': [deleted]
+            } : deleted;
+
+            if (_paging.keyword) {
+                var regex = new RegExp(_paging.keyword, "i");
+                var filterCategory = {
+                    'category': {
+                        '$regex': regex
+                    }
+                };
+                // var filterName = {
+                //     'name': {
+                //         '$regex': regex
+                //     }
+                // };
+                // var $or = {
+                //     '$or': [filterCode, filterName]
+                // };
+
+                query['$and'].push(filterCategory);
+            }
+
+            this.UoMCollection
+                .where(query,{users:0})
+                .page(_paging.page, _paging.size)
+                .orderBy(_paging.order, _paging.asc)
+                .execute()
+                .then(UoMs => {
+                    var listCategory = [];
+                    
+                    for (var i=0 ; i<UoMs.length;i++) {
+                        var category = {};
+                        category._id = UoMs[i]._id;
+                        category.category = UoMs[i].category;
+                        category.default = UoMs[i].default;
+                        listCategory.push(category);
+                    }
+                    
+                    resolve(listCategory);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
 
     create(UoM) {
         return new Promise((resolve, reject) => {
