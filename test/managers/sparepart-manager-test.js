@@ -174,7 +174,6 @@ it('#08. should error with property code and name ', function (done) {
         })
         .catch(e => {
             try {
-                console.log("Error",e.errors);
                 e.errors.should.have.property('code');
                 e.errors.should.have.property('name');
                 done();
