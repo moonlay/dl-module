@@ -1,17 +1,18 @@
 'use strict'
 
 var ObjectId = require("mongodb").ObjectId;
+
 require("mongodb-toolkit");
+var DLModels = require('dl-models');
+var map = DLModels.map;
+var UoM = DLModels.core.UoM;
 
-var dlModel = require("dl-models");
-var Textile = dlModel.core.Textile;
-var map = dlModel.map;
-
-module.exports = class TextileManager {
+module.exports = class UoMManager {
+    
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.textileCollection = this.db.collection(map.core.Textile);
+        this.UoMCollection = this.db.use(map.core.UoM);
     }
 
     read(paging) {
@@ -32,38 +33,38 @@ module.exports = class TextileManager {
 
             if (_paging.keyword) {
                 var regex = new RegExp(_paging.keyword, "i");
-                var filterCode = {
-                    'code': {
+                var filterCategory = {
+                    'category': {
                         '$regex': regex
                     }
                 };
-                var filterName = {
-                    'name': {
-                        '$regex': regex
-                    }
-                };
-                var $or = {
-                    '$or': [filterCode, filterName]
-                };
+                // var filterName = {
+                //     'name': {
+                //         '$regex': regex
+                //     }
+                // };
+                // var $or = {
+                //     '$or': [filterCode, filterName]
+                // };
 
-                query['$and'].push($or);
+                query['$and'].push(filterCategory);
             }
 
-            this.textileCollection
+            this.UoMCollection
                 .where(query)
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
-                .then(textiles => {
-                    resolve(textiles);
+                .then(UoMs => {
+                    resolve(UoMs);
                 })
                 .catch(e => {
                     reject(e);
                 });
         });
     }
-
-    readByTextileId(textileId, paging) {
+    
+    readListCategory(paging) {
         var _paging = Object.assign({
             page: 1,
             size: 20,
@@ -75,39 +76,46 @@ module.exports = class TextileManager {
             var deleted = {
                 _deleted: false
             };
-            var textile = {
-                textileId: new ObjectId(textileId)
-            };
-            var query = {
-                '$and': [deleted, module]
-            };
+            var query = _paging.keyword ? {
+                '$and': [deleted]
+            } : deleted;
 
             if (_paging.keyword) {
                 var regex = new RegExp(_paging.keyword, "i");
-                var filterCode = {
-                    'code': {
+                var filterCategory = {
+                    'category': {
                         '$regex': regex
                     }
                 };
-                var filterName = {
-                    'name': {
-                        '$regex': regex
-                    }
-                };
-                var $or = {
-                    '$or': [filterCode, filterName]
-                };
-                
-                query['$and'].push($or);
+                // var filterName = {
+                //     'name': {
+                //         '$regex': regex
+                //     }
+                // };
+                // var $or = {
+                //     '$or': [filterCode, filterName]
+                // };
+
+                query['$and'].push(filterCategory);
             }
 
-            this.textileCollection
-                .where(query)
+            this.UoMCollection
+                .where(query,{users:0})
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
-                .then(textile => {
-                    resolve(textile);
+                .then(UoMs => {
+                    var listCategory = [];
+                    
+                    for (var i=0 ; i<UoMs.length;i++) {
+                        var category = {};
+                        category._id = UoMs[i]._id;
+                        category.category = UoMs[i].category;
+                        category.default = UoMs[i].default;
+                        listCategory.push(category);
+                    }
+                    
+                    resolve(listCategory);
                 })
                 .catch(e => {
                     reject(e);
@@ -115,12 +123,12 @@ module.exports = class TextileManager {
         });
     }
 
-    create(textile) {
+    create(UoM) {
         return new Promise((resolve, reject) => {
-            this._validate(textile)
-                .then(validTextile => {
+            this._validate(UoM)
+                .then(validUoM => {
 
-                    this.textileCollection.insert(validTextile)
+                    this.UoMCollection.insert(validUoM)
                         .then(id => {
                             resolve(id);
                         })
@@ -134,11 +142,11 @@ module.exports = class TextileManager {
         });
     }
 
-    update(textile) {
+    update(UoM) {
         return new Promise((resolve, reject) => {
-            this._validate(textile)
-                .then(validTextile => {
-                    this.textileCollection.update(validTextile)
+            this._validate(UoM)
+                .then(validUoM => {
+                    this.UoMCollection.update(validUoM)
                         .then(id => {
                             resolve(id);
                         })
@@ -152,12 +160,12 @@ module.exports = class TextileManager {
         });
     }
 
-    delete(textile) {
+    delete(UoM) {
         return new Promise((resolve, reject) => {
-            this._validate(textile)
-                .then(validTextile => {
-                    validTextile._deleted = true;
-                    this.textileCollection.update(validTextile)
+            this._validate(UoM)
+                .then(validUoM => {
+                    validUoM._deleted = true;
+                    this.UoMCollection.update(validUoM)
                         .then(id => {
                             resolve(id);
                         })
@@ -171,44 +179,64 @@ module.exports = class TextileManager {
         });
     }
 
-    _validate(textile) {
+    _validate(uom) {
         var errors = {};
         return new Promise((resolve, reject) => {
-            var valid = textile;
+            var valid = uom;
             // 1. begin: Declare promises.
-            var getTextilePromise = this.textileCollection.singleOrDefault({
+            var getUoMPromise = this.UoMCollection.singleOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
+                        category: valid.category
                     }]
             });
             // 1. end: Declare promises.
 
             // 2. begin: Validation.
-            Promise.all([getTextilePromise])
+            Promise.all([getUoMPromise])
                 .then(results => {
-                    var _textile = results[0];
-                    if (!valid.code || valid.code == '')
-                        errors["code"] = "code is required";
-                    else if (_textile) {
-                        errors["code"] = "code already exists";
+                    var _UoM = results[0];
+
+                    if (!valid.category || valid.category == '')
+                        errors["category"] = "category is required";
+                    else if (_UoM) {
+                        errors["category"] = "category already exists";
+                    }
+                    
+                    if (!valid.default)
+                        errors["default"] = "default is required";
+                        else{
+                    
+                    if (!valid.default.mainUnit || valid.default.mainUnit == '')
+                        errors["default"] = "default is required";
+                    else {
+                        if (valid.default.mainUnit != valid.default.convertedUnit || valid.default.mainValue != valid.default.convertedValue)
+                            errors["default"] = "main unit and main value must be equal with converted unit and converted value";
+                        else {
+                            if (valid.units.length == 0)
+                                errors["units"] = "units is required";
+                            else {
+                                var i = 1;
+                                for (var item of valid.units) {
+                                    if (item['mainValue'] != valid.default.mainValue || item['mainUnit'] != valid.default.mainUnit) {
+                                        errors["units"] = "main unit and main value in units must be equal wit main unit and main value in default";
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
                     }
 
-                    if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required";
-
-                    if (!valid.description || valid.description == '')
-                        errors["description"] = "description is required";
-
-                    // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
                         var ValidationError = require('../../validation-error');
                         reject(new ValidationError('data does not pass validation', errors));
                     }
-                    valid = new Textile(textile);
+
+                    valid = new UoM(uom);
                     valid.stamp(this.user.username, 'manager');
                     resolve(valid);
                 })
@@ -217,8 +245,6 @@ module.exports = class TextileManager {
                 })
         });
     }
-
-
 
     getById(id) {
         return new Promise((resolve, reject) => {
@@ -229,8 +255,8 @@ module.exports = class TextileManager {
                 _deleted: false
             };
             this.getSingleByQuery(query)
-                .then(module => {
-                    resolve(module);
+                .then(UoM => {
+                    resolve(UoM);
                 })
                 .catch(e => {
                     reject(e);
@@ -247,26 +273,8 @@ module.exports = class TextileManager {
                 _deleted: false
             };
             this.getSingleByQueryOrDefault(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getByCode(code) {
-        return new Promise((resolve, reject) => {
-            if (code === '')
-                resolve(null);
-            var query = {
-                code: code,
-                _deleted: false
-            };
-            this.getSingleByQuery(query)
-                .then(module => {
-                    resolve(module);
+                .then(UoM => {
+                    resolve(UoM);
                 })
                 .catch(e => {
                     reject(e);
@@ -276,10 +284,10 @@ module.exports = class TextileManager {
 
     getSingleByQuery(query) {
         return new Promise((resolve, reject) => {
-            this.textileCollection
+            this.UoMCollection
                 .single(query)
-                .then(module => {
-                    resolve(module);
+                .then(UoM => {
+                    resolve(UoM);
                 })
                 .catch(e => {
                     reject(e);
@@ -289,10 +297,10 @@ module.exports = class TextileManager {
 
     getSingleByQueryOrDefault(query) {
         return new Promise((resolve, reject) => {
-            this.textileCollection
+            this.UoMCollection
                 .singleOrDefault(query)
-                .then(textile => {
-                    resolve(textile);
+                .then(UoM => {
+                    resolve(UoM);
                 })
                 .catch(e => {
                     reject(e);

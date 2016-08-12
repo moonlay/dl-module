@@ -1,14 +1,16 @@
+'use strict';
+
+var should = require('should');
 var helper = require("../helper");
-var SparepartManager = require("../../src/managers/core/sparepart-manager");
+var GeneralMerchandiseManager = require("../../src/managers/core/general-merchandise-manager");
 var instanceManager = null;
-var should = require("should");
 
 function getData() {
-    var Sparepart = require('dl-models').core.Sparepart;
+    var GeneralMerchandise = require('dl-models').core.GeneralMerchandise;
     var UoM = require('dl-models').core.UoM;
     var UoM_Template = require('dl-models').core.UoM_Template;
 
-    var sparepart = new Sparepart();
+    var generalMerchandise = new GeneralMerchandise();
     var uom_template = new UoM_Template({
         mainValue: 1,
         mainUnit: 'M',
@@ -16,7 +18,6 @@ function getData() {
         convertedUnit: 'M'
     });
     var _uom_units = [];
-    
     _uom_units.push(uom_template);
 
     var uom = new UoM({
@@ -29,20 +30,20 @@ function getData() {
     var stamp = now / 1000 | 0;
     var code = stamp.toString(36);
 
-    sparepart.code = code;
-    sparepart.name = `name[${code}]`;
-    sparepart.description = `description for ${code}`;
-    sparepart.UoM = uom;
-
-    return sparepart;
-
-
+    generalMerchandise.code = code;
+    generalMerchandise.name = `name[${code}]`;
+    generalMerchandise.composition = `composition for ${code}`;
+    generalMerchandise.construction = `construction for ${code}`;
+    generalMerchandise.thread = `thread for ${code}`;
+    generalMerchandise.width = 0;
+    generalMerchandise.UoM = uom;
+    return generalMerchandise;
 }
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            instanceManager = new SparepartManager(db, {
+            instanceManager = new GeneralMerchandiseManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -82,6 +83,7 @@ var createdData;
 it(`#03. should success when get created data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
+            // validate.product(data);
             data.should.instanceof(Object);
             createdData = data;
             done();
@@ -91,9 +93,7 @@ it(`#03. should success when get created data with id`, function (done) {
         })
 });
 
-
 it(`#03. should success when update created data`, function (done) {
-
     createdData.code += '[updated]';
     createdData.name += '[updated]';
     createdData.description += '[updated]';
@@ -111,7 +111,6 @@ it(`#03. should success when update created data`, function (done) {
 it(`#04. should success when get updated data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
-            // validate.product(data);
             data.code.should.equal(createdData.code);
             data.name.should.equal(createdData.name);
             data.description.should.equal(createdData.description);
