@@ -33,7 +33,6 @@ function getData() {
     generalMerchandise.code = code;
     generalMerchandise.name = `name[${code}]`;
     generalMerchandise.description = `description for ${code}`;
-    generalMerchandise.supplier = `supplier for ${code}`;
     generalMerchandise.price = 0;
     generalMerchandise.UoM = uom;
     return generalMerchandise;
@@ -96,7 +95,6 @@ it(`#03. should success when update created data`, function (done) {
     createdData.code += '[updated]';
     createdData.name += '[updated]';
     createdData.description += '[updated]';
-    createdData.supplier += '[updated]';
     
     instanceManager.update(createdData)
         .then(id => {
@@ -114,7 +112,6 @@ it(`#04. should success when get updated data with id`, function (done) {
             data.code.should.equal(createdData.code);
             data.name.should.equal(createdData.name);
             data.description.should.equal(createdData.description);
-            data.supplier.should.equal(createdData.supplier);
             done();
         })
         .catch(e => {
