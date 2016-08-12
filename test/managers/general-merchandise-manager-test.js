@@ -32,10 +32,8 @@ function getData() {
 
     generalMerchandise.code = code;
     generalMerchandise.name = `name[${code}]`;
-    generalMerchandise.composition = `composition for ${code}`;
-    generalMerchandise.construction = `construction for ${code}`;
-    generalMerchandise.thread = `thread for ${code}`;
-    generalMerchandise.width = 0;
+    generalMerchandise.description = `description for ${code}`;
+    generalMerchandise.price = 0;
     generalMerchandise.UoM = uom;
     return generalMerchandise;
 }
@@ -97,7 +95,7 @@ it(`#03. should success when update created data`, function (done) {
     createdData.code += '[updated]';
     createdData.name += '[updated]';
     createdData.description += '[updated]';
-
+    
     instanceManager.update(createdData)
         .then(id => {
             createdId.toString().should.equal(id.toString());
