@@ -284,7 +284,10 @@ module.exports = class GeneralMerchandiseManager{
 
                     if (!valid.name || valid.name == '')
                         errors["name"] = "name is required"; 
-
+                        
+                    if (valid.supplierId && !valid.supplierId.length)
+                        errors["supplier"] = "supplier Id does not exists";
+                        
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
                         var ValidationError = require('../../validation-error');

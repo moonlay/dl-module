@@ -199,10 +199,7 @@ module.exports = class TextileManager {
 
                     if (!valid.name || valid.name == '')
                         errors["name"] = "name is required";
-
-                    if (!valid.description || valid.description == '')
-                        errors["description"] = "description is required";
-
+                    
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
                         var ValidationError = require('../../validation-error');
