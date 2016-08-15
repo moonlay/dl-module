@@ -75,7 +75,7 @@ function getData() {
     return pOGarmentSparepart;
 }
 
-var supplierID = '57b141c85340483fd07d81b9';
+//var supplierID = '57b141c85340483fd07d81b9';
 
 before('#00. connect db', function (done) {
     helper.getDb()
