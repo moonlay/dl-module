@@ -117,22 +117,6 @@ it('#02. should success when create new data', function (done) {
         })
 });
 
-
-
-// var createdId;
-// it('#03. should error when create new data with exists reference', function (done) {
-//     var data = getData();
-//     instanceManager.create(data)
-//         .then(id => {
-//             done("should error when create new data with exists reference");
-//         })
-//         .catch(e => {
-//             e.errors.should.have.property("code");
-//             e.errors.code.should.equal("RO, PR, da already exists");
-//             done();
-//         })
-// });
-
 var createdData;
 it(`#03. should success when get created data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
