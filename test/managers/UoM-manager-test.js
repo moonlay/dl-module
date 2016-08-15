@@ -28,7 +28,7 @@ function getData() {
         default: uom_template,
         units: _uom_units
     });
-
+    
     return uom;
 }
 
