@@ -9,6 +9,9 @@ module.exports = {
             FabricManager: require('./src/managers/core/fabric-manager'),
             GeneralMerchandiseManager: require('./src/managers/core/general-merchandise-manager'),
             UoMManager: require('./src/managers/core/UoM-manager')
+        },
+        po: {
+            POGarmentSparepart: require('./src/managers/core/po-garment-sparepart-manager')
         }
     }
 }
