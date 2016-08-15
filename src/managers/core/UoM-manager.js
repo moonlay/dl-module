@@ -222,7 +222,7 @@ module.exports = class UoMManager {
                                 var i = 1;
                                 for (var item of valid.units) {
                                     if (item['mainValue'] != valid.default.mainValue || item['mainUnit'] != valid.default.mainUnit) {
-                                        errors["units"] = "main unit and main value in units must be equal wit main unit and main value in default";
+                                        errors["units"] = "main unit and main value in units must be equal with main unit and main value in default";
                                         break;
                                     }
                                 }
