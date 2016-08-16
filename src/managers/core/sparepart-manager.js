@@ -3,14 +3,15 @@
 var ObjectId = require("mongodb").ObjectId;
 
 require("mongodb-toolkit");
-
-var Sparepart = require("dl-models").core.Sparepart;
+var DLModels = require('dl-models');
+var map = DLModels.map;
+var Sparepart = DLModels.core.Sparepart;
 
 module.exports = class SparepartManager {
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.sparepartCollection = this.db.collection("sparepart");
+        this.sparepartCollection = this.db.collection(map.core.collection.Product);
     }
 
     read(paging) {

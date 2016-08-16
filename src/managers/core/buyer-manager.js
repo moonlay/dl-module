@@ -3,13 +3,15 @@
 var ObjectId= require("mongodb").ObjectId;
 require ("mongodb-toolkit");
 
-var Buyer= require("dl-models").core.Buyer;
+var DLModels = require('dl-models');
+var map = DLModels.map;
+var Buyer= DLModels.core.Buyer;
 
 module.exports = class BuyerManager {
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.buyerCollection = this.db.use("buyers");
+        this.buyerCollection = this.db.use(map.core.collection.Buyer);
     }
 
     read(paging) {

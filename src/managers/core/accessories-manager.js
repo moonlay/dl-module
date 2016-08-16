@@ -13,7 +13,7 @@ module.exports = class AccessoriesManager {
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.accessoriesCollection = this.db.use(map.core.Accessories);
+        this.accessoriesCollection = this.db.use(map.core.collection.Product);
     }
 
     read(paging) {

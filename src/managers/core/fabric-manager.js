@@ -13,7 +13,7 @@ module.exports = class FabricManager{
     constructor(db, user){
         this.db = db;
         this.user = user;
-        this.fabricCollection = this.db.use(map.core.Fabric);
+        this.fabricCollection = this.db.use(map.core.collection.Product);
     }
 
     read(paging){

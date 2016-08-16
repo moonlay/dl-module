@@ -13,7 +13,7 @@ module.exports = class POGarmentSparepartManager {
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.POGarmentSparepartCollection = this.db.use(map.po.POGarmentSparepart);
+        this.POGarmentSparepartCollection = this.db.use(map.po.collection.PurchaseOrder);
     }
 
     read(paging) {

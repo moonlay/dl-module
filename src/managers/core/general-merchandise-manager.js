@@ -13,7 +13,7 @@ module.exports = class GeneralMerchandiseManager{
     constructor(db, user){
         this.db = db;
         this.user = user;
-        this.generalMerchandiseCollection = this.db.use(map.core.GeneralMerchandise);
+        this.generalMerchandiseCollection = this.db.use(map.core.collection.Product);
     }
 
     read(paging){
