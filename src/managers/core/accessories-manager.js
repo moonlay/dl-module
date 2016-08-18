@@ -9,14 +9,14 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var Accessories = DLModels.core.Accessories;
 
-module.exports = class AccessoriesManager{
-    constructor(db, user){
+module.exports = class AccessoriesManager {
+    constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.accessoriesCollection = this.db.use(map.core.Accessories);
+        this.accessoriesCollection = this.db.use(map.core.collection.Product);
     }
 
-    read(paging){
+    read(paging) {
         var _paging = Object.assign({
             page: 1,
             size: 20,
@@ -24,9 +24,9 @@ module.exports = class AccessoriesManager{
             asc: true
         }, paging);
 
-        return new Promise((resolve, reject)=>{
+        return new Promise((resolve, reject) => {
             var deleted = {
-                _deleted : false
+                _deleted: false
             };
             var query = _paging.keyword ? {
                 '$and': [deleted]
@@ -62,7 +62,7 @@ module.exports = class AccessoriesManager{
                 })
                 .catch(e => {
                     reject(e);
-            });
+                });
         });
     }
 
@@ -119,7 +119,7 @@ module.exports = class AccessoriesManager{
         });
     }
 
-   getById(id) {
+    getById(id) {
         return new Promise((resolve, reject) => {
             if (id === '')
                 resolve(null);
@@ -186,7 +186,7 @@ module.exports = class AccessoriesManager{
         })
     }
 
-     getSingleOrDefaultByQuery(query) {
+    getSingleOrDefaultByQuery(query) {
         return new Promise((resolve, reject) => {
             this.accessoriesCollection
                 .singleOrDefault(query)
@@ -199,7 +199,7 @@ module.exports = class AccessoriesManager{
         })
     }
 
-     create(accessories) {
+    create(accessories) {
         return new Promise((resolve, reject) => {
             this._validate(accessories)
                 .then(validAccessories => {
@@ -254,11 +254,11 @@ module.exports = class AccessoriesManager{
         });
     }
 
- _validate(accessories) {
+    _validate(accessories) {
         var errors = {};
         return new Promise((resolve, reject) => {
             var valid = new Accessories(accessories);
-           
+
             // 1. begin: Declare promises.
             var getAccessoriesPromise = this.accessoriesCollection.singleOrDefault({
                 "$and": [{
@@ -273,18 +273,17 @@ module.exports = class AccessoriesManager{
 
             // 2. begin: Validation.
             Promise.all([getAccessoriesPromise])
-                   .then(results => {
+                .then(results => {
                     var _module = results[0];
 
                     if (!valid.code || valid.code == '')
-                        errors["code"] = "code is required";
-                    else if (_module) {
-                        errors["code"] = "code already exists";
-                    }
-
+                        errors["code"] = "Kode tidak boleh kosong";
+                    else if (_module) 
+                        errors["code"] = "Kode sudah didaftarkan";
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required"; 
-
+                        errors["name"] = "Nama tidak boleh kosong";
+                    if (!valid.price || valid.price == 0)
+                        errors["price"] = "Harga tidak boleh kosong dan bernilai 0";
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
                         var ValidationError = require('../../validation-error');

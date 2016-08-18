@@ -3,15 +3,15 @@
 var ObjectId = require("mongodb").ObjectId;
 require("mongodb-toolkit");
 
-var dlModel = require("dl-models");
-var Textile = dlModel.core.Textile;
-var map = dlModel.map;
+var DLModels = require('dl-models');
+var Textile = DLModels.core.Textile;
+var map = DLModels.map;
 
 module.exports = class TextileManager {
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.textileCollection = this.db.collection(map.core.Textile);
+        this.textileCollection = this.db.collection(map.core.collection.Product);
     }
 
     read(paging) {

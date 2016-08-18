@@ -2,32 +2,32 @@
 
 var should = require('should');
 var helper = require("../helper");
-var POGarmentSparepartManager = require("../../src/managers/po/po-garment-sparepart-manager");
+var POGarmentGeneralManager = require("../../src/managers/po/po-garment-general-manager");
 var instanceManager = null;
 
 function getData() {
-    var POGarmentSparepart = require('dl-models').po.POGarmentSparePart;
+    var POGarmentGeneral = require('dl-models').po.POGarmentGeneral;
     var Supplier = require('dl-models').core.Supplier;
     var UoM_Template = require('dl-models').core.UoM_Template;
     var UoM = require('dl-models').core.UoM;
-    var SparepartValue = require('dl-models').po.SparepartValue;
-    var Sparepart = require('dl-models').core.Sparepart;
+    var PurchaseOrderItem = require('dl-models').po.PurchaseOrderItem;
+    var Product = require('dl-models').core.Product;
 
     var now = new Date();
     var stamp = now / 1000 | 0;
     var code = stamp.toString(36);
 
-    var pOGarmentSparepart = new POGarmentSparepart();
-    pOGarmentSparepart.RONo = '1' + code + stamp;
-    pOGarmentSparepart.PRNo = '2' + code + stamp;
-    pOGarmentSparepart.PONo = '3' + code + stamp;
-    pOGarmentSparepart.ppn = 10;
-    pOGarmentSparepart.deliveryDate = new Date();
-    pOGarmentSparepart.termOfPayment = 'Tempo 2 bulan';
-    pOGarmentSparepart.deliveryFeeByBuyer = true;
-    pOGarmentSparepart.PODLNo = '';
-    pOGarmentSparepart.description = 'SP1';
-    pOGarmentSparepart.supplierID = {};
+    var poGarmentGeneral = new POGarmentGeneral();
+    poGarmentGeneral.RONo = '1' + code + stamp;
+    poGarmentGeneral.RefPONo = '2' + code + stamp;
+    poGarmentGeneral.PONo = '3' + code + stamp;
+    poGarmentGeneral.ppn = 10;
+    poGarmentGeneral.deliveryDate = new Date();
+    poGarmentGeneral.termOfPayment = 'Tempo 2 bulan';
+    poGarmentGeneral.deliveryFeeByBuyer = true;
+    poGarmentGeneral.PODLNo = '';
+    poGarmentGeneral.description = 'SP1';
+    poGarmentGeneral.supplierID = {};
 
     var supplier = new Supplier({
         code: '123',
@@ -38,7 +38,7 @@ function getData() {
         local: true
     });
 
-    var template = new UoM_Template({
+    var template = new UoM_Template ({
         mainUnit: 'M',
         mainValue: 1,
         convertedUnit: 'M',
@@ -48,39 +48,39 @@ function getData() {
     var _units = [];
     _units.push(template);
 
-    var _uom = new UoM({
+    var _uom = new UoM ({
         category: 'UoM-Unit-Test',
         default: template,
         units: _units
     });
 
-    var sparepart = new Sparepart({
+    var product = new Product ({
         code: '22',
         name: 'hotline',
-        description: 'hotline123',
-        UoM: _uom
-    });
-
-    var sparepartValue = new SparepartValue({
-        qty: 0,
-        unit: '',
         price: 0,
-        sparepart: sparepart
+        description: 'hotline123',
+        UoM: _uom,
+        detail: {}
     });
-    var _spareparts = [];
-    _spareparts.push(sparepartValue);
 
-    pOGarmentSparepart.supplier = supplier;
-    pOGarmentSparepart.items = _spareparts;
-    return pOGarmentSparepart;
+    var productValue = new PurchaseOrderItem ({
+        qty: 0,
+        price: 0,
+        product: product
+    });
+    
+    var _products = [];
+    _products.push(productValue);
+
+    poGarmentGeneral.supplier = supplier;
+    poGarmentGeneral.items = _products;
+    return poGarmentGeneral;
 }
-
-//var supplierID = '57b141c85340483fd07d81b9';
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            instanceManager = new POGarmentSparepartManager(db, {
+            instanceManager = new POGarmentGeneralManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -132,7 +132,7 @@ it(`#03. should success when get created data with id`, function (done) {
 
 it(`#04. should success when update created data`, function (done) {
     createdData.RONo += '[updated]';
-    createdData.PRNo += '[updated]';
+    createdData.ReffPONo += '[updated]';
     createdData.PONo += '[updated]';
     createdData.termOfPayment += '[updated]';
     createdData.PODLNo += '[updated]';
@@ -152,7 +152,7 @@ it(`#05. should success when get updated data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             data.RONo.should.equal(createdData.RONo);
-            data.PRNo.should.equal(createdData.PRNo);
+            data.RefPONo.should.equal(createdData.RefPONo);
             data.PONo.should.equal(createdData.PONo);
             data.termOfPayment.should.equal(createdData.termOfPayment);
             data.PODLNo.should.equal(createdData.PODLNo);
@@ -188,34 +188,3 @@ it(`#07. should _deleted=true`, function (done) {
             done(e);
         })
 });
-
-// it('#07. should error when create new data with same code', function (done) {
-//     var data = Object.assign({}, createdData);
-//     delete data._id;
-//     instanceManager.create(data)
-//         .then(id => {
-//             id.should.be.Object();
-//             createdId = id;
-//             done("Should not be able to create data with same code");
-//         })
-//         .catch(e => {
-//             e.errors.should.have.property('code');
-//             done();
-//         })
-// });
-
-// it('#08. should error with property code and name ', function (done) {
-//     instanceManager.create({})
-//         .then(id => {
-//             done("Should not be error with property code and name");
-//         })
-//         .catch(e => {
-//             try {
-//                 e.errors.should.have.property('code');
-//                 e.errors.should.have.property('name');
-//                 done();
-//             } catch (ex) {
-//                 done(ex);
-//             }
-//         })
-// });
