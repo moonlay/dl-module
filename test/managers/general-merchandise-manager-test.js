@@ -33,7 +33,7 @@ function getData() {
     generalMerchandise.code = code;
     generalMerchandise.name = `name[${code}]`;
     generalMerchandise.description = `description for ${code}`;
-    generalMerchandise.price = 0;
+    generalMerchandise.price = 50;
     generalMerchandise.UoM = uom;
     return generalMerchandise;
 }
