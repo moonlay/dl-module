@@ -1,27 +1,28 @@
 'use strict'
 
-var ObjectId= require("mongodb").ObjectId;
-require ("mongodb-toolkit");
+// external deps 
+var ObjectId = require("mongodb").ObjectId;
 
+// internal deps
+require('mongodb-toolkit');
 var DLModels = require('dl-models');
-var Buyer = DLModels.core.Buyer;
 var map = DLModels.map;
+var Product = DLModels.core.Product;
 
-module.exports = class BuyerManager {
+module.exports = class ProductManager {
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.buyerCollection = this.db.use(map.core.collection.Buyer);
+        this.productCollection = this.db.use(map.core.collection.Product);
     }
 
-    read(paging) {
+    readAll(paging) {
         var _paging = Object.assign({
             page: 1,
             size: 20,
             order: '_id',
             asc: true
         }, paging);
-
         return new Promise((resolve, reject) => {
             var deleted = {
                 _deleted: false
@@ -49,13 +50,14 @@ module.exports = class BuyerManager {
                 query['$and'].push($or);
             }
 
-            this.buyerCollection
+
+            this.productCollection
                 .where(query)
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
-                .then(modules => {
-                    resolve(modules);
+                .then(products => {
+                    resolve(products);
                 })
                 .catch(e => {
                     reject(e);
@@ -63,92 +65,11 @@ module.exports = class BuyerManager {
         });
     }
 
-    getById(id) {
+    create(product) {
         return new Promise((resolve, reject) => {
-            if (id === '')
-                resolve(null);
-            var query = {
-                _id: new ObjectId(id),
-                _deleted: false
-            };
-            this.getSingleByQuery(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getByCode(code) {
-        return new Promise((resolve, reject) => {
-            if (code === '')
-                resolve(null);
-            var query = {
-                code: code,
-                _deleted: false
-            };
-            this.getSingleByQuery(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getByIdOrDefault(id) {
-        return new Promise((resolve, reject) => {
-            if (id === '')
-                resolve(null);
-            var query = {
-                _id: new ObjectId(id),
-                _deleted: false
-            };
-            this.getSingleOrDefaultByQuery(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getSingleByQuery(query) {
-        return new Promise((resolve, reject) => {
-            this.buyerCollection
-                .single(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        })
-    }
-
-    getSingleOrDefaultByQuery(query) {
-        return new Promise((resolve, reject) => {
-            this.buyerCollection
-                .singleOrDefault(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        })
-    }
-
-    create(module) {
-        return new Promise((resolve, reject) => {
-            this._validate(module)
-                .then(validModule => {
-
-                    this.buyerCollection.insert(validModule)
+            this._validate(product)
+                .then(validProduct => {
+                    this.productCollection.insert(validProduct)
                         .then(id => {
                             resolve(id);
                         })
@@ -162,49 +83,50 @@ module.exports = class BuyerManager {
         });
     }
 
-    update(module) {
+    update(product) {
         return new Promise((resolve, reject) => {
-            this._validate(module)
-                .then(validModule => {
-                    this.buyerCollection.update(validModule)
+            this._validate(product)
+                .then(validProduct => {
+                    this.productCollection.update(validProduct)
                         .then(id => {
                             resolve(id);
                         })
                         .catch(e => {
                             reject(e);
-                        })
+                        });
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
 
-    delete(module) {
+    delete(product) {
         return new Promise((resolve, reject) => {
-            this._validate(module)
-                .then(validModule => {
-                    validModule._deleted = true;
-                    this.buyerCollection.update(validModule)
+            this._validate(product)
+                .then(validProduct => {
+                    validProduct._deleted = true;
+                    this.productCollection.update(validProduct)
                         .then(id => {
                             resolve(id);
                         })
                         .catch(e => {
                             reject(e);
-                        })
+                        });
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
 
-    _validate(buyer) {
+    _validate(product) {
         var errors = {};
         return new Promise((resolve, reject) => {
-            var valid = buyer;
+            var valid = product;
+
             // 1. begin: Declare promises.
-            var getBuyerPromise = this.buyerCollection.singleOrDefault({
+            var getProductPromise = this.productCollection.singleOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
@@ -216,7 +138,7 @@ module.exports = class BuyerManager {
             // 1. end: Declare promises.
 
             // 2. begin: Validation.
-            Promise.all([getBuyerPromise])
+            Promise.all([getProductPromise])
                 .then(results => {
                     var _module = results[0];
 
@@ -234,8 +156,8 @@ module.exports = class BuyerManager {
                         var ValidationError = require('../../validation-error');
                         reject(new ValidationError('data does not pass validation', errors));
                     }
-
-                    valid=new Buyer(buyer);
+                    if (!valid.stamp)
+                        valid = new Product(valid);
                     valid.stamp(this.user.username, 'manager');
                     resolve(valid);
                 })

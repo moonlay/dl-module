@@ -7,66 +7,16 @@ var ObjectId = require("mongodb").ObjectId;
 require('mongodb-toolkit');
 var DLModels = require('dl-models');
 var map = DLModels.map;
-var GeneralMerchandise = DLModels.core.GeneralMerchandise;
+var POTextileJobOrder = DLModels.po.POTextileJobOrder;
 
-module.exports = class GeneralMerchandiseManager{
-    constructor(db, user){
+module.exports = class POTextileJobOrderManager {
+    constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.generalMerchandiseCollection = this.db.use(map.core.GeneralMerchandise);
+        this.POTextileJobOrderCollection = this.db.use(map.po.POTextileJobOrder);
     }
 
-    read(paging){
-        var _paging = Object.assign({
-            page: 1,
-            size: 20,
-            order: '_id',
-            asc: true
-        }, paging);
-
-        return new Promise((resolve, reject)=>{
-            var deleted = {
-                _deleted : false
-            };
-            var query = _paging.keyword ? {
-                '$and': [deleted]
-            } : deleted;
-
-            if (_paging.keyword) {
-                var regex = new RegExp(_paging.keyword, "i");
-                var filterCode = {
-                    'code': {
-                        '$regex': regex
-                    }
-                };
-                var filterName = {
-                    'name': {
-                        '$regex': regex
-                    }
-                };
-                var $or = {
-                    '$or': [filterCode, filterName]
-                };
-
-                query['$and'].push($or);
-            }
-
-
-            this.generalMerchandiseCollection
-                .where(query)
-                .page(_paging.page, _paging.size)
-                .orderBy(_paging.order, _paging.asc)
-                .execute()
-                .then(generalMerchandises => {
-                    resolve(generalMerchandises);
-                })
-                .catch(e => {
-                    reject(e);
-            });
-        });
-    }
-
-    readByGeneralMerchandiseId(generalMerchandiseId, paging) {
+    read(paging) {
         var _paging = Object.assign({
             page: 1,
             size: 20,
@@ -78,40 +28,43 @@ module.exports = class GeneralMerchandiseManager{
             var deleted = {
                 _deleted: false
             };
-            var generalMerchandise = {
-                generalMerchandiseId: new ObjectId(generalMerchandiseId)
-            };
-            var query = {
-                '$and': [deleted, module]
-            };
+            var query = _paging.keyword ? {
+                '$and': [deleted]
+            } : deleted;
 
             if (_paging.keyword) {
                 var regex = new RegExp(_paging.keyword, "i");
-                var filterCode = {
-                    'code': {
+                var filterRONo = {
+                    'RONo': {
                         '$regex': regex
                     }
                 };
-                var filterName = {
-                    'name': {
+                var filterPRNo = {
+                    'PRNo': {
                         '$regex': regex
                     }
                 };
+                var filterPONo = {
+                    'PONo': {
+                        '$regex': regex
+                    }
+                };
+
                 var $or = {
-                    '$or': [filterCode, filterName]
+                    '$or': [filterRONo, filterPRNo, filterPONo]
                 };
 
                 query['$and'].push($or);
             }
 
 
-            this.generalMerchandiseCollection
+            this.POTextileJobOrderCollection
                 .where(query)
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
-                .then(generalMerchandise => {
-                    resolve(generalMerchandise);
+                .then(POTextileJobOrders => {
+                    resolve(POTextileJobOrders);
                 })
                 .catch(e => {
                     reject(e);
@@ -119,7 +72,65 @@ module.exports = class GeneralMerchandiseManager{
         });
     }
 
-   getById(id) {
+    readByPOTextileJobOrderId(POTextileJobOrderId, paging) {
+        var _paging = Object.assign({
+            page: 1,
+            size: 20,
+            order: '_id',
+            asc: true
+        }, paging);
+
+        return new Promise((resolve, reject) => {
+            var deleted = {
+                _deleted: false
+            };
+            var POTextileJobOrder = {
+                POTextileJobOrderId: new ObjectId(POTextileJobOrderId)
+            };
+            var query = {
+                '$and': [deleted, module]
+            };
+
+            if (_paging.keyword) {
+                var regex = new RegExp(_paging.keyword, "i");
+                var filterRONo = {
+                    'RONo': {
+                        '$regex': regex
+                    }
+                };
+                var filterPRNo = {
+                    'PRNo': {
+                        '$regex': regex
+                    }
+                };
+                var filterPONo = {
+                    'PONo': {
+                        '$regex': regex
+                    }
+                };
+                var $or = {
+                    '$or': [filterRONo, filterPRNo, filterPONo]
+                };
+
+                query['$and'].push($or);
+            }
+
+
+            this.POTextileJobOrderCollection
+                .where(query)
+                .page(_paging.page, _paging.size)
+                .orderBy(_paging.order, _paging.asc)
+                .execute()
+                .then(POTextileJobOrder => {
+                    resolve(POTextileJobOrder);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    getById(id) {
         return new Promise((resolve, reject) => {
             if (id === '')
                 resolve(null);
@@ -137,12 +148,14 @@ module.exports = class GeneralMerchandiseManager{
         });
     }
 
-    getByCode(code) {
+    getByFKPO(RONo, PRNo, PONo) {
         return new Promise((resolve, reject) => {
             if (code === '')
                 resolve(null);
             var query = {
-                code: code,
+                RONo: RONo,
+                PRNo: PRNo,
+                PONo: PONo,
                 _deleted: false
             };
             this.getSingleByQuery(query)
@@ -172,10 +185,9 @@ module.exports = class GeneralMerchandiseManager{
                 });
         });
     }
-
     getSingleByQuery(query) {
         return new Promise((resolve, reject) => {
-            this.generalMerchandiseCollection
+            this.POTextileJobOrderCollection
                 .single(query)
                 .then(module => {
                     resolve(module);
@@ -186,12 +198,12 @@ module.exports = class GeneralMerchandiseManager{
         })
     }
 
-     getSingleOrDefaultByQuery(query) {
+    getSingleOrDefaultByQuery(query) {
         return new Promise((resolve, reject) => {
-            this.generalMerchandiseCollection
+            this.POTextileJobOrderCollection
                 .singleOrDefault(query)
-                .then(generalMerchandise => {
-                    resolve(generalMerchandise);
+                .then(fabric => {
+                    resolve(fabric);
                 })
                 .catch(e => {
                     reject(e);
@@ -199,11 +211,11 @@ module.exports = class GeneralMerchandiseManager{
         })
     }
 
-     create(generalMerchandise) {
+    create(POTextileJobOrder) {
         return new Promise((resolve, reject) => {
-            this._validate(generalMerchandise)
-                .then(validGeneralMerchandise => {
-                    this.generalMerchandiseCollection.insert(validGeneralMerchandise)
+            this._validate(POTextileJobOrder)
+                .then(validPOTextileJobOrder => {
+                    this.POTextileJobOrderCollection.insert(validPOTextileJobOrder)
                         .then(id => {
                             resolve(id);
                         })
@@ -217,30 +229,11 @@ module.exports = class GeneralMerchandiseManager{
         });
     }
 
-    update(generalMerchandise) {
+    update(POTextileJobOrder) {
         return new Promise((resolve, reject) => {
-            this._validate(generalMerchandise)
-                .then(validGeneralMerchandise => {
-                    this.generalMerchandiseCollection.update(validGeneralMerchandise)
-                        .then(id => {
-                            resolve(id);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    delete(generalMerchandise) {
-        return new Promise((resolve, reject) => {
-            this._validate(generalMerchandise)
-                .then(validGeneralMerchandise => {
-                    validGeneralMerchandise._deleted = true;
-                    this.generalMerchandiseCollection.update(validGeneralMerchandise)
+            this._validate(POTextileJobOrder)
+                .then(validPOTextileJobOrder => {
+                    this.POTextileJobOrderCollection.update(validPOTextileJobOrder)
                         .then(id => {
                             resolve(id);
                         })
@@ -254,37 +247,70 @@ module.exports = class GeneralMerchandiseManager{
         });
     }
 
- _validate(generalMerchandise) {
+    delete(POTextileJobOrder) {
+        return new Promise((resolve, reject) => {
+            this._validate(POTextileJobOrder)
+                .then(validPOTextileJobOrder => {
+                    validPOTextileJobOrder._deleted = true;
+                    this.POTextileJobOrderCollection.update(validPOTextileJobOrder)
+                        .then(id => {
+                            resolve(id);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    _validate(POTextileJobOrder) {
         var errors = {};
         return new Promise((resolve, reject) => {
-            var valid = new GeneralMerchandise(generalMerchandise);
-           
+            var valid = new POTextileJobOrder(POTextileJobOrder);
+
             // 1. begin: Declare promises.
-            var getGeneralMerchandisePromise = this.generalMerchandiseCollection.singleOrDefault({
+            var getPOTextileJobOrderPromise = this.POTextileJobOrderCollection.singleOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
+                        // code: valid.code
                     }]
             });
+
             // 1. end: Declare promises.
 
+            var getByFKPOData = this.getByFKPO(POTextileJobOrder.RONo, POTextileJobOrder.PRNo, POTextileJobOrder.POGarmentSparepart)
             // 2. begin: Validation.
-            Promise.all([getGeneralMerchandisePromise])
-                   .then(results => {
+            Promise.all([getPOTextileJobOrderPromise, getByFKPOData])
+                .then(results => {
                     var _module = results[0];
+                    var _FKPO = results[1];
 
-                    if (!valid.code || valid.code == '')
-                        errors["code"] = "code is required";
-                    else if (_module) {
-                        errors["code"] = "code already exists";
+                    if (!valid.RONo || valid.RONo == '')
+                        errors["RONo"] = "Nomor RO tidak boleh kosong";
+                    if (!valid.PRNo || valid.PRNo == '')
+                        errors["PRNo"] = "Nomor PR tidak boleh kosong";
+                    if (!valid.PONo || valid.PONo == '')
+                        errors["PONo"] = "Nomor PO tidak boleh kosong";
+                    if (!valid.buyerId || valid.buyerId == '')
+                        errors["buyerId"] = "Nama Pembeli tidak boleh kosong";
+                    if (!valid.supplierId || valid.supplierId == '')
+                        errors["supplierId"] = "Nama Penjual tidak boleh kosong";
+                    if (!valid.deliveryDate || valid.deliveryDate == '')
+                        errors["deliveryDate"] = "Tanggal Kirim tidak boleh kosong";
+                    if (!valid.termOfPayment || valid.termOfPayment == '')
+                        errors["termOfPayment"] = "Metode Pembayaran tidak boleh kosong";
+                    if (!valid.deliveryFeeByBuyer || valid.deliveryFeeByBuyer == '')
+                    if (_FKPO) {
+                        errors["code"] = "RO, PR, da already exists";
                     }
 
-                    if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required"; 
-                        
+
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
                         var ValidationError = require('../../validation-error');
@@ -299,4 +325,5 @@ module.exports = class GeneralMerchandiseManager{
                 })
         });
     }
+
 };
