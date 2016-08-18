@@ -81,67 +81,7 @@ module.exports = class POGarmentSparepartManager {
         });
     }
 
-      readByPOGarmentSparepartId(POGarmentSparepartId,paging) {
-        var _paging = Object.assign({
-            page: 1,
-            size: 20,
-            order: '_id',
-            asc: true
-        }, paging);
-
-        return new Promise((resolve, reject) => {
-            var filter = {
-                _deleted: false,
-                  _type: map.po.type.POGarmentSparepart
-            };
-
-            var POGarmentSparepart = {
-                POGarmentSparepartId: new ObjectId(POGarmentSparepartId)
-            };
-            var query = {
-                '$and': [filter, module]
-            };
-
-            if (_paging.keyword) {
-                var regex = new RegExp(_paging.keyword, "i");
-                var filterRONo = {
-                    'RONo': {
-                        '$regex': regex
-                    }
-                };
-                var filterPRNo = {
-                    'PRNo': {
-                        '$regex': regex
-                    }
-                };
-                var filterPONo = {
-                    'PONo': {
-                        '$regex': regex
-                    }
-                };
-                var $or = {
-                    '$or': [filterRONo, filterPRNo, filterPONo]
-                };
-
-                query['$and'].push($or);
-            }
-
-
-            this.purchaseOrderManager.PurchaseOrderCollection
-                .where(query)
-                .page(_paging.page, _paging.size)
-                .orderBy(_paging.order, _paging.asc)
-                .execute()
-                .then(POGarmentSpareparts => {
-                    resolve(POGarmentSpareparts);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getById(id, POtype) {
+    getById(id) {
         return new Promise((resolve, reject) => {
             if (id === '')
                 resolve(null);
@@ -161,7 +101,7 @@ module.exports = class POGarmentSparepartManager {
         });
     }
 
-    getByFKPO(RONo, PRNo, PONo, POtype) {
+    getByFKPO(RONo, PRNo, PONo) {
         return new Promise((resolve, reject) => {
             // if (code === '')
             //     resolve(null);
