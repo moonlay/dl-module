@@ -9,7 +9,7 @@ var map = DLModels.map;
 var UoM = DLModels.core.UoM;
 
 module.exports = class UoMManager {
-    
+
     constructor(db, user) {
         this.db = db;
         this.user = user;
@@ -64,7 +64,7 @@ module.exports = class UoMManager {
                 });
         });
     }
-    
+
     readListCategory(paging) {
         var _paging = Object.assign({
             page: 1,
@@ -101,21 +101,21 @@ module.exports = class UoMManager {
             }
 
             this.UoMCollection
-                .where(query,{users:0})
+                .where(query, { users: 0 })
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
                 .then(UoMs => {
                     var listCategory = [];
-                    
-                    for (var i=0 ; i<UoMs.length;i++) {
+
+                    for (var i = 0; i < UoMs.length; i++) {
                         var category = {};
                         category._id = UoMs[i]._id;
                         category.category = UoMs[i].category;
                         category.default = UoMs[i].default;
                         listCategory.push(category);
                     }
-                    
+
                     resolve(listCategory);
                 })
                 .catch(e => {
@@ -206,35 +206,35 @@ module.exports = class UoMManager {
                     else if (_UoM) {
                         errors["category"] = "category already exists";
                     }
-                    
+
                     if (!valid.default)
                         errors["default"] = "default is required";
-                        else{
-                    
-                    if (!valid.default.mainUnit || valid.default.mainUnit == '')
-                        errors["default"] = "default is required";
                     else {
-                        if (valid.default.mainUnit != valid.default.convertedUnit || valid.default.mainValue != valid.default.convertedValue)
-                            errors["default"] = "main unit and main value must be equal with converted unit and converted value";
+
+                        if (!valid.default.mainUnit || valid.default.mainUnit == '')
+                            errors["default"] = "default is required";
                         else {
-                            if (valid.units.length == 0)
-                                errors["units"] = "units is required";
+                            if (valid.default.mainUnit != valid.default.convertedUnit || valid.default.mainValue != valid.default.convertedValue)
+                                errors["default"] = "main unit and main value must be equal with converted unit and converted value";
                             else {
-                                var i = 1;
-                                for (var item of valid.units) {
-                                    if (item['mainValue'] != valid.default.mainValue || item['mainUnit'] != valid.default.mainUnit) {
-                                        errors["units"] = "main unit and main value in units must be equal with main unit and main value in default";
-                                        break;
-                                    }
-                                    
-                                    if (item['convertedUnit'] == '') {
-                                        errors["units"] = "converted unit is required";
-                                        break;
+                                if (valid.units.length == 0)
+                                    errors["units"] = "units is required";
+                                else {
+                                    var i = 1;
+                                    for (var item of valid.units) {
+                                        if (item['mainValue'] != valid.default.mainValue || item['mainUnit'] != valid.default.mainUnit) {
+                                            errors["units"] = "main unit and main value in units must be equal with main unit and main value in default";
+                                            break;
+                                        }
+
+                                        if (item['convertedUnit'] == '') {
+                                            errors["units"] = "converted unit is required";
+                                            break;
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
                     }
 
                     for (var prop in errors) {

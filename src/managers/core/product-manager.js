@@ -143,19 +143,23 @@ module.exports = class ProductManager {
                     var _module = results[0];
 
                     if (!valid.code || valid.code == '')
-                        errors["code"] = "code is required";
+                        errors["code"] = "Kode tidak boleh kosong.";
                     else if (_module) {
-                        errors["code"] = "code already exists";
+                        errors["code"] = "Kode sudah terdaftar.";
                     }
 
+                    if (!valid.price || valid.price == 0)
+                        errors["price"] = "Harga tidak boleh kosong atau bernilai 0";
+
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required";
+                        errors["name"] = "Nama tidak boleh kosong.";
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
                         var ValidationError = require('../../validation-error');
-                        reject(new ValidationError('data does not pass validation', errors));
+                        reject(new ValidationError('Product Manager : data does not pass validation', errors));
                     }
+                    
                     if (!valid.stamp)
                         valid = new Product(valid);
                     valid.stamp(this.user.username, 'manager');
