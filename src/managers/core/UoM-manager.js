@@ -226,6 +226,7 @@ module.exports = class UoMManager {
                                         errors["units"] = "main unit and main value in units must be equal with main unit and main value in default";
                                         break;
                                     }
+                                    
                                     if (item['convertedUnit'] == '') {
                                         errors["units"] = "converted unit is required";
                                         break;
