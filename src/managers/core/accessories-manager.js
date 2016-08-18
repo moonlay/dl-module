@@ -28,6 +28,10 @@ module.exports = class AccessoriesManager {
             var deleted = {
                 _deleted: false
             };
+            var type = {
+                _type: map.core.type.Accessories
+            };
+
             var query = _paging.keyword ? {
                 '$and': [deleted]
             } : deleted;
@@ -49,6 +53,7 @@ module.exports = class AccessoriesManager {
                 };
 
                 query['$and'].push($or);
+                query['$and'].push(type);
             }
 
 
@@ -278,7 +283,7 @@ module.exports = class AccessoriesManager {
 
                     if (!valid.code || valid.code == '')
                         errors["code"] = "Kode tidak boleh kosong";
-                    else if (_module) 
+                    else if (_module)
                         errors["code"] = "Kode sudah didaftarkan";
                     if (!valid.name || valid.name == '')
                         errors["name"] = "Nama tidak boleh kosong";

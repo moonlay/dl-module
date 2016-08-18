@@ -1,35 +1,32 @@
 'use strict'
 
+// external deps 
 var ObjectId = require("mongodb").ObjectId;
 
-require("mongodb-toolkit");
+// internal deps
+require('mongodb-toolkit');
 var DLModels = require('dl-models');
 var map = DLModels.map;
-var Sparepart = DLModels.core.Sparepart;
+var Product = DLModels.core.Product;
 
-module.exports = class SparepartManager {
+module.exports = class ProductManager {
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.sparepartCollection = this.db.collection(map.core.collection.Product);
+        this.productCollection = this.db.use(map.core.collection.Product);
     }
 
-    read(paging) {
+    readAll(paging) {
         var _paging = Object.assign({
             page: 1,
             size: 20,
             order: '_id',
             asc: true
         }, paging);
-
         return new Promise((resolve, reject) => {
             var deleted = {
                 _deleted: false
             };
-            var type = {
-                _type: map.core.type.Sparepart
-            }
-
             var query = _paging.keyword ? {
                 '$and': [deleted]
             } : deleted;
@@ -51,16 +48,16 @@ module.exports = class SparepartManager {
                 };
 
                 query['$and'].push($or);
-                query['$and'].push(type);
             }
 
-            this.sparepartCollection
+
+            this.productCollection
                 .where(query)
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
-                .then(spareparts => {
-                    resolve(spareparts);
+                .then(products => {
+                    resolve(products);
                 })
                 .catch(e => {
                     reject(e);
@@ -68,12 +65,11 @@ module.exports = class SparepartManager {
         });
     }
 
-    create(sparepart) {
+    create(product) {
         return new Promise((resolve, reject) => {
-            this._validate(sparepart)
-                .then(validSparepart => {
-
-                    this.sparepartCollection.insert(validSparepart)
+            this._validate(product)
+                .then(validProduct => {
+                    this.productCollection.insert(validProduct)
                         .then(id => {
                             resolve(id);
                         })
@@ -87,50 +83,50 @@ module.exports = class SparepartManager {
         });
     }
 
-    update(sparepart) {
+    update(product) {
         return new Promise((resolve, reject) => {
-            this._validate(sparepart)
-                .then(validSparepart => {
-                    this.sparepartCollection.update(validSparepart)
+            this._validate(product)
+                .then(validProduct => {
+                    this.productCollection.update(validProduct)
                         .then(id => {
                             resolve(id);
                         })
                         .catch(e => {
                             reject(e);
-                        })
+                        });
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
 
-    delete(sparepart) {
+    delete(product) {
         return new Promise((resolve, reject) => {
-            this._validate(sparepart)
-                .then(validSparepart => {
-                    validSparepart._deleted = true;
-                    this.sparepartCollection.update(validSparepart)
+            this._validate(product)
+                .then(validProduct => {
+                    validProduct._deleted = true;
+                    this.productCollection.update(validProduct)
                         .then(id => {
                             resolve(id);
                         })
                         .catch(e => {
                             reject(e);
-                        })
+                        });
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
 
-    _validate(sparepart) {
+    _validate(product) {
         var errors = {};
         return new Promise((resolve, reject) => {
-            var valid = sparepart;
+            var valid = product;
 
             // 1. begin: Declare promises.
-            var getSparepartPromise = this.sparepartCollection.singleOrDefault({
+            var getProductPromise = this.productCollection.singleOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
@@ -142,29 +138,26 @@ module.exports = class SparepartManager {
             // 1. end: Declare promises.
 
             // 2. begin: Validation.
-            Promise.all([getSparepartPromise])
+            Promise.all([getProductPromise])
                 .then(results => {
-                    var _sparepart = results[0];
-                    
+                    var _module = results[0];
+
                     if (!valid.code || valid.code == '')
                         errors["code"] = "code is required";
-                    else if (_sparepart) {
+                    else if (_module) {
                         errors["code"] = "code already exists";
                     }
 
                     if (!valid.name || valid.name == '')
                         errors["name"] = "name is required";
 
-                    if (valid.supplierId && !valid.supplierId.length)
-                        errors["supplier"] = "supplier Id does not exists";
-
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
                         var ValidationError = require('../../validation-error');
                         reject(new ValidationError('data does not pass validation', errors));
                     }
-
-                    valid = new Sparepart(sparepart);
+                    if (!valid.stamp)
+                        valid = new Product(valid);
                     valid.stamp(this.user.username, 'manager');
                     resolve(valid);
                 })
@@ -173,66 +166,4 @@ module.exports = class SparepartManager {
                 })
         });
     }
-
-    getById(id) {
-        return new Promise((resolve, reject) => {
-            if (id === '')
-                resolve(null);
-            var query = {
-                _id: new ObjectId(id),
-                _deleted: false
-            };
-            this.getSingleByQuery(query)
-                .then(sparepart => {
-                    resolve(sparepart);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getByIdOrDefault(id) {
-        return new Promise((resolve, reject) => {
-            if (id === '')
-                resolve(null);
-            var query = {
-                _id: new ObjectId(id),
-                _deleted: false
-            };
-            this.getSingleByQueryOrDefault(query)
-                .then(sparepart => {
-                    resolve(sparepart);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getSingleByQuery(query) {
-        return new Promise((resolve, reject) => {
-            this.sparepartCollection
-                .single(query)
-                .then(sparepart => {
-                    resolve(sparepart);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        })
-    }
-
-    getSingleByQueryOrDefault(query) {
-        return new Promise((resolve, reject) => {
-            this.sparepartCollection
-                .singleOrDefault(query)
-                .then(sparepart => {
-                    resolve(sparepart);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        })
-    }
-}
+};

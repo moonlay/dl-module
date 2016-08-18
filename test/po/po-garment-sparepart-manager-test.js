@@ -6,12 +6,12 @@ var POGarmentSparepartManager = require("../../src/managers/po/po-garment-sparep
 var instanceManager = null;
 
 function getData() {
-    var POGarmentSparepart = require('dl-models').po.POGarmentSparePart;
+    var POGarmentSparepart = require('dl-models').po.POGarmentSparepart;
     var Supplier = require('dl-models').core.Supplier;
     var UoM_Template = require('dl-models').core.UoM_Template;
     var UoM = require('dl-models').core.UoM;
-    var SparepartValue = require('dl-models').po.SparepartValue;
-    var Sparepart = require('dl-models').core.Sparepart;
+    var PurchaseOrderItem = require('dl-models').po.PurchaseOrderItem;
+    var Product = require('dl-models').core.Product;
 
     var now = new Date();
     var stamp = now / 1000 | 0;
@@ -28,6 +28,7 @@ function getData() {
     pOGarmentSparepart.PODLNo = '';
     pOGarmentSparepart.description = 'SP1';
     pOGarmentSparepart.supplierID = {};
+    
 
     var supplier = new Supplier({
         code: '123',
@@ -54,28 +55,29 @@ function getData() {
         units: _units
     });
 
-    var sparepart = new Sparepart({
+
+    var product = new Product({
         code: '22',
         name: 'hotline',
+        price: 0,
         description: 'hotline123',
-        UoM: _uom
+        UoM: _uom,
+        detail: {}
     });
 
-    var sparepartValue = new SparepartValue({
+    var productValue = new PurchaseOrderItem({
         qty: 0,
-        unit: '',
         price: 0,
-        sparepart: sparepart
+        product: product
     });
-    var _spareparts = [];
-    _spareparts.push(sparepartValue);
+
+    var _products = [];
+    _products.push(productValue);
 
     pOGarmentSparepart.supplier = supplier;
-    pOGarmentSparepart.items = _spareparts;
+    pOGarmentSparepart.items = _products;
     return pOGarmentSparepart;
 }
-
-//var supplierID = '57b141c85340483fd07d81b9';
 
 before('#00. connect db', function (done) {
     helper.getDb()
@@ -134,6 +136,7 @@ it(`#04. should success when update created data`, function (done) {
     createdData.RONo += '[updated]';
     createdData.PRNo += '[updated]';
     createdData.PONo += '[updated]';
+    createdData.RefPONo += '[updated]';
     createdData.termOfPayment += '[updated]';
     createdData.PODLNo += '[updated]';
     createdData.description += '[updated]';
@@ -154,6 +157,7 @@ it(`#05. should success when get updated data with id`, function (done) {
             data.RONo.should.equal(createdData.RONo);
             data.PRNo.should.equal(createdData.PRNo);
             data.PONo.should.equal(createdData.PONo);
+            data.RefPONo.should.equal(createdData.RefPONo);
             data.termOfPayment.should.equal(createdData.termOfPayment);
             data.PODLNo.should.equal(createdData.PODLNo);
             data.description.should.equal(createdData.description);
@@ -188,34 +192,3 @@ it(`#07. should _deleted=true`, function (done) {
             done(e);
         })
 });
-
-// it('#07. should error when create new data with same code', function (done) {
-//     var data = Object.assign({}, createdData);
-//     delete data._id;
-//     instanceManager.create(data)
-//         .then(id => {
-//             id.should.be.Object();
-//             createdId = id;
-//             done("Should not be able to create data with same code");
-//         })
-//         .catch(e => {
-//             e.errors.should.have.property('code');
-//             done();
-//         })
-// });
-
-// it('#08. should error with property code and name ', function (done) {
-//     instanceManager.create({})
-//         .then(id => {
-//             done("Should not be error with property code and name");
-//         })
-//         .catch(e => {
-//             try {
-//                 e.errors.should.have.property('code');
-//                 e.errors.should.have.property('name');
-//                 done();
-//             } catch (ex) {
-//                 done(ex);
-//             }
-//         })
-// });

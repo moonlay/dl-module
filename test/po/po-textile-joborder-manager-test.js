@@ -2,50 +2,94 @@
 
 var should = require('should');
 var helper = require("../helper");
-var FabricManager = require("../../src/managers/core/fabric-manager");
+var POTextileJobOrderManager = require("../../src/managers/po/po-textile-joborder-manager");
 var instanceManager = null;
 
 function getData() {
-    var Fabric = require('dl-models').core.Fabric;
-    var UoM = require('dl-models').core.UoM;
+    var POTextileJobOrder = require('dl-models').po.POTextileJobOrder;
+    var Supplier = require('dl-models').core.Supplier;
+    var Buyer = require('dl-models').core.Buyer;
     var UoM_Template = require('dl-models').core.UoM_Template;
+    var UoM = require('dl-models').core.UoM;
+    var TextileValue = require('dl-models').po.TextileValue;
+    var Textile = require('dl-models').core.Textile;
 
-    var fabric = new Fabric();
-    var uom_template = new UoM_Template({
-        mainValue: 1,
+    var pOTextileJobOrder = new POTextileJobOrder();
+    pOTextileJobOrder.RONo = '12333';
+    pOTextileJobOrder.PRNo = '12333';
+    pOTextileJobOrder.PONo = '126666';
+    pOTextileJobOrder.ppn = 10;
+    pOTextileJobOrder.deliveryDate = new Date();
+    pOTextileJobOrder.termOfPayment = 'Tempo 2 bulan';
+    pOTextileJobOrder.deliveryFeeByBuyer = true;
+    pOTextileJobOrder.PODLNo = '';
+    pOTextileJobOrder.description = 'SP1';
+    pOTextileJobOrder.supplierID = {};
+    pOTextileJobOrder.buyerID = {};
+
+    var buyer = new Buyer({
+        code: '123',
+        name: 'hot',
+        description: 'hotline',
+        contact: '0812....',
+        address: 'test',
+        tempo:'tempo',
+        local: true
+    });
+    
+    var supplier = new Supplier({
+        code: '123',
+        name: 'hot',
+        description: 'hotline',
+        contact: '0812....',
+        address: 'test',
+        import: true
+    });
+
+    var template = new UoM_Template({
         mainUnit: 'M',
-        convertedValue: 1,
-        convertedUnit: 'M'
-    });
-    var _uom_units = [];
-    _uom_units.push(uom_template);
-
-    var uom = new UoM({
-        category: 'UoM_Unit_Test',
-        default: uom_template,
-        units: _uom_units
+        mainValue: 1,
+        convertedUnit: 'M',
+        convertedValue: 1
     });
 
-    var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var _units = [];
+    _units.push(template);
 
-    fabric.code = code;
-    fabric.name = `name[${code}]`;
-    fabric.price = 500;
-    fabric.description = `desc for ${code}`;
-    fabric.detail.composition = `composition for ${code}`;
-    fabric.detail.construction = `construction for ${code}`;
-    fabric.detail.yarn = `yarn for ${code}`;
-    fabric.detail.width = 5;
-    fabric.UoM = uom;
-    return fabric;
+    var _uom = new UoM({
+        category: 'UoM-Unit-Test',
+        default: template,
+        units: _units
+    });
+
+    var textile = new Textile({
+        code: '22',
+        name: 'hotline',
+        description: 'hotline123',
+        price:0,
+        UoM: _uom
+    });
+
+    var textileValue = new TextileValue({
+        qty: 0,
+        unit: '',
+        price: 0,
+        textile: textile
+    });
+    var _textiles = [];
+    _textiles.push(textileValue);
+
+    pOTextileJobOrder.supplier = supplier;
+    pOTextileJobOrder.buyer=buyer;
+    pOTextileJobOrder.items = _textiles;
+    return pOTextileJobOrder;
 }
+
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            instanceManager = new FabricManager(db, {
+            instanceManager = new POTextileJobOrderManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -96,14 +140,13 @@ it(`#03. should success when get created data with id`, function (done) {
 });
 
 it(`#03. should success when update created data`, function (done) {
-    createdData.code += '[updated]';
-    createdData.name += '[updated]';
+    createdData.RONo += '[updated]';
+    createdData.PRNo += '[updated]';
+    createdData.PONo += '[updated]';
+    createdData.supplierId += '[updated]';
+    createdData.termOfPayment += '[updated]';
+    createdData.PODLNo += '[updated]';
     createdData.description += '[updated]';
-    createdData.price = 10000;
-    createdData.detail.composition += '[updated]';
-    createdData.detail.construction += '[updated]';
-    createdData.detail.yarn += '[updated]';
-    createdData.detail.width = 9999;
 
     instanceManager.update(createdData)
         .then(id => {
@@ -118,20 +161,20 @@ it(`#03. should success when update created data`, function (done) {
 it(`#04. should success when get updated data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
-            data.code.should.equal(createdData.code);
-            data.name.should.equal(createdData.name);
-            data.price.should.equal(createdData.price);
+            data.RONo.should.equal(createdData.RONo);
+            data.PRNo.should.equal(createdData.PRNo);
+            data.PONo.should.equal(createdData.PONo);
+            data.termOfPayment.should.equal(createdData.termOfPayment);
+            data.PODLNo.should.equal(createdData.PODLNo);
             data.description.should.equal(createdData.description);
-            data.detail.composition.should.equal(createdData.detail.composition);
-            data.detail.construction.should.equal(createdData.detail.construction);
-            data.detail.yarn.should.equal(createdData.detail.yarn);
-            data.detail.width.should.equal(createdData.detail.width);
+
             done();
         })
         .catch(e => {
             done(e);
         })
 });
+
 
 it(`#05. should success when delete data`, function (done) {
     instanceManager.delete(createdData)
@@ -156,7 +199,6 @@ it(`#06. should _deleted=true`, function (done) {
             done(e);
         })
 });
-
 
 it('#07. should error when create new data with same code', function (done) {
     var data = Object.assign({}, createdData);
