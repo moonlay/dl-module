@@ -5,6 +5,7 @@ var ObjectId = require("mongodb").ObjectId;
 
 // internal deps
 require('mongodb-toolkit');
+var ProductManager = require("./product-manager");
 var DLModels = require('dl-models');
 var map = DLModels.map;
 var GeneralMerchandise = DLModels.core.GeneralMerchandise;
@@ -13,7 +14,7 @@ module.exports = class GeneralMerchandiseManager {
     constructor(db, user) {
         this.db = db;
         this.user = user;
-        this.generalMerchandiseCollection = this.db.use(map.core.collection.Product);
+        this.productManager = new ProductManager(db, user);
     }
 
     read(paging) {
@@ -32,9 +33,9 @@ module.exports = class GeneralMerchandiseManager {
                 _type: map.core.type.GeneralMerchandise
             }
 
-            var query = _paging.keyword ? {
-                '$and': [deleted]
-            } : deleted;
+            var query = {
+                '$and': [deleted, type]
+            };
 
             if (_paging.keyword) {
                 var regex = new RegExp(_paging.keyword, "i");
@@ -53,11 +54,9 @@ module.exports = class GeneralMerchandiseManager {
                 };
 
                 query['$and'].push($or);
-                query['$and'].push(type);
             }
 
-
-            this.generalMerchandiseCollection
+            this.productManager.productCollection
                 .where(query)
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
@@ -87,7 +86,7 @@ module.exports = class GeneralMerchandiseManager {
                 generalMerchandiseId: new ObjectId(generalMerchandiseId)
             };
             var query = {
-                '$and': [deleted, module]
+                '$and': [deleted, generalMerchandise]
             };
 
             if (_paging.keyword) {
@@ -110,7 +109,7 @@ module.exports = class GeneralMerchandiseManager {
             }
 
 
-            this.generalMerchandiseCollection
+            this.productManager.productCollection
                 .where(query)
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
@@ -130,7 +129,8 @@ module.exports = class GeneralMerchandiseManager {
                 resolve(null);
             var query = {
                 _id: new ObjectId(id),
-                _deleted: false
+                _deleted: false,
+                _type: map.core.type.GeneralMerchandise
             };
             this.getSingleByQuery(query)
                 .then(module => {
@@ -148,7 +148,8 @@ module.exports = class GeneralMerchandiseManager {
                 resolve(null);
             var query = {
                 code: code,
-                _deleted: false
+                _deleted: false,
+                _type: map.core.type.GeneralMerchandise
             };
             this.getSingleByQuery(query)
                 .then(module => {
@@ -166,7 +167,8 @@ module.exports = class GeneralMerchandiseManager {
                 resolve(null);
             var query = {
                 _id: new ObjectId(id),
-                _deleted: false
+                _deleted: false,
+                _type: map.core.type.GeneralMerchandise
             };
             this.getSingleOrDefaultByQuery(query)
                 .then(module => {
@@ -180,7 +182,7 @@ module.exports = class GeneralMerchandiseManager {
 
     getSingleByQuery(query) {
         return new Promise((resolve, reject) => {
-            this.generalMerchandiseCollection
+            this.productManager.productCollection
                 .single(query)
                 .then(module => {
                     resolve(module);
@@ -193,7 +195,7 @@ module.exports = class GeneralMerchandiseManager {
 
     getSingleOrDefaultByQuery(query) {
         return new Promise((resolve, reject) => {
-            this.generalMerchandiseCollection
+            this.productManager.productCollection
                 .singleOrDefault(query)
                 .then(generalMerchandise => {
                     resolve(generalMerchandise);
@@ -205,10 +207,11 @@ module.exports = class GeneralMerchandiseManager {
     }
 
     create(generalMerchandise) {
+        generalMerchandise = new GeneralMerchandise(generalMerchandise);
         return new Promise((resolve, reject) => {
             this._validate(generalMerchandise)
                 .then(validGeneralMerchandise => {
-                    this.generalMerchandiseCollection.insert(validGeneralMerchandise)
+                    this.productManager.create(validGeneralMerchandise)
                         .then(id => {
                             resolve(id);
                         })
@@ -223,10 +226,11 @@ module.exports = class GeneralMerchandiseManager {
     }
 
     update(generalMerchandise) {
+        generalMerchandise = new GeneralMerchandise(generalMerchandise);
         return new Promise((resolve, reject) => {
             this._validate(generalMerchandise)
                 .then(validGeneralMerchandise => {
-                    this.generalMerchandiseCollection.update(validGeneralMerchandise)
+                    this.productManager.update(validGeneralMerchandise)
                         .then(id => {
                             resolve(id);
                         })
@@ -241,11 +245,11 @@ module.exports = class GeneralMerchandiseManager {
     }
 
     delete(generalMerchandise) {
+        generalMerchandise = new GeneralMerchandise(generalMerchandise);
         return new Promise((resolve, reject) => {
             this._validate(generalMerchandise)
                 .then(validGeneralMerchandise => {
-                    validGeneralMerchandise._deleted = true;
-                    this.generalMerchandiseCollection.update(validGeneralMerchandise)
+                    this.productManager.delete(validGeneralMerchandise)
                         .then(id => {
                             resolve(id);
                         })
@@ -264,44 +268,25 @@ module.exports = class GeneralMerchandiseManager {
         return new Promise((resolve, reject) => {
             var valid = new GeneralMerchandise(generalMerchandise);
 
-            // 1. begin: Declare promises.
-            var getGeneralMerchandisePromise = this.generalMerchandiseCollection.singleOrDefault({
-                "$and": [{
-                    _id: {
-                        '$ne': new ObjectId(valid._id)
-                    }
-                }, {
-                        code: valid.code
-                    }]
-            });
-            // 1. end: Declare promises.
+            // Get existing documents if needed.
+            // var getGeneralMerchandisePromise = this.generalMerchandiseCollection.singleOrDefault({
+            //     "$and": [{
+            //         _id: {
+            //             '$ne': new ObjectId(valid._id)
+            //         }
+            //     }, {
+            //             code: valid.code
+            //         }]
+            // });
 
-            // 2. begin: Validation.
-            Promise.all([getGeneralMerchandisePromise])
-                .then(results => {
-                    var _module = results[0];
+            // if (!valid.name || valid.name == '')
+            //     errors["name"] = "name is required";
+            for (var prop in errors) {
+                var ValidationError = require('../../validation-error');
+                reject(new ValidationError('General Merchandise Manager : data does not pass validation', errors));
+            }
+            resolve(valid);
 
-                    if (!valid.code || valid.code == '')
-                        errors["code"] = "code is required";
-                    else if (_module) {
-                        errors["code"] = "code already exists";
-                    }
-
-                    if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required";
-
-                    // 2c. begin: check if data has any error, reject if it has.
-                    for (var prop in errors) {
-                        var ValidationError = require('../../validation-error');
-                        reject(new ValidationError('data does not pass validation', errors));
-                    }
-
-                    valid.stamp(this.user.username, 'manager');
-                    resolve(valid);
-                })
-                .catch(e => {
-                    reject(e);
-                })
         });
     }
 };
