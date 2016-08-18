@@ -7,7 +7,7 @@ var ObjectId = require("mongodb").ObjectId;
 require('mongodb-toolkit');
 var DLModels = require('dl-models');
 var map = DLModels.map;
-var POGarmentSparepart = DLModels.po.POGarmentSparePart;
+var POGarmentSparepart = DLModels.po.POGarmentSparepart;
 
 module.exports = class POGarmentSparepartManager {
     constructor(db, user) {
@@ -65,6 +65,68 @@ module.exports = class POGarmentSparepartManager {
                 .execute()
                 .then(POGarmentSpareparts => {
                     resolve(POGarmentSpareparts);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    readHavePODL(paging) {
+        var _paging = Object.assign({
+            page: 1,
+            size: 20,
+            order: '_id',
+            asc: true
+        }, paging);
+
+        return new Promise((resolve, reject) => {
+            var deleted = {
+                _deleted: false
+            };
+
+            var poDLNotEmpty = {
+                'PODLNo': {
+                    '$ne': ''
+                }
+            };
+
+            var query = {
+                '$and': [deleted, poDLNotEmpty]
+            };
+
+            if (_paging.keyword) {
+                var regex = new RegExp(_paging.keyword, "i");
+                var filterRONo = {
+                    'RONo': {
+                        '$regex': regex
+                    }
+                };
+                var filterRefPONo = {
+                    'RefPONo': {
+                        '$regex': regex
+                    }
+                };
+                var filterPONo = {
+                    'PONo': {
+                        '$regex': regex
+                    }
+                };
+
+                var $or = {
+                    '$or': [filterRONo, filterRefPONo, filterPONo]
+                };
+
+                query['$and'].push($or);
+            }
+
+            this.POGarmentGeneralCollection
+                .where(query)
+                .page(_paging.page, _paging.size)
+                .orderBy(_paging.order, _paging.asc)
+                .execute()
+                .then(POGarmentGenerals => {
+                    resolve(POGarmentGenerals);
                 })
                 .catch(e => {
                     reject(e);
@@ -212,33 +274,9 @@ module.exports = class POGarmentSparepartManager {
         })
     }
 
-    // create(pOGarmentSparepart) {
-    //     return new Promise((resolve, reject) => {
-    //         this._validate(pOGarmentSparepart)
-    //             .then(validPOGarmentSparepart => {
-    //                 var tasks = [this.POGarmentSparepartCollection.insert(validPOGarmentSparepart)];
-    //                 for (var item of validPOGarmentSparepart.items) {
-    //                     tasks.push(this.POGarmentSparepartManager.in(validPOGarmentSparepart.Supplier.Code, item.quantity, item.unit, item.price, item.sparepart, item.remark));
-    //                 }
-
-    //                 Promise.all(tasks)
-    //                     .then(results => {
-    //                         var id = results[0];
-    //                         resolve(id);
-    //                     })
-    //                     .catch(e => {
-    //                         reject(e);
-    //                     })
-    //             })
-    //             .catch(e => {
-    //                 reject(e);
-    //             })
-    //     });
-    // }
-
     create(pOGarmentSparepart) {
         return new Promise((resolve, reject) => {
-            this._validateInsert(pOGarmentSparepart)
+            this._validate(pOGarmentSparepart)
                 .then(validPOGarmentSparepart => {
                     this.POGarmentSparepartCollection.insert(validPOGarmentSparepart)
                         .then(id => {
@@ -291,8 +329,8 @@ module.exports = class POGarmentSparepartManager {
         });
     }
 
-   _validateInsert(pOGarmentSparepart) {
-         var errors = {};
+    _validateInsert(pOGarmentSparepart) {
+        var errors = {};
         return new Promise((resolve, reject) => {
             var valid = new POGarmentSparepart(pOGarmentSparepart);
 
@@ -308,16 +346,14 @@ module.exports = class POGarmentSparepartManager {
             });
 
             // 1. end: Declare promises.
-
             var getByFKPOData = this.getByFKPO(pOGarmentSparepart.RONo, pOGarmentSparepart.PRNo, pOGarmentSparepart.PONo)
-            // var getSupplier = this.SupplierManager.getById(suppierId);
 
             // 2. begin: Validation.
             Promise.all([getPOGarmentSparepartPromise, getByFKPOData])
 
                 .then(results => {
                     var _module = results[0];
-                     var _FKPO = results[1];
+                    var _FKPO = results[1];
 
                     if (!valid.RONo || valid.RONo == '')
                         errors["RONo"] = "Nomor RO tidak boleh kosong";
@@ -339,7 +375,6 @@ module.exports = class POGarmentSparepartManager {
                         errors["code"] = "RO, PR, da already exists";
                     }
 
-
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
                         var ValidationError = require('../../validation-error');
@@ -353,13 +388,14 @@ module.exports = class POGarmentSparepartManager {
                     reject(e);
                 })
         });
-   }
+    }
 
     _validate(pOGarmentSparepart) {
         var errors = {};
         return new Promise((resolve, reject) => {
             var valid = new POGarmentSparepart(pOGarmentSparepart);
 
+            //var valid = pOGarmentSparepart;
             // 1. begin: Declare promises.
             var getPOGarmentSparepartPromise = this.POGarmentSparepartCollection.singleOrDefault({
                 "$and": [{
@@ -370,14 +406,9 @@ module.exports = class POGarmentSparepartManager {
                         // code: valid.code
                     }]
             });
-
             // 1. end: Declare promises.
 
-            // var getByFKPOData = this.getByFKPO(pOGarmentSparepart.RONo, pOGarmentSparepart.PRNo, pOGarmentSparepart.PONo)
-            // var getSupplier = this.SupplierManager.getById(suppierId);
-
             // 2. begin: Validation.
-            // Promise.all([getPOGarmentSparepartPromise, getByFKPOData])
             Promise.all([getPOGarmentSparepartPromise])
                 .then(results => {
                     var _module = results[0];
@@ -389,8 +420,10 @@ module.exports = class POGarmentSparepartManager {
                         errors["PRNo"] = "Nomor PR tidak boleh kosong";
                     if (!valid.PONo || valid.PONo == '')
                         errors["PONo"] = "Nomor PO tidak boleh kosong";
+                    // if (!valid.RefPONo || valid.RefPONo == '')
+                    //     errors["RefPONo"] = "Nomor Referensi No PO tidak boleh kosong";
                     if (!valid.supplierId || valid.supplierId == '')
-                        errors["storageId"] = "Nama Supplier tidak boleh kosong";
+                        errors["supplierId"] = "Nama Supplier tidak boleh kosong";
                     if (!valid.deliveryDate || valid.deliveryDate == '')
                         errors["deliveryDate"] = "Tanggal Kirim tidak boleh kosong";
                     if (!valid.termOfPayment || valid.termOfPayment == '')
@@ -400,7 +433,7 @@ module.exports = class POGarmentSparepartManager {
                     if (!valid.description || valid.description == '')
                         errors["description"] = "Keterangan tidak boleh kosong";
                     if (_module) {
-                        errors["code"] = "RO, PR, da already exists";
+                        errors["code"] = "RO, PR, PO already exists";
                     }
 
 
@@ -409,7 +442,6 @@ module.exports = class POGarmentSparepartManager {
                         var ValidationError = require('../../validation-error');
                         reject(new ValidationError('data does not pass validation', errors));
                     }
-
                     valid.stamp(this.user.username, 'manager');
                     resolve(valid);
                 })
