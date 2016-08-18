@@ -16,7 +16,7 @@ module.exports = class POGarmentGeneralManager {
         this.POGarmentGeneralCollection = this.db.use(map.po.collection.PurchaseOrder);
     }
     
-    read(paging) {
+    read(POType, paging) {
         var _paging = Object.assign({
             page: 1,
             size: 20,
@@ -25,12 +25,13 @@ module.exports = class POGarmentGeneralManager {
         }, paging);
 
         return new Promise((resolve, reject) => {
-            var deleted = {
-                _deleted: false
+            var filter = {
+                _deleted: false, 
+                _type: POType
             };
             var query = _paging.keyword ? {
-                '$and': [deleted]
-            } : deleted;
+                '$and': [filter]
+            } : filter;
 
             if (_paging.keyword) {
                 var regex = new RegExp(_paging.keyword, "i");
@@ -287,9 +288,9 @@ module.exports = class POGarmentGeneralManager {
                         errors["termOfPayment"] = "Pembayaran tidak boleh kosong";
                     if (!valid.deliveryFeeByBuyer || valid.deliveryFeeByBuyer == '')
                         errors["deliveryFeeByBuyer"] = "Pilih salah satu ongkos kirim";
-                    if (_module) {
-                        errors["code"] = "RO, PO already exists";
-                    }
+                    // if (_module) {
+                    //     errors["code"] = "RO, PO already exists";
+                    // }
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {

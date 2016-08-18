@@ -28,7 +28,7 @@ function getData() {
     pOGarmentSparepart.PODLNo = '';
     pOGarmentSparepart.description = 'SP1';
     pOGarmentSparepart.supplierID = {};
-    
+      pOGarmentSparepart.article = "Test Article";
 
     var supplier = new Supplier({
         code: '123',
