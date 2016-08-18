@@ -1,12 +1,11 @@
 var helper = require("../helper");
 var SparepartManager = require("../../src/managers/core/sparepart-manager");
-
 var instanceManager = null;
-var should = require("should");
+var should = require('should');
 
 function getData() {
     var Sparepart = require('dl-models').core.Sparepart;
-    var Supplier = require('dl-models').core.Supplier;
+    var Sparepart = require('dl-models').core.Sparepart;
     var UoM = require('dl-models').core.UoM;
     var UoM_Template = require('dl-models').core.UoM_Template;
 
@@ -17,10 +16,7 @@ function getData() {
         convertedValue: 1,
         convertedUnit: 'M'
     });
-    
-    
     var _uom_units = [];
-    
     _uom_units.push(uom_template);
 
     var uom = new UoM({
@@ -37,11 +33,9 @@ function getData() {
     sparepart.name = `name[${code}]`;
     sparepart.description = `description for ${code}`;
     sparepart.UoM = uom;
-    sparepart.supplierId= "57a07e4c2b059d16dc5864f6";
+    sparepart.price = 0;
 
     return sparepart;
-
-
 }
 
 before('#00. connect db', function (done) {
@@ -97,12 +91,11 @@ it(`#03. should success when get created data with id`, function (done) {
 });
 
 
-it(`#03. should success when update created data`, function (done) {
+it(`#04. should success when update created data`, function (done) {
 
     createdData.code += '[updated]';
     createdData.name += '[updated]';
     createdData.description += '[updated]';
-
     instanceManager.update(createdData)
         .then(id => {
             createdId.toString().should.equal(id.toString());
@@ -113,10 +106,9 @@ it(`#03. should success when update created data`, function (done) {
         });
 });
 
-it(`#04. should success when get updated data with id`, function (done) {
+it(`#05. should success when get updated data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
-            // validate.product(data);
             data.code.should.equal(createdData.code);
             data.name.should.equal(createdData.name);
             data.description.should.equal(createdData.description);
@@ -127,7 +119,7 @@ it(`#04. should success when get updated data with id`, function (done) {
         })
 });
 
-it(`#05. should success when delete data`, function (done) {
+it(`#06. should success when delete data`, function (done) {
     instanceManager.delete(createdData)
         .then(id => {
             createdId.toString().should.equal(id.toString());
@@ -138,10 +130,9 @@ it(`#05. should success when delete data`, function (done) {
         });
 });
 
-it(`#06. should _deleted=true`, function (done) {
+it(`#07. should _deleted=true`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
-            // validate.product(data);
             data._deleted.should.be.Boolean();
             data._deleted.should.equal(true);
             done();
@@ -152,7 +143,7 @@ it(`#06. should _deleted=true`, function (done) {
 });
 
 
-it('#07. should error when create new data with same code', function (done) {
+it('#08. should error when create new data with same code', function (done) {
     var data = Object.assign({}, createdData);
     delete data._id;
     instanceManager.create(data)
@@ -162,12 +153,16 @@ it('#07. should error when create new data with same code', function (done) {
             done("Should not be able to create data with same code");
         })
         .catch(e => {
-            e.errors.should.have.property('code');
-            done();
+            try {
+                e.errors.should.have.property('code');
+                done();
+            } catch (ex) {
+                done(ex);
+            }
         })
 });
 
-it('#08. should error with property code and name ', function (done) {
+it('#09. should error with property code and name ', function (done) {
     instanceManager.create({})
         .then(id => {
             done("Should not be error with property code and name");
