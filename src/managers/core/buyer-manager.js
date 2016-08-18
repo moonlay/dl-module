@@ -4,8 +4,8 @@ var ObjectId= require("mongodb").ObjectId;
 require ("mongodb-toolkit");
 
 var DLModels = require('dl-models');
-var Buyer = DLModels.core.Buyer;
 var map = DLModels.map;
+var Buyer= DLModels.core.Buyer;
 
 module.exports = class BuyerManager {
     constructor(db, user) {

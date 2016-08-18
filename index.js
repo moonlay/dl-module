@@ -12,7 +12,8 @@ module.exports = {
         },
         po: {
             POGarmentSparepart: require('./src/managers/po/po-garment-sparepart-manager'),
-            POTextileJobOrderManager: require('./src/managers/po/po-textile-joborder-manager')
+            POTextileJobOrderManager: require('./src/managers/po/po-textile-joborder-manager'),
+            POGarmentGeneral: require('./src/managers/po/po-garment-general-manager')
         }
     }
 }

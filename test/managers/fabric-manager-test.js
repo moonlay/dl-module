@@ -32,10 +32,12 @@ function getData() {
 
     fabric.code = code;
     fabric.name = `name[${code}]`;
-    fabric.composition = `composition for ${code}`;
-    fabric.construction = `construction for ${code}`;
-    fabric.thread = `thread for ${code}`;
-    fabric.width = 0;
+    fabric.price = 500;
+    fabric.description = `desc for ${code}`;
+    fabric.detail.composition = `composition for ${code}`;
+    fabric.detail.construction = `construction for ${code}`;
+    fabric.detail.yarn = `yarn for ${code}`;
+    fabric.detail.width = 5;
     fabric.UoM = uom;
     return fabric;
 }
@@ -96,9 +98,12 @@ it(`#03. should success when get created data with id`, function (done) {
 it(`#03. should success when update created data`, function (done) {
     createdData.code += '[updated]';
     createdData.name += '[updated]';
-    createdData.composition += '[updated]';
-    createdData.construction += '[updated]';
-    createdData.thread += '[updated]';
+    createdData.description += '[updated]';
+    createdData.price = 10000;
+    createdData.detail.composition += '[updated]';
+    createdData.detail.construction += '[updated]';
+    createdData.detail.yarn += '[updated]';
+    createdData.detail.width = 9999;
 
     instanceManager.update(createdData)
         .then(id => {
@@ -115,9 +120,12 @@ it(`#04. should success when get updated data with id`, function (done) {
         .then(data => {
             data.code.should.equal(createdData.code);
             data.name.should.equal(createdData.name);
-            data.composition.should.equal(createdData.composition);
-            data.construction.should.equal(createdData.construction);
-            data.thread.should.equal(createdData.thread);
+            data.price.should.equal(createdData.price);
+            data.description.should.equal(createdData.description);
+            data.detail.composition.should.equal(createdData.detail.composition);
+            data.detail.construction.should.equal(createdData.detail.construction);
+            data.detail.yarn.should.equal(createdData.detail.yarn);
+            data.detail.width.should.equal(createdData.detail.width);
             done();
         })
         .catch(e => {

@@ -33,6 +33,7 @@ function getData() {
     accessories.code = code;
     accessories.name = `name[${code}]`;
     accessories.description = `description for ${code}`;
+    accessories.price = 2000;
     accessories.UoM = uom;
 
     return accessories;
@@ -95,7 +96,7 @@ it(`#03. should success when update created data`, function (done) {
     createdData.code += '[updated]';
     createdData.name += '[updated]';
     createdData.description += '[updated]';
-
+    createdData.price += 1000;
     instanceManager.update(createdData)
         .then(id => {
             createdId.toString().should.equal(id.toString());
@@ -111,6 +112,7 @@ it(`#04. should success when get updated data with id`, function (done) {
         .then(data => {
             data.code.should.equal(createdData.code);
             data.name.should.equal(createdData.name);
+             data.price.should.equal(createdData.price);
             data.description.should.equal(createdData.description);
             done();
         })

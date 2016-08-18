@@ -52,6 +52,7 @@ module.exports = class TextileManager {
                 };
 
                 query['$and'].push($or);
+                query['$and'].push(type);
             }
 
             this.productManager.productCollection

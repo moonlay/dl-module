@@ -2,11 +2,11 @@
 
 var should = require('should');
 var helper = require("../helper");
-var POGarmentSparepartManager = require("../../src/managers/po/po-garment-sparepart-manager");
+var POGarmentGeneralManager = require("../../src/managers/po/po-garment-general-manager");
 var instanceManager = null;
 
 function getData() {
-    var POGarmentSparepart = require('dl-models').po.POGarmentSparepart;
+    var POGarmentGeneral = require('dl-models').po.POGarmentGeneral;
     var Supplier = require('dl-models').core.Supplier;
     var UoM_Template = require('dl-models').core.UoM_Template;
     var UoM = require('dl-models').core.UoM;
@@ -17,18 +17,17 @@ function getData() {
     var stamp = now / 1000 | 0;
     var code = stamp.toString(36);
 
-    var pOGarmentSparepart = new POGarmentSparepart();
-    pOGarmentSparepart.RONo = '1' + code + stamp;
-    pOGarmentSparepart.PRNo = '2' + code + stamp;
-    pOGarmentSparepart.PONo = '3' + code + stamp;
-    pOGarmentSparepart.ppn = 10;
-    pOGarmentSparepart.deliveryDate = new Date();
-    pOGarmentSparepart.termOfPayment = 'Tempo 2 bulan';
-    pOGarmentSparepart.deliveryFeeByBuyer = true;
-    pOGarmentSparepart.PODLNo = '';
-    pOGarmentSparepart.description = 'SP1';
-    pOGarmentSparepart.supplierID = {};
-    
+    var poGarmentGeneral = new POGarmentGeneral();
+    poGarmentGeneral.RONo = '1' + code + stamp;
+    poGarmentGeneral.RefPONo = '2' + code + stamp;
+    poGarmentGeneral.PONo = '3' + code + stamp;
+    poGarmentGeneral.ppn = 10;
+    poGarmentGeneral.deliveryDate = new Date();
+    poGarmentGeneral.termOfPayment = 'Tempo 2 bulan';
+    poGarmentGeneral.deliveryFeeByBuyer = true;
+    poGarmentGeneral.PODLNo = '';
+    poGarmentGeneral.description = 'SP1';
+    poGarmentGeneral.supplierID = {};
 
     var supplier = new Supplier({
         code: '123',
@@ -39,7 +38,7 @@ function getData() {
         local: true
     });
 
-    var template = new UoM_Template({
+    var template = new UoM_Template ({
         mainUnit: 'M',
         mainValue: 1,
         convertedUnit: 'M',
@@ -49,14 +48,13 @@ function getData() {
     var _units = [];
     _units.push(template);
 
-    var _uom = new UoM({
+    var _uom = new UoM ({
         category: 'UoM-Unit-Test',
         default: template,
         units: _units
     });
 
-
-    var product = new Product({
+    var product = new Product ({
         code: '22',
         name: 'hotline',
         price: 0,
@@ -65,24 +63,24 @@ function getData() {
         detail: {}
     });
 
-    var productValue = new PurchaseOrderItem({
+    var productValue = new PurchaseOrderItem ({
         qty: 0,
         price: 0,
         product: product
     });
-
+    
     var _products = [];
     _products.push(productValue);
 
-    pOGarmentSparepart.supplier = supplier;
-    pOGarmentSparepart.items = _products;
-    return pOGarmentSparepart;
+    poGarmentGeneral.supplier = supplier;
+    poGarmentGeneral.items = _products;
+    return poGarmentGeneral;
 }
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            instanceManager = new POGarmentSparepartManager(db, {
+            instanceManager = new POGarmentGeneralManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -134,9 +132,8 @@ it(`#03. should success when get created data with id`, function (done) {
 
 it(`#04. should success when update created data`, function (done) {
     createdData.RONo += '[updated]';
-    createdData.PRNo += '[updated]';
+    createdData.ReffPONo += '[updated]';
     createdData.PONo += '[updated]';
-    createdData.RefPONo += '[updated]';
     createdData.termOfPayment += '[updated]';
     createdData.PODLNo += '[updated]';
     createdData.description += '[updated]';
@@ -155,9 +152,8 @@ it(`#05. should success when get updated data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             data.RONo.should.equal(createdData.RONo);
-            data.PRNo.should.equal(createdData.PRNo);
-            data.PONo.should.equal(createdData.PONo);
             data.RefPONo.should.equal(createdData.RefPONo);
+            data.PONo.should.equal(createdData.PONo);
             data.termOfPayment.should.equal(createdData.termOfPayment);
             data.PODLNo.should.equal(createdData.PODLNo);
             data.description.should.equal(createdData.description);
