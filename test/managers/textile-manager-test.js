@@ -33,7 +33,7 @@ function getData() {
     textile.name = `name[${code}]`;
     textile.description = `description for ${code}`;
     textile.UoM = uom;
-    textile.price = 0;
+    textile.price = 50;
 
     return textile;
 }

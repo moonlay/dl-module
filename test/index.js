@@ -22,4 +22,6 @@ describe('#dl-module', function (done) {
     //PO
     test('@po/po-garment-sparepart-manager', './po/po-garment-sparepart-manager-test');
     test('@po/po-garment-general-manager', './po/po-garment-general-manager-test');
+    test('@po/purchase-order-group-manager', './po/purchase-order-group-manager-test');
+    
 })

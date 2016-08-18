@@ -33,7 +33,7 @@ function getData() {
     sparepart.name = `name[${code}]`;
     sparepart.description = `description for ${code}`;
     sparepart.UoM = uom;
-    sparepart.price = 0;
+    sparepart.price = 50;
 
     return sparepart;
 }

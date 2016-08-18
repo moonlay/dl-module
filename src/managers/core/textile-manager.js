@@ -31,9 +31,9 @@ module.exports = class TextileManager {
                 _type: map.core.type.Textile
             };
 
-            var query = _paging.keyword ? {
+            var query = {
                 '$and': [deleted, type]
-            } : deleted;
+            };
 
             if (_paging.keyword) {
                 var regex = new RegExp(_paging.keyword, "i");
@@ -52,7 +52,6 @@ module.exports = class TextileManager {
                 };
 
                 query['$and'].push($or);
-                query['$and'].push(type);
             }
 
             this.productManager.productCollection
@@ -136,40 +135,79 @@ module.exports = class TextileManager {
     create(textile) {
         textile = new Textile(textile);
         return new Promise((resolve, reject) => {
-            this.productManager.create(textile)
-                .then(id => {
-                    resolve(id);
-                })
-                .catch(e => {
-                    reject(e);
-                });
+            this._validate(textile).then(validTextile => {
+                this.productManager.create(validTextile)
+                    .then(id => {
+                        resolve(id);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    });
+            }).catch(e => {
+                reject(e);
+            })
         })
-
     }
 
     update(textile) {
         textile = new Textile(textile);
         return new Promise((resolve, reject) => {
-            this.productManager.update(textile)
-                .then(id => {
-                    resolve(id);
-                })
-                .catch(e => {
-                    reject(e);
-                })
+            this._validate(textile).then(validTextile => {
+                this.productManager.update(validTextile)
+                    .then(id => {
+                        resolve(id);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    })
+            }).catch(e => {
+                reject(e);
+            })
         })
     }
 
     delete(textile) {
         textile = new Textile(textile);
         return new Promise((resolve, reject) => {
-            this.productManager.delete(textile)
-                .then(id => {
-                    resolve(id);
-                })
-                .catch(e => {
-                    reject(e);
-                })
+            this._validate(textile).then(validTextile => {
+                this.productManager.delete(validTextile)
+                    .then(id => {
+                        resolve(id);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    })
+            }).catch(e => {
+                reject(e);
+            })
         })
+    }
+
+    _validate(textile) {
+        // Additional validations, specific to this Product only.
+        var errors = {};
+        return new Promise((resolve, reject) => {
+            var valid = new Textile(textile);
+
+            // Get existing documents if needed.
+            // var getFabricPromise = this.fabricCollection.singleOrDefault({
+            //     "$and": [{
+            //         _id: {
+            //             '$ne': new ObjectId(valid._id)
+            //         }
+            //     }, {
+            //             code: valid.code
+            //         }]
+            // });
+
+            // if (!valid.price || valid.price == 0)
+            //     errors["price"] = "Harga tidak boleh kosong dan bernilai 0";
+
+            for (var prop in errors) {
+                var ValidationError = require('../../validation-error');
+                reject(new ValidationError('Textile Manager : data does not pass validation', errors));
+            }
+            resolve(valid);
+        });
     }
 };

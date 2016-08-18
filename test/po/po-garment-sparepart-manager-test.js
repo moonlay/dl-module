@@ -19,8 +19,9 @@ function getData() {
 
     var pOGarmentSparepart = new POGarmentSparepart();
     pOGarmentSparepart.RONo = '1' + code + stamp;
+    pOGarmentSparepart.RefPONo = '2' + code + stamp;
     pOGarmentSparepart.PRNo = '2' + code + stamp;
-    pOGarmentSparepart.PONo = '3' + code + stamp;
+    // pOGarmentSparepart.PONo = '3' + code + stamp;
     pOGarmentSparepart.ppn = 10;
     pOGarmentSparepart.deliveryDate = new Date();
     pOGarmentSparepart.termOfPayment = 'Tempo 2 bulan';
@@ -28,7 +29,7 @@ function getData() {
     pOGarmentSparepart.PODLNo = '';
     pOGarmentSparepart.description = 'SP1';
     pOGarmentSparepart.supplierID = {};
-      pOGarmentSparepart.article = "Test Article";
+    pOGarmentSparepart.article = "Test Article";
 
     var supplier = new Supplier({
         code: '123',

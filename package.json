@@ -18,6 +18,8 @@
   "homepage": "https://github.com/moonlay/dl-module#readme",
   "dependencies": {
     "dl-models": "git+https://github.com/moonlay/dl-models.git",
+    "hashids": "^1.1.0",
+    "moment": "^2.14.1",
     "mongo-factory": "^1.0.0",
     "mongodb": "^2.2.5",
     "mongodb-toolkit": "git+https://github.com/pinkgorilla/mongodb-toolkit.git"

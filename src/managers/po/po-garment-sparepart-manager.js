@@ -10,6 +10,10 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var POGarmentSparepart = DLModels.po.POGarmentSparepart;
 
+var moduleId = 'POGS'
+
+var generateCode = require('../.././utils/code-generator');
+
 module.exports = class POGarmentSparepartManager {
     constructor(db, user) {
         this.db = db;
@@ -171,6 +175,8 @@ module.exports = class POGarmentSparepartManager {
     create(poGarmentSparepart) {
         poGarmentSparepart = new POGarmentSparepart(poGarmentSparepart);
         return new Promise((resolve, reject) => {
+            
+            poGarmentSparepart.PONo = generateCode(moduleId)
             this.purchaseOrderManager.create(poGarmentSparepart)
                 .then(id => {
                     resolve(id);
