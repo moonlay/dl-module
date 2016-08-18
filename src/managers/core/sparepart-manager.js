@@ -26,6 +26,10 @@ module.exports = class SparepartManager {
             var deleted = {
                 _deleted: false
             };
+            var type = {
+                _type: map.core.type.Sparepart
+            }
+
             var query = _paging.keyword ? {
                 '$and': [deleted]
             } : deleted;
@@ -47,6 +51,7 @@ module.exports = class SparepartManager {
                 };
 
                 query['$and'].push($or);
+                query['$and'].push(type);
             }
 
             this.sparepartCollection

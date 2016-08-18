@@ -26,6 +26,10 @@ module.exports = class TextileManager {
             var deleted = {
                 _deleted: false
             };
+            var type = {
+                _type: map.core.type.Textile
+            };
+
             var query = _paging.keyword ? {
                 '$and': [deleted]
             } : deleted;
@@ -47,6 +51,7 @@ module.exports = class TextileManager {
                 };
 
                 query['$and'].push($or);
+                query['$and'].push(type);
             }
 
             this.textileCollection

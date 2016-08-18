@@ -9,14 +9,14 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var GeneralMerchandise = DLModels.core.GeneralMerchandise;
 
-module.exports = class GeneralMerchandiseManager{
-    constructor(db, user){
+module.exports = class GeneralMerchandiseManager {
+    constructor(db, user) {
         this.db = db;
         this.user = user;
         this.generalMerchandiseCollection = this.db.use(map.core.collection.Product);
     }
 
-    read(paging){
+    read(paging) {
         var _paging = Object.assign({
             page: 1,
             size: 20,
@@ -24,10 +24,14 @@ module.exports = class GeneralMerchandiseManager{
             asc: true
         }, paging);
 
-        return new Promise((resolve, reject)=>{
+        return new Promise((resolve, reject) => {
             var deleted = {
-                _deleted : false
+                _deleted: false
             };
+            var type = {
+                _type: map.core.type.GeneralMerchandise
+            }
+
             var query = _paging.keyword ? {
                 '$and': [deleted]
             } : deleted;
@@ -49,6 +53,7 @@ module.exports = class GeneralMerchandiseManager{
                 };
 
                 query['$and'].push($or);
+                query['$and'].push(type);
             }
 
 
@@ -62,7 +67,7 @@ module.exports = class GeneralMerchandiseManager{
                 })
                 .catch(e => {
                     reject(e);
-            });
+                });
         });
     }
 
@@ -119,7 +124,7 @@ module.exports = class GeneralMerchandiseManager{
         });
     }
 
-   getById(id) {
+    getById(id) {
         return new Promise((resolve, reject) => {
             if (id === '')
                 resolve(null);
@@ -186,7 +191,7 @@ module.exports = class GeneralMerchandiseManager{
         })
     }
 
-     getSingleOrDefaultByQuery(query) {
+    getSingleOrDefaultByQuery(query) {
         return new Promise((resolve, reject) => {
             this.generalMerchandiseCollection
                 .singleOrDefault(query)
@@ -199,7 +204,7 @@ module.exports = class GeneralMerchandiseManager{
         })
     }
 
-     create(generalMerchandise) {
+    create(generalMerchandise) {
         return new Promise((resolve, reject) => {
             this._validate(generalMerchandise)
                 .then(validGeneralMerchandise => {
@@ -254,11 +259,11 @@ module.exports = class GeneralMerchandiseManager{
         });
     }
 
- _validate(generalMerchandise) {
+    _validate(generalMerchandise) {
         var errors = {};
         return new Promise((resolve, reject) => {
             var valid = new GeneralMerchandise(generalMerchandise);
-           
+
             // 1. begin: Declare promises.
             var getGeneralMerchandisePromise = this.generalMerchandiseCollection.singleOrDefault({
                 "$and": [{
@@ -273,7 +278,7 @@ module.exports = class GeneralMerchandiseManager{
 
             // 2. begin: Validation.
             Promise.all([getGeneralMerchandisePromise])
-                   .then(results => {
+                .then(results => {
                     var _module = results[0];
 
                     if (!valid.code || valid.code == '')
@@ -283,7 +288,7 @@ module.exports = class GeneralMerchandiseManager{
                     }
 
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required"; 
+                        errors["name"] = "name is required";
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {

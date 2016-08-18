@@ -28,6 +28,10 @@ module.exports = class FabricManager{
             var deleted = {
                 _deleted : false
             };
+            var type = {
+                _type : map.core.type.Fabric
+            };
+
             var query = _paging.keyword ? {
                 '$and': [deleted]
             } : deleted;
@@ -49,6 +53,7 @@ module.exports = class FabricManager{
                 };
 
                 query['$and'].push($or);
+                query['$and'].push(type);
             }
 
 
