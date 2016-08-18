@@ -10,7 +10,7 @@ function getData() {
     var Supplier = require('dl-models').core.Supplier;
     var UoM_Template = require('dl-models').core.UoM_Template;
     var UoM = require('dl-models').core.UoM;
-   var PurchaseOrderItem = require('dl-models').po.PurchaseOrderItem;
+    var PurchaseOrderItem = require('dl-models').po.PurchaseOrderItem;
     var Product = require('dl-models').core.Product;
 
     var now = new Date();
@@ -28,8 +28,9 @@ function getData() {
     pOGarmentSparepart.PODLNo = '';
     pOGarmentSparepart.description = 'SP1';
     pOGarmentSparepart.supplierID = {};
+    
 
-    var supplier = new Supplier ({
+    var supplier = new Supplier({
         code: '123',
         name: 'hot',
         description: 'hotline',
@@ -38,7 +39,7 @@ function getData() {
         local: true
     });
 
-    var template = new UoM_Template ({
+    var template = new UoM_Template({
         mainUnit: 'M',
         mainValue: 1,
         convertedUnit: 'M',
@@ -48,14 +49,14 @@ function getData() {
     var _units = [];
     _units.push(template);
 
-    var _uom = new UoM ({
+    var _uom = new UoM({
         category: 'UoM-Unit-Test',
         default: template,
         units: _units
     });
 
-  
-    var product = new Product ({
+
+    var product = new Product({
         code: '22',
         name: 'hotline',
         price: 0,
@@ -64,7 +65,7 @@ function getData() {
         detail: {}
     });
 
-    var productValue = new PurchaseOrderItem ({
+    var productValue = new PurchaseOrderItem({
         qty: 0,
         price: 0,
         product: product

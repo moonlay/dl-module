@@ -274,9 +274,9 @@ module.exports = class POGarmentSparepartManager {
         })
     }
 
-    create(pOGarmentSparepart) {
+    create(poGarmentSparepart) {
         return new Promise((resolve, reject) => {
-            this._validate(pOGarmentSparepart)
+            this._validate(poGarmentSparepart)
                 .then(validPOGarmentSparepart => {
                     this.POGarmentSparepartCollection.insert(validPOGarmentSparepart)
                         .then(id => {
@@ -390,10 +390,10 @@ module.exports = class POGarmentSparepartManager {
         });
     }
 
-    _validate(pOGarmentSparepart) {
+    _validate(poGarmentSparepart) {
         var errors = {};
         return new Promise((resolve, reject) => {
-            var valid = new POGarmentSparepart(pOGarmentSparepart);
+            var valid = new POGarmentSparepart(poGarmentSparepart);
 
             //var valid = pOGarmentSparepart;
             // 1. begin: Declare promises.
