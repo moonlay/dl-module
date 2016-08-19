@@ -219,6 +219,24 @@ module.exports = class POGarmentSparepartManager {
         })
     }
 
+    getByPONo(poNo) {
+        return new Promise((resolve, reject) => {
+            if (poNo === '')
+                resolve(null);
+            var query = {
+                PONo: poNo,
+                _deleted: false
+            };
+            this.getSingleByQuery(query)
+                .then(module => {
+                    resolve(module);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
     create(poGarmentSparepart) {
         poGarmentSparepart = new POGarmentSparepart(poGarmentSparepart);
         return new Promise((resolve, reject) => {

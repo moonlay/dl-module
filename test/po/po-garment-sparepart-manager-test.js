@@ -20,7 +20,7 @@ function getData() {
     var pOGarmentSparepart = new POGarmentSparepart();
     pOGarmentSparepart.RONo = '1' + code + stamp;
     pOGarmentSparepart.RefPONo = '2' + code + stamp;
-    pOGarmentSparepart.PRNo = '2' + code + stamp;
+    pOGarmentSparepart.PRNo = '3' + code + stamp;
     // pOGarmentSparepart.PONo = '3' + code + stamp;
     pOGarmentSparepart.ppn = 10;
     pOGarmentSparepart.deliveryDate = new Date();
@@ -105,9 +105,20 @@ it('#01. should success when read data', function (done) {
         })
 });
 
+it('#02. should success when read all podl data', function (done) {
+    instanceManager.readAllPurchaseOrderGroup()
+        .then(documents => {
+            //process documents
+            documents.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
 
 var createdId;
-it('#02. should success when create new data', function (done) {
+it('#03. should success when create new data', function (done) {
     var data = getData();
     instanceManager.create(data)
         .then(id => {
@@ -120,8 +131,30 @@ it('#02. should success when create new data', function (done) {
         })
 });
 
+var createdPODLId;
+it('#04. should success when create podl data', function (done) {
+    instanceManager.getSingleByQuery({ _id: createdId })
+        .then(result => {
+            var _poNumbers = []
+            _poNumbers.push(result.PONo)
+            instanceManager.createGroup(_poNumbers)
+                .then(id => {
+                    id.should.be.Object();
+                    createdPODLId = id;
+                    done();
+                })
+                .catch(e => {
+                    done(e);
+                })
+
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
 var createdData;
-it(`#03. should success when get created data with id`, function (done) {
+it(`#05. should success when get created data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             data.should.instanceof(Object);
@@ -133,7 +166,7 @@ it(`#03. should success when get created data with id`, function (done) {
         })
 });
 
-it(`#04. should success when update created data`, function (done) {
+it(`#06. should success when update created data`, function (done) {
     createdData.RONo += '[updated]';
     createdData.PRNo += '[updated]';
     createdData.PONo += '[updated]';
@@ -152,7 +185,7 @@ it(`#04. should success when update created data`, function (done) {
         });
 });
 
-it(`#05. should success when get updated data with id`, function (done) {
+it(`#07. should success when get updated data with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             data.RONo.should.equal(createdData.RONo);
@@ -170,26 +203,26 @@ it(`#05. should success when get updated data with id`, function (done) {
         })
 });
 
-it(`#06. should success when delete data`, function (done) {
-    instanceManager.delete(createdData)
-        .then(id => {
-            createdId.toString().should.equal(id.toString());
-            done();
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+// it(`#08. should success when delete data`, function (done) {
+//     instanceManager.delete(createdData)
+//         .then(id => {
+//             createdId.toString().should.equal(id.toString());
+//             done();
+//         })
+//         .catch(e => {
+//             done(e);
+//         });
+// });
 
-it(`#07. should _deleted=true`, function (done) {
-    instanceManager.getSingleByQuery({ _id: createdId })
-        .then(data => {
-            // validate.product(data);
-            data._deleted.should.be.Boolean();
-            data._deleted.should.equal(true);
-            done();
-        })
-        .catch(e => {
-            done(e);
-        })
-});
+// it(`#09. should _deleted=true`, function (done) {
+//     instanceManager.getSingleByQuery({ _id: createdId })
+//         .then(data => {
+//             // validate.product(data);
+//             data._deleted.should.be.Boolean();
+//             data._deleted.should.equal(true);
+//             done();
+//         })
+//         .catch(e => {
+//             done(e);
+//         })
+// });

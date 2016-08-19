@@ -89,15 +89,9 @@ module.exports = class PurchaseOrderManager {
             Promise.all([getPurchaseOrderPromise])
                 .then(results => {
                     var _module = results[0];
-                    //  var _FKPO = results[1];
-                    if (!valid.RefPONo || valid.RefPONo == '')
-                        errors["RefPONo"] = "Nomor referensi PO tidak boleh kosong";
-                    if (!valid.RONo || valid.RONo == '')
-                        errors["RONo"] = "Nomor RO tidak boleh kosong";
-                    // if (!valid.article || valid.article == '')
-                    //     errors["article"] = "Article tidak boleh kosong";
-                    // if (!valid.PRNo || valid.PRNo == '')
-                    //     errors["PRNo"] = "Nomor PR tidak boleh kosong";
+
+                    if (!valid.PRNo || valid.PRNo == '')
+                        errors["PRNo"] = "Nomor PR tidak boleh kosong";
                     if (!valid.supplierId || valid.supplierId == '')
                         errors["supplierId"] = "Nama Supplier tidak boleh kosong";
                     if (!valid.deliveryDate || valid.deliveryDate == '')
@@ -106,8 +100,6 @@ module.exports = class PurchaseOrderManager {
                         errors["termOfPayment"] = "Pembayaran tidak boleh kosong";
                     if (!valid.deliveryFeeByBuyer || valid.deliveryFeeByBuyer == '')
                         errors["deliveryFeeByBuyer"] = "Pilih salah satu ongkos kirim";
-                    // if (!valid.description || valid.description == '')
-                    //     errors["description"] = "Keterangan tidak boleh kosong";
                     // if (_module) {
                     //     errors["code"] = "RO, PR, PO already exists";
                     // }
