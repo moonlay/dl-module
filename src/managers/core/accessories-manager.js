@@ -268,21 +268,6 @@ module.exports = class AccessoriesManager {
         var errors = {};
         return new Promise((resolve, reject) => {
             var valid = new Accessories(accessories);
-
-            // Get existing documents if needed.
-            // var getAccessoriesPromise = this.accessoriesCollection.singleOrDefault({
-            //     "$and": [{
-            //         _id: {
-            //             '$ne': new ObjectId(valid._id)
-            //         }
-            //     }, {
-            //             code: valid.code
-            //         }]
-            // });
-
-            // if (!valid.price || valid.price == 0)
-            //     errors["price"] = "Harga tidak boleh kosong dan bernilai 0";
-
             for (var prop in errors) {
                 var ValidationError = require('../../validation-error');
                 reject(new ValidationError('Accessories Manager : data does not pass validation', errors));
