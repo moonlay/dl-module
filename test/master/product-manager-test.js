@@ -1,31 +1,36 @@
 var helper = require("../helper");
 var ProductManager = require("../../src/managers/master/product-manager");
+var UomManager = require("../../src/managers/master/uom-manager");
 var instanceManager = null;
+var uomManager = null;
+var validator = require('dl-models').validator.master;
 var should = require('should');
 
 function getData() {
     var Product = require('dl-models').master.Product;
-    var Uom = require('dl-models').master.Uom; 
-
     var now = new Date();
     var stamp = now / 1000 | 0;
     var code = stamp.toString(36);
 
     var product = new Product();
-    
-    var uom = new Uom({
-        unit: `Meter`
-    });
-
     product.code = code;
     product.name = `name[${code}]`;
     product.price = 50;
     product.description = `description for ${code}`;
-    product.uom = uom;
-    product.tags = 'product,master';
+    product.tags = `tags for ${code}`;
     product.properties = [];
 
     return product;
+}
+
+function getDataUom() {
+    var Uom = require('dl-models').master.Uom;
+    var now = new Date();
+    var stamp = now / 1000 | 0;
+    var code = stamp.toString(36);
+    var uom = new Uom();
+    uom.unit= `Satuan [${code}]`;
+    return uom;
 }
 
 before('#00. connect db', function (done) {
@@ -34,6 +39,11 @@ before('#00. connect db', function (done) {
             instanceManager = new ProductManager(db, {
                 username: 'unit-test'
             });
+            
+            uomManager = new UomManager(db, {
+                username: 'unit-test'
+            });
+            
             done();
         })
         .catch(e => {
@@ -41,7 +51,35 @@ before('#00. connect db', function (done) {
         })
 });
 
-it('#01. should success when read data', function (done) {
+var uomId;
+it('#01. should success when create new data uom', function (done) {
+    var data = getDataUom();
+    uomManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            uomId = id;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+var uom;
+it(`#02. should success when get created data uom with id`, function (done) {
+    uomManager.getSingleByQuery({ _id: uomId })
+        .then(data => {
+            validator.uom(data);
+            data.should.instanceof(Object);
+            uom = data;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+it('#03. should success when read data product', function (done) {
     instanceManager.read()
         .then(documents => {
             //process documents
@@ -54,8 +92,10 @@ it('#01. should success when read data', function (done) {
 });
 
 var createdId;
-it('#02. should success when create new data', function (done) {
+it('#04. should success when create new data product', function (done) {
     var data = getData();
+    data.uom=uom;
+    data.uomId=uom._id;
     instanceManager.create(data)
         .then(id => {
             id.should.be.Object();
@@ -68,9 +108,10 @@ it('#02. should success when create new data', function (done) {
 });
 
 var createdData;
-it(`#03. should success when get created data with id`, function (done) {
+it(`#05. should success when get created data product with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
+            validator.product(data);
             data.should.instanceof(Object);
             createdData = data;
             done();
@@ -80,8 +121,7 @@ it(`#03. should success when get created data with id`, function (done) {
         })
 });
 
-
-it(`#04. should success when update created data`, function (done) {
+it(`#06. should success when update created data product`, function (done) {
 
     createdData.code += '[updated]';
     createdData.name += '[updated]';
@@ -96,7 +136,7 @@ it(`#04. should success when update created data`, function (done) {
         });
 });
 
-it(`#05. should success when get updated data with id`, function (done) {
+it(`#07. should success when get updated data product with id`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             data.code.should.equal(createdData.code);
@@ -109,7 +149,7 @@ it(`#05. should success when get updated data with id`, function (done) {
         })
 });
 
-it(`#06. should success when delete data`, function (done) {
+it(`#08. should success when delete data product`, function (done) {
     instanceManager.delete(createdData)
         .then(id => {
             createdId.toString().should.equal(id.toString());
@@ -120,10 +160,10 @@ it(`#06. should success when delete data`, function (done) {
         });
 });
 
-it(`#07. should _deleted=true`, function (done) {
+it(`#09. should _deleted=true`, function (done) {
     instanceManager.getSingleByQuery({ _id: createdId })
         .then(data => {
-            // validate.product(data);
+            validator.product(data);
             data._deleted.should.be.Boolean();
             data._deleted.should.equal(true);
             done();
@@ -133,7 +173,7 @@ it(`#07. should _deleted=true`, function (done) {
         })
 });
 
-it('#08. should error when create new data with same code', function (done) {
+it('#10. should error when create new data with same code', function (done) {
     var data = Object.assign({}, createdData);
     delete data._id;
     instanceManager.create(data)
@@ -148,7 +188,7 @@ it('#08. should error when create new data with same code', function (done) {
         })
 });
 
-it('#09. should error with property code and name ', function (done) {
+it('#11. should error with property code and name ', function (done) {
     instanceManager.create({})
         .then(id => {
             done("Should not be error with property code and name");

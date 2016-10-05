@@ -18,6 +18,7 @@
   "homepage": "https://github.com/danliris/dl-module#readme",
   "dependencies": {
     "assert": "^1.4.1",
+    "dl-i18n": "git+https://github.com/danliris/dl-i18n.git",
     "dl-models": "git+https://github.com/danliris/dl-models.git",
     "hashids": "^1.1.0",
     "moment": "^2.14.1",

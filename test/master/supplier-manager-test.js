@@ -79,7 +79,6 @@ it(`#03. should success when get created data with id`, function (done) {
 
 it(`#03. should success when update created data`, function (done) {
 
-    createdData.code += '[updated]';
     createdData.name += '[updated]';
     createdData.address += '[updated]';
     createdData.contact += '[updated]';
@@ -115,32 +114,8 @@ it(`#04. should success when get updated data with id`, function (done) {
         })
 });
 
-it(`#05. should success when delete data`, function (done) {
-    instanceManager.delete(createdData)
-        .then(id => {
-            createdId.toString().should.equal(id.toString());
-            done();
-        })
-        .catch(e => {
-            done(e);
-        });
-});
 
-it(`#06. should _deleted=true`, function (done) {
-    instanceManager.getSingleByQuery({ _id: createdId })
-        .then(data => {
-            // validate.product(data);
-            data._deleted.should.be.Boolean();
-            data._deleted.should.equal(true);
-            done();
-        })
-        .catch(e => {
-            done(e);
-        })
-});
-
-
-it('#07. should error when create new data with same code', function (done) {
+it('#05. should error when create new data with same code', function (done) {
     var data = Object.assign({}, createdData);
     delete data._id;
     instanceManager.create(data)
@@ -155,7 +130,7 @@ it('#07. should error when create new data with same code', function (done) {
         })
 });
 
-it('#08. should error with property code and name ', function (done) {
+it('#06. should error with property code and name ', function (done) {
     instanceManager.create({})
         .then(id => {
             done("Should not be error with property code and name");
@@ -168,5 +143,29 @@ it('#08. should error with property code and name ', function (done) {
             } catch (ex) {
                 done(ex);
             }
+        })
+});
+
+it(`#07. should success when delete data`, function (done) {
+    instanceManager.delete(createdData)
+        .then(id => {
+            createdId.toString().should.equal(id.toString());
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it(`#08. should _deleted=true`, function (done) {
+    instanceManager.getSingleByQuery({ _id: createdId })
+        .then(data => {
+            // validate.product(data);
+            data._deleted.should.be.Boolean();
+            data._deleted.should.equal(true);
+            done();
+        })
+        .catch(e => {
+            done(e);
         })
 });

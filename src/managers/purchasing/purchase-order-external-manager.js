@@ -146,8 +146,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     if (!valid.currencyRate || valid.currencyRate == 0)
                         purchaseOrderExternalError["currencyRate"] = "Rate tidak boleh kosong";
 
-                    if ((valid.paymentMethod.toUpperCase() != "CASH") && !valid.paymentDueDays || valid.paymentDueDays == '')
-                        purchaseOrderExternalError["paymentDueDays"] = "Tempo Pembayaran tidak boleh kosong";
+                    if (valid.paymentMethod.toUpperCase() != "CASH")
+                        if(!valid.paymentDueDays || valid.paymentDueDays == ''|| valid.paymentDueDays == 0)
+                            purchaseOrderExternalError["paymentDueDays"] = "Tempo Pembayaran tidak boleh kosong";
+                            
+                    // if ((valid.paymentMethod.toUpperCase() != "CASH") && !valid.paymentDueDays || valid.paymentDueDays == '')
+                    //     purchaseOrderExternalError["paymentDueDays"] = "Tempo Pembayaran tidak boleh kosong";
 
                     // if (valid.useVat == undefined || valid.useVat.toString() === '')
                     //     purchaseOrderExternalError["useVat"] = "Pengenaan PPn harus dipilih";

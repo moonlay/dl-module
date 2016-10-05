@@ -220,7 +220,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                                                 totalRealize += poItemFulfillment.deliveredQuantity;
                                                             }
                                                             poItem.realizationQuantity = totalRealize;
-                                                            if(poItem.realizationQuantity == poItem.pricePerDealUnit)
+                                                            if(poItem.realizationQuantity == poItem.dealQuantity)
                                                                 poItem.isClosed=true;
                                                             else
                                                                 poItem.isClosed=false;

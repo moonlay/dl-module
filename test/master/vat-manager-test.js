@@ -1,30 +1,25 @@
-
 var helper = require("../helper");
-var CurrencyManager = require("../../src/managers/master/currency-manager");
+var VatManager = require("../../src/managers/master/vat-manager");
 var instanceManager = null;
-var validator = require('dl-models').validator.currency;
+var validator = require('dl-models').validator.vat;
 
 require("should");
 
 function getData() {
-    var Currency = require('dl-models').master.Currency;
-    var currency = new Currency(); 
-    var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
-    
-    currency.code = code;
-    currency.symbol = `symbol[${code}]`;
-    currency.rate = 1; 
-    currency.description = `description[${code}]`;
-    return currency;
+    var Vat = require('dl-models').master.Vat;
+    var vat = new Vat();
+ 
+    vat.name = "Pasal 22";
+    vat.rate = 1.5; 
+    vat.description = "";
+    return vat;
 }
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            instanceManager = new CurrencyManager(db, {
-                username: 'unit-test'
+            instanceManager = new VatManager(db, {
+                username: 'vat-test'
             });
             done();
         })
