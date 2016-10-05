@@ -146,8 +146,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     if (!valid.currencyRate || valid.currencyRate == 0)
                         purchaseOrderExternalError["currencyRate"] = "Rate tidak boleh kosong";
 
-                    if ((valid.paymentMethod.toUpperCase() != "CASH") && !valid.paymentDueDays || valid.paymentDueDays == '')
-                        purchaseOrderExternalError["paymentDueDays"] = "Tempo Pembayaran tidak boleh kosong";
+                    if (valid.paymentMethod.toUpperCase() != "CASH")
+                        if(!valid.paymentDueDays || valid.paymentDueDays == ''|| valid.paymentDueDays == 0)
+                            purchaseOrderExternalError["paymentDueDays"] = "Tempo Pembayaran tidak boleh kosong";
+                            
+                    // if ((valid.paymentMethod.toUpperCase() != "CASH") && !valid.paymentDueDays || valid.paymentDueDays == '')
+                    //     purchaseOrderExternalError["paymentDueDays"] = "Tempo Pembayaran tidak boleh kosong";
 
                     // if (valid.useVat == undefined || valid.useVat.toString() === '')
                     //     purchaseOrderExternalError["useVat"] = "Pengenaan PPn harus dipilih";
@@ -241,7 +245,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         var _purchaseOrder = result;
                         for (var _purchaseOrderExternal of listPurchaseOrderExternal) {
                             for (var _poExternal of _purchaseOrderExternal.items) {
-                                if (_purchaseOrder._id == _poExternal._id) {
+                                if (_purchaseOrder._id.equals(_poExternal._id)) {
                                     _purchaseOrder.purchaseOrderExternalId = new ObjectId(_purchaseOrderExternal._id);
                                     _purchaseOrder.purchaseOrderExternal = _purchaseOrderExternal;
                                     _purchaseOrder.supplierId = new ObjectId(_purchaseOrderExternal.supplierId);
@@ -258,7 +262,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
 
                                     for (var poItem of _purchaseOrder.items) {
                                         for (var itemExternal of _poExternal.items) {
-                                            if (itemExternal.product._id == poItem.product._id) {
+                                            if (itemExternal.product._id.equals(poItem.product._id)) {
                                                 poItem.dealQuantity = itemExternal.dealQuantity;
                                                 poItem.dealUom = itemExternal.dealUom;
                                                 poItem.pricePerDealUnit = itemExternal.pricePerDealUnit;

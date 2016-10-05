@@ -1,6 +1,7 @@
 var helper = require("../helper");
 var validator = require('dl-models').validator.master;
 var validatorPurchasing = require('dl-models').validator.purchasing;
+var UnitReceiptNoteManager = require("../../src/managers/purchasing/unit-receipt-note-manager");
 var DeliveryOrderManager = require("../../src/managers/purchasing/delivery-order-manager");
 var PurchaseOrderExternalManager = require("../../src/managers/purchasing/purchase-order-external-manager");
 var PurchaseOrderBaseManager = require("../../src/managers/purchasing/purchase-order-manager");
@@ -10,6 +11,7 @@ var ProductManager = require("../../src/managers/master/product-manager");
 var UomManager = require("../../src/managers/master/uom-manager");
 var SupplierManager = require("../../src/managers/master/supplier-manager");
 var CurrencyManager = require("../../src/managers/master/currency-manager");
+var unitReceiptNoteManager = null;
 var deliveryOrderManager = null;
 var purchaseOrderExternalManager = null;
 var purchaseOrderManager = null;
@@ -21,10 +23,24 @@ var supplierManager = null;
 var currencyManager = null;
 var DeliveryOrderItem = require('dl-models').purchasing.DeliveryOrderItem;
 var DeliveryOrderItemFulfillment = require('dl-models').purchasing.DeliveryOrderItemFulfillment;
+var UnitReceiptNoteItem = require('dl-models').purchasing.UnitReceiptNoteItem;
 
 require("should");
+function getDataUnitReceiptNote() {
+    var UnitReceiptNote = require('dl-models').purchasing.UnitReceiptNote;
 
-function getData() {
+    var now = new Date();
+    var stamp = now / 1000 | 0;
+    var code = stamp.toString(36);
+    
+    var unitReceiptNote = new UnitReceiptNote();
+    unitReceiptNote.no = code;
+    unitReceiptNote.date = now;
+    unitReceiptNote.remark = `remark ${code}`;
+    return unitReceiptNote;
+}
+
+function getDataDeliveryOrder() {
     var DeliveryOrder = require('dl-models').purchasing.DeliveryOrder;
 
     var now = new Date();
@@ -188,6 +204,10 @@ function getDataCurrency() {
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
+            unitReceiptNoteManager = new UnitReceiptNoteManager(db, {
+                username: 'unit-test'
+            });
+            
             deliveryOrderManager = new DeliveryOrderManager(db, {
                 username: 'unit-test'
             });
@@ -496,20 +516,8 @@ it(`#17. should success when post`, function (done) {
         })
 });
 
-it('#18. should success when read data', function (done) {
-    deliveryOrderManager.read()
-        .then(documents => {
-            //process documents
-            documents.should.be.instanceof(Array);
-            done();
-        })
-        .catch(e => {
-            done(e);
-        })
-});
-
-var createdId;
-it('#19. should success when create new data', function (done) {
+var deliveryOrderId;
+it('#18. should success when create new data delivery Order', function (done) {
     var doItemFulfillment  = new DeliveryOrderItemFulfillment();
     doItemFulfillment.purchaseOrderId = purchaseOrder._id;
     doItemFulfillment.purchaseOrder = purchaseOrder;
@@ -525,13 +533,84 @@ it('#19. should success when create new data', function (done) {
     doItem.fulfillments=[];
     doItem.fulfillments.push(doItemFulfillment);
     
-    var data = getData();
+    var data = getDataDeliveryOrder();
     data.supplier=supplier;
     data.supplierId=supplier._id;
     data.items=[];
     data.items.push(doItem);
     
     deliveryOrderManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            deliveryOrderId = id;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+var deliveryOrder;
+it(`#19. should success when get created data delivery Order with id`, function (done) {
+    deliveryOrderManager.getSingleByQuery({ _id: deliveryOrderId })
+        .then(data => {
+            // validate.product(data);
+            data.should.instanceof(Object);
+            deliveryOrder = data;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+it(`#20. should success when post`, function (done) {
+    var listPurchaseOrderExternal = [];
+    listPurchaseOrderExternal.push(purchaseOrderExternal);
+    purchaseOrderExternalManager.post(listPurchaseOrderExternal)
+        .then(data => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+it('#21. should success when read data', function (done) {
+    unitReceiptNoteManager.read()
+        .then(documents => {
+            //process documents
+            documents.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+var createdId;
+it('#22. should success when create new data', function (done) {
+    var unitReceiptNoteItem = new UnitReceiptNoteItem();
+    for (var doItem of deliveryOrder.items)
+    {
+        for(var doItemFulfillment of doItem.fulfillments)
+        {
+            unitReceiptNoteItem.product = doItemFulfillment.product;
+            unitReceiptNoteItem.deliveredQuantity = doItemFulfillment.deliveredQuantity;
+            unitReceiptNoteItem.deliveredUom = doItemFulfillment.purchaseOrderUom;
+        }
+    }
+    var data = getDataUnitReceiptNote();
+    data.unit=unit;
+    data.unitId=unit._id;
+    data.supplier=supplier;
+    data.supplierId=supplier._id;
+    data.deliveryOrder=deliveryOrder;
+    data.deliveryOrderId=deliveryOrder._id;
+    data.items=[];
+    data.items.push(unitReceiptNoteItem);
+    
+    unitReceiptNoteManager.create(data)
         .then(id => {
             id.should.be.Object();
             createdId = id;
@@ -543,10 +622,10 @@ it('#19. should success when create new data', function (done) {
 });
 
 var createdData;
-it(`#20. should success when get created data with id`, function (done) {
-    deliveryOrderManager.getSingleByQuery({ _id: createdId })
+it(`#23. should success when get created data with id`, function (done) {
+    unitReceiptNoteManager.getSingleByQuery({ _id: createdId })
         .then(data => {
-            // validate.product(data);
+            validatorPurchasing.unitReceiptNote(data);
             data.should.instanceof(Object);
             createdData = data;
             done();
@@ -556,10 +635,10 @@ it(`#20. should success when get created data with id`, function (done) {
         })
 });
 
-it(`#21. should success when update created data`, function (done) {
+it(`#24. should success when update created data`, function (done) {
     createdData.remark += '[updated]';
 
-    deliveryOrderManager.update(createdData)
+    unitReceiptNoteManager.update(createdData)
         .then(id => {
             createdId.toString().should.equal(id.toString());
             done();
@@ -569,8 +648,8 @@ it(`#21. should success when update created data`, function (done) {
         });
 });
 
-it(`#22. should success when get updated data with id`, function (done) {
-    deliveryOrderManager.getSingleByQuery({ _id: createdId })
+it(`#25. should success when get updated data with id`, function (done) {
+    unitReceiptNoteManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             data.no.should.equal(createdData.no); 
             createdData = data;
@@ -581,8 +660,8 @@ it(`#22. should success when get updated data with id`, function (done) {
         })
 });
 
-it(`#23. should success when posting created data`, function (done) {
-    deliveryOrderManager.post(createdData)
+it(`#26. should success when delete data`, function (done) {
+    unitReceiptNoteManager.delete(createdData)
         .then(id => {
             createdId.toString().should.equal(id.toString());
             done();
@@ -592,40 +671,16 @@ it(`#23. should success when posting created data`, function (done) {
         });
 });
 
-it(`#24. should isPosted=true`, function (done) {
-    deliveryOrderManager.getSingleByQuery({ _id: createdId })
-        .then(data => {
-            data.isPosted.should.be.Boolean();
-            data.isPosted.should.equal(true);
-            createdData = data;
-            done();
-        })
-        .catch(e => {
-            done(e);
-        })
-});
-
-it(`#25. should success when delete data`, function (done) {
-    deliveryOrderManager.delete(createdData)
-        .then(id => {
-            createdId.toString().should.equal(id.toString());
-            done();
-        })
-        .catch(e => {
-            done(e);
-        });
-});
-
-it('#26. should error when create new data with same code', function (done) {
-    var data = Object.assign({}, createdData);
-    delete data._id;
-    deliveryOrderManager.create(data)
-        .then(id => {
-            id.should.be.Object(); 
-            done();
-        })
-        .catch(e => {
-            e.errors.should.have.property('no');
-            done();
-        })
-});
+// it('#27. should error when create new data with same code', function (done) {
+//     var data = Object.assign({}, createdData);
+//     delete data._id;
+//     unitReceiptNoteManager.create(data)
+//         .then(id => {
+//             id.should.be.Object(); 
+//             done();
+//         })
+//         .catch(e => {
+//             e.errors.should.have.property('no');
+//             done();
+//         })
+// });
