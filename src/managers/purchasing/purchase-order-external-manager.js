@@ -24,8 +24,11 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
     _getQuery(paging) {
         var filter = {
             _deleted: false,
-            _createdBy:this.user.username
+            _createdBy: this.user.username
         };
+
+        if (paging.filter)
+            Object.assign(filter, paging.filter);
 
         var query = paging.keyword ? {
             '$and': [filter]
@@ -111,43 +114,52 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         });
     }
 
-    update(purchaseOrderExternal) {
+    delete(purchaseOrderExternal) {
         return new Promise((resolve, reject) => {
-            this._validate(data)
-                .then(validData => {
-                    this.collection.update(validData)
-                        .then(id => {
-                            var tasks = [];
-                            var getPOItemById = [];
-                            for (var data of validPurchaseOrderExternal.items) {
-                                getPOItemById.push(this.purchaseOrderManager.getSingleById(data._id));
-                            }
-                            Promise.all(getPOItemById)
-                                .then(results => {
-                                    for (var result of results) {
-                                        var poItem = result;
-                                        poItem.isPosted = false;
-                                        tasks.push(this.purchaseOrderManager.update(poItem));
+            this._createIndexes()
+                .then((createIndexResults) => {
+                    this._validate(purchaseOrderExternal)
+                        .then(validData => {
+                            validData._deleted = true;
+                            this.collection.update(validData)
+                                .then(id => {
+                                    var tasks = [];
+                                    var getPOItemById = [];
+                                    for (var data of validData.items) {
+                                        getPOItemById.push(this.purchaseOrderManager.getSingleById(data._id));
                                     }
-                                    Promise.all(tasks)
+                                    Promise.all(getPOItemById)
                                         .then(results => {
-                                            resolve(id);
+                                            for (var result of results) {
+                                                var poItem = result;
+                                                poItem.isPosted = false;
+                                                tasks.push(this.purchaseOrderManager.update(poItem));
+
+                                            }
+                                            Promise.all(tasks)
+                                                .then(results => {
+                                                    resolve(id);
+                                                })
+                                                .catch(e => {
+                                                    reject(e);
+                                                })
                                         })
                                         .catch(e => {
                                             reject(e);
                                         })
+
                                 })
                                 .catch(e => {
                                     reject(e);
-                                })
+                                });
                         })
                         .catch(e => {
                             reject(e);
-                        })
+                        });
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
 
@@ -162,8 +174,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                    "refNo": valid.refNo
-                }]
+                        "refNo": valid.refNo
+                    }]
             });
 
             Promise.all([getPurchaseOrderPromise])
@@ -193,14 +205,14 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         if (!valid.paymentDueDays || valid.paymentDueDays == '' || valid.paymentDueDays == 0)
                             purchaseOrderExternalError["paymentDueDays"] = i18n.__("PurchaseOrderExternal.paymentDueDays.isRequired:%s is required", i18n.__("PurchaseOrderExternal.paymentDueDays._:PaymentDueDays")); //"Tempo Pembayaran tidak boleh kosong";
 
-                        // if ((valid.paymentMethod.toUpperCase() != "CASH") && !valid.paymentDueDays || valid.paymentDueDays == '')
-                        //     purchaseOrderExternalError["paymentDueDays"] = "Tempo Pembayaran tidak boleh kosong";
+                    // if ((valid.paymentMethod.toUpperCase() != "CASH") && !valid.paymentDueDays || valid.paymentDueDays == '')
+                    //     purchaseOrderExternalError["paymentDueDays"] = "Tempo Pembayaran tidak boleh kosong";
 
-                        // if (valid.useVat == undefined || valid.useVat.toString() === '')
-                        //     purchaseOrderExternalError["useVat"] = "Pengenaan PPn harus dipilih";
+                    // if (valid.useVat == undefined || valid.useVat.toString() === '')
+                    //     purchaseOrderExternalError["useVat"] = "Pengenaan PPn harus dipilih";
 
-                        // if (valid.useIncomeTax == undefined || valid.useIncomeTax.toString() === '')
-                        //     purchaseOrderExternalError["useIncomeTax"] = "Pengenaan PPh harus dipilih";
+                    // if (valid.useIncomeTax == undefined || valid.useIncomeTax.toString() === '')
+                    //     purchaseOrderExternalError["useIncomeTax"] = "Pengenaan PPh harus dipilih";
 
                     if (valid.items && valid.items.length < 1)
                         purchaseOrderExternalError["items"] = i18n.__("PurchaseOrderExternal.items.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items._:Items")); //"Harus ada minimal 1 po internal";
@@ -231,17 +243,14 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     poItemHasError = true;
                                     poItemError["pricePerDealUnit"] = i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit._:PricePerDealUnit")); //"Harga tidak boleh kosong";
                                 }
-                                var price =(poItem.pricePerDealUnit.toString()).split(",");
-                                if (price[1]!=undefined || price[1]!="" || price[1]!=" " )
-                                {
-                                    poItem.pricePerDealUnit=parseFloat(poItem.pricePerDealUnit.toString()+".00");
-                                }else if (price[1].length()>2)
-                                {
+                                var price = (poItem.pricePerDealUnit.toString()).split(",");
+                                if (price[1] != undefined || price[1] != "" || price[1] != " ") {
+                                    poItem.pricePerDealUnit = parseFloat(poItem.pricePerDealUnit.toString() + ".00");
+                                } else if (price[1].length() > 2) {
                                     poItemHasError = true;
                                     poItemError["pricePerDealUnit"] = i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit.isRequired:%s is greater than 2", i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit._:PricePerDealUnit")); //"Harga tidak boleh kosong";
-                                }else
-                                {
-                                    poItem.pricePerDealUnit=poItem.pricePerDealUnit;
+                                } else {
+                                    poItem.pricePerDealUnit = poItem.pricePerDealUnit;
                                 }
 
                                 if (!poItem.conversion || poItem.conversion == '') {
@@ -305,7 +314,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             poItem.product._id = new ObjectId(poItem.product._id);
                             poItem.product.uom._id = new ObjectId(poItem.product.uom._id);
                             poItem.defaultUom._id = new ObjectId(poItem.defaultUom._id);
-                            poItem.dealUom._id = new ObjectId(poItem.dealUom._id); 
+                            poItem.dealUom._id = new ObjectId(poItem.dealUom._id);
                         }
                     }
                     if (!valid.stamp)
@@ -418,88 +427,6 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         }
         var no = `${code}/DL-${unit}/PO-${initial}/${month}/${year}`;
         return no;
-    }
-
-    _getQueryPosted(_paging) {
-        var supplierId = _paging.filter.supplierId;
-
-        var filter = {
-            _deleted: false,
-            isPosted: true,
-            isClosed: false,
-            supplierId: new ObjectId(supplierId)
-        };
-
-        var query = _paging.keyword ? {
-            '$and': [filter]
-        } : filter;
-
-        if (_paging.keyword) {
-            var regex = new RegExp(_paging.keyword, "i");
-
-            var filterPOItem = {
-                items: {
-                    $elemMatch: {
-                        no: {
-                            '$regex': regex
-                        }
-                    }
-                }
-            };
-
-            var filterPODLNo = {
-                'no': {
-                    '$regex': regex
-                }
-            };
-
-            var filterRefPO = {
-                "refNo": {
-                    '$regex': regex
-                }
-            };
-            var filterPOItem = {
-                items: {
-                    $elemMatch: {
-                        no: {
-                            '$regex': regex
-                        }
-                    }
-                }
-            };
-
-            var $or = {
-                '$or': [filterPODLNo, filterRefPO, filterPOItem]
-            };
-
-            query['$and'].push($or);
-        }
-
-        return query;
-    }
-
-    readPosted(paging) {
-        var _paging = Object.assign({
-            page: 1,
-            size: 20,
-            order: '_id',
-            asc: true
-        }, paging);
-        return new Promise((resolve, reject) => {
-            var query = this._getQueryPosted(_paging);
-
-            this.collection
-                .where(query)
-                .page(_paging.page, _paging.size)
-                .order(_paging.order) 
-                .execute()
-                .then(PurchaseOrders => {
-                    resolve(PurchaseOrders);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
     }
 
     pdf(id) {
