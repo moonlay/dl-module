@@ -150,6 +150,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         var filter = {
             _deleted: false
         };
+        
+        if(paging.filter)
+            Object.assign(filter,paging.filter);
 
         var query = paging.keyword ? {
             '$and': [filter]
