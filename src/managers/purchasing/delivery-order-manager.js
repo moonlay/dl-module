@@ -25,16 +25,12 @@ module.exports = class DeliveryOrderManager extends BaseManager {
     }
 
     _getQuery(paging) {
-        var filter = {
+        var deletedFilter = {
             _deleted: false
-        };
-        
-        if(paging.filter)
-            Object.assign(filter,paging.filter);
-            
-        var query = paging.keyword ? {
-            '$and': [filter]
-        } : filter;
+        }, keywordFilter = {};
+
+
+        var query = {};
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
@@ -62,12 +58,12 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     }
                 }
             };
-            var $or = {
+            keywordFilter = {
                 '$or': [filteNO, filterNRefNo, filterSupplierName, filterItem]
             };
-
-            query['$and'].push($or);
         }
+
+        query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
         return query;
     }
 
@@ -208,7 +204,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                 poItem.product.uom._id = new ObjectId(poItem.product.uom._id);
                                 poItem.defaultUom._id = new ObjectId(poItem.defaultUom._id);
                                 poItem.dealUom._id = new ObjectId(poItem.dealUom._id);
-                            } 
+                            }
                         }
 
                         for (var fulfillment of item.fulfillments) {
@@ -224,22 +220,20 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     }
                     if (!valid.stamp)
                         valid = new DeliveryOrder(valid);
-                    
+
                     valid.supplierId = new ObjectId(valid.supplierId);
                     valid.supplier._id = new ObjectId(valid.supplier._id);
-                    for (var doItem of valid.items)
-                    {
+                    for (var doItem of valid.items) {
                         doItem.purchaseOrderExternalId = new ObjectId(doItem.purchaseOrderExternalId);
                         doItem.purchaseOrderExternal._id = new ObjectId(doItem.purchaseOrderExternal._id);
-                        for(var fulfillment of doItem.fulfillments)
-                        {
+                        for (var fulfillment of doItem.fulfillments) {
                             fulfillment.purchaseOrderId = new ObjectId(fulfillment.purchaseOrderId);
                             fulfillment.purchaseOrder._id = new ObjectId(fulfillment.purchaseOrder._id);
                             fulfillment.productId = new ObjectId(fulfillment.productId);
                             fulfillment.product._id = new ObjectId(fulfillment.product._id);
                         }
                     }
-                    
+
                     valid.stamp(this.user.username, 'manager');
                     resolve(valid);
                 })

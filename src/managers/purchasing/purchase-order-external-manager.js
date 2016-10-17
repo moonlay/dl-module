@@ -22,18 +22,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
     }
 
     _getQuery(paging) {
-        var filter = {
+        var deletedFilter = {
             _deleted: false,
             _createdBy: this.user.username
-        };
+        }, keywordFilter = {};
 
-        if (paging.filter)
-            Object.assign(filter, paging.filter);
-
-        var query = paging.keyword ? {
-            '$and': [filter]
-        } : filter;
-
+        var query = {};
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
 
@@ -62,12 +56,11 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 }
             };
 
-            var $or = {
+            keywordFilter = {
                 '$or': [filterPODLNo, filterRefPO, filterPOItem, filterSupplierName]
             };
-
-            query['$and'].push($or);
         }
+        query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
         return query;
     }
 

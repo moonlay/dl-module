@@ -156,18 +156,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
     _getQuery(paging) {
-        var filter = {
+        var deletedFilter = {
             _deleted: false,
             _createdBy:this.user.username
-        };
+        }, keywordFilter = {};
 
-        if(paging.filter)
-            Object.assign(filter,paging.filter);
-            
-        var query = paging.keyword ? {
-            '$and': [filter]
-        } : filter;
-
+        var query = {};
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
 
@@ -215,9 +209,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             var $or = {
                 '$or': [filterRefPONo, filterRefPOEksternal, filterPONo, filterUnitDivision, filterUnitSubDivision, filterCategory, filterBuyerName]
             };
-
-            query['$and'].push($or);
         }
+        query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
         return query;
     }
 
