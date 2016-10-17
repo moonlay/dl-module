@@ -185,7 +185,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 }
             };
 
-            var $or = {
+            keywordFilter = {
                 '$or': [filterNo, filterSupplierName, filterUnitDivision, filterUnitSubDivision, filterDeliveryOrder]
             };
         }
