@@ -46,3 +46,19 @@ it('#01. should success when create new data', function (done) {
             done(e);
         })
 });
+
+it('#02. should error when create new data', function (done) {
+    var data = {};
+    instanceManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch(e => {
+            e.errors.should.have.property('code');
+            e.errors.should.have.property('symbol');
+            e.errors.should.have.property('rate');
+            done();
+        })
+});

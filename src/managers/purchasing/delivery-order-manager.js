@@ -163,11 +163,54 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     }
 
                     valid.supplierId = new ObjectId(valid.supplierId);
+                    valid.supplier._id = new ObjectId(valid.supplier._id);
                     for (var item of valid.items) {
                         item.purchaseOrderExternalId = new ObjectId(item.purchaseOrderExternalId);
+                        item.purchaseOrderExternal._id = new ObjectId(item.purchaseOrderExternal._id);
+                        item.purchaseOrderExternal.supplier._id = new ObjectId(item.purchaseOrderExternal.supplier._id);
+                        item.purchaseOrderExternal.currency._id = new ObjectId(item.purchaseOrderExternal.currency._id);
+                        if (item.purchaseOrderExternal.vat) {
+                            item.purchaseOrderExternal.vat._id = new ObjectId(item.purchaseOrderExternal.vat._id);
+                        }
+                        for (var exItem of item.purchaseOrderExternal.items) {
+                            exItem.purchaseRequest.unit._id = new ObjectId(exItem.purchaseRequest.unit._id);
+                            exItem.purchaseRequest.category._id = new ObjectId(exItem.purchaseRequest.category._id);
+                            exItem.purchaseRequest.unitId = new ObjectId(exItem.purchaseRequest.unitId);
+                            exItem.purchaseRequest.categoryId = new ObjectId(exItem.purchaseRequest.categoryId);
+                            if (exItem.sourcePurchaseOrder) {
+                                exItem.sourcePurchaseOrder._id = new ObjectId(exItem.sourcePurchaseOrder._id);
+                                exItem.sourcePurchaseOrder.purchaseRequest.unit._id = new ObjectId(exItem.sourcePurchaseOrder.purchaseRequest.unit._id);
+                                exItem.sourcePurchaseOrder.purchaseRequest.category._id = new ObjectId(exItem.sourcePurchaseOrder.purchaseRequest.category._id);
+                                exItem.sourcePurchaseOrder.purchaseRequest.unitId = new ObjectId(exItem.sourcePurchaseOrder.purchaseRequest.unitId);
+                                exItem.sourcePurchaseOrder.purchaseRequest.categoryId = new ObjectId(exItem.sourcePurchaseOrder.purchaseRequest.categoryId);
+                                exItem.sourcePurchaseOrder.unit._id = new ObjectId(exItem.sourcePurchaseOrder.unit._id);
+                                exItem.sourcePurchaseOrder.category._id = new ObjectId(exItem.sourcePurchaseOrder.category._id);
+                                exItem.sourcePurchaseOrder.unitId = new ObjectId(exItem.sourcePurchaseOrder.unitId);
+                                exItem.sourcePurchaseOrder.categoryId = new ObjectId(exItem.sourcePurchaseOrder.categoryId);
+
+                                for (var soItem of exItem.sourcePurchaseOrder.items) {
+                                    soItem.product._id = new ObjectId(soItem.product._id);
+                                    soItem.product.uom._id = new ObjectId(soItem.product.uom._id);
+                                    soItem.defaultUom._id = new ObjectId(soItem.defaultUom._id);
+                                }
+                            }
+                            exItem.unitId = new ObjectId(exItem.unitId);
+                            exItem.unit._id = new ObjectId(exItem.unit._id);
+                            exItem.categoryId = new ObjectId(exItem.categoryId);
+                            exItem.category._id = new ObjectId(exItem.category._id);
+                            for (var poItem of exItem.items) {
+                                poItem.product._id = new ObjectId(poItem.product._id);
+                                poItem.product.uom._id = new ObjectId(poItem.product.uom._id);
+                                poItem.defaultUom._id = new ObjectId(poItem.defaultUom._id);
+                                poItem.dealUom._id = new ObjectId(poItem.dealUom._id);
+                            } 
+                        }
+
                         for (var fulfillment of item.fulfillments) {
                             fulfillment.purchaseOrderId = new ObjectId(fulfillment.purchaseOrderId);
+                            fulfillment.purchaseOrder._id = new ObjectId(fulfillment.purchaseOrder._id);
                             fulfillment.productId = new ObjectId(fulfillment.productId);
+                            fulfillment.product._id = new ObjectId(fulfillment.product._id);
                         }
                     }
                     if (!valid.stamp)

@@ -329,8 +329,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             this.collection
                 .where(query)
                 .execute()
-                .then(unitReceiptNote => {
-                    resolve(unitReceiptNote);
+                .then(result => {
+                    resolve(result.data);
                 })
                 .catch(e => {
                     reject(e);

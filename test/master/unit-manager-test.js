@@ -16,7 +16,7 @@ function getData() {
 
     unit.code = code;
     unit.division = `division[${code}]`;
-    unit.subDivision = `subdivison [${code}]`; 
+    unit.subDivision = `subdivison [${code}]`;
     unit.description = `desc[${code}]`;
     return unit;
 }
@@ -45,5 +45,20 @@ it('#01. should success when create new data', function (done) {
         })
         .catch(e => {
             done(e);
+        })
+});
+
+it('#02. should error when create new data', function (done) {
+    var data = {};
+    instanceManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch(e => {
+            e.errors.should.have.property('division');
+            e.errors.should.have.property('subDivision');
+            done();
         })
 });

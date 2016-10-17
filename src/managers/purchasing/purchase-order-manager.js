@@ -84,8 +84,10 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
                             if (valid.sourcePurchaseOrder != null) {
                                 for (var sourcePoItem of valid.sourcePurchaseOrder.items) {
-                                    if (item.product._id && item.defaultQuantity) { 
-                                        if (item.product._id.equals(sourcePoItem.product._id)) { 
+                                    sourcePoItem.product._id = new ObjectId(sourcePoItem.product._id); 
+                                    item.product._id=new ObjectId(item.product._id);
+                                    if (item.product._id && item.defaultQuantity) {
+                                        if (item.product._id.equals(sourcePoItem.product._id)) {
                                             if (item.defaultQuantity > sourcePoItem.defaultQuantity) {
                                                 itemError["defaultQuantity"] = i18n.__("PurchaseOrder.items.defaultQuantity.isGreater:%s is greater than the first PO", i18n.__("PurchaseOrder.items.defaultQuantity._:DefaultQuantity")); //"Jumlah default tidak boleh lebih besar dari PO asal";
                                                 break;
@@ -123,10 +125,18 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         valid.refNo = valid.purchaseRequest.no;
                         valid.unit = valid.purchaseRequest.unit;
                         valid.unitId = new ObjectId(valid.purchaseRequest.unit._id);
+                        valid.unit._id = new ObjectId(valid.purchaseRequest.unit._id);
                         valid.category = valid.purchaseRequest.category;
                         valid.categoryId = new ObjectId(valid.purchaseRequest.category._id);
+                        valid.category._id = new ObjectId(valid.purchaseRequest.category._id);
                         valid.date = valid.purchaseRequest.date;
                         valid.expectedDeliveryDate = valid.purchaseRequest.expectedDeliveryDate;
+                        for (var poItem of valid.items)
+                        {
+                            poItem.product._id = new ObjectId(poItem.product.uom._id);
+                            poItem.product.uom._id = new ObjectId(poItem.product.uom._id);
+                            poItem.defaultUom._id = new ObjectId(poItem.product.uom._id);
+                        }
                     }
                     
                         valid.unitId = new ObjectId(valid.unitId);
@@ -206,6 +216,24 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return query;
     }
 
+    _createIndexes()
+    {
+        var createdDateIndex = {
+            name: `ix_${map.master.collection.PurchaseOrder}__createdDate`,
+            key: {
+                _createdDate: -1
+            }
+        }
+        var poNoIndex = {
+            name: `ix_${map.master.collection.PurchaseOrder}_no`,
+            key: {
+                no: -1
+            },
+            unique: true
+        }
+
+        return this.collection.createIndexes([createdDateIndex, poNoIndex]);
+    }
     read(paging) {
         var _paging = Object.assign({
             page: 1,
@@ -313,8 +341,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 .page(_paging.page, _paging.size)
                 .orderBy(_paging.order, _paging.asc)
                 .execute()
-                .then(PurchaseOrders => {
-                    resolve(PurchaseOrders);
+                .then(result => {
+                    resolve(result.data);
                 })
                 .catch(e => {
                     reject(e);
