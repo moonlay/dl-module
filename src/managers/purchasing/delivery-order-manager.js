@@ -167,6 +167,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     for (var item of valid.items) {
                         item.purchaseOrderExternalId = new ObjectId(item.purchaseOrderExternalId);
                         item.purchaseOrderExternal._id = new ObjectId(item.purchaseOrderExternal._id);
+                        item.purchaseOrderExternal.supplierId = new ObjectId(item.purchaseOrderExternal.supplierId);
                         item.purchaseOrderExternal.supplier._id = new ObjectId(item.purchaseOrderExternal.supplier._id);
                         item.purchaseOrderExternal.currency._id = new ObjectId(item.purchaseOrderExternal.currency._id);
                         if (item.purchaseOrderExternal.vat) {
@@ -209,6 +210,10 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         for (var fulfillment of item.fulfillments) {
                             fulfillment.purchaseOrderId = new ObjectId(fulfillment.purchaseOrderId);
                             fulfillment.purchaseOrder._id = new ObjectId(fulfillment.purchaseOrder._id);
+                            fulfillment.purchaseOrder.unitId = new ObjectId(fulfillment.purchaseOrder.unitId);
+                            fulfillment.purchaseOrder.unit._id = new ObjectId(fulfillment.purchaseOrder.unit._id);
+                            fulfillment.purchaseOrder.categoryId = new ObjectId(fulfillment.purchaseOrder.categoryId);
+                            fulfillment.purchaseOrder.category._id = new ObjectId(fulfillment.purchaseOrder.category._id);
                             fulfillment.productId = new ObjectId(fulfillment.productId);
                             fulfillment.product._id = new ObjectId(fulfillment.product._id);
                         }

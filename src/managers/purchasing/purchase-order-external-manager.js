@@ -23,7 +23,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
 
     _getQuery(paging) {
         var filter = {
-            _deleted: false
+            _deleted: false,
+            _createdBy:this.user.username
         };
 
         var query = paging.keyword ? {
@@ -86,6 +87,46 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     for (var result of results) {
                                         var poItem = result;
                                         poItem.isPosted = true;
+                                        tasks.push(this.purchaseOrderManager.update(poItem));
+                                    }
+                                    Promise.all(tasks)
+                                        .then(results => {
+                                            resolve(id);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        })
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                })
+                        })
+                        .catch(e => {
+                            reject(e);
+                        })
+                })
+                .catch(e => {
+                    reject(e);
+                })
+        });
+    }
+
+    update(purchaseOrderExternal) {
+        return new Promise((resolve, reject) => {
+            this._validate(data)
+                .then(validData => {
+                    this.collection.update(validData)
+                        .then(id => {
+                            var tasks = [];
+                            var getPOItemById = [];
+                            for (var data of validPurchaseOrderExternal.items) {
+                                getPOItemById.push(this.purchaseOrderManager.getSingleById(data._id));
+                            }
+                            Promise.all(getPOItemById)
+                                .then(results => {
+                                    for (var result of results) {
+                                        var poItem = result;
+                                        poItem.isPosted = false;
                                         tasks.push(this.purchaseOrderManager.update(poItem));
                                     }
                                     Promise.all(tasks)
@@ -190,6 +231,18 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     poItemHasError = true;
                                     poItemError["pricePerDealUnit"] = i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit._:PricePerDealUnit")); //"Harga tidak boleh kosong";
                                 }
+                                var price =(poItem.pricePerDealUnit.toString()).split(",");
+                                if (price[1]!=undefined || price[1]!="" || price[1]!=" " )
+                                {
+                                    poItem.pricePerDealUnit=parseFloat(poItem.pricePerDealUnit.toString()+".00");
+                                }else if (price[1].length()>2)
+                                {
+                                    poItemHasError = true;
+                                    poItemError["pricePerDealUnit"] = i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit.isRequired:%s is greater than 2", i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit._:PricePerDealUnit")); //"Harga tidak boleh kosong";
+                                }else
+                                {
+                                    poItem.pricePerDealUnit=poItem.pricePerDealUnit;
+                                }
 
                                 if (!poItem.conversion || poItem.conversion == '') {
                                     poItemHasError = true;
@@ -252,7 +305,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             poItem.product._id = new ObjectId(poItem.product._id);
                             poItem.product.uom._id = new ObjectId(poItem.product.uom._id);
                             poItem.defaultUom._id = new ObjectId(poItem.defaultUom._id);
-                            poItem.dealUom._id = new ObjectId(poItem.dealUom._id);
+                            poItem.dealUom._id = new ObjectId(poItem.dealUom._id); 
                         }
                     }
                     if (!valid.stamp)
@@ -438,7 +491,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             this.collection
                 .where(query)
                 .page(_paging.page, _paging.size)
-                .orderBy(_paging.order, _paging.asc)
+                .order(_paging.order) 
                 .execute()
                 .then(PurchaseOrders => {
                     resolve(PurchaseOrders);
