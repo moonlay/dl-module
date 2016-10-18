@@ -359,7 +359,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
 
                                     for (var poItem of _purchaseOrder.items) {
                                         for (var itemExternal of _poExternal.items) {
-                                            if (itemExternal.product._id.equals(poItem.product._id)) {
+                                            itemExternal.product._id = new ObjectId(itemExternal.product._id);
+                                            if ((itemExternal.product._id).equals(poItem.product._id)) {
                                                 poItem.dealQuantity = itemExternal.dealQuantity;
                                                 poItem.dealUom = itemExternal.dealUom;
                                                 poItem.pricePerDealUnit = itemExternal.pricePerDealUnit;
