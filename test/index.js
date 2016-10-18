@@ -26,4 +26,5 @@ describe('#dl-module', function (done) {
     test('@purchasing/purchase-order-external-manager', './purchasing/purchase-order-external-manager-test');
     test('@purchasing/delivery-order-manager', './purchasing/delivery-order-manager-test');
     test('@purchasing/unit-receipt-note', './purchasing/unit-receipt-note-manager-test');
+    test('@purchasing/unit-payment-price-correction-note', './purchasing/unit-payment-price-correction-note-manager-test');
 })
