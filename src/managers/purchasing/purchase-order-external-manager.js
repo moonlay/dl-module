@@ -22,14 +22,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
     }
 
     _getQuery(paging) {
-        var filter = {
-            _deleted: false
-        };
+        var deletedFilter = {
+            _deleted: false,
+            _createdBy: this.user.username
+        }, keywordFilter = {};
 
-        var query = paging.keyword ? {
-            '$and': [filter]
-        } : filter;
-
+        var query = {};
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
 
@@ -58,12 +56,11 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 }
             };
 
-            var $or = {
+            keywordFilter = {
                 '$or': [filterPODLNo, filterRefPO, filterPOItem, filterSupplierName]
             };
-
-            query['$and'].push($or);
         }
+        query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
         return query;
     }
 
@@ -73,6 +70,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 .then(validPurchaseOrderExternal => {
                     validPurchaseOrderExternal.no = this.generatePOno();
                     validPurchaseOrderExternal.supplierId = new ObjectId(validPurchaseOrderExternal.supplierId);
+                    validPurchaseOrderExternal.supplier._id = new ObjectId(validPurchaseOrderExternal.supplier._id);
                     this.collection.insert(validPurchaseOrderExternal)
                         .then(id => {
                             var tasks = [];
@@ -106,6 +104,55 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 .catch(e => {
                     reject(e);
                 })
+        });
+    }
+
+    delete(purchaseOrderExternal) {
+        return new Promise((resolve, reject) => {
+            this._createIndexes()
+                .then((createIndexResults) => {
+                    this._validate(purchaseOrderExternal)
+                        .then(validData => {
+                            validData._deleted = true;
+                            this.collection.update(validData)
+                                .then(id => {
+                                    var tasks = [];
+                                    var getPOItemById = [];
+                                    for (var data of validData.items) {
+                                        getPOItemById.push(this.purchaseOrderManager.getSingleById(data._id));
+                                    }
+                                    Promise.all(getPOItemById)
+                                        .then(results => {
+                                            for (var result of results) {
+                                                var poItem = result;
+                                                poItem.isPosted = false;
+                                                tasks.push(this.purchaseOrderManager.update(poItem));
+
+                                            }
+                                            Promise.all(tasks)
+                                                .then(results => {
+                                                    resolve(id);
+                                                })
+                                                .catch(e => {
+                                                    reject(e);
+                                                })
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        })
+
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
         });
     }
 
@@ -189,6 +236,15 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     poItemHasError = true;
                                     poItemError["pricePerDealUnit"] = i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit._:PricePerDealUnit")); //"Harga tidak boleh kosong";
                                 }
+                                var price = (poItem.pricePerDealUnit.toString()).split(",");
+                                if (price[1] != undefined || price[1] != "" || price[1] != " ") {
+                                    poItem.pricePerDealUnit = parseFloat(poItem.pricePerDealUnit.toString() + ".00");
+                                } else if (price[1].length() > 2) {
+                                    poItemHasError = true;
+                                    poItemError["pricePerDealUnit"] = i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit.isRequired:%s is greater than 2", i18n.__("PurchaseOrderExternal.items.items.pricePerDealUnit._:PricePerDealUnit")); //"Harga tidak boleh kosong";
+                                } else {
+                                    poItem.pricePerDealUnit = poItem.pricePerDealUnit;
+                                }
 
                                 if (!poItem.conversion || poItem.conversion == '') {
                                     poItemHasError = true;
@@ -216,6 +272,44 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     }
 
                     valid.supplierId = new ObjectId(valid.supplierId);
+                    valid.supplier._id = new ObjectId(valid.supplier._id);
+                    valid.currency._id = new ObjectId(valid.currency._id);
+                    if (valid.vat) {
+                        valid.vat._id = new ObjectId(valid.vat._id);
+                    }
+                    for (var item of valid.items) {
+                        item.purchaseRequest.unit._id = new ObjectId(item.purchaseRequest.unit._id);
+                        item.purchaseRequest.category._id = new ObjectId(item.purchaseRequest.category._id);
+                        item.purchaseRequest.unitId = new ObjectId(item.purchaseRequest.unitId);
+                        item.purchaseRequest.categoryId = new ObjectId(item.purchaseRequest.categoryId);
+                        if (item.sourcePurchaseOrder) {
+                            item.sourcePurchaseOrder._id = new ObjectId(item.sourcePurchaseOrder._id);
+                            item.sourcePurchaseOrder.purchaseRequest.unit._id = new ObjectId(item.sourcePurchaseOrder.purchaseRequest.unit._id);
+                            item.sourcePurchaseOrder.purchaseRequest.category._id = new ObjectId(item.sourcePurchaseOrder.purchaseRequest.category._id);
+                            item.sourcePurchaseOrder.purchaseRequest.unitId = new ObjectId(item.sourcePurchaseOrder.purchaseRequest.unitId);
+                            item.sourcePurchaseOrder.purchaseRequest.categoryId = new ObjectId(item.sourcePurchaseOrder.purchaseRequest.categoryId);
+                            item.sourcePurchaseOrder.unit._id = new ObjectId(item.sourcePurchaseOrder.unit._id);
+                            item.sourcePurchaseOrder.category._id = new ObjectId(item.sourcePurchaseOrder.category._id);
+                            item.sourcePurchaseOrder.unitId = new ObjectId(item.sourcePurchaseOrder.unitId);
+                            item.sourcePurchaseOrder.categoryId = new ObjectId(item.sourcePurchaseOrder.categoryId);
+
+                            for (var soItem of item.sourcePurchaseOrder.items) {
+                                soItem.product._id = new ObjectId(soItem.product._id);
+                                soItem.defaultUom._id = new ObjectId(soItem.defaultUom._id);
+                            }
+                        }
+                        item.unitId = new ObjectId(item.unitId);
+                        item.unit._id = new ObjectId(item.unit._id);
+                        item.categoryId = new ObjectId(item.categoryId);
+                        item.category._id = new ObjectId(item.category._id);
+
+                        for (var poItem of item.items) {
+                            poItem.product._id = new ObjectId(poItem.product._id);
+                            poItem.product.uom._id = new ObjectId(poItem.product.uom._id);
+                            poItem.defaultUom._id = new ObjectId(poItem.defaultUom._id);
+                            poItem.dealUom._id = new ObjectId(poItem.dealUom._id);
+                        }
+                    }
                     if (!valid.stamp)
                         valid = new PurchaseOrderExternal(valid);
 
@@ -249,8 +343,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 if (_purchaseOrder._id.equals(_poExternal._id)) {
                                     _purchaseOrder.purchaseOrderExternalId = new ObjectId(_purchaseOrderExternal._id);
                                     _purchaseOrder.purchaseOrderExternal = _purchaseOrderExternal;
+                                    _purchaseOrder.purchaseOrderExternal._id = new ObjectId(_purchaseOrderExternal._id);
                                     _purchaseOrder.supplierId = new ObjectId(_purchaseOrderExternal.supplierId);
                                     _purchaseOrder.supplier = _purchaseOrderExternal.supplier;
+                                    _purchaseOrder.supplier._id = new ObjectId(_purchaseOrderExternal.supplier._id);
                                     _purchaseOrder.freightCostBy = _purchaseOrderExternal.freightCostBy;
                                     _purchaseOrder.currency = _purchaseOrderExternal.currency;
                                     _purchaseOrder.currencyRate = _purchaseOrderExternal.currencyRate;
@@ -324,89 +420,6 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         }
         var no = `${code}/DL-${unit}/PO-${initial}/${month}/${year}`;
         return no;
-    }
-
-    _getQueryPosted(_paging) {
-        var supplierId = _paging.filter.supplierId;
-
-        var filter = {
-            _deleted: false,
-            isPosted: true,
-            isClosed: false,
-            supplierId: new ObjectId(supplierId)
-        };
-
-        var query = _paging.keyword ? {
-            '$and': [filter]
-        } : filter;
-
-        if (_paging.keyword) {
-            var regex = new RegExp(_paging.keyword, "i");
-
-            var filterPOItem = {
-                items: {
-                    $elemMatch: {
-                        no: {
-                            '$regex': regex
-                        }
-                    }
-                }
-            };
-
-            var filterPODLNo = {
-                'no': {
-                    '$regex': regex
-                }
-            };
-
-            var filterRefPO = {
-                "refNo": {
-                    '$regex': regex
-                }
-            };
-            var filterPOItem = {
-                items: {
-                    $elemMatch: {
-                        no: {
-                            '$regex': regex
-                        }
-                    }
-                }
-            };
-
-            var $or = {
-                '$or': [filterPODLNo, filterRefPO, filterPOItem]
-            };
-
-            query['$and'].push($or);
-        }
-
-        return query;
-    }
-
-    readPosted(paging) {
-        var _paging = Object.assign({
-            page: 1,
-            size: 20,
-            order: '_id',
-            asc: true
-        }, paging);
-
-        return new Promise((resolve, reject) => {
-            var query = this._getQueryPosted(_paging);
-
-            this.collection
-                .where(query)
-                .page(_paging.page, _paging.size)
-                .orderBy(_paging.order, _paging.asc)
-                .execute()
-                .then(PurchaseOrders => {
-                    resolve(PurchaseOrders);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
     }
 
     pdf(id) {

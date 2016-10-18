@@ -62,8 +62,8 @@ module.exports = class CurrencyManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
-                    }]
+                    code: valid.code
+                }]
             });
 
             // 2. begin: Validation.
@@ -83,7 +83,7 @@ module.exports = class CurrencyManager extends BaseManager {
                     if (!valid.rate || valid.rate == 0)
                         errors["rate"] = i18n.__("Currency.rate.isRequired:%s is required", i18n.__("Currency.rate._:Rate")); //"Rate mata uang Tidak Boleh Kosong";
 
-                     if (Object.getOwnPropertyNames(errors).length > 0) {
+                    if (Object.getOwnPropertyNames(errors).length > 0) {
                         var ValidationError = require('../../validation-error');
                         reject(new ValidationError('data does not pass validation', errors));
                     }
@@ -96,5 +96,18 @@ module.exports = class CurrencyManager extends BaseManager {
                     reject(e);
                 })
         });
+    }
+
+    _createIndexes() {
+
+        var codeIndex = {
+            name: `ix_${map.master.collection.Currency}_code`,
+            key: {
+                code: 1
+            },
+            unique: true
+        }
+
+        return this.collection.createIndexes([codeIndex]);
     }
 }

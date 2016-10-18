@@ -28,6 +28,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     }
                 }, {
                         "no": valid.no
+                    }, {
+                        _deleted: false
                     }]
             });
 
@@ -48,7 +50,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             errors["unit"] = i18n.__("UnitReceiptNote.unit.isRequired:%s is required", i18n.__("UnitReceiptNote.unit._:Unit")); //"Unit tidak boleh kosong";
                     }
                     else if (!valid.unit)
-                        errors["unit"] =  i18n.__("UnitReceiptNote.unit.isRequired:%s is required", i18n.__("UnitReceiptNote.unit._:Unit")); //"Unit tidak boleh kosong";
+                        errors["unit"] = i18n.__("UnitReceiptNote.unit.isRequired:%s is required", i18n.__("UnitReceiptNote.unit._:Unit")); //"Unit tidak boleh kosong";
 
                     if (!valid.supplierId)
                         errors["supplier"] = i18n.__("UnitReceiptNote.supplier.isRequired:%s name is required", i18n.__("UnitReceiptNote.supplier._:Supplier")); //"Nama supplier tidak boleh kosong";
@@ -70,7 +72,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
 
                     if (valid.items) {
                         if (valid.items.length <= 0) {
-                            errors["items"] =  i18n.__("UnitReceiptNote.items.isRequired:%s is required", i18n.__("UnitReceiptNote.items._:Item")); //"Harus ada minimal 1 barang";
+                            errors["items"] = i18n.__("UnitReceiptNote.items.isRequired:%s is required", i18n.__("UnitReceiptNote.items._:Item")); //"Harus ada minimal 1 barang";
                         }
                         else {
                             var itemErrors = [];
@@ -99,6 +101,37 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 
+                    valid.unitId = new ObjectId(valid.unitId);
+                    valid.supplierId = new ObjectId(valid.supplierId);
+                    valid.deliveryOrderId = new ObjectId(valid.deliveryOrderId);
+                    valid.deliveryOrder.supplierId = new ObjectId(valid.deliveryOrder.supplierId);
+                    for (var doItem of valid.deliveryOrder.items) {
+                        doItem.purchaseOrderExternalId = new ObjectId(doItem.purchaseOrderExternalId);
+                        for (var fulfillment of doItem.fulfillments) {
+                            fulfillment.purchaseOrderId = new ObjectId(fulfillment.purchaseOrderId);
+                            fulfillment.purchaseOrder._id = new ObjectId(fulfillment.purchaseOrder._id);
+                            fulfillment.purchaseOrder.unitId = new ObjectId(fulfillment.purchaseOrder.unit._id);
+                            fulfillment.purchaseOrder.unit._id = new ObjectId(fulfillment.purchaseOrder.unit._id);
+                            fulfillment.purchaseOrder.categoryId = new ObjectId(fulfillment.purchaseOrder.category._id);
+                            fulfillment.purchaseOrder.category._id = new ObjectId(fulfillment.purchaseOrder.category._id);
+                            fulfillment.productId = new ObjectId(fulfillment.productId);
+                        }
+                    }
+
+                    for (var item of valid.items){
+                        item.product._id = new ObjectId(item.product._id);
+                        item.purchaseOrderId = new ObjectId(item.purchaseOrderId);
+                        item.purchaseOrder._id = new ObjectId(item.purchaseOrder._id);
+                        item.purchaseOrder.unitId = new ObjectId(item.purchaseOrder.unit._id);
+                        item.purchaseOrder.unit._id = new ObjectId(item.purchaseOrder.unit._id);
+                        item.purchaseOrder.categoryId = new ObjectId(item.purchaseOrder.category._id);
+                        item.purchaseOrder.category._id = new ObjectId(item.purchaseOrder.category._id);
+                        for(var poItem of item.purchaseOrder.items){
+                            poItem.product._id = new ObjectId(poItem.product.uom._id);
+                            poItem.product.uom._id = new ObjectId(poItem.product.uom._id);
+                            poItem.defaultUom._id = new ObjectId(poItem.product.uom._id);
+                        }
+                    }
 
                     if (!valid.stamp)
                         valid = new UnitReceiptNote(valid);
@@ -114,14 +147,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
     }
 
     _getQuery(paging) {
-        var filter = {
+        var deletedFilter = {
             _deleted: false
-        };
-
-        var query = paging.keyword ? {
-            '$and': [filter]
-        } : filter;
-
+        }, keywordFilter = {};
+        
+        var query = {};
+        
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
 
@@ -154,12 +185,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 }
             };
 
-            var $or = {
+            keywordFilter = {
                 '$or': [filterNo, filterSupplierName, filterUnitDivision, filterUnitSubDivision, filterDeliveryOrder]
             };
-
-            query['$and'].push($or);
         }
+        query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
         return query;
     }
 
@@ -173,6 +203,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     validUnitReceiptNote.unitId = new ObjectId(validUnitReceiptNote.unitId);
                     validUnitReceiptNote.supplierId = new ObjectId(validUnitReceiptNote.supplierId);
                     validUnitReceiptNote.deliveryOrderId = new ObjectId(validUnitReceiptNote.deliveryOrderId);
+                    validUnitReceiptNote.date = validUnitReceiptNote._createdDate;
                     this.collection.insert(validUnitReceiptNote)
                         .then(id => {
                             //update PO Internal
@@ -226,6 +257,81 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 .catch(e => {
                     reject(e);
                 })
+        });
+    }
+
+    pdf(id) {
+        return new Promise((resolve, reject) => {
+
+            this.getSingleById(id)
+                .then(unitReceiptNote => {
+                    var getDefinition = require('../../pdf/definitions/unit-receipt-note');
+                    var definition = getDefinition(unitReceiptNote);
+
+                    var generatePdf = require('../../pdf/pdf-generator');
+                    generatePdf(definition)
+                        .then(binary => {
+                            resolve(binary);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+
+        });
+    }
+
+    getUnitReceiptNotes(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo) {
+        return new Promise((resolve, reject) => {
+            var query = Object.assign({});
+
+            var deleted = { _deleted: false };
+
+            if (_no != "undefined" && _no != "") {
+                var no = { no: _no };
+                Object.assign(query, no);
+            }
+            if (_unitId != "undefined" && _unitId != "") {
+                var unitId = { unitId: new ObjectId(_unitId) };
+                Object.assign(query, unitId);
+            }
+            if (_categoryId != "undefined" && _categoryId != "") {
+                var categoryId = {
+                    "items": {
+                        $elemMatch: {
+                            "purchaseOrder.categoryId": new ObjectId(_categoryId)
+                        }
+                    }
+                };
+                Object.assign(query, categoryId);
+            }
+            if (_supplierId != "undefined" && _supplierId != "") {
+                var supplierId = { supplierId: new ObjectId(_supplierId) };
+                Object.assign(query, supplierId);
+            }
+            if (_dateFrom != "undefined" && _dateFrom != "null" && _dateFrom != "" && _dateTo != "undefined" && _dateTo != "null" && _dateTo != "") {
+                var date = {
+                    date: {
+                        $gte: _dateFrom,
+                        $lte: _dateTo
+                    }
+                };
+                Object.assign(query, date);
+            }
+            Object.assign(query, deleted);
+
+            this.collection
+                .where(query)
+                .execute()
+                .then(result => {
+                    resolve(result.data);
+                })
+                .catch(e => {
+                    reject(e);
+                });
         });
     }
 

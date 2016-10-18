@@ -4,9 +4,10 @@ var ObjectId = require('mongodb').ObjectId;
 require("mongodb-toolkit");
 
 module.exports = class BaseManager {
-    constructor(db, user) {
+    constructor(db, user, locale) {
         this.db = db;
         this.user = user;
+        this.locale = locale;
 
         this.collection = null;
     }
@@ -18,6 +19,28 @@ module.exports = class BaseManager {
     _getQuery(paging) {
         throw new Error('_getQuery(paging) not implemented');
     }
+    _createIndexes() {
+        return Promise.resolve(true);
+    }
+
+    getCollectionInfo(query) {
+        return new Promise((resolve, reject) => {
+            this._createIndexes()
+                .then((createIndexResults) => {
+                    this.collection.count(query)
+                        .then(count => {
+
+                            resolve(count);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
 
 
     read(paging) {
@@ -27,16 +50,25 @@ module.exports = class BaseManager {
             order: '_id',
             asc: true
         }, paging);
+        var start = process.hrtime();
 
         return new Promise((resolve, reject) => {
-            var query = this._getQuery(_paging); 
-            this.collection
-                .where(query)
-                .page(_paging.page, _paging.size)
-                .orderBy(_paging.order, _paging.asc)
-                .execute()
-                .then(modules => {
-                    resolve(modules);
+            this._createIndexes()
+                .then((createIndexResults) => {
+                    var query = this._getQuery(_paging);
+                    this.collection
+                        .where(query)
+                        .page(_paging.page, _paging.size)
+                        .order(_paging.order)
+                        .execute()
+                        .then(modules => {
+                            var elapsed = process.hrtime(start);
+                            console.log(elapsed);
+                            resolve(modules);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
                 })
                 .catch(e => {
                     reject(e);
@@ -44,61 +76,80 @@ module.exports = class BaseManager {
         });
     }
 
+
     create(data) {
         return new Promise((resolve, reject) => {
-            this._validate(data)
-                .then(validData => {
-                    this.collection.insert(validData)
-                        .then(id => {
-                            resolve(id);
+            this._createIndexes()
+                .then((createIndexResults) => {
+                    this._validate(data)
+                        .then(validData => {
+                            this.collection.insert(validData)
+                                .then(id => {
+                                    resolve(id);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
                         })
                         .catch(e => {
                             reject(e);
-                        })
+                        });
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
 
     update(data) {
         return new Promise((resolve, reject) => {
-            this._validate(data)
-                .then(validData => {
-                    this.collection.update(validData)
-                        .then(id => {
-                            resolve(id);
+            this._createIndexes()
+                .then((createIndexResults) => {
+                    this._validate(data)
+                        .then(validData => {
+                            this.collection.update(validData)
+                                .then(id => {
+                                    resolve(id);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
                         })
                         .catch(e => {
                             reject(e);
-                        })
+                        });
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
 
     delete(data) {
         return new Promise((resolve, reject) => {
-            this._validate(data)
-                .then(validData => {
-                    validData._deleted = true;
-                    this.collection.update(validData)
-                        .then(id => {
-                            resolve(id);
+            this._createIndexes()
+                .then((createIndexResults) => {
+                    this._validate(data)
+                        .then(validData => {
+                            validData._deleted = true;
+                            this.collection.update(validData)
+                                .then(id => {
+                                    resolve(id);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
                         })
                         .catch(e => {
                             reject(e);
-                        })
+                        });
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
-    
+
     getSingleById(id) {
         return new Promise((resolve, reject) => {
             if (id === '')
@@ -145,7 +196,7 @@ module.exports = class BaseManager {
                 .catch(e => {
                     reject(e);
                 });
-        })
+        });
     }
 
     getSingleByQueryOrDefault(query) {
@@ -158,6 +209,6 @@ module.exports = class BaseManager {
                 .catch(e => {
                     reject(e);
                 });
-        })
+        });
     }
-}
+};
