@@ -208,273 +208,9 @@ before('#00. connect db', function (done) {
         })
 });
 
-var purchaseOrderExternal;
-it(`#19. should success when get created data with id`, function (done) {
-    purchaseOrderExternalManager.pdf("57f47c1d2e1ca2003a8d0913")
-        .then(data => {
-            validatorPurchasing.purchaseOrderExternal(data);
-            data.should.instanceof(Object);
-            purchaseOrderExternal = data;
-            done();
-        })
-        .catch(e => {
-            done(e);
-        })
-});
-// var unitId;
-// it('#01. should success when create new data unit', function (done) {
-//     var data = getDataUnit();
-//     unitManager.create(data)
-//         .then(id => {
-//             id.should.be.Object();
-//             unitId = id;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var unit;
-// it(`#02. should success when get created data unit with id`, function (done) {
-//     unitManager.getSingleByQuery({ _id: unitId })
-//         .then(data => {
-//             validator.unit(data);
-//             data.should.instanceof(Object);
-//             unit = data;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var categoryId;
-// it('#03. should success when create new data category', function (done) {
-//     var data = getDataCategory();
-//     categoryManager.create(data)
-//         .then(id => {
-//             id.should.be.Object();
-//             categoryId = id;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var category;
-// it(`#04. should success when get created data category with id`, function (done) {
-//     categoryManager.getSingleByQuery({ _id: categoryId })
-//         .then(data => {
-//             validator.category(data);
-//             data.should.instanceof(Object);
-//             category = data;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var uomId;
-// it('#05. should success when create new data uom', function (done) {
-//     var data = getDataUom();
-//     uomManager.create(data)
-//         .then(id => {
-//             id.should.be.Object();
-//             uomId = id;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var uom;
-// it(`#06. should success when get created data uom with id`, function (done) {
-//     uomManager.getSingleByQuery({ _id: uomId })
-//         .then(data => {
-//             validator.uom(data);
-//             data.should.instanceof(Object);
-//             uom = data;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var productId;
-// it('#07. should success when create new data product', function (done) {
-//     var data = getDataProduct();
-//     data.uom=uom;
-//     data.uomId=uom._id;
-//     productManager.create(data)
-//         .then(id => {
-//             id.should.be.Object();
-//             productId = id;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var product;
-// it(`#08. should success when get created data product with id`, function (done) {
-//     productManager.getSingleByQuery({ _id: productId })
-//         .then(data => {
-//             validator.product(data);
-//             data.should.instanceof(Object);
-//             product = data;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var purchaseOrderId;
-// it('#11. should success when create new data purchase order', function (done) {
-//     var data = getDataPurchaseOrder();
-//     var purchaseOrderItems = getDataPurchaseOrderItem();
-//     for(var purchaseOrderItem of purchaseOrderItems){
-//         purchaseOrderItem.defaultUom=uom;
-//         purchaseOrderItem.dealUom=uom;
-//         purchaseOrderItem.product= product;
-//     }
-    
-//     var _purchaseOrderItems = [];
-//     _purchaseOrderItems.push(purchaseOrderItem);
-    
-//     data.purchaseRequest.unit = unit;
-//     data.purchaseRequest.category = category;
-//     data.items = _purchaseOrderItems;
-    
-//     purchaseOrderManager.create(data)
-//         .then(id => {
-//             id.should.be.Object();
-//             purchaseOrderId = id;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var purchaseOrder;
-// it(`#12. should success when get created data purchase order with id`, function (done) {
-//     purchaseOrderManager.getSingleByQuery({ _id: purchaseOrderId })
-//         .then(data => {
-//             validatorPurchasing.purchaseOrder(data);
-//             data.should.instanceof(Object);
-//             purchaseOrder = data;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var supplierId;
-// it('#13. should success when create new data supplier', function (done) {
-//     var data = getDataSupplier();
-//     supplierManager.create(data)
-//         .then(id => {
-//             id.should.be.Object();
-//             supplierId = id;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var supplier;
-// it(`#14. should success when get created data supplier with id`, function (done) {
-//     supplierManager.getSingleByQuery({ _id: supplierId })
-//         .then(data => {
-//             validator.supplier(data);
-//             data.should.instanceof(Object);
-//             supplier = data;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var currencyId;
-// it('#15. should success when create new data currency', function (done) {
-//     var data = getDataCurrency();
-//     currencyManager.create(data)
-//         .then(id => {
-//             id.should.be.Object();
-//             currencyId = id;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var currency;
-// it(`#16. should success when get created data currency with id`, function (done) {
-//     currencyManager.getSingleByQuery({ _id: currencyId })
-//         .then(data => {
-//             validator.currency(data);
-//             data.should.instanceof(Object);
-//             currency = data;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// it('#17. should success when read data', function (done) {
-//     purchaseOrderExternalManager.read()
-//         .then(documents => {
-//             documents.should.be.instanceof(Array);
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
-// var purchaseOrderExternalId;
-// it('#18. should success when create new data', function (done) {
-//     var data = getData();
-//     data.supplier=supplier;
-//     data.supplierId=supplierId;
-//     data.currency = currency;
-//     data.currencyRate = currency.rate;
-//     data.items=[];
-//     data.items.push(purchaseOrder);
-    
-//     for (var poItem of data.items)
-//     {
-//         for(var item of poItem.items)
-//         {
-//             item.pricePerDealUnit=2000;
-//         }
-//     }
-//     purchaseOrderExternalManager.create(data)
-//         .then(id => {
-//             id.should.be.Object();
-//             purchaseOrderExternalId = id;
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
-
 // var purchaseOrderExternal;
 // it(`#19. should success when get created data with id`, function (done) {
-//     purchaseOrderExternalManager.getSingleByQuery({ _id: purchaseOrderExternalId })
+//     purchaseOrderExternalManager.pdf("57f47c1d2e1ca2003a8d0913")
 //         .then(data => {
 //             validatorPurchasing.purchaseOrderExternal(data);
 //             data.should.instanceof(Object);
@@ -485,75 +221,339 @@ it(`#19. should success when get created data with id`, function (done) {
 //             done(e);
 //         })
 // });
+var unitId;
+it('#01. should success when create new data unit', function (done) {
+    var data = getDataUnit();
+    unitManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            unitId = id;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
 
-// it(`#20. should success when update created data`, function (done) {
-//     purchaseOrderExternal.remark += '[updated]';
+var unit;
+it(`#02. should success when get created data unit with id`, function (done) {
+    unitManager.getSingleByQuery({ _id: unitId })
+        .then(data => {
+            validator.unit(data);
+            data.should.instanceof(Object);
+            unit = data;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
 
-//     purchaseOrderExternalManager.update(purchaseOrderExternal)
-//         .then(id => {
-//             purchaseOrderExternalId.toString().should.equal(id.toString());
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         });
-// });
+var categoryId;
+it('#03. should success when create new data category', function (done) {
+    var data = getDataCategory();
+    categoryManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            categoryId = id;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
 
-// it(`#21. should success when get updated data with id`, function (done) {
-//     purchaseOrderExternalManager.getSingleByQuery({ _id: purchaseOrderExternalId })
-//         .then(data => {
-//             data.no.should.equal(purchaseOrderExternal.no);
+var category;
+it(`#04. should success when get created data category with id`, function (done) {
+    categoryManager.getSingleByQuery({ _id: categoryId })
+        .then(data => {
+            validator.category(data);
+            data.should.instanceof(Object);
+            category = data;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
 
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
+var uomId;
+it('#05. should success when create new data uom', function (done) {
+    var data = getDataUom();
+    uomManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            uomId = id;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
 
-// it(`#22. should success when delete data`, function (done) {
-//     purchaseOrderExternalManager.delete(purchaseOrderExternal)
-//         .then(id => {
-//             purchaseOrderExternalId.toString().should.equal(id.toString());
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         });
-// });
+var uom;
+it(`#06. should success when get created data uom with id`, function (done) {
+    uomManager.getSingleByQuery({ _id: uomId })
+        .then(data => {
+            validator.uom(data);
+            data.should.instanceof(Object);
+            uom = data;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
 
-// it(`#23. should _deleted=true`, function (done) {
-//     purchaseOrderExternalManager.getSingleByQuery({ _id: purchaseOrderExternalId })
-//         .then(data => {
-//             data._deleted.should.be.Boolean();
-//             data._deleted.should.equal(true);
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
+var productId;
+it('#07. should success when create new data product', function (done) {
+    var data = getDataProduct();
+    data.uom=uom;
+    data.uomId=uom._id;
+    productManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            productId = id;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
 
-// it(`#24. should success when post`, function (done) {
-//     var listPurchaseOrderExternal = [];
-//     listPurchaseOrderExternal.push(purchaseOrderExternal);
-//     purchaseOrderExternalManager.post(listPurchaseOrderExternal)
-//         .then(data => {
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
+var product;
+it(`#08. should success when get created data product with id`, function (done) {
+    productManager.getSingleByQuery({ _id: productId })
+        .then(data => {
+            validator.product(data);
+            data.should.instanceof(Object);
+            product = data;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
 
-// it(`#25. should isPosted=true`, function (done) {
-//     purchaseOrderExternalManager.getSingleByQuery({ _id: purchaseOrderExternalId })
-//         .then(data => {
-//             data.isPosted.should.be.Boolean();
-//             data.isPosted.should.equal(true);
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         })
-// });
+var purchaseOrderId;
+it('#11. should success when create new data purchase order', function (done) {
+    var data = getDataPurchaseOrder();
+    var purchaseOrderItems = getDataPurchaseOrderItem();
+    for(var purchaseOrderItem of purchaseOrderItems){
+        purchaseOrderItem.defaultUom=uom;
+        purchaseOrderItem.dealUom=uom;
+        purchaseOrderItem.product= product;
+    }
+    
+    var _purchaseOrderItems = [];
+    _purchaseOrderItems.push(purchaseOrderItem);
+    
+    data.purchaseRequest.unit = unit;
+    data.purchaseRequest.category = category;
+    data.items = _purchaseOrderItems;
+    
+    purchaseOrderManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            purchaseOrderId = id;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+var purchaseOrder;
+it(`#12. should success when get created data purchase order with id`, function (done) {
+    purchaseOrderManager.getSingleByQuery({ _id: purchaseOrderId })
+        .then(data => {
+            validatorPurchasing.purchaseOrder(data);
+            data.should.instanceof(Object);
+            purchaseOrder = data;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+var supplierId;
+it('#13. should success when create new data supplier', function (done) {
+    var data = getDataSupplier();
+    supplierManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            supplierId = id;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+var supplier;
+it(`#14. should success when get created data supplier with id`, function (done) {
+    supplierManager.getSingleByQuery({ _id: supplierId })
+        .then(data => {
+            validator.supplier(data);
+            data.should.instanceof(Object);
+            supplier = data;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+var currencyId;
+it('#15. should success when create new data currency', function (done) {
+    var data = getDataCurrency();
+    currencyManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            currencyId = id;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+var currency;
+it(`#16. should success when get created data currency with id`, function (done) {
+    currencyManager.getSingleByQuery({ _id: currencyId })
+        .then(data => {
+            validator.currency(data);
+            data.should.instanceof(Object);
+            currency = data;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+it('#17. should success when read data', function (done) {
+    purchaseOrderExternalManager.read()
+        .then(documents => {
+            documents.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+var purchaseOrderExternalId;
+it('#18. should success when create new data', function (done) {
+    var data = getData();
+    data.supplier=supplier;
+    data.supplierId=supplierId;
+    data.currency = currency;
+    data.currencyRate = currency.rate;
+    data.items=[];
+    data.items.push(purchaseOrder);
+    
+    for (var poItem of data.items)
+    {
+        for(var item of poItem.items)
+        {
+            item.pricePerDealUnit=2000;
+        }
+    }
+    purchaseOrderExternalManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            purchaseOrderExternalId = id;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+var purchaseOrderExternal;
+it(`#19. should success when get created data with id`, function (done) {
+    purchaseOrderExternalManager.getSingleByQuery({ _id: purchaseOrderExternalId })
+        .then(data => {
+            validatorPurchasing.purchaseOrderExternal(data);
+            data.should.instanceof(Object);
+            purchaseOrderExternal = data;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+it(`#20. should success when update created data`, function (done) {
+    purchaseOrderExternal.remark += '[updated]';
+
+    purchaseOrderExternalManager.update(purchaseOrderExternal)
+        .then(id => {
+            purchaseOrderExternalId.toString().should.equal(id.toString());
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it(`#21. should success when get updated data with id`, function (done) {
+    purchaseOrderExternalManager.getSingleByQuery({ _id: purchaseOrderExternalId })
+        .then(data => {
+            data.no.should.equal(purchaseOrderExternal.no);
+
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+it(`#22. should success when delete data`, function (done) {
+    purchaseOrderExternalManager.delete(purchaseOrderExternal)
+        .then(id => {
+            purchaseOrderExternalId.toString().should.equal(id.toString());
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it(`#23. should _deleted=true`, function (done) {
+    purchaseOrderExternalManager.getSingleByQuery({ _id: purchaseOrderExternalId })
+        .then(data => {
+            data._deleted.should.be.Boolean();
+            data._deleted.should.equal(true);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+it(`#24. should success when post`, function (done) {
+    var listPurchaseOrderExternal = [];
+    listPurchaseOrderExternal.push(purchaseOrderExternal);
+    purchaseOrderExternalManager.post(listPurchaseOrderExternal)
+        .then(data => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+
+it(`#25. should isPosted=true`, function (done) {
+    purchaseOrderExternalManager.getSingleByQuery({ _id: purchaseOrderExternalId })
+        .then(data => {
+            data.isPosted.should.be.Boolean();
+            data.isPosted.should.equal(true);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});

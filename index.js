@@ -13,6 +13,7 @@ module.exports = {
             UomManager: require('./src/managers/master/uom-manager'),
             CurrencyManager: require('./src/managers/master/currency-manager'),
             VatManager: require('./src/managers/master/vat-manager'),
+            BudgetManager: require('./src/managers/master/budget-manager'),
         },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
