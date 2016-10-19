@@ -20,10 +20,12 @@ describe('#dl-module', function (done) {
     // test('@master/category-manager', './master/category-manager-test');
     // test('@master/currency-manager', './master/currency-manager-test');
     // test('@master/vat-manager', './master/vat-manager-test');
+    //test('@master/budget-manager', './master/budget-manager-test');
     
     // //Purchasing 
     // test('@purchasing/purchase-order-base-manager', './purchasing/purchase-order-manager-test');
-    test('@purchasing/purchase-order-external-manager', './purchasing/purchase-order-external-manager-test');
+    //test('@purchasing/purchase-order-external-manager', './purchasing/purchase-order-external-manager-test');
     // test('@purchasing/delivery-order-manager', './purchasing/delivery-order-manager-test');
     // test('@purchasing/unit-receipt-note', './purchasing/unit-receipt-note-manager-test');
+    test('@purchasing/purchase-request-manager', './purchasing/purchase-request-manager-test');
 })
