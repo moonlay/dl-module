@@ -214,32 +214,7 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
 
         return this.collection.createIndexes([createdDateIndex, poNoIndex]);
     }
-
-    create(unitPaymentPriceCorrectionNote) {
-        return new Promise((resolve, reject) => {
-            this._createIndexes()
-                .then((createIndexResults) => {
-                    this._validate(unitPaymentPriceCorrectionNote)
-                        .then(validData => {
-                            validData.date = new Date();
-                            this.collection.insert(validData)
-                                .then(id => {
-                                    resolve(id);
-                                })
-                                .catch(e => {
-                                    reject(e);
-                                });
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
+    
     pdf(id) {
         return new Promise((resolve, reject) => {
 
