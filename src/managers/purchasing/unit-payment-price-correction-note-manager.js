@@ -92,27 +92,27 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 
-                    valid.unitPaymentOrderId = new ObjectId(valid.unitPaymentOrderId);
+                    valid.unitPaymentOrderId = new ObjectId(valid.unitPaymentOrder._id);
                     valid.unitPaymentOrder._id = new ObjectId(valid.unitPaymentOrder._id);
-                    valid.unitPaymentOrder.unitId = new ObjectId(valid.unitPaymentOrder.unitId);
+                    valid.unitPaymentOrder.unitId = new ObjectId(valid.unitPaymentOrder.unit._id);
                     valid.unitPaymentOrder.unit._id = new ObjectId(valid.unitPaymentOrder.unit._id);
-                    valid.unitPaymentOrder.supplierId = new ObjectId(valid.unitPaymentOrder.supplierId);
+                    valid.unitPaymentOrder.supplierId = new ObjectId(valid.unitPaymentOrder.supplier._id);
                     valid.unitPaymentOrder.supplier._id = new ObjectId(valid.unitPaymentOrder.supplier._id);
 
                     for (var unitPaymentOrderItem of valid.unitPaymentOrder.items) {
-                        unitPaymentOrderItem.productId = new ObjectId(unitPaymentOrderItem.productId);
+                        unitPaymentOrderItem.productId = new ObjectId(unitPaymentOrderItem.product._id);
                         unitPaymentOrderItem.product._id = new ObjectId(unitPaymentOrderItem.product._id);
-                        unitPaymentOrderItem.unitReceiptNoteId = new ObjectId(unitPaymentOrderItem.unitReceiptNoteId);
+                        unitPaymentOrderItem.unitReceiptNoteId = new ObjectId(unitPaymentOrderItem.unitReceiptNote._id);
                         unitPaymentOrderItem.unitReceiptNote._id = new ObjectId(unitPaymentOrderItem.unitReceiptNote._id);
 
-                        unitPaymentOrderItem.unitReceiptNote.unitId = new ObjectId(unitPaymentOrderItem.unitReceiptNote.unitId);
-                        unitPaymentOrderItem.unitReceiptNote.supplierId = new ObjectId(unitPaymentOrderItem.unitReceiptNote.supplierId);
-                        unitPaymentOrderItem.unitReceiptNote.deliveryOrderId = new ObjectId(unitPaymentOrderItem.unitReceiptNote.deliveryOrderId);
-                        unitPaymentOrderItem.unitReceiptNote.deliveryOrder.supplierId = new ObjectId(unitPaymentOrderItem.unitReceiptNote.deliveryOrder.supplierId);
+                        unitPaymentOrderItem.unitReceiptNote.unitId = new ObjectId(unitPaymentOrderItem.unitReceiptNote.unit._id);
+                        unitPaymentOrderItem.unitReceiptNote.supplierId = new ObjectId(unitPaymentOrderItem.unitReceiptNote.supplier._id);
+                        unitPaymentOrderItem.unitReceiptNote.deliveryOrderId = new ObjectId(unitPaymentOrderItem.unitReceiptNote.deliveryOrder._id);
+                        unitPaymentOrderItem.unitReceiptNote.deliveryOrder.supplierId = new ObjectId(unitPaymentOrderItem.unitReceiptNote.deliveryOrder.supplier._id);
                         for (var doItem of unitPaymentOrderItem.unitReceiptNote.deliveryOrder.items) {
-                            doItem.purchaseOrderExternalId = new ObjectId(doItem.purchaseOrderExternalId);
+                            doItem.purchaseOrderExternalId = new ObjectId(doItem.purchaseOrderExternal._id);
                             for (var fulfillment of doItem.fulfillments) {
-                                fulfillment.purchaseOrderId = new ObjectId(fulfillment.purchaseOrderId);
+                                fulfillment.purchaseOrderId = new ObjectId(fulfillment.purchaseOrder._id);
                                 fulfillment.purchaseOrder._id = new ObjectId(fulfillment.purchaseOrder._id);
                                 fulfillment.purchaseOrder.unitId = new ObjectId(fulfillment.purchaseOrder.unit._id);
                                 fulfillment.purchaseOrder.unit._id = new ObjectId(fulfillment.purchaseOrder.unit._id);
@@ -124,7 +124,7 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
 
                         for (var item of unitPaymentOrderItem.unitReceiptNote.items) {
                             item.product._id = new ObjectId(item.product._id);
-                            item.purchaseOrderId = new ObjectId(item.purchaseOrderId);
+                            item.purchaseOrderId = new ObjectId(item.purchaseOrder._id);
                             item.purchaseOrder._id = new ObjectId(item.purchaseOrder._id);
                             item.purchaseOrder.unitId = new ObjectId(item.purchaseOrder.unit._id);
                             item.purchaseOrder.unit._id = new ObjectId(item.purchaseOrder.unit._id);
@@ -143,7 +143,7 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
                         item.product._id = new ObjectId(item.product._id);
                         item.product.uom._id = new ObjectId(item.product.uom._id);
                         item.uom._id = new ObjectId(item.uom._id);
-                        item.purchaseOrderExternalId = new ObjectId(item.purchaseOrderExternalId);
+                        item.purchaseOrderExternalId = new ObjectId(item.purchaseOrderExternal._id);
                         item.purchaseOrderExternal._id = new ObjectId(item.purchaseOrderExternal._id);
                     }
 

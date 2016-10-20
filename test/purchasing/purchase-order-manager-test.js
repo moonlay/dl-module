@@ -279,17 +279,6 @@ it('#09. should success when read data', function (done) {
         })
 });
 
-it('#10. should success when read data no purchase order external ', function (done) {
-    purchaseOrderManager.readUnposted()
-        .then(documents => {
-            documents.should.be.instanceof(Array);
-            done();
-        })
-        .catch(e => {
-            done(e);
-        })
-});
-
 var purchaseOrderId;
 it('#11. should success when create new data purchase order', function (done) {
     var data = getData();

@@ -271,7 +271,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         reject(new ValidationError('data podl does not pass validation', purchaseOrderExternalError));
                     }
 
-                    valid.supplierId = new ObjectId(valid.supplierId);
+                    valid.supplierId = new ObjectId(valid.supplier._id);
                     valid.supplier._id = new ObjectId(valid.supplier._id);
                     valid.currency._id = new ObjectId(valid.currency._id);
                     if (valid.vat) {
@@ -280,27 +280,27 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     for (var item of valid.items) {
                         item.purchaseRequest.unit._id = new ObjectId(item.purchaseRequest.unit._id);
                         item.purchaseRequest.category._id = new ObjectId(item.purchaseRequest.category._id);
-                        item.purchaseRequest.unitId = new ObjectId(item.purchaseRequest.unitId);
-                        item.purchaseRequest.categoryId = new ObjectId(item.purchaseRequest.categoryId);
+                        item.purchaseRequest.unitId = new ObjectId(item.purchaseRequest.unit._id);
+                        item.purchaseRequest.categoryId = new ObjectId(item.purchaseRequest.category._id);
                         if (item.sourcePurchaseOrder) {
                             item.sourcePurchaseOrder._id = new ObjectId(item.sourcePurchaseOrder._id);
                             item.sourcePurchaseOrder.purchaseRequest.unit._id = new ObjectId(item.sourcePurchaseOrder.purchaseRequest.unit._id);
                             item.sourcePurchaseOrder.purchaseRequest.category._id = new ObjectId(item.sourcePurchaseOrder.purchaseRequest.category._id);
-                            item.sourcePurchaseOrder.purchaseRequest.unitId = new ObjectId(item.sourcePurchaseOrder.purchaseRequest.unitId);
-                            item.sourcePurchaseOrder.purchaseRequest.categoryId = new ObjectId(item.sourcePurchaseOrder.purchaseRequest.categoryId);
+                            item.sourcePurchaseOrder.purchaseRequest.unitId = new ObjectId(item.sourcePurchaseOrder.purchaseRequest.unit._id);
+                            item.sourcePurchaseOrder.purchaseRequest.categoryId = new ObjectId(item.sourcePurchaseOrder.purchaseRequest.category._id);
                             item.sourcePurchaseOrder.unit._id = new ObjectId(item.sourcePurchaseOrder.unit._id);
                             item.sourcePurchaseOrder.category._id = new ObjectId(item.sourcePurchaseOrder.category._id);
-                            item.sourcePurchaseOrder.unitId = new ObjectId(item.sourcePurchaseOrder.unitId);
-                            item.sourcePurchaseOrder.categoryId = new ObjectId(item.sourcePurchaseOrder.categoryId);
+                            item.sourcePurchaseOrder.unitId = new ObjectId(item.sourcePurchaseOrder.unit._id);
+                            item.sourcePurchaseOrder.categoryId = new ObjectId(item.sourcePurchaseOrder.category._id);
 
                             for (var soItem of item.sourcePurchaseOrder.items) {
                                 soItem.product._id = new ObjectId(soItem.product._id);
                                 soItem.defaultUom._id = new ObjectId(soItem.defaultUom._id);
                             }
                         }
-                        item.unitId = new ObjectId(item.unitId);
+                        item.unitId = new ObjectId(item.unit._id);
                         item.unit._id = new ObjectId(item.unit._id);
-                        item.categoryId = new ObjectId(item.categoryId);
+                        item.categoryId = new ObjectId(item.category._id);
                         item.category._id = new ObjectId(item.category._id);
 
                         for (var poItem of item.items) {
@@ -359,8 +359,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
 
                                     for (var poItem of _purchaseOrder.items) {
                                         for (var itemExternal of _poExternal.items) {
-                                            itemExternal.product._id = new ObjectId(itemExternal.product._id);
-                                            if ((itemExternal.product._id).equals(poItem.product._id)) {
+                                            if (itemExternal.product._id.equals(poItem.product._id)) {
                                                 poItem.dealQuantity = itemExternal.dealQuantity;
                                                 poItem.dealUom = itemExternal.dealUom;
                                                 poItem.pricePerDealUnit = itemExternal.pricePerDealUnit;
