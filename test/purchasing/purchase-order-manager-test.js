@@ -271,7 +271,7 @@ it(`#08. should success when get created data product with id`, function (done) 
 it('#09. should success when read data', function (done) {
     purchaseOrderManager.read()
         .then(documents => {
-            documents.should.be.instanceof(Array);
+            documents.data.should.be.instanceof(Array);
             done();
         })
         .catch(e => {
