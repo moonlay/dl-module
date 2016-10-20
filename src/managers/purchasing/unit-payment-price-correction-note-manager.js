@@ -94,10 +94,10 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
 
                     valid.unitPaymentOrderId = new ObjectId(valid.unitPaymentOrderId);
                     valid.unitPaymentOrder._id = new ObjectId(valid.unitPaymentOrder._id);
-                    valid.unitPaymentOrde.unitId = new ObjectId(valid.unitPaymentOrde.unitId);
-                    valid.unitPaymentOrde.unit._id = new ObjectId(valid.unitPaymentOrde.unit._id);
-                    valid.unitPaymentOrde.supplierId = new ObjectId(valid.unitPaymentOrde.supplierId);
-                    valid.unitPaymentOrde.supplier._id = new ObjectId(valid.unitPaymentOrde.supplier._id);
+                    valid.unitPaymentOrder.unitId = new ObjectId(valid.unitPaymentOrder.unitId);
+                    valid.unitPaymentOrder.unit._id = new ObjectId(valid.unitPaymentOrder.unit._id);
+                    valid.unitPaymentOrder.supplierId = new ObjectId(valid.unitPaymentOrder.supplierId);
+                    valid.unitPaymentOrder.supplier._id = new ObjectId(valid.unitPaymentOrder.supplier._id);
 
                     for (var unitPaymentOrderItem of valid.unitPaymentOrder.items) {
                         unitPaymentOrderItem.productId = new ObjectId(unitPaymentOrderItem.productId);
@@ -142,14 +142,13 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
                     for (var item of valid.items) {
                         item.product._id = new ObjectId(item.product._id);
                         item.product.uom._id = new ObjectId(item.product.uom._id);
-                        item.product._id = new ObjectId(item.product.uom._id);
                         item.uom._id = new ObjectId(item.uom._id);
                         item.purchaseOrderExternalId = new ObjectId(item.purchaseOrderExternalId);
                         item.purchaseOrderExternal._id = new ObjectId(item.purchaseOrderExternal._id);
                     }
 
                     if (!valid.stamp)
-                        valid = new UnitReceiptNote(valid);
+                        valid = new UnitPaymentPriceCorrectionNote(valid);
 
                     valid.stamp(this.user.username, 'manager');
                     resolve(valid);
@@ -193,7 +192,7 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
                 '$or': [filterNo, filterSupplierName, filterUnitCoverLetterNo]
             };
         }
-        query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
+        query = { '$and': [deletedFilter, paging.filter || {}, keywordFilter] }
         return query;
     }
 

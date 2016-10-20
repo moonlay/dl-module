@@ -1,4 +1,5 @@
 var helper = require("../helper");
+var ObjectId = require("mongodb").ObjectId;
 var validatorPurchasing = require('dl-models').validator.purchasing;
 var UnitPaymentPriceCorrectionNoteManager = require("../../src/managers/purchasing/unit-payment-price-correction-note-manager");
 var UnitPaymentOrderManager = require("../../src/managers/purchasing/unit-payment-order-manager");
@@ -9,19 +10,6 @@ var UnitPaymentPriceCorrectionNote = require('dl-models').purchasing.UnitPayment
 var UnitPaymentPriceCorrectionNoteItem = require('dl-models').purchasing.UnitPaymentPriceCorrectionNoteItem;
 
 require("should");
-function getUnitPaymentOrder() {    
-    var unitPaymentOrder = new UnitPaymentOrder();
-    unitPaymentOrderManager.getSingleByQuery({ _deleted: false })
-        .then(data => {
-            unitPaymentOrder = data;
-            done();
-        })
-        .catch(e => {
-            done(e);
-        })
-    
-    return unitPaymentOrder;
-}
 
 function getDataUnitPaymnetPriceCorrection(unitPaymentOrder){
     var unitPaymentPriceCorrectionNote = new UnitPaymentPriceCorrectionNote();
@@ -46,9 +34,13 @@ function getDataUnitPaymnetPriceCorrection(unitPaymentOrder){
     {
         var unitPaymentPriceCorrectionNoteItem = new UnitPaymentPriceCorrectionNoteItem();
         var _productId = new ObjectId(item.product._id);
-        var unitReceiptNoteItem = item.unitReceiptNote.items.find(function (product){
-            return product._id=_productId;
-        });
+        var unitReceiptNoteItem ={};
+        for (var _unitReceiptNoteItem of item.unitReceiptNote.items){
+             if(_unitReceiptNoteItem.product._id.equals(_productId)){
+                 unitReceiptNoteItem=_unitReceiptNoteItem;
+                 break;
+             }
+        };
         
         unitPaymentPriceCorrectionNoteItem.purchaseOrderExternalId = unitReceiptNoteItem.purchaseOrder.purchaseOrderExternalId;
         unitPaymentPriceCorrectionNoteItem.purchaseOrderExternal = unitReceiptNoteItem.purchaseOrder.purchaseOrderExternal;
@@ -60,9 +52,10 @@ function getDataUnitPaymnetPriceCorrection(unitPaymentOrder){
         unitPaymentPriceCorrectionNoteItem.pricePerUnit=10;
         unitPaymentPriceCorrectionNoteItem.priceTotal=1000;
         
-        _item.push(unitPaymentPriceCorrectionNote);
+        _item.push(unitPaymentPriceCorrectionNoteItem);
     }
     unitPaymentPriceCorrectionNote.items=_item;
+    return unitPaymentPriceCorrectionNote;
     
 }
 
@@ -88,7 +81,19 @@ it('#01. should success when read data', function (done) {
     unitPaymentPriceCorrectionNoteManager.read()
         .then(documents => {
             //process documents
-            documents.should.be.instanceof(Array);
+            documents.data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        })
+});
+var unitPaymentOrder = new UnitPaymentOrder();
+it(`#02. should success when get data Unit Payment Order`, function (done) {
+    unitPaymentOrderManager.getSingleById("58084a9a84ccbf1958e1791d")
+        .then(data => { 
+            data.should.instanceof(Object);
+            unitPaymentOrder = data;
             done();
         })
         .catch(e => {
@@ -97,10 +102,7 @@ it('#01. should success when read data', function (done) {
 });
 
 var createdId;
-it('#02. should success when create new data', function (done) {
-    var unitPaymentOrder = new UnitPaymentOrder();
-    unitPaymentOrder = getUnitPaymentOrder();
-    
+it('#03. should success when create new data', function (done) {
     var data = getDataUnitPaymnetPriceCorrection(unitPaymentOrder);
     
     unitPaymentPriceCorrectionNoteManager.create(data)
@@ -115,10 +117,10 @@ it('#02. should success when create new data', function (done) {
 });
 
 var createdData;
-it(`#03. should success when get created data with id`, function (done) {
-    unitPaymentPriceCorrectionNoteManager.getSingleByQuery({ _id: createdId })
+it(`#04. should success when get created data with id`, function (done) {
+    unitPaymentPriceCorrectionNoteManager.getSingleById( createdId )
         .then(data => {
-            validatorPurchasing.unitReceiptNote(data);
+            // validatorPurchasing.unitReceiptNote(data);
             data.should.instanceof(Object);
             createdData = data;
             done();
@@ -128,7 +130,7 @@ it(`#03. should success when get created data with id`, function (done) {
         })
 });
 
-it(`#04. should success when update created data`, function (done) {
+it(`#05. should success when update created data`, function (done) {
     createdData.remark += '[updated]';
 
     unitPaymentPriceCorrectionNoteManager.update(createdData)
@@ -141,7 +143,7 @@ it(`#04. should success when update created data`, function (done) {
         });
 });
 
-it(`#05. should success when get updated data with id`, function (done) {
+it(`#06. should success when get updated data with id`, function (done) {
     unitPaymentPriceCorrectionNoteManager.getSingleByQuery({ _id: createdId })
         .then(data => {
             data.no.should.equal(createdData.no); 
@@ -151,17 +153,6 @@ it(`#05. should success when get updated data with id`, function (done) {
         .catch(e => {
             done(e);
         })
-});
-
-it(`#06. should success when delete data`, function (done) {
-    unitPaymentPriceCorrectionNoteManager.delete(createdData)
-        .then(id => {
-            createdId.toString().should.equal(id.toString());
-            done();
-        })
-        .catch(e => {
-            done(e);
-        });
 });
 
 it('#07. should error when create new data with same code', function (done) {
@@ -192,3 +183,15 @@ it('#08. should error when create new blank data', function (done) {
             done();
         })
 });
+
+it(`#09. should success when delete data`, function (done) {
+    unitPaymentPriceCorrectionNoteManager.delete(createdData)
+        .then(id => {
+            createdId.toString().should.equal(id.toString());
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
