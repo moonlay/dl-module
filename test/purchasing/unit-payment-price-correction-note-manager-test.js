@@ -18,14 +18,15 @@ function getDataUnitPaymnetPriceCorrection(unitPaymentOrder){
     var code = stamp.toString(36);
     
     unitPaymentPriceCorrectionNote.no = code;
+    unitPaymentPriceCorrectionNote.date = new Date();
     unitPaymentPriceCorrectionNote.unitPaymentOrderId = unitPaymentOrder._id;
     unitPaymentPriceCorrectionNote.unitPaymentOrder = unitPaymentOrder;
     unitPaymentPriceCorrectionNote.invoiceCorrectionNo = `invoiceCorrectionNo ${code}`;
-    unitPaymentPriceCorrectionNote.invoiceCorrectionDate = now;
+    unitPaymentPriceCorrectionNote.invoiceCorrectionDate = new Date();
     unitPaymentPriceCorrectionNote.incomeTaxCorrectionNo = `incomeTaxCorrectionNo ${code}`;
-    unitPaymentPriceCorrectionNote.incomeTaxCorrectionDate = now;
+    unitPaymentPriceCorrectionNote.incomeTaxCorrectionDate = new Date();
     unitPaymentPriceCorrectionNote.vatTaxCorrectionNo = `vatTaxCorrectionNo ${code}`;
-    unitPaymentPriceCorrectionNote.vatTaxCorrectionDate = now;
+    unitPaymentPriceCorrectionNote.vatTaxCorrectionDate = new Date();
     unitPaymentPriceCorrectionNote.unitCoverLetterNo = `unitCoverLetterNo ${code}`;
     unitPaymentPriceCorrectionNote.remark = `remark ${code}`;
     
@@ -49,8 +50,8 @@ function getDataUnitPaymnetPriceCorrection(unitPaymentOrder){
         unitPaymentPriceCorrectionNoteItem.product = item.product;
         unitPaymentPriceCorrectionNoteItem.quantity=item.unitReceiptNoteQuantity;
         unitPaymentPriceCorrectionNoteItem.uom = item.unitReceiptNoteUom;
-        unitPaymentPriceCorrectionNoteItem.pricePerUnit=10;
-        unitPaymentPriceCorrectionNoteItem.priceTotal=1000;
+        unitPaymentPriceCorrectionNoteItem.pricePerUnit=item.invoicePrice;
+        unitPaymentPriceCorrectionNoteItem.priceTotal=item.invoicePrice*item.unitReceiptNoteQuantity;
         
         _item.push(unitPaymentPriceCorrectionNoteItem);
     }
@@ -184,14 +185,14 @@ it('#08. should error when create new blank data', function (done) {
         })
 });
 
-it(`#09. should success when delete data`, function (done) {
-    unitPaymentPriceCorrectionNoteManager.delete(createdData)
-        .then(id => {
-            createdId.toString().should.equal(id.toString());
-            done();
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+// it(`#09. should success when delete data`, function (done) {
+//     unitPaymentPriceCorrectionNoteManager.delete(createdData)
+//         .then(id => {
+//             createdId.toString().should.equal(id.toString());
+//             done();
+//         })
+//         .catch(e => {
+//             done(e);
+//         });
+// });
 
