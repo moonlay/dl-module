@@ -124,7 +124,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         }
                     }
 
-                    for (var item of valid.items){
+                    for (var item of valid.items) {
                         item.product._id = new ObjectId(item.product._id);
                         item.purchaseOrderId = new ObjectId(item.purchaseOrder._id);
                         item.purchaseOrder._id = new ObjectId(item.purchaseOrder._id);
@@ -132,7 +132,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         item.purchaseOrder.unit._id = new ObjectId(item.purchaseOrder.unit._id);
                         item.purchaseOrder.categoryId = new ObjectId(item.purchaseOrder.category._id);
                         item.purchaseOrder.category._id = new ObjectId(item.purchaseOrder.category._id);
-                        for(var poItem of item.purchaseOrder.items){
+                        item.purchaseOrder.currency._id = new ObjectId(valid.currency._id);
+                        for (var poItem of item.purchaseOrder.items) {
                             poItem.product._id = new ObjectId(poItem.product.uom._id);
                             poItem.product.uom._id = new ObjectId(poItem.product.uom._id);
                             poItem.defaultUom._id = new ObjectId(poItem.product.uom._id);
@@ -156,9 +157,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         var deletedFilter = {
             _deleted: false
         }, keywordFilter = {};
-        
+
         var query = {};
-        
+
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
 

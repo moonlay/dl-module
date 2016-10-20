@@ -141,6 +141,8 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
 
                     for (var item of valid.items) {
                         item.product._id = new ObjectId(item.product._id);
+                        item.productId = new ObjectId(item.product._id);
+                        item.currency._id = new ObjectId(item.currency._id);
                         item.product.uom._id = new ObjectId(item.product.uom._id);
                         item.uom._id = new ObjectId(item.uom._id);
                         item.purchaseOrderExternalId = new ObjectId(item.purchaseOrderExternal._id);
