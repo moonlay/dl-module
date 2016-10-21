@@ -6,7 +6,7 @@ var assert = require('assert');
 var map = DLModels.map;
 var i18n = require('dl-i18n');
 var UnitPaymentPriceCorrectionNote = DLModels.purchasing.UnitPaymentPriceCorrectionNote;
-var UnitPaymentOrderManager = require('./unit-receipt-note-manager');
+var UnitPaymentOrderManager = require('./unit-payment-order-manager');
 var BaseManager = require('../base-manager');
 
 module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager {
@@ -33,8 +33,11 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
                     }]
             });
 
-            var getUnitPaymentOrder = this.unitPaymentOrderManager.getSingleById(valid.unitPaymentOrderId);
-            Promise.all([getUnitPaymentPriceCorrectionNote, getUnitPaymentOrder])
+            var getUnitPaymentOrder = this.unitPaymentOrderManager.getSingleByQuery({_id:valid.unitPaymentOrder._id});
+            // var query=[];
+            // query.push(getUnitPaymentPriceCorrectionNote);
+            // query.push(getUnitPaymentOrder);
+            Promise.all([getUnitPaymentPriceCorrectionNote,getUnitPaymentOrder])
                 .then(results => {
                     var _unitPaymentPriceCorrectionNote = results[0];
                     var _unitPaymentOrder = results[1];
@@ -101,13 +104,12 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
                     valid.unitPaymentOrder = _unitPaymentOrder;
 
                     for (var item of valid.items) {
-                        for (var unitReceiptNote of _unitPaymentOrder.unitReceiptNote.items) {
-                                for (var unitReceiptNoteItem of unitReceiptNote.items) {
+                        for (var _unitPaymentOrderItem of _unitPaymentOrder.items){
+                            for(var unitReceiptNoteItem of _unitPaymentOrderItem.unitReceiptNote.items) {
                                     var _purchaseOrderExternalId = new ObjectId(item.purchaseOrderExternalId);
-                                    var _purchaseRequestId = new ObjectId(item.purchaseRequestId);
                                     var _productId = new ObjectId(item.productId);
 
-                                    if (_purchaseOrderExternalId.equals(unitReceiptNoteItem.purchaseOrder.purchaseOrderExternalId) && _purchaseRequestId.equals(unitReceiptNoteItem.purchaseOrder.purchaseRequestId) && _productId.equals(unitReceiptNoteItem.productId)) {
+                                    if (_purchaseOrderExternalId.equals(unitReceiptNoteItem.purchaseOrder.purchaseOrderExternalId) && _productId.equals(unitReceiptNoteItem.product._id)) {
                                         item.purchaseOrderExternalId = unitReceiptNoteItem.purchaseOrder.purchaseOrderExternalId;
                                         item.purchaseOrderExternal = unitReceiptNoteItem.purchaseOrder.purchaseOrderExternal;
                                         item.purchaseRequestId = unitReceiptNoteItem.purchaseOrder.purchaseRequestId;
@@ -120,8 +122,8 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
                                         item.currencyRate = unitReceiptNoteItem.currencyRate;
                                         break;
                                     }
-                                }
                         }
+                    }
                     }
 
                     if (!valid.stamp)
@@ -169,7 +171,7 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
                 '$or': [filterNo, filterSupplierName, filterUnitCoverLetterNo]
             };
         }
-        query = { '$and': [deletedFilter, paging.filter || {}, keywordFilter] }
+        query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
         return query;
     }
 

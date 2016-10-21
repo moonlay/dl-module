@@ -23,30 +23,13 @@ module.exports = class BaseManager {
         return Promise.resolve(true);
     }
 
-    getCollectionInfo(query) {
-        return new Promise((resolve, reject) => {
-            this._createIndexes()
-                .then((createIndexResults) => {
-                    this.collection.count(query)
-                        .then(count => {
-
-                            resolve(count);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
 
     read(paging) {
         var _paging = Object.assign({
             page: 1,
             size: 20,
+            order:{},
+            filter:{},
             asc: true
         }, paging);
         var start = process.hrtime();
