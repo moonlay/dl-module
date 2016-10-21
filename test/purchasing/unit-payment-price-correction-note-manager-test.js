@@ -44,10 +44,10 @@ function getDataUnitPaymnetPriceCorrection(unitPaymentOrder) {
     unitPaymentPriceCorrectionNote.remark = `remark ${code}`;
 
     var _item = []
-    for (var unitReceiptNote of unitPaymentOrder.items) {
+    for (var unitPaymentOrderItem of unitPaymentOrder.items) {
         var unitPaymentPriceCorrectionNoteItem = new UnitPaymentPriceCorrectionNoteItem();
 
-        for (var unitReceiptNoteItem of unitReceiptNote.items) {
+        for (var unitReceiptNoteItem of unitPaymentOrderItem.unitReceiptNote.items) {
             unitPaymentPriceCorrectionNoteItem.purchaseOrderExternalId = unitReceiptNoteItem.purchaseOrder.purchaseOrderExternalId;
             unitPaymentPriceCorrectionNoteItem.purchaseOrderExternal = unitReceiptNoteItem.purchaseOrder.purchaseOrderExternal;
             unitPaymentPriceCorrectionNoteItem.purchaseRequestId = unitReceiptNoteItem.purchaseOrder.purchaseRequestId;
@@ -98,7 +98,7 @@ it('#01. should success when read data', function (done) {
 });
 var unitPaymentOrder = new UnitPaymentOrder();
 it(`#02. should success when get data Unit Payment Order`, function (done) {
-    unitPaymentOrderManager.getSingleById("58084a9a84ccbf1958e1791d")
+    unitPaymentOrderManager.getSingleById("5809c0210d5b282a78a9faf1")
         .then(data => { 
             data.should.instanceof(Object);
             unitPaymentOrder = data;
