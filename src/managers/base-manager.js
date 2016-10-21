@@ -28,8 +28,8 @@ module.exports = class BaseManager {
         var _paging = Object.assign({
             page: 1,
             size: 20,
-            order:{},
-            filter:{},
+            order: {},
+            filter: {},
             asc: true
         }, paging);
         var start = process.hrtime();
