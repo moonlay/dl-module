@@ -181,7 +181,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             };
 
             keywordFilter = {
-                '$or': [filterNo, filterSupplierName, filterUnitDivision, filterUnitSubDivision, filterDeliveryOrder]
+                '$or': [filterNo, filterSupplierName, filterUnitDivision, filterUnitSubDivision]
             };
         }
         query = { '$and': [deletedFilter, paging.filter, keywordFilter] }

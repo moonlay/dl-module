@@ -69,14 +69,14 @@ it('#02. should success when create new data', function (done) {
     if (createdData) {
         unitPaymentOrderItem.unitReceiptNoteId = createdData._id;
         unitPaymentOrderItem.unitReceiptNote = createdData;
-        for (var item of createdData.items) {
-            unitPaymentOrderItem.productId = item.product._id;
-            unitPaymentOrderItem.product = item.product;
-            unitPaymentOrderItem.unitReceiptNoteQuantity = 10;
-            unitPaymentOrderItem.unitReceiptNoteUom = item.deliveredUom.unit;
-            unitPaymentOrderItem.invoicePrice = 10;
-            unitPaymentOrderItem.remark = '';
-        }
+        // for (var item of createdData.items) {
+        //     unitPaymentOrderItem.productId = item.product._id;
+        //     unitPaymentOrderItem.product = item.product;
+        //     unitPaymentOrderItem.unitReceiptNoteQuantity = 10;
+        //     unitPaymentOrderItem.unitReceiptNoteUom = item.deliveredUom;
+        //     unitPaymentOrderItem.invoicePrice = 10;
+        //     unitPaymentOrderItem.remark = '';
+        // }
     }
     data.unit = createdData.unit;
     data.unitId = createdData.unit._id;
