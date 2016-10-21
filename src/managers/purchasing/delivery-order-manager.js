@@ -162,7 +162,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 
-                    valid.supplierId = new ObjectId(valid.supplie._id);
+                    valid.supplierId = new ObjectId(valid.supplier._id);
                     valid.supplier._id = new ObjectId(valid.supplier._id);
                     for (var item of valid.items) {
                         item.purchaseOrderExternalId = new ObjectId(item.purchaseOrderExternal._id);
