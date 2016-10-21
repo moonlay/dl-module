@@ -33,10 +33,8 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
                     }]
             });
 
-            var getUnitPaymentOrder = this.unitPaymentOrderManager.getSingleByQuery({_id:valid.unitPaymentOrder._id});
-            // var query=[];
-            // query.push(getUnitPaymentPriceCorrectionNote);
-            // query.push(getUnitPaymentOrder);
+            var getUnitPaymentOrder = this.unitPaymentOrderManager.getSingleById(valid.unitPaymentOrder._id);
+            
             Promise.all([getUnitPaymentPriceCorrectionNote,getUnitPaymentOrder])
                 .then(results => {
                     var _unitPaymentPriceCorrectionNote = results[0];
