@@ -161,4 +161,50 @@ module.exports = class PurchaseRequestManager extends BaseManager {
 
         });
     }
+
+    post(listPurchaseRequest) {
+        return new Promise((resolve, reject) => {
+            for (var purchaseRequest of listPurchaseRequest) {
+            this._validate(purchaseRequest)
+                .then(validPurchaseRequest => {
+                    validPurchaseRequest.isPosted = true;
+                    this.collection.update(validPurchaseRequest)
+                        .then(id => {
+                            resolve(id);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+            }
+        });
+        
+    }
+
+    pdf(id) {
+        return new Promise((resolve, reject) => {
+
+            this.getSingleById(id)
+                .then(purchaseRequest => {
+                    var getDefinition = require('../../pdf/definitions/purchase-request');
+                    var definition = getDefinition(purchaseRequest);
+
+                    var generatePdf = require('../../pdf/pdf-generator');
+                    generatePdf(definition)
+                        .then(binary => {
+                            resolve(binary);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+
+        });
+    }
 }
