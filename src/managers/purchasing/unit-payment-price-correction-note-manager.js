@@ -33,7 +33,7 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
                     }]
             });
 
-            var getUnitPaymentOrder = this.unitPaymentOrderManager.getSingleById(valid.unitPaymentOrder._id);
+            var getUnitPaymentOrder = this.unitPaymentOrderManager.getSingleByQueryOrDefault(valid.unitPaymentOrder._id);
             
             Promise.all([getUnitPaymentPriceCorrectionNote,getUnitPaymentOrder])
                 .then(results => {
