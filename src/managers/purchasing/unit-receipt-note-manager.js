@@ -111,7 +111,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     valid.deliveryOrder.supplier._id = new ObjectId(valid.deliveryOrder.supplier._id);
                     for (var doItem of valid.deliveryOrder.items) {
                         doItem.purchaseOrderExternalId = new ObjectId(doItem.purchaseOrderExternal._id);
-                        doItem.purchaseOrderExternal._id = new ObjectId(doItem.purchaseOrderExterna._id);
+                        doItem.purchaseOrderExternal._id = new ObjectId(doItem.purchaseOrderExternal._id);
                         for (var fulfillment of doItem.fulfillments) {
                             fulfillment.purchaseOrderId = new ObjectId(fulfillment.purchaseOrder._id);
                             fulfillment.purchaseOrder._id = new ObjectId(fulfillment.purchaseOrder._id);
@@ -132,7 +132,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         item.purchaseOrder.unit._id = new ObjectId(item.purchaseOrder.unit._id);
                         item.purchaseOrder.categoryId = new ObjectId(item.purchaseOrder.category._id);
                         item.purchaseOrder.category._id = new ObjectId(item.purchaseOrder.category._id);
-                        item.purchaseOrder.currency._id = new ObjectId(valid.currency._id);
+                        item.purchaseOrder.currency._id = new ObjectId(item.currency._id);
                         for (var poItem of item.purchaseOrder.items) {
                             poItem.product._id = new ObjectId(poItem.product.uom._id);
                             poItem.product.uom._id = new ObjectId(poItem.product.uom._id);
