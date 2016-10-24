@@ -140,7 +140,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         }
                     }
                     
-                        valid.unitId = new ObjectId(valid.unitId);
+                        valid.unitId = new ObjectId(valid.unit._id);
                         valid.categoryId = new ObjectId(valid.categoryId);
                     if (!valid.stamp)
                         valid = new PurchaseOrder(valid);
