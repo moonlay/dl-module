@@ -50,7 +50,7 @@ module.exports = function (unitReceiptNote) {
                     }, {
                             alignment: "right",
                             text: 'BON PENERIMAAN BARANG',
-                            style: ['size09']
+                            style: ['size09','bold']
                         }]
                 }]
 
