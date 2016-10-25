@@ -42,7 +42,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     else if (_module)
                         errors["no"] = i18n.__("PurchaseRequest.no.isExists:%s is already exists", i18n.__("PurchaseRequest.no._:No")); //"No. bon PR sudah terdaftar";
 
-                    if (!valid.date || valid.date == '')
+                    if (!valid.date || valid.date == '' || valid.date =="undefined")
                         errors["date"] = i18n.__("PurchaseRequest.date.isRequired:%s is required", i18n.__("PurchaseRequest.date._:Date"));//"Tanggal PR tidak boleh kosong";
 
                     if (!valid.unitId)
@@ -161,9 +161,12 @@ module.exports = class PurchaseRequestManager extends BaseManager {
 
     create(purchaseRequest) {
         purchaseRequest = new PurchaseRequest(purchaseRequest);
-
         return new Promise((resolve, reject) => {
-            //purchaseRequest.no = `${this.moduleId}${this.year}${generateCode()}`;
+            var dateFormat = "MMYY";
+            var locale = 'id-ID';
+            var moment = require('moment');
+            moment.locale(locale);
+            purchaseRequest.no = `${purchaseRequest.budget.code}${purchaseRequest.unit.code}${purchaseRequest.category.code}${moment(purchaseRequest.date).format(dateFormat)}${generateCode()}`;
             this._validate(purchaseRequest)
                 .then(validPurchaseRequest => {
                     this.collection.insert(validPurchaseRequest)

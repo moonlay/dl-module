@@ -5,12 +5,17 @@ module.exports = function (purchaseRequest) {
     var iso = "FM-6.00-06-004/R1";
     var number = purchaseRequest.no;
 
-    var locale = 'id-id';
+    var locale = 'id-ID';
     var dateLocaleOptions = {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     };
+    var dateFormat = "DD-MMMM-YYYY";
+
+    var moment = require('moment');
+    moment.locale(locale);
+
     var numberLocaleOptions = {
         style: 'decimal',
         maximumFractionDigits: 4
@@ -83,7 +88,7 @@ var line = [{
                         stack: [':', ':']
                     }, {
                         width: '*',
-                        stack: [purchaseRequest.unit.subdivision, purchaseRequest.no]
+                        stack: [purchaseRequest.unit.subDivision, purchaseRequest.no]
                     }],
                 style: ['size08']
 
@@ -96,7 +101,7 @@ var line = [{
                 width: '30%',
                 columns: [{
                     width: '*',
-                    stack: [ `Solo, ${new Date(purchaseRequest.date).toLocaleString(locale, dateLocaleOptions)} `],
+                    stack: [ `Solo, ${moment(purchaseRequest.date).format(dateFormat)} `],
                     alignment: "right",
                 }],
                 style: ['size08']
@@ -164,7 +169,7 @@ var line = [{
 
     var table = [{
         table: {
-            widths: ['5%', '40%', '20%', '10%', '25%'],
+            widths: ['5%', '20%', '40%', '10%', '25%'],
             headerRows: 1,
             body: [].concat([thead],tbody,tfoot)
         }
@@ -177,13 +182,13 @@ var line = [{
                         width: '60%',
                         columns: [{
                             width: '50%',
-                            stack: ['DIMINTA DATANG', 'KETERANGAN', 'KATEGORI']
+                            stack: ['KATEGORI','DIMINTA DATANG', 'KETERANGAN']
                         }, {
                             width: '3%',
                             stack: [':', ':', ':']
                         }, {
                             width: '*',
-                            stack: [`${new Date(purchaseRequest.expectedDeliveryDate).toLocaleString(locale, dateLocaleOptions)}`,purchaseRequest.remark, purchaseRequest.category.name]
+                            stack: [purchaseRequest.category.name,`${moment(purchaseRequest.expectedDeliveryDate).format(dateFormat)}`,purchaseRequest.remark]
                         }, ]
                     }]
                 }
