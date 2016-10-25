@@ -352,6 +352,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     _purchaseOrder.currencyRate = _purchaseOrderExternal.currencyRate;
                                     _purchaseOrder.paymentMethod = _purchaseOrderExternal.paymentMethod;
                                     _purchaseOrder.paymentDueDays = _purchaseOrderExternal.paymentDueDays;
+                                    _purchaseOrder.vat = _purchaseOrderExternal.vat;
                                     _purchaseOrder.useVat = _purchaseOrderExternal.useVat;
                                     _purchaseOrder.vatRate = _purchaseOrderExternal.vatRate;
                                     _purchaseOrder.useIncomeTax = _purchaseOrderExternal.useIncomeTax;

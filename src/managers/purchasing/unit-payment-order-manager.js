@@ -80,6 +80,11 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
 
                     valid.unitId = new ObjectId(valid.unitId);
                     valid.supplierId = new ObjectId(valid.supplierId);
+                    valid.categoryId = new ObjectId(valid.category._id);
+                    valid.category._id = new ObjectId(valid.category._id);
+                    valid.currency._id = new ObjectId(valid.currency._id);
+                    valid.vat._id = new ObjectId(valid.vat._id);
+                    valid.supplierId = new ObjectId(valid.categoryId);
                     valid.unit._id = new ObjectId(valid.unitId);
                     valid.supplier._id = new ObjectId(valid.supplierId);
                     for (var item of valid.items) {
