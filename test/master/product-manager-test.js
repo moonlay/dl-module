@@ -83,7 +83,7 @@ it('#03. should success when read data product', function (done) {
     instanceManager.read()
         .then(documents => {
             //process documents
-            documents.should.be.instanceof(Array);
+            documents.data.should.be.instanceof(Array);
             done();
         })
         .catch(e => {

@@ -42,6 +42,9 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     else if (_module)
                         errors["no"] = i18n.__("PurchaseRequest.no.isExists:%s is already exists", i18n.__("PurchaseRequest.no._:No")); //"No. bon PR sudah terdaftar";
 
+                    if (!valid.date || valid.date == '')
+                        errors["date"] = i18n.__("PurchaseRequest.date.isRequired:%s is required", i18n.__("PurchaseRequest.date._:Date"));//"Tanggal PR tidak boleh kosong";
+
                     if (!valid.unitId)
                         errors["unit"] = i18n.__("PurchaseRequest.unit.isRequired:%s is required", i18n.__("PurchaseRequest.unit._:Unit")); //"Unit tidak boleh kosong";
                     else if (valid.unit) {
@@ -51,6 +54,20 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     else if (!valid.unit)
                         errors["unit"] =  i18n.__("PurchaseRequest.unit.isRequired:%s is required", i18n.__("PurchaseRequest.unit._:Unit")); //"Unit tidak boleh kosong";
 
+                    if (!valid.categoryId)
+                        errors["category"] = i18n.__("PurchaseRequest.category.isRequired:%s is required", i18n.__("PurchaseRequest.category._:Category")); //"Category tidak boleh kosong";
+                    else if (valid.category) {
+                        if (!valid.category._id)
+                            errors["category"] = i18n.__("PurchaseRequest.category.isRequired:%s is required", i18n.__("PurchaseRequest.category._:Category")); //"Category tidak boleh kosong";
+                    }
+                    else if (!valid.category)
+                        errors["category"] =  i18n.__("PurchaseRequest.category.isRequired:%s is required", i18n.__("PurchaseRequest.category._:Category")); //"Category tidak boleh kosong";
+
+                    if (!valid.budget || valid.budget.name=='')
+                        errors["budget"] = i18n.__("PurchaseRequest.budget.name.isRequired:%s is required", i18n.__("PurchaseRequest.budget.name._:Budget")); //"Budget tidak boleh kosong";
+
+
+
                     if (valid.items) {
                         if (valid.items.length <= 0) {
                             errors["items"] =  i18n.__("PurchaseRequest.items.isRequired:%s is required", i18n.__("PurchaseRequest.items._:Item")); //"Harus ada minimal 1 barang";
@@ -59,6 +76,8 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                             var itemErrors = [];
                             for (var item of valid.items) {
                                 var itemError = {};
+                                 if (!item.product || !item.product._id)
+                                itemError["product"] = i18n.__("PurchaseRequest.items.product.name.isRequired:%s is required", i18n.__("PurchaseRequest.items.product.name._:Name")); //"Nama barang tidak boleh kosong";
                                 if (item.quantity <= 0)
                                     itemError["quantity"] = i18n.__("PurchaseRequest.items.quantity.isRequired:%s is required", i18n.__("PurchaseRequest.items.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
                                 itemErrors.push(itemError);
@@ -144,7 +163,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         purchaseRequest = new PurchaseRequest(purchaseRequest);
 
         return new Promise((resolve, reject) => {
-            purchaseRequest.no = `${this.moduleId}${this.year}${generateCode()}`;
+            //purchaseRequest.no = `${this.moduleId}${this.year}${generateCode()}`;
             this._validate(purchaseRequest)
                 .then(validPurchaseRequest => {
                     this.collection.insert(validPurchaseRequest)

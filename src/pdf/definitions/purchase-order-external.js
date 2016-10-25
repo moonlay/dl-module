@@ -194,14 +194,17 @@ module.exports = function(pox) {
             colSpan: 4
         }, "", "", ""]
     ];
-
-    var sum = items.length > 0 ? items.reduce(function(prev, curr, index, arr) {
-        return (prev.price * prev.quantity) + (curr.price * curr.quantity);
-    }, {
+    var initialValue = {
         price: 0,
-        quantity: 0
-    }) : 0;
+        quntity: 0
+    };
     
+    var sum = (items.length > 0 ? items : [initialValue])
+        .map(item => item.price * item.quantity)
+        .reduce(function(prev, curr, index, arr) {
+            return prev + curr;
+        }, 0);
+ 
     var vat = pox.useVat ? sum * 0.1 : 0;
 
     var tfoot = [

@@ -121,6 +121,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                             }
                         }
                         item.unitReceiptNote.deliveryOrder.supplierId = new ObjectId(item.unitReceiptNote.deliveryOrder.supplierId);
+
                         item.productId = new ObjectId(item.productId);
                         item.product._id = new ObjectId(item.productId);
                         for (var fulfillment of doItem.fulfillments) {
@@ -135,7 +136,9 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     }
 
                     if (!valid.stamp)
+                    {
                         valid = new UnitPaymentOrder(valid);
+                    }
 
                     valid.stamp(this.user.username, 'manager');
                     resolve(valid);
@@ -211,6 +214,28 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                         for (var poItem of purchaseOrder.items) {
                                             for (var unitPaymentOrderItem of validUnitPaymentOrder.items) {
                                                 if (validUnitPaymentOrder.unitId.equals(purchaseOrder.unitId)) {
+                                                    for (var fulfillment of poItem.fulfillments) {
+                                                        var fulfillmentNo = fulfillment.deliveryOderNo || '';
+                                                        var deliveryOrderNo = unitPaymentOrderItem.unitReceiptNote.deliveryOrder.no || '';
+                                                        if (fulfillmentNo == deliveryOrderNo) {
+                                                            fulfillment.invoiceDate = validUnitPaymentOrder.invoceDate;
+                                                            fulfillment.invoiceNo = validUnitPaymentOrder.invoceDate;
+                                                            fulfillment.interNoteDate = validUnitPaymentOrder.no;
+                                                            fulfillment.interNoteNo = validUnitPaymentOrder.date;
+                                                            fulfillment.interNoteValue = validUnitPaymentOrder.invoicePrice;
+                                                            fulfillment.interNoteDueDate = validUnitPaymentOrder.dueDate;
+                                                            if (validUnitPaymentOrder.incomeTaxNo) {
+                                                                fulfillment.ppnNo = validUnitPaymentOrder.incomeTaxNo;
+                                                                fulfillment.ppnDate = validUnitPaymentOrder.incomeTaxDate
+                                                                fulfillment.ppnValue = 0.1;
+                                                            }
+                                                            if (validUnitPaymentOrder.vatNo) {
+                                                                fulfillment.ppnNo = validUnitPaymentOrder.vatNo;
+                                                                fulfillment.pphValue = validUnitPaymentOrder.vatDate;
+                                                                fulfillment.pphDate = validUnitPaymentOrder.vatRate;
+                                                            }
+                                                        }
+                                                    }
                                                     if (unitPaymentOrderItem.product._id.equals(poItem.product._id)) {
                                                         for (var fulfillment of poItem.fulfillments) {
                                                             var fulfillmentNo = fulfillment.deliveryOderNo || '';
@@ -287,6 +312,27 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                                 for (var poItem of purchaseOrder.items) {
                                                     for (var unitPaymentOrderItem of validUnitPaymentOrder.items) {
                                                         if (validUnitPaymentOrder.unitId.equals(purchaseOrder.unitId)) {
+
+                                                            for (var fulfillment of poItem.fulfillments) {
+                                                                var fulfillmentNo = fulfillment.deliveryOderNo || '';
+                                                                var deliveryOrderNo = unitPaymentOrderItem.unitReceiptNote.deliveryOrder.no || '';
+                                                                if (fulfillmentNo == deliveryOrderNo) {
+                                                                    fulfillment.invoiceDate = validUnitPaymentOrder.invoceDate;
+                                                                    fulfillment.invoiceNo = validUnitPaymentOrder.invoceDate;
+                                                                    fulfillment.interNoteDate = validUnitPaymentOrder.no;
+                                                                    fulfillment.interNoteNo = validUnitPaymentOrder.date;
+                                                                    fulfillment.interNoteValue = validUnitPaymentOrder.invoicePrice;
+                                                                    fulfillment.interNoteDueDate = validUnitPaymentOrder.dueDate;
+                                                                    if (validUnitPaymentOrder.incomeTaxNo) {
+                                                                        fulfillment.ppnNo = validUnitPaymentOrder.incomeTaxNo;
+                                                                        fulfillment.ppnDate = validUnitPaymentOrder.incomeTaxDate
+                                                                        fulfillment.ppnValue = 0.1;
+                                                                    }
+                                                                    if (validUnitPaymentOrder.vatNo) {
+                                                                        fulfillment.ppnNo = validUnitPaymentOrder.vatNo;
+                                                                        fulfillment.pphValue = validUnitPaymentOrder.vatDate;
+                                                                        fulfillment.pphDate = validUnitPaymentOrder.vatRate;
+
                                                             if (unitPaymentOrderItem.product._id.equals(poItem.product._id)) {
                                                                 for (var fulfillment of poItem.fulfillments) {
                                                                     var fulfillmentNo = fulfillment.deliveryOderNo || '';
@@ -323,6 +369,9 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                                 .catch(e => {
                                                     reject(e);
                                                 })
+                                        }
+                                                }
+                                            }
                                         })
                                         .catch(e => {
                                             reject(e);
@@ -368,6 +417,24 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                                 for (var poItem of purchaseOrder.items) {
                                                     for (var unitPaymentOrderItem of validUnitPaymentOrder.items) {
                                                         if (validUnitPaymentOrder.unitId.equals(purchaseOrder.unitId)) {
+
+                                                            for (var fulfillment of poItem.fulfillments) {
+                                                                var fulfillmentNo = fulfillment.deliveryOderNo || '';
+                                                                var deliveryOrderNo = unitPaymentOrderItem.unitReceiptNote.deliveryOrder.no || '';
+                                                                if (fulfillmentNo == deliveryOrderNo) {
+                                                                    fulfillment.invoiceDate = '';
+                                                                    fulfillment.invoiceNo = '';
+                                                                    fulfillment.interNoteDate = '';
+                                                                    fulfillment.interNoteNo = '';
+                                                                    fulfillment.interNoteValue = '';
+                                                                    fulfillment.interNoteDueDate = '';
+                                                                    fulfillment.ppnNo = '';
+                                                                    fulfillment.ppnDate = '';
+                                                                    fulfillment.ppnValue = '';
+                                                                    fulfillment.ppnNo = '';
+                                                                    fulfillment.pphValue = '';
+                                                                    fulfillment.pphDate = '';
+
                                                             if (unitPaymentOrderItem.product._id.equals(poItem.product._id)) {
                                                                 for (var fulfillment of poItem.fulfillments) {
                                                                     var fulfillmentNo = fulfillment.deliveryOderNo || '';
@@ -400,7 +467,10 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                                 .catch(e => {
                                                     reject(e);
                                                 })
-                                        })
+                                        }
+                                            }
+                                        }
+                                        )
                                         .catch(e => {
                                             reject(e);
                                         });

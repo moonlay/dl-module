@@ -83,7 +83,7 @@ var line = [{
                         stack: [':', ':']
                     }, {
                         width: '*',
-                        stack: [purchaseRequest.unit.division, purchaseRequest.no]
+                        stack: [purchaseRequest.unit.subdivision, purchaseRequest.no]
                     }],
                 style: ['size08']
 
@@ -141,7 +141,7 @@ var line = [{
                     text: item.product.name,
                     style: ['size07', 'center']
                 }, {
-                    text:parseFloat(item.deliveredQuantity).toLocaleString(locale, numberLocaleOptions) +" "+ item.uom.unit,
+                    text:parseFloat(item.quantity).toLocaleString(locale, numberLocaleOptions) +" "+ item.uom.unit,
                     style: ['size07', 'center']
                 }, {
                     text: '',

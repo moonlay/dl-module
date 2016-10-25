@@ -500,7 +500,7 @@ it('#18. should success when read data', function (done) {
     deliveryOrderManager.read()
         .then(documents => {
             //process documents
-            documents.should.be.instanceof(Array);
+            documents.data.should.be.instanceof(Array);
             done();
         })
         .catch(e => {

@@ -436,7 +436,7 @@ it(`#16. should success when get created data currency with id`, function (done)
 it('#17. should success when read data', function (done) {
     purchaseOrderExternalManager.read()
         .then(documents => {
-            documents.should.be.instanceof(Array);
+            documents.data.should.be.instanceof(Array);
             done();
         })
         .catch(e => {

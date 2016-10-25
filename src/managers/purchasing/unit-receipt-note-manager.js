@@ -101,32 +101,39 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 
-                    valid.unitId = new ObjectId(valid.unitId);
-                    valid.supplierId = new ObjectId(valid.supplierId);
-                    valid.deliveryOrderId = new ObjectId(valid.deliveryOrderId);
-                    valid.deliveryOrder.supplierId = new ObjectId(valid.deliveryOrder.supplierId);
+                    valid.unitId = new ObjectId(valid.unit._id);
+                    valid.unit._id = new ObjectId(valid.unit._id);
+                    valid.supplierId = new ObjectId(valid.supplier._id);
+                    valid.supplier._id = new ObjectId(valid.supplier._id);
+                    valid.deliveryOrderId = new ObjectId(valid.deliveryOrder._id);
+                    valid.deliveryOrder._id = new ObjectId(valid.deliveryOrder._id);
+                    valid.deliveryOrder.supplierId = new ObjectId(valid.deliveryOrder.supplier._id);
+                    valid.deliveryOrder.supplier._id = new ObjectId(valid.deliveryOrder.supplier._id);
                     for (var doItem of valid.deliveryOrder.items) {
-                        doItem.purchaseOrderExternalId = new ObjectId(doItem.purchaseOrderExternalId);
+                        doItem.purchaseOrderExternalId = new ObjectId(doItem.purchaseOrderExternal._id);
+                        doItem.purchaseOrderExternal._id = new ObjectId(doItem.purchaseOrderExterna._id);
                         for (var fulfillment of doItem.fulfillments) {
-                            fulfillment.purchaseOrderId = new ObjectId(fulfillment.purchaseOrderId);
+                            fulfillment.purchaseOrderId = new ObjectId(fulfillment.purchaseOrder._id);
                             fulfillment.purchaseOrder._id = new ObjectId(fulfillment.purchaseOrder._id);
                             fulfillment.purchaseOrder.unitId = new ObjectId(fulfillment.purchaseOrder.unit._id);
                             fulfillment.purchaseOrder.unit._id = new ObjectId(fulfillment.purchaseOrder.unit._id);
                             fulfillment.purchaseOrder.categoryId = new ObjectId(fulfillment.purchaseOrder.category._id);
                             fulfillment.purchaseOrder.category._id = new ObjectId(fulfillment.purchaseOrder.category._id);
-                            fulfillment.productId = new ObjectId(fulfillment.productId);
+                            fulfillment.productId = new ObjectId(fulfillment.product._id);
+                            fulfillment.product._id = new ObjectId(fulfillment.product._id);
                         }
                     }
 
-                    for (var item of valid.items){
+                    for (var item of valid.items) {
                         item.product._id = new ObjectId(item.product._id);
-                        item.purchaseOrderId = new ObjectId(item.purchaseOrderId);
+                        item.purchaseOrderId = new ObjectId(item.purchaseOrder._id);
                         item.purchaseOrder._id = new ObjectId(item.purchaseOrder._id);
                         item.purchaseOrder.unitId = new ObjectId(item.purchaseOrder.unit._id);
                         item.purchaseOrder.unit._id = new ObjectId(item.purchaseOrder.unit._id);
                         item.purchaseOrder.categoryId = new ObjectId(item.purchaseOrder.category._id);
                         item.purchaseOrder.category._id = new ObjectId(item.purchaseOrder.category._id);
-                        for(var poItem of item.purchaseOrder.items){
+                        item.purchaseOrder.currency._id = new ObjectId(valid.currency._id);
+                        for (var poItem of item.purchaseOrder.items) {
                             poItem.product._id = new ObjectId(poItem.product.uom._id);
                             poItem.product.uom._id = new ObjectId(poItem.product.uom._id);
                             poItem.defaultUom._id = new ObjectId(poItem.product.uom._id);
@@ -150,9 +157,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         var deletedFilter = {
             _deleted: false
         }, keywordFilter = {};
-        
+
         var query = {};
-        
+
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
 
