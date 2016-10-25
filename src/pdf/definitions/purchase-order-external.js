@@ -10,7 +10,7 @@ module.exports = function(pox) {
                 uom: poItem.dealUom.unit,
                 price: poItem.pricePerDealUnit
             };
-        })
+        });
     });
 
     items = [].concat.apply([], items);
@@ -42,9 +42,9 @@ module.exports = function(pox) {
     };
     var currencyLocaleOptions = {
         style: 'decimal',
-        minimumFractionDigits: 4,
+        minimumFractionDigits: 2,
         // currency: currency,
-        maximumFractionDigits: 4,
+        maximumFractionDigits: 2,
         // currencyDisplay: 'symbol',
 
     };
@@ -205,7 +205,7 @@ module.exports = function(pox) {
             return prev + curr;
         }, 0);
  
-    var vat = pox.useVat ? sum * 0.1 : 0;
+    var vat = pox.useIncomeTax ? sum * 0.1 : 0;
 
     var tfoot = [
         [{

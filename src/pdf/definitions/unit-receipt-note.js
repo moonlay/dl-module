@@ -5,12 +5,18 @@ module.exports = function (unitReceiptNote) {
     var iso = "FM.FP-GB-15-005/R2";
     var number = unitReceiptNote.no;
 
-    var locale = 'id-id';
+    var locale = 'id-ID';
     var dateLocaleOptions = {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     };
+    var dateFormat = "DD-MMMM-YYYY";
+
+    var moment = require('moment');
+    moment.locale(locale);
+    
+    
     var numberLocaleOptions = {
         style: 'decimal',
         maximumFractionDigits: 4
@@ -44,7 +50,7 @@ module.exports = function (unitReceiptNote) {
                     }, {
                             alignment: "right",
                             text: 'BON PENERIMAAN BARANG',
-                            style: ['size09']
+                            style: ['size09','bold']
                         }]
                 }]
 
@@ -63,7 +69,7 @@ module.exports = function (unitReceiptNote) {
                         stack: [':', ':']
                     }, {
                         width: '*',
-                        stack: [`${new Date(unitReceiptNote.date).toLocaleString(locale, dateLocaleOptions)}`, unitReceiptNote.supplier.name]
+                        stack: [`${moment(unitReceiptNote.date).format(dateFormat)}`, unitReceiptNote.supplier.name]
                     }],
                 style: ['size08']
 
@@ -82,7 +88,7 @@ module.exports = function (unitReceiptNote) {
                         stack: [':', ':']
                     }, {
                         width: '*',
-                        stack: [unitReceiptNote.unit.division, unitReceiptNote.no]
+                        stack: [unitReceiptNote.unit.subDivision, unitReceiptNote.no]
                     }],
                 style: ['size08']
             }
@@ -160,7 +166,7 @@ module.exports = function (unitReceiptNote) {
     var footer = [
         '\n', {
             stack: [{
-                text: `Sukoharjo, ${new Date(unitReceiptNote.date).toLocaleString(locale, dateLocaleOptions)}`,
+                text: `Sukoharjo, ${moment(unitReceiptNote.date).format(dateFormat)}`,
                 alignment: "right"
             }, {
                     columns: [{
@@ -172,7 +178,7 @@ module.exports = function (unitReceiptNote) {
                             text: ''
                         }, {
                             width: '35%',
-                            stack: ['Menerima\n\n\n\n\n', '(_______________________)'],
+                            stack: ['Yang Menerima\n\n\n\n\n', '(_______________________)'],
                             style: 'center'
                         },]
                 }
