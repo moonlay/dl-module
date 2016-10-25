@@ -117,7 +117,8 @@ module.exports = class PurchaseRequestManager extends BaseManager {
 
      _getQuery(paging) {
         var filter = {
-            _deleted: false
+            _deleted: false,
+            _createdBy:this.user.username
         };
 
         var query = paging.keyword ? {
