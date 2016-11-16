@@ -8,6 +8,7 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var Uom = DLModels.master.Uom;
 var BaseManager = require('../base-manager');
+var i18n = require('dl-i18n');
 
 module.exports = class UomManager extends BaseManager {
     
@@ -58,9 +59,9 @@ module.exports = class UomManager extends BaseManager {
                     var _uom = results[0];
 
                     if (!valid.unit || valid.unit == '')
-                        errors["unit"] = "Satuan Tidak Boleh Kosong";
+                        errors["unit"] =  i18n.__("Uom.unit.isRequired:%s is required", i18n.__("Uom.unit._:Unit")); //"Satuan Tidak Boleh Kosong";
                     else if (_uom) {
-                        errors["unit"] = "Satuan sudah terdaftar";
+                        errors["unit"] = i18n.__("Uom.unit.isExists:%s is already exists", i18n.__("Uom.unit._:Unit")); //"Satuan sudah terdaftar";
                     }
 
                      if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -77,4 +78,23 @@ module.exports = class UomManager extends BaseManager {
                 })
         });
     }
+    _createIndexes() {
+        var dateIndex = {
+            name: `ix_${map.master.collection.uom}__updatedDate`,
+            key: {
+                _updatedDate: -1
+            }
+        }
+
+        var unitIndex = {
+            name: `ix_${map.master.collection.uom}_unit`,
+            key: {
+                unit: 1
+            },
+            unique: true
+        }
+
+        return this.collection.createIndexes([dateIndex, unitIndex]);
+    }
+ 
 }

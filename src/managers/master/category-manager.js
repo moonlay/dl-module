@@ -8,6 +8,7 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var Category = DLModels.master.Category;
 var BaseManager = require('../base-manager');
+var i18n = require('dl-i18n');
 
 module.exports = class CategoryManager  extends BaseManager  {
 
@@ -58,9 +59,9 @@ module.exports = class CategoryManager  extends BaseManager  {
                     var _category = results[0];
 
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "Nama Kategori Tidak Boleh Kosong";
+                        errors["name"] = i18n.__("Category.name.isRequired:%s is required", i18n.__("Category.name._:Name"));//"Nama Kategori Tidak Boleh Kosong";
                     else if (_category) {
-                        errors["name"] = "Nama Kategori sudah terdaftar";
+                        errors["name"] = i18n.__("Category.name.isExists:%s is already exists", i18n.__("Category.name._:Name"));//"Nama Kategori sudah terdaftar";
                     }
 
                      if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -76,6 +77,25 @@ module.exports = class CategoryManager  extends BaseManager  {
                     reject(e);
                 })
         });
+    }
+
+     _createIndexes() {
+        var dateIndex = {
+            name: `ix_${map.master.collection.Category}__updatedDate`,
+            key: {
+                _updatedDate: -1
+            }
+        }
+
+        var codeIndex = {
+            name: `ix_${map.master.collection.Category}_code`,
+            key: {
+                code: 1
+            },
+            unique: true
+        }
+
+        return this.collection.createIndexes([dateIndex, codeIndex]);
     }
    
 }

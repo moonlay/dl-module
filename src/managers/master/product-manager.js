@@ -4,17 +4,20 @@
 var ObjectId = require("mongodb").ObjectId;
 var UomManager = require('./uom-manager');
 var BaseManager = require('../base-manager');
+var i18n = require('dl-i18n');
 
 // internal deps
 require('mongodb-toolkit');
 var DLModels = require('dl-models');
 var map = DLModels.map;
 var Product = DLModels.master.Product;
+var UomManager = require('./uom-manager');
 
 module.exports = class ProductManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.master.collection.Product);
+        this.uomManager = new UomManager(db,user);
     }
 
     _getQuery(paging) {
@@ -58,38 +61,41 @@ module.exports = class ProductManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
-                    }]
+                    code: valid.code
+                }]
             });
-
+            
+            var getUom = valid.uom && valid.uom._id ? this.uomManager.getSingleByIdOrDefault(valid.uom._id) : Promise.resolve(null);
             // 2. begin: Validation.
-            Promise.all([getProductPromise])
+            Promise.all([getProductPromise, getUom])
                 .then(results => {
                     var _module = results[0];
+                    var _uom = results[1];
 
                     if (!valid.code || valid.code == '')
-                        errors["code"] = "Kode tidak boleh kosong.";
+                        errors["code"] = i18n.__("Product.code.isRequired:%s is required", i18n.__("Product.code._:Code")); // "Kode tidak boleh kosong.";
                     else if (_module) {
-                        errors["code"] = "Kode sudah terdaftar.";
+                        errors["code"] = i18n.__("Product.code.isExists:%s is already exists", i18n.__("Product.code._:Code")); // "Kode sudah terdaftar.";
                     }
 
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "Nama tidak boleh kosong.";
+                        errors["name"] =  i18n.__("Product.name.isRequired:%s is required", i18n.__("Product.name._:Name")); // "Nama tidak boleh kosong.";
 
                     if (valid.uom) {
                         if (!valid.uom.unit || valid.uom.unit == '')
-                            errors["uom"] = "Satuan tidak boleh kosong";
+                            errors["uom"] = i18n.__("Product.uom.isRequired:%s is required", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
                     }
                     else
-                        errors["uom"] = "Satuan tidak boleh kosong";
+                        errors["uom"] = i18n.__("Product.uom.isRequired:%s is required", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
 
                     // 2c. begin: check if data has any error, reject if it has.
-                     if (Object.getOwnPropertyNames(errors).length > 0) {
+                    if (Object.getOwnPropertyNames(errors).length > 0) {
                         var ValidationError = require('../../validation-error');
                         reject(new ValidationError('Product Manager : data does not pass validation', errors));
                     }
-
-                    valid.uomId = new ObjectId(valid.uomId);
+                    
+                    valid.uom=_uom;
+                    valid.uomId = new ObjectId(valid.uom._id);
                     if (!valid.stamp)
                         valid = new Product(valid);
                     valid.stamp(this.user.username, 'manager');
@@ -99,5 +105,23 @@ module.exports = class ProductManager extends BaseManager {
                     reject(e);
                 })
         });
+    }
+    _createIndexes() {
+        var dateIndex = {
+            name: `ix_${map.master.collection.Product}__updatedDate`,
+            key: {
+                _updatedDate: -1
+            }
+        }
+
+        var codeIndex = {
+            name: `ix_${map.master.collection.Product}_code`,
+            key: {
+                code: 1
+            },
+            unique: true
+        }
+
+        return this.collection.createIndexes([dateIndex, codeIndex]);
     }
 };

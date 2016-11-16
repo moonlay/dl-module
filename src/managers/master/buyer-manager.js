@@ -6,6 +6,7 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var Buyer = DLModels.master.Buyer;
 var BaseManager = require('../base-manager');
+var i18n = require('dl-i18n');
 
 module.exports = class BuyerManager extends BaseManager {
     constructor(db, user) {
@@ -67,19 +68,19 @@ module.exports = class BuyerManager extends BaseManager {
                     var _module = results[0];
 
                     if (!valid.code || valid.code == '')
-                        errors["code"] = "Kode harus diisi";
+                        errors["code"] = i18n.__("Buyer.code.isRequired:%s is required", i18n.__("Buyer.code._:Code")); // "Kode harus diisi";
                     else if (_module) {
-                        errors["code"] = "Kode sudah ada";
+                        errors["code"] = i18n.__("Buyer.code.isExists:%s is already exists", i18n.__("Buyer.code._:Code")); //"Kode sudah ada";
                     }
 
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "Nama Harus diisi";
+                        errors["name"] = i18n.__("Buyer.name.isRequired:%s is required", i18n.__("Buyer.name._:Name")); //"Nama Harus diisi";
 
                     if (Number.isInteger(parseInt(valid.tempo)) === false)
-                        errors["tempo"] = "Tempo harus berupa angka";
+                        errors["tempo"] = i18n.__("Buyer.tempo.isNumeric:%s must be numeric", i18n.__("Buyer.tempo._:Tempo"));//"Tempo harus berupa angka";
 
                     if (!valid.country || valid.country == '')
-                        errors["country"] = "Silakan pilih salah satu negara";
+                        errors["country"] = i18n.__("Buyer.country.isRequired:%s is required", i18n.__("Buyer.country._:Country"));// "Silakan pilih salah satu negara";
 
                     // 2c. begin: check if data has any error, reject if it has.
                      if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -95,5 +96,24 @@ module.exports = class BuyerManager extends BaseManager {
                     reject(e);
                 })
         });
+    }
+
+     _createIndexes() {
+        var dateIndex = {
+            name: `ix_${map.master.collection.Buyer}__updatedDate`,
+            key: {
+                _updatedDate: -1
+            }
+        }
+
+        var codeIndex = {
+            name: `ix_${map.master.collection.Buyer}_code`,
+            key: {
+                code: 1
+            },
+            unique: true
+        }
+
+        return this.collection.createIndexes([dateIndex, codeIndex]);
     }
 }

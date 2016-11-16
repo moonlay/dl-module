@@ -9,11 +9,14 @@ require("should");
 function getData() {
     var Currency = require('dl-models').master.Currency;
     var currency = new Currency(); 
-
-    currency.code = 'IDR';
-    currency.symbol = 'Rp';
+    var now = new Date();
+    var stamp = now / 1000 | 0;
+    var code = stamp.toString(36);
+    
+    currency.code = code;
+    currency.symbol = `symbol[${code}]`;
     currency.rate = 1; 
-    currency.description = 'rupiah';
+    currency.description = `description[${code}]`;
     return currency;
 }
 
@@ -41,5 +44,21 @@ it('#01. should success when create new data', function (done) {
         })
         .catch(e => {
             done(e);
+        })
+});
+
+it('#02. should error when create new data', function (done) {
+    var data = {};
+    instanceManager.create(data)
+        .then(id => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch(e => {
+            e.errors.should.have.property('code');
+            e.errors.should.have.property('symbol');
+            e.errors.should.have.property('rate');
+            done();
         })
 });

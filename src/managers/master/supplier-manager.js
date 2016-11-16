@@ -7,6 +7,7 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var Supplier = DLModels.master.Supplier;
 var BaseManager = require('../base-manager');
+var i18n = require('dl-i18n');
 
 module.exports = class SupplierManager extends BaseManager {
     constructor(db, user) {
@@ -68,13 +69,13 @@ module.exports = class SupplierManager extends BaseManager {
                     var _supplier = results[0];
 
                     if (!valid.code || valid.code == '')
-                        errors["code"] = "Kode harus diisi ";
+                        errors["code"] = i18n.__("Supplier.code.isRequired:%s is required", i18n.__("Supplier.code._:Code")); //"Kode harus diisi ";
                     else if (_supplier) {
-                        errors["code"] = "Kode sudah ada";
+                        errors["code"] = i18n.__("Supplier.code.isExists:%s is required", i18n.__("Supplier.code._:Code")); //"Kode sudah ada";
                     }
 
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "Nama harus diisi";
+                        errors["name"] = i18n.__("Supplier.name.isExists:%s is required", i18n.__("Supplier.name._:Name")); //"Nama harus diisi";
                     
                     if(!valid.import)
                         valid.import=false;
@@ -93,5 +94,23 @@ module.exports = class SupplierManager extends BaseManager {
                     reject(e);
                 })
         });
+    }
+     _createIndexes() {
+        var dateIndex = {
+            name: `ix_${map.master.collection.Supplier}__updatedDate`,
+            key: {
+                _updatedDate: -1
+            }
+        }
+
+        var codeIndex = {
+            name: `ix_${map.master.collection.Supplier}_code`,
+            key: {
+                code: 1
+            },
+            unique: true
+        }
+
+        return this.collection.createIndexes([dateIndex, codeIndex]);
     }
 }
