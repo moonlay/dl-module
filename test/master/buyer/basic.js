@@ -28,7 +28,6 @@ it("#01. should error when create new buyer with empty data", function(done) {
             try {
                 e.errors.should.have.property("code");
                 e.errors.should.have.property("name");
-                e.errors.should.have.property("tempo");
                 e.errors.should.have.property("country");
                 done();
             }
@@ -85,7 +84,49 @@ it("#04. should error when create new data with same code", function(done) {
         });
 });
 
-it(`#05. should success when update created data`, function(done) {
+it("#05. should success when create new data with tempo value is 0", function(done) {
+    Buyer.getNewData()
+        .then(data => {
+            data.tempo = 0;
+            instanceManager.create(data)
+            .then(id => {
+                id.should.be.Object();
+                instanceManager.destroy(id)
+                    .then(() => {
+                        done();
+                    })
+                .catch((e) => {
+                    done(e);
+                });
+            })
+            .catch((e) => {
+                done(e);
+            });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#06. should error when create new data with tempo less then 0", function(done) {
+    Buyer.getNewData()
+        .then(data => {
+            data.tempo = -1;
+            instanceManager.create(data)
+            .then(id => {
+                done("Should not be able to create new data with tempo less then 0"); 
+            })
+            .catch((e) => {
+                e.errors.should.have.property("tempo");
+                done();
+            });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#07. should success when update created data`, function(done) {
 
     createdData.name += "[updated]";
     instanceManager.update(createdData)
@@ -98,7 +139,7 @@ it(`#05. should success when update created data`, function(done) {
         });
 });
 
-it(`#06. should success when get updated data with id`, function(done) {
+it(`#08. should success when get updated data with id`, function(done) {
     instanceManager.getSingleById(createdId)
         .then((data) => {
             validate(data);
@@ -110,7 +151,7 @@ it(`#06. should success when get updated data with id`, function(done) {
         });
 });
 
-it("#07. should error when update new data with same code", function(done) {
+it("#09. should error when update new data with same code", function(done) {
     var newDataId;
     Buyer.getNewData()
         .then((data) => instanceManager.create(data))
@@ -135,7 +176,7 @@ it("#07. should error when update new data with same code", function(done) {
         });
 });
 
-it("#08. should success when read data", function(done) {
+it("#10. should success when read data", function(done) {
     instanceManager.read({
             filter: {
                 _id: createdId
@@ -153,7 +194,7 @@ it("#08. should success when read data", function(done) {
         });
 });
 
-it(`#09. should success when delete data`, function(done) {
+it(`#11. should success when delete data`, function(done) {
     instanceManager.delete(createdData)
         .then((id) => {
             id.toString().should.equal(createdId.toString());
@@ -165,7 +206,7 @@ it(`#09. should success when delete data`, function(done) {
 });
 
 
-it(`#10. should _deleted=true`, function(done) {
+it(`#12. should _deleted=true`, function(done) {
     instanceManager.getSingleByQuery({
             _id: createdId
         })
@@ -180,7 +221,7 @@ it(`#10. should _deleted=true`, function(done) {
         });
 });
 
-it("#11. should success when destroy data with id", function(done) {
+it("#13. should success when destroy data with id", function(done) {
     instanceManager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();
@@ -192,7 +233,7 @@ it("#11. should success when destroy data with id", function(done) {
         });
 });
 
-it(`#12. should null when get destroyed data`, function(done) {
+it(`#14. should null when get destroyed data`, function(done) {
     instanceManager.getSingleByIdOrDefault(createdId)
         .then((data) => {
             should.equal(data, null);
