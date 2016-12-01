@@ -1,6 +1,7 @@
 "use strict";
 var _getSert = require("./getsert");
 var division = require("./division-data-util");
+var generateCode = require("../../../src/utils/code-generator");
 
 class UnitDataUtil {
     getSert(input) {
@@ -16,9 +17,7 @@ class UnitDataUtil {
         return division.getTestData()
             .then(div => {
 
-                var now = new Date();
-                var stamp = now / 1000 | 0;
-                var code = stamp.toString(36);
+                var code = generateCode();
 
                 var data = {
                     code: code,

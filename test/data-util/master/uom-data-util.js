@@ -1,20 +1,34 @@
-'use strict';
-var _getSert = require('./getsert');
+"use strict";
+var _getSert = require("./getsert");
+var generateCode = require("../../../src/utils/code-generator");
 
 class UomDataUtil {
-    getSert(uom) {
-        var UomManager = require('../../../src/managers/master/uom-manager');
-        return Promise.resolve(_getSert(uom, UomManager, data => {
+    getSert(input) {
+        var ManagerType = require("../../../src/managers/master/uom-manager");
+        return _getSert(input, ManagerType, (data) => {
             return {
                 unit: data.unit
             };
-        }));
+        });
     }
+
+    getNewData() {
+        var Model = require("dl-models").master.Uom;
+        var data = new Model();
+
+        var code = generateCode();
+
+        data.unit = code;
+
+        return Promise.resolve(data);
+    }
+
     getTestData() {
-        var testData = {
-            unit: 'PCS'
+        var data = {
+            unit: "PCS"
         };
-        return Promise.resolve(this.getSert(testData));
+        return this.getSert(data);
     }
 }
+
 module.exports = new UomDataUtil();

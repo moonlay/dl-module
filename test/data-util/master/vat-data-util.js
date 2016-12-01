@@ -1,23 +1,36 @@
-'use strict';
-var _getSert = require('./getsert');
+"use strict";
+var _getSert = require("./getsert");
+var generateCode = require("../../../src/utils/code-generator");
 
 class VatDataUtil {
-    getSert(vat) {
-        var VatManager = require('../../../src/managers/master/vat-manager');
-        return Promise.resolve(_getSert(vat, VatManager, data => {
+    getSert(input) {
+        var ManagerType = require("../../../src/managers/master/budget-manager");
+        return _getSert(input, ManagerType, (data) => {
             return {
-                name: data.name
+                name: data.name,
+                rate: data.rate
             };
-        }));
+        });
     }
-     getTestData() {
-        var testData = { 
-            name: 'Vat 01',
-            rate: 1,
-            description:''
+
+    getNewData() {
+        var Model = require('dl-models').master.Vat;
+        var data = new Model();
+
+        var code = generateCode();
+        data.name = `Pasal 22[${code}]`;
+        data.rate = 1.5;
+
+        return Promise.resolve(data);
+    }
+
+    getTestData() {
+        var data = {
+            name: 'VAT UT',
+            rate: 10,
+            description: ''
         };
-         return Promise.resolve(this.getSert(testData));
+        return this.getSert(data);
     }
 }
 module.exports = new VatDataUtil();
-

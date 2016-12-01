@@ -51,57 +51,50 @@ module.exports = class LotMachineManager extends BaseManager {
 
     _validate(lotMachine) {
         var errors = {};
-        return new Promise((resolve, reject) => {
-            var valid = lotMachine;
-            // 1. begin: Declare promises.
-            var getLotMachinePromise = this.collection.singleOrDefault({
-                _id: {
-                    '$ne': new ObjectId(valid._id)
-                },
-                productId: new ObjectId(valid.productId),
-                machineId: new ObjectId(valid.machineId)
-            });
-
-            var getProduct = ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(new ObjectId(valid.productId)) : Promise.resolve(null);
-            var getMachine = ObjectId.isValid(valid.machineId) ? this.machineManager.getSingleByIdOrDefault(new Object(valid.machineId)) : Promise.resolve(null);
-
-            Promise.all([getLotMachinePromise, getProduct, getMachine])
-                .then(results => {
-                    var _lotMachine = results[0];
-                    var _product = results[1];
-                    var _machine = results[2];
-                    var now = new Date();
-
-                    if (_lotMachine) {
-                        errors["product"] = i18n.__("LotMachine.product.isExists:%s is exists", i18n.__("LotMachine.product._:Product"));
-                        errors["machine"] = i18n.__("LotMachine.machine.isExists:%s is exists", i18n.__("LotMachine.machine._:Machine"));
-                    }
-
-                    if (!_product) {
-                        errors["product"] = i18n.__("LotMachine.product.isRequired:%s is not exists", i18n.__("LotMachine.product._:Product"));
-                    }
-
-                    if (!_machine)
-                        errors["machine"] = i18n.__("LotMachine.machine.isRequired:%s is not exists", i18n.__("LotMachine.machine._:Machine"));
-
-                    if (!valid.lot || valid.lot == '')
-                        errors["lot"] = i18n.__("LotMachine.lot.isRequired:%s is required", i18n.__("LotMachine.lot._:Lot")); //"Lot Harus diisi";
-
-
-                    if (Object.getOwnPropertyNames(errors).length > 0) {
-                        var ValidationError = require('module-toolkit').ValidationError;
-                        reject(new ValidationError('data does not pass validation', errors));
-                    }
-
-                    valid = new LotMachine(lotMachine);
-                    valid.stamp(this.user.username, 'manager');
-                    resolve(valid);
-                })
-                .catch(e => {
-                    reject(e);
-                })
+        var valid = lotMachine;
+        // 1. begin: Declare promises.
+        var getLotMachinePromise = this.collection.singleOrDefault({
+            _id: {
+                '$ne': new ObjectId(valid._id)
+            },
+            productId: new ObjectId(valid.productId),
+            machineId: new ObjectId(valid.machineId)
         });
 
+        var getProduct = ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(new ObjectId(valid.productId)) : Promise.resolve(null);
+        var getMachine = ObjectId.isValid(valid.machineId) ? this.machineManager.getSingleByIdOrDefault(new Object(valid.machineId)) : Promise.resolve(null);
+
+        return Promise.all([getLotMachinePromise, getProduct, getMachine])
+            .then(results => {
+                var _lotMachine = results[0];
+                var _product = results[1];
+                var _machine = results[2];
+
+                if (_lotMachine) {
+                    errors["product"] = i18n.__("LotMachine.product.isExists:%s is exists", i18n.__("LotMachine.product._:Product"));
+                    errors["machine"] = i18n.__("LotMachine.machine.isExists:%s is exists", i18n.__("LotMachine.machine._:Machine"));
+                }
+
+                if (!_product) {
+                    errors["product"] = i18n.__("LotMachine.product.isRequired:%s is not exists", i18n.__("LotMachine.product._:Product"));
+                }
+
+                if (!_machine)
+                    errors["machine"] = i18n.__("LotMachine.machine.isRequired:%s is not exists", i18n.__("LotMachine.machine._:Machine"));
+
+                if (!valid.lot || valid.lot == '')
+                    errors["lot"] = i18n.__("LotMachine.lot.isRequired:%s is required", i18n.__("LotMachine.lot._:Lot")); //"Lot Harus diisi";
+
+
+                if (Object.getOwnPropertyNames(errors).length > 0) {
+                    var ValidationError = require('module-toolkit').ValidationError;
+                    return Promise.reject(new ValidationError('data does not pass validation', errors));
+                }
+
+                valid = new LotMachine(lotMachine);
+                valid.stamp(this.user.username, 'manager');
+                return Promise.resolve(valid);
+            });
     }
 
     getLotbyMachineProduct(_productId, _machineId) {

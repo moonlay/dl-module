@@ -45,46 +45,41 @@ module.exports = class CurrencyManager extends BaseManager {
 
     _validate(currency) {
         var errors = {};
-        return new Promise((resolve, reject) => {
-            var valid = currency;
-            // 1. begin: Declare promises.
-            var getcurrencyPromise = this.collection.singleOrDefault({
-                _id: {
-                    '$ne': new ObjectId(valid._id)
-                },
-                code: valid.code
-            });
-
-            // 2. begin: Validation.
-            Promise.all([getcurrencyPromise])
-                .then(results => {
-                    var _currency = results[0];
-
-                    if (!valid.code || valid.code == '')
-                        errors["code"] = i18n.__("Currency.code.isRequired:%s is required", i18n.__("Currency.code._:Code")); //"Kode mata uang Tidak Boleh Kosong";
-                    else if (_currency) {
-                        errors["code"] = i18n.__("Currency.code.isExists:%s is already exists", i18n.__("Currency.code._:Code")); //"Kode mata uang sudah terdaftar";
-                    }
-
-                    if (!valid.symbol || valid.symbol == '')
-                        errors["symbol"] = i18n.__("Currency.symbol.isRequired:%s is required", i18n.__("Currency.symbol._:Symbol")); //"Simbol mata uang Tidak Boleh Kosong";
-
-                    if (!valid.rate || valid.rate == 0)
-                        errors["rate"] = i18n.__("Currency.rate.isRequired:%s is required", i18n.__("Currency.rate._:Rate")); //"Rate mata uang Tidak Boleh Kosong";
-
-                    if (Object.getOwnPropertyNames(errors).length > 0) {
-                        var ValidationError = require('module-toolkit').ValidationError;
-                        reject(new ValidationError('data does not pass validation', errors));
-                    }
-
-                    valid = new Currency(currency);
-                    valid.stamp(this.user.username, 'manager');
-                    resolve(valid);
-                })
-                .catch(e => {
-                    reject(e);
-                })
+        var valid = currency;
+        // 1. begin: Declare promises.
+        var getcurrencyPromise = this.collection.singleOrDefault({
+            _id: {
+                '$ne': new ObjectId(valid._id)
+            },
+            code: valid.code
         });
+
+        // 2. begin: Validation.
+        return Promise.all([getcurrencyPromise])
+            .then(results => {
+                var _currency = results[0];
+
+                if (!valid.code || valid.code == '')
+                    errors["code"] = i18n.__("Currency.code.isRequired:%s is required", i18n.__("Currency.code._:Code")); //"Kode mata uang Tidak Boleh Kosong";
+                else if (_currency) {
+                    errors["code"] = i18n.__("Currency.code.isExists:%s is already exists", i18n.__("Currency.code._:Code")); //"Kode mata uang sudah terdaftar";
+                }
+
+                if (!valid.symbol || valid.symbol == '')
+                    errors["symbol"] = i18n.__("Currency.symbol.isRequired:%s is required", i18n.__("Currency.symbol._:Symbol")); //"Simbol mata uang Tidak Boleh Kosong";
+
+                if (!valid.rate || valid.rate == 0)
+                    errors["rate"] = i18n.__("Currency.rate.isRequired:%s is required", i18n.__("Currency.rate._:Rate")); //"Rate mata uang Tidak Boleh Kosong";
+
+                if (Object.getOwnPropertyNames(errors).length > 0) {
+                    var ValidationError = require('module-toolkit').ValidationError;
+                    return Promise.reject(new ValidationError('data does not pass validation', errors));
+                }
+
+                valid = new Currency(currency);
+                valid.stamp(this.user.username, 'manager');
+                return Promise.resolve(valid);
+            })
     }
 
     _createIndexes() {

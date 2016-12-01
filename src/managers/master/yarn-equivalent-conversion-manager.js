@@ -49,45 +49,38 @@ module.exports = class YarnEquivalentConversionManager extends BaseManager {
 
     _validate(yarnEquivalentConversion) {
         var errors = {};
-        return new Promise((resolve, reject) => {
-            var valid = yarnEquivalentConversion;
-            // 1. begin: Declare promises.
-            var getYarnEquivalentConversionPromise = this.collection.singleOrDefault({
-                "$and": [{
-                    _id: {
-                        '$ne': new ObjectId(valid._id)
-                    }
-                }, {
-                    ne: valid.ne,
-                    conversionRatio: valid.conversionRatio
-                }]
-            });
-
-            // 2. begin: Validation.
-            Promise.all([getYarnEquivalentConversionPromise])
-                .then(results => {
-                    var _yarnEquivalentConversion = results[0];
-
-                    if (!valid.ne || valid.ne == '')
-                        errors["ne"] = i18n.__("YarnEquivalentConversion.ne.isRequired:%s is required", i18n.__("YarnEquivalentConversion.ne._:Ne"));
-
-                    if (!valid.conversionRatio || valid.conversionRatio == 0)
-                        errors["conversionRatio"] = i18n.__("YarnEquivalentConversion.conversionRatio.isRequired:%s is required", i18n.__("YarnEquivalentConversion.conversionRatio._:ConversionRatio"));
-
-
-                    if (Object.getOwnPropertyNames(errors).length > 0) {
-                        var ValidationError = require('module-toolkit').ValidationError ;
-                        reject(new ValidationError('data does not pass validation', errors));
-                    }
-
-                    valid = new YarnEquivalentConversion(yarnEquivalentConversion);
-                    valid.stamp(this.user.username, 'manager');
-                    resolve(valid);
-                })
-                .catch(e => {
-                    reject(e);
-                })
+        var valid = yarnEquivalentConversion;
+        // 1. begin: Declare promises.
+        var getYarnEquivalentConversionPromise = this.collection.singleOrDefault({
+            _id: {
+                '$ne': new ObjectId(valid._id)
+            },
+            ne: valid.ne
         });
+        
+        // 2. begin: Validation.
+        return Promise.all([getYarnEquivalentConversionPromise])
+            .then(results => {
+                var _yarnEquivalentConversion = results[0];
+
+                if (!valid.ne || valid.ne == 0)
+                    errors["ne"] = i18n.__("YarnEquivalentConversion.ne.isRequired:%s is required", i18n.__("YarnEquivalentConversion.ne._:Ne"));
+                else if (_yarnEquivalentConversion)
+                    errors["ne"] = i18n.__("YarnEquivalentConversion.ne.isExists:%s is exists", i18n.__("Vat.ne._:Ne"));
+
+                if (!valid.conversionRatio || valid.conversionRatio == 0)
+                    errors["conversionRatio"] = i18n.__("YarnEquivalentConversion.conversionRatio.isRequired:%s is required", i18n.__("YarnEquivalentConversion.conversionRatio._:Conversion Ratio"));
+
+
+                if (Object.getOwnPropertyNames(errors).length > 0) {
+                    var ValidationError = require('module-toolkit').ValidationError;
+                    return Promise.reject(new ValidationError('data does not pass validation', errors));
+                }
+
+                valid = new YarnEquivalentConversion(yarnEquivalentConversion);
+                valid.stamp(this.user.username, 'manager');
+                return Promise.resolve(valid);
+            });
     }
     _createIndexes() {
         var dateIndex = {
@@ -95,7 +88,7 @@ module.exports = class YarnEquivalentConversionManager extends BaseManager {
             key: {
                 _updatedDate: -1
             }
-        }
+        };
 
         var neRatioIndex = {
             name: `ix_${map.master.collection.YarnEquivalentConversion}_ne_conversionRatio`,
@@ -104,27 +97,16 @@ module.exports = class YarnEquivalentConversionManager extends BaseManager {
                 conversionRatio: 1
             },
             unique: true
-        }
+        };
 
         return this.collection.createIndexes([dateIndex, neRatioIndex]);
     }
 
     _getByNe(ne) {
-        return new Promise((resolve, reject) => {
-            if (ne === '')
-                resolve(null);
-
-            var query = {
-                ne: ne,
-                _deleted: false
-            };
-            this.getSingleByQueryOrDefault(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
+        var query = {
+            ne: ne,
+            _deleted: false
+        };
+        return this.getSingleByQueryOrDefault(query);
     }
-}
+};

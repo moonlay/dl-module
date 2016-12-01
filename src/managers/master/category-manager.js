@@ -45,42 +45,37 @@ module.exports = class CategoryManager extends BaseManager {
 
     _validate(category) {
         var errors = {};
-        return new Promise((resolve, reject) => {
-            var valid = category;
-            // 1. begin: Declare promises.
-            var getcategoryPromise = this.collection.singleOrDefault({
-                _id: {
-                    '$ne': new ObjectId(valid._id)
-                },
-                code: valid.code
-            });
-
-            // 2. begin: Validation.
-            Promise.all([getcategoryPromise])
-                .then(results => {
-                    var _category = results[0];
-
-                    if (!valid.code || valid.code == "")
-                        errors["code"] = i18n.__("Category.code.isRequired:%s is required", i18n.__("Category.code._:Code")); //"Code Kategori Tidak Boleh Kosong";
-                    else if (_category) {
-                        errors["code"] = i18n.__("Category.code.isExists:%s is already exists", i18n.__("Category.code._:Code")); //"Code Kategori sudah terdaftar";
-                    }
-                    if (!valid.name || valid.name == "")
-                        errors["name"] = i18n.__("Category.name.isRequired:%s is required", i18n.__("Category.name._:Name")); //"Nama Harus diisi";
-
-                    if (Object.getOwnPropertyNames(errors).length > 0) {
-                        var ValidationError = require("module-toolkit").ValidationError;
-                        reject(new ValidationError("data does not pass validation", errors));
-                    }
-
-                    valid = new Category(category);
-                    valid.stamp(this.user.username, "manager");
-                    resolve(valid);
-                })
-                .catch(e => {
-                    reject(e);
-                });
+        var valid = category;
+        // 1. begin: Declare promises.
+        var getcategoryPromise = this.collection.singleOrDefault({
+            _id: {
+                '$ne': new ObjectId(valid._id)
+            },
+            code: valid.code
         });
+
+        // 2. begin: Validation.
+        return Promise.all([getcategoryPromise])
+            .then(results => {
+                var _category = results[0];
+
+                if (!valid.code || valid.code == "")
+                    errors["code"] = i18n.__("Category.code.isRequired:%s is required", i18n.__("Category.code._:Code")); //"Code Kategori Tidak Boleh Kosong";
+                else if (_category) {
+                    errors["code"] = i18n.__("Category.code.isExists:%s is already exists", i18n.__("Category.code._:Code")); //"Code Kategori sudah terdaftar";
+                }
+                if (!valid.name || valid.name == "")
+                    errors["name"] = i18n.__("Category.name.isRequired:%s is required", i18n.__("Category.name._:Name")); //"Nama Harus diisi";
+
+                if (Object.getOwnPropertyNames(errors).length > 0) {
+                    var ValidationError = require("module-toolkit").ValidationError;
+                    return Promise.reject(new ValidationError("data does not pass validation", errors));
+                }
+
+                valid = new Category(category);
+                valid.stamp(this.user.username, "manager");
+                return Promise.resolve(valid);
+            });
     }
 
     _createIndexes() {

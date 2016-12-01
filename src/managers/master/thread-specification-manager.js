@@ -1,13 +1,13 @@
-'use strict'
+"use strict"
 
 var ObjectId = require("mongodb").ObjectId;
-require('mongodb-toolkit');
-var DLModels = require('dl-models');
+require("mongodb-toolkit");
+var DLModels = require("dl-models");
 var map = DLModels.map;
 var ThreadSpecification = DLModels.master.ThreadSpecification;
-var ProductManager = require('../master/product-manager');
-var BaseManager = require('module-toolkit').BaseManager;
-var i18n = require('dl-i18n');
+var ProductManager = require("../master/product-manager");
+var BaseManager = require("module-toolkit").BaseManager;
+var i18n = require("dl-i18n");
 
 module.exports = class ThreadSpecificationManager extends BaseManager {
     constructor(db, user) {
@@ -17,86 +17,66 @@ module.exports = class ThreadSpecificationManager extends BaseManager {
     }
 
     _getQuery(paging) {
-        var deleted = {
-            _deleted: false
-        };
-        var query = paging.keyword ? {
-            '$and': [deleted]
-        } : deleted;
+
+        var _default = {
+                _deleted: false
+            },
+            pagingFilter = paging.filter || {},
+            keywordFilter = {},
+            query = {};
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
-            var filterName = {
-                'product.name': {
-                    '$regex': regex
+            var productNameFilter = {
+                "product.name": {
+                    "$regex": regex
                 }
             };
-            var filterCode = {
-                'product.code': {
-                    '$regex': regex
+            var productCodeFilter = {
+                "product.code": {
+                    "$regex": regex
                 }
             };
-
-            var $or = {
-                '$or': [filterCode, filterName]
-            };
-
-            query['$and'].push($or);
+            keywordFilter["$or"] = [productNameFilter, productCodeFilter];
         }
+        query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
     }
 
     _validate(threadSpecification) {
         var errors = {};
-        return new Promise((resolve, reject) => {
-            var valid = threadSpecification;
-            // 1. begin: Declare promises.
-            var getThreadSpecificationPromise = this.collection.singleOrDefault({
-                "$and": [{
-                    "$and": [{
-                        _id: {
-                            '$ne': new ObjectId(valid._id)
-                        }
-                    }, {
-                        productId: new ObjectId(valid.productId)
-                    }]
-                },
-                {
-                    _deleted: false
-                }]
-            });
-
-            var getProduct = valid.productId && ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(valid.productId) : Promise.resolve(null);
-
-            Promise.all([getThreadSpecificationPromise, getProduct])
-                .then(results => {
-                    var _module = results[0];
-                    var _product = results[1];
-                    var now = new Date();
-
-                    if (!_product)
-                        errors["product"] = i18n.__("ThreadSpecification.product.isRequired:%s is not exists", i18n.__("ThreadSpecification.product._:Product"));
-                    else if (!valid.productId)
-                        errors["product"] = i18n.__("ThreadSpecification.product.isRequired:%s is required", i18n.__("ThreadSpecification.product._:Product"));
-                    else if (valid.product) {
-                        if (!valid.product._id)
-                            errors["product"] = i18n.__("ThreadSpecification.product.isRequired:%s is required", i18n.__("ThreadSpecification.product._:Product"));
-                    }
-
-                    if (Object.getOwnPropertyNames(errors).length > 0) {
-                        var ValidationError = require('module-toolkit').ValidationError ;
-                        reject(new ValidationError('data does not pass validation', errors));
-                    }
-
-                    valid = new ThreadSpecification(threadSpecification);
-                    valid.stamp(this.user.username, 'manager');
-                    resolve(valid);
-                })
-                .catch(e => {
-                    reject(e);
-                })
+        var valid = threadSpecification;
+        // 1. begin: Declare promises.
+        var getThreadSpecificationPromise = this.collection.singleOrDefault({
+            _id: {
+                "$ne": new ObjectId(valid._id)
+            },
+            productId: new ObjectId(valid.productId)
         });
 
+        var getProduct = valid.productId && ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(valid.productId) : Promise.resolve(null);
+
+        return Promise.all([getThreadSpecificationPromise, getProduct])
+            .then(results => {
+                var _threadSpecification = results[0];
+                var _product = results[1];
+
+                if (_threadSpecification)
+                    errors["product"] = i18n.__("ThreadSpecification.product.isExists:%s is exists", i18n.__("ThreadSpecification.product._:Product"));
+                else if (!_product)
+                    errors["product"] = i18n.__("ThreadSpecification.product.isNotExists:%s is not exists", i18n.__("ThreadSpecification.product._:Product"));
+                else if (!valid.productId)
+                    errors["product"] = i18n.__("ThreadSpecification.product.isRequired:%s is required", i18n.__("ThreadSpecification.product._:Product"));
+
+                if (Object.getOwnPropertyNames(errors).length > 0) {
+                    var ValidationError = require("module-toolkit").ValidationError;
+                    return Promise.reject(new ValidationError("data does not pass validation", errors));
+                }
+
+                valid = new ThreadSpecification(threadSpecification);
+                valid.stamp(this.user.username, "manager");
+                return Promise.resolve(valid);
+            });
     }
 
     _createIndexes() {
@@ -105,7 +85,7 @@ module.exports = class ThreadSpecificationManager extends BaseManager {
             key: {
                 _updatedDate: -1
             }
-        }
+        };
 
         var codeIndex = {
             name: `ix_${map.master.collection.ThreadSpecification}_productId`,
@@ -113,8 +93,8 @@ module.exports = class ThreadSpecificationManager extends BaseManager {
                 productId: 1
             },
             unique: true
-        }
+        };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
     }
-}
+};

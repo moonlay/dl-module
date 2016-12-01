@@ -1,14 +1,14 @@
-'use strict'
+"use strict";
 
 var ObjectId = require("mongodb").ObjectId;
 
 require("mongodb-toolkit");
 
-var DLModels = require('dl-models');
+var DLModels = require("dl-models");
 var map = DLModels.map;
 var Vat = DLModels.master.Vat;
-var BaseManager = require('module-toolkit').BaseManager;
-var i18n = require('dl-i18n');
+var BaseManager = require("module-toolkit").BaseManager;
+var i18n = require("dl-i18n");
 
 module.exports = class VatManager extends BaseManager {
 
@@ -18,76 +18,64 @@ module.exports = class VatManager extends BaseManager {
     }
 
     _getQuery(paging) {
-        var deleted = {
-            _deleted: false
-        };
-        var query = paging.keyword ? {
-            '$and': [deleted]
-        } : deleted;
+        var _default = {
+                _deleted: false
+            },
+            pagingFilter = paging.filter || {},
+            keywordFilter = {},
+            query = {};
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
-            var filterName = {
+            var nameFilter = {
                 'name': {
                     '$regex': regex
                 }
             };
-            var filterRate = {
-                'rate': {
-                    '$regex': regex
-                }
-            };
-
-            var $or = {
-                '$or': [filterName, filterRate]
-            };
-
-            query['$and'].push($or);
+            keywordFilter['$or'] = [nameFilter];
         }
+        query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
     }
 
     _validate(vat) {
         var errors = {};
-        return new Promise((resolve, reject) => {
-            var valid = vat;
-            // 1. begin: Declare promises.
-            var getVatPromise = this.collection.singleOrDefault({
-                "$and": [{
-                    _id: {
-                        '$ne': new ObjectId(valid._id)
-                    }
-                }, {
-                    name: valid.name,
-                    rate: valid.rate
-                }]
-            });
+        var valid = vat;
+        // 1. begin: Declare promises.
+        var getVatPromise = this.collection.singleOrDefault({
+            _id: {
+                '$ne': new ObjectId(valid._id)
+            },
+            name: valid.name,
+            rate: valid.rate
+        });
 
-            // 2. begin: Validation.
-            Promise.all([getVatPromise])
-                .then(results => {
-                    var _vat = results[0];
+        // 2. begin: Validation.
+        return Promise.all([getVatPromise])
+            .then(results => {
+                var _vat = results[0];
 
-                    if (!valid.name || valid.name == '')
-                        errors["name"] = i18n.__("Vat.name.isRequired:%s is required", i18n.__("Vat.name._:Name"));//"Name Tidak Boleh Kosong"; 
+                if (_vat) {
+                    errors["name"] = i18n.__("Vat.name.isExists:%s is exists", i18n.__("Vat.name._:Name"));
+                    errors["rate"] = i18n.__("Vat.rate.isExists:%s is exists", i18n.__("Vat.rate._:Rate"));
+                }
+                else {
+                    if (!valid.name || valid.name == "")
+                        errors["name"] = i18n.__("Vat.name.isRequired:%s is required", i18n.__("Vat.name._:Name")); //"Name Tidak Boleh Kosong"; 
 
                     if (!valid.rate || valid.rate == 0)
-                        errors["rate"] = i18n.__("Vat.rate.isRequired:%s is required", i18n.__("Vat.rate._:Rate"));//"Rate Tidak Boleh Kosong";
+                        errors["rate"] = i18n.__("Vat.rate.isRequired:%s is required", i18n.__("Vat.rate._:Rate")); //"Rate Tidak Boleh Kosong";
+                }
 
+                if (Object.getOwnPropertyNames(errors).length > 0) {
+                    var ValidationError = require("module-toolkit").ValidationError;
+                    return Promise.reject(new ValidationError("data does not pass validation", errors));
+                }
 
-                    if (Object.getOwnPropertyNames(errors).length > 0) {
-                        var ValidationError = require('module-toolkit').ValidationError ;
-                        reject(new ValidationError('data does not pass validation', errors));
-                    }
-
-                    valid = new Vat(vat);
-                    valid.stamp(this.user.username, 'manager');
-                    resolve(valid);
-                })
-                .catch(e => {
-                    reject(e);
-                })
-        });
+                valid = new Vat(vat);
+                valid.stamp(this.user.username, "manager");
+                return Promise.resolve(valid);
+            });
     }
     _createIndexes() {
         var dateIndex = {
@@ -95,7 +83,7 @@ module.exports = class VatManager extends BaseManager {
             key: {
                 _updatedDate: -1
             }
-        }
+        };
 
         var nameRateIndex = {
             name: `ix_${map.master.collection.Vat}_name`,
@@ -104,7 +92,7 @@ module.exports = class VatManager extends BaseManager {
                 rate: 1
             },
             unique: true
-        }
+        };
 
         return this.collection.createIndexes([dateIndex, nameRateIndex]);
     }
