@@ -22,6 +22,7 @@ describe('#dl-module', function(done) {
     test('@master/machine', './master/machine');
     test('@master/product', './master/product');
     test('@master/unit', './master/unit');
+    test('@master/lamp-standard', './master/lamp-standard');
     // test('@master/uom-manager', './master/uom-manager-test');
     // test('@master/supplier-manager', './master/supplier-manager-test');
     // test('@master/buyer-manager', './master/buyer-manager-test');

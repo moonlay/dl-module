@@ -10,7 +10,8 @@ module.exports = {
         unit: require('./data-util/master/unit-data-util'),
         machine: require('./data-util/master/machine-data-util'),
         lotMachine: require('./data-util/master/lot-machine-data-util'),
-        category: require('./data-util/master/category-data-util')
+        category: require('./data-util/master/category-data-util'),
+        lampStandard: require('./data-util/master/lamp-standard-data-util')
     },
     transaction: {
         purchaseRequest: require('./data-util/transaction/purchase-request-data-util'),
