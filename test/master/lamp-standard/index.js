@@ -1,3 +1,3 @@
-describe("basic test", function() {
+describe("BASIC CRUD SCENARIOS", function() {
     require("./basic");
 });

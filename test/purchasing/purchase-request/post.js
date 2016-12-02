@@ -1,7 +1,7 @@
 require("should");
-var dataUtil = require('../../data').transaction.purchaseRequest;
+var PurchaseRequest = require('../../data-util/purchasing/purchase-request-data-util');
 var helper = require("../../helper");
-var validatePR = require("dl-models").validator.purchasing.purchaseRequest;
+var validate = require("dl-models").validator.purchasing.purchaseRequest;
 
 var PurchaseRequestManager = require("../../../src/managers/purchasing/purchase-request-manager");
 var purchaseRequestManager = null;
@@ -17,14 +17,14 @@ before('#00. connect db', function(done) {
         .catch(e => {
             done(e);
         });
-}); 
+});
 
 var purchaseRequest;
 it('#01. should success when create new data', function(done) {
-    dataUtil.getNew()
+    PurchaseRequest.getNewTestData()
         .then(pr => {
             purchaseRequest = pr;
-            validatePR(purchaseRequest);
+            validate(purchaseRequest);
             done();
         })
         .catch(e => {
@@ -39,7 +39,7 @@ it('#02. should success when post', function(done) {
             purchaseRequestManager.getSingleById(prId)
                 .then(pr => {
                     purchaseRequest = pr;
-                    validatePR(purchaseRequest);
+                    validate(purchaseRequest);
                     purchaseRequest.isPosted.should.equal(true, "purchase-request.isPosted should be true after posted");
                     done();
                 })
