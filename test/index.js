@@ -29,6 +29,7 @@ describe('#dl-module', function(done) {
     test('@MASTER/VAT', './master/vat');
     test('@MASTER/YARN-EQUIVALENT-CONVERSION', './master/yarn-equivalent-coversion');
     test('@MASTER/LAMP-STANDARD', './master/lamp-standard');
+    test('@MASTER/ACCOUNT-BANK', './master/account-bank');
 
     // //Purchasing 
      test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
