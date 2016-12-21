@@ -1,0 +1,17 @@
+describe("BASIC CRUD SCENARIOS", function() {
+    require("./basic");
+});
+
+describe("CREATE SCENARIOS", function() {
+    require("./create");
+});
+
+// describe("CANCEL SCENARIOS", function() {
+//     require("./cancel");
+// });
+// describe("CLOSE SCENARIOS", function() {
+//     require("./close");
+// });
+// describe("UNPOST SCENARIOS", function() {
+//     require("./unpost");
+// });

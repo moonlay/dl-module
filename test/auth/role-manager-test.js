@@ -35,7 +35,8 @@ it('#01. should success when read data', function (done) {
     instanceManager.read()
         .then(documents => {
             //process documents
-            documents.should.be.instanceof(Array);
+            documents.data.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
             done();
         })
         .catch(e => {

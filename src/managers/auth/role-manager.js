@@ -5,7 +5,7 @@ require("mongodb-toolkit");
 var DLModels = require('dl-models');
 var map = DLModels.map;
 var Role = DLModels.auth.Role;
-var BaseManager = require('../base-manager');
+var BaseManager = require('module-toolkit').BaseManager;
 
 module.exports = class RoleManager extends BaseManager {
     constructor(db, user) {
@@ -73,7 +73,7 @@ module.exports = class RoleManager extends BaseManager {
 
                     // 2c. begin: check if data has any error, reject if it has.
                     if (Object.getOwnPropertyNames(errors).length > 0) {
-                        var ValidationError = require('../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError ;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 
