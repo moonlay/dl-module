@@ -82,6 +82,101 @@ module.exports = class CurrencyManager extends BaseManager {
             })
     }
 
+     getCurrency() {
+        return new Promise((resolve, reject) => {
+            var query = {
+                _deleted: false
+            };
+
+            this.collection
+                .where(query)
+                .execute()
+                .then(currencies => {
+                    resolve(currencies);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    insert(dataFile) {
+        return new Promise((resolve, reject) => {
+            var currency;
+            this.getCurrency()
+                .then(results => {
+                    currency = results.data;
+                    var data = [];
+                    if (dataFile != "") {
+                        for (var i = 1; i < dataFile.length; i++) {
+                            data.push({ "code": dataFile[i][0], "symbol": dataFile[i][1], "rate": dataFile[i][2], "description": dataFile[i][3] });
+                        }
+                    }
+                    var dataError = [], errorMessage;
+                    for (var i = 0; i < data.length; i++) {
+                        errorMessage = "";
+                        if (data[i]["code"] === "" || data[i]["code"] === undefined) {
+                            errorMessage = errorMessage + "Kode tidak boleh kosong, ";
+                        }
+                        if (data[i]["symbol"] === "" || data[i]["symbol"] === undefined) {
+                            errorMessage = errorMessage + "Simbol tidak boleh kosong, ";
+                        }
+
+                        if (data[i]["rate"] === "" || data[i]["rate"] === undefined) {
+                            errorMessage = errorMessage + "Rate tidak boleh kosong, ";
+                        } else if (isNaN(data[i]["rate"])) {
+                            errorMessage = errorMessage + "Rate harus numerik, ";
+                        }
+                        else {
+                            var rateTemp = (data[i]["rate"]).toString().split(".");
+                            if (rateTemp[1] === undefined) {
+                            } else if (rateTemp[1].length > 2) {
+                                errorMessage = errorMessage + "Rate maksimal memiliki 2 digit dibelakang koma, ";
+                            }
+                        }
+                        if (data[i]["symbol"] === "" || data[i]["symbol"] === undefined) {
+                            errorMessage = errorMessage + "Simbol tidak boleh kosong, ";
+                        }
+
+                        for (var j = 0; j < currency.length; j++) {
+                            if (currency[j]["code"] === data[i]["code"]) {
+                                errorMessage = errorMessage + "Kode tidak boleh duplikat, ";
+                            }
+                             if (currency[j]["description"] === data[i]["description"]) {
+                                errorMessage = errorMessage + "Keterangan tidak boleh duplikat";
+                            }
+                        }
+                        if (errorMessage !== "") {
+                            dataError.push({ "code": data[i]["code"], "symbol": data[i]["symbol"], "rate": data[i]["rate"], "description": data[i]["description"], "Error": errorMessage });
+                        }
+                    }
+                    if (dataError.length === 0) {
+                        var newCurrency = [];
+                        for (var i = 0; i < data.length; i++) {
+                            var valid = new Currency(data[i]);
+                            valid.stamp(this.user.username, 'manager');
+                            this.collection.insert(valid)
+                                .then(id => {
+                                    this.getSingleById(id)
+                                        .then(resultItem => {
+                                            newCurrency.push(resultItem)
+                                            resolve(newCurrency);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        }
+                    } else {
+                        resolve(dataError);
+                    }
+                })
+        })
+    }
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.collection.Currency}__updatedDate`,

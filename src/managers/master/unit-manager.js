@@ -99,6 +99,112 @@ module.exports = class UnitManager extends BaseManager {
                 })
         });
     }
+     getUnit() {
+        return new Promise((resolve, reject) => {
+            var query = {
+                _deleted: false
+            };
+
+            this.collection
+                .where(query)
+                .execute()
+                .then(vats => {
+                    resolve(vats);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    insert(dataFile) {
+        return new Promise((resolve, reject) => {
+            var unit;
+            var div;
+            this.getUnit()
+                .then(results => {
+                    this.divisionManager.getDivision()
+                        .then(divisions => {
+                            unit = results.data;
+                            div = divisions.data;
+                            var data = [];
+                            if (dataFile != "") {
+                                for (var i = 1; i < dataFile.length; i++) {
+                                    data.push({ "code": dataFile[i][0], "division": dataFile[i][1], "name": dataFile[i][2], "description": dataFile[i][3] });
+                                }
+                            }
+                            var dataError = [], errorMessage;
+                            for (var i = 0; i < data.length; i++) {
+                                errorMessage = "";
+                                if (data[i]["code"] === "" || data[i]["code"] === undefined) {
+                                    errorMessage = errorMessage + "Kode tidak boleh kosong, ";
+                                }
+                                if (data[i]["division"] === "" || data[i]["division"] === undefined) {
+                                    errorMessage = errorMessage + "Division tidak boleh kosong, ";
+                                }
+                                if (data[i]["name"] === "" || data[i]["name"] === undefined) {
+                                    errorMessage = errorMessage + "Nama tidak boleh kosong, ";
+                                }
+                                for (var j = 0; j < unit.length; j++) {
+                                    if (unit[j]["code"] === data[i]["code"]) {
+                                        errorMessage = errorMessage + "Kode tidak boleh duplikat, ";
+                                    }
+                                    if (unit[j]["name"] === data[i]["name"]) {
+                                        errorMessage = errorMessage + "Nama tidak boleh duplikat, ";
+                                    }
+                                }
+                                 var flag =false; 
+                                for (var j = 0; j < div.length; j++) { 
+                                    if (div[j]["name"] === data[i]["division"])
+                                    {
+                                        flag=true; 
+                                        break;
+                                    } 
+                                }
+                                if (flag===false)
+                                    {
+                                        errorMessage = errorMessage + "Divisi tidak terdaftar di Master Divisi";
+                                    } 
+                                if (errorMessage !== "") {
+                                    dataError.push({ "code": data[i]["code"], "division": data[i]["division"], "name": data[i]["name"], "description": data[i]["description"], "Error": errorMessage });
+                                }
+                            }
+                            if (dataError.length === 0) {
+                                var newUnit = [];
+                                for (var i = 0; i < data.length; i++) {
+                                    var valid = new Unit(data[i]);
+                                    for (var j = 0; j < div.length; j++) {
+                                        if (data[i]["division"] == div[j]["name"]) {
+                                            valid.divisionId = new ObjectId(div[j]["_id"]);
+                                            valid.division = div[j];
+                                            valid.stamp(this.user.username, 'manager');
+                                            this.collection.insert(valid)
+                                                .then(id => {
+                                                    this.getSingleById(id)
+                                                        .then(resultItem => {
+                                                            newUnit.push(resultItem)
+                                                            resolve(newUnit);
+                                                        })
+                                                        .catch(e => {
+                                                            reject(e);
+                                                        });
+                                                })
+                                                .catch(e => {
+                                                    reject(e);
+                                                });
+                                            break;
+                                        }
+
+                                    }
+                                }
+                            } else {
+                                resolve(dataError);
+                            }
+                        })
+                })
+        })
+    }
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.collection.Unit}__updatedDate`,
