@@ -51,7 +51,7 @@ module.exports = function(unitReceiptNote) {
     var subHeader = [{
         columns: [
             {
-                width: '40%',
+                width: '60%',
                 columns: [{
                     width: '35%',
                     stack: ['Tanggal', 'Diterima dari']
@@ -66,7 +66,7 @@ module.exports = function(unitReceiptNote) {
 
             },
             {
-                width: '30%',
+                width: '10%',
                 text: ''
             },
             {

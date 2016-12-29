@@ -3,7 +3,7 @@ var validator = require('dl-models').validator.master;
 var validatorPurchasing = require('dl-models').validator.purchasing;
 var UnitReceiptNoteManager = require("../../../src/managers/purchasing/unit-receipt-note-manager");
 var unitReceiptNoteManager = null;
-var unitReceiptNote = require('../../data').transaction.unitReceiptNote;
+var unitReceiptNote = require("../../data-util/purchasing/unit-receipt-note-data-util");
 require("should");
 
 before('#00. connect db', function (done) {
@@ -21,15 +21,16 @@ before('#00. connect db', function (done) {
 
 var createdData;
 it('#01. should success when create new data', function (done) {
-    unitReceiptNote.getNew()
-        .then(data => {
-            data.should.be.Object();
-            createdData = data;
+    unitReceiptNote.getNewData()
+        .then((data) => unitReceiptNoteManager.create(data))
+        .then((id) => {
+            id.should.be.Object();
+            createdId = id;
             done();
         })
-        .catch(e => {
+        .catch((e) => {
             done(e);
-        })
+        });
 });
 
 it('#02. should error when create new data with same code', function (done) {
