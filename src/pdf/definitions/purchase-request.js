@@ -168,9 +168,9 @@ module.exports = function (purchaseRequest) {
         '\n', {
             stack: [{
                 columns: [{
-                    width: '60%',
+                    width: '80%',
                     columns: [{
-                        width: '30%',
+                        width: '25%',
                         stack: ['Kategori', 'Diminta Datang', 'Keterangan']
                     }, {
                             width: '3%',

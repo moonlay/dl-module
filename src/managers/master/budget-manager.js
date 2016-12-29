@@ -79,6 +79,85 @@ module.exports = class BudgetManager extends BaseManager {
             });
     }
 
+     getBudget() {
+        return new Promise((resolve, reject) => {
+            var query = {
+                _deleted: false
+            };
+
+            this.collection
+                .where(query)
+                .execute()
+                .then(budgets => {
+                    resolve(budgets);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    } 
+
+    insert(dataFile) {
+        return new Promise((resolve, reject) => {
+            var budget;
+            this.getBudget()
+                .then(results => {
+                    budget = results.data;
+                    var data = [];
+                    if (dataFile != "") {
+                        for (var i = 1; i < dataFile.length; i++) {
+                            data.push({ "code": dataFile[i][0], "name": dataFile[i][1] });
+                        }
+                    }
+                    var dataError = [], errorMessage;
+                    for (var i = 0; i < data.length; i++) {
+                        errorMessage = "";
+                        if (data[i]["code"] === "" || data[i]["code"] === undefined) {
+                            errorMessage = errorMessage + "Kode tidak boleh kosong, ";
+                        }
+                        if (data[i]["name"] === "" || data[i]["name"] === undefined) {
+                            errorMessage = errorMessage + "Nama tidak boleh kosong, ";
+                        }
+                        for (var j = 0; j < budget.length; j++) {
+                            if (budget[j]["code"] === data[i]["code"]) {
+                                errorMessage = errorMessage + "Kode tidak boleh duplikat, ";
+                            }
+                            if (budget[j]["name"] === data[i]["name"]) {
+                                errorMessage = errorMessage + "Nama tidak boleh duplikat";
+                            }
+                        }
+                        if (errorMessage !== "") {
+                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "Error": errorMessage });
+                        }
+                    }
+                    if (dataError.length === 0) {
+                        var newBudget = [];
+                        for (var i = 0; i < data.length; i++) {
+                            var valid = new Budget(data[i]);
+                            valid.stamp(this.user.username, 'manager');
+                            this.collection.insert(valid)
+                                .then(id => {
+                                    this.getSingleById(id)
+                                        .then(resultItem => {
+                                            newBudget.push(resultItem)
+                                            resolve(newBudget);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        }
+                    }
+                    else {
+                        resolve(dataError);
+                    }
+                })
+        })
+    }
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.collection.Budget}__updatedDate`,

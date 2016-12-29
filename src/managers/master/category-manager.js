@@ -19,8 +19,8 @@ module.exports = class CategoryManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -76,6 +76,87 @@ module.exports = class CategoryManager extends BaseManager {
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
             });
+    }
+
+    getCategory() {
+        return new Promise((resolve, reject) => {
+            var query = {
+                _deleted: false
+            };
+
+            this.collection
+                .where(query)
+                .execute()
+                .then(categories => {
+                    resolve(categories);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+
+
+    insert(dataFile) {
+        return new Promise((resolve, reject) => {
+            var category;
+            this.getCategory()
+                .then(results => {
+                    category = results.data;
+                    var data = [];
+                    if (dataFile != "") {
+                        for (var i = 1; i < dataFile.length; i++) {
+                            data.push({ "code": dataFile[i][0], "name": dataFile[i][1], "codeRequirement": dataFile[i][2] });
+                        }
+                    }
+                    var dataError = [], errorMessage;
+                    for (var i = 0; i < data.length; i++) {
+                        errorMessage = "";
+                        if (data[i]["code"] === "" || data[i]["code"] === undefined) {
+                            errorMessage = errorMessage + "Kode tidak boleh kosong, ";
+                        }
+                        if (data[i]["name"] === "" || data[i]["name"] === undefined) {
+                            errorMessage = errorMessage + "Nama tidak boleh kosong, ";
+                        }
+                        for (var j = 0; j < category.length; j++) {
+                            if (category[j]["code"] === data[i]["code"]) {
+                                errorMessage = errorMessage + "Kode tidak boleh duplikat, ";
+                            }
+                            if (category[j]["name"] === data[i]["name"]) {
+                                errorMessage = errorMessage + "Nama tidak boleh duplikat";
+                            }
+                        }
+                        if (errorMessage !== "") {
+                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "codeRequirement": data[i]["codeRequirement"], "Error": errorMessage });
+                        }
+                    }
+                    if (dataError.length === 0) {
+                        var newCategory = [];
+                        for (var i = 0; i < data.length; i++) {
+                            var valid = new Category(data[i]);
+                            j += 1;
+                            valid.stamp(this.user.username, 'manager');
+                            this.collection.insert(valid)
+                                .then(id => {
+                                    this.getSingleById(id)
+                                        .then(resultItem => {
+                                            newCategory.push(resultItem)
+                                            resolve(newCategory);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        }
+                    } else {
+                        resolve(dataError);
+                    }
+                })
+        })
     }
 
     _createIndexes() {

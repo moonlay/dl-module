@@ -9,6 +9,7 @@ var map = DLModels.map;
 var Division = DLModels.master.Division;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
+var generateCode = require("../../utils/code-generator");
 
 module.exports = class DivisionManager extends BaseManager {
 
@@ -77,6 +78,78 @@ module.exports = class DivisionManager extends BaseManager {
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
             });
+    }
+    getDivision() {
+        return new Promise((resolve, reject) => {
+            var query = {
+                _deleted: false
+            };
+
+            this.collection
+                .where(query)
+                .execute()
+                .then(divisions => {
+                    resolve(divisions);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    insert(dataFile) {
+        return new Promise((resolve, reject) => {
+            var division;
+            this.getDivision()
+                .then(results => {
+                    division = results.data;
+                    var data = [];
+                    if (dataFile != "") {
+                        for (var i = 1; i < dataFile.length; i++) {
+                            data.push({ "name": dataFile[i][0], "description": dataFile[i][1] });
+                        }
+                    }
+                    var dataError = [], errorMessage;
+                    for (var i = 0; i < data.length; i++) {
+                        errorMessage = ""; 
+                        if (data[i]["name"] === "" || data[i]["name"] === undefined) {
+                            errorMessage = errorMessage + "Nama tidak boleh kosong, ";
+                        }
+                        for (var j = 0; j < division.length; j++) { 
+                            if ((division[j]["name"]).toLowerCase() === (data[i]["name"]).toLowerCase()) {
+                                errorMessage = errorMessage + "Nama tidak boleh duplikat";
+                            }
+                        }
+                        if (errorMessage !== "") {
+                            dataError.push({"name": data[i]["name"], "description": data[i]["description"], "Error": errorMessage });
+                        }
+                    }
+                    if (dataError.length === 0) {
+                        var newDivision = [];
+                        for (var i = 0; i < data.length; i++) {
+                            var valid = new Division(data[i]);
+                            valid.code= generateCode();
+                            valid.stamp(this.user.username, 'manager');
+                            this.collection.insert(valid)
+                                .then(id => {
+                                    this.getSingleById(id)
+                                        .then(resultItem => {
+                                            newDivision.push(resultItem)
+                                            resolve(newDivision);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        }
+                    } else {
+                        resolve(dataError);
+                    }
+                })
+        })
     }
 
     _createIndexes() {

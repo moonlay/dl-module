@@ -80,6 +80,95 @@ module.exports = class SupplierManager extends BaseManager {
                 return Promise.resolve(valid);
             });
     }
+
+    getSupplier() {
+        return new Promise((resolve, reject) => {
+            var query = {
+                _deleted: false
+            };
+
+            this.collection
+                .where(query)
+                .execute()
+                .then(divisions => {
+                    resolve(divisions);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    insert(dataFile) {
+        return new Promise((resolve, reject) => {
+            var supplier;
+            this.getSupplier()
+                .then(results => {
+                    supplier = results.data;
+                    var data = [];
+                    if (dataFile != "") {
+                        for (var i = 1; i < dataFile.length; i++) {
+                            data.push({ "code": dataFile[i][0], "name": dataFile[i][1], "address": dataFile[i][2], "contact": dataFile[i][3], "PIC": dataFile[i][4], "import": dataFile[i][5], "NPWP": dataFile[i][6], "serialNumber": dataFile[i][7] });
+                        }
+                    }
+                    var dataError = [], errorMessage;
+                    for (var i = 0; i < data.length; i++) {
+                        errorMessage = ""; 
+                         if (data[i]["code"] === "" || data[i]["code"] === undefined) {
+                            errorMessage = errorMessage + "Kode tidak boleh kosong, ";
+                        }
+                        if (data[i]["name"] === "" || data[i]["name"] === undefined) {
+                            errorMessage = errorMessage + "Nama tidak boleh kosong, ";
+                        }
+                        if (data[i]["import"] === "" || data[i]["import"] === undefined) {
+                            errorMessage = errorMessage + "Import tidak boleh kosong, ";
+                        }else if ((data[i]["import"]).toString() !== "TRUE" && (data[i]["import"]).toString() !== "FALSE") {
+                            errorMessage = errorMessage + "Import harus diisi dengan true atau false, ";
+                        }
+                        for (var j = 0; j < supplier.length; j++) { 
+                            if (supplier[j]["code"] === data[i]["code"]) {
+                                errorMessage = errorMessage + "Kode tidak boleh duplikat";
+                            }
+                        }
+                        if (errorMessage !== "") {
+                            dataError.push({"code": data[i]["code"],"name": data[i]["name"], "address": data[i]["address"],"contact": data[i]["contact"], "PIC": data[i]["PIC"],"import": data[i]["import"],"NPWP": data[i]["NPWP"], "serialNumber": data[i]["serialNumber"], "Error": errorMessage });
+                        }
+                    }
+                    if (dataError.length === 0) {
+                        var newSupplier = [];
+                        for (var i = 0; i < data.length; i++) {
+                            if ((data[i]["import"]).toString()==="TRUE") 
+                            {
+                                data[i]["import"]=true;
+                            }
+                            if ((data[i]["import"]).toString()==="FALSE") 
+                            {
+                                data[i]["import"]=false;
+                            }
+                            var valid = new Supplier(data[i]); 
+                            valid.stamp(this.user.username, 'manager');
+                            this.collection.insert(valid)
+                                .then(id => {
+                                    this.getSingleById(id)
+                                        .then(resultItem => {
+                                            newSupplier.push(resultItem)
+                                            resolve(newSupplier);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        }
+                    } else {
+                        resolve(dataError);
+                    }
+                })
+        })
+    }
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.collection.Supplier}__updatedDate`,
