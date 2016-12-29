@@ -12,12 +12,14 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var Product = DLModels.master.Product;
 var UomManager = require('./uom-manager');
+var CurrencyManager = require('./currency-manager');
 
 module.exports = class ProductManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.master.collection.Product);
         this.uomManager = new UomManager(db, user);
+        this.currencyManager = new CurrencyManager(db, user);
     }
 
     _getQuery(paging) {
@@ -102,6 +104,141 @@ module.exports = class ProductManager extends BaseManager {
                 valid.stamp(this.user.username, 'manager');
                 return Promise.resolve(valid);
             });
+    }
+
+    getProduct() {
+        return new Promise((resolve, reject) => {
+            var query = {
+                _deleted: false
+            };
+            this.collection
+                .where(query)
+                .execute()
+                .then(products => {
+                    resolve(products);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    insert(dataFile) {
+        return new Promise((resolve, reject) => {
+            var product, uom, currency;
+            this.getProduct()
+                .then(results => {
+                    this.uomManager.getUOM()
+                        .then(uoms => {
+                            this.currencyManager.getCurrency()
+                                .then(currencies => {
+                                    product = results.data;
+                                    uom = uoms.data;
+                                    currency = currencies.data;
+                                    var data = [];
+                                    if (dataFile != "") {
+                                        for (var i = 1; i < dataFile.length; i++) {
+                                            data.push({ "code": dataFile[i][0], "name": dataFile[i][1], "uom": dataFile[i][2], "currency": dataFile[i][3], "price": dataFile[i][4], "tags":dataFile[i][5], "description": dataFile[i][6] });
+                                        }
+                                    }
+                                    var dataError = [], errorMessage;
+                                    for (var i = 0; i < data.length; i++) {
+                                        errorMessage = "";
+                                        if (data[i]["code"] === "" || data[i]["code"] === undefined) {
+                                            errorMessage = errorMessage + "Kode tidak boleh kosong, ";
+                                        }
+                                        if (data[i]["name"] === "" || data[i]["name"] === undefined) {
+                                            errorMessage = errorMessage + "Nama tidak boleh kosong, ";
+                                        }
+                                        if (data[i]["uom"] === "" || data[i]["uom"] === undefined) {
+                                            errorMessage = errorMessage + "Satuan tidak boleh kosong, ";
+                                        }
+                                        if (data[i]["currency"] === "" || data[i]["currency"] === undefined) {
+                                            errorMessage = errorMessage + "Mata Uang tidak boleh kosong, ";
+                                        }
+                                        if (data[i]["price"] === "" || data[i]["price"] === undefined) {
+                                            errorMessage = errorMessage + "Harga tidak boleh kosong, ";
+                                        } else if (isNaN(data[i]["price"])) {
+                                            errorMessage = errorMessage + "Harga harus numerik, ";
+                                        }
+                                        else {
+                                            var rateTemp = (data[i]["price"]).toString().split(".");
+                                            if (rateTemp[1] === undefined) {
+                                            } else if (rateTemp[1].length > 2) {
+                                                errorMessage = errorMessage + "Harga maksimal memiliki 2 digit dibelakang koma, ";
+                                            }
+                                        }
+                                        for (var j = 0; j < product.length; j++) {
+                                            if (product[j]["code"] === data[i]["code"]) {
+                                                errorMessage = errorMessage + "Kode tidak boleh duplikat, ";
+                                            }
+                                            if (product[j]["name"] === data[i]["name"]) {
+                                                errorMessage = errorMessage + "Nama tidak boleh duplikat, ";
+                                            }
+                                        }
+                                        var flagUom = false;
+                                        for (var j = 0; j < uom.length; j++) {
+                                            if (uom[j]["unit"] === data[i]["uom"]) {
+                                                flagUom = true;
+                                                break;
+                                            }
+                                        }
+                                        if (flagUom === false) {
+                                            errorMessage = errorMessage + "Satuan tidak terdaftar di Master Satuan, ";
+                                        }
+                                        var flagCurrency = false;
+                                        for (var j = 0; j < currency.length; j++) {
+                                            if (currency[j]["code"] !== data[i]["currency"]) {
+                                                flagCurrency = true;
+                                                break;
+                                            }
+                                        }
+                                        if (flagCurrency === false) {
+                                            errorMessage = errorMessage + "Mata Uang tidak terdaftar di Master Mata Uang";
+                                        }
+
+                                        if (errorMessage !== "") {
+                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags":data[i]["tags"], "description": data[i]["description"], "Error": errorMessage });
+                                        }
+                                    }
+                                    if (dataError.length === 0) {
+                                        var newProduct = [];
+                                        for (var i = 0; i < data.length; i++) {
+                                            var valid = new Product(data[i]);
+                                            for (var c = 0; c < currency.length; c++) {
+                                                for (var j = 0; j < uom.length; j++) {
+                                                    if (data[i]["uom"] == uom[j]["unit"] && data[i]["currency"] == currency[c]["code"]) {
+                                                        valid.currency = currency[c];
+                                                        valid.uomId = new ObjectId(uom[j]["_id"]);
+                                                        valid.uom = uom[j];
+                                                        valid.stamp(this.user.username, 'manager');
+                                                        this.collection.insert(valid)
+                                                            .then(id => {
+                                                                this.getSingleById(id)
+                                                                    .then(resultItem => {
+                                                                        newProduct.push(resultItem)
+                                                                        resolve(newProduct);
+                                                                    })
+                                                                    .catch(e => {
+                                                                        reject(e);
+                                                                    });
+                                                            })
+                                                            .catch(e => {
+                                                                reject(e);
+                                                            });
+                                                        break;
+                                                    }
+
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        resolve(dataError);
+                                    }
+                                })
+                        })
+                })
+        })
     }
     
     _createIndexes() {

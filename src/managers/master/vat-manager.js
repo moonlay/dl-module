@@ -77,6 +77,92 @@ module.exports = class VatManager extends BaseManager {
                 return Promise.resolve(valid);
             });
     }
+    getVat() {
+        return new Promise((resolve, reject) => {
+            var query = {
+                _deleted: false
+            };
+
+            this.collection
+                .where(query)
+                .execute()
+                .then(vats => {
+                    resolve(vats);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    insert(dataFile) {
+        return new Promise((resolve, reject) => {
+            var vat;
+            this.getVat()
+                .then(results => {
+                    vat = results.data;
+                    var data = [];
+                    if (dataFile != "") {
+                        for (var i = 1; i < dataFile.length; i++) {
+                            data.push({ "name": dataFile[i][0], "rate": dataFile[i][1], "description": dataFile[i][2] });
+                        }
+                    }
+                    var dataError = [], errorMessage;
+                    for (var i = 0; i < data.length; i++) {
+                        errorMessage = "";
+                        if (data[i]["name"] === "" || data[i]["name"] === undefined) {
+                            errorMessage = errorMessage + "Nama tidak boleh kosong, ";
+                        }
+
+                        if (data[i]["rate"] === "" || data[i]["rate"] === undefined) {
+                            errorMessage = errorMessage + "Rate tidak boleh kosong, ";
+                        } else if (isNaN(data[i]["rate"])) {
+                            errorMessage = errorMessage + "Rate harus numerik, ";
+                        }
+                        else {
+                            var rateTemp = (data[i]["rate"]).toString().split(".");
+                            if (rateTemp[1]===undefined)
+                            { 
+                            }else if (rateTemp[1].length > 2) {
+                                errorMessage = errorMessage + "Rate maksimal memiliki 2 digit dibelakang koma, ";
+                            }
+                        }
+                        for (var j = 0; j < vat.length; j++) {
+                            if (vat[j]["name"] === data[i]["name"] && vat[j]["rate"] === data[i]["rate"]) {
+                                errorMessage = errorMessage + "Kombinasi Nama dan Rate tidak boleh sama";
+                            }
+                        }
+                        if (errorMessage !== "") {
+                            dataError.push({"name": data[i]["name"], "rate": data[i]["rate"], "description": data[i]["description"], "Error": errorMessage });
+                        }
+                    }
+                    if (dataError.length === 0) {
+                        var newVat = [];
+                        for (var i = 0; i < data.length; i++) {
+                            var valid = new Vat(data[i]);
+                            valid.stamp(this.user.username, 'manager');
+                            this.collection.insert(valid)
+                                .then(id => {
+                                    this.getSingleById(id)
+                                        .then(resultItem => {
+                                            newVat.push(resultItem)
+                                            resolve(newVat);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        }
+                    } else {
+                        resolve(dataError);
+                    }
+                })
+        })
+    }
+    
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.collection.Vat}__updatedDate`,

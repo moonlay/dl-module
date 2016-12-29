@@ -19,8 +19,8 @@ module.exports = class UomManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -71,7 +71,82 @@ module.exports = class UomManager extends BaseManager {
                 return Promise.resolve(valid);
             });
     }
-    
+
+     getUOM() {
+        return new Promise((resolve, reject) => {
+            var query = {
+                _deleted: false
+            };
+
+            this.collection
+                .where(query)
+                .execute()
+                .then(uoms => {
+                    resolve(uoms);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+
+
+    insert(dataFile) {
+        return new Promise((resolve, reject) => {
+            var uom;
+            this.getUOM()
+                .then(results => {
+                    uom = results.data;
+                    var data = [];
+                    if (dataFile != "") {
+                        for (var i = 1; i < dataFile.length; i++) {
+                            data.push({ "unit": dataFile[i][0] });
+                        }
+                    }
+                    var dataError = [], errorMessage;
+                    for (var i = 0; i < data.length; i++) {
+                        errorMessage = "";
+                        if (data[i]["unit"] === "" || data[i]["unit"] === undefined) {
+                            errorMessage = errorMessage + "Unit tidak boleh kosong, ";
+                        }
+                        for (var j = 0; j < uom.length; j++) {
+                            if ((uom[j]["unit"]).toLowerCase() === (data[i]["unit"]).toLowerCase()) {
+                                errorMessage = errorMessage + "Unit tidak boleh duplikat";
+                            }
+                        }
+                        if (errorMessage !== "") {
+                            dataError.push({ "unit": data[i]["unit"], "Error": errorMessage });
+                        }
+                    }
+                    if (dataError.length === 0) {
+                        var newUOM = [];
+                        for (var i = 0; i < data.length; i++) {
+                            var valid = new Uom(data[i]);
+                            valid.stamp(this.user.username, 'manager');
+                            this.collection.insert(valid)
+                                .then(id => {
+                                    this.getSingleById(id)
+                                        .then(resultItem => {
+                                            newUOM.push(resultItem)
+                                            resolve(newUOM);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        }
+                    }
+                    else {
+                        resolve(dataError);
+                    }
+                })
+        })
+    }
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.collection.uom}__updatedDate`,
