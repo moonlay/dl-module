@@ -98,10 +98,10 @@ module.exports = function (unitPaymentOrder) {
     var subHeader = [{
         columns: [
             {
-                width: '40%',
+                width: '60%',
                 stack: [{
                     columns: [{
-                        width: '35%',
+                        width: '25%',
                         text: "Nota Pembelian"
                     }, {
                             width: '5%',
@@ -113,7 +113,7 @@ module.exports = function (unitPaymentOrder) {
                     style: ['size08']
                 }, {
                         columns: [{
-                            width: '35%',
+                            width: '25%',
                             text: "Untuk"
                         }, {
                                 width: '5%',
@@ -127,7 +127,7 @@ module.exports = function (unitPaymentOrder) {
                 ]
             },
             {
-                width: '30%',
+                width: '10%',
                 text: ''
             },
             {
@@ -347,11 +347,11 @@ module.exports = function (unitPaymentOrder) {
         {
             columns: [
                 {
-                    width: '40%',
+                    width: '50%',
                     stack: [
                         {
                             columns: [{
-                                width: '50%',
+                                width: '40%',
                                 text: "Perjanjian Pembayaran"
                             },
                                 {
@@ -364,7 +364,7 @@ module.exports = function (unitPaymentOrder) {
                                 }]
                         }, {
                             columns: [{
-                                width: '50%',
+                                width: '40%',
                                 text: "Invoice"
                             },
                                 {
@@ -373,11 +373,11 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.invoceNo || '-'
+                                    text: unitPaymentOrder.invoceNo + ', ' + moment(unitPaymentOrder.invoceDate).format(locale.date.format) || '-'
                                 }]
                         }, {
                             columns: [{
-                                width: '50%',
+                                width: '40%',
                                 text: "Ket."
                             },
                                 {
@@ -391,7 +391,7 @@ module.exports = function (unitPaymentOrder) {
                         }]
                 },
                 {
-                    width: '20%',
+                    width: '10%',
                     text: ''
                 },
                 {
