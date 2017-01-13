@@ -24,7 +24,7 @@ class BuyerDataUtil {
         data.country = `country[${code}]`;
         data.contact = `contact[${code}]`;
         data.tempo = "30";
-
+        data.type = "Export";
         return Promise.resolve(data);
     }
 

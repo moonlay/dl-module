@@ -41,16 +41,18 @@ var createdId;
 var dataprodOrder;
     it("#02. should success when create new data", function(done) {
         dataUtil.getNewData()
-            .then((data) => dataprodOrder=data)
-            .then((data) =>
-            manager.create(data))
-            .then((id) => {
-                id.should.be.Object();
-                createdId = id;
-                done();
-            })
-            .catch((e) => {
-                done(e);
+            //.then((data) => dataprodOrder=data)
+            .then((data) =>{
+                dataprodOrder=data;
+                manager.create(data)
+                .then((id) => {
+                    id.should.be.Object();
+                    createdId = id;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
             });
     });
 

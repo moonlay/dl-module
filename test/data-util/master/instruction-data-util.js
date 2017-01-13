@@ -1,5 +1,8 @@
 "use strict";
 var _getSert = require("../getsert");
+var material = require("./product-data-util");
+var orderType = require("./order-type-data-util");
+var colorType = require("./color-type-data-util");
 var generateCode = require("../../../src/utils/code-generator");
 
 class InstructionDataUtil {
@@ -7,35 +10,58 @@ class InstructionDataUtil {
         var ManagerType = require("../../../src/managers/master/instruction-manager");
         return _getSert(input, ManagerType, (data) => {
             return {
-                material        : data.material,
+                materialId      : data.materialId,
                 construction    : data.construction,
-                processType     : data.processType
+                orderTypeId     : data.orderTypeId,
+                colorTypeId     : data.colorTypeId
             };
         });
     }
 
     getNewData() {
-        var Model = require('dl-models').master.Instruction;
-        var data = new Model();
+       return Promise.all([material.getRandomTestData(), orderType.getTestData(), colorType.getTestData()])
+            .then((results) => {
+                var material = results[0];
+                var orderType = results[1];
+                var colorType = results[2];
 
-        var code = generateCode();
+                var code = generateCode();
 
-        data.material = `material[${code}]`;
-        data.construction = `construction[${code}]`;
-        data.processType = `processType[${code}]`;
-        data.steps=[`step1[${code}]`,`step2[${code}]`,`step3[${code}]`];
-
-        return Promise.resolve(data);
+                var data = {
+                    materialId:material._id,
+                    material:material,
+                    orderTypeId:orderType._id,
+                    orderType:orderType,
+                    colorTypeId:colorType._id,
+                    colorType:colorType,
+                    construction : `construction[${code}]`,
+                    steps:[`step1[${code}]`,`step2[${code}]`,`step3[${code}]`]
+                    };
+                return Promise.resolve(data);
+            });
     }
 
     getTestData() {
-        var data = {
-            material: 'CD 40 X CD 40 material',
-            construction: '2/1 133 construction',
-            processType: 'Finishing',
-            steps:['BLEACHING','SCOURING','MERCERIZE']
-        };
-        return this.getSert(data);
+        return Promise.all([material.getTestData(), orderType.getTestData(), colorType.getTestData()])
+            .then((results) => {
+                var material = results[0];
+                var orderType = results[1];
+                var colorType = results[2];
+
+                var code = generateCode();
+
+                var data = {
+                    materialId:material._id,
+                    material:material,
+                    orderTypeId:orderType._id,
+                    orderType:orderType,
+                    colorTypeId:colorType._id,
+                    colorType:colorType,
+                    construction : '2/1 133 construction',
+                    steps:['BLEACHING','SCOURING','MERCERIZE']
+                    };
+                return this.getSert(data);
+            });
     }
 }
 module.exports = new InstructionDataUtil();

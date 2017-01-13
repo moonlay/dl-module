@@ -12,7 +12,7 @@ module.exports = function (productionOrder) {
 
     var spelling=productionOrder.spelling;
     var orderQuantity=productionOrder.orderQuantity;
-    var spellOrder=spelling+orderQuantity;
+    var spellOrder=((spelling/100)*orderQuantity)+orderQuantity;;
 
     var moment = require('moment');
     moment.locale(locale.name); 
@@ -42,6 +42,10 @@ module.exports = function (productionOrder) {
     }, {
             text: 'Acuan/Color Way',
             style: 'tableHeader'
+        },
+        {
+            text: 'Jenis Warna',
+            style: 'tableHeader'
         }, {
             text: 'Jumlah',
             style: 'tableHeader'
@@ -50,8 +54,8 @@ module.exports = function (productionOrder) {
     var tfoot = [[{
         text: 'Total',
         style: 'tableHeader',
-        colSpan:2
-    }, "", {
+        colSpan:3
+    }, "", "", {
             text: productionOrder.orderQuantity +" "+productionOrder.uom.unit,
             style: 'tableHeader'
         }]];
@@ -64,6 +68,9 @@ module.exports = function (productionOrder) {
             text: detail.colorTemplate ,
             style: ['size07', 'center']
         },{
+            text: detail.colorType.name ,
+            style: ['size07', 'center']
+        },{
             text: detail.quantity + " "+detail.uom.unit ,
             style: ['size07', 'center']
         } ]
@@ -73,13 +80,13 @@ module.exports = function (productionOrder) {
         [{
             text: "tidak ada detail",
             style: ['size06', 'center'],
-            colSpan: 3
-        }, "", ""]
+            colSpan: 4
+        }, "", "",""]
     ];
 
     var table = [{
         table: {
-            widths: ['30%', '30%', '40%'],
+            widths: ['25%', '25%', '25%','25%'],
             headerRows: 1,
             body: [].concat([thead], tbody,tfoot)
         }
@@ -122,7 +129,7 @@ module.exports = function (productionOrder) {
                 },
                 {
                     width: '*',
-                    text:productionOrder.processType
+                    text:productionOrder.processType.name
                 }]
         },{
             columns: [
@@ -135,7 +142,7 @@ module.exports = function (productionOrder) {
                 },
                 {
                     width: '*',
-                    text:productionOrder.material
+                    text:productionOrder.material.name
                 }]
         },{
             columns: [
@@ -161,7 +168,7 @@ module.exports = function (productionOrder) {
                 },
                 {
                     width: '*',
-                    text:productionOrder.orderType
+                    text:productionOrder.orderType.name
                 }]
         },{
             columns: [

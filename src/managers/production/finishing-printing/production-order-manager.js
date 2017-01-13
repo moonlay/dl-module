@@ -6,25 +6,38 @@ require("mongodb-toolkit");
 var DLModels = require('dl-models');
 var map = DLModels.map;
 var SalesContract=DLModels.production.finishingPrinting.SalesContract;
+var DailyOperation=DLModels.production.finishingPrinting.DailyOperation;
 var ProductionOrder=DLModels.production.finishingPrinting.ProductionOrder;
 var ProductionOrderDetail=DLModels.production.finishingPrinting.ProductionOrderDetail;
+var DailyOperation=DLModels.production.finishingPrinting.DailyOperation;
 var LampStandardManager=require('../../master/lamp-standard-manager');
 var BuyerManager=require('../../master/buyer-manager');
 var UomManager = require('../../master/uom-manager');
+var ProductManager = require('../../master/product-manager');
+var ProcessTypeManager = require('../../master/process-type-manager');
+var OrderTypeManager = require('../../master/order-type-manager');
+var ColorTypeManager = require('../../master/color-type-manager');
 var InstructionManager = require('../../master/instruction-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var generateCode = require("../../../utils/code-generator");
+var DailyOperationCollection=null;
+var assert = require('assert');
 
 module.exports = class ProductionOrderManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
-
+        
         this.collection = this.db.collection(map.production.finishingPrinting.collection.SalesContract);
+        DailyOperationCollection=this.db.collection(map.production.finishingPrinting.collection.DailyOperation);
         this.LampStandardManager = new LampStandardManager(db, user);
         this.BuyerManager= new BuyerManager(db,user);
         this.UomManager = new UomManager(db, user);
+        this.ProductManager = new ProductManager(db, user);
         this.InstructionManager = new InstructionManager(db, user);
+        this.ProcessTypeManager = new ProcessTypeManager(db, user);
+        this.ColorTypeManager = new ColorTypeManager(db, user);
+        this.OrderTypeManager = new OrderTypeManager(db, user);
     }
 
     _getQuery(paging) {
@@ -55,26 +68,35 @@ module.exports = class ProductionOrderManager extends BaseManager {
         var errors = {};
 
         var valid=productionOrder;
+        if(valid.constructionId){
+            valid.construction=valid.construction._id;}
+
         var getBuyer = ObjectId.isValid(valid.buyerId) ? this.BuyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
         var getLampStandard = ObjectId.isValid(valid.lampStandardId) ? this.LampStandardManager.getSingleByIdOrDefault(valid.lampStandardId) : Promise.resolve(null);
         var getUom = valid.uom && ObjectId.isValid(valid.uomId) ? this.UomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
-        var getInstruction= ObjectId.isValid(valid.instructionId) ? this.InstructionManager.getSingleByIdOrDefault(valid.instructionId) : Promise.resolve(null);
-        return Promise.all([getBuyer, getLampStandard, getUom, getInstruction])
+        var getProduct = ObjectId.isValid(valid.materialId) ? this.ProductManager.getSingleByIdOrDefault(valid.materialId) : Promise.resolve(null);
+        var getProcessType = ObjectId.isValid(valid.processTypeId) ? this.ProcessTypeManager.getSingleByIdOrDefault(valid.processTypeId) : Promise.resolve(null);
+        var getOrderType = ObjectId.isValid(valid.orderTypeId) ? this.OrderTypeManager.getSingleByIdOrDefault(valid.orderTypeId) : Promise.resolve(null);
+
+        valid.details = valid.details || [];
+        var getColorTypes = [];
+        for (var detail of valid.details) {
+            if (ObjectId.isValid(detail.colorTypeId)) {
+                var color=ObjectId.isValid(detail.colorTypeId) ? this.ColorTypeManager.getSingleByIdOrDefault(detail.colorTypeId) : Promise.resolve(null);
+                getColorTypes.push(color);
+            }
+        }
+
+        return Promise.all([getBuyer, getLampStandard, getUom,  getProduct, getProcessType, getOrderType].concat(getColorTypes))
             .then(results => {
                 var _buyer = results[0];
                 var _lampStandard = results[1];
                 var _uom = results[2];
-                var _instruction = results[3];
-                var _instruct=null;
+                var _material = results[3];
+                var _process = results[4];
+                var _order = results[5];
+                var _colors = results.slice(6, results.length);
 
-                if (!_instruction)
-                    errors["construction"] = i18n.__("ProductionOrder.instruction.isRequired:%s is not exists", i18n.__("ProductionOrder.instruction._:Instruction")); //"Buyer tidak boleh kosong";
-                else if (!valid.instructionId)
-                    errors["construction"] = i18n.__("ProductionOrder.instruction.isRequired:%s is required", i18n.__("ProductionOrder.instruction._:Instruction")); //"Buyer tidak boleh kosong";
-                else{
-                    valid.construction=valid.instruction.construction;
-                    valid.material=valid.instruction.material;
-                }
 
                 if (valid.uom) {
                     if (!valid.uom.unit || valid.uom.unit == '')
@@ -91,9 +113,20 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     errors["construction"]=i18n.__("ProductionOrder.construction.isRequired:%s is required", i18n.__("ProductionOrder.construction._:Construction")); //"construction tidak boleh kosong";
                 }
 
-                if(!valid.material || valid.material===''){
-                    errors["material"]=i18n.__("ProductionOrder.material.isRequired:%s is required", i18n.__("ProductionOrder.material._:Material")); //"material tidak boleh kosong";
-                }
+                if (!_material)
+                    errors["material"] = i18n.__("ProductionOrder.material.isRequired:%s is not exists", i18n.__("ProductionOrder.material._:Material")); //"material tidak boleh kosong";
+                else if (!valid.materialId)
+                    errors["material"] = i18n.__("ProductionOrder.material.isRequired:%s is required", i18n.__("ProductionOrder.material._:Material")); //"material tidak boleh kosong";
+
+                if (!_process)
+                    errors["processType"] = i18n.__("ProductionOrder.processType.isRequired:%s is not exists", i18n.__("ProductionOrder.processType._:ProcessType")); //"processType tidak boleh kosong";
+                else if (!valid.processTypeId)
+                    errors["processType"] = i18n.__("ProductionOrder.processType.isRequired:%s is required", i18n.__("ProductionOrder.processType._:ProcessType")); //"processType tidak boleh kosong";
+                
+                if (!_order)
+                    errors["orderType"] = i18n.__("ProductionOrder.orderType.isRequired:%s is not exists", i18n.__("ProductionOrder.orderType._:OrderType")); //"orderType tidak boleh kosong";
+                else if (!valid.processTypeId)
+                    errors["orderType"] = i18n.__("ProductionOrder.orderType.isRequired:%s is required", i18n.__("ProductionOrder.orderType._:OrderType")); //"orderType tidak boleh kosong";
 
                 if(!valid.rollLength || valid.rollLength===''){
                     errors["rollLength"]=i18n.__("ProductionOrder.rollLength.isRequired:%s is required", i18n.__("ProductionOrder.rollLength._:RollLength")); //"rollLength tidak boleh kosong";
@@ -103,16 +136,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     errors["originGreigeFabric"]=i18n.__("ProductionOrder.originGreigeFabric.isRequired:%s is required", i18n.__("ProductionOrder.originGreigeFabric._:OriginGreigeFabric")); //"originGreigeFabric tidak boleh kosong";
                 }
 
-                if(!valid.orderType || valid.orderType===''){
-                    errors["orderType"]=i18n.__("ProductionOrder.orderType.isRequired:%s is required", i18n.__("ProductionOrder.orderType._:OrderType")); //"orderType tidak boleh kosong";
-                }
-
                 if(!valid.finishWidth || valid.finishWidth===''){
                     errors["finishWidth"]=i18n.__("ProductionOrder.finishWidth.isRequired:%s is required", i18n.__("ProductionOrder.finishWidth._:FinishWidth")); //"finishWidth tidak boleh kosong";
-                }
-
-                if(!valid.design || valid.design===''){
-                    errors["design"]=i18n.__("ProductionOrder.design.isRequired:%s is required", i18n.__("ProductionOrder.design._:Design")); //"design tidak boleh kosong";
                 }
 
                 if(!valid.sample || valid.sample===''){
@@ -168,7 +193,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     for (var detail of valid.details) {
                         var detailError = {};
                         detail.code=generateCode();
-                        if (!detail.colorRequest || !detail.colorRequest==="")
+                        if (!detail.colorRequest || detail.colorRequest=="")
                             detailError["colorRequest"] = i18n.__("ProductionOrder.details.colorRequest.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorRequest._:ColorRequest")); //"colorRequest tidak boleh kosong";
                         if (detail.quantity <= 0)
                             detailError["quantity"] = i18n.__("ProductionOrder.details.quantity.isRequired:%s is required", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
@@ -177,8 +202,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         if(_uom){
                             detail.uomId=new ObjectId(_uom._id);
                         }
-                        if (!detail.colorTemplate || !detail.colorTemplate==="")
+                        if (!detail.colorTemplate || detail.colorTemplate=="")
                             detailError["colorTemplate"] = i18n.__("ProductionOrder.details.colorTemplate.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorTemplate._:ColorTemplate")); //"colorTemplate tidak boleh kosong";
+                        
+                        if (!_colors)
+                            detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
                         
                         if (Object.getOwnPropertyNames(detailError).length > 0)
                             detailErrors.push(detailError);
@@ -191,22 +219,36 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if(!valid.orderNo || valid.orderNo===''){
                     valid.orderNo = generateCode();
                 }
-                if(valid.buyer){
-                    valid.buyerId=new ObjectId(valid.buyer._id);
+                if(_buyer){
+                    valid.buyerId=new ObjectId(_buyer._id);
                 }
-                if(valid.lampStandard){
-                    valid.lampStandardId=new ObjectId(valid.lampStandard._id);
+                if(_lampStandard){
+                    valid.lampStandardId=new ObjectId(_lampStandard._id);
                 }
-                if(valid.uom){
-                    valid.uomId=new ObjectId(valid.uom._id);
+                if(_uom){
+                    valid.uomId=new ObjectId(_uom._id);
                 }
-                if(valid.instruction){
-                    valid.instructionId=new ObjectId(valid.instruction._id);
+                if(_process){
+                    valid.processTypeId=new ObjectId(_process._id);
                 }
-                valid.deliveryDate=new Date(valid.deliveryDate);
+                if(_order){
+                    valid.orderTypeId=new ObjectId(_order._id);
+                }
+                if(_material){
+                    valid.material=_material;
+                    valid.materialId=new ObjectId(_material._id);
+                }
+                for (var detail of valid.details) {
+                    for (var _color of _colors) {
+                        if (detail.colorTypeId.toString() === _color._id.toString()) {
+                            detail.colorTypeId = _color._id;
+                            detail.colorType = _color;
+                            break;
+                        }
+                    }
+                }
 
-                if (!valid.isExport)
-                    valid.isExport = false;
+                valid.deliveryDate=new Date(valid.deliveryDate);
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
@@ -253,17 +295,38 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         {_deleted:false}]
                     }).then(result=>{
                         if(result!=null){
-                            var prodOrders=[validproductionOrder];
-                            prodOrders.push(result.productionOrders);
-                            result.productionOrders=prodOrders;
+                            for(var prodOrders of result.productionOrders){
+                                prodOrd.push(prodOrders);
+                            }
+                            result.productionOrders=prodOrd;
                             if (!result.stamp){
                                 result = new SalesContract(result);
+                            }
+                            var dailyOperation = [];
+                            for(var a of validproductionOrder.details){
+                                var newDailyOperation = new DailyOperation();
+                                newDailyOperation.salesContract = validproductionOrder.salesContractNo;
+                                newDailyOperation.productionOrder = validproductionOrder;
+                                newDailyOperation.materialId = new ObjectId(validproductionOrder.materialId);
+                                newDailyOperation.material = validproductionOrder.material;
+                                newDailyOperation.construction = validproductionOrder.construction;
+                                newDailyOperation.color = a.colorRequest;
+                                newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
+                                newDailyOperation.colorType = a.colorType;
+                                newDailyOperation.stamp(this.user.username, "manager");
+                                dailyOperation.push(newDailyOperation);
                             }
 
                             result.stamp(this.user.username, "manager");
                             this.collection.update(result)
                                 .then(id => {
-                                    resolve(id);
+                                    DailyOperationCollection.insertMany(dailyOperation)
+                                    .then(dOperation => {
+                                        resolve(id);
+                                    })
+                                    .catch(e => {
+                                        reject(e);
+                                    });
                                 })
                                 .catch(e => {
                                     reject(e);
@@ -278,11 +341,31 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             if (!SalesContractData.stamp){
                                 SalesContractData = new SalesContract(SalesContractData);
                             }
+                            var dailyOperation = [];
+                            for(var a of validproductionOrder.details){
+                                var newDailyOperation = new DailyOperation();
+                                newDailyOperation.salesContract = validproductionOrder.salesContractNo;
+                                newDailyOperation.productionOrder = validproductionOrder;
+                                newDailyOperation.materialId = new ObjectId(validproductionOrder.materialId);
+                                newDailyOperation.material = validproductionOrder.material;
+                                newDailyOperation.construction = validproductionOrder.construction;
+                                newDailyOperation.color = a.colorRequest;
+                                newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
+                                newDailyOperation.colorType = a.colorType;
+                                newDailyOperation.stamp(this.user.username, "manager");
+                                dailyOperation.push(newDailyOperation);
+                            }
 
                             SalesContractData.stamp(this.user.username, "manager");
                             this.collection.insert(SalesContractData)
                                 .then(id => {
-                                    resolve(id);
+                                    DailyOperationCollection.insertMany(dailyOperation)
+                                    .then(dOperation => {
+                                        resolve(id);
+                                    })
+                                    .catch(e => {
+                                        reject(e);
+                                    });
                                 })
                                 .catch(e => {
                                     reject(e);
@@ -292,7 +375,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }).catch(e => {
                         reject(e);
                     })
-
                            
                 })
                 .catch(e => {
@@ -304,7 +386,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
    update(data){
        return new Promise((resolve, reject) => {
-           this._validate(data)
+            this._validate(data)
             .then(validproductionOrder => {
                 this.collection.singleOrDefault({
                     "$and": [{
@@ -316,6 +398,24 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     for(var i of prodOrd){
                         if(i.orderNo==validproductionOrder.orderNo){
                             i=validproductionOrder;
+                            var query={
+                                "productionOrder.orderNo":data.orderNo
+                            }
+                            DailyOperationCollection.deleteMany(query);
+                            var dailyOperation = [];
+                            for(var a of i.details){
+                                var newDailyOperation = new DailyOperation();
+                                newDailyOperation.salesContract = i.salesContractNo;
+                                newDailyOperation.productionOrder = i;
+                                newDailyOperation.materialId = new ObjectId(i.materialId);
+                                newDailyOperation.material = i.material;
+                                newDailyOperation.construction = i.construction;
+                                newDailyOperation.color = a.colorRequest;
+                                newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
+                                newDailyOperation.colorType = a.colorType;
+                                newDailyOperation.stamp(this.user.username, "manager");
+                                dailyOperation.push(newDailyOperation);
+                            }
                         }
                         newProdOrder.push(i);
                     }
@@ -323,17 +423,24 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     if (!result.stamp){
                         result = new SalesContract(result);
                     }
-
                     result.stamp(this.user.username, "manager");
                     this.collection.update(result)
-                                .then(id => {
-                                    resolve(id);
-                                })
-                                .catch(e => {
-                                    reject(e);
-                                })
+                    .then(id => {
+                        DailyOperationCollection.insertMany(dailyOperation)
+                        .then(dOperation => {
+                            resolve(id);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                    })
+                    .catch(e => {
+                        reject(e);
+                    })
                     
-                })
+                }).catch(e => {
+                        reject(e);
+                    })
             }).catch(e => {
                 reject(e);
             })
@@ -353,7 +460,18 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             id._deleted=true;
                             this.collection.update(id)
                                 .then(id => {
-                                    resolve(id);
+                                     DailyOperationCollection.updateMany(
+                                        {
+                                            "productionOrder.orderNo":data.orderNo
+                                        },
+                                        { $set: { "_deleted" : true } }
+                                    )
+                                    .then(dOperation => {
+                                        resolve(id);
+                                    })
+                                    .catch(e => {
+                                        reject(e);
+                                    });
                                 })
                                 .catch(e => {
                                     reject(e);
@@ -361,7 +479,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         }
                         else{
                             for(var i of id.productionOrders){
-                                if(i.orderNo==data.no){
+                                if(i.orderNo==data.orderNo){
                                     for(var j=0; j<id.productionOrders.length;j++){
                                         id.productionOrders.splice(j,1);
                                     }
@@ -369,15 +487,27 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                             this.collection.update(id)
                                 .then(id => {
-                                    resolve(id);
+                                    DailyOperationCollection.updateMany(
+                                        {
+                                            "productionOrder.orderNo":data.orderNo
+                                        },
+                                        { $set: { "_deleted" : true } }
+                                    )
+                                    .then(dOperation => {
+                                        resolve(id);
+                                    })
+                                    .catch(e => {
+                                        reject(e);
+                                    });
                                 })
                                 .catch(e => {
                                     reject(e);
                                 })
                         }
+                        
                     }).catch(e => {
-                                        reject(e);
-                                    });
+                        reject(e);
+                    });
                 }).catch(e => {
                     reject(e);
                 });

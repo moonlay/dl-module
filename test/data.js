@@ -12,7 +12,10 @@ module.exports = {
         lotMachine: require('./data-util/master/lot-machine-data-util'),
         category: require('./data-util/master/category-data-util'),
         lampStandard: require('./data-util/master/lamp-standard-data-util'),
-        instruction: require('./data-util/master/instruction-data-util')
+        instruction: require('./data-util/master/instruction-data-util'),
+        orderType: require('./data-util/master/order-type-data-util'),
+        processType: require('./data-util/master/process-type-data-util'),
+        colorType: require('./data-util/master/color-type-data-util')
     },
     purchasing:{
         purchaseRequest: require('./data-util/purchasing/purchase-request-data-util'),

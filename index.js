@@ -23,7 +23,10 @@ module.exports = {
             UsterManager: require('./src/managers/master/uster-manager'),
             LampStandardManager: require('./src/managers/master/lamp-standard-manager'),
             AccountBankManager: require('./src/managers/master/account-bank-manager'),
-            InstructionManager: require('./src/managers/master/instruction-manager')
+            InstructionManager: require('./src/managers/master/instruction-manager'),
+            ProcessTypeManager: require('./src/managers/master/process-type-manager'),
+            OrderTypeManager: require('./src/managers/master/order-type-manager'),
+            ColorTypeManager: require('./src/managers/master/color-type-manager')
         },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
