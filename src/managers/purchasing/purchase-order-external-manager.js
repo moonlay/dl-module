@@ -94,6 +94,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             this._validate(purchaseOrderExternal)
                 .then(validPurchaseOrderExternal => {
                     validPurchaseOrderExternal.no = generateCode();
+                    validPurchaseOrderExternal._createdDate = new Date();
                     validPurchaseOrderExternal.supplierId = new ObjectId(validPurchaseOrderExternal.supplierId);
                     validPurchaseOrderExternal.supplier._id = new ObjectId(validPurchaseOrderExternal.supplier._id);
                     this.collection.insert(validPurchaseOrderExternal)
@@ -270,69 +271,76 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 }
 
                 if (valid.items && valid.items.length > 0) {
+
                     var purchaseOrderExternalItemErrors = [];
                     var poItemExternalHasError = false;
                     for (var purchaseOrder of valid.items) {
                         var purchaseOrderError = {};
                         var purchaseOrderItemErrors = [];
                         var poItemHasError = false;
-                        for (var po of _poInternals) {
-                            if (po._id.toString() === purchaseOrder._id.toString()) {
-                                if (po.isPosted && !valid._id) {
-                                    poItemHasError = true;
-                                    purchaseOrderError["no"] = i18n.__("PurchaseOrderExternal.items.isPosted:%s is already used", i18n.__("PurchaseOrderExternal.items._:Purchase Order Internal ")); //"Purchase order internal tidak boleh kosong";
-                                }
-                                else if (!purchaseOrder.no || purchaseOrder.no == "") {
-                                    poItemHasError = true;
-                                    purchaseOrderError["no"] = i18n.__("PurchaseOrderExternal.items.no.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.no._:No")); //"Purchase order internal tidak boleh kosong";
-                                }
+                        if (Object.getOwnPropertyNames(purchaseOrder).length == 0) {
+                            purchaseOrderError["no"] = i18n.__("PurchaseOrderExternal.items.no.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.no._:No")); //"Purchase order internal tidak boleh kosong";
+                            poItemExternalHasError = true;
+                            purchaseOrderExternalItemErrors.push(purchaseOrderError);
+                        } else {
+                            for (var po of _poInternals) {
+                                if (po._id.toString() === purchaseOrder._id.toString()) {
+                                    if (po.isPosted && !valid._id) {
+                                        poItemHasError = true;
+                                        purchaseOrderError["no"] = i18n.__("PurchaseOrderExternal.items.isPosted:%s is already used", i18n.__("PurchaseOrderExternal.items._:Purchase Order Internal ")); //"Purchase order internal tidak boleh kosong";
+                                    }
+                                    else if (!purchaseOrder.no || purchaseOrder.no == "") {
+                                        poItemHasError = true;
+                                        purchaseOrderError["no"] = i18n.__("PurchaseOrderExternal.items.no.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.no._:No")); //"Purchase order internal tidak boleh kosong";
+                                    }
 
-                                for (var poItem of purchaseOrder.items || []) {
-                                    var poItemError = {};
-                                    var dealUomId = new ObjectId(poItem.dealUom._id);
-                                    var defaultUomId = new ObjectId(poItem.defaultUom._id);
-                                    if (!poItem.dealQuantity || poItem.dealQuantity === 0) {
-                                        poItemHasError = true;
-                                        poItemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.items.dealQuantity.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
-                                    }
-                                    else if (dealUomId.equals(defaultUomId) && poItem.dealQuantity > poItem.defaultQuantity) {
-                                        poItemHasError = true;
-                                        poItemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.items.dealQuantity.isRequired:%s must not be greater than defaultQuantity", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
-                                    }
-                                    if (!poItem.dealUom || !poItem.dealUom.unit || poItem.dealUom.unit === "") {
-                                        poItemHasError = true;
-                                        poItemError["dealUom"] = i18n.__("PurchaseOrderExternal.items.items.dealQuantity.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
-                                    }
-                                    if (!poItem.priceBeforeTax || poItem.priceBeforeTax === 0) {
-                                        poItemHasError = true;
-                                        poItemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
-                                    }
-                                    var price = (poItem.priceBeforeTax.toString()).split(",");
-                                    if (price[1] != undefined || price[1] !== "" || price[1] !== " ") {
-                                        {
-                                            poItem.priceBeforeTax = parseFloat(poItem.priceBeforeTax.toString() + ".00");
+                                    for (var poItem of purchaseOrder.items || []) {
+                                        var poItemError = {};
+                                        var dealUomId = new ObjectId(poItem.dealUom._id);
+                                        var defaultUomId = new ObjectId(poItem.defaultUom._id);
+                                        if (!poItem.dealQuantity || poItem.dealQuantity === 0) {
+                                            poItemHasError = true;
+                                            poItemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.items.dealQuantity.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
                                         }
+                                        else if (dealUomId.equals(defaultUomId) && poItem.dealQuantity > poItem.defaultQuantity) {
+                                            poItemHasError = true;
+                                            poItemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.items.dealQuantity.isRequired:%s must not be greater than defaultQuantity", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
+                                        }
+                                        if (!poItem.dealUom || !poItem.dealUom.unit || poItem.dealUom.unit === "") {
+                                            poItemHasError = true;
+                                            poItemError["dealUom"] = i18n.__("PurchaseOrderExternal.items.items.dealQuantity.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
+                                        }
+                                        if (!poItem.priceBeforeTax || poItem.priceBeforeTax === 0) {
+                                            poItemHasError = true;
+                                            poItemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
+                                        }
+                                        var price = (poItem.priceBeforeTax.toString()).split(",");
+                                        if (price[1] != undefined || price[1] !== "" || price[1] !== " ") {
+                                            {
+                                                poItem.priceBeforeTax = parseFloat(poItem.priceBeforeTax.toString() + ".00");
+                                            }
+                                        }
+                                        else if (price[1].length() > 2) {
+                                            poItemHasError = true;
+                                            poItemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax.isRequired:%s is greater than 2", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
+                                        }
+                                        else {
+                                            poItem.priceBeforeTax = poItem.priceBeforeTax;
+                                        }
+                                        if (!poItem.conversion || poItem.conversion === "") {
+                                            poItemHasError = true;
+                                            poItemError["conversion"] = i18n.__("PurchaseOrderExternal.items.items.conversion.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.conversion._:Conversion")); //"Konversi tidak boleh kosong";
+                                        }
+                                        purchaseOrderItemErrors.push(poItemError);
                                     }
-                                    else if (price[1].length() > 2) {
-                                        poItemHasError = true;
-                                        poItemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax.isRequired:%s is greater than 2", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
+                                    if (poItemHasError) {
+                                        poItemExternalHasError = true;
+                                        purchaseOrderError["items"] = purchaseOrderItemErrors;
                                     }
-                                    else {
-                                        poItem.priceBeforeTax = poItem.priceBeforeTax;
-                                    }
-                                    if (!poItem.conversion || poItem.conversion === "") {
-                                        poItemHasError = true;
-                                        poItemError["conversion"] = i18n.__("PurchaseOrderExternal.items.items.conversion.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.conversion._:Conversion")); //"Konversi tidak boleh kosong";
-                                    }
-                                    purchaseOrderItemErrors.push(poItemError);
-                                }
-                                if (poItemHasError) {
-                                    poItemExternalHasError = true;
-                                    purchaseOrderError["items"] = purchaseOrderItemErrors;
-                                }
 
-                                purchaseOrderExternalItemErrors.push(purchaseOrderError);
-                                break;
+                                    purchaseOrderExternalItemErrors.push(purchaseOrderError);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -357,6 +365,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 valid.vat = _vat;
                 valid.date = new Date(valid.date);
                 valid.expectedDeliveryDate = new Date(valid.expectedDeliveryDate);
+                valid.currencyRate = parseInt(valid.currencyRate);
 
                 var items = [];
 
@@ -784,5 +793,45 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 valid.stamp(this.user.username, 'manager');
                 return Promise.resolve(valid);
             });
+    }
+
+    getAllData(filter) {
+        return new Promise((resolve, reject) => {
+            var sorting = {
+                "date": -1,
+                "no": 1
+            };
+            var query = Object.assign({});
+            query = Object.assign(query, filter);
+            query = Object.assign(query, {
+                _deleted: false
+            });
+
+            var _select = ["no",
+                "date",
+                "supplier",
+                "expectedDeliveryDate",
+                "freightCostBy",
+                "paymentMethod",
+                "paymentDueDays",
+                "currency",
+                "useIncomeTax",
+                "useVat",
+                "vat.rate",
+                "remark",
+                "isPosted",
+                "_createdBy",
+                "items.no",
+                "items.purchaseRequest.no",
+                "items.items"];
+
+            this.collection.where(query).select(_select).order(sorting).execute()
+                .then((results) => {
+                    resolve(results.data);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
     }
 };

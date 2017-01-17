@@ -149,13 +149,17 @@ module.exports = class FactPurchaseOrderComparisonEtlManager {
                         poNoAtDeliveryOrderNo: deliveryOrder ? `'${deliveryOrder.items[0].purchaseOrderExternal.items[0].no}'` : null,
                         purchaseOrderExternalNo: purchaseOrderExternal ? `'${purchaseOrderExternal.no}'` : null,
                         deliveryOrderNo: deliveryOrder ? `'${deliveryOrder.no}'` : null,
-                        purchaseOrderDate: purchaseOrder ? `'${moment(purchaseOrder.date).format('L')}'` : null,
+                        purchaseRequestDate: purchaseRequest ? `'${moment(purchaseRequest.date).format('L')}'` : null,
                         divisionName: purchaseRequest ? `'${purchaseRequest.unit.division.name}'` : null,
                         categoryName: purchaseRequest ? `'${purchaseRequest.category.name}'` : null,
                         purchasingStaffName: purchaseOrder ? `'${purchaseOrder._createdBy}'` : null,
                         expectedDeliveryDate: purchaseOrderExternal ? `'${moment(purchaseOrderExternal.expectedDeliveryDate).format('L')}'` : null,
+                        askedDeliveryDate: purchaseRequest ? `'${moment(purchaseRequest.expectedDeliveryDate).format('L')}'` : null,
                         unitName: purchaseRequest ? `'${purchaseRequest.unit.name}'` : null,
-                        supplierName: purchaseOrderExternal ? `'${purchaseOrderExternal.supplier.name}'` : null
+                        unitCode: purchaseRequest ? `'${purchaseRequest.unit.code}'` : null,
+                        supplierName: purchaseOrderExternal ? `'${purchaseOrderExternal.supplier.name}'` : null,
+                        divisionCode: purchaseRequest ? `'${purchaseRequest.unit.division.code}'` : null,
+                        purchaseOrderExternalDate: purchaseOrderExternal ? `'${moment(purchaseOrderExternal.date).format('L')}'` : null,
                     };
                 });
                 return [].concat.apply([], results);
@@ -174,7 +178,7 @@ module.exports = class FactPurchaseOrderComparisonEtlManager {
                 for (var item of data) {
 
                     if (item) {
-                        sqlQuery = sqlQuery.concat(`insert into fact_perbandingan_purchase_order([ID Perbandingan Purchase Order], [Nomor PO Internal], [PO Eksternal], [PO Datang], [Nomor PO Eksternal], [Nomor Surat Jalan], [Tanggal PO Internal], [Nama Divisi], [Nama Kategori], [Staff Pembelian Yang Menerima PR], [Nama Unit], [Nama Supplier], [Tanggal Diminta Datang]) values(${count}, ${item.purchaseRequestNo}, ${item.poNoAtPoExt}, ${item.poNoAtDeliveryOrderNo}, ${item.purchaseOrderExternalNo}, ${item.deliveryOrderNo}, ${item.purchaseOrderDate}, ${item.divisionName}, ${item.categoryName}, ${item.purchasingStaffName}, ${item.unitName}, ${item.supplierName}, ${item.expectedDeliveryDate}); `);
+                        sqlQuery = sqlQuery.concat(`insert into fact_perbandingan_purchase_order([ID Perbandingan Purchase Order], [Nomor PO Internal], [PO Eksternal], [PO Datang], [Nomor PO Eksternal], [Nomor Surat Jalan], [Tanggal PO Internal], [Nama Divisi], [Nama Kategori], [Staff Pembelian Yang Menerima PR], [Nama Unit], [Nama Supplier], [Tanggal Diminta Datang], [Tanggal Expected Delivery], [Kode Divisi], [Kode Unit], [Tanggal PO Eksternal]) values(${count}, ${item.purchaseRequestNo}, ${item.poNoAtPoExt}, ${item.poNoAtDeliveryOrderNo}, ${item.purchaseOrderExternalNo}, ${item.deliveryOrderNo}, ${item.purchaseRequestDate}, ${item.divisionName}, ${item.categoryName}, ${item.purchasingStaffName}, ${item.unitName}, ${item.supplierName}, ${item.askedDeliveryDate}, ${item.expectedDeliveryDate}, ${item.divisionCode}, ${item.unitCode}, ${item.purchaseOrderExternalDate}); `);
 
                         count++;
 
@@ -184,9 +188,20 @@ module.exports = class FactPurchaseOrderComparisonEtlManager {
 
                 request.multiple = true;
 
-                // return request.query(sqlQuery)
-                    // return request.query('select count(*) from fact_durasi_pembelian')
-                    return request.query('select top 1 * from fact_durasi_pembelian')
+                // var fs = require("fs");
+                // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
+
+                // fs.writeFile(path, sqlQuery, function (error) {
+                //     if (error) {
+                //         console.error("write error:  " + error.message);
+                //     } else {
+                //         console.log("Successful Write to " + path);
+                //     }
+                // });
+
+                return request.query(sqlQuery)
+                // return request.query('select count(*) from fact_durasi_pembelian')
+                // return request.query('select top 1 * from fact_durasi_pembelian')
                     .then((results) => {
                         console.log(results);
                         return Promise.resolve();

@@ -38,8 +38,33 @@ it(`#01. should success when get created new data`, function (done) {
 
 it(`#01. should success when get material from created data`, function (done) {
     var key=createdData.material;
-    var filter=createdData.processType;
+    var filter=createdData.orderTypeId;
     instructionManager.getMaterial(key,filter).then(
+        instruction => {
+            instruction.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+    });
+});
+
+it(`#01. should success when get material from created data`, function (done) {
+    var key=createdData.material;
+    var filter=createdData.orderTypeId;
+    instructionManager.getMaterial(key,filter).then(
+        instruction => {
+            instruction.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+    });
+});
+
+it(`#02. should success when get construction from created data`, function (done) {
+    var key=createdData.construction;
+    var orderId=createdData.orderTypeId;
+    var materialId=createdData.materialId;
+    instructionManager.getConstruction(key,orderId,materialId).then(
         instruction => {
             instruction.should.instanceof(Array);
             done();

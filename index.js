@@ -23,7 +23,10 @@ module.exports = {
             UsterManager: require('./src/managers/master/uster-manager'),
             LampStandardManager: require('./src/managers/master/lamp-standard-manager'),
             AccountBankManager: require('./src/managers/master/account-bank-manager'),
-            InstructionManager: require('./src/managers/master/instruction-manager')
+            InstructionManager: require('./src/managers/master/instruction-manager'),
+            ProcessTypeManager: require('./src/managers/master/process-type-manager'),
+            OrderTypeManager: require('./src/managers/master/order-type-manager'),
+            ColorTypeManager: require('./src/managers/master/color-type-manager')
         },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
@@ -71,11 +74,16 @@ module.exports = {
                 uom: require("./test/data-util/master/uom-data-util"),
                 uster: require("./test/data-util/master/uster-data-util"),
                 vat: require("./test/data-util/master/vat-data-util"),
-                yarnEquivalentConversion: require("./test/data-util/master/yarn-equivalent-conversion-data-util")
+                yarnEquivalentConversion: require("./test/data-util/master/yarn-equivalent-conversion-data-util"),
+                orderType: require('./test/data-util/master/order-type-data-util'),
+                processType: require('./test/data-util/master/process-type-data-util')
             },
             purchasing:{
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util")
             }
         }
+    },
+    etl: {
+        factPembelian: require("./src/etl/fact-pembelian")
     }
 }

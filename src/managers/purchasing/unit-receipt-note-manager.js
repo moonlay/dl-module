@@ -35,10 +35,10 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                    "no": valid.no
-                }, {
-                    _deleted: false
-                }]
+                        "no": valid.no
+                    }, {
+                        _deleted: false
+                    }]
             });
             var getDeliveryOrder = valid.deliveryOrder && ObjectId.isValid(valid.deliveryOrder._id) ? this.deliveryOrderManager.getSingleByIdOrDefault(valid.deliveryOrder._id) : Promise.resolve(null);
             var getUnit = valid.unit && ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(valid.unit._id) : Promise.resolve(null);
@@ -124,7 +124,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     }
 
                     if (Object.getOwnPropertyNames(errors).length > 0) {
-                        var ValidationError = require('module-toolkit').ValidationError ;
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 
@@ -225,6 +225,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             this._validate(unitReceiptNote)
                 .then(validUnitReceiptNote => {
                     validUnitReceiptNote.no = generateCode();
+                    validUnitReceiptNote._createdDate = new Date();
 
                     //Update PO Internal
                     var poId = new ObjectId();
@@ -270,19 +271,16 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                     }
                                 }
                                 var _isClosed = true;
-                                for(var poItem of purchaseOrder.items)
-                                {
-                                    var sum = poItem.fulfillments.reduce(function (a,b) { return a + b.unitReceiptNoteDeliveredQuantity; }, 0);
-                                    if(sum !== poItem.realizationQuantity)
-                                    {
+                                for (var poItem of purchaseOrder.items) {
+                                    var sum = poItem.fulfillments.reduce(function (a, b) { return a + b.unitReceiptNoteDeliveredQuantity; }, 0);
+                                    if (sum !== poItem.realizationQuantity) {
                                         _isClosed = false;
                                         break;
                                     }
                                 }
-                                if(_isClosed)
-                                {
+                                if (_isClosed) {
                                     purchaseOrder.status = poStatusEnum.RECEIVED;
-                                }else{
+                                } else {
                                     purchaseOrder.status = poStatusEnum.RECEIVING;
                                 }
                                 tasksUpdatePoInternal.push(this.purchaseOrderManager.update(purchaseOrder));
@@ -410,19 +408,16 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                             }
                                         }
                                         var _isClosed = true;
-                                        for(var poItem of purchaseOrder.items)
-                                        {
-                                            var sum = poItem.fulfillments.reduce(function (a,b) { return a + b.unitReceiptNoteDeliveredQuantity; }, 0);
-                                            if(sum !== poItem.realizationQuantity)
-                                            {
+                                        for (var poItem of purchaseOrder.items) {
+                                            var sum = poItem.fulfillments.reduce(function (a, b) { return a + b.unitReceiptNoteDeliveredQuantity; }, 0);
+                                            if (sum !== poItem.realizationQuantity) {
                                                 _isClosed = false;
                                                 break;
                                             }
                                         }
-                                        if(_isClosed)
-                                        {
+                                        if (_isClosed) {
                                             purchaseOrder.status = poStatusEnum.RECEIVED;
-                                        }else{
+                                        } else {
                                             purchaseOrder.status = poStatusEnum.RECEIVING;
                                         }
                                         tasksUpdatePoInternal.push(this.purchaseOrderManager.update(purchaseOrder));
@@ -551,9 +546,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                                             }
                                                         }
                                                     }
-                                                    if(purchaseOrder.isClosed){
+                                                    if (purchaseOrder.isClosed) {
                                                         purchaseOrder.status = poStatusEnum.ARRIVED;
-                                                    }else{
+                                                    } else {
                                                         purchaseOrder.status = poStatusEnum.ARRIVING;
                                                     }
                                                     unitReceiptNoteItem.purchaseOrder = purchaseOrder;
@@ -744,4 +739,38 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
 
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
-}
+
+    getAllData(filter) {
+        return new Promise((resolve, reject) => {
+            var sorting = {
+                "date": -1,
+                "no": 1
+            };
+            var query = Object.assign({});
+            query = Object.assign(query, filter);
+            query = Object.assign(query, {
+                _deleted: false
+            });
+
+            var _select = ["no",
+                "date",
+                "unit",
+                "supplier",
+                "deliveryOrder.no",
+                "remark",
+                "_createdBy",
+                "items.product",
+                "items.deliveredQuantity",
+                "items.deliveredUom",
+                "items.remark"];
+
+            this.collection.where(query).select(_select).order(sorting).execute()
+                .then((results) => {
+                    resolve(results.data);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+};

@@ -15,7 +15,7 @@ module.exports = function (unitPaymentCorrection) {
     });
 
     items = [].concat.apply([], items);
-
+    var iso = "FM-PB-00-06-015";
     var currency = unitPaymentCorrection.items.find(r => true).currency.code;
     var urDates = unitPaymentCorrection.unitPaymentOrder.items.map(unitPaymentOrderItem => {
         return new Date(unitPaymentOrderItem.unitReceiptNote.date)
@@ -54,6 +54,10 @@ module.exports = function (unitPaymentCorrection) {
                 }, {
                     width: '30%',
                     stack: [
+                        {
+                            text: iso,
+                            style: ['size09', 'bold']
+                        },
                         `SUKOHARJO, ${moment(unitPaymentCorrection.unitPaymentOrder.date).format(locale.date.format)}`,
                         `(${unitPaymentCorrection.unitPaymentOrder.supplier.code}) ${unitPaymentCorrection.unitPaymentOrder.supplier.name}`,
                         `${unitPaymentCorrection.unitPaymentOrder.supplier.address}`],

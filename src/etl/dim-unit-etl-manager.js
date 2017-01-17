@@ -52,16 +52,16 @@ module.exports = class DimUnitEtlManager {
 
                 var count = 1;
                 for (var item of data) {
-                    sqlQuery = sqlQuery.concat("insert into Dimunit([ID dim unit], [Kode unit], [Nama Divisi], [Nama unit]) values(" + count + ", '" + item.unitCode + "', '"+ item.divisionName +"', '" + item.unitName + "'); ");
+                    sqlQuery = sqlQuery.concat("insert into DL_Dim_Unit(ID_dim_unit, Kode_unit, Nama_Divisi, Nama_unit) values(" + count + ", '" + item.unitCode + "', '" + item.divisionName + "', '" + item.unitName + "'); ");
 
                     count = count + 1;
                 }
 
                 request.multiple = true;
 
-                // return request.query(sqlQuery)
-                // return request.query('select count(*) from Dimunit')
-                return request.query('select top 1 * from Dimunit')
+                return request.query(sqlQuery)
+                    // return request.query('select count(*) from Dimunit')
+                    // return request.query('select top 1 * from Dimunit')
                     .then((results) => {
                         console.log(results);
                         return Promise.resolve();

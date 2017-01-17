@@ -28,7 +28,7 @@ module.exports = class FactTotalHutang {
     }
 
     extract() {
-        var timestamp = new Date(1970, 1, 1);
+        // var trueFalse = false;
         return this.unitReceiptNoteManager.collection.find({
             _deleted: false
         }).toArray()
@@ -38,7 +38,6 @@ module.exports = class FactTotalHutang {
     }
 
     joinUnitPaymentOrder(data) {
-
         var joinUnitPaymentOrders = data.map((unitReceiptNote) => {
             return this.unitPaymentOrderManager.collection.find({
                 items: {
@@ -72,18 +71,18 @@ module.exports = class FactTotalHutang {
             var results = unitReceiptNote.items.map((unitReceiptNoteItem) => {
 
                 return {
-                    unitPaymentOrderNo: unitPaymentOrder.no,
-                    unitPaymentOrderDate: moment(unitPaymentOrder.date).format('L'),
-                    unitPaymentOrderDueDate: moment(unitPaymentOrder.dueDate).format('L'),
-                    supplierName: unitPaymentOrder.supplier.name,
-                    categoryName: unitPaymentOrder.category.name,
+                    unitPaymentOrderNo: `'${unitPaymentOrder.no}'`,
+                    unitPaymentOrderDate: `'${moment(unitPaymentOrder.date).format('L')}'`,
+                    unitPaymentOrderDueDate: `'${moment(unitPaymentOrder.dueDate).format('L')}'`,
+                    supplierName: `'${unitPaymentOrder.supplier.name}'`,
+                    categoryName: `'${unitPaymentOrder.category.name}'`,
                     categoryType: unitPaymentOrder.category.name.toLowerCase() == 'bahan baku' ? 'BAHAN BAKU' : 'NON BAHAN BAKU',
-                    divisionName: unitPaymentOrder.division.name,
-                    unitName: unitReceiptNote.unit.name,
-                    invoicePrice: unitReceiptNoteItem.pricePerDealUnit,
-                    unitReceiptNoteQuantity: unitReceiptNoteItem.deliveredQuantity,
-                    purchaseOrderExternalCurrencyRate: unitReceiptNoteItem.currencyRate,
-                    total: unitReceiptNoteItem.pricePerDealUnit * unitReceiptNoteItem.deliveredQuantity * unitReceiptNoteItem.currencyRate
+                    divisionName: `'${unitPaymentOrder.division.name}'`,
+                    unitName: `'${unitReceiptNote.unit.name}'`,
+                    invoicePrice: `${unitReceiptNoteItem.pricePerDealUnit}`,
+                    unitReceiptNoteQuantity: `${unitReceiptNoteItem.deliveredQuantity}`,
+                    purchaseOrderExternalCurrencyRate: `${unitReceiptNoteItem.currencyRate}`,
+                    total: `${unitReceiptNoteItem.pricePerDealUnit * unitReceiptNoteItem.deliveredQuantity * unitReceiptNoteItem.currencyRate}`
                 };
             });
 
@@ -111,9 +110,9 @@ module.exports = class FactTotalHutang {
                 // return request.query('select count(*) from fact_total_hutang')
                 return request.query('select top 1 * from fact_total_hutang')
                     .then((results) => {
-                    console.log(results);
-                    return Promise.resolve();
-                })
+                        console.log(results);
+                        return Promise.resolve();
+                    })
             })
             .catch((err) => {
                 console.log(err);

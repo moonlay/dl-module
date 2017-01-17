@@ -4,35 +4,42 @@ var ProductionOrderManager = require('../../../../src/managers/production/finish
 var codeGenerator = require('../../../../src/utils/code-generator');
 var buyer = require('../../master/buyer-data-util');
 var uom = require('../../master/uom-data-util');
+var orderType = require('../../master/order-type-data-util');
+var processType = require('../../master/process-type-data-util');
+var colorType = require('../../master/color-type-data-util');
 var lampStandard = require('../../master/lamp-standard-data-util');
-var instruction = require('../../master/instruction-data-util');
+var material = require('../../master/product-data-util');
 
 class ProductionOrderDataUtil {
     getNewData() {
-        return Promise.all([uom.getTestData(), buyer.getTestData(), lampStandard.getTestData(), instruction.getTestData()])
+        return Promise.all([uom.getTestData(), buyer.getTestData(), lampStandard.getTestData(), processType.getTestData(), material.getTestData(), colorType.getTestData(), colorType.getTestData2()])
             .then((results) => {
-                var uom = results[0];
-                var buyer = results[1];
-                var lampStandard = results[2];
-                var instruction = results[3];
+                var _uom = results[0];
+                var _buyer = results[1];
+                var _lampStandard = results[2];
+                var _processType = results[3];
+                var _material = results[4];
+                var color1=results[5];
+                var color2=results[6];
 
                 var data = {
                     
-                    salesContractNo: `UT/Prod/1KQ3VP55`,
+                    salesContractNo: `UT/Prod/1KQ3VP57`,
                     orderNo: `orderNo/${codeGenerator()}`,
-                    uomId: uom._id,
-                    uom: uom,
-                    buyerId: buyer._id,
-                    buyer: buyer,
-                    lampStandardId: lampStandard._id,
-                    lampStandard: lampStandard,
-                    instructionId: instruction._id,
-                    instruction: instruction,
+                    uomId: _uom._id,
+                    uom: _uom,
+                    buyerId: _buyer._id,
+                    buyer: _buyer,
+                    lampStandardId: _lampStandard._id,
+                    lampStandard: _lampStandard,
                     isExport:true,
-                    processType: instruction.processType,
-                    orderType: `Order`,
-                    construction:instruction.construction,
-                    material:instruction.material,
+                    processType: _processType,
+                    processTypeId: _processType._id,
+                    orderType: _processType.orderType,
+                    orderTypeId: _processType.orderType._id,
+                    construction:`construction/${codeGenerator()}`,
+                    material:_material,
+                    materialId:_material._id,
                     orderQuantity:30,
                     spelling:5,
 
@@ -48,18 +55,22 @@ class ProductionOrderDataUtil {
                     remark:`desc`,
                     details: [{
                         code:`code1/${codeGenerator()}`,
+                        colorTypeId:color1._id,
+                        colorType:color1,
                         colorRequest:`reddish`,
                         colorTemplate:`template1`,
                         quantity:10,
-                        uomId: uom._id,
-                        uom:uom,
+                        uomId: _uom._id,
+                        uom:_uom,
                     }, {
                         code:`code2/${codeGenerator()}`,
+                        colorTypeId:color2._id,
+                        colorType:color2,
                         colorRequest:`gray`,
                         colorTemplate:`template2`,
                         quantity:20,
-                        uomId: uom._id,
-                        uom:uom,
+                        uomId: _uom._id,
+                        uom:_uom,
                     }]
                 };
                 return Promise.resolve(data);

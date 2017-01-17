@@ -35,7 +35,7 @@ module.exports = function (pox) {
     }, {});
 
 
-    var iso = pox.items.find(r => true).iso;
+    var iso = "FM-PB-00-06-009";
     var number = pox.no;
     var currency = pox.currency.code;
     var supplier = pox.supplier.name;

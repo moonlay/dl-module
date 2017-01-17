@@ -249,6 +249,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     this._validate(deliveryOrder)
                         .then(validDeliveryOrder => {
                             validDeliveryOrder.supplierId = new ObjectId(validDeliveryOrder.supplierId);
+                            validDeliveryOrder._createdDate = new Date();
                             //UPDATE PO INTERNAL
                             var poId = new ObjectId();
                             for (var validDeliveryOrderItem of validDeliveryOrder.items) {
@@ -849,4 +850,35 @@ module.exports = class DeliveryOrderManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, refNoIndex]);
     }
 
-}
+    getAllData(filter) {
+        return new Promise((resolve, reject) => {
+            var sorting = {
+                "date": -1,
+                "no": 1
+            };
+            var query = Object.assign({});
+            query = Object.assign(query, filter);
+            query = Object.assign(query, {
+                _deleted: false
+            });
+
+            var _select = ["no",
+                "date",
+                "supplier",
+                "_createdBy",
+                "items.purchaseOrderExternal",
+                "items.fulfillments.product",
+                "items.fulfillments.purchaseOrderQuantity",
+                "items.fulfillments.purchaseOrderUom",
+                "items.fulfillments.deliveredQuantity"];
+
+            this.collection.where(query).select(_select).order(sorting).execute()
+                .then((results) => {
+                    resolve(results.data);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+};

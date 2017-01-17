@@ -266,6 +266,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                             var tasks = [];
                             var getPurchaseOrderById = [];
                             validData.no = generateCode();
+                            validData._createdDate = new Date();
                             if (validData.unitPaymentOrder.useIncomeTax)
                                 validData.returNoteNo = generateCode();
                             //Update PO Internal

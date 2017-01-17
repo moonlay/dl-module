@@ -52,16 +52,16 @@ module.exports = class DimCategoryEtlManager {
 
                 var count = 1;
                 for (var item of data) {
-                    sqlQuery = sqlQuery.concat("insert into DimKategori([ID Dim Kategori], [Kode Kategori] ,[Nama Kategori], [Jenis Kategori]) values(" + count + ", '" + item.categoryCode + "', '" + item.categoryName + "', '" + item.categoryType + "'); ");
-                 
+                    sqlQuery = sqlQuery.concat("insert into DL_Dim_Kategori(ID_Dim_Kategori, Kode_Kategori, Nama_Kategori, Jenis_Kategori) values(" + count + ", '" + item.categoryCode + "', '" + item.categoryName + "', '" + item.categoryType + "'); ");
+
                     count = count + 1;
                 }
 
                 request.multiple = true;
 
-                // return request.query(sqlQuery)
-                // return request.query('select count(*) from DimKategori')
-                return request.query('select top 1 * from DimKategori')
+                return request.query(sqlQuery)
+                    // return request.query('select count(*) from DimKategori')
+                    // return request.query('select top 1 * from DimKategori')
                     .then((results) => {
                         console.log(results);
                         return Promise.resolve();
