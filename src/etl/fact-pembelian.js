@@ -15,27 +15,46 @@ var PurchaseOrderExternalManager = require('../managers/purchasing/purchase-orde
 var DeliveryOrderManager = require('../managers/purchasing/delivery-order-manager');
 var UnitReceiptNoteManager = require('../managers/purchasing/unit-receipt-note-manager');
 var UnitPaymentOrderManager = require('../managers/purchasing/unit-payment-order-manager');
-var SupplierManager = require('../managers/master/supplier-manager');
 
-module.exports = class FactPurchasingEtlManager {
+module.exports = class FactPurchasingEtlManager extends BaseManager{
     constructor(db, user) {
+        super(db, user);
         this.purchaseRequestManager = new PurchaseRequestManager(db, user);
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
         this.purchaseOrderExternalManager = new PurchaseOrderExternalManager(db, user);
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
         this.unitPaymentOrderManager = new UnitPaymentOrderManager(db, user);
+        this.migrationLog = this.db.collection("migrationLog");
     }
 
     run() {
+        var startedDate = new Date();
+        this.migrationLog.insert({
+            description: "Fact Pembelian from MongoDB to Azure DWH",
+            start: startedDate,
+        })
         return this.extract()
             .then((data) => this.transform(data))
-            .then((data) => this.load(data));
+            .then((data) => this.load(data))
+            .then(() => {
+                var finishedDate = new Date();
+                var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                var updateLog = {
+                    description: "Fact Pembelian from MongoDB to Azure DWH",
+                    start: startedDate,
+                    finish: finishedDate,
+                    executionTime: spentTime + " minutes",
+                    status: "success"
+                };
+                this.migrationLog.updateOne({ start: startedDate }, updateLog);
+            })
     }
 
     joinPurchaseOrder(purchaseRequests) {
         var joinPurchaseOrders = purchaseRequests.map((purchaseRequest) => {
             return this.purchaseOrderManager.collection.find({
+                _deleted: false,
                 purchaseRequestId: purchaseRequest._id
             })
                 .toArray()
@@ -64,6 +83,7 @@ module.exports = class FactPurchasingEtlManager {
     joinPurchaseOrderExternal(data) {
         var joinPurchaseOrderExternals = data.map((item) => {
             var getPurchaseOrderExternal = item.purchaseOrder ? this.purchaseOrderExternalManager.collection.find({
+                _deleted: false,
                 items: {
                     "$elemMatch": {
                         _id: item.purchaseOrder._id
@@ -96,6 +116,7 @@ module.exports = class FactPurchasingEtlManager {
     joinDeliveryOrder(data) {
         var joinDeliveryOrders = data.map((item) => {
             var getDeliveryOrders = item.purchaseOrderExternal ? this.deliveryOrderManager.collection.find({
+                _deleted: false,
                 items: {
                     "$elemMatch": {
                         purchaseOrderExternalId: item.purchaseOrderExternal._id
@@ -127,6 +148,7 @@ module.exports = class FactPurchasingEtlManager {
     joinUnitReceiptNote(data) {
         var joinUnitReceiptNotes = data.map((item) => {
             var getUnitReceiptNotes = item.deliveryOrder ? this.unitReceiptNoteManager.collection.find({
+                _deleted: false,
                 deliveryOrderId: item.deliveryOrder._id
             }).toArray() : Promise.resolve([]);
 
@@ -155,6 +177,7 @@ module.exports = class FactPurchasingEtlManager {
     joinUnitPaymentOrder(data) {
         var joinUnitPaymentOrders = data.map((item) => {
             var getUnitPaymentOrders = item.unitReceiptNote ? this.unitPaymentOrderManager.collection.find({
+                _deleted: false,
                 items: {
                     "$elemMatch": {
                         unitReceiptNoteId: item.unitReceiptNote._id
@@ -187,11 +210,12 @@ module.exports = class FactPurchasingEtlManager {
     extract() {
         var timestamp = new Date(1970, 1, 1);
         return this.purchaseRequestManager.collection.find({
+            _deleted: false,
             _updatedDate: {
                 "$gt": timestamp
             }
         }).toArray()
-            .then((puchaseRequests) => this.joinPurchaseOrder(puchaseRequests))
+            .then((purchaseRequests) => this.joinPurchaseOrder(purchaseRequests))
             .then((results) => this.joinPurchaseOrderExternal(results))
             .then((results) => this.joinDeliveryOrder(results))
             .then((results) => this.joinUnitReceiptNote(results))
@@ -237,7 +261,8 @@ module.exports = class FactPurchasingEtlManager {
     }
 
     getStatus(poDate, doDate) {
-        if (doDate <= poDate) {
+        var result = doDate - poDate;
+        if (result <= 0) {
             return "Tepat Waktu";
         } else {
             return "Tidak Tepat Waktu";
@@ -294,6 +319,7 @@ module.exports = class FactPurchasingEtlManager {
                         purchaseOrderExternalDays: purchaseOrderExternal ? `${poExtDays}` : null,
                         purchaseOrderExternalDaysRange: purchaseOrderExternal ? `'${this.getRangeWeek(poExtDays)}'` : null,
                         purchasingStaffName: purchaseOrder ? `'${purchaseOrder._createdBy}'` : null,
+                        prNoAtPo: purchaseOrder ? `'${purchaseOrder.purchaseRequest.no}'` : null,
 
                         purchaseOrderExternalId: purchaseOrderExternal ? `'${purchaseOrderExternal._id}'` : null,
                         purchaseOrderExternalNo: purchaseOrderExternal ? `'${purchaseOrderExternal.no}'` : null,
@@ -318,7 +344,7 @@ module.exports = class FactPurchasingEtlManager {
                         deliveryOrderDate: deliveryOrder ? `'${moment(deliveryOrder.date).format('L')}'` : null,
                         unitReceiptNoteDays: unitReceiptNote ? `${urnDays}` : null,
                         unitReceiptNoteDaysRange: unitReceiptNote ? `'${this.getRangeWeek(urnDays)}'` : null,
-                        status: deliveryOrder ? `'${this.getStatus(moment(purchaseOrderExternal.expectedDeliveryDate), moment(lastDeliveredDate))}'` : null,
+                        status: deliveryOrder ? `'${this.getStatus(new Date(purchaseOrderExternal.expectedDeliveryDate), new Date(lastDeliveredDate))}'` : null,
                         prNoAtDo: deliveryOrder ? `'${deliveryOrder.items[0].purchaseOrderExternal.items[0].purchaseRequest.no}'` : null,
 
                         unitReceiptNoteId: unitReceiptNote ? `'${unitReceiptNote._id}'` : null,
@@ -332,7 +358,7 @@ module.exports = class FactPurchasingEtlManager {
                         unitPaymentOrderDate: unitPaymentOrder ? `'${moment(unitPaymentOrder.date).format('L')}'` : null,
                         purchaseOrderDays: unitPaymentOrder ? `${poDays}` : null,
                         purchaseOrderDaysRange: unitPaymentOrder ? `'${this.getRangeMonth(poDays)}'` : null,
-                        invoicePrice: unitPaymentOrder ? `'${poItem.pricePerDealUnit}'` : null
+                        invoicePrice: unitPaymentOrder ? `'${poItem.pricePerDealUnit}'` : null,
                     };
                 });
                 return [].concat.apply([], results);
@@ -375,6 +401,7 @@ module.exports = class FactPurchasingEtlManager {
                         purchaseOrderExternalDays: null,
                         purchaseOrderExternalDaysRange: null,
                         purchasingStaffName: null,
+                        prNoAtPo: null,
 
                         purchaseOrderExternalId: null,
                         purchaseOrderExternalNo: null,
@@ -413,7 +440,7 @@ module.exports = class FactPurchasingEtlManager {
                         unitPaymentOrderDate: null,
                         purchaseOrderDays: null,
                         purchaseOrderDaysRange: null,
-                        invoicePrice: null
+                        invoicePrice: null,
                     };
                 });
                 return [].concat.apply([], results);
@@ -432,7 +459,7 @@ module.exports = class FactPurchasingEtlManager {
 
                 for (var item of data) {
                     if (item.purchaseRequestId) {
-                        sqlQuery = sqlQuery.concat(`INSERT INTO dl_fact_pembelian_temp([id fact pembelian], [id pr], [nomor pr], [tanggal pr], [jumlah selisih hari pr-po internal], [selisih hari pr-po internal], [jumlah selisih hari pr-po eksternal], [selisih hari pr-po eksternal], [tanggal diminta datang], [kode budget], [nama budget], [kode unit], [nama unit], [kode divisi], [nama divisi], [kode kategori], [nama kategori], [jenis kategori], [kode produk], [nama produk], [id po internal], [nomor po internal], [tanggal po internal], [jumlah selisih hari po eksternal-po internal], [selisih hari po internal], [nama staff pembelian], [id po eksternal], [nomor po eksternal], [nomor pr di po eksternal], [tanggal po eksternal], [jumlah selisih hari do-po eksternal], [selisih hari do-po eksternal], [tanggal rencana kedatangan], [kode supplier], [nama supplier], [kode mata uang], [nama mata uang], [metode pembayaran], [nilai mata uang], [jumlah barang], [uom], [harga per unit], [total harga], [id do], [nomor do], [nomor pr di do], [tanggal do], [jumlah selisih hari urn-do], [selisih hari urn-do], [status ketepatan waktu], [id urn], [nomor urn], [tanggal urn], [jumlah selisih hari upo-urn], [selisih hari upo-urn], [id upo], [nomor upo], [tanggal upo], [jumlah selisih hari upo-po internal], [selisih hari upo-po internal], [invoice price]) VALUES(${count}, ${item.purchaseRequestId}, ${item.purchaseRequestNo}, ${item.purchaseRequestDate}, ${item.purchaseRequestDays}, ${item.purchaseRequestDaysRange}, ${item.prPurchaseOrderExternalDays}, ${item.prPurchaseOrderExternalDaysRange}, ${item.expectedPRDeliveryDate}, ${item.budgetCode}, ${item.budgetName}, ${item.unitCode}, ${item.unitName}, ${item.divisionCode}, ${item.divisionName}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType}, ${item.productCode}, ${item.productName}, ${item.purchaseOrderId}, ${item.purchaseOrderNo}, ${item.purchaseOrderDate}, ${item.purchaseOrderExternalDays}, ${item.purchaseOrderExternalDaysRange}, ${item.purchasingStaffName}, ${item.purchaseOrderExternalId}, ${item.purchaseOrderExternalNo}, ${item.prNoAtPoExt}, ${item.purchaseOrderExternalDate}, ${item.deliveryOrderDays}, ${item.deliveryOrderDaysRange}, ${item.expectedDeliveryDate}, ${item.supplierCode}, ${item.supplierName}, ${item.currencyCode}, ${item.currencyName}, ${item.paymentMethod}, ${item.currencyRate}, ${item.purchaseQuantity}, ${item.uom}, ${item.pricePerUnit}, ${item.totalPrice}, ${item.deliveryOrderId}, ${item.deliveryOrderNo}, ${item.prNoAtDo}, ${item.deliveryOrderDate}, ${item.unitReceiptNoteDays}, ${item.unitReceiptNoteDaysRange}, ${item.status}, ${item.unitReceiptNoteId}, ${item.unitReceiptNoteNo}, ${item.unitReceiptNoteDate}, ${item.unitPaymentOrderDays}, ${item.unitPaymentOrderDaysRange}, ${item.unitPaymentOrderId}, ${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate}, ${item.purchaseOrderDays}, ${item.purchaseOrderDaysRange}, ${item.invoicePrice}); `);
+                        sqlQuery = sqlQuery.concat(`INSERT INTO dl_fact_pembelian_temp([id fact pembelian], [id pr], [nomor pr], [tanggal pr], [jumlah selisih hari pr-po internal], [selisih hari pr-po internal], [jumlah selisih hari pr-po eksternal], [selisih hari pr-po eksternal], [tanggal diminta datang], [kode budget], [nama budget], [kode unit], [nama unit], [kode divisi], [nama divisi], [kode kategori], [nama kategori], [jenis kategori], [kode produk], [nama produk], [id po internal], [nomor po internal], [tanggal po internal], [jumlah selisih hari po eksternal-po internal], [selisih hari po internal], [nama staff pembelian], [id po eksternal], [nomor po eksternal], [nomor pr di po eksternal], [tanggal po eksternal], [jumlah selisih hari do-po eksternal], [selisih hari do-po eksternal], [tanggal rencana kedatangan], [kode supplier], [nama supplier], [kode mata uang], [nama mata uang], [metode pembayaran], [nilai mata uang], [jumlah barang], [uom], [harga per unit], [total harga], [id do], [nomor do], [nomor pr di do], [tanggal do], [jumlah selisih hari urn-do], [selisih hari urn-do], [status ketepatan waktu], [id urn], [nomor urn], [tanggal urn], [jumlah selisih hari upo-urn], [selisih hari upo-urn], [id upo], [nomor upo], [tanggal upo], [jumlah selisih hari upo-po internal], [selisih hari upo-po internal], [invoice price], [po internal]) VALUES(${count}, ${item.purchaseRequestId}, ${item.purchaseRequestNo}, ${item.purchaseRequestDate}, ${item.purchaseRequestDays}, ${item.purchaseRequestDaysRange}, ${item.prPurchaseOrderExternalDays}, ${item.prPurchaseOrderExternalDaysRange}, ${item.expectedPRDeliveryDate}, ${item.budgetCode}, ${item.budgetName}, ${item.unitCode}, ${item.unitName}, ${item.divisionCode}, ${item.divisionName}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType}, ${item.productCode}, ${item.productName}, ${item.purchaseOrderId}, ${item.purchaseOrderNo}, ${item.purchaseOrderDate}, ${item.purchaseOrderExternalDays}, ${item.purchaseOrderExternalDaysRange}, ${item.purchasingStaffName}, ${item.purchaseOrderExternalId}, ${item.purchaseOrderExternalNo}, ${item.prNoAtPoExt}, ${item.purchaseOrderExternalDate}, ${item.deliveryOrderDays}, ${item.deliveryOrderDaysRange}, ${item.expectedDeliveryDate}, ${item.supplierCode}, ${item.supplierName}, ${item.currencyCode}, ${item.currencyName}, ${item.paymentMethod}, ${item.currencyRate}, ${item.purchaseQuantity}, ${item.uom}, ${item.pricePerUnit}, ${item.totalPrice}, ${item.deliveryOrderId}, ${item.deliveryOrderNo}, ${item.prNoAtDo}, ${item.deliveryOrderDate}, ${item.unitReceiptNoteDays}, ${item.unitReceiptNoteDaysRange}, ${item.status}, ${item.unitReceiptNoteId}, ${item.unitReceiptNoteNo}, ${item.unitReceiptNoteDate}, ${item.unitPaymentOrderDays}, ${item.unitPaymentOrderDaysRange}, ${item.unitPaymentOrderId}, ${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate}, ${item.purchaseOrderDays}, ${item.purchaseOrderDaysRange}, ${item.invoicePrice}, ${item.prNoAtPo}); `);
 
                         count++;
                     }
@@ -443,7 +470,7 @@ module.exports = class FactPurchasingEtlManager {
                 // var fs = require("fs");
                 // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
 
-                // fs.writeFile(path, sqlQuery + storedProcedure + deleteTempTable, function (error) {
+                // fs.writeFile(path, sqlQuery, function (error) {
                 //     if (error) {
                 //         console.log("write error:  " + error.message);
                 //     } else {
@@ -451,11 +478,10 @@ module.exports = class FactPurchasingEtlManager {
                 //     }
                 // });
 
-                // var sqlQuery1 = this.removeDuplicate(sqlQuery)
-                var deleteTempTable = ('DELETE FROM [dl_fact_pembelian_temp]; ')
-                var storedProcedure = ('EXEC UPSERT; ')
+                // var deleteTempTable = ('DELETE FROM [dl_fact_pembelian_temp]; ')
+                // var storedProcedure = ('EXEC UPSERT; ')
 
-                return request.query(sqlQuery + storedProcedure + deleteTempTable)
+                return request.query(sqlQuery)
                     // return request.query('select count(*) from fact_durasi_pembelian')
                     // return request.query('select top 1 * from fact_durasi_pembelian')
                     .then((results) => {
@@ -464,6 +490,16 @@ module.exports = class FactPurchasingEtlManager {
                     });
             })
             .catch((err) => {
+                var finishedDate = new Date();
+                var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                var updateLog = {
+                    description: "Fact Pembelian from MongoDB to Azure DWH",
+                    start: startedDate,
+                    finish: finishedDate,
+                    executionTime: spentTime + " minutes",
+                    status: err
+                };
+                this.migrationLog.updateOne({ start: startedDate }, updateLog);
                 console.log(err);
                 return Promise.reject(err);
             });
