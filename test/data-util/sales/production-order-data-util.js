@@ -1,14 +1,14 @@
 'use strict'
-var helper = require('../../../helper');
-var ProductionOrderManager = require('../../../../src/managers/production/finishing-printing/production-order-manager');
-var codeGenerator = require('../../../../src/utils/code-generator');
-var buyer = require('../../master/buyer-data-util');
-var uom = require('../../master/uom-data-util');
-var orderType = require('../../master/order-type-data-util');
-var processType = require('../../master/process-type-data-util');
-var colorType = require('../../master/color-type-data-util');
-var lampStandard = require('../../master/lamp-standard-data-util');
-var material = require('../../master/product-data-util');
+var helper = require('../../helper');
+var ProductionOrderManager = require('../../../src/managers/sales/production-order-manager');
+var codeGenerator = require('../../../src/utils/code-generator');
+var buyer = require('../master/buyer-data-util');
+var uom = require('../master/uom-data-util');
+var orderType = require('../master/order-type-data-util');
+var processType = require('../master/process-type-data-util');
+var colorType = require('../master/color-type-data-util');
+var lampStandard = require('../master/lamp-standard-data-util');
+var material = require('../master/product-data-util');
 
 class ProductionOrderDataUtil {
     getNewData() {
