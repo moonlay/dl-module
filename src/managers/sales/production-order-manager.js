@@ -5,22 +5,21 @@ require("mongodb-toolkit");
 
 var DLModels = require('dl-models');
 var map = DLModels.map;
-var SalesContract=DLModels.production.finishingPrinting.SalesContract;
+var SalesContract=DLModels.sales.SalesContract;
+var ProductionOrder=DLModels.sales.ProductionOrder;
+var ProductionOrderDetail=DLModels.sales.ProductionOrderDetail;
 var DailyOperation=DLModels.production.finishingPrinting.DailyOperation;
-var ProductionOrder=DLModels.production.finishingPrinting.ProductionOrder;
-var ProductionOrderDetail=DLModels.production.finishingPrinting.ProductionOrderDetail;
-var DailyOperation=DLModels.production.finishingPrinting.DailyOperation;
-var LampStandardManager=require('../../master/lamp-standard-manager');
-var BuyerManager=require('../../master/buyer-manager');
-var UomManager = require('../../master/uom-manager');
-var ProductManager = require('../../master/product-manager');
-var ProcessTypeManager = require('../../master/process-type-manager');
-var OrderTypeManager = require('../../master/order-type-manager');
-var ColorTypeManager = require('../../master/color-type-manager');
-var InstructionManager = require('../../master/instruction-manager');
+var LampStandardManager=require('../master/lamp-standard-manager');
+var BuyerManager=require('../master/buyer-manager');
+var UomManager = require('../master/uom-manager');
+var ProductManager = require('../master/product-manager');
+var ProcessTypeManager = require('../master/process-type-manager');
+var OrderTypeManager = require('../master/order-type-manager');
+var ColorTypeManager = require('../master/color-type-manager');
+var InstructionManager = require('../master/instruction-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
-var generateCode = require("../../../utils/code-generator");
+var generateCode = require("../../utils/code-generator");
 var DailyOperationCollection=null;
 var assert = require('assert');
 
@@ -28,7 +27,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         
-        this.collection = this.db.collection(map.production.finishingPrinting.collection.SalesContract);
+        this.collection = this.db.collection(map.sales.collection.SalesContract);
         DailyOperationCollection=this.db.collection(map.production.finishingPrinting.collection.DailyOperation);
         this.LampStandardManager = new LampStandardManager(db, user);
         this.BuyerManager= new BuyerManager(db,user);
@@ -299,14 +298,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
      _createIndexes() {
         var dateIndex = {
-            name: `ix_${map.production.finishingPrinting.collection.SalesContract}__updatedDate`,
+            name: `ix_${map.sales.collection.SalesContract}__updatedDate`,
             key: {
                 _updatedDate: -1
             }
         }
 
         var noIndex = {
-            name: `ix_${map.production.finishingPrinting.collection.SalesContract}_no`,
+            name: `ix_${map.sales.collection.SalesContract}_no`,
             key: {
                 salesContractNo: 1
             }

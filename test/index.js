@@ -10,9 +10,9 @@ describe('#dl-module', function(done) {
 
     // Auth
     // test('@auth/account-manager', './auth/account-manager-test');
-    test('@AUTH/ACCOUNT', './auth/account');
-    test('@AUTH/ROLE', './auth/role');
-    test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
+    // test('@AUTH/ACCOUNT', './auth/account');
+    // test('@AUTH/ROLE', './auth/role');
+    // test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
     // test('@ETL/DIM-CATEGORY', './etl/dim-category');
     // test('@ETL/DIM-DIVISION', './etl/dim-division');
@@ -24,7 +24,7 @@ describe('#dl-module', function(done) {
     // test('@ETL/FACT-TOP-TEN-SUPPLIER', './etl/fact-top-ten-supplier');
     // test('@ETL/FACT-PURCHASE-ORDER-COMPARISON', './etl/fact-purchase-order-comparison');
     // test('@ETL/FACT-TIMELINESS-SUPPLIER', './etl/fact-timeliness-supplier');
-    test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');    
+    // test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');    
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
@@ -82,8 +82,11 @@ describe('#dl-module', function(done) {
 
     // //Production
 
-     test('@production/production-order', './production/finishing-printing/production-order/create');
     // test('@production/winding-quality-sampling-manager', './production/spinning/winding/winding-quality-sampling-manager-test');
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
     
+    //Sales
+
+    
+    test('@production/production-order', './sales/production-order/create');
 });
