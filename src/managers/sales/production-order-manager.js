@@ -5,22 +5,21 @@ require("mongodb-toolkit");
 
 var DLModels = require('dl-models');
 var map = DLModels.map;
-var SalesContract=DLModels.production.finishingPrinting.SalesContract;
+var SalesContract=DLModels.sales.SalesContract;
+var ProductionOrder=DLModels.sales.ProductionOrder;
+var ProductionOrderDetail=DLModels.sales.ProductionOrderDetail;
 var DailyOperation=DLModels.production.finishingPrinting.DailyOperation;
-var ProductionOrder=DLModels.production.finishingPrinting.ProductionOrder;
-var ProductionOrderDetail=DLModels.production.finishingPrinting.ProductionOrderDetail;
-var DailyOperation=DLModels.production.finishingPrinting.DailyOperation;
-var LampStandardManager=require('../../master/lamp-standard-manager');
-var BuyerManager=require('../../master/buyer-manager');
-var UomManager = require('../../master/uom-manager');
-var ProductManager = require('../../master/product-manager');
-var ProcessTypeManager = require('../../master/process-type-manager');
-var OrderTypeManager = require('../../master/order-type-manager');
-var ColorTypeManager = require('../../master/color-type-manager');
-var InstructionManager = require('../../master/instruction-manager');
+var LampStandardManager=require('../master/lamp-standard-manager');
+var BuyerManager=require('../master/buyer-manager');
+var UomManager = require('../master/uom-manager');
+var ProductManager = require('../master/product-manager');
+var ProcessTypeManager = require('../master/process-type-manager');
+var OrderTypeManager = require('../master/order-type-manager');
+var ColorTypeManager = require('../master/color-type-manager');
+var InstructionManager = require('../master/instruction-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
-var generateCode = require("../../../utils/code-generator");
+var generateCode = require("../../utils/code-generator");
 var DailyOperationCollection=null;
 var assert = require('assert');
 
@@ -28,7 +27,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         
-        this.collection = this.db.collection(map.production.finishingPrinting.collection.SalesContract);
+        this.collection = this.db.collection(map.sales.collection.SalesContract);
         DailyOperationCollection=this.db.collection(map.production.finishingPrinting.collection.DailyOperation);
         this.LampStandardManager = new LampStandardManager(db, user);
         this.BuyerManager= new BuyerManager(db,user);
@@ -55,9 +54,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 }
             };
            
+           var filterOrderNo = {
+               'productionOrders': {
+                   $elemMatch: {orderNo: {'$regex': regex }
+                    }
+                }
+            };
 
             keywordFilter = {
-                '$or': [filterSalesContract]
+                '$or': [filterSalesContract, filterOrderNo]
             };
         }
         query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
@@ -127,7 +132,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     errors["orderType"] = i18n.__("ProductionOrder.orderType.isRequired:%s is not exists", i18n.__("ProductionOrder.orderType._:OrderType")); //"orderType tidak boleh kosong";
                 else if (!valid.processTypeId)
                     errors["orderType"] = i18n.__("ProductionOrder.orderType.isRequired:%s is required", i18n.__("ProductionOrder.orderType._:OrderType")); //"orderType tidak boleh kosong";
-
+                
                 if(!valid.rollLength || valid.rollLength===''){
                     errors["rollLength"]=i18n.__("ProductionOrder.rollLength.isRequired:%s is required", i18n.__("ProductionOrder.rollLength._:RollLength")); //"rollLength tidak boleh kosong";
                 }
@@ -178,6 +183,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                             if(valid.orderQuantity!=totalqty){
                                 errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.shouldNot:%s should equal SUM quantity in details", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh berbeda dari total jumlah detail";
+                                
                         }
                     }
                 
@@ -190,6 +196,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 }
                 else if(valid.details.length>0) {
                     var detailErrors = [];
+                    var totalqty=0;
+                    for(var i of valid.details){
+                        totalqty+=i.quantity;
+                    }
                     for (var detail of valid.details) {
                         var detailError = {};
                         detail.code=generateCode();
@@ -197,16 +207,27 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             detailError["colorRequest"] = i18n.__("ProductionOrder.details.colorRequest.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorRequest._:ColorRequest")); //"colorRequest tidak boleh kosong";
                         if (detail.quantity <= 0)
                             detailError["quantity"] = i18n.__("ProductionOrder.details.quantity.isRequired:%s is required", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
+                        else if(valid.orderQuantity!=totalqty)
+                            detailError["total"] = i18n.__("ProductionOrder.details.quantity.shouldNot:%s Total should equal Order Quantity", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh berbeda dari jumlah order";
                         if(!_uom)
                             detailError["uom"] = i18n.__("ProductionOrder.details.uom.isRequired:%s is not exists", i18n.__("ProductionOrder.details.uom._:Uom")); //"satuan tidak boleh kosong";
+                        
                         if(_uom){
                             detail.uomId=new ObjectId(_uom._id);
                         }
                         if (!detail.colorTemplate || detail.colorTemplate=="")
                             detailError["colorTemplate"] = i18n.__("ProductionOrder.details.colorTemplate.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorTemplate._:ColorTemplate")); //"colorTemplate tidak boleh kosong";
                         
-                        if (!_colors)
-                            detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
+                        if(_order){
+                            if(_order.name.trim().toLowerCase()=="yarndyed" || _order.name.trim().toLowerCase()=="printing" ){
+                                _colors={};
+                            }
+                            else{
+                                if (!_colors)
+                                    detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
+                        
+                            }
+                        }
                         
                         if (Object.getOwnPropertyNames(detailError).length > 0)
                             detailErrors.push(detailError);
@@ -233,20 +254,30 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 }
                 if(_order){
                     valid.orderTypeId=new ObjectId(_order._id);
+
+                    if(_order.name.trim().toLowerCase()=="yarndyed" || _order.name.trim().toLowerCase()=="printing" ){
+                        for (var detail of valid.details) {
+                            detail.colorTypeId = null;
+                            detail.colorType = null;
+                        }
+                    }
+                    else{
+                        for (var detail of valid.details) {
+                            for (var _color of _colors) {
+                                if (detail.colorTypeId.toString() === _color._id.toString()) {
+                                    detail.colorTypeId = _color._id;
+                                    detail.colorType = _color;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
                 if(_material){
                     valid.material=_material;
                     valid.materialId=new ObjectId(_material._id);
                 }
-                for (var detail of valid.details) {
-                    for (var _color of _colors) {
-                        if (detail.colorTypeId.toString() === _color._id.toString()) {
-                            detail.colorTypeId = _color._id;
-                            detail.colorType = _color;
-                            break;
-                        }
-                    }
-                }
+                
 
                 valid.deliveryDate=new Date(valid.deliveryDate);
 
@@ -267,14 +298,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
      _createIndexes() {
         var dateIndex = {
-            name: `ix_${map.production.finishingPrinting.collection.SalesContract}__updatedDate`,
+            name: `ix_${map.sales.collection.SalesContract}__updatedDate`,
             key: {
                 _updatedDate: -1
             }
         }
 
         var noIndex = {
-            name: `ix_${map.production.finishingPrinting.collection.SalesContract}_no`,
+            name: `ix_${map.sales.collection.SalesContract}_no`,
             key: {
                 salesContractNo: 1
             }
@@ -311,8 +342,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 newDailyOperation.material = validproductionOrder.material;
                                 newDailyOperation.construction = validproductionOrder.construction;
                                 newDailyOperation.color = a.colorRequest;
-                                newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
-                                newDailyOperation.colorType = a.colorType;
+                                if(validproductionOrder.orderType.name.trim().toLowerCase()=="yarndyed" || validproductionOrder.orderType.name.trim().toLowerCase()=="printing"){
+                                    newDailyOperation.colorTypeId = null;
+                                    newDailyOperation.colorType = null;
+                                }
+                                else{
+                                    newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
+                                    newDailyOperation.colorType = a.colorType;
+                                }
                                 newDailyOperation.stamp(this.user.username, "manager");
                                 dailyOperation.push(newDailyOperation);
                             }
@@ -350,8 +387,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 newDailyOperation.material = validproductionOrder.material;
                                 newDailyOperation.construction = validproductionOrder.construction;
                                 newDailyOperation.color = a.colorRequest;
-                                newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
-                                newDailyOperation.colorType = a.colorType;
+                                if(validproductionOrder.orderType.name.trim().toLowerCase()=="yarndyed" || validproductionOrder.orderType.name.trim().toLowerCase()=="printing"){
+                                    newDailyOperation.colorTypeId = null;
+                                    newDailyOperation.colorType = null;
+                                }
+                                else{
+                                    newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
+                                    newDailyOperation.colorType = a.colorType;
+                                }
                                 newDailyOperation.stamp(this.user.username, "manager");
                                 dailyOperation.push(newDailyOperation);
                             }
@@ -411,8 +454,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 newDailyOperation.material = i.material;
                                 newDailyOperation.construction = i.construction;
                                 newDailyOperation.color = a.colorRequest;
-                                newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
-                                newDailyOperation.colorType = a.colorType;
+                                if(validproductionOrder.orderType.name.trim().toLowerCase()=="yarndyed" || validproductionOrder.orderType.name.trim().toLowerCase()=="printing"){
+                                    newDailyOperation.colorTypeId = null;
+                                    newDailyOperation.colorType = null;
+                                }
+                                else{
+                                    newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
+                                    newDailyOperation.colorType = a.colorType;
+                                }
                                 newDailyOperation.stamp(this.user.username, "manager");
                                 dailyOperation.push(newDailyOperation);
                             }
@@ -525,10 +574,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             productionOrder=i;
                         }
                     }
-                    var getDefinition = require("../../../pdf/definitions/production-order");
+                    var getDefinition = require("../../pdf/definitions/production-order");
                     var definition = getDefinition(productionOrder);
 
-                    var generatePdf = require("../../../pdf/pdf-generator");
+                    var generatePdf = require("../../pdf/pdf-generator");
                     generatePdf(definition)
                         .then(binary => {
                             resolve(binary);
@@ -541,6 +590,41 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     reject(e);
                 });
 
+        });
+    }
+
+    getSingleProductionOrder(data){
+       return new Promise((resolve, reject) => {
+            var query = {"productionOrders": { "$elemMatch": { "orderNo": data}}};
+            this.collection.singleOrDefault(query).then((result) => {
+                var dataReturn = {};
+                for(var a of result.productionOrders){
+                    if(data === a.orderNo)
+                        dataReturn = new ProductionOrder(a);
+                }
+                resolve(dataReturn);
+            });
+        });
+    }
+
+    getDataProductionOrder(data){
+       return new Promise((resolve, reject) => {
+            var regex = new RegExp(data.keyword, "i");
+            var dataReturn= [];
+            this.collection.aggregate([{ $unwind : "$productionOrders" }])
+            .match({
+                $and:[{
+                    "productionOrders.orderNo" : {"$regex" : regex}
+                },{"_deleted" : false}]
+            })
+            .limit(20)
+            .toArray(function(err, result) {
+                        for(var a of result){
+                            var pOrder = new ProductionOrder(a.productionOrders)
+                            dataReturn.push(pOrder);
+                        }
+                        resolve(dataReturn);
+                    });
         });
     }
 }

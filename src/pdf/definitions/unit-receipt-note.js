@@ -53,7 +53,7 @@ module.exports = function(unitReceiptNote) {
             {
                 width: '60%',
                 columns: [{
-                    width: '35%',
+                    width: '30%',
                     stack: ['Tanggal', 'Diterima dari']
                 }, {
                     width: '5%',
@@ -122,19 +122,19 @@ module.exports = function(unitReceiptNote) {
     var tbody = items.map(function(item, index) {
         return [{
             text: (index + 1).toString() || '',
-            style: ['size07', 'center']
+            style: ['size08', 'center']
         }, {
             text: item.product.code + " - " + item.product.name,
-            style: ['size07', 'left']
+            style: ['size08', 'left']
         }, {
             text: parseFloat(item.deliveredQuantity).toLocaleString(locale, locale.decimal),
-            style: ['size07', 'center']
+            style: ['size08', 'center']
         }, {
             text: item.deliveredUom.unit,
-            style: ['size07', 'center']
+            style: ['size08', 'center']
         }, {
             text: item.remark || '',
-            style: ['size07', 'left']
+            style: ['size08', 'left']
         }];
     });
 

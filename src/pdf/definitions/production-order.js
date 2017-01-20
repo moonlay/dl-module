@@ -35,62 +35,120 @@ module.exports = function (productionOrder) {
         }]
     }];
 
-   
-    var thead = [{
-        text: 'Warna yang Diminta',
-        style: 'tableHeader'
-    }, {
-            text: 'Acuan/Color Way',
-            style: 'tableHeader'
-        },
-        {
-            text: 'Jenis Warna',
+    var thead=[];
+    var tbody=[];
+    var tfoot=[];
+    var table=[];
+
+    if(productionOrder.orderType.name.trim().toLowerCase()=="printing" || productionOrder.orderType.name.trim().toLowerCase()=="yarndyed")
+    {
+        thead = [{
+            text: 'Warna yang Diminta',
             style: 'tableHeader'
         }, {
-            text: 'Jumlah',
-            style: 'tableHeader'
+                text: 'Acuan/Color Way',
+                style: 'tableHeader'
+            }, {
+                text: 'Jumlah',
+                style: 'tableHeader'
+            }];
+            
+        tfoot = [[{
+            text: 'Total',
+            style: 'tableHeader',
+            colSpan:2
+        }, "", {
+                text: productionOrder.orderQuantity +" "+productionOrder.uom.unit,
+                style: 'tableHeader'
+            }]];
+
+        tbody = details.map(function (detail, index) {
+            return [{
+                text: detail.colorRequest ,
+                style: ['size07', 'center']
+            },{
+                text: detail.colorTemplate ,
+                style: ['size07', 'center']
+            },{
+                text: detail.quantity + " "+detail.uom.unit ,
+                style: ['size07', 'center']
+            } ]
+        });
+
+        tbody = tbody.length > 0 ? tbody : [
+            [{
+                text: "tidak ada detail",
+                style: ['size06', 'center'],
+                colSpan: 3
+            }, "", ""]
+        ];
+
+        table = [{
+            table: {
+                widths: ['35%', '35%', '30%'],
+                headerRows: 1,
+                body: [].concat([thead], tbody,tfoot)
+            }
         }];
-        
-    var tfoot = [[{
-        text: 'Total',
-        style: 'tableHeader',
-        colSpan:3
-    }, "", "", {
-            text: productionOrder.orderQuantity +" "+productionOrder.uom.unit,
+    }
+   else{
+        thead = [{
+            text: 'Warna yang Diminta',
             style: 'tableHeader'
-        }]];
+        }, {
+                text: 'Acuan/Color Way',
+                style: 'tableHeader'
+            },
+            {
+                text: 'Jenis Warna',
+                style: 'tableHeader'
+            }, {
+                text: 'Jumlah',
+                style: 'tableHeader'
+            }];
+            
+        tfoot = [[{
+            text: 'Total',
+            style: 'tableHeader',
+            colSpan:3
+        }, "", "", {
+                text: productionOrder.orderQuantity +" "+productionOrder.uom.unit,
+                style: 'tableHeader'
+            }]];
 
-    var tbody = details.map(function (detail, index) {
-        return [{
-            text: detail.colorRequest ,
-            style: ['size07', 'center']
-        },{
-            text: detail.colorTemplate ,
-            style: ['size07', 'center']
-        },{
-            text: detail.colorType.name ,
-            style: ['size07', 'center']
-        },{
-            text: detail.quantity + " "+detail.uom.unit ,
-            style: ['size07', 'center']
-        } ]
-    });
+        tbody = details.map(function (detail, index) {
+            return [{
+                text: detail.colorRequest ,
+                style: ['size07', 'center']
+            },{
+                text: detail.colorTemplate ,
+                style: ['size07', 'center']
+            },{
+                text: detail.colorType.name ,
+                style: ['size07', 'center']
+            },{
+                text: detail.quantity + " "+detail.uom.unit ,
+                style: ['size07', 'center']
+            } ]
+        });
 
-    tbody = tbody.length > 0 ? tbody : [
-        [{
-            text: "tidak ada detail",
-            style: ['size06', 'center'],
-            colSpan: 4
-        }, "", "",""]
-    ];
+        tbody = tbody.length > 0 ? tbody : [
+            [{
+                text: "tidak ada detail",
+                style: ['size06', 'center'],
+                colSpan: 4
+            }, "", "",""]
+        ];
 
-    var table = [{
-        table: {
-            widths: ['25%', '25%', '25%','25%'],
-            headerRows: 1,
-            body: [].concat([thead], tbody,tfoot)
-        }
-    }];
+        table = [{
+            table: {
+                widths: ['25%', '25%', '25%','25%'],
+                headerRows: 1,
+                body: [].concat([thead], tbody,tfoot)
+            }
+        }];
+    }
+
     var datas=[
         {
             columns: [
