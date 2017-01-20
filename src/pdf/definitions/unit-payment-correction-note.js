@@ -130,13 +130,13 @@ module.exports = function (unitPaymentCorrection) {
     var tbody = items.map(function (item, index) {
         return [{
             text: (index + 1).toString() || '',
-            style: ['size07', 'center']
+            style: ['size08', 'center']
         }, {
                 text: item.product.name,
-                style: ['size07', 'left']
+                style: ['size08', 'left']
             }, {
                 text: `${item.quantity} ${item.uom.unit}`,
-                style: ['size07', 'right']
+                style: ['size08', 'right']
             }, {
                 columns: [{
                     width: '5%',
@@ -145,7 +145,7 @@ module.exports = function (unitPaymentCorrection) {
                 }, {
                         width: '*',
                         text: parseFloat(item.pricePerUnit).toLocaleString(locale, locale.currency),
-                        style: ['size07', 'right']
+                        style: ['size08', 'right']
                     }]
             }, {
                 columns: [{
@@ -155,11 +155,11 @@ module.exports = function (unitPaymentCorrection) {
                 }, {
                         width: '*',
                         text: parseFloat(item.priceTotal).toLocaleString(locale, locale.currency),
-                        style: ['size07', 'right']
+                        style: ['size08', 'right']
                     }]
             }, {
                 text: item.prNo,
-                style: ['size07', 'left']
+                style: ['size08', 'left']
             }];
     });
 

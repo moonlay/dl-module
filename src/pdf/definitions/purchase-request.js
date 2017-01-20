@@ -125,19 +125,19 @@ module.exports = function (purchaseRequest) {
     var tbody = items.map(function (item, index) {
         return [{
             text: (index + 1).toString() || '',
-            style: ['size07', 'center']
+            style: ['size08', 'center']
         }, {
                 text: item.product.code,
-                style: ['size07', 'left']
+                style: ['size08', 'left']
             }, {
                 text: item.product.name+'\n'+item.remark,
-                style: ['size07', 'left']
+                style: ['size08', 'left']
             }, {
                 text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + " " + item.product.uom.unit,
-                style: ['size07', 'center']
+                style: ['size08', 'center']
             }, {
                 text: '',
-                style: ['size07', 'left']
+                style: ['size08', 'left']
             }];
     });
 
