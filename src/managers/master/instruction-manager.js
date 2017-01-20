@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 var ObjectId = require("mongodb").ObjectId;
 
@@ -15,7 +15,6 @@ var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 
 module.exports = class InstructionManager extends BaseManager {
-
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.master.collection.Instruction);
@@ -34,6 +33,16 @@ module.exports = class InstructionManager extends BaseManager {
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
+            var nameFilter = {
+                "name": {
+                    "$regex": regex
+                }
+            };
+            var orderFilter = {
+                "orderType.name": {
+                    "$regex": regex
+                }
+            };
             var materialFilter = {
                 "material.name": {
                     "$regex": regex
@@ -44,17 +53,8 @@ module.exports = class InstructionManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            var orderTypeFilter = {
-                "orderType.name": {
-                    "$regex": regex
-                }
-            };
-            var colorTypeFilter = {
-                "colorType.name": {
-                    "$regex": regex
-                }
-            };
-            keywordFilter["$or"] = [materialFilter, constructionFilter, orderTypeFilter, colorTypeFilter];
+            keywordFilter["$or"] = [nameFilter, orderFilter, materialFilter, constructionFilter];
+
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -64,65 +64,98 @@ module.exports = class InstructionManager extends BaseManager {
         var errors = {};
         var valid = instruction;
         // 1. begin: Declare promises.
-        var getInstructionPromise = this.collection.singleOrDefault({
-            _id: {
-                '$ne'   : new ObjectId(valid._id)
-            },
-            materialId      :new ObjectId(valid.materialId),
-            construction    :valid.construction,
-            orderTypeId     :new ObjectId(valid.orderTypeId),
-            colorTypeId     :new ObjectId(valid.colorTypeId)
-        });
-
-        var getProduct = ObjectId.isValid(valid.materialId) ? this.productManager.getSingleByIdOrDefault(new ObjectId(valid.materialId)) : Promise.resolve(null);
-        var getColor = ObjectId.isValid(valid.colorTypeId) ? this.colorTypeManager.getSingleByIdOrDefault(new ObjectId(valid.colorTypeId)) : Promise.resolve(null);
-        var getOrder = ObjectId.isValid(valid.orderTypeId) ? this.orderTypeManager.getSingleByIdOrDefault(new ObjectId(valid.orderTypeId)) : Promise.resolve(null);
-        
-
-        // 2. begin: Validation.
-        return Promise.all([getInstructionPromise,getProduct, getColor, getOrder])
+        var getInstructionPromise = Promise.resolve(null);
+        if(valid.orderType){
+            if(valid.orderType.name){
+                if(valid.orderType.name == "Yarn Dyed" || valid.orderType.name == "Printing"){
+                    var getInstructionPromise = this.collection.singleOrDefault({
+                        _id: {
+                            "$ne": new ObjectId(valid._id)
+                        },
+                        _deleted : false,
+                        name: valid.name,
+                        materialId      :valid.material ? new ObjectId(valid.material._id) : '',
+                        construction    :valid.construction ? valid.construction : '',
+                        orderTypeId     :valid.orderType ? new ObjectId(valid.orderType._id) : ''
+                    });
+                }else{
+                    var getInstructionPromise = this.collection.singleOrDefault({
+                        _id: {
+                            "$ne": new ObjectId(valid._id)
+                        },
+                        _deleted : false,
+                        name: valid.name,
+                        materialId      :valid.material && ObjectId.isValid(valid.material._id) ? new ObjectId(valid.material._id) : '',
+                        construction    :valid.construction ? valid.construction : '',
+                        orderTypeId     :valid.orderType && ObjectId.isValid(valid.orderType._id) ? new ObjectId(valid.orderType._id) : '',
+                        colorTypeId     :valid.colorType && ObjectId.isValid(valid.colorType._id) ? new ObjectId(valid.colorType._id) : ''
+                    });
+                }
+            }
+        }
+        var getProduct = valid.material && ObjectId.isValid(valid.material._id) ? this.productManager.getSingleByIdOrDefault(new ObjectId(valid.material._id)) : Promise.resolve(null);
+        var getOrderType = valid.orderType && ObjectId.isValid(valid.orderType._id) ? this.orderTypeManager.getSingleByIdOrDefault(new ObjectId(valid.orderType._id)) : Promise.resolve(null);
+        var getColorType = valid.colorType && ObjectId.isValid(valid.colorType._id) ? this.colorTypeManager.getSingleByIdOrDefault(new ObjectId(valid.colorType._id)) : Promise.resolve(null);
+        return Promise.all([getInstructionPromise, getProduct, getOrderType, getColorType])
             .then(results => {
                 var _instruction = results[0];
-                var _material=results[1];
-                var _color = results[2];
-                var _order = results[3];
+                var _product = results[1];
+                var _orderType = results[2];
+                var _colorType = results[3];
 
-                if (_instruction) {
-                    errors["materialId"] = i18n.__("Instruction.materialId.isAlreadyExists:%s is exists", i18n.__("Instruction.materialId._:Material"));
-                    errors["construction"] = i18n.__("Instruction.construction.isAlreadyExists:%s is exists", i18n.__("Instruction.construction._:Construction"));
-                    errors["orderTypeId"] = i18n.__("Instruction.orderTypeId.isAlreadyExists:%s is exists", i18n.__("Instruction.orderTypeId._:OrderType"));
-                    errors["colorTypeId"] = i18n.__("Instruction.colorTypeId.isAlreadyExists:%s is exists", i18n.__("Instruction.colorTypeId._:ColorType"));
-                }
-                else {
-                    if (!_material)
-                        errors["materialId"] = i18n.__("Instruction.material.isRequired:%s is not exsists", i18n.__("Instruction.material._:Material")); //"Material Tidak Boleh Kosong";
+                if (!valid.name || valid.name == "")
+                    errors["name"] = i18n.__("Instruction.name.isRequired:%s is required", i18n.__("Instruction.name._:Name")); // "Nama harus diisi";
+                else if (_instruction) 
+                    errors["name"] = i18n.__("Instruction.name.isExists:%s with same order type, construction and material is already exists", i18n.__("Instruction.name._:Name")); //"Nama sudah ada";
                     
-                    if (!valid.construction || valid.construction=="")
-                        errors["construction"] = i18n.__("Instruction.construction.isRequired:%s is not exsists", i18n.__("Instruction.construction._:Construction")); //"construction Tidak Boleh Kosong";
-                    
-                    if (!_order)
-                        errors["orderTypeId"] = i18n.__("Instruction.orderType.isRequired:%s is not exsists", i18n.__("Instruction.orderType._:OrderType")); //"orderType Tidak Boleh Kosong";
-                    
-                    if (!_color)
-                        errors["colorTypeId"] = i18n.__("Instruction.colorType.isRequired:%s is not exsists", i18n.__("Instruction.colorType._:ColorType")); //"colorType Tidak Boleh Kosong";
-                    
+                if (!valid.materialId || valid.materialId.toString() == "")
+                    errors["material"] = i18n.__("Instruction.material.isRequired:%s is required", i18n.__("Instruction.material._:Material")); // "Material harus diisi";
+                else if(!_product)
+                    errors["material"] = i18n.__("Instruction.material.isRequired:%s is required", i18n.__("Instruction.material._:Material")); // "Material harus diisi";
+                else if(_instruction)
+                    errors["material"] = i18n.__("Instruction.material.isExists:%s with same name, order type and construction is already exists", i18n.__("Instruction.material._:Material"));//"Material sudah ada";
 
-                    if (!valid.steps || valid.steps.length<=0)
-                        errors["steps"] = i18n.__("Instruction.steps.isRequired:%s is required", i18n.__("Instruction.steps._:Steps")); //"steps Tidak Boleh Kosong";
-                }
+
+                if (!valid.construction || valid.construction == "")
+                    errors["construction"] = i18n.__("Instruction.construction.isRequired:%s is required", i18n.__("Instruction.construction._:Construction")); // "Construction harus diisi";
+                else if(_instruction)
+                    errors["construction"] = i18n.__("Instruction.construction.isExists:%s with same name, order type and material is already exists", i18n.__("Instruction.construction._:Construction")); // "Construction sudah ada";
                 
-                valid.materialId =new ObjectId(valid.materialId);
-                valid.orderTypeId=new ObjectId(valid.orderTypeId);
-                valid.colorTypeId=new ObjectId(valid.colorTypeId);
 
+                if (!valid.orderTypeId || valid.orderTypeId.toString() == "")
+                    errors["orderType"] = i18n.__("Instruction.orderType.isRequired:%s is required", i18n.__("Instruction.orderType._:OrderType")); // "Tipe order harus diisi";
+                else if(!_orderType)
+                    errors["orderType"] = i18n.__("Instruction.orderType.isRequired:%s is required", i18n.__("Instruction.orderType._:OrderType")); // "Tipe order harus diisi";
+                else if(_instruction)
+                    errors["orderType"] = i18n.__("Instruction.orderType.isExists:%s with same name, material and construction is already exists", i18n.__("Instruction.orderType._:OrderType")); // "Tipe Order sudah ada";
+                
+                if(!valid.steps || valid.steps.length < 1)
+                    errors["steps"] = i18n.__("Instruction.steps.isRequired:%s is required", i18n.__("Instruction.steps._:Steps")); //"minimal harus ada 1 Step";
+                
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
+                }
+                if(_product){
+                    valid.material = _product;
+                    valid.materialId = new ObjectId(_product._id);
+                }
+                if(_orderType){
+                    valid.orderType = _orderType;
+                    valid.orderTypeId= new ObjectId(_orderType._id);
+                }
+                if(_colorType){
+                    valid.colorType = _colorType;
+                    valid.colorTypeId = new ObjectId(_colorType._id);
+                }else{
+                    valid.colorType = null;
+                    valid.colorTypeId = null;
                 }
 
                 valid = new Instruction(valid);
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
+
             });
     }
 
@@ -133,88 +166,76 @@ module.exports = class InstructionManager extends BaseManager {
                 _updatedDate: -1
             }
         };
-
-        var nameIndex = {
-            name: `ix_${map.master.collection.Instruction}_material_construction_orderType_colorType`,
-            key: {
-                materialId: 1,
-                construction: 1,
-                orderTypeId: 1,
-                colorTypeId:1
-            },
-            unique: true
-        };
-
-        return this.collection.createIndexes([dateIndex, nameIndex]);
+        return this.collection.createIndexes([dateIndex]);
     }
 
     getMaterial(key,query){
         return new Promise((resolve, reject) => {
-        var regex=new RegExp(key,"i");
-        this.collection.aggregate(
-                            [{
-                                $match: {
-                                    $and:[{
-                                    $and: [{
-                                        "orderTypeId": new ObjectId(query)
-                                    }, {
-                                        "_deleted": false
-                                    }]
-                                },{
-                                        "material.name": {
-                                            "$regex": regex
-                                        }
-                                    }]
-                                }
+            var regex=new RegExp(key,"i");
+            this.collection.aggregate(
+                                [{
+                                    $match: {
+                                        $and:[{
+                                        $and: [{
+                                            "orderTypeId": new ObjectId(query)
+                                        }, {
+                                            "_deleted": false
+                                        }]
+                                    },{
+                                            "material.name": {
+                                                "$regex": regex
+                                            }
+                                        }]
+                                    }
 
-                            }, {
-                                $group: {
-                                    _id: {name: "$material.name", _id:"$material._id"}
-                                }
-                            }]
-                        )
-                        .toArray(function(err, result) {
-                            assert.equal(err, null);
-                            resolve(result);
-                        });
-    }
-        )}
-
-        getConstruction(key,orderId,materialId){
-        return new Promise((resolve, reject) => {
-        var regex=new RegExp(key,"i");
-        this.collection.aggregate(
-                [{
-                    $match: {
-                        $and:[{
-                            $and: [{
-                                $and:[{
-                                    "orderTypeId": new ObjectId(orderId)
-                                },{
-                                    "materialId" :new ObjectId(materialId)
+                                }, {
+                                    $group: {
+                                        _id: {name: "$material.name", _id:"$material._id"}
+                                    }
                                 }]
-                                
-                            }, {
-                                "_deleted": false
-                            }]
-                    },{
-                            "construction": {
-                                "$regex": regex
-                            }
-                        }]
-                    }
+                            )
+                            .toArray(function(err, result) {
+                                assert.equal(err, null);
+                                resolve(result);
+                            });
+        }
+    )}
 
-                }, {
-                    $group: {
-                        _id: "$construction"
-                    }
-                }]
-            )
-            .toArray(function(err, result) {
-                assert.equal(err, null);
-                resolve(result);
+    getConstruction(key,orderId,materialId){
+        return new Promise((resolve, reject) => {
+            var regex=new RegExp(key,"i");
+            this.collection.aggregate(
+                    [{
+                        $match: {
+                            $and:[{
+                                $and: [{
+                                    $and:[{
+                                        "orderTypeId": new ObjectId(orderId)
+                                    },{
+                                        "materialId" :new ObjectId(materialId)
+                                    }]
+                                    
+                                }, {
+                                    "_deleted": false
+                                }]
+                        },{
+                                "construction": {
+                                    "$regex": regex
+                                }
+                            }]
+                        }
+
+                    }, {
+                        $group: {
+                            _id: "$construction"
+                        }
+                    }]
+                )
+                .toArray(function(err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
             });
     }
-        )}
-}
+};
 
