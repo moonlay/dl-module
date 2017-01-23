@@ -10,7 +10,8 @@ module.exports = function (pox) {
                 prNo: po.refNo,
                 quantity: poItem.dealQuantity,
                 uom: poItem.dealUom.unit,
-                price: poItem.pricePerDealUnit
+                price: poItem.pricePerDealUnit,
+                remark: poItem.remark
             };
         });
     });
@@ -160,7 +161,7 @@ module.exports = function (pox) {
             stack: [{
                 text: item.product,
                 style: 'bold'
-            }, item.prNo],
+            },item.remark, item.prNo],
             style: ['size08']
         }, {
             text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
