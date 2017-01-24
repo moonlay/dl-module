@@ -252,47 +252,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             });
     }
 
-    // create(purchaseOrder) {
-    //     return new Promise((resolve, reject) => {
-    //         this._createIndexes()
-    //             .then((createIndexResults) => {
-    //                 purchaseOrder.no = generateCode();
-    //                 this._validate(purchaseOrder)
-    //                     .then(validPurchaseOrder => {
-    //                         this.purchaseRequestManager.getSingleById(validPurchaseOrder.purchaseRequest._id)
-    //                             .then(PR => {
-    //                                 validPurchaseOrder.purchaseRequestId = PR._id;
-    //                                 validPurchaseOrder.purchaseRequest = PR;
-
-    //                                 this.collection.insert(validPurchaseOrder)
-    //                                     .then(id => {
-    //                                         PR.isUsed = true;
-    //                                         PR.purchaseOrderIds = PR.purchaseOrderIds || [];
-    //                                         PR.purchaseOrderIds.push(id);
-
-    //                                         this.purchaseRequestManager.update(PR)
-    //                                             .then(results => {
-    //                                                 resolve(id);
-    //                                             })
-    //                                             .catch(e => {
-    //                                                 reject(e);
-    //                                             });
-    //                                     })
-    //                                     .catch(e => {
-    //                                         reject(e);
-    //                                     });
-    //                             })
-    //                     })
-    //                     .catch(e => {
-    //                         reject(e);
-    //                     });
-    //             })
-    //             .catch(e => {
-    //                 reject(e);
-    //             });
-    //     });
-    // }
-
     delete(purchaseOrder) {
         return new Promise((resolve, reject) => {
             this._createIndexes()
@@ -403,7 +362,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         });
     }
 
-    getDataPOMonitoringPembelian(unitId, categoryId, PODLNo, PRNo, supplierId, dateFrom, dateTo, state) {
+    getDataPOMonitoringPembelian(unitId, categoryId, PODLNo, PRNo, supplierId, dateFrom, dateTo, state, createdBy) {
         return new Promise((resolve, reject) => {
             var sorting = {
                 "purchaseRequest.date": -1,
@@ -450,10 +409,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     }
                 });
             }
-            query = Object.assign(query, {
-                _createdBy: this.user.username,
-                _deleted: false
-            });
+            if (createdBy !== undefined && createdBy !== "") {
+                Object.assign(query, {
+                    _createdBy: createdBy
+                });
+            }
+            query = Object.assign(query, { _deleted: false });
             this.collection.find(query).sort(sorting).toArray()
                 .then(purchaseOrders => {
                     resolve(purchaseOrders);
@@ -927,7 +888,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         });
     }
 
-
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.purchasing.collection.PurchaseOrder}__updatedDate`,
@@ -945,5 +905,23 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, noIndex]);
+    }
+
+    selectDateById(id) {
+        return new Promise((resolve, reject) => {
+            var query = { "purchaseRequest._id": ObjectId.isValid(id) ? new ObjectId(id) : {}, "_deleted": false };
+            var _select = ["_createdDate", "purchaseRequest._id"];
+            this.collection.where(query).select(_select).execute()
+                .then((purchaseRequests) => {
+                    if (purchaseRequests.data.length > 0) {
+                        resolve(purchaseRequests.data[0]);
+                    } else {
+                        resolve({});
+                    }
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
     }
 };

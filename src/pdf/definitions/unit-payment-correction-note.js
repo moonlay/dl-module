@@ -15,7 +15,7 @@ module.exports = function (unitPaymentCorrection) {
     });
 
     items = [].concat.apply([], items);
-
+    var iso = "FM-PB-00-06-015";
     var currency = unitPaymentCorrection.items.find(r => true).currency.code;
     var urDates = unitPaymentCorrection.unitPaymentOrder.items.map(unitPaymentOrderItem => {
         return new Date(unitPaymentOrderItem.unitReceiptNote.date)
@@ -54,6 +54,10 @@ module.exports = function (unitPaymentCorrection) {
                 }, {
                     width: '30%',
                     stack: [
+                        {
+                            text: iso,
+                            style: ['size09', 'bold']
+                        },
                         `SUKOHARJO, ${moment(unitPaymentCorrection.unitPaymentOrder.date).format(locale.date.format)}`,
                         `(${unitPaymentCorrection.unitPaymentOrder.supplier.code}) ${unitPaymentCorrection.unitPaymentOrder.supplier.name}`,
                         `${unitPaymentCorrection.unitPaymentOrder.supplier.address}`],
@@ -126,13 +130,13 @@ module.exports = function (unitPaymentCorrection) {
     var tbody = items.map(function (item, index) {
         return [{
             text: (index + 1).toString() || '',
-            style: ['size07', 'center']
+            style: ['size08', 'center']
         }, {
                 text: item.product.name,
-                style: ['size07', 'left']
+                style: ['size08', 'left']
             }, {
                 text: `${item.quantity} ${item.uom.unit}`,
-                style: ['size07', 'right']
+                style: ['size08', 'right']
             }, {
                 columns: [{
                     width: '5%',
@@ -141,7 +145,7 @@ module.exports = function (unitPaymentCorrection) {
                 }, {
                         width: '*',
                         text: parseFloat(item.pricePerUnit).toLocaleString(locale, locale.currency),
-                        style: ['size07', 'right']
+                        style: ['size08', 'right']
                     }]
             }, {
                 columns: [{
@@ -151,11 +155,11 @@ module.exports = function (unitPaymentCorrection) {
                 }, {
                         width: '*',
                         text: parseFloat(item.priceTotal).toLocaleString(locale, locale.currency),
-                        style: ['size07', 'right']
+                        style: ['size08', 'right']
                     }]
             }, {
                 text: item.prNo,
-                style: ['size07', 'left']
+                style: ['size08', 'left']
             }];
     });
 

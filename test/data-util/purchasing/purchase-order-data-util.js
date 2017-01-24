@@ -29,6 +29,7 @@ class PurchaseOrderDataUtil {
 
                         var poItems = purchaseRequest.items.map(prItem => {
                             return {
+                                productId:prItem.productId,
                                 product: prItem.product,
                                 defaultQuantity: prItem.quantity,
                                 defaultUom: prItem.uom

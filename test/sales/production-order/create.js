@@ -1,9 +1,9 @@
 require("should");
-var dataUtil = require("../../../data-util/production/finishing-printing/production-order-data-util");
-var helper = require("../../../helper");
-var validate = require("dl-models").validator.production.finishingPrinting.salesContract;
+var dataUtil = require("../../data-util/sales/production-order-data-util");
+var helper = require("../../helper");
+var validate = require("dl-models").validator.sales.salesContract;
 
-var ProductionOrderManager = require("../../../../src/managers/production/finishing-printing/production-order-manager");
+var ProductionOrderManager = require("../../../src/managers/sales/production-order-manager");
 var productionOrderManager = null;
 
 before('#00. connect db', function(done) {
@@ -41,16 +41,18 @@ var createdId;
 var dataprodOrder;
     it("#02. should success when create new data", function(done) {
         dataUtil.getNewData()
-            .then((data) => dataprodOrder=data)
-            .then((data) =>
-            manager.create(data))
-            .then((id) => {
-                id.should.be.Object();
-                createdId = id;
-                done();
-            })
-            .catch((e) => {
-                done(e);
+            //.then((data) => dataprodOrder=data)
+            .then((data) =>{
+                dataprodOrder=data;
+                manager.create(data)
+                .then((id) => {
+                    id.should.be.Object();
+                    createdId = id;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
             });
     });
 

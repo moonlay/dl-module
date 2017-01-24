@@ -510,4 +510,53 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
 
-}
+    getAllData(filter) {
+        return new Promise((resolve, reject) => {
+            var sorting = {
+                "date": -1,
+                "no": 1
+            };
+            var query = Object.assign({});
+            query = Object.assign(query, filter);
+            query = Object.assign(query, {
+                _deleted: false
+            });
+
+            var _select = ["no",
+                "date",
+                "supplier",
+                "invoceNo",
+                "invoceDate",
+                "dueDate",
+                "remark",
+                "useIncomeTax",
+                "incomeTaxNo",
+                "incomeTaxDate",
+                "useVat",
+                "vat",
+                "vatNo",
+                "vatDate",
+                "_createdBy",
+                "category.name",
+                "items.unitReceiptNote.no",
+                "items.unitReceiptNote.date",
+                "items.unitReceiptNote.items.purchaseOrder.purchaseOrderExternal.no",
+                "items.unitReceiptNote.items.purchaseOrder.items.product",
+                "items.unitReceiptNote.items.purchaseOrder.items.useIncomeTax",
+                "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
+                "items.unitReceiptNote.items.product",
+                "items.unitReceiptNote.items.deliveredQuantity",
+                "items.unitReceiptNote.items.deliveredUom",
+                "items.unitReceiptNote.items.pricePerDealUnit",
+                "items.unitReceiptNote.items.currency"];
+
+            this.collection.where(query).select(_select).order(sorting).execute()
+                .then((results) => {
+                    resolve(results.data);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+};

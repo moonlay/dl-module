@@ -77,6 +77,7 @@ it(`#04. should _deleted=true`, function (done) {
 
 it("#05. should success when create deleted data", function (done) {
     delete createdData._id;
+    delete createdData.refNo;
     deliveryOrderManager.create(createdData)
         .then((id) => {
             id.should.be.Object();

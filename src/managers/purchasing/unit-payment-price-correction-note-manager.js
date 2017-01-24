@@ -478,24 +478,53 @@ module.exports = class UnitPaymentPriceCorrectionNoteManager extends BaseManager
         return query;
     }
 
-    readAllUnitPaymentCorrection(paging) {
-        var _paging = Object.assign({
-            page: 1,
-            size: 20,
-            order: {},
-            filter: {},
-            select: []
-        }, paging);
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                var query = this._getQueryAllUnitPaymentCorrection(_paging);
-                return this.collection
-                    .where(query)
-                    .select(_paging.select)
-                    .page(_paging.page, _paging.size)
-                    .order(_paging.order)
-                    .execute();
+    getAllData(filter) {
+        return new Promise((resolve, reject) => {
+            var sorting = {
+                "date": -1,
+                "no": 1
+            };
+            var query = Object.assign({});
+            query = Object.assign(query, filter);
+            query = Object.assign(query, {
+                _deleted: false
             });
-    }
 
+            var _select = ["no",
+                "date",
+                "correctionType",
+                "unitPaymentOrder.no",
+                "invoiceCorrectionNo",
+                "invoiceCorrectionDate",
+                "incomeTaxCorrectionNo",
+                "incomeTaxCorrectionDate",
+                "vatTaxCorrectionNo",
+                "vatTaxCorrectionDate",
+                "unitPaymentOrder.supplier",
+                "unitPaymentOrder.items.unitReceiptNote.no",
+                "unitPaymentOrder.items.unitReceiptNote.date",
+                "unitPaymentOrder.items.unitReceiptNote.items.purchaseOrder._id",
+                "releaseOrderNoteNo",
+                "remark",
+                "_createdBy",
+                "items.purchaseOrder._id",
+                "items.purchaseOrder.purchaseOrderExternal.no",
+                "items.purchaseOrder.purchaseRequest.no",
+                "items.product",
+                "items.quantity",
+                "items.uom",
+                "items.pricePerUnit",
+                "items.currency",
+                "items.priceTotal"
+            ];
+
+            this.collection.where(query).select(_select).order(sorting).execute()
+                .then((results) => {
+                    resolve(results.data);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
 }

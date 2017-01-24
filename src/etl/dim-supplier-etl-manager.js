@@ -37,7 +37,7 @@ module.exports = class DimSupplierEtlManager {
 
             return {
                 supplierCode: item.code,
-                supplierName: item.name
+                supplierName: item.name.replace("[", ".").replace("}", ".").replace("\"", ".").replace("]", ".").replace("\"", ".").replace("{", ".").replace("'", ".")
             };
         });
         return Promise.resolve([].concat.apply([], result));
@@ -51,12 +51,23 @@ module.exports = class DimSupplierEtlManager {
 
                 var count = 1;
                 for (var item of data) {
-                    sqlQuery = sqlQuery.concat("insert into DL_Dim_Supplier(ID_Dim_Supplier, Kode_Supplier, Nama_Supplier) values(" + count + ", '" + item.supplierCode + "', '" + item.supplierName + "'); ");
+                    sqlQuery = sqlQuery.concat(`insert into DL_Dim_Supplier(ID_Dim_Supplier, Kode_Supplier, Nama_Supplier) values(${count}, '${item.supplierCode}', '${item.supplierName}'); `);
 
                     count = count + 1;
                 }
 
                 request.multiple = true;
+
+                var fs = require("fs");
+                var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
+
+                fs.writeFile(path, sqlQuery, function (error) {
+                    if (error) {
+                        console.log("write error:  " + error.message);
+                    } else {
+                        console.log("Successful Write to " + path);
+                    }
+                });
 
                 return request.query(sqlQuery)
                     // return request.query('select count(*) from DimSupplier')

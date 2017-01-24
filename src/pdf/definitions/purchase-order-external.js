@@ -10,7 +10,8 @@ module.exports = function (pox) {
                 prNo: po.refNo,
                 quantity: poItem.dealQuantity,
                 uom: poItem.dealUom.unit,
-                price: poItem.pricePerDealUnit
+                price: poItem.pricePerDealUnit,
+                remark: poItem.remark
             };
         });
     });
@@ -35,7 +36,7 @@ module.exports = function (pox) {
     }, {});
 
 
-    var iso = pox.items.find(r => true).iso;
+    var iso = "FM-PB-00-06-009";
     var number = pox.no;
     var currency = pox.currency.code;
     var supplier = pox.supplier.name;
@@ -67,11 +68,11 @@ module.exports = function (pox) {
             stack: [{
                 text: iso,
                 alignment: "right",
-                style: ['size09', 'bold']
-            }, {
-                text: number,
-                alignment: "right",
                 style: ['size08']
+            }, {
+                text: `Nomor PO : ${number}`,
+                alignment: "right",
+                style: ['size09', 'bold']
             }]
 
         }
@@ -160,11 +161,11 @@ module.exports = function (pox) {
             stack: [{
                 text: item.product,
                 style: 'bold'
-            }, item.prNo],
-            style: ['size07']
+            },item.remark, item.prNo],
+            style: ['size08']
         }, {
             text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
-            style: ['size07', 'center']
+            style: ['size08', 'center']
         }, {
             columns: [{
                 width: '10%',
@@ -174,7 +175,7 @@ module.exports = function (pox) {
                 text: `${parseFloat(item.price).toLocaleString(locale, locale.currency)}`,
                 style: ['right']
             }],
-            style: ['size07']
+            style: ['size08']
         }, {
             columns: [{
                 width: '10%',
@@ -184,7 +185,7 @@ module.exports = function (pox) {
                 text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
                 style: ['right']
             }],
-            style: ['size07']
+            style: ['size08']
         }];
     });
 

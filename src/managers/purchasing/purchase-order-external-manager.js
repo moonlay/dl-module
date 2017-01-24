@@ -794,4 +794,44 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 return Promise.resolve(valid);
             });
     }
+
+    getAllData(filter) {
+        return new Promise((resolve, reject) => {
+            var sorting = {
+                "date": -1,
+                "no": 1
+            };
+            var query = Object.assign({});
+            query = Object.assign(query, filter);
+            query = Object.assign(query, {
+                _deleted: false
+            });
+
+            var _select = ["no",
+                "date",
+                "supplier",
+                "expectedDeliveryDate",
+                "freightCostBy",
+                "paymentMethod",
+                "paymentDueDays",
+                "currency",
+                "useIncomeTax",
+                "useVat",
+                "vat.rate",
+                "remark",
+                "isPosted",
+                "_createdBy",
+                "items.no",
+                "items.purchaseRequest.no",
+                "items.items"];
+
+            this.collection.where(query).select(_select).order(sorting).execute()
+                .then((results) => {
+                    resolve(results.data);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
 };

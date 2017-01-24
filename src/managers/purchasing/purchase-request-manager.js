@@ -130,8 +130,8 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                             itemError["product"] = i18n.__("PurchaseRequest.items.product.name.isDuplicate:%s is duplicate", i18n.__("PurchaseRequest.items.product.name._:Product")); //"Nama barang tidak boleh kosong";
                         }
                         if (Object.getOwnPropertyNames(itemError).length > 0) {
-                            itemErrors[valueArr.indexOf(item)]= itemError;
-                            itemErrors[idx]= itemError;
+                            itemErrors[valueArr.indexOf(item)] = itemError;
+                            itemErrors[idx] = itemError;
                         }
                         return valueArr.indexOf(item) != idx
                     });
@@ -144,13 +144,15 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                             if (item.quantity <= 0) {
                                 itemError["quantity"] = i18n.__("PurchaseRequest.items.quantity.isRequired:%s is required", i18n.__("PurchaseRequest.items.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
                             }
-                            if (Object.getOwnPropertyNames(itemError).length > 0) {
-                                itemErrors.push(itemError);
-                            }
+                            itemErrors.push(itemError);
                         }
                     }
-                    if (itemErrors.length > 0)
-                        errors.items = itemErrors;
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            errors.items = itemErrors;
+                            break;
+                        }
+                    }
                 }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -268,9 +270,25 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 _deleted: false
             });
 
-            this.collection.find(query).sort(sorting).toArray()
+            var _select = [
+                "no",
+                "date",
+                "expectedDeliveryDate",
+                "budget.code",
+                "unit",
+                "currency",
+                "category",
+                "remark",
+                "isPosted",
+                "isUsed",
+                "_createdBy",
+                "items.product",
+                "items.quantity",
+                "items.remark"
+            ];
+            this.collection.where(query).select(_select).order(sorting).execute()
                 .then((purchaseRequests) => {
-                    resolve(purchaseRequests);
+                    resolve(purchaseRequests.data);
                 })
                 .catch(e => {
                     reject(e);
@@ -278,7 +296,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         });
     }
 
-    getDataPRMonitoring(unitId, categoryId, budgetId, PRNo, dateFrom, dateTo, state) {
+    getDataPRMonitoring(unitId, categoryId, budgetId, PRNo, dateFrom, dateTo, state, createdBy) {
         return new Promise((resolve, reject) => {
             var sorting = {
                 "date": -1,
@@ -320,8 +338,12 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     }
                 });
             }
+            if (createdBy !== undefined && createdBy !== "") {
+                Object.assign(query, {
+                    _createdBy: createdBy
+                });
+            }
             query = Object.assign(query, {
-                _createdBy: this.user.username,
                 _deleted: false,
                 isPosted: true
             });
