@@ -16,20 +16,16 @@ class MonitoringEventDataUtil {
                 var monitoringEventType02 = results[3];
 
                 var data = {
-                    date: new Date(),
-                    timeInMillis: 12000,
+                    dateStart: new Date(),
+                    dateEnd: new Date(),
+                    timeInMillisStart: 12000,
+                    timeInMillisEnd: 24000,
                     machineId: machine._id,
                     machine: machine,
                     productionOrder: productionOrder,
-                    items: [{
-                        monitoringEventTypeId: monitoringEventType01._id,
-                        monitoringEventType: monitoringEventType01,
-                        remark: ""
-                    }, {
-                        monitoringEventTypeId: monitoringEventType02._id,
-                        monitoringEventType: monitoringEventType02,
-                        remark: ""
-                    }]
+                    monitoringEventTypeId: monitoringEventType01._id,
+                    monitoringEventType: monitoringEventType01,
+                    remark: ""
                 };
                 return Promise.resolve(data);
             });
