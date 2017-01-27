@@ -48,11 +48,19 @@ module.exports = {
                 },
                 DailySpinningProductionReportManager: require('./src/managers/production/spinning/daily-spinning-production-report-manager')
             },
+<<<<<<< HEAD
+            finishingPrinting: {
+                MonitoringSpecificationMachineManager: require('./src/managers/production/finishing-printing/monitoring-specification-machine-manager')
+            }
+        },
+        sales: {
+=======
             finishingPrinting:{
                 DailyOperationManager: require('./src/managers/production/finishing-printing/daily-operation-manager') 
             }
         },
         sales:{
+>>>>>>> origin/danliris/dev
             ProductionOrderManager: require('./src/managers/sales/production-order-manager')
         }
     },
@@ -86,8 +94,13 @@ module.exports = {
                 step : require('./test/data-util/master/step-data-util'),
                 instruction : require('./test/data-util/master/instruction-data-util')
             },
-            purchasing:{
+            purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util")
+            },
+            production: {
+                finishingPrinting: {
+                    MonitoringSpecificationMachine: require('./test/data-util/production/finishing-printing/monitoring-specification-machine-data-util')
+                }
             }
         }
     },

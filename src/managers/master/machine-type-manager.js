@@ -47,6 +47,7 @@ module.exports = class MachineTypeManager extends BaseManager {
 
     _beforeInsert(data) {
         data.code = CodeGenerator();
+        data._active=true;
         return Promise.resolve(data);
     }
 
@@ -97,7 +98,7 @@ module.exports = class MachineTypeManager extends BaseManager {
                         } else if (indicator.dataType == "string" || indicator.dataType == "option") {
                             indicator.value instanceof string ? valid.value : "";
                         }
-                    }    
+                    }
                 }
 
 
@@ -146,16 +147,18 @@ module.exports = class MachineTypeManager extends BaseManager {
             });
     }
 
+
+
     _createIndexes() {
         var dateIndex = {
-            name: `ix_${map.master.collection.Machine}__updatedDate`,
+            name: `ix_${map.master.type.MachineType}__updatedDate`,
             key: {
                 _updatedDate: -1
             }
         };
 
         var codeIndex = {
-            name: `ix_${map.master.collection.Machine}_code`,
+            name: `ix_${map.master.type.MachineType}_code`,
             key: {
                 code: 1
             },

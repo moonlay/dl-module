@@ -1,17 +1,11 @@
 "use strict";
 var _getSert = require("../getsert");
+var helper = require("../../helper");
 var generateCode = require("../../../src/utils/code-generator");
+var ObjectId = require("mongodb").ObjectId;
+var machineType = require("../../../src/managers/master/machine-type-manager");
 
 class MachineTypeDataUtil {
-    getSert(input) {
-        var ManagerType = require("../../../src/managers/master/machine-type-manager");
-        return _getSert(input, ManagerType, (data) => {
-            return {
-                code: data.code
-            };
-        });
-    }
-
     getNewData() {
         var Model = require("dl-models").master.MachineType;
         var data = new Model();
@@ -36,26 +30,15 @@ class MachineTypeDataUtil {
         return Promise.resolve(data);
     }
 
-    getTestData() {
-        var data = {
-            code: "machineType-UT-01",
-            name: "machine flue",
-            decription: "description",
-            indicators: [
-                {
-                    indicator: "Tekanan Press Mangle",
-                    dataType: "number",
-                    value: 10,
-                },
-                {
-                    indicator: "Tekanan Press Mangle",
-                    dataType: "string",
-                    value: "10",
-                }
-            ],
-
-        };
-        return this.getSert(data);
+    getNewTestData() {
+        return helper
+            .getManager(machineType)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    return manager.create(data)
+                        .then((id) => manager.getSingleById(id));
+                });
+            });
     }
 }
 

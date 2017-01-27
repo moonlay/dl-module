@@ -91,6 +91,7 @@ describe('#dl-module', function (done) {
     // test('@production/winding-quality-sampling-manager', './production/spinning/winding/winding-quality-sampling-manager-test');
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
     test('@production/daily-operation', './production/finishing-printing/daily-operation');
+    test('@production/finishing-printing/monitoring-specification-machine', './production/finishing-printing/monitoring-specification-machine');
     
     //Sales
     test('@production/production-order', './sales/production-order/create');
