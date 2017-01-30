@@ -4,6 +4,7 @@
 var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require("module-toolkit").BaseManager;
 var moment = require("moment");
+var startedDate = new Date();
 
 // internal deps 
 require("mongodb-toolkit");
@@ -26,9 +27,8 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
         this.unitPaymentOrderManager = new UnitPaymentOrderManager(db, user);
-        this.migrationLog = this.db.collection("migrationLog");
+        this.migrationLog = this.db.collection("migration-log");
     }
-
 
     run() {
         this.migrationLog.insert({
@@ -38,7 +38,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
         return this.extract()
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
-            .then(() => {
+            .then((results) => {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
@@ -46,7 +46,19 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
-                    status: "success"
+                    status: "Successful"
+                };
+                this.migrationLog.updateOne({ start: startedDate }, updateLog);
+            })
+            .catch((err) => {
+                var finishedDate = new Date();
+                var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                var updateLog = {
+                    description: "Fact Pembelian from MongoDB to Azure DWH",
+                    start: startedDate,
+                    finish: finishedDate,
+                    executionTime: spentTime + " minutes",
+                    status: err
                 };
                 this.migrationLog.updateOne({ start: startedDate }, updateLog);
             })
@@ -318,7 +330,6 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                     var catType = purchaseOrder.purchaseRequest.category.name;
 
                     return {
-                        // updatedDate: purchaseRequest ? moment(purchaseRequest._updatedDate).format('L') : null,
                         purchaseRequestId: purchaseOrder ? `'${purchaseOrder.purchaseRequest._id}'` : null,
                         purchaseRequestNo: purchaseOrder ? `'${purchaseOrder.purchaseRequest.no}'` : null,
                         purchaseRequestDate: purchaseOrder ? `'${moment(purchaseOrder.purchaseRequest.date).format('L')}'` : null,
@@ -333,7 +344,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                         categoryName: purchaseOrder ? `'${purchaseOrder.purchaseRequest.category.name}'` : null,
                         categoryType: purchaseOrder ? `'${this.getCategoryType(catType)}'` : null,
                         productCode: purchaseOrder ? `'${poItem.product.code}'` : null,
-                        productName: purchaseOrder ? `'${poItem.product.name.replace("[", ".").replace("}", ".").replace("\"", ".").replace("]", ".").replace("\"", ".").replace("{", ".").replace("'", ".")}'` : null,
+                        productName: purchaseOrder ? `'${poItem.product.name.replace(/'/g, '"')}'` : null,
                         purchaseRequestDays: purchaseOrder ? `${poIntDays}` : null,
                         purchaseRequestDaysRange: purchaseOrder ? `'${this.getRangeWeek(poIntDays)}'` : null,
                         prPurchaseOrderExternalDays: purchaseOrderExternal ? `${prPoExtDays}` : null,
@@ -350,10 +361,10 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                         purchaseOrderExternalId: purchaseOrderExternal ? `'${purchaseOrderExternal._id}'` : null,
                         purchaseOrderExternalNo: purchaseOrderExternal ? `'${purchaseOrderExternal.no}'` : null,
                         purchaseOrderExternalDate: purchaseOrderExternal ? `'${moment(purchaseOrderExternal.date).format('L')}'` : null,
-                        deliveryOrderDays: deliveryOrder ? `${doDays}` : null,
-                        deliveryOrderDaysRange: deliveryOrder ? `'${this.getRangeMonth(doDays)}'` : null,
+                        deliveryOrderDays: (poItem.fulfillments.length > 0 && deliveryOrder) ? `${doDays}` : null,
+                        deliveryOrderDaysRange: (poItem.fulfillments.length > 0 && deliveryOrder) ? `'${this.getRangeMonth(doDays)}'` : null,
                         supplierCode: purchaseOrderExternal ? `'${purchaseOrderExternal.supplier.code}'` : null,
-                        supplierName: purchaseOrderExternal ? `'${purchaseOrderExternal.supplier.name.replace("[", ".").replace("}", ".").replace("\"", ".").replace("]", ".").replace("\"", ".").replace("{", ".").replace("'", ".")}'` : null,
+                        supplierName: purchaseOrderExternal ? `'${purchaseOrderExternal.supplier.name.replace(/'/g, '"')}'` : null,
                         currencyCode: purchaseOrderExternal ? `'${purchaseOrderExternal.currency.code}'` : null,
                         currencyName: purchaseOrderExternal ? `'${purchaseOrderExternal.currency.description}'` : null,
                         paymentMethod: purchaseOrderExternal ? `'${purchaseOrderExternal.paymentMethod}'` : null,
@@ -365,13 +376,13 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                         expectedDeliveryDate: purchaseOrderExternal ? `'${moment(purchaseOrderExternal.expectedDeliveryDate).format('L')}'` : null,
                         prNoAtPoExt: purchaseOrderExternal ? `'${purchaseOrder.purchaseRequest.no}'` : null,
 
-                        deliveryOrderId: deliveryOrder ? `'${deliveryOrder._id}'` : null,
-                        deliveryOrderNo: deliveryOrder ? `'${deliveryOrder.no}'` : null,
-                        deliveryOrderDate: deliveryOrder ? `'${moment(deliveryOrder.date).format('L')}'` : null,
+                        deliveryOrderId: (poItem.fulfillments.length > 0 && deliveryOrder) ? `'${deliveryOrder._id}'` : null,
+                        deliveryOrderNo: (poItem.fulfillments.length > 0 && deliveryOrder) ? `'${deliveryOrder.no}'` : null,
+                        deliveryOrderDate: (poItem.fulfillments.length > 0 && deliveryOrder) ? `'${moment(deliveryOrder.date).format('L')}'` : null,
                         unitReceiptNoteDays: unitReceiptNote ? `${urnDays}` : null,
                         unitReceiptNoteDaysRange: unitReceiptNote ? `'${this.getRangeWeek(urnDays)}'` : null,
-                        status: deliveryOrder ? `'${this.getStatus(purchaseOrderExternal.expectedDeliveryDate, lastDeliveredDate)}'` : null,
-                        prNoAtDo: deliveryOrder ? `'${purchaseOrder.purchaseRequest.no}'` : null,
+                        status: (poItem.fulfillments.length > 0 && deliveryOrder) ? `'${this.getStatus(purchaseOrderExternal.expectedDeliveryDate, lastDeliveredDate)}'` : null,
+                        prNoAtDo: (poItem.fulfillments.length > 0 && deliveryOrder) ? `'${purchaseOrder.purchaseRequest.no}'` : null,
 
                         unitReceiptNoteId: unitReceiptNote ? `'${unitReceiptNote._id}'` : null,
                         unitReceiptNoteNo: unitReceiptNote ? `'${unitReceiptNote.no}'` : null,
@@ -391,16 +402,9 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
             }
             else if (item.purchaseRequest) {
                 var results = purchaseRequest.items.map((poItem) => {
-                    // var poExtDays = purchaseOrderExternal ? moment(purchaseOrderExternal.date).diff(moment(purchaseOrder.date), "days") : null;
-                    // var doDays = deliveryOrder ? moment(deliveryOrder.date).diff(moment(purchaseOrderExternal.date), "days") : null;
-                    // var urnDays = unitReceiptNote ? moment(unitReceiptNote.date).diff(moment(deliveryOrder.date), "days") : null;
-                    // var upoDays = unitPaymentOrder ? moment(unitPaymentOrder.date).diff(moment(unitReceiptNote.date), "days") : null;
-                    // var poDays = unitPaymentOrder ? moment(unitPaymentOrder.date).diff(moment(purchaseOrder.date), "days") : null;
-                    // var lastDeliveredDate = deliveryOrder ? purchaseOrder.items.slice(-1)[0].fulfillments.slice(-1)[0].deliveryOderDate : null;
                     var catType = purchaseRequest.category.name;
 
                     return {
-                        // updatedDate: purchaseRequest ? moment(purchaseRequest._updatedDate).format('L') : null,
                         purchaseRequestId: purchaseRequest ? `'${purchaseRequest._id}'` : null,
                         purchaseRequestNo: purchaseRequest ? `'${purchaseRequest.no}'` : null,
                         purchaseRequestDate: purchaseRequest ? `'${moment(purchaseRequest.date).format('L')}'` : null,
@@ -415,7 +419,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                         categoryName: purchaseRequest ? `'${purchaseRequest.category.name}'` : null,
                         categoryType: purchaseRequest ? `'${this.getCategoryType(catType)}'` : null,
                         productCode: purchaseRequest ? `'${poItem.product.code}'` : null,
-                        productName: purchaseRequest ? `'${poItem.product.name.replace("[", ".").replace("}", ".").replace("\"", ".").replace("]", ".").replace("\"", ".").replace("{", ".").replace("'", ".")}'` : null,
+                        productName: purchaseRequest ? `'${poItem.product.name.replace(/'/g, '"')}'` : null,
                         purchaseRequestDays: null,
                         purchaseRequestDaysRange: null,
                         prPurchaseOrderExternalDays: null,
@@ -493,16 +497,16 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
                 request.multiple = true;
 
-                var fs = require("fs");
-                var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
+                // var fs = require("fs");
+                // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
 
-                fs.writeFile(path, sqlQuery, function (error) {
-                    if (error) {
-                        console.log("write error:  " + error.message);
-                    } else {
-                        console.log("Successful Write to " + path);
-                    }
-                });
+                // fs.writeFile(path, sqlQuery, function (error) {
+                //     if (error) {
+                //         console.log("write error:  " + error.message);
+                //     } else {
+                //         console.log("Successful Write to " + path);
+                //     }
+                // });
 
                 // var deleteTempTable = ('DELETE FROM [dl_fact_pembelian_temp]; ')
                 // var storedProcedure = ('EXEC UPSERT; ')
@@ -512,21 +516,11 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                     // return request.query('select top 1 * from fact_durasi_pembelian')
                     .then((results) => {
                         console.log(results);
-                        return Promise.resolve();
+                        return Promise.resolve(results);
                     });
             })
             .catch((err) => {
                 console.log(err);
-                var finishedDate = new Date();
-                var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
-                var updateLog = {
-                    description: "Fact Pembelian from MongoDB to Azure DWH",
-                    start: startedDate,
-                    finish: finishedDate,
-                    executionTime: spentTime + " minutes",
-                    status: err
-                };
-                this.migrationLog.updateOne({ start: startedDate }, updateLog);
                 return Promise.reject(err);
             });
     }
