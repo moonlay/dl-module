@@ -108,6 +108,11 @@ module.exports = {
         }
     },
     etl: {
-        factPembelian: require("./src/etl/fact-pembelian")
+        factPembelian: require("./src/etl/fact-pembelian"),
+        factTotalHutang: require("./src/etl/fact-total-hutang-etl-manager"),
+        dimCategory: require("./src/etl/dim-category-etl-manager"),
+        dimDivision: require("./src/etl/dim-unit-etl-manager"),
+        dimSupplier: require("./src/etl/dim-supplier-etl-manager"),
+        dimUnit: require("./src/etl/dim-unit-etl-manager")
     }
 }
