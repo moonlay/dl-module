@@ -86,11 +86,12 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
-                    },
-                    _deleted: false
-                }, {
-                        "no": valid.no
-                    }]
+                    }
+                },
+                    { _deleted: false },
+                    { no: valid.no },
+                    { supplierId: new ObjectId(valid.supplierId) }
+                ]
             });
             var getDeliveryderByRefNoPromise = this.collection.singleOrDefault({
                 "$and": [{
@@ -376,20 +377,23 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
                         poItem.fulfillments = poItem.fulfillments || [];
                         poItem.fulfillments.push(fulfillment);
+
                         poItem.realizationQuantity = poItem.fulfillments
                             .map(fulfillment => fulfillment.deliveryOrderDeliveredQuantity)
                             .reduce((prev, curr, index) => {
                                 return prev + curr;
                             }, 0);
-                        poItem.isClosed = poItem.realizationQuantity === poItem.dealQuantity;
+                        if (purchaseOrder.purchaseRequest.status.value !== 9) {
+                            poItem.isClosed = poItem.realizationQuantity === poItem.dealQuantity;
+                        }
                     }
-
-                    purchaseOrder.isClosed = purchaseOrder.items
-                        .map((item) => item.isClosed)
-                        .reduce((prev, curr, index) => {
-                            return prev && curr
-                        }, true);
-
+                    if (purchaseOrder.purchaseRequest.status.value !== 9) {
+                        purchaseOrder.isClosed = purchaseOrder.items
+                            .map((item) => item.isClosed)
+                            .reduce((prev, curr, index) => {
+                                return prev && curr
+                            }, true);
+                    }
                     if (purchaseOrder.status.value <= 5) {
                         purchaseOrder.status = purchaseOrder.isClosed ? poStatusEnum.ARRIVED : poStatusEnum.ARRIVING;
                     }
