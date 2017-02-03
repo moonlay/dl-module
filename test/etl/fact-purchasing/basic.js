@@ -46,7 +46,7 @@ it("#01. should success when create etl fact-purchasing", function (done) {
 });
 
 it("#01. should success when transforming data", function(done) {
-    var data = [];
+    var data = [{}, {}];
     instanceManager.transform(data)
         .then(() => {
             // console.log(a);
