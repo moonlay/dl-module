@@ -13,9 +13,9 @@ describe('#dl-module', function (done) {
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
-    // test('@ETL/DIM-CATEGORY', './etl/dim-category');
+    test('@ETL/DIM-CATEGORY', './etl/dim-category');
     // test('@ETL/DIM-DIVISION', './etl/dim-division');
-    // test('@ETL/DIM-SUPPLIER', './etl/dim-supplier');
+    test('@ETL/DIM-SUPPLIER', './etl/dim-supplier');
     // test('@ETL/DIM-UNIT', './etl/dim-unit');
     // test('@ETL/FACT-TOTAL-HUTANG', './etl/fact-total-hutang');
     test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');    
@@ -42,7 +42,6 @@ describe('#dl-module', function (done) {
     test('@MASTER/PROCESS-TYPE', './master/process-type');
     test('@MASTER/COLOR-TYPE', './master/color-type');
     test('@MASTER/INSTRUCTION', './master/instruction');
-    test('@MASTER/MONITORING-EVENT-TYPE', './master/monitoring-event-type');
     test('@MASTER/STEP', './master/step');
     test('@MASTER/MACHINE-TYPE', './master/machine-type');
     test('@MASTER/MACHINE-SPESIFICATION-STANDARD', './master/machine-spesification-standard');

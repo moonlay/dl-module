@@ -6,6 +6,7 @@ require("mongodb-toolkit");
 var DLModels = require('dl-models');
 var map = DLModels.map;
 var Machine = DLModels.master.Machine;
+var MachineEvent = DLModels.master.MachineEvent;
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var CodeGenerator = require('../../utils/code-generator');
@@ -70,6 +71,11 @@ module.exports = class MachineManager extends BaseManager {
 
     _beforeInsert(data) {
         data.code = CodeGenerator();
+        if (data.machineEvents){
+            for (var machineEvent of data.machineEvents){
+                machineEvent.code = CodeGenerator();
+            }
+        }
         return Promise.resolve(data);
     }
 
@@ -128,6 +134,48 @@ module.exports = class MachineManager extends BaseManager {
                 valid.stamp(this.user.username, 'manager');
                 return Promise.resolve(valid);
             });
+    }
+
+    getMachineEvents(query){
+        return new Promise((resolve, reject) => {
+            var _default = {
+                    _deleted: false
+                },
+                keywordFilter = {},
+                machineCodeFilter = {},
+                matchQuery = {};
+
+            if (query.keyword){
+                var regex = new RegExp(query.keyword, "i");
+                var nameFilter = {
+                    'machineEvents.name': {
+                        '$regex': regex
+                    }
+                };
+                var noFilter = {
+                    'machineEvents.no': {
+                        '$regex': regex
+                    }
+                };
+                keywordFilter['$or'] = [nameFilter, noFilter];
+            }
+
+            if (query.machineCode){
+                machineCodeFilter = {"code" : query.machineCode};
+            }
+
+            matchQuery["$and"] = [_default, keywordFilter, machineCodeFilter];
+            var dataReturn = [];
+            this.collection.aggregate([{ $unwind : "$machineEvents" }])
+            .match(matchQuery)
+            .toArray(function(err, result) {
+                for(var machine of result){
+                    var machineEvent = new MachineEvent(machine.machineEvents)
+                    dataReturn.push(machineEvent);
+                }
+                resolve(dataReturn);
+            });
+        });
     }
 
     _createIndexes() {

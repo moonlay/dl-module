@@ -278,10 +278,30 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             poItem.fulfillments.push(_fulfillment);
                         }
                     }
+                    var totalReceived = purchaseOrder.items
+                        .map(poItem => {
+                            var total = poItem.fulfillments
+                                .map(fulfillment => fulfillment.unitReceiptNoteDeliveredQuantity)
+                                .reduce((prev, curr, index) => {
+                                    return prev + curr;
+                                }, 0);
+                            return total;
+                        })
+                        .reduce((prev, curr, index) => {
+                            return prev + curr;
+                        }, 0);
+
+                    var totalDealQuantity = purchaseOrder.items
+                        .map(poItem => poItem.dealQuantity)
+                        .reduce((prev, curr, index) => {
+                            return prev + curr;
+                        }, 0);
+
                     if (purchaseOrder.status.value <= 7) {
-                        purchaseOrder.status = purchaseOrder.isClosed ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING;
-                        purchaseOrder.status = fulfillment.unitReceiptNoteDeliveredQuantity < fulfillment.deliveryOrderDeliveredQuantity ? poStatusEnum.RECEIVING : purchaseOrder.status;
-                    } return this.purchaseOrderManager.update(purchaseOrder);
+                        purchaseOrder.status = totalReceived === totalDealQuantity ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING;
+                        // purchaseOrder.status = fulfillment.unitReceiptNoteDeliveredQuantity < fulfillment.deliveryOrderDeliveredQuantity ? poStatusEnum.RECEIVING : purchaseOrder.status;
+                    }
+                    return this.purchaseOrderManager.update(purchaseOrder);
                 })
             jobs.push(job);
         })
@@ -318,10 +338,28 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         fulfillment.unitReceiptNoteDeliveredQuantity = item.deliveredQuantity;
                         fulfillment.unitReceiptDeliveredUom = item.deliveredUom;
                     }
+                    var totalReceived = purchaseOrder.items
+                        .map(poItem => {
+                            var total = poItem.fulfillments
+                                .map(fulfillment => fulfillment.unitReceiptNoteDeliveredQuantity)
+                                .reduce((prev, curr, index) => {
+                                    return prev + curr;
+                                }, 0);
+                            return total;
+                        })
+                        .reduce((prev, curr, index) => {
+                            return prev + curr;
+                        }, 0);
+
+                    var totalDealQuantity = purchaseOrder.items
+                        .map(poItem => poItem.dealQuantity)
+                        .reduce((prev, curr, index) => {
+                            return prev + curr;
+                        }, 0);
 
                     if (purchaseOrder.status.value <= 7) {
-                        purchaseOrder.status = purchaseOrder.isClosed ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING;
-                        purchaseOrder.status = fulfillment.unitReceiptNoteDeliveredQuantity < fulfillment.deliveryOrderDeliveredQuantity ? poStatusEnum.RECEIVING : purchaseOrder.status;
+                        purchaseOrder.status = totalReceived === totalDealQuantity ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING;
+                        // purchaseOrder.status = fulfillment.unitReceiptNoteDeliveredQuantity < fulfillment.deliveryOrderDeliveredQuantity ? poStatusEnum.RECEIVING : purchaseOrder.status;
                     }
                     return this.purchaseOrderManager.update(purchaseOrder);
                 })
@@ -353,13 +391,29 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 .then((purchaseOrder) => {
                     for (var item of items) {
                         var poItem = purchaseOrder.items.find(_item => _item.product._id.toString() === item.productId.toString());
+                        var listDo = poItem.fulfillments
+                            .map((fulfillment) => {
+                                if (fulfillment.deliveryOrderNo.toString() === unitReceiptNote.deliveryOrder.no.toString()) {
+                                    return 1;
+                                } else {
+                                    return 0;
+                                }
+                            })
+                            .reduce((prev, curr, index) => {
+                                return prev + curr;
+                            }, 0);
 
                         var fulfillment = poItem.fulfillments.find(fulfillment => fulfillment.deliveryOrderNo.toString() === unitReceiptNote.deliveryOrder.no.toString() && fulfillment.unitReceiptNoteNo === unitReceiptNote.no);
                         if (fulfillment) {
-                            delete fulfillment.unitReceiptNoteNo;
-                            delete fulfillment.unitReceiptNoteDate;
-                            delete fulfillment.unitReceiptNoteDeliveredQuantity;
-                            delete fulfillment.unitReceiptDeliveredUom;
+                            if (listDo > 1) {
+                                var index = poItem.fulfillments.indexOf(fulfillment);
+                                poItem.fulfillments.splice(index, 1);
+                            } else {
+                                delete fulfillment.unitReceiptNoteNo;
+                                delete fulfillment.unitReceiptNoteDate;
+                                delete fulfillment.unitReceiptNoteDeliveredQuantity;
+                                delete fulfillment.unitReceiptDeliveredUom;
+                            }
                         }
                     }
 
@@ -569,8 +623,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     .then((deliveryOrder) => {
                         return Promise.all(getPoInternals)
                             .then((purchaseOrderInternals) => {
-                                for (var purchaseOrderInternal of purchaseOrderInternals) {
-                                    var item = unitReceiptNote.items.find(item => item.purchaseOrderId.toString() === purchaseOrderInternal._id.toString())
+                                for (var item of unitReceiptNote.items) {
+                                    var purchaseOrderInternal = purchaseOrderInternals.find(purchaseOrderInternal => item.purchaseOrderId.toString() === purchaseOrderInternal._id.toString())
                                     item.purchaseOrder = purchaseOrderInternal;
                                 }
                                 unitReceiptNote.deliveryOrder = deliveryOrder;

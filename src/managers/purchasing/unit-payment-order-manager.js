@@ -255,19 +255,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
     _beforeUpdate(unitPaymentOrder) {
         return this.getSingleById(unitPaymentOrder._id)
             .then((oldUnitPaymentOrder) => {
-                return this.mergeUnitPaymentOrder(unitPaymentOrder, oldUnitPaymentOrder)
-                    .then((realizations) => {
-                        if (realizations.length > 0) {
-                            return this.updatePurchaseOrderDeleteUnitPaymentOrder(realizations)
-                                .then((realizations) => this.updateUnitReceiptNoteDeleteUnitPaymentOrder(realizations))
-                                .then(() => {
-                                    return Promise.resolve(unitPaymentOrder);
-                                })
-                        }
-                        else {
-                            return Promise.resolve(unitPaymentOrder);
-                        }
-                    })
+                return this.mergeUnitPaymentOrder(unitPaymentOrder, oldUnitPaymentOrder);
             })
 
     }
@@ -306,16 +294,29 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             .then((newRealizations) => {
                 return this.getRealization(oldUnitPaymentOrder)
                     .then((oldRealizations) => {
-                        var realizations = [];
+                        var _newRealizations = [];
+                        var _oldRealizations = [];
                         for (var oldRealization of oldRealizations) {
                             var realization = newRealizations.find(item => item.unitReceiptNoteId.toString() === oldRealization.unitReceiptNoteId.toString());
 
                             if (!realization) {
-                                realizations.push(oldRealization);
+                                _oldRealizations.push(newRealization);
                             }
                         }
-                        return Promise.resolve(realizations);
-                    });
+
+                        for (var newRealization of newRealizations) {
+                            var realization = oldRealizations.find(item => item.unitReceiptNoteId.toString() === newRealization.unitReceiptNoteId.toString());
+
+                            if (!realization) {
+                                _newRealizations.push(newRealization);
+                            }
+                        }
+                        return _oldRealizations.length > 0 ? this.updatePurchaseOrderDeleteUnitPaymentOrder(_oldRealizations) : Promise.resolve(null)
+                            .then((res) => {
+                                return _newRealizations.length > 0 ? this.updatePurchaseOrder(_newRealizations) : Promise.resolve(null)
+                            })
+                            .then((res) => { return Promise.resolve(newUnitPaymentOrder) });
+                    })
             });
     }
 
@@ -335,7 +336,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     for (var realization of realizations) {
                         var unitPaymentOrder = realization.unitPaymentOrder;
                         var poItem = purchaseOrder.items.find(_item => _item.product._id.toString() === realization.productId.toString());
-                        var fulfillment = poItem.fulfillments.find(fulfillment => fulfillment.unitReceiptNoteNo.toString() === realization.unitReceiptNoteNo.toString());
+                        var fulfillment = poItem.fulfillments.find(fulfillment => fulfillment.unitReceiptNoteNo === realization.unitReceiptNoteNo);
 
                         fulfillment.invoiceDate = unitPaymentOrder.invoceDate;
                         fulfillment.invoiceNo = unitPaymentOrder.invoceNo;
@@ -355,7 +356,6 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         }
                     }
 
-                    purchaseOrder.status = purchaseOrder.isClosed ? poStatusEnum.COMPLETE : poStatusEnum.PAYMENT;
                     var isFull = purchaseOrder.items
                         .map((item) => {
                             return item.fulfillments
@@ -368,7 +368,38 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                             return prev && curr
                         }, true);
 
-                    purchaseOrder.status = purchaseOrder.status.value === 9 && isFull ? poStatusEnum.COMPLETE : poStatusEnum.PREMATURE;
+                    var isRealized = purchaseOrder.items
+                        .map((poItem) => poItem.realizationQuantity === poItem.dealQuantity)
+                        .reduce((prev, curr, index) => {
+                            return prev && curr
+                        }, true);
+
+                    var totalReceived = purchaseOrder.items
+                        .map(poItem => {
+                            var total = poItem.fulfillments
+                                .map(fulfillment => fulfillment.unitReceiptNoteDeliveredQuantity)
+                                .reduce((prev, curr, index) => {
+                                    return prev + curr;
+                                }, 0);
+                            return total;
+                        })
+                        .reduce((prev, curr, index) => {
+                            return prev + curr;
+                        }, 0);
+
+                    var totalDealQuantity = purchaseOrder.items
+                        .map(poItem => poItem.dealQuantity)
+                        .reduce((prev, curr, index) => {
+                            return prev + curr;
+                        }, 0);
+
+                    if (isFull && purchaseOrder.isClosed && isRealized && totalReceived === totalDealQuantity) {
+                        purchaseOrder.status = poStatusEnum.COMPLETE;
+                    } else if (isFull && purchaseOrder.isClosed && !isRealized && totalReceived !== totalDealQuantity) {
+                        purchaseOrder.status = poStatusEnum.PREMATURE;
+                    } else {
+                        purchaseOrder.status = poStatusEnum.PAYMENT;
+                    }
                     return this.purchaseOrderManager.update(purchaseOrder);
                 })
             jobs.push(job);
@@ -395,7 +426,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     for (var realization of realizations) {
                         var unitPaymentOrder = realization.unitPaymentOrder;
                         var poItem = purchaseOrder.items.find(_item => _item.product._id.toString() === realization.productId.toString());
-                        var fulfillment = poItem.fulfillments.find(fulfillment => fulfillment.unitReceiptNoteNo.toString() === realization.unitReceiptNoteNo.toString() && fulfillment.interNoteNo.toString() === unitPaymentOrder.no.toString());
+                        var fulfillment = poItem.fulfillments.find(fulfillment => fulfillment.unitReceiptNoteNo === realization.unitReceiptNoteNo && fulfillment.interNoteNo === unitPaymentOrder.no);
 
                         fulfillment.invoiceDate = unitPaymentOrder.invoceDate;
                         fulfillment.invoiceNo = unitPaymentOrder.invoceNo;
@@ -415,7 +446,6 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         }
                     }
 
-                    purchaseOrder.status = purchaseOrder.isClosed ? poStatusEnum.COMPLETE : poStatusEnum.PAYMENT;
                     var isFull = purchaseOrder.items
                         .map((item) => {
                             return item.fulfillments
@@ -428,7 +458,38 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                             return prev && curr
                         }, true);
 
-                    purchaseOrder.status = purchaseOrder.status.value === 9 && isFull ? poStatusEnum.COMPLETE : poStatusEnum.PREMATURE;
+                    var isRealized = purchaseOrder.items
+                        .map((poItem) => poItem.realizationQuantity === poItem.dealQuantity)
+                        .reduce((prev, curr, index) => {
+                            return prev && curr
+                        }, true);
+
+                    var totalReceived = purchaseOrder.items
+                        .map(poItem => {
+                            var total = poItem.fulfillments
+                                .map(fulfillment => fulfillment.unitReceiptNoteDeliveredQuantity)
+                                .reduce((prev, curr, index) => {
+                                    return prev + curr;
+                                }, 0);
+                            return total;
+                        })
+                        .reduce((prev, curr, index) => {
+                            return prev + curr;
+                        }, 0);
+
+                    var totalDealQuantity = purchaseOrder.items
+                        .map(poItem => poItem.dealQuantity)
+                        .reduce((prev, curr, index) => {
+                            return prev + curr;
+                        }, 0);
+
+                    if (isFull && purchaseOrder.isClosed && isRealized && totalReceived === totalDealQuantity) {
+                        purchaseOrder.status = poStatusEnum.COMPLETE;
+                    } else if (isFull && purchaseOrder.isClosed && !isRealized && totalReceived !== totalDealQuantity) {
+                        purchaseOrder.status = poStatusEnum.PREMATURE;
+                    } else {
+                        purchaseOrder.status = poStatusEnum.PAYMENT;
+                    }
                     return this.purchaseOrderManager.update(purchaseOrder);
                 })
             jobs.push(job);
@@ -455,7 +516,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     for (var realization of realizations) {
                         var unitPaymentOrder = realization.unitPaymentOrder;
                         var poItem = purchaseOrder.items.find(_item => _item.product._id.toString() === realization.productId.toString());
-                        var fulfillment = poItem.fulfillments.find(fulfillment => fulfillment.unitReceiptNoteNo.toString() === realization.unitReceiptNoteNo.toString() && fulfillment.interNoteNo === unitPaymentOrder.no);
+                        var fulfillment = poItem.fulfillments.find(fulfillment => fulfillment.unitReceiptNoteNo === realization.unitReceiptNoteNo && fulfillment.interNoteNo === unitPaymentOrder.no);
                         if (fulfillment) {
                             delete fulfillment.invoiceDate;
                             delete fulfillment.invoiceNo;
@@ -487,7 +548,8 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         .reduce((prev, curr, index) => {
                             return prev && curr
                         }, false);
-                    purchaseOrder.status = isPaid ? poStatusEnum.PAYMENT : (purchaseOrder.isClosed ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING);
+
+                    purchaseOrder.status = isPaid && purchaseOrder.isClosed ? poStatusEnum.PAYMENT : (purchaseOrder.isClosed ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING);
                     purchaseOrder.status = purchaseOrder.status.value === 7 && fulfillment.unitReceiptNoteDeliveredQuantity < fulfillment.deliveryOrderDeliveredQuantity ? poStatusEnum.RECEIVING : poStatusEnum.RECEIVED;
 
                     return this.purchaseOrderManager.update(purchaseOrder);
@@ -598,11 +660,9 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                 })
                 return Promise.all(getUnitReceiptNotes)
                     .then((unitReceiptNotes) => {
-                        for (var unitReceiptNote of unitReceiptNotes) {
-                            for (var unitPaymentOrderItem of unitPaymentOrder.items) {
-                                var item = unitPaymentOrder.items.find(item => item.unitReceiptNoteId.toString() === unitReceiptNote._id.toString())
-                                item.unitReceiptNote = unitReceiptNote;
-                            }
+                        for (var unitPaymentOrderItem of unitPaymentOrder.items) {
+                            var item = unitReceiptNotes.find(unitReceiptNote => unitPaymentOrderItem.unitReceiptNoteId.toString() === unitReceiptNote._id.toString())
+                            unitPaymentOrderItem.unitReceiptNote = item;
                         }
                         return this.collection
                             .updateOne({
