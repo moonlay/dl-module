@@ -56,15 +56,3 @@ it("#01. should success when transforming data", function(done) {
             done(e);
         });
 });
-
-it("#01. should success when load data", function(done) {
-    var data = [];
-    instanceManager.load(data)
-        .then(() => {
-            // console.log(a);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
