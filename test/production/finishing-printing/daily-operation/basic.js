@@ -190,7 +190,27 @@ it("#08. should success when read data", function(done) {
         });
 });
 
-it("#09. should success when read data partition", function(done) {
+it("#09. should success when read data with keyword", function(done) {
+    var key = DailyOperation.color;
+    manager.read({
+            filter: {
+                _id: DailyOperationId
+            },
+            keyword : key
+        })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#10. should success when read data partition", function(done) {
     manager.readPartition({
             filter: {
                 _id: DailyOperationId
@@ -207,7 +227,7 @@ it("#09. should success when read data partition", function(done) {
         });
 });
 
-it("#10. should success when read data partition with keyword", function(done) {
+it("#11. should success when read data partition with keyword", function(done) {
     var partition;
     for(var a of DailyOperation.kanban.partitions){
         partition = a;
@@ -229,7 +249,7 @@ it("#10. should success when read data partition with keyword", function(done) {
         });
 });
 
-it("#11. should success get no data partition when search with no parameter", function(done) {
+it("#12. should success get no data partition when search with no parameter", function(done) {
     manager.getDataPartition({})
         .then((data) => {
             if(!data)
@@ -242,7 +262,7 @@ it("#11. should success get no data partition when search with no parameter", fu
         });
 });
 
-it("#12. should success get 1 data partition when search with parameter", function(done) {
+it("#13. should success get 1 data partition when search with parameter", function(done) {
     var data;
     for(var a of DailyOperation.kanban.partitions){
         data = a;
@@ -265,7 +285,35 @@ it("#12. should success get 1 data partition when search with parameter", functi
         });
 });
 
-it(`#13. should success when delete data`, function(done) {
+it("#14. should success get 0 data report when search report with no parameter", function(done) {
+    manager.getDailyOperationReport()
+        .then((result) => {
+            result.should.be.instanceof(Array);
+            result.length.should.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#15. should success get data report when search report with machine parameter", function(done) {
+    var data;
+    for(var a of DailyOperation.kanban.partitions){
+        data = a;
+    }
+    manager.getDailyOperationReport(null, null, a.machineId)
+        .then((result) => {
+            result.should.be.instanceof(Array);
+            result.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#16. should success when delete data`, function(done) {
     manager.delete(DailyOperation)
         .then((id) => {
             id.toString().should.equal(DailyOperationId.toString());
@@ -276,7 +324,7 @@ it(`#13. should success when delete data`, function(done) {
         });
 })
 
-it(`#14. should _deleted=true`, function(done) {
+it(`#17. should _deleted=true`, function(done) {
     manager.getSingleByQuery({
             _id: DailyOperationId
         })
@@ -291,7 +339,7 @@ it(`#14. should _deleted=true`, function(done) {
         });
 });
 
-it("#15. should success when destroy data with id", function(done) {
+it("#18. should success when destroy data with id", function(done) {
     manager.destroy(DailyOperationId)
         .then((result) => {
             result.should.be.Boolean();
@@ -303,7 +351,7 @@ it("#15. should success when destroy data with id", function(done) {
         });
 });
 
-it(`#16. should null when get destroyed data`, function(done) {
+it(`#19. should null when get destroyed data`, function(done) {
     manager.getSingleByIdOrDefault(DailyOperationId)
         .then((data) => {
             if(!data)

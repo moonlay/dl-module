@@ -235,23 +235,29 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
     _afterInsert(id) {
-        var poId = id;
-        return this.getSingleById(poId)
+        return this.getSingleById(id)
             .then((purchaseOrder) => {
-                return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId);
+                return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
+                    .then((purchaseRequest) => {
+                        purchaseRequest.isUsed = true;
+                        purchaseRequest.purchaseOrderIds = purchaseRequest.purchaseOrderIds || [];
+                        purchaseRequest.status = prStatusEnum.PROCESSING;
+                        purchaseRequest.purchaseOrderIds.push(id);
+                        return this.purchaseRequestManager.update(purchaseRequest)
+                            .then(() => {
+                                purchaseOrder.purchaseRequest = purchaseRequest
+                                return this.collection
+                                    .updateOne({
+                                        _id: purchaseOrder._id
+                                    }, {
+                                        $set: purchaseOrder
+                                    })
+                                    .then((result) => Promise.resolve(purchaseOrder._id));
+                            });
+                    })
             })
-            .then((purchaseRequest) => {
-                purchaseRequest.isUsed = true;
-                purchaseRequest.purchaseOrderIds = purchaseRequest.purchaseOrderIds || [];
-                purchaseRequest.status = prStatusEnum.PROCESSING;
-                purchaseRequest.purchaseOrderIds.push(poId);
-                return this.purchaseRequestManager.update(purchaseRequest);
-            })
-            .then(() => {
-                return Promise.resolve(poId);
-            });
     }
-
+    
     delete(purchaseOrder) {
         return new Promise((resolve, reject) => {
             this._createIndexes()
@@ -363,66 +369,65 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
     getDataPOMonitoringPembelian(unitId, categoryId, PODLNo, PRNo, supplierId, dateFrom, dateTo, state, createdBy) {
-        return new Promise((resolve, reject) => {
-            var sorting = {
-                "purchaseRequest.date": -1,
-                "purchaseRequest.no": 1
-            };
-            var query = Object.assign({});
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
 
-            if (state !== -1) {
-                Object.assign(query, {
-                    "status.value": state
-                });
-            }
-
-            if (unitId !== "undefined" && unitId !== "") {
-                Object.assign(query, {
-                    unitId: new ObjectId(unitId)
-                });
-            }
-            if (categoryId !== "undefined" && categoryId !== "") {
-                Object.assign(query, {
-                    categoryId: new ObjectId(categoryId)
-                });
-            }
-            if (PODLNo !== "undefined" && PODLNo !== "") {
-                Object.assign(query, {
-                    "purchaseOrderExternal.no": PODLNo
-                });
-            }
-            if (PRNo !== "undefined" && PRNo !== "") {
-                Object.assign(query, {
-                    "purchaseRequest.no": PRNo
-                });
-            }
-            if (supplierId !== "undefined" && supplierId !== "") {
-                Object.assign(query, {
-                    supplierId: new ObjectId(supplierId)
-                });
-            }
-            if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
-                Object.assign(query, {
-                    date: {
-                        $gte: new Date(dateFrom),
-                        $lte: new Date(dateTo)
+                    if (state !== -1) {
+                        Object.assign(query, {
+                            "status.value": state
+                        });
                     }
+
+                    if (unitId !== "undefined" && unitId !== "") {
+                        Object.assign(query, {
+                            unitId: new ObjectId(unitId)
+                        });
+                    }
+                    if (categoryId !== "undefined" && categoryId !== "") {
+                        Object.assign(query, {
+                            categoryId: new ObjectId(categoryId)
+                        });
+                    }
+                    if (PODLNo !== "undefined" && PODLNo !== "") {
+                        Object.assign(query, {
+                            "purchaseOrderExternal.no": PODLNo
+                        });
+                    }
+                    if (PRNo !== "undefined" && PRNo !== "") {
+                        Object.assign(query, {
+                            "purchaseRequest.no": PRNo
+                        });
+                    }
+                    if (supplierId !== "undefined" && supplierId !== "") {
+                        Object.assign(query, {
+                            supplierId: new ObjectId(supplierId)
+                        });
+                    }
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        Object.assign(query, {
+                            date: {
+                                $gte: new Date(dateFrom),
+                                $lte: new Date(dateTo)
+                            }
+                        });
+                    }
+                    if (createdBy !== undefined && createdBy !== "") {
+                        Object.assign(query, {
+                            _createdBy: createdBy
+                        });
+                    }
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.find(query).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
                 });
-            }
-            if (createdBy !== undefined && createdBy !== "") {
-                Object.assign(query, {
-                    _createdBy: createdBy
-                });
-            }
-            query = Object.assign(query, { _deleted: false });
-            this.collection.find(query).sort(sorting).toArray()
-                .then(purchaseOrders => {
-                    resolve(purchaseOrders);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
+            });
     }
 
     getDataPOUnit(startdate, enddate) {
@@ -890,9 +895,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
     _createIndexes() {
         var dateIndex = {
-            name: `ix_${map.purchasing.collection.PurchaseOrder}__updatedDate`,
+            name: `ix_${map.purchasing.collection.PurchaseOrder}_date`,
             key: {
-                _updatedDate: -1
+                date: -1
             }
         };
 

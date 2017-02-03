@@ -79,7 +79,7 @@ it('#03. should success when unposting purchase-order-external', function (done)
 
 });
 
-it('#04. all purchase-orders isPosted should be = false and status should be PROCESSING in purchase-order-external', function (done) {
+it('#04. all purchase-orders status should be PROCESSING in purchase-order-external', function (done) {
     Promise.all(purchaseOrderExternal.items.map(purchaseOrder => {
         return purchaseOrderManager.getSingleById(purchaseOrder._id);
     }))
@@ -88,7 +88,6 @@ it('#04. all purchase-orders isPosted should be = false and status should be PRO
             purchaseOrderExternal.items.length.should.equal(purchaseOrders.length, "purchase-order-external items not the same count with purchase-orders");
 
             for (var purchaseOrder of purchaseOrders) {
-                purchaseOrder.isPosted.should.equal(false);
                 JSON.stringify(purchaseOrder.status).should.equal(JSON.stringify(poStatusEnum.PROCESSING));
             }
             done();

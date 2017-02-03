@@ -55,7 +55,7 @@ class AccountDataUtil {
     getTestData() {
         return this.getNewData()
             .then((data) => {
-                data.username = "dev";
+                data.username = "dev2";
                 data.email = "dev@unit.test";
                 data.profile.firstname = "Test";
                 data.profile.lastname = "Unit";

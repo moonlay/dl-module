@@ -53,6 +53,7 @@ class ProductionOrderDataUtil {
                     sample:`sample`,
                     deliveryDate:new Date(),
                     remark:`desc`,
+                    isUsed:false,
                     details: [{
                         code:`code1/${codeGenerator()}`,
                         colorTypeId:color1._id,

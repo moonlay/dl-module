@@ -3,7 +3,7 @@ var options = {
     model: require("dl-models").master.Machine,
     util: require("../../data-util/master/machine-data-util"),
     validator: require("dl-models").validator.master.machine,
-    createDuplicate: false,
+    createDuplicate: true,
     keys: ["code"]
 };
 

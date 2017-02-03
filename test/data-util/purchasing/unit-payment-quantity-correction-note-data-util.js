@@ -27,6 +27,7 @@ class UnitPaymentQuantityCorrectionNoteDataUtil {
                                     priceTotal: (unitReceiptNoteItem.pricePerDealUnit * unitReceiptNoteItem.deliveredQuantity),
                                     currency: unitReceiptNoteItem.currency,
                                     currencyRate: unitReceiptNoteItem.currencyRate,
+                                    unitReceiptNoteNo : unitPaymentOrder.unitReceiptNote.no,
                                     remark: ''
                                 }
                             })

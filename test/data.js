@@ -15,7 +15,10 @@ module.exports = {
         instruction: require('./data-util/master/instruction-data-util'),
         orderType: require('./data-util/master/order-type-data-util'),
         processType: require('./data-util/master/process-type-data-util'),
-        colorType: require('./data-util/master/color-type-data-util')
+        colorType: require('./data-util/master/color-type-data-util'),
+        machineType: require('./data-util/master/machine-type-data-util'),
+        machineEvent: require('./data-util/master/machine-event-data-util')
+
     },
     purchasing:{
         purchaseRequest: require('./data-util/purchasing/purchase-request-data-util'),
@@ -29,7 +32,12 @@ module.exports = {
         unitPaymentPriceCorrectionNote: require('./data-util/transaction/unit-payment-price-correction-note-data-util'),
         unitPaymentQuantityCorrectionNote: require('./data-util/transaction/unit-payment-quantity-correction-note-data-util')
     },
+    production: {
+        monitoringEvent: require('./data-util/production/finishing-printing/monitoring-event-data-util'),
+        monitoringSpecificationMachine: require('./data-util/production/finishing-printing/monitoring-specification-machine-data-util')
+    },
     sales: {
         productionOrder: require('./data-util/sales/production-order-data-util'),
-    }
+    },
+
 };

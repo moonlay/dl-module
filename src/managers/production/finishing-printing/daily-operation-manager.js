@@ -121,7 +121,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                     var getDailyOperation = Promise.resolve(null);
                     if(_productionOrder){
                         if(_productionOrder.orderType){
-                            if(_productionOrder.orderType.name != "Printing" && _productionOrder.orderType.name != "Yarn Dyed"){
+                            if(_productionOrder.orderType.name.trim().toLowerCase() != "printing" && _productionOrder.orderType.name.trim().toLowerCase() != "yarn dyed"){
                                 getData = this.getSingleByQueryOrDefault({
                                     '$and' : [{
                                             "productionOrder.orderNo" : valid.productionOrder ? valid.productionOrder.orderNo : ""
@@ -264,24 +264,32 @@ module.exports = class DailyOperationManager extends BaseManager {
                             if (!valid.dateInput || valid.dateInput == ''){
                                 errors["dateInput"] = i18n.__("DailyOperation.kanban.partitions.dateInput.isRequired:%s not required", i18n.__("DailyOperation.kanban.partitions.dateInput._:DateInput")); //"Date Input tidak ditemukan";
                             }
-
-
+                            else{
+                                var dateInput = new Date(valid.dateInput);
+                                if(dateInput > now){
+                                    errors["dateInput"] = i18n.__("DailyOperation.kanban.partitions.dateInput.isMoreThan:%s is not be more than this day", i18n.__("DailyOperation.kanban.partitions.dateInput._:DateInput")); //"Date Input tidak ditemukan";
+                                }
+                            }
 
                             if (valid.dateOutput && valid.dateOutput != '' && valid.dateInput && valid.dateInput != ''){
                                 var dateOutput = new Date(valid.dateOutput);
                                 var dateInput = new Date(valid.dateInput);
                                 if(valid.dateOutput != "1900-01-01 00:00:00"){
-                                    if(dateInput > dateOutput){
-                                        errors["dateInput"] = i18n.__("DailyOperation.kanban.partitions.dateInput.isLessThen:%s is must be less then Date Output", i18n.__("DailyOperation.kanban.partitions.dateInput._:DateInput")); // "tanggal dan jam output harus lebih besar dari tanggal dan jam input";
-                                        errors["dateOutput"] = i18n.__("DailyOperation.kanban.partitions.dateOutput.isMoreThen:%s is must be more then Date Input", i18n.__("DailyOperation.kanban.partitions.dateOutput._:DateOutput")); // "tanggal dan jam output harus lebih besar dari tanggal dan jam input";
+                                    if(dateOutput > now)
+                                    {
+                                        errors["dateOutput"] = i18n.__("DailyOperation.kanban.partitions.dateOutput.isMoreThan:%s is not be more than this day", i18n.__("DailyOperation.kanban.partitions.dateOutput._:DateOutput")); //"Date Input tidak ditemukan";
+                                    }
+                                    else if(dateInput > dateOutput){
+                                        errors["dateInput"] = i18n.__("DailyOperation.kanban.partitions.dateInput.isLessThanOutput:%s is must be less than Date Output", i18n.__("DailyOperation.kanban.partitions.dateInput._:DateInput")); // "tanggal dan jam output harus lebih besar dari tanggal dan jam input";
+                                        errors["dateOutput"] = i18n.__("DailyOperation.kanban.partitions.dateOutput.isMoreThan:%s is must be more than Date Input", i18n.__("DailyOperation.kanban.partitions.dateOutput._:DateOutput")); // "tanggal dan jam output harus lebih besar dari tanggal dan jam input";
                                     }
                                 }
                             }
 
                             if(!valid.input || valid.input == ''){
-                                errors["input"] = i18n.__("DailyOperation.kanban.partitions.input.isRequired:%s is must be more then 0", i18n.__("DailyOperation.kanban.partitions.input._:Input")); //"nilai input harus lebih besar dari 0";
+                                errors["input"] = i18n.__("DailyOperation.kanban.partitions.input.isRequired:%s is must be more than 0", i18n.__("DailyOperation.kanban.partitions.input._:Input")); //"nilai input harus lebih besar dari 0";
                             }else if(valid.input < 1){
-                                errors["input"] = i18n.__("DailyOperation.kanban.partitions.input.isRequired:%s is must be more then 0", i18n.__("DailyOperation.kanban.partitions.input._:Input")); //"nilai input harus lebih besar dari 0";
+                                errors["input"] = i18n.__("DailyOperation.kanban.partitions.input.isRequired:%s is must be more than 0", i18n.__("DailyOperation.kanban.partitions.input._:Input")); //"nilai input harus lebih besar dari 0";
                             }
 
                             if(valid.input && valid.input != '' && valid.goodOutput && valid.goodOutput != ''){
@@ -336,7 +344,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     machine : _machine,
                                     dateInput : new Date(valid.dateInput),
                                     input : valid.input,
-                                    dateOutput : new Date(valid.dateOutput),
+                                    dateOutput : !valid.dateOutput || valid.dateOutput == "" ? (new Date("1900-01-01 00:00:00")) : (new Date(valid.dateOutput)),
                                     badOutput : valid.badOutput,
                                     goodOutput : valid.goodOutput,
                                     badOutputDescription : valid.badOutputDescription
@@ -350,7 +358,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                         a.dateInput = new Date(valid.dateInput);
                                         a.badOutput = valid.badOutput;
                                         a.goodOutput = valid.goodOutput;
-                                        a.dateOutput = new Date(valid.dateOutput);
+                                        a.dateOutput = !valid.dateOutput || valid.dateOutput == "" ? (new Date("1900-01-01 00:00:00")) : (new Date(valid.dateOutput));
                                         a.badOutputDescription = valid.badOutputDescription;
                                         a.steps = valid.steps;
                                         a = new Partition(a);
@@ -518,7 +526,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                         orderNo : result[dataSelect].orderNo,
                                         kanbanNo : result[dataSelect].kanbanNo,
                                         input : result[dataSelect].input,
-                                        ouput : (result[dataSelect].badOutput + result[dataSelect].goodOutput),
+                                        output : (result[dataSelect].badOutput + result[dataSelect].goodOutput),
                                         code : result[dataSelect].code
                                     };
                                     dataResults.push(data);
@@ -571,9 +579,9 @@ module.exports = class DailyOperationManager extends BaseManager {
         	                        steps : a.kanban.partitions.steps,
         	                        machineId : a.kanban.partitions.machineId,
         	                        machine : a.kanban.partitions.machine,
-        	                        dateInput : a.kanban.partitions.dateInput,
+        	                        dateInput : (new Date(a.kanban.partitions.dateInput)),
         	                        input : a.kanban.partitions.input,
-        	                        dateOutput : a.kanban.partitions.dateOutput,
+        	                        dateOutput : (new Date(a.kanban.partitions.dateOutput)),
         	                        goodOutput : a.kanban.partitions.goodOutput,
         	                        badOutput : a.kanban.partitions.badOutput,
         	                        badOutputDescription : a.kanban.partitions.badOutputDescription,

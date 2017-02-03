@@ -10,6 +10,7 @@ var UnitPaymentCorrectionNote = DLModels.purchasing.UnitPaymentCorrectionNote;
 var UnitPaymentOrderManager = require('./unit-payment-order-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
+var UnitReceiptNoteManager = require('./unit-receipt-note-manager');
 
 module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseManager {
     constructor(db, user) {
@@ -17,6 +18,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         this.collection = this.db.use(map.purchasing.collection.UnitPaymentCorrectionNote);
         this.unitPaymentOrderManager = new UnitPaymentOrderManager(db, user);
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
+        this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
     }
 
     _validate(unitPaymentQuantityCorrectionNote) {
@@ -75,21 +77,17 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                             var itemErrors = [];
                             for (var item of valid.items) {
                                 var itemError = {};
-                                for (var _unitPaymentOrderItem of valid.unitPaymentOrder.items) {
-                                    for (var _unitReceiptNoteItem of _unitPaymentOrderItem.unitReceiptNote.items) {
-                                        if (_unitReceiptNoteItem.purchaseOrderId.toString() === item.purchaseOrderId.toString() && _unitReceiptNoteItem.product._id.toString() === item.productId.toString()) {
-                                            if (item.quantity <= 0)
-                                                itemError["quantity"] = i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity.isRequired:%s is required", i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity._:Quantity"));
-                                            else if (item.quantity > _unitReceiptNoteItem.deliveredQuantity)
-                                                itemError["quantity"] = i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity.lessThan:%s must not be greater than quantity on unit payment order", i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity._:Quantity"));
-                                            else if (item.quantity === _unitReceiptNoteItem.deliveredQuantity)
-                                                itemError["quantity"] = i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity.noChanges: no changes", i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity._:Quantity"));
+                                var unitReceiptNote = valid.unitPaymentOrder.items.find((upoItem) => item.unitReceiptNoteNo === upoItem.unitReceiptNote.no);
+                                var unitReceiptQty = unitReceiptNote.unitReceiptNote.items.find((unitReceiptNoteItem) => item.purchaseOrderId.toString() === unitReceiptNoteItem.purchaseOrderId.toString() && unitReceiptNoteItem.product._id.toString() === item.productId.toString());
 
-                                            itemErrors.push(itemError);
-                                            break;
-                                        }
-                                    }
-                                }
+                                if (item.quantity <= 0)
+                                    itemError["quantity"] = i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity.isRequired:%s is required", i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity._:Quantity"));
+                                else if (item.quantity > unitReceiptQty.deliveredQuantity)
+                                    itemError["quantity"] = i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity.lessThan:%s must not be greater than quantity on unit payment order", i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity._:Quantity"));
+                                else if (item.quantity === unitReceiptQty.deliveredQuantity)
+                                    itemError["quantity"] = i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity.noChanges: no changes", i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity._:Quantity"));
+
+                                itemErrors.push(itemError);
                             }
                             for (var itemError of itemErrors) {
                                 for (var prop in itemError) {
@@ -223,12 +221,9 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                 for (var _fulfillment of _poItem.fulfillments) {
                                     var qty = 0, priceTotal = 0, pricePerUnit = 0;
                                     if (_item.unitReceiptNoteNo === _fulfillment.unitReceiptNoteNo && unitPaymentQuantityCorrectionNote.unitPaymentOrder.no === _fulfillment.interNoteNo) {
-                                        // qty = _fulfillment.unitReceiptNoteDeliveredQuantity - _item.quantity;
-                                        // priceTotal = qty * _item.pricePerUnit;
                                         priceTotal = _item.quantity * _item.pricePerUnit;
                                         pricePerUnit = _item.pricePerUnit;
                                         _item.pricePerUnit = pricePerUnit;
-                                        // _item.quantity = qty;
                                         _item.priceTotal = priceTotal;
                                         break;
                                     }
@@ -257,137 +252,210 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         });
     }
 
-    create(unitPaymentQuantityCorrectionNote) {
-        return new Promise((resolve, reject) => {
-            this._createIndexes()
-                .then((createIndexResults) => {
-                    this._validate(unitPaymentQuantityCorrectionNote)
-                        .then(validData => {
-                            var tasks = [];
-                            var getPurchaseOrderById = [];
-                            validData.no = generateCode();
-                            validData._createdDate = new Date();
-                            if (validData.unitPaymentOrder.useIncomeTax)
-                                validData.returNoteNo = generateCode();
-                            //Update PO Internal
-                            var poId = new ObjectId();
-                            for (var _item of validData.items) {
-                                if (!poId.equals(_item.purchaseOrder._id)) {
-                                    poId = new ObjectId(_item.purchaseOrder._id);
-                                    if (ObjectId.isValid(_item.purchaseOrder._id))
-                                        getPurchaseOrderById.push(this.purchaseOrderManager.getSingleByIdOrDefault(_item.purchaseOrder._id));
+    _beforeInsert(unitPaymentPriceCorrectionNote) {
+        unitPaymentPriceCorrectionNote.no = generateCode();
+        if (unitPaymentPriceCorrectionNote.unitPaymentOrder.useIncomeTax)
+            unitPaymentPriceCorrectionNote.returNoteNo = generateCode();
+        return Promise.resolve(unitPaymentPriceCorrectionNote)
+    }
+
+    _afterInsert(id) {
+        return this.getSingleById(id)
+            .then((unitPaymentPriceCorrectionNote) => this.updatePurchaseOrder(unitPaymentPriceCorrectionNote))
+            .then((unitPaymentPriceCorrectionNote) => this.updateUnitReceiptNote(unitPaymentPriceCorrectionNote))
+            .then((unitPaymentPriceCorrectionNote) => this.updateUnitPaymentOrder(unitPaymentPriceCorrectionNote))
+            .then(() => {
+                return this.syncItems(id);
+            })
+    }
+
+    updatePurchaseOrder(unitPaymentPriceCorrectionNote) {
+        var realizations = unitPaymentPriceCorrectionNote.items.map((item) => {
+            return {
+                purchaseOrderId: item.purchaseOrderId,
+                productId: item.productId,
+                quantity: item.quantity,
+                pricePerUnit: item.pricePerUnit,
+                priceTotal: item.priceTotal,
+                currency: item.currency,
+                unitReceiptNoteNo: item.unitReceiptNoteNo
+            }
+        })
+        realizations = [].concat.apply([], realizations);
+
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.purchaseOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+
+        var jobs = [];
+        map.forEach((realizations, purchaseOrderId) => {
+            var job = this.purchaseOrderManager.getSingleById(purchaseOrderId)
+                .then((purchaseOrder) => {
+                    for (var realization of realizations) {
+                        var productId = realization.productId;
+                        var poItem = purchaseOrder.items.find(item => item.product._id.toString() === productId.toString());
+                        var fulfillment = poItem.fulfillments.find((fulfillment) => realization.unitReceiptNoteNo === fulfillment.unitReceiptNoteNo && unitPaymentPriceCorrectionNote.unitPaymentOrder.no === fulfillment.interNoteNo)
+
+                        if (fulfillment) {
+                            var _correction = {};
+                            var _qty = 0;
+
+                            if (fulfillment) {
+                                if (!fulfillment.correction) {
+                                    fulfillment.correction = [];
+                                }
+                                var correctionQty = 0;
+                                if (fulfillment.correction.length > 0) {
+                                    var lastQty = fulfillment.correction[fulfillment.correction.length - 1].correctionQuantity;
+                                    correctionQty = realization.quantity - lastQty;
+                                } else {
+                                    correctionQty = fulfillment.unitReceiptNoteDeliveredQuantity - realization.quantity;
+                                }
+                                
+                                _correction.correctionDate = unitPaymentPriceCorrectionNote.date;
+                                _correction.correctionNo = unitPaymentPriceCorrectionNote.no;
+                                _correction.correctionRemark = `Koreksi ${unitPaymentPriceCorrectionNote.correctionType}`;
+                                _correction.correctionQuantity = correctionQty;
+                                _correction.correctionPriceTotal = correctionQty * realization.pricePerUnit * realization.currency.rate;
+
+                                fulfillment.correction.push(_correction);
+                            }
+                        }
+                    }
+                    return this.purchaseOrderManager.update(purchaseOrder);
+                })
+            jobs.push(job);
+        })
+
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(unitPaymentPriceCorrectionNote);
+        })
+    }
+
+    updateUnitReceiptNote(unitPaymentPriceCorrectionNote) {
+        var urnIds = unitPaymentPriceCorrectionNote.unitPaymentOrder.items.map((upoItem) => upoItem.unitReceiptNoteId);
+        var realizations = unitPaymentPriceCorrectionNote.items.map((item) => {
+            return {
+                purchaseOrderId: item.purchaseOrderId,
+                productId: item.productId,
+                quantity: item.quantity,
+                pricePerUnit: item.pricePerUnit,
+                priceTotal: item.priceTotal,
+                currency: item.currency,
+                unitReceiptNoteNo: item.unitReceiptNoteNo
+            }
+        })
+        realizations = [].concat.apply([], realizations);
+
+        var jobs = [];
+        for (var urnId of urnIds) {
+            var job = this.unitReceiptNoteManager.getSingleById(urnId)
+                .then((unitReceiptNote) => {
+                    return Promise.all(unitReceiptNote.items.map((item) => {
+                        return this.purchaseOrderManager.getSingleById(item.purchaseOrderId)
+                    }))
+                        .then((purchaseOrders) => {
+                            for (var item of unitReceiptNote.items) {
+                                var realization = realizations.find((_realization) => _realization.productId.toString() === item.product._id.toString() && _realization.purchaseOrderId.toString() === item.purchaseOrderId.toString() && _realization.unitReceiptNoteNo === unitReceiptNote.no);
+                                if (realization) {
+                                    var _correction = {
+                                        correctionDate: unitPaymentPriceCorrectionNote.date,
+                                        correctionNo: unitPaymentPriceCorrectionNote.no,
+                                        correctionQuantity: realization.quantity,
+                                        correctionPricePerUnit: realization.pricePerUnit,
+                                        correctionPriceTotal: realization.priceTotal,
+                                        correctionRemark: `Koreksi ${unitPaymentPriceCorrectionNote.correctionType}`
+                                    };
+                                    item.correction.push(_correction);
+                                }
+                                var purchaseOrder = purchaseOrders.find((_purchaseOrder) => _purchaseOrder._id.toString() === item.purchaseOrderId.toString());
+                                if (purchaseOrder) {
+                                    item.purchaseOrder = purchaseOrder;
                                 }
                             }
-
-                            Promise.all(getPurchaseOrderById)
-                                .then(results => {
-                                    for (var _purchaseOrder of results) {
-                                        for (var unitPaymentQuantityCorrectionNoteItem of validData.items) {
-                                            if (unitPaymentQuantityCorrectionNoteItem.purchaseOrder._id.equals(_purchaseOrder._id)) {
-                                                for (var _poItem of _purchaseOrder.items) {
-                                                    if (unitPaymentQuantityCorrectionNoteItem.product._id.equals(_poItem.product._id)) {
-                                                        for (var fulfillmentPoItem of _poItem.fulfillments) {
-                                                            var _unitPaymentOrderNo = fulfillmentPoItem.interNoteNo || '';
-                                                            var _unitReceiptNoteNo = fulfillmentPoItem.unitReceiptNoteNo || '';
-
-                                                            if (unitPaymentQuantityCorrectionNoteItem.unitReceiptNoteNo === _unitReceiptNoteNo && validData.unitPaymentOrder.no === _unitPaymentOrderNo) {
-
-                                                                var _correction = {};
-                                                                var _qty = 0;
-                                                                _correction.correctionDate = validData.date;
-                                                                _correction.correctionNo = validData.no;
-                                                                _correction.correctionRemark = `Koreksi ${validData.correctionType}`;
-
-                                                                if (!fulfillmentPoItem.correction) {
-                                                                    fulfillmentPoItem.correction = [];
-                                                                    _correction.correctionQuantity = fulfillmentPoItem.unitReceiptNoteDeliveredQuantity - unitPaymentQuantityCorrectionNoteItem.quantity;
-                                                                } else {
-                                                                    var sum = 0;
-                                                                    for (var corr of fulfillmentPoItem.correction) {
-                                                                        if (corr.correctionRemark == "Koreksi Jumlah")
-                                                                            sum += corr.correctionQuantity;
-                                                                    }
-                                                                    _correction.correctionQuantity = fulfillmentPoItem.unitReceiptNoteDeliveredQuantity - unitPaymentQuantityCorrectionNoteItem.quantity - sum;
-                                                                    _qty = unitPaymentQuantityCorrectionNoteItem.quantity + sum - fulfillmentPoItem.unitReceiptNoteDeliveredQuantity;
-                                                                }
-                                                                _correction.correctionPriceTotal = _qty * unitPaymentQuantityCorrectionNoteItem.pricePerUnit * unitPaymentQuantityCorrectionNoteItem.currency.rate;
-                                                                fulfillmentPoItem.correction.push(_correction);
-                                                                break;
-                                                            }
-                                                        }
-                                                        break;
-                                                    }
-                                                }
-                                                unitPaymentQuantityCorrectionNoteItem.purchaseOrder = _purchaseOrder;
-                                                unitPaymentQuantityCorrectionNoteItem.purchaseOrderId = new ObjectId(_purchaseOrder._id);
-                                                break;
-                                            }
-                                        }
-                                        tasks.push(this.purchaseOrderManager.update(_purchaseOrder));
-                                    }
-                                    Promise.all(tasks)
-                                        .then(results => {
-                                            var _unitPaymentOrder = validData.unitPaymentOrder;
-                                            for (var _item of validData.items) {
-                                                for (var _unitReceiptNote of _unitPaymentOrder.items) {
-                                                    if (_item.unitReceiptNoteNo === _unitReceiptNote.unitReceiptNote.no) {
-                                                        for (var _unitReceiptNoteItem of _unitReceiptNote.unitReceiptNote.items) {
-                                                            if (_item.purchaseOrderId.toString() === _unitReceiptNoteItem.purchaseOrderId.toString() && _item.product._id.toString() === _unitReceiptNoteItem.product._id.toString()) {
-                                                                var _correction = {
-                                                                    correctionDate: validData.date,
-                                                                    correctionNo: validData.no,
-                                                                    correctionQuantity: _item.quantity,
-                                                                    correctionPricePerUnit: _item.pricePerUnit,
-                                                                    correctionPriceTotal: _item.priceTotal,
-                                                                    correctionRemark: `Koreksi ${validData.correctionType}`
-                                                                };
-                                                                _unitReceiptNoteItem.correction.push(_correction);
-                                                                break;
-                                                            }
-                                                        }
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                            this.unitPaymentOrderManager.update(_unitPaymentOrder)
-                                                .then(_unitPaymentOrderId => {
-                                                    validData.unitPaymentOrder = _unitPaymentOrder;
-                                                    this.collection.insert(validData)
-                                                        .then(id => {
-                                                            resolve(id);
-                                                        })
-                                                        .catch(e => {
-                                                            reject(e);
-                                                        });
-                                                })
-                                                .catch(e => {
-                                                    reject(e);
-                                                });
-                                        })
-                                        .catch(e => {
-                                            reject(e);
-                                        })
-                                })
-                                .catch(e => {
-                                    reject(e);
-                                })
-
+                            return this.unitReceiptNoteManager.update(unitReceiptNote);
                         })
-                        .catch(e => {
-                            reject(e);
-                        });
                 })
-                .catch(e => {
-                    reject(e);
-                });
-        });
+            jobs.push(job);
+        }
+
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(unitPaymentPriceCorrectionNote);
+        })
+    }
+
+    updateUnitPaymentOrder(unitPaymentPriceCorrectionNote) {
+        var unitPaymentOrder = unitPaymentPriceCorrectionNote.unitPaymentOrder;
+        var getUnitReceiptNotes = unitPaymentOrder.items.map((unitPaymentOrderItem) => {
+            return this.unitReceiptNoteManager.getSingleById(unitPaymentOrderItem.unitReceiptNoteId)
+        })
+        return this.unitPaymentOrderManager.getSingleByIdOrDefault(unitPaymentOrder._id)
+            .then((_unitPaymentOrder) => {
+                return Promise.all(getUnitReceiptNotes)
+                    .then((unitReceiptNotes) => {
+                        for (var unitPaymentOrderItem of _unitPaymentOrder.items) {
+                            var _unitReceiptNote = unitReceiptNotes.find((unitReceiptNote) => unitPaymentOrderItem.unitReceiptNoteId.toString() === unitReceiptNote._id.toString())
+                            if (_unitReceiptNote) {
+                                unitPaymentOrderItem.unitReceiptNote = _unitReceiptNote;
+                            }
+                        }
+                        return this.unitPaymentOrderManager.collection.update(_unitPaymentOrder)
+                    })
+                    .then((results) => {
+                        return Promise.resolve(unitPaymentPriceCorrectionNote);
+                    })
+            })
+
+    }
+
+    syncItems(id) {
+        var query = {
+            _id: ObjectId.isValid(id) ? new ObjectId(id) : {}
+        };
+        return this.getSingleByQuery(query)
+            .then((unitPaymentPriceCorrectionNote) => {
+                var realizations = unitPaymentPriceCorrectionNote.items.map((item) => { return item.purchaseOrderId });
+                realizations = [].concat.apply([], realizations);
+
+                var _listPO = realizations.filter(function (elem, index, self) {
+                    return index == self.indexOf(elem);
+                })
+
+                var jobGetPurchaseOrders = _listPO.map((po) => { return this.purchaseOrderManager.getSingleById(po) });
+
+                return Promise.all(jobGetPurchaseOrders)
+                    .then((purchaseOrders) => {
+                        return this.unitPaymentOrderManager.getSingleById(unitPaymentPriceCorrectionNote.unitPaymentOrderId)
+                            .then((unitPaymentOrder) => {
+                                unitPaymentPriceCorrectionNote.unitPaymentOrder = unitPaymentOrder;
+
+                                for (var item of unitPaymentPriceCorrectionNote.items) {
+                                    var _purchaseOrder = purchaseOrders.find((purchaseOrder) => purchaseOrder._id.toString() === item.purchaseOrderId.toString());
+                                    if (_purchaseOrder) {
+                                        item.purchaseOrder = _purchaseOrder;
+                                    }
+                                }
+                                return this.collection
+                                    .updateOne({
+                                        _id: unitPaymentPriceCorrectionNote._id
+                                    }, {
+                                        $set: unitPaymentPriceCorrectionNote
+                                    })
+                                    .then((result) => Promise.resolve(unitPaymentPriceCorrectionNote._id));
+                            })
+                    })
+            })
     }
 
     _createIndexes() {
         var dateIndex = {
-            name: `ix_${map.purchasing.collection.UnitPaymentCorrectionNote}__updatedDate`,
+            name: `ix_${map.purchasing.collection.UnitPaymentCorrectionNote}_date`,
             key: {
-                _updatedDate: -1
+                date: -1
             }
         }
 

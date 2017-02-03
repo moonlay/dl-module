@@ -19,21 +19,33 @@ module.exports = function (pox) {
     _items = [].concat.apply([], _items);
 
     var items = [];
-    _items.reduce(function (res, value) {
-        if (!res[value.product]) {
-            res[value.product] = {
-                product: value.product,
-                quantity: 0,
-                prNo: "",
-                uom: value.uom,
-                price: value.price
-            };
-            items.push(res[value.product])
-        }
-        res[value.product].quantity += value.quantity;
-        res[value.product].prNo = `${res[value.product].prNo}\n${value.prNo}`;
-        return res;
-    }, {});
+    var map = new Map();
+    for (var _item of _items) {
+        var key = _item.product;
+        if (!map.has(key))
+            map.set(key, [])
+        map.get(key).push(_item);
+    }
+    map.forEach((_items, product) => {
+        var poeItem = {};
+        poeItem.product = product;
+        poeItem.quantity = _items
+            .map(_item => _item.quantity)
+            .reduce((prev, curr, index) => {
+                return prev + curr;
+            }, 0);
+        poeItem.prNo = `\n${_items
+            .map(function (_item) {
+                return _item.prNo;
+            }).join("\n")}`;
+        poeItem.uom = _items[0].uom;
+        poeItem.price = _items[0].price;
+        poeItem.remark = `\n${_items
+            .map(function (_item) {
+                return _item.remark;
+            }).join("\n")}`;
+        items.push(poeItem);
+    });
 
 
     var iso = "FM-PB-00-06-009";
@@ -52,37 +64,37 @@ module.exports = function (pox) {
         text: 'PT. DAN LIRIS',
         style: 'bold'
     }, {
-        columns: [{
-            width: '50%',
-            stack: [
-                'Head Office   : ',
-                'Kelurahan Banaran',
-                'Kecamatan Grogol',
-                'Sukoharjo 57193 - INDONESIA',
-                'PO.BOX 166 Solo 57100',
-                'Telp. (0271) 740888, 714400',
-                'Fax. (0271) 735222, 740777'
-            ],
-            style: ['size07', 'bold']
-        }, {
-            stack: [{
-                text: iso,
-                alignment: "right",
-                style: ['size08']
+            columns: [{
+                width: '50%',
+                stack: [
+                    'Head Office   : ',
+                    'Kelurahan Banaran',
+                    'Kecamatan Grogol',
+                    'Sukoharjo 57193 - INDONESIA',
+                    'PO.BOX 166 Solo 57100',
+                    'Telp. (0271) 740888, 714400',
+                    'Fax. (0271) 735222, 740777'
+                ],
+                style: ['size07', 'bold']
             }, {
-                text: `Nomor PO : ${number}`,
-                alignment: "right",
-                style: ['size09', 'bold']
-            }]
+                    stack: [{
+                        text: iso,
+                        alignment: "right",
+                        style: ['size08']
+                    }, {
+                            text: `Nomor PO : ${number}`,
+                            alignment: "right",
+                            style: ['size09', 'bold']
+                        }]
 
-        }
+                }
 
-        ]
-    }, {
-        alignment: "center",
-        text: 'ORDER PEMBELIAN',
-        style: ['size09', 'bold']
-    },
+            ]
+        }, {
+            alignment: "center",
+            text: 'ORDER PEMBELIAN',
+            style: ['size09', 'bold']
+        },
         '\n'
     ];
 
@@ -92,32 +104,32 @@ module.exports = function (pox) {
             text: 'Kepada Yth:',
             style: ['size08']
         }, {
-            width: '*',
-            text: `${supplier}\n Attn. ${supplierAtt}\n Telp. ${supplierTel}`,
-            style: ['size08']
-        }, {
-            width: '35%',
-            stack: [
-                `Sukoharjo, ${moment(pox.date).format(locale.date.format)} `, {
-                    text: [
-                        'Mohon', {
-                            text: ' di-fax kembali',
-                            style: 'bold'
-                        }, ' setelah\n', {
-                            text: 'ditandatangani',
-                            style: ['bold'],
-                            decoration: 'underline'
-                        }, ' dan ', {
-                            text: 'distempel ',
-                            style: ['bold'],
-                            decoration: 'underline'
-                        }, 'perusahaan.Terima Kasih.'
-                    ],
-                    style: ['size07']
-                }
-            ],
-            style: ['size08']
-        }]
+                width: '*',
+                text: `${supplier}\n Attn. ${supplierAtt}\n Telp. ${supplierTel}`,
+                style: ['size08']
+            }, {
+                width: '35%',
+                stack: [
+                    `Sukoharjo, ${moment(pox.date).format(locale.date.format)} `, {
+                        text: [
+                            'Mohon', {
+                                text: ' di-fax kembali',
+                                style: 'bold'
+                            }, ' setelah\n', {
+                                text: 'ditandatangani',
+                                style: ['bold'],
+                                decoration: 'underline'
+                            }, ' dan ', {
+                                text: 'distempel ',
+                                style: ['bold'],
+                                decoration: 'underline'
+                            }, 'perusahaan.Terima Kasih.'
+                        ],
+                        style: ['size07']
+                    }
+                ],
+                style: ['size08']
+            }]
     }];
 
     var opening = {
@@ -146,47 +158,47 @@ module.exports = function (pox) {
         text: 'NAMA DAN JENIS BARANG',
         style: ['size08', 'bold', 'center']
     }, {
-        text: 'JUMLAH',
-        style: ['size08', 'bold', 'center']
-    }, {
-        text: 'HARGA SATUAN',
-        style: ['size08', 'bold', 'center']
-    }, {
-        text: 'SUB TOTAL',
-        style: ['size08', 'bold', 'center']
-    }];
+            text: 'JUMLAH',
+            style: ['size08', 'bold', 'center']
+        }, {
+            text: 'HARGA SATUAN',
+            style: ['size08', 'bold', 'center']
+        }, {
+            text: 'SUB TOTAL',
+            style: ['size08', 'bold', 'center']
+        }];
 
     var tbody = items.map(function (item) {
         return [{
             stack: [{
                 text: item.product,
                 style: 'bold'
-            },item.remark, item.prNo],
+            }, item.remark, item.prNo],
             style: ['size08']
         }, {
-            text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
-            style: ['size08', 'center']
-        }, {
-            columns: [{
-                width: '10%',
-                text: `${currency}`
+                text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
+                style: ['size08', 'center']
             }, {
-                width: '*',
-                text: `${parseFloat(item.price).toLocaleString(locale, locale.currency)}`,
-                style: ['right']
-            }],
-            style: ['size08']
-        }, {
-            columns: [{
-                width: '10%',
-                text: `${currency}`
+                columns: [{
+                    width: '10%',
+                    text: `${currency}`
+                }, {
+                        width: '*',
+                        text: `${parseFloat(item.price).toLocaleString(locale, locale.currency)}`,
+                        style: ['right']
+                    }],
+                style: ['size08']
             }, {
-                width: '*',
-                text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
-                style: ['right']
-            }],
-            style: ['size08']
-        }];
+                columns: [{
+                    width: '10%',
+                    text: `${currency}`
+                }, {
+                        width: '*',
+                        text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
+                        style: ['right']
+                    }],
+                style: ['size08']
+            }];
     });
 
     tbody = tbody.length > 0 ? tbody : [
@@ -215,46 +227,46 @@ module.exports = function (pox) {
             style: ['size08', 'bold', 'right'],
             colSpan: 3
         }, "", "", {
-            columns: [{
-                width: '10%',
-                text: currency
-            }, {
-                width: '*',
-                text: parseFloat(sum).toLocaleString(locale, locale.currency),
-                style: ['right']
+                columns: [{
+                    width: '10%',
+                    text: currency
+                }, {
+                        width: '*',
+                        text: parseFloat(sum).toLocaleString(locale, locale.currency),
+                        style: ['right']
+                    }],
+                style: ['size08']
             }],
-            style: ['size08']
-        }],
         [{
             text: 'PPN 10%',
             style: ['size08', 'bold', 'right'],
             colSpan: 3
         }, null, null, {
-            columns: [{
-                width: '10%',
-                text: currency
-            }, {
-                width: '*',
-                text: parseFloat(vat).toLocaleString(locale, locale.currency),
-                style: ['right']
+                columns: [{
+                    width: '10%',
+                    text: currency
+                }, {
+                        width: '*',
+                        text: parseFloat(vat).toLocaleString(locale, locale.currency),
+                        style: ['right']
+                    }],
+                style: ['size08']
             }],
-            style: ['size08']
-        }],
         [{
             text: 'Grand Total',
             style: ['size08', 'bold', 'right'],
             colSpan: 3
         }, null, null, {
-            columns: [{
-                width: '10%',
-                text: currency
-            }, {
-                width: '*',
-                text: parseFloat(sum + vat).toLocaleString(locale, locale.currency),
-                style: ['bold', 'right']
-            }],
-            style: ['size09']
-        }]
+                columns: [{
+                    width: '10%',
+                    text: currency
+                }, {
+                        width: '*',
+                        text: parseFloat(sum + vat).toLocaleString(locale, locale.currency),
+                        style: ['bold', 'right']
+                    }],
+                style: ['size09']
+            }]
     ];
 
     var table = [{
@@ -273,52 +285,52 @@ module.exports = function (pox) {
                         width: '40%',
                         stack: ['Ongkos Kirim', 'Pembayaran']
                     }, {
-                        width: '3%',
-                        stack: [':', ':']
-                    }, {
-                        width: '*',
-                        stack: [`Ditanggung ${pox.freightCostBy}`, `${pox.paymentMethod}, ${pox.paymentDueDays} hari setelah terima barang`]
-                    }]
+                            width: '3%',
+                            stack: [':', ':']
+                        }, {
+                            width: '*',
+                            stack: [`Ditanggung ${pox.freightCostBy}`, `${pox.paymentMethod}, ${pox.paymentDueDays} hari setelah terima barang`]
+                        }]
                 }, {
-                    width: '20%',
-                    text: ''
-                }, {
-                    width: '40%',
-                    columns: [{
-                        width: '45%',
-                        stack: ['Delivery', 'Lain-lain']
+                        width: '20%',
+                        text: ''
                     }, {
-                        width: '3%',
-                        stack: [':', ':']
-                    }, {
-                        width: '*',
-                        stack: [{
-                            text: `${moment(pox.expectedDeliveryDate).format(locale.date.format)}`,
-                            style: ['bold']
-                        }, `${pox.remark}`]
+                        width: '40%',
+                        columns: [{
+                            width: '45%',
+                            stack: ['Delivery', 'Lain-lain']
+                        }, {
+                                width: '3%',
+                                stack: [':', ':']
+                            }, {
+                                width: '*',
+                                stack: [{
+                                    text: `${moment(pox.expectedDeliveryDate).format(locale.date.format)}`,
+                                    style: ['bold']
+                                }, `${pox.remark}`]
+                            }]
                     }]
-                }]
             },
                 '\n\n\n', {
-                columns: [{
-                    width: '35%',
-                    stack: ['Pembeli\n\n\n\n\n', {
-                        text: pox._createdBy,
-                        style: ['bold']
-                    }],
-                    style: 'center'
-                }, {
-                    width: '30%',
-                    text: ''
-                }, {
-                    width: '35%',
-                    stack: ['Penjual\n\n\n\n\n', {
-                        text: supplier,
-                        style: ['bold']
-                    }],
-                    style: 'center'
-                }]
-            }
+                    columns: [{
+                        width: '35%',
+                        stack: ['Pembeli\n\n\n\n\n', {
+                            text: pox._createdBy,
+                            style: ['bold']
+                        }],
+                        style: 'center'
+                    }, {
+                            width: '30%',
+                            text: ''
+                        }, {
+                            width: '35%',
+                            stack: ['Penjual\n\n\n\n\n', {
+                                text: supplier,
+                                style: ['bold']
+                            }],
+                            style: 'center'
+                        }]
+                }
             ],
             style: ['size08']
         }
