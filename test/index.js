@@ -52,7 +52,7 @@ describe('#dl-module', function (done) {
     test('@PURCHASING/UNIT PAYMENT ORDER', './purchasing/unit-payment-order');
     test('@PURCHASING/UNIT PAYMENT PRICE CORRECTION', './purchasing/unit-payment-price-correction-note');
     test('@PURCHASING/UNIT PAYMENT QUANTITY CORRECTION', './purchasing/unit-payment-quantity-correction-note');
-    
+
     //  test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');		
     // //Production
 
@@ -69,4 +69,12 @@ describe('#dl-module', function (done) {
 
     //Sales
     // test('@production/production-order', './sales/production-order/create');
+
+    //ETL
+    test('@ETL/DIM-CATEGORY', './etl/dim-category');
+    // test('@ETL/DIM-DIVISION', './etl/dim-division');
+    test('@ETL/DIM-SUPPLIER', './etl/dim-supplier');
+    // test('@ETL/DIM-UNIT', './etl/dim-unit');
+    // test('@ETL/FACT-TOTAL-HUTANG', './etl/fact-total-hutang');
+    test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');
 });
