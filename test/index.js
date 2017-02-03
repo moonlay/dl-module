@@ -52,33 +52,8 @@ describe('#dl-module', function (done) {
     test('@PURCHASING/UNIT PAYMENT ORDER', './purchasing/unit-payment-order');
     test('@PURCHASING/UNIT PAYMENT PRICE CORRECTION', './purchasing/unit-payment-price-correction-note');
     test('@PURCHASING/UNIT PAYMENT QUANTITY CORRECTION', './purchasing/unit-payment-quantity-correction-note');
-<<<<<<< HEAD
-
-    test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');
-
-    // ok
-    // test('@purchasing/delivery-order-manager', './purchasing/delivery-order-manager-test');
-
-    // test('@purchasing/unit-receipt-note', './purchasing/unit-receipt-note-manager-test');
-    // test('@purchasing/unit-payment-price-correction-note', './purchasing/unit-payment-price-correction-note-manager-test');
-    // test('@purchasing/unit-payment-order', './purchasing/unit-payment-order-test');
-    // test('@purchasing/purchase-request/create', './purchasing/purchase-request/create');
-    // test('@purchasing/purchase-request/post', './purchasing/purchase-request/post');
-    // test('@purchasing/purchase-order/create', './purchasing/purchase-order/create');
-    // test('@purchasing/purchase-order/update', './purchasing/purchase-order/update');
-
-    // ok
-    // test('@purchasing/delivery-order/create', './purchasing/delivery-order/create');
-    // test('@purchasing/unit-receipt-note/create', './purchasing/unit-receipt-note/create');
-
-    // test('@purchasing/unit-payment-order/create', './purchasing/unit-payment-order/create');
-    // test('@purchasing/unit-payment-price-correction-note/create', './purchasing/unit-payment-price-correction-note/create');
-    // test('@purchasing/unit-payment-quantity-correction-note/create', './purchasing/unit-payment-quantity-correction-note/create');
-
-=======
     
     //  test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');		
->>>>>>> refs/remotes/danliris/dev
     // //Production
 
     test('@sales/production-order', './sales/production-order/create');
@@ -87,19 +62,6 @@ describe('#dl-module', function (done) {
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
 
     test('@production/daily-operation', './production/finishing-printing/daily-operation');
-<<<<<<< HEAD
-
-    //Sales
-    test('@production/production-order', './sales/production-order/create');
-
-    // etl
-    test('@ETL/DIM-CATEGORY', './etl/dim-category');
-    // test('@ETL/DIM-DIVISION', './etl/dim-division');
-    test('@ETL/DIM-SUPPLIER', './etl/dim-supplier');
-    // test('@ETL/DIM-UNIT', './etl/dim-unit');
-    // test('@ETL/FACT-TOTAL-HUTANG', './etl/fact-total-hutang');
-    test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');
-=======
     test('@production/finishing-printing/monitoring-specification-machine', './production/finishing-printing/monitoring-specification-machine');
     test('@PRODUCTION/MONITORING-EVENT', './production/finishing-printing/monitoring-event');
     // test('@production/winding-quality-sampling-manager', './production/spinning/winding/winding-quality-sampling-manager-test');
@@ -107,5 +69,4 @@ describe('#dl-module', function (done) {
 
     //Sales
     // test('@production/production-order', './sales/production-order/create');
->>>>>>> refs/remotes/danliris/dev
 });
