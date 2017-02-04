@@ -45,13 +45,14 @@ it("#01. should success when create etl fact-purchasing", function (done) {
         });
 });
 
-// it("#01. should success when log synchronize date after updating fact-purchasing", function(done) {
-//     instanceManager.lastSynchDate()
-//         .then(() => {
-//             // console.log(a);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+it("#01. should success when transforming data", function(done) {
+    var data = [];
+    instanceManager.transform(data)
+        .then(() => {
+            // console.log(a);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

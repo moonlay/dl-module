@@ -19,29 +19,30 @@ module.exports = class FactTotalHutang {
     }
     run() {
         return this.extract()
-            .then((data) => {
-                return this.transform(data)
-            })
-            .then((data) => {
-                return this.load(data)
-            });
+            .then((data) => this.transform(data))
+            .then((data) => this.load(data));
     }
 
     extract() {
         // var trueFalse = false;
         return this.unitReceiptNoteManager.collection.find({
-            _deleted: false
-        }).toArray()
-            .then((unitReceiptNotes) => {
-                return this.joinUnitPaymentOrder(unitReceiptNotes)
-            })
+            _deleted: false,
+            _createdBy: {
+                $nin: ["dev", "unit-test"]
+            }
+        }).limit(50).toArray()
+            .then((unitReceiptNotes) => this.joinUnitPaymentOrder(unitReceiptNotes));
     }
 
-    joinUnitPaymentOrder(data) {
-        var joinUnitPaymentOrders = data.map((unitReceiptNote) => {
+    joinUnitPaymentOrder(unitReceiptNotes) {
+        var joinUnitPaymentOrders = unitReceiptNotes.map((unitReceiptNote) => {
             return this.unitPaymentOrderManager.collection.find({
+                _deleted: false,
+                _createdBy: {
+                    $nin: ["dev", "unit-test"]
+                },
                 items: {
-                    "$elemMatch": {
+                    $elemMatch: {
                         unitReceiptNoteId: unitReceiptNote._id
                     }
                 }
@@ -49,18 +50,22 @@ module.exports = class FactTotalHutang {
                 .then((unitPaymentOrders) => {
                     var arr = unitPaymentOrders.map((unitPaymentOrder) => {
                         return {
-                            unitPaymentOrder: unitPaymentOrder,
-                            unitReceiptNote: unitReceiptNote
+                            unitReceiptNote: unitReceiptNote,
+                            unitPaymentOrder: unitPaymentOrder
                         };
                     });
-
+                    if (arr.length === 0)
+                        arr.push({
+                            unitReceiptNote: unitReceiptNote,
+                            unitPaymentOrder: null
+                        });
                     return Promise.resolve(arr);
                 });
         });
         return Promise.all(joinUnitPaymentOrders)
-            .then((joinUnitPaymentOrder => {
-                return Promise.resolve([].concat.apply([], joinUnitPaymentOrder));
-            }));
+        .then((joinUnitPaymentOrder) => {
+            return Promise.resolve([].concat.apply([], joinUnitPaymentOrder));
+        })
     }
 
     transform(data) {
@@ -71,18 +76,21 @@ module.exports = class FactTotalHutang {
             var results = unitReceiptNote.items.map((unitReceiptNoteItem) => {
 
                 return {
-                    unitPaymentOrderNo: `'${unitPaymentOrder.no}'`,
-                    unitPaymentOrderDate: `'${moment(unitPaymentOrder.date).format('L')}'`,
-                    unitPaymentOrderDueDate: `'${moment(unitPaymentOrder.dueDate).format('L')}'`,
-                    supplierName: `'${unitPaymentOrder.supplier.name}'`,
-                    categoryName: `'${unitPaymentOrder.category.name}'`,
-                    categoryType: unitPaymentOrder.category.name.toLowerCase() == 'bahan baku' ? 'BAHAN BAKU' : 'NON BAHAN BAKU',
-                    divisionName: `'${unitPaymentOrder.division.name}'`,
+                    unitPaymentOrderNo: unitPaymentOrder ? `'${unitPaymentOrder.no}'` : null,
+                    unitPaymentOrderDate: unitPaymentOrder ? `'${moment(unitPaymentOrder.date).format('L')}'` : null,
+                    unitPaymentOrderDueDate: unitPaymentOrder ? `'${moment(unitPaymentOrder.dueDate).format('L')}'` : null,
+                    supplierName: unitPaymentOrder ? `'${unitPaymentOrder.supplier.name}'` : null,
+                    categoryName: unitPaymentOrder ? `'${unitPaymentOrder.category.name}'` : null,
+                    categoryType: unitPaymentOrder ? unitPaymentOrder.category.name.toLowerCase() == 'bahan baku' ? 'BAHAN BAKU' : 'NON BAHAN BAKU' : null,
+                    divisionName: unitPaymentOrder ? `'${unitPaymentOrder.division.name}'` : null,
                     unitName: `'${unitReceiptNote.unit.name}'`,
                     invoicePrice: `${unitReceiptNoteItem.pricePerDealUnit}`,
                     unitReceiptNoteQuantity: `${unitReceiptNoteItem.deliveredQuantity}`,
                     purchaseOrderExternalCurrencyRate: `${unitReceiptNoteItem.currencyRate}`,
-                    total: `${unitReceiptNoteItem.pricePerDealUnit * unitReceiptNoteItem.deliveredQuantity * unitReceiptNoteItem.currencyRate}`
+                    total: `${unitReceiptNoteItem.pricePerDealUnit * unitReceiptNoteItem.deliveredQuantity * unitReceiptNoteItem.currencyRate}`,
+                    unitReceiptNoteNo: `'${unitReceiptNote.no}'`,
+                    productName: `'${unitReceiptNoteItem.product.name}'`,
+                    productCode: `'${unitReceiptNoteItem.product.code}'`
                 };
             });
 
@@ -99,7 +107,7 @@ module.exports = class FactTotalHutang {
 
                 var count = 1;
                 for (var item of data) {
-                    sqlQuery = sqlQuery.concat("insert into fact_total_hutang([ID Total Hutang], [Nomor Nota Intern], [Tanggal Nota Intern], [Nama Supplier], [Jenis Kategori], [Harga Sesuai Invoice], [Jumlah Sesuai Bon Unit], [Rate yang disepakati], [Total harga Nota Intern], [Nominal Bayar], [Nama Kategori], [Nama Divisi], [Nama Unit], [Tanggal Jatuh Tempo]) values(" + count + ", '" + item.unitPaymentOrderNo + "', '" + item.unitPaymentOrderDate + "', '" + item.supplierName + "', '" + item.categoryType + "', " + item.invoicePrice + ", " + item.unitReceiptNoteQuantity + ", " + item.purchaseOrderExternalCurrencyRate + ", " + item.total + ", '', '" + item.categoryName + "', '" + item.divisionName + "', '" + item.unitName + "', '" + item.unitPaymentOrderDueDate + "'); ");
+                    sqlQuery = sqlQuery.concat(`insert into fact_total_hutang([ID Total Hutang], [Nomor Nota Intern], [Tanggal Nota Intern], [Nama Supplier], [Jenis Kategori], [Harga Sesuai Invoice], [Jumlah Sesuai Bon Unit], [Rate yang disepakati], [Total harga Nota Intern], [Nominal Bayar], [Nama Kategori], [Nama Divisi], [Nama Unit], [Tanggal Jatuh Tempo]) values(${count}, ${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate}, ${item.supplierName}, ${item.categoryType}, ${item.invoicePrice}, ${item.unitReceiptNoteQuantity}, ${item.purchaseOrderExternalCurrencyRate}, ${item.total}, ${item.categoryName}, ${item.divisionName}, ${item.unitName}, ${item.unitPaymentOrderDueDate}); `);
 
                     count = count + 1;
                 }
