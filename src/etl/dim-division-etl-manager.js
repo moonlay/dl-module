@@ -10,8 +10,9 @@ require('mongodb-toolkit');
 
 var DivisionManager = require('../managers/master/division-manager');
 
-module.exports = class DimDivisionEtlManager {
+module.exports = class DimDivisionEtlManager extends BaseManager {
     constructor(db, user, sql) {
+        super(db, user);
         this.sql = sql;
         this.divisionManager = new DivisionManager(db, user);
     }

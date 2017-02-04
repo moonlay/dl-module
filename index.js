@@ -24,7 +24,6 @@ module.exports = {
             UsterManager: require('./src/managers/master/uster-manager'),
             LampStandardManager: require('./src/managers/master/lamp-standard-manager'),
             AccountBankManager: require('./src/managers/master/account-bank-manager'),
-            MonitoringEventTypeManager: require('./src/managers/master/monitoring-event-type-manager'),
             InstructionManager: require('./src/managers/master/instruction-manager'),
             StepManager: require('./src/managers/master/step-manager'),
             ProcessTypeManager: require('./src/managers/master/process-type-manager'),
@@ -55,6 +54,7 @@ module.exports = {
             },
             finishingPrinting: {
                 DailyOperationManager: require('./src/managers/production/finishing-printing/daily-operation-manager'),
+                MonitoringEventManager: require('./src/managers/production/finishing-printing/monitoring-event-manager'),
                 MonitoringSpecificationMachineManager: require('./src/managers/production/finishing-printing/monitoring-specification-machine-manager')
             }
         },
@@ -89,7 +89,6 @@ module.exports = {
                 yarnEquivalentConversion: require("./test/data-util/master/yarn-equivalent-conversion-data-util"),
                 step: require("./test/data-util/master/step-data-util"),
                 instruction: require("./test/data-util/master/instruction-data-util"),
-                monitoringEventType: require("./test/data-util/master/monitoring-event-type-data-util"),
                 orderType: require('./test/data-util/master/order-type-data-util'),
                 processType: require('./test/data-util/master/process-type-data-util'),
                 materialConstruction: require('./test/data-util/master/material-construction-data-util'),
@@ -101,13 +100,17 @@ module.exports = {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util")
             },
             production: {
-                finishingPrinting: {
-                    MonitoringSpecificationMachine: require('./test/data-util/production/finishing-printing/monitoring-specification-machine-data-util')
-                }
+                monitoringEvent: require('./test/data-util/production/finishing-printing/monitoring-event-data-util'),
+                monitoringSpecificationMachine: require('./test/data-util/production/finishing-printing/monitoring-specification-machine-data-util')
             }
         }
     },
     etl: {
-        factPembelian: require("./src/etl/fact-pembelian")
+        factPembelian: require("./src/etl/fact-pembelian"),
+        factTotalHutang: require("./src/etl/fact-total-hutang-etl-manager"),
+        dimCategory: require("./src/etl/dim-category-etl-manager"),
+        dimDivision: require("./src/etl/dim-unit-etl-manager"),
+        dimSupplier: require("./src/etl/dim-supplier-etl-manager"),
+        dimUnit: require("./src/etl/dim-unit-etl-manager")
     }
 }
