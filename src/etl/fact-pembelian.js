@@ -61,7 +61,58 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                     status: err
                 };
                 this.migrationLog.updateOne({ start: startedDate }, updateLog);
-            })
+            });
+    }
+
+    timestamp() {
+        return this.migrationLog.find({
+            description: "Fact Pembelian from MongoDB to Azure DWH",
+            status: "Successful"
+        }).sort({ finish: -1 }).limit(1).toArray()
+    }
+
+    extractPR(time) {
+        var timestamp = new Date(time[0].finish);
+        return this.purchaseRequestManager.collection.find({
+            _deleted: false,
+            _createdBy: {
+                "$nin": ["dev", "unit-test"]
+            },
+            _updatedDate: {
+                "$gt": timestamp
+            }
+        }).toArray()
+    }
+
+    extractPO(time) {
+        var timestamp = new Date(time[0].finish);
+        return this.purchaseOrderManager.collection.find({
+            _deleted: false,
+            _createdBy: {
+                "$nin": ["dev", "unit-test"]
+            },
+            _updatedDate: {
+                "$gt": timestamp
+            }
+        }).toArray()
+    }
+
+    getPRFromPO(datas) {
+        var joinExtractedPR = datas.map((data) => {
+            return data.purchaseRequest;
+        })
+        return Promise.all(joinExtractedPR)
+    }
+
+    extractPRFromPO() {
+        return this.timestamp()
+            .then((time) => this.extractPO(time))
+            .then((datas) => this.getPRFromPO(datas))
+    }
+
+    extractPRfromPR() {
+        return this.timestamp()
+            .then((time) => this.extractPR(time))
     }
 
     joinPurchaseOrder(purchaseRequests) {
@@ -239,23 +290,40 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
             }));
     }
 
+    collectPR() {
+        var purchaseRequest = this.extractPRfromPR();
+        var prFromPOInternal = this.extractPRFromPO();
+        return Promise.all([purchaseRequest, prFromPOInternal])
+            .then((data) => {
+                var purchaseRequest = data[0];
+                var prFromPOInternal = data[1];
+                return Promise.resolve(purchaseRequest.concat(prFromPOInternal))
+            })
+    }
 
     extract() {
-        var timestamp = new Date(1970, 1, 1);
-        return this.purchaseRequestManager.collection.find({
-            _deleted: false,
-            _createdBy: {
-                "$nin": ["dev", "unit-test"]
-            },
-            _updatedDate: {
-                "$gt": timestamp
-            }
-        }).toArray()
-            .then((purchaseRequests) => this.joinPurchaseOrder(purchaseRequests))
-            .then((results) => this.joinPurchaseOrderExternal(results))
-            .then((results) => this.joinDeliveryOrder(results))
-            .then((results) => this.joinUnitReceiptNote(results))
-            .then((results) => this.joinUnitPaymentOrder(results));
+        return this.collectPR()
+            .then((data) => this.removeDuplicates(data))
+            .then((purchaseRequest) => this.joinPurchaseOrder(purchaseRequest))
+            .then((data) => this.joinPurchaseOrderExternal(data))
+            .then((data) => this.joinDeliveryOrder(data))
+            .then((data) => this.joinUnitReceiptNote(data))
+            .then((data) => this.joinUnitPaymentOrder(data))
+    }
+
+    removeDuplicates(arr) {
+        var new_arr = [];
+        var lookup = {};
+
+        for (var i in arr) {
+            lookup[arr[i].no] = arr[i];
+        }
+
+        for (i in lookup) {
+            new_arr.push(lookup[i]);
+        }
+
+        return new_arr;
     }
 
     getRangeMonth(days) {
@@ -479,49 +547,88 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
         return Promise.resolve([].concat.apply([], result));
     }
 
-    load(data) {
-        return this.sql.getConnection()
-            .then((request) => {
-
-                var sqlQuery = '';
-
-                var count = 1;
-
-                for (var item of data) {
-                    if (item.purchaseRequestId) {
-                        sqlQuery = sqlQuery.concat(`INSERT INTO dl_fact_pembelian_temp([id fact pembelian], [id pr], [nomor pr], [tanggal pr], [jumlah selisih hari pr-po internal], [selisih hari pr-po internal], [jumlah selisih hari pr-po eksternal], [selisih hari pr-po eksternal], [tanggal diminta datang], [kode budget], [nama budget], [kode unit], [nama unit], [kode divisi], [nama divisi], [kode kategori], [nama kategori], [jenis kategori], [kode produk], [nama produk], [id po internal], [nomor po internal], [tanggal po internal], [jumlah selisih hari po eksternal-po internal], [selisih hari po internal], [nama staff pembelian], [id po eksternal], [nomor po eksternal], [nomor pr di po eksternal], [tanggal po eksternal], [jumlah selisih hari do-po eksternal], [selisih hari do-po eksternal], [tanggal rencana kedatangan], [kode supplier], [nama supplier], [kode mata uang], [nama mata uang], [metode pembayaran], [nilai mata uang], [jumlah barang], [uom], [harga per unit], [total harga], [id do], [nomor do], [nomor pr di do], [tanggal do], [jumlah selisih hari urn-do], [selisih hari urn-do], [status ketepatan waktu], [id urn], [nomor urn], [tanggal urn], [jumlah selisih hari upo-urn], [selisih hari upo-urn], [id upo], [nomor upo], [tanggal upo], [jumlah selisih hari upo-po internal], [selisih hari upo-po internal], [invoice price], [po internal]) VALUES(${count}, ${item.purchaseRequestId}, ${item.purchaseRequestNo}, ${item.purchaseRequestDate}, ${item.purchaseRequestDays}, ${item.purchaseRequestDaysRange}, ${item.prPurchaseOrderExternalDays}, ${item.prPurchaseOrderExternalDaysRange}, ${item.expectedPRDeliveryDate}, ${item.budgetCode}, ${item.budgetName}, ${item.unitCode}, ${item.unitName}, ${item.divisionCode}, ${item.divisionName}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType}, ${item.productCode}, ${item.productName}, ${item.purchaseOrderId}, ${item.purchaseOrderNo}, ${item.purchaseOrderDate}, ${item.purchaseOrderExternalDays}, ${item.purchaseOrderExternalDaysRange}, ${item.purchasingStaffName}, ${item.purchaseOrderExternalId}, ${item.purchaseOrderExternalNo}, ${item.prNoAtPoExt}, ${item.purchaseOrderExternalDate}, ${item.deliveryOrderDays}, ${item.deliveryOrderDaysRange}, ${item.expectedDeliveryDate}, ${item.supplierCode}, ${item.supplierName}, ${item.currencyCode}, ${item.currencyName}, ${item.paymentMethod}, ${item.currencyRate}, ${item.purchaseQuantity}, ${item.uom}, ${item.pricePerUnit}, ${item.totalPrice}, ${item.deliveryOrderId}, ${item.deliveryOrderNo}, ${item.prNoAtDo}, ${item.deliveryOrderDate}, ${item.unitReceiptNoteDays}, ${item.unitReceiptNoteDaysRange}, ${item.status}, ${item.unitReceiptNoteId}, ${item.unitReceiptNoteNo}, ${item.unitReceiptNoteDate}, ${item.unitPaymentOrderDays}, ${item.unitPaymentOrderDaysRange}, ${item.unitPaymentOrderId}, ${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate}, ${item.purchaseOrderDays}, ${item.purchaseOrderDaysRange}, ${item.invoicePrice}, ${item.prNoAtPo}); `);
-
-                        count++;
-                    }
+    insertQuery(sql, query) {
+        return new Promise((resolve, reject) => {
+            sql.query(query, function (err, result) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
                 }
-
-                request.multiple = true;
-
-                // var fs = require("fs");
-                // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
-
-                // fs.writeFile(path, sqlQuery, function (error) {
-                //     if (error) {
-                //         console.log("write error:  " + error.message);
-                //     } else {
-                //         console.log("Successful Write to " + path);
-                //     }
-                // });
-
-                // var deleteTempTable = ('DELETE FROM [dl_fact_pembelian_temp]; ')
-                // var storedProcedure = ('EXEC UPSERT; ')
-
-                return request.query(sqlQuery)
-                    // return request.query('select count(*) from fact_durasi_pembelian')
-                    // return request.query('select top 1 * from fact_durasi_pembelian')
-                    .then((results) => {
-                        console.log(results);
-                        return Promise.resolve(results);
-                    });
             })
-            .catch((err) => {
-                console.log(err);
-                return Promise.reject(err);
-            });
+        })
+    }
+
+    load(data) {
+        return new Promise((resolve, reject) => {
+            this.sql.startConnection()
+                .then(() => {
+
+                    var transaction = this.sql.transaction();
+
+                    transaction.begin((err) => {
+
+                        var request = this.sql.transactionRequest(transaction);
+
+                        var command = [];
+
+                        var sqlQuery = '';
+
+                        var count = 1;
+
+                        for (var item of data) {
+                            if (item) {
+                                var queryString = `INSERT INTO dl_fact_pembelian_temp([id fact pembelian], [id pr], [nomor pr], [tanggal pr], [jumlah selisih hari pr-po internal], [selisih hari pr-po internal], [jumlah selisih hari pr-po eksternal], [selisih hari pr-po eksternal], [tanggal diminta datang], [kode budget], [nama budget], [kode unit], [nama unit], [kode divisi], [nama divisi], [kode kategori], [nama kategori], [jenis kategori], [kode produk], [nama produk], [id po internal], [nomor po internal], [tanggal po internal], [jumlah selisih hari po eksternal-po internal], [selisih hari po internal], [nama staff pembelian], [id po eksternal], [nomor po eksternal], [nomor pr di po eksternal], [tanggal po eksternal], [jumlah selisih hari do-po eksternal], [selisih hari do-po eksternal], [tanggal rencana kedatangan], [kode supplier], [nama supplier], [kode mata uang], [nama mata uang], [metode pembayaran], [nilai mata uang], [jumlah barang], [uom], [harga per unit], [total harga], [id do], [nomor do], [nomor pr di do], [tanggal do], [jumlah selisih hari urn-do], [selisih hari urn-do], [status ketepatan waktu], [id urn], [nomor urn], [tanggal urn], [jumlah selisih hari upo-urn], [selisih hari upo-urn], [id upo], [nomor upo], [tanggal upo], [jumlah selisih hari upo-po internal], [selisih hari upo-po internal], [invoice price], [po internal]) VALUES(${count}, ${item.purchaseRequestId}, ${item.purchaseRequestNo}, ${item.purchaseRequestDate}, ${item.purchaseRequestDays}, ${item.purchaseRequestDaysRange}, ${item.prPurchaseOrderExternalDays}, ${item.prPurchaseOrderExternalDaysRange}, ${item.expectedPRDeliveryDate}, ${item.budgetCode}, ${item.budgetName}, ${item.unitCode}, ${item.unitName}, ${item.divisionCode}, ${item.divisionName}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType}, ${item.productCode}, ${item.productName}, ${item.purchaseOrderId}, ${item.purchaseOrderNo}, ${item.purchaseOrderDate}, ${item.purchaseOrderExternalDays}, ${item.purchaseOrderExternalDaysRange}, ${item.purchasingStaffName}, ${item.purchaseOrderExternalId}, ${item.purchaseOrderExternalNo}, ${item.prNoAtPoExt}, ${item.purchaseOrderExternalDate}, ${item.deliveryOrderDays}, ${item.deliveryOrderDaysRange}, ${item.expectedDeliveryDate}, ${item.supplierCode}, ${item.supplierName}, ${item.currencyCode}, ${item.currencyName}, ${item.paymentMethod}, ${item.currencyRate}, ${item.purchaseQuantity}, ${item.uom}, ${item.pricePerUnit}, ${item.totalPrice}, ${item.deliveryOrderId}, ${item.deliveryOrderNo}, ${item.prNoAtDo}, ${item.deliveryOrderDate}, ${item.unitReceiptNoteDays}, ${item.unitReceiptNoteDaysRange}, ${item.status}, ${item.unitReceiptNoteId}, ${item.unitReceiptNoteNo}, ${item.unitReceiptNoteDate}, ${item.unitPaymentOrderDays}, ${item.unitPaymentOrderDaysRange}, ${item.unitPaymentOrderId}, ${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate}, ${item.purchaseOrderDays}, ${item.purchaseOrderDaysRange}, ${item.invoicePrice}, ${item.prNoAtPo}); \n`;
+                                sqlQuery = sqlQuery.concat(queryString);
+                                if (count % 1000 == 0) {
+                                    command.push(this.insertQuery(request, sqlQuery));
+                                    sqlQuery = "";
+                                }
+                                console.log(`add data to query  : ${count}`);
+                                count++;
+                            }
+                        }
+
+                        if (sqlQuery != "")
+                            command.push(this.insertQuery(request, `${sqlQuery}`));
+
+                        this.sql.multiple = true;
+
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\daniel.nababan.MOONLAY\\Desktop\\sqlQuery.txt";
+
+                        return Promise.all(command)
+                            .then((results) => {
+                                request.execute("DL_UPSERT_FACT_PEMBELIAN").then((execResult) => {
+                                    transaction.commit((err) => {
+                                        if (err)
+                                            reject(err);
+                                        else
+                                            resolve(results);
+                                    });
+                                }).catch((error) => {
+                                    transaction.rollback((err) => {
+                                        if (err)
+                                            reject(err)
+                                        else
+                                            reject(error);
+                                    });
+                                })
+                            })
+                            .catch((error) => {
+                                transaction.rollback((err) => {
+                                    console.log("rollback");
+                                    if (err)
+                                        reject(err)
+                                    else
+                                        reject(error);
+                                });
+                            });
+                    });
+                })
+                .catch((err) => {
+                    reject(err);
+                })
+        });
     }
 }

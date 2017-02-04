@@ -7,36 +7,25 @@ var sqlHelper = require("../../sql-helper");
 
 before("#00. connect db", function (done) {
     Promise.all([helper, sqlHelper])
-    .then((result) => {
-        var db = result[0];
-        var sql = result[1];
-        db.getDb().then((db) => {
-            instanceManager = new Manager(db, {
-                username: "unit-test"
-            }, sql);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        })
-    });
+        .then((result) => {
+            var db = result[0];
+            var sql = result[1];
+            db.getDb().then((db) => {
+                instanceManager = new Manager(db, {
+                    username: "unit-test"
+                }, sql);
+                done();
+            })
+                .catch((e) => {
+                    done(e);
+                })
+        });
 });
 
 it("#01. should success when create etl fact-purchasing", function (done) {
     instanceManager.run()
         .then((a) => {
             console.log(a);
-            // var fs = require("fs");
-            // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
-
-            // fs.writeFile(path, a, function (error) {
-            //     if (error) {
-            //         console.error("write error:  " + error.message);
-            //     } else {
-            //         console.log("Successful Write to " + path);
-            //     }
-            // });
-
             done();
         })
         .catch((e) => {
@@ -45,13 +34,129 @@ it("#01. should success when create etl fact-purchasing", function (done) {
         });
 });
 
-// it("#01. should success when log synchronize date after updating fact-purchasing", function(done) {
-//     instanceManager.lastSynchDate()
-//         .then(() => {
-//             // console.log(a);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+var data = [{}, {}];
+
+it("#02. should success when transforming data", function (done) {
+    instanceManager.transform(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#03. should success when extracting PR from PO", function (done) {
+    instanceManager.getPRFromPO(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#04. should success when joining PR to PO", function (done) {
+    instanceManager.joinPurchaseOrder(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#05. should success when joining data to PO External", function (done) {
+    instanceManager.joinPurchaseOrderExternal(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#06. should success when joining data to Delivery Order", function (done) {
+    instanceManager.joinDeliveryOrder(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#07. should success when joining data to Unit Receipt Note", function (done) {
+    instanceManager.joinUnitReceiptNote(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#08. should success when joining data to Unit Payment Order", function (done) {
+    instanceManager.joinUnitPaymentOrder(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+var arr = [{no: {}}, {no: {}}];
+it("#09. should success when remove duplicate data", function (done) {
+    instanceManager.removeDuplicates(arr)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+var days = 0;
+it("#10. should success when get days range by month", function (done) {
+    instanceManager.getRangeMonth(days)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#11. should success when get days range by week", function (done) {
+    instanceManager.getRangeWeek(days)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+var catType = "";
+it("#12. should success when get category type", function (done) {
+    instanceManager.getCategoryType(days)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+var poDate = new Date();
+var doDate = new Date();
+it("#10. should success when get status", function (done) {
+    instanceManager.getStatus(poDate, doDate)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
