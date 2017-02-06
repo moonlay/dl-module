@@ -19,12 +19,12 @@ class MachineTypeDataUtil {
         data.indicators = [{
             indicator: `Tekanan Press Mangle[${code}]`,
             dataType: "number",
-            value: 10,
+            defaultValue: 10,
         },
             {
                 indicator: `Tekanan Press Mangl[${code}]`,
                 dataType: "string",
-                value: "10",
+                defaultValue: "10",
             }];
 
         return Promise.resolve(data);

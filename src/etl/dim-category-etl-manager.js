@@ -4,29 +4,63 @@
 var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require('module-toolkit').BaseManager;
 var moment = require("moment");
+var startedDate = new Date();
 
 // internal deps 
 require('mongodb-toolkit');
 
 var CategoryManager = require('../managers/master/category-manager');
 
-module.exports = class DimCategoryEtlManager {
+module.exports = class DimCategoryEtlManager extends BaseManager {
     constructor(db, user, sql) {
+        super(db, user);
         this.sql = sql;
         this.categoryManager = new CategoryManager(db, user);
+        this.migrationLog = this.db.collection("migration-log");
     }
     run() {
-        return this.extract()
-            .then((data) => {
-                return this.transform(data)
+        this.migrationLog.insert({
+            description: "Dim Category from MongoDB to Azure DWH",
+            start: startedDate,
+        })
+        return this.getTimestamp()
+            .then((timestamp) => this.extract(timestamp))
+            .then((data) => this.transform(data))
+            .then((data) => this.load(data))
+            .then(() => {
+                var finishedDate = new Date();
+                var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                var updateLog = {
+                    description: "Dim Category from MongoDB to Azure DWH",
+                    start: startedDate,
+                    finish: finishedDate,
+                    executionTime: spentTime + " minutes",
+                    status: "success"
+                };
+                this.migrationLog.updateOne({ start: startedDate }, updateLog);
+            }).catch((err) => {
+                var finishedDate = new Date();
+                var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                var updateLog = {
+                    description: "Dim Category from MongoDB to Azure DWH",
+                    start: startedDate,
+                    finish: finishedDate,
+                    executionTime: spentTime + " minutes",
+                    status: err
+                };
+                this.migrationLog.updateOne({ start: startedDate }, updateLog);
             })
-            .then((data) => {
-                return this.load(data)
-            });
     }
 
-    extract() {
-        var timestamp = new Date(1970, 1, 1);
+    getTimestamp() {
+        return this.migrationLog.find({
+            status: "success",
+            description: "Dim Category from MongoDB to Azure DWH"
+        }).sort({ finish: -1 }).limit(1).toArray();
+    }
+
+    extract(timestamp) {
+        var timestamps = new Date(timestamp[0].finish);
         return this.categoryManager.collection.find({
             _deleted: false
         }).toArray();

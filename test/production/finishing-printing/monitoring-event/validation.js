@@ -35,7 +35,6 @@ it('#01. should error when create with empty data ', function (done) {
                 e.errors.should.have.property('productionOrder');
                 e.errors.should.have.property('selectedProductionOrderDetail');
                 e.errors.should.have.property('cartNumber');
-                e.errors.should.have.property('monitoringEventType');
                 done();
             }
             catch (ex) {
@@ -202,5 +201,20 @@ it('#07. should error when create new data with timeStart greater than timeEnd i
         .catch(e => {
             done(e);
         });
+});
+
+it('#08. should success when get Query', function (done) {
+    var paging = {};
+    paging.keyword = '123';
+    var query = monitoringEventManager._getQuery(paging)
+    try {
+        query.should.have.property('$and');
+        query['$and'].should.instanceof(Array)
+        query['$and'].length.should.not.equal(0);
+        done();
+    }
+    catch (ex) {
+        done(ex);
+    }
 });
 
