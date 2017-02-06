@@ -30,6 +30,7 @@ it('#01. should error when create with empty data ', function (done) {
                 e.errors.should.have.property('date');
                 e.errors.should.have.property('time');
                 e.errors.should.have.property('machineType');
+                e.errors.should.have.property('items');
 
                 done();
             }
