@@ -61,6 +61,7 @@ module.exports = {
         sales:{
             ProductionOrderManager: require('./src/managers/sales/production-order-manager')
         }
+
     },
     test: {
         data: {

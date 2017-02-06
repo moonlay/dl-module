@@ -7,6 +7,7 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var MonitoringSpecificationMachine = DLModels.production.finishingPrinting.MonitoringSpecificationMachine;
 var MachineTypeManager = require('../../master/machine-type-manager');
+var MachineManager = require('../../master/machine-manager');
 var CodeGenerator = require('../../../utils/code-generator');
 var BaseManager = require('module-toolkit').BaseManager;
 
@@ -18,6 +19,7 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
         this.collection = this.db.collection(map.production.finishingPrinting.collection.MonitoringSpecificationMachine);
 
         this.machineTypeManager = new MachineTypeManager(db, user);
+        // this.machineManager= new MachineManager(db,user);
 
     }
 
@@ -69,10 +71,12 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
         });
 
         var getMachineType = ObjectId.isValid(valid.machineTypeId) ? this.machineTypeManager.getSingleByIdOrDefault(new ObjectId(valid.machineTypeId)) : Promise.resolve(null);
+        // var getMachine = ObjectId.isValid(valid.machineTypeId) ? this.machineManager.getSingleByIdOrDefault(new ObjectId(valid.machineTypeId)) : Promise.resolve(null);
 
 
 
         return Promise.all([getMonitoringSpecificationMachinePromise, getMachineType])
+            // return Promise.all([getMonitoringSpecificationMachinePromise, getMachine])
             .then(results => {
 
                 var _monitoringSpecificationMachine = results[0];
@@ -93,6 +97,30 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
                     errors["machineType"] = i18n.__("MonitoringSpecificationMachine.machineType.name.isRequired:%s is not exists", i18n.__("MonitoringSpecificationMachine.machineType.name._:MachineType")); //"machineType tidak boleh kosong";
                 else if (!valid.machineType._id)
                     errors["machineType"] = i18n.__("MonitoringSpecificationMachine.machineType.name.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.machineType.name._:MachineType")); //"machineType tidak boleh kosong";
+                // else {
+                //     var errorIndicators = [];
+
+                //     for (var indicator of valid.machineType.indicators) {
+                //         var errorIndicator = {};
+                //         if (indicator.dataType == "range (use '-' as delimiter)") {
+                //             var rangeValues = indicator.value.split("-");
+                //             if (rangeValues.length == 0) {
+                //                 errorIndicator["value"] = i18n.__("MonitoringSpecificationMachine.machineType.indicators.value.isIncorrect:%s delimiter is incorrect", i18n.__("MonitoringSpecificationMachine.machineType.indicators.value._:value")); //"value tidak boleh kosong";
+
+                //             } else if (rangeValues.length == 2) {
+                //                 if (!parseInt(rangeValues[0]) || !parseInt(rangeValues[1])) {
+                //                     errorIndicator["value"] = i18n.__("MonitoringSpecificationMachine.machineType.indicators.value.isIncorrect:%s is incorrect", i18n.__("MonitoringSpecificationMachine.machineType.indicators.value._:value")); //"value tidak boleh kosong";
+                //                 } else if (parseInt(rangeValues[0]) >= parseInt(rangeValues[1])) {
+                //                     errorIndicator["value"] = i18n.__("MonitoringSpecificationMachine.machineType.indicators.value.isIncorrect:%s 1st value must less than 2nd value", i18n.__("MonitoringSpecificationMachine.machineType.indicators.value._:value")); //"value tidak boleh kosong";
+                //                 }
+
+                //             } else {
+                //                 errorIndicator["value"] = i18n.__("MonitoringSpecificationMachine.machineType.indicators.value.isIncorrect:%s range is incorrect", i18n.__("MonitoringSpecificationMachine.machineType.indicators.value._:value")); //"value tidak boleh kosong";
+                //             }
+
+                //         }
+                //     }
+                // }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
