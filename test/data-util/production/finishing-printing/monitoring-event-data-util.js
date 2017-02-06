@@ -4,30 +4,29 @@ var MonitoringEventManager = require("../../../../src/managers/production/finish
 
 var productionOrder = require("../../sales/production-order-data-util");
 var machine = require("../../master/machine-data-util");
-var monitoringEventType = require("../../master/monitoring-event-type-data-util");
 
 class MonitoringEventDataUtil {
     getNewData() {
-        return Promise.all([productionOrder.getNewData(), machine.getTestData(), monitoringEventType.getTestData(), monitoringEventType.getTestData2()])
+        return Promise.all([productionOrder.getNewTestData(), machine.getTestData()])
             .then((results) => {
-                var productionOrder = results[0];
-                var machine = results[1];
-                var monitoringEventType01 = results[2];
-                var monitoringEventType02 = results[3];
-                var selectedProductionOrderDetail = productionOrder.details.length > 0 ? productionOrder.details[0] : {};
+                var _salesContract = results[0];
+                var _productionOrder = _salesContract && _salesContract.productionOrders.length > 0 ? results[0].productionOrders[0] : {};
+                var _selectedProductionOrderDetail = (_productionOrder.details && _productionOrder.details.length > 0) ? _productionOrder.details[0] : {};
+
+                var _machine = results[1];
+                var _machineEvent = _machine.machineEvents.length > 0 ? _machine.machineEvents[0] : {};
             
                 var data = {
                     dateStart: new Date(),
                     dateEnd: new Date(),
                     timeInMillisStart: 12000,
                     timeInMillisEnd: 24000,
-                    machineId: machine._id,
-                    machine: machine,
-                    productionOrder: productionOrder,
-                    selectedProductionOrderDetail: selectedProductionOrderDetail,
+                    machineId: _machine._id,
+                    machine: _machine,
+                    productionOrder: _productionOrder,
+                    selectedProductionOrderDetail: _selectedProductionOrderDetail,
                     cartNumber: "Cart Number for UnitTest",
-                    monitoringEventTypeId: monitoringEventType01._id,
-                    monitoringEventType: monitoringEventType01,
+                    machineEvent: _machineEvent,
                     remark: "Unit Test"
                 };
                 return Promise.resolve(data);
@@ -40,7 +39,9 @@ class MonitoringEventDataUtil {
             .then((manager) => {
                 return this.getNewData().then((data) => {
                     return manager.create(data)
-                        .then((id) => manager.getSingleById(id));
+                        .then((id) => {
+                            manager.getSingleById(id)
+                            });
                 });
             });
     }

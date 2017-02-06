@@ -235,23 +235,29 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
     _afterInsert(id) {
-        var poId = id;
-        return this.getSingleById(poId)
+        return this.getSingleById(id)
             .then((purchaseOrder) => {
-                return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId);
+                return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
+                    .then((purchaseRequest) => {
+                        purchaseRequest.isUsed = true;
+                        purchaseRequest.purchaseOrderIds = purchaseRequest.purchaseOrderIds || [];
+                        purchaseRequest.status = prStatusEnum.PROCESSING;
+                        purchaseRequest.purchaseOrderIds.push(id);
+                        return this.purchaseRequestManager.update(purchaseRequest)
+                            .then(() => {
+                                purchaseOrder.purchaseRequest = purchaseRequest
+                                return this.collection
+                                    .updateOne({
+                                        _id: purchaseOrder._id
+                                    }, {
+                                        $set: purchaseOrder
+                                    })
+                                    .then((result) => Promise.resolve(purchaseOrder._id));
+                            });
+                    })
             })
-            .then((purchaseRequest) => {
-                purchaseRequest.isUsed = true;
-                purchaseRequest.purchaseOrderIds = purchaseRequest.purchaseOrderIds || [];
-                purchaseRequest.status = prStatusEnum.PROCESSING;
-                purchaseRequest.purchaseOrderIds.push(poId);
-                return this.purchaseRequestManager.update(purchaseRequest);
-            })
-            .then(() => {
-                return Promise.resolve(poId);
-            });
     }
-
+    
     delete(purchaseOrder) {
         return new Promise((resolve, reject) => {
             this._createIndexes()

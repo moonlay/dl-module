@@ -12,6 +12,17 @@ class MonitoringSpecificationMachineDataUtil {
         return Promise.all([machineType.getNewTestData()])
             .then((results) => {
                 var _machineType = results[0];
+                var itemsArr = [];
+                for (var machine of _machineType.indicators) {
+                    var item = {
+                        indicator: machine.indicator,
+                        dataType: machine.dataType,
+                        defaultValue: machine.defaultValue,
+                        value: "",
+
+                    }
+                    itemsArr.push(item);
+                }
 
                 var data = {
                     code: `UT/MSM/${codeGenerator()}`,
@@ -19,7 +30,10 @@ class MonitoringSpecificationMachineDataUtil {
                     time: "10.00",
                     machineTypeId: _machineType._id,
                     machineType: _machineType,
+                    items: itemsArr
+
                 };
+
                 return Promise.resolve(data);
             });
     }
