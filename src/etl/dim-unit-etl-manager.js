@@ -11,8 +11,9 @@ require('mongodb-toolkit');
 
 var UnitManager = require('../managers/master/unit-manager');
 
-module.exports = class DimUnitEtlManager {
+module.exports = class DimUnitEtlManager extends BaseManager {
     constructor(db, user, sql) {
+        super(db, user);
         this.sql = sql;
         this.unitManager = new UnitManager(db, user);
     }

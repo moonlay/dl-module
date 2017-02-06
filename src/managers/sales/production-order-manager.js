@@ -607,6 +607,24 @@ module.exports = class ProductionOrderManager extends BaseManager {
         });
     }
 
+    getSingleProductionOrderDetail(detailCode){
+        return new Promise((resolve, reject) => {
+            var query = {"productionOrders.details": { "$elemMatch": { "code": detailCode}}};
+            this.collection.singleOrDefault(query).then((result) => {
+                var dataReturn = {};
+                if (result){
+                    for(var productionOrder of result.productionOrders){
+                        for (var detail of productionOrder.details){
+                            if (detailCode === detail.code)
+                                dataReturn = new ProductionOrderDetail(detail);
+                        }
+                    }
+                }
+                resolve(dataReturn);
+            });
+        });
+    }
+
     getDataProductionOrder(data){
        return new Promise((resolve, reject) => {
             var regex = new RegExp(data.keyword, "i");
