@@ -66,13 +66,21 @@ module.exports = class DimCategoryEtlManager extends BaseManager {
         }).toArray();
     }
 
+    getCategoryType(catType) {
+        if (catType === "BAHAN BAKU") {
+            return "BAHAN BAKU";
+        } else {
+            return "NON BAHAN BAKU";
+        }
+    }
+
     transform(data) {
         var result = data.map((item) => {
 
             return {
                 categoryCode: item.code,
                 categoryName: item.name,
-                categoryType: item.name.toLowerCase() == 'bahan baku' ? 'BAHAN BAKU' : 'NON BAHAN BAKU'
+                categoryType: this.getCategoryType(item.name)
             };
         });
         return Promise.resolve([].concat.apply([], result));
