@@ -46,6 +46,7 @@ it("#02. should success when transforming data", function (done) {
         });
 });
 
+
 it("#03. should success when extracting PR from PO", function (done) {
     instanceManager.getPRFromPO(data)
         .then(() => {
@@ -55,6 +56,7 @@ it("#03. should success when extracting PR from PO", function (done) {
             done(e);
         });
 });
+
 
 it("#04. should success when joining PR to PO", function (done) {
     instanceManager.joinPurchaseOrder(data)

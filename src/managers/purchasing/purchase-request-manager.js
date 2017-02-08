@@ -155,12 +155,14 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         }
                         itemErrors.push(itemError);
                     }
+
                     for (var itemError of itemErrors) {
                         if (Object.getOwnPropertyNames(itemError).length > 0) {
                             errors.items = itemErrors;
                             break;
                         }
                     }
+                    
                 }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {

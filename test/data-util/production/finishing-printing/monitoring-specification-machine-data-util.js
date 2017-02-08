@@ -4,16 +4,17 @@ var helper = require("../../../helper");
 var MonitoringSpecificationMachineManager = require("../../../../src/managers/production/finishing-printing/monitoring-specification-machine-manager");
 var codeGenerator = require("../../../../src/utils/code-generator");
 
-var machineType = require("../../master/machine-type-data-util");
+// var machineType = require("../../master/machine-type-data-util");
+var machine = require("../../master/machine-data-util");
 
 class MonitoringSpecificationMachineDataUtil {
 
     getNewData() {
-        return Promise.all([machineType.getNewTestData()])
+        return Promise.all([machine.getTestData()])
             .then((results) => {
-                var _machineType = results[0];
+                var _machine = results[0];
                 var itemsArr = [];
-                for (var machine of _machineType.indicators) {
+                for (var machine of _machine.machineType.indicators) {
                     var item = {
                         indicator: machine.indicator,
                         dataType: machine.dataType,
@@ -28,8 +29,8 @@ class MonitoringSpecificationMachineDataUtil {
                     code: `UT/MSM/${codeGenerator()}`,
                     date: new Date(),
                     time: "10.00",
-                    machineTypeId: _machineType._id,
-                    machineType: _machineType,
+                    machineId: _machine._id,
+                    machine: _machine,
                     items: itemsArr
 
                 };

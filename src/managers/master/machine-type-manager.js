@@ -47,7 +47,7 @@ module.exports = class MachineTypeManager extends BaseManager {
 
     _beforeInsert(data) {
         data.code = CodeGenerator();
-        data._active=true;
+        data._active = true;
         return Promise.resolve(data);
     }
 
@@ -62,14 +62,10 @@ module.exports = class MachineTypeManager extends BaseManager {
             code: valid.code,
         });
 
-        // valid.name = valid.name instanceof String;
-        // valid.description = valid.description instanceof String ? valid.description : "";
+
         valid.name = valid.name ? valid.name : "";
         valid.description = valid.description ? valid.description : "";
         valid.indicators = valid.indicators instanceof Array ? valid.indicators : [];
-
-
-
 
 
         // 2. begin: Validation.
@@ -83,20 +79,15 @@ module.exports = class MachineTypeManager extends BaseManager {
                 if (!valid.name || valid.name == "" || valid.name == "undefined")
                     errors["name"] = i18n.__("MachineType.name.isRequired:%s is required", i18n.__("MachineType.name._:Name")); //"name tidak boleh kosong";
 
-                if (!valid.description || valid.description == "" || valid.description == "undefined")
-                    errors["description"] = i18n.__("MachineType.description.isRequired:%s is required", i18n.__("MachineType.description._:Description")); //"description tidak boleh kosong";
-
-                // if (!valid.expectedDeliveryDate || valid.expectedDeliveryDate === "" || valid.expectedDeliveryDate === "undefined")
-                //     valid.expectedDeliveryDate = "";
 
                 if (valid.indicators && valid.indicators.length <= 0) {
-                    errors["indicators"] = i18n.__("MachineType.indicators.isRequired:%s is required", i18n.__("MachineType.indicators._:Indicators")); //"Harus ada minimal 1 barang";
+                    errors["indicators"] = i18n.__("MachineType.indicators.isRequired:%s is required", i18n.__("MachineType.indicators._:Indicators")); //"Harus ada minimal 1 indicator";
 
                     for (var indicator of valid.indicators) {
                         if (indicator.dataType == "number") {
-                            indicator.value instanceof number ? valid.value : 0;
+                            indicator.defaultValue instanceof number ? valid.defaultValue : 0;
                         } else if (indicator.dataType == "string" || indicator.dataType == "option") {
-                            indicator.value instanceof string ? valid.value : "";
+                            indicator.defaultValue instanceof string ? valid.defaultValue : "";
                         }
                     }
                 }
@@ -124,13 +115,17 @@ module.exports = class MachineTypeManager extends BaseManager {
                                 itemError["indicator"] = i18n.__("MachineType.indicators.indicator.isRequired:%s is required", i18n.__("MachineType.indicators.indicator._:indicator")); //"indicator tidak boleh kosong";
                             }
 
+                            itemErrors.push(itemError);
+
+                        }
+                        for (var itemError of itemErrors) {
                             if (Object.getOwnPropertyNames(itemError).length > 0) {
-                                itemErrors.push(itemError);
+                                errors.indicators = itemErrors;
+                                break;
                             }
                         }
                     }
-                    if (itemErrors.length > 0)
-                        errors.items = itemErrors;
+            
                 }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {

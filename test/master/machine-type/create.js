@@ -26,9 +26,9 @@ it('#01. should error when create with empty data ', function (done) {
         })
         .catch(e => {
             try {
-                // e.errors.should.have.property('code');
+                
                 e.errors.should.have.property("name");
-                e.errors.should.have.property("description");
+               
                 e.errors.should.have.property("indicators");
                 done();
             }
