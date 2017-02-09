@@ -43,7 +43,7 @@ module.exports = function (productionOrder) {
     var tfoot=[];
     var table=[];
 
-    if(productionOrder.orderType.name.trim().toLowerCase()=="printing" || productionOrder.orderType.name.trim().toLowerCase()=="yarndyed")
+    if(productionOrder.orderType.name.trim().toLowerCase()=="printing" || productionOrder.orderType.name.toLowerCase()=="yarn dyed")
     {
         thead = [{
             text: 'Warna yang Diminta',
