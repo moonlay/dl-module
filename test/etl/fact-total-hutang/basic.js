@@ -23,7 +23,7 @@ before("#00. connect db", function(done) {
 
 it("#01. should success when create etl fact-total-hutang", function(done) {
     instanceManager.run()
-        .then(() => {
+        .then((a) => {
             done();
         })
         .catch((e) => {
