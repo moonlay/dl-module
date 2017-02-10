@@ -14,12 +14,13 @@ describe('#dl-module', function (done) {
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
     test('@ETL/DIM-CATEGORY', './etl/dim-category');
-    // test('@ETL/DIM-DIVISION', './etl/dim-division');
+    test('@ETL/DIM-DIVISION', './etl/dim-division');
     test('@ETL/DIM-SUPPLIER', './etl/dim-supplier');
-    // test('@ETL/DIM-UNIT', './etl/dim-unit');
-    // test('@ETL/FACT-TOTAL-HUTANG', './etl/fact-total-hutang');
+    test('@ETL/DIM-UNIT', './etl/dim-unit');
+    test('@ETL/FACT-TOTAL-HUTANG', './etl/fact-total-hutang');
     test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');    
     test('@ETL/FACT-MONITORING-EVENT', './etl/fact-monitoring-event');    
+    test('@ETL/FACT-SALES-CONTRACT', './etl/fact-sales-contract');    
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');

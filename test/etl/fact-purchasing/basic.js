@@ -108,16 +108,16 @@ it("#08. should success when joining data to Unit Payment Order", function (done
         });
 });
 
-// var arr = [{no: {}}, {no: {}}];
-// it("#09. should success when remove duplicate data", function (done) {
-//     instanceManager.removeDuplicates(arr)
-//         .then((a) => {
-//             done(a);
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+var arr = [{no: {}}, {no: {}}];
+it("#09. should success when remove duplicate data", function (done) {
+    instanceManager.removeDuplicates(arr)
+        .then((a) => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
 
 // var days = 0;
 // it("#10. should success when get days range by month", function (done) {

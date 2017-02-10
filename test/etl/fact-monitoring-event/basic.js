@@ -25,7 +25,7 @@ it("#01. should success when create etl fact-purchasing", function (done) {
     instanceManager.run()
         .then((a) => {
             console.log(a);
-            done(a);
+            done();
         })
         .catch((e) => {
             console.log(e);
