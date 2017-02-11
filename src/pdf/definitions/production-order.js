@@ -46,12 +46,12 @@ module.exports = function (productionOrder) {
     if(productionOrder.orderType.name.trim().toLowerCase()=="printing" || productionOrder.orderType.name.toLowerCase()=="yarn dyed")
     {
         thead = [{
-            text: 'Warna yang Diminta',
-            style: 'tableHeader'
-        }, {
                 text: 'Acuan/Color Way',
                 style: 'tableHeader'
-            }, {
+            },{
+                text: 'Warna yang Diminta',
+                style: 'tableHeader'
+            },{
                 text: 'Jumlah',
                 style: 'tableHeader'
             }];
@@ -61,19 +61,26 @@ module.exports = function (productionOrder) {
             style: 'tableHeader',
             colSpan:2
         }, "", {
-                text: productionOrder.orderQuantity +" "+productionOrder.uom.unit,
+                text: parseFloat(productionOrder.orderQuantity).toLocaleString(locale, locale.decimal) +" "+productionOrder.uom.unit,
                 style: 'tableHeader'
             }]];
 
         tbody = details.map(function (detail, index) {
+            var colorReq=detail.colorRequest;
+            var colorTemplate=detail.colorTemplate;
+            if(detail.colorRequest.indexOf(' ')<10)
+                colorReq=detail.colorRequest.length>10?detail.colorRequest.replace(/(.{10})/g,"$&" + " "):detail.colorRequest;
+            if(detail.colorTemplate.indexOf(' ')<10)
+                colorTemplate=detail.colorTemplate.length>10?detail.colorTemplate.replace(/(.{10})/g,"$&" + " "):detail.colorTemplate;
+            
             return [{
-                text: detail.colorRequest ,
+                text: colorTemplate ,
                 style: ['size07', 'center']
             },{
-                text: detail.colorTemplate ,
-                style: ['size07', 'center']
+                text: colorReq ,
+                style: ['size07', 'center'],
             },{
-                text: detail.quantity + " "+detail.uom.unit ,
+                text: parseFloat(detail.quantity).toLocaleString(locale, locale.decimal) + " "+detail.uom.unit ,
                 style: ['size07', 'center']
             } ]
         });
@@ -90,18 +97,19 @@ module.exports = function (productionOrder) {
             table: {
                 widths: ['35%', '35%', '30%'],
                 headerRows: 1,
-                body: [].concat([thead], tbody,tfoot)
+                body: [].concat([thead], tbody,tfoot),
+
             }
         }];
     }
    else{
         thead = [{
-            text: 'Warna yang Diminta',
-            style: 'tableHeader'
-        }, {
                 text: 'Acuan/Color Way',
                 style: 'tableHeader'
-            },
+            },{
+                text: 'Warna yang Diminta',
+                style: 'tableHeader'
+            }, 
             {
                 text: 'Jenis Warna',
                 style: 'tableHeader'
@@ -115,22 +123,29 @@ module.exports = function (productionOrder) {
             style: 'tableHeader',
             colSpan:3
         }, "", "", {
-                text: productionOrder.orderQuantity +" "+productionOrder.uom.unit,
+                text: parseFloat(productionOrder.orderQuantity).toLocaleString(locale, locale.decimal) +" "+productionOrder.uom.unit,
                 style: 'tableHeader'
             }]];
 
         tbody = details.map(function (detail, index) {
+            var colorReq=detail.colorRequest;
+            var colorTemplate=detail.colorTemplate;
+            if(detail.colorRequest.indexOf(' ')<10)
+                colorReq=detail.colorRequest.length>10?detail.colorRequest.replace(/(.{10})/g,"$&" + " "):detail.colorRequest;
+            if(detail.colorTemplate.indexOf(' ')<10)
+                colorTemplate=detail.colorTemplate.length>10?detail.colorTemplate.replace(/(.{10})/g,"$&" + " "):detail.colorTemplate;
+            
             return [{
-                text: detail.colorRequest ,
+                text: colorTemplate ,
                 style: ['size07', 'center']
             },{
-                text: detail.colorTemplate ,
-                style: ['size07', 'center']
+                text: colorReq ,
+                style: ['size07', 'center'],
             },{
                 text: detail.colorType.name ,
                 style: ['size07', 'center']
             },{
-                text: detail.quantity + " "+detail.uom.unit ,
+                text: parseFloat(detail.quantity).toLocaleString(locale, locale.decimal) + " "+detail.uom.unit ,
                 style: ['size07', 'center']
             } ]
         });
@@ -283,7 +298,7 @@ module.exports = function (productionOrder) {
                     },
                     {
                         width: '*',
-                        text:orderQuantity + " " + productionOrder.uom.unit
+                        text:parseFloat(orderQuantity).toLocaleString(locale, locale.decimal) + " " + productionOrder.uom.unit
                     }]
             },{
                 columns: [
@@ -296,7 +311,7 @@ module.exports = function (productionOrder) {
                     },
                     {
                         width: '*',
-                        text:spellOrder+" " + productionOrder.uom.unit
+                        text:parseFloat(spellOrder).toLocaleString(locale, locale.decimal)+" " + productionOrder.uom.unit
                     }]
             },{
                 columns: [
@@ -652,7 +667,7 @@ module.exports = function (productionOrder) {
                     },
                     {
                         width: '*',
-                        text:orderQuantity + " " + productionOrder.uom.unit
+                        text:parseFloat(orderQuantity).toLocaleString(locale, locale.decimal) + " " + productionOrder.uom.unit
                     }]
             },{
                 columns: [
@@ -665,7 +680,7 @@ module.exports = function (productionOrder) {
                     },
                     {
                         width: '*',
-                        text:spellOrder+" " + productionOrder.uom.unit
+                        text:parseFloat(spellOrder).toLocaleString(locale, locale.decimal)+" " + productionOrder.uom.unit
                     }]
             },{
                 columns: [

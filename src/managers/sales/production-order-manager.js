@@ -124,8 +124,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var _standard = results[7];
                 var _construction = results[8];
                 var _account = results[9];
-                var _colors = results.slice(10, 10+ valid.details.length);
-                var _lampStandards= results.slice(10+ valid.details.length, results.length);
+                var _colors = results.slice(10, 10+ getColorTypes.length);
+                var _lampStandards= results.slice(10+ getColorTypes.length, results.length);
 
 
                 if (valid.uom) {
@@ -159,6 +159,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 else if (!valid.yarnMaterialId)
                     errors["yarnMaterial"] = i18n.__("ProductionOrder.yarnMaterial.isRequired:%s is required", i18n.__("ProductionOrder.yarnMaterial._:YarnMaterial")); //"yarnMaterial tidak boleh kosong";
                 
+                if (!_construction)
+                    errors["materialConstruction"] = i18n.__("ProductionOrder.materialConstruction.isRequired:%s is not exists", i18n.__("ProductionOrder.materialConstruction._:MaterialConstruction")); //"materialConstruction tidak boleh kosong";
+                else if (!valid.materialConstructionId)
+                    errors["materialConstructionId"] = i18n.__("ProductionOrder.materialConstruction.isRequired:%s is required", i18n.__("ProductionOrder.materialConstruction._:MaterialConstruction")); //"materialConstruction tidak boleh kosong";
+                
+
                 if (!_finish)
                     errors["finishType"] = i18n.__("ProductionOrder.finishType.isRequired:%s is not exists", i18n.__("ProductionOrder.finishType._:FinishType")); //"finishType tidak boleh kosong";
                 else if (!valid.finishTypeId)
@@ -200,7 +206,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 }
 
                 if (!valid.deliveryDate || valid.deliveryDate === "") {
-                     errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.isRequired:%s is required", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"Buyer tidak boleh kosong";
+                     errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.isRequired:%s is required", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"deliveryDate tidak boleh kosong";
+                }
+                else{
+                    valid.deliveryDate=new Date(valid.deliveryDate);
+                    var today=new Date();
+                    today.setHours(0,0,0,0);
+                    if(today>valid.deliveryDate){
+                        errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.shouldNot:%s should not be less than today's date", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"deliveryDate tidak boleh kurang dari tanggal hari ini";
+                    }
                 }
 
                 if(_order){
@@ -268,7 +282,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     var lampErrors = [];
                     for (var lamp of valid.lampStandards) {
                         var lampError = {};
-                        if(!_lampStandards){
+                        if(!_lampStandards || _lampStandards.length<=0 ){
                             lampError["lampStandard"] = i18n.__("ProductionOrder.lampStandards.lampStandard.isRequired:%s is not exists", i18n.__("ProductionOrder.lampStandards.lampStandard._:LampStandard")); //"lampStandard tidak boleh kosong";
                         
                         }
@@ -353,9 +367,16 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         }
                     }
                 }
+                
                 if(_order){
                     valid.orderTypeId=new ObjectId(_order._id);
-
+                    if(_order.name.toLowerCase()!="printing"){
+                        valid.RUN="";
+                        valid.RUNWidth=[];
+                        valid.designCode="";
+                        valid.designNumber="";
+                        valid.articleFabricEdge="";
+                    }
                     if(_order.name.toLowerCase()=="yarn dyed" || _order.name.toLowerCase()=="printing" ){
                         for (var detail of valid.details) {
                             detail.colorTypeId = null;
@@ -783,8 +804,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return new Promise((resolve, reject) => {
             var date = {
                 "productionOrders._createdDate" : {
-                    "$gte" : (!query || !query.sdate ? (new Date("1900-01-01")) : (new Date(`${query.sdate} 23:59:59`))),
-                    "$lte" : (!query || !query.edate ? (new Date()) : (new Date(query.edate)))
+                    "$gte" : (!query || !query.sdate ? (new Date("1900-01-01")) : (new Date(`${query.sdate} 00:00:00`))),
+                    "$lte" : (!query || !query.edate ? (new Date()) : (new Date(`${query.edate} 23:59:59`)))
                 }
             };
             var salesQuery = {};
