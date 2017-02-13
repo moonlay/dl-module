@@ -23,7 +23,7 @@ before("#00. connect db", function (done) {
 
 it("#01. should success when create etl for dim-category", function(done) {
     instanceManager.run()
-        .then(() => {
+        .then((a) => {
             done();
         })
         .catch((e) => {
@@ -31,16 +31,16 @@ it("#01. should success when create etl for dim-category", function(done) {
         });
 });
 
-// it("#02. should success when transforming data for dim-category", function(done) {
-//     var data = [{}, {}];
-//     instanceManager.transform(data)
-//         .then(() => {
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+it("#02. should success when transforming data for dim-category", function(done) {
+    var data = [{}, {}];
+    instanceManager.transform(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
 
 // it("#03. should success when load data for dim-category", function(done) {
 //     var data = [[], []];

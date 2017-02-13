@@ -19,12 +19,8 @@ module.exports = class DimUnitEtlManager extends BaseManager {
     }
     run() {
         return this.extract()
-            .then((data) => {
-                return this.transform(data)
-            })
-            .then((data) => {
-                return this.load(data)
-            });
+            .then((data) => this.transform(data))
+            .then((data) => this.load(data));
     }
 
     extract() {
