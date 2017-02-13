@@ -4,7 +4,6 @@
 var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require("module-toolkit").BaseManager;
 var moment = require("moment");
-var startedDate = new Date();
 
 // internal deps 
 require("mongodb-toolkit");
@@ -15,7 +14,6 @@ var PurchaseOrderExternalManager = require('../managers/purchasing/purchase-orde
 var DeliveryOrderManager = require('../managers/purchasing/delivery-order-manager');
 var UnitReceiptNoteManager = require('../managers/purchasing/unit-receipt-note-manager');
 var UnitPaymentOrderManager = require('../managers/purchasing/unit-payment-order-manager');
-var startedDate = new Date();
 
 module.exports = class FactPurchasingEtlManager extends BaseManager {
     constructor(db, user, sql) {
@@ -31,6 +29,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
     }
 
     run() {
+        var startedDate = new Date();
         this.migrationLog.insert({
             description: "Fact Pembelian from MongoDB to Azure DWH",
             start: startedDate,
@@ -323,7 +322,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
             new_arr.push(lookup[i]);
         }
 
-        return new_arr;
+        return Promise.resolve(new_arr);
     }
 
     getRangeMonth(days) {
@@ -600,14 +599,25 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                         return Promise.all(command)
                             .then((results) => {
                                 request.execute("DL_UPSERT_FACT_PEMBELIAN").then((execResult) => {
-                                    transaction.commit((err) => {
-                                        if (err)
-                                            reject(err);
-                                        else
-                                            resolve(results);
-                                    });
+                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
+                                        transaction.commit((err) => {
+                                            if (err)
+                                                reject(err);
+                                            else
+                                                resolve(results);
+                                        });
+                                    }).catch((error) => {
+                                        transaction.rollback((err) => {
+                                            console.log("rollback")
+                                            if (err)
+                                                reject(err)
+                                            else
+                                                reject(error);
+                                        });
+                                    })
                                 }).catch((error) => {
                                     transaction.rollback((err) => {
+                                        console.log("rollback")
                                         if (err)
                                             reject(err)
                                         else
@@ -624,11 +634,17 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                                         reject(error);
                                 });
                             });
-                    });
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    })
                 })
                 .catch((err) => {
                     reject(err);
                 })
-        });
+        })
+        .catch((err) => {
+            reject(err);
+        })
     }
 }
