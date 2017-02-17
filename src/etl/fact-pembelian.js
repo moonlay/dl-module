@@ -340,8 +340,8 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                             currencyName: purchaseOrder.purchaseOrderExternal.currency ? `'${purchaseOrder.purchaseOrderExternal.currency.description}'` : null,
                             paymentMethod: purchaseOrder.purchaseOrderExternal.paymentMethod ? `'${purchaseOrder.purchaseOrderExternal.paymentMethod}'` : null,
                             currencyRate: purchaseOrder.purchaseOrderExternal.currencyRate ? `${purchaseOrder.purchaseOrderExternal.currencyRate}` : null,
-                            purchaseQuantity: purchaseOrder.purchaseOrderExternal.no ? `${poItem.dealQuantity}` : null,
-                            uom: purchaseOrder.purchaseOrderExternal.no ? `'${poItem.dealUom.unit}'` : null,
+                            purchaseQuantity: poItem.defaultQuantity ? `${poItem.defaultQuantity}` : null,
+                            uom: poItem.defaultUom ? `'${poItem.defaultUom.unit}'` : null,
                             pricePerUnit: purchaseOrder.purchaseOrderExternal.no ? `${poItem.pricePerDealUnit}` : null,
                             totalPrice: (purchaseOrder.purchaseOrderExternal.currencyRate && poItem.pricePerDealUnit && poItem.dealQuantity) ? `${poItem.dealQuantity * poItem.pricePerDealUnit * purchaseOrder.purchaseOrderExternal.currencyRate}` : null,
                             expectedDeliveryDate: purchaseOrder.purchaseOrderExternal.no ? `'${moment(purchaseOrder.purchaseOrderExternal.expectedDeliveryDate).format('L')}'` : null,
@@ -410,8 +410,8 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                         currencyName: null,
                         paymentMethod: null,
                         currencyRate: null,
-                        purchaseQuantity: null,
-                        uom: null,
+                        purchaseQuantity: poItem.quantity ? `${poItem.quantity}` : null,
+                        uom: poItem.product.uom ? `'${poItem.product.uom.unit}'` : null,
                         pricePerUnit: null,
                         totalPrice: null,
                         expectedDeliveryDate: null,
@@ -444,7 +444,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
     insertQuery(sql, query) {
         return new Promise((resolve, reject) => {
-            sql.query(query, function(err, result) {
+            sql.query(query, function (err, result) {
                 if (err) {
                     reject(err);
                 } else {
