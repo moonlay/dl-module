@@ -54,7 +54,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             else
                 getPurchaseOrder = Promise.resolve(null);
 
-            Promise.all([getUnitReceiptNotePromise, getDeliveryOrder, getUnit, getSupplier, getPurchaseOrder])
+            Promise.all([getUnitReceiptNotePromise, getDeliveryOrder, getUnit, getSupplier].concat(getPurchaseOrder))
                 .then(results => {
                     var _unitReceiptNote = results[0];
                     var _deliveryOrder = results[1];
