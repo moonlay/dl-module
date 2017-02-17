@@ -497,7 +497,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
     
-
    pdf(id) {
         return new Promise((resolve, reject) => {
 
