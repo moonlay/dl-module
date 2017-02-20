@@ -23,6 +23,8 @@ class BuyerDataUtil {
         data.address = `address[${code}]`;
         data.country = `country[${code}]`;
         data.contact = `contact[${code}]`;
+        data.city = `city[${code}]`;
+        data.NPWP = `NPWP[${code}]`;
         data.tempo = "30";
         data.type = "Export";
         return Promise.resolve(data);

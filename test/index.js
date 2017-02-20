@@ -44,7 +44,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/ORDER-TYPE', './master/order-type');
     test('@MASTER/PROCESS-TYPE', './master/process-type');
     test('@MASTER/COLOR-TYPE', './master/color-type');
-    test('@MASTER/INSTRUCTION', './master/instruction');
+    // test('@MASTER/INSTRUCTION', './master/instruction');
 
     // test('@MASTER/MONITORING-EVENT-TYPE', './master/monitoring-event-type');
     test('@MASTER/STEP', './master/step');

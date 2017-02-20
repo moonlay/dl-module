@@ -261,10 +261,13 @@ module.exports = function (unitPaymentCorrection) {
 
     var total = unitPaymentCorrection.correctionType === "Jumlah" ? totalKoreksiJumlah : totalKoreksiHarga;
 
-    var terbilang = {
+    var terbilang = unitPaymentCorrection.correctionType === "Jumlah" ? {
         text: `Terbilang : ${Say(sum + useIncomeTax)}`,
         style: ['size09', 'bold']
-    };
+    } : {
+            text: `Terbilang : ${Say(sum)}`,
+            style: ['size09', 'bold']
+        };
 
     var footer = ['\n',
         {
