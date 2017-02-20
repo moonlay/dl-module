@@ -21,7 +21,7 @@ before("#00. connect db", function (done) {
         });
 });
 
-it("#01. should success when create etl fact-purchasing", function (done) {
+it("#01. should success when create etl fact-monitoring-event", function (done) {
     instanceManager.run()
         .then((a) => {
             console.log(a);

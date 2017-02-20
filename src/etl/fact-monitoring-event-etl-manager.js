@@ -10,7 +10,6 @@ var moment = require("moment");
 require("mongodb-toolkit");
 
 var MonitoringEventManager = require("../managers/production/finishing-printing/monitoring-event-manager");
-var startedDate = new Date();
 
 module.exports = class FactMonitoringEventEtlManager extends BaseManager {
     constructor(db, user, sql) {
@@ -21,11 +20,13 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
     };
 
     run() {
+        var startedDate = new Date()
         this.migrationLog.insert({
             description: "Fact Monitoring Event from MongoDB to Azure DWH",
             start: startedDate,
         })
-        return this.extract()
+        return this.timestamp()
+            .then((time) => this.extract(time))
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
             .then((results) => {
@@ -54,10 +55,20 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
             });
     };
 
-    extract() {
-        var timestamp = new Date(1970, 1, 1);
+    timestamp() {
+        return this.migrationLog.find({
+            description: "Fact Pembelian from MongoDB to Azure DWH",
+            status: "Successful"
+        }).sort({ finish: -1 }).limit(1).toArray()
+    }
+
+    extract(time) {
+        var timestamp = new Date(time[0].finish);
         return this.monitoringEventManager.collection.find({
             _deleted: false,
+            _createdBy: {
+                "$nin": ["dev", "unit-test"]
+            },
             _updatedDate: {
                 "$gt": timestamp
             }
@@ -65,7 +76,7 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
     };
 
     getOperationRange(hours) {
-       return hours / 60;
+        return hours / 60;
     }
 
     transform(data) {
@@ -137,64 +148,109 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
                 selectedProductionOrderDetailColorTypeRemark: (monitoringEvent.selectedProductionOrderDetail.colorType !== null) ? `'${monitoringEvent.selectedProductionOrderDetail.colorType.remark}'` : null,
                 selectedProductionOrderDetailQuantity: monitoringEvent.selectedProductionOrderDetail.quantity ? `'${monitoringEvent.selectedProductionOrderDetail.quantity}'` : null,
                 selectedProductionOrderDetailUom: monitoringEvent.selectedProductionOrderDetail.uom ? `'${monitoringEvent.selectedProductionOrderDetail.uom.unit}'` : null,
-                machineEventName: monitoringEvent.machineEvent ? `'${monitoringEvent.machineEvent.name}'` : null,
-                eventRange: monitoringEvent.dateEnd ? `'${this.getOperationRange(operationRange)}'` : null
+                machineEventName: (monitoringEvent.machineEvent && monitoringEvent.machineEvent.name) ? `'${monitoringEvent.machineEvent.name}'` : null,
+                eventRange: monitoringEvent.dateEnd ? `'${this.getOperationRange(operationRange)}'` : null,
+                machineEventNo: (monitoringEvent.machineEvent && monitoringEvent.machineEvent.no) ? `'${monitoringEvent.machineEvent.no}'` : null,
+                createdBy: monitoringEvent ? `'${monitoringEvent._createdBy}'` : null
             }
         });
         return Promise.resolve([].concat.apply([], result));
     };
 
-    // insertQuery(sql, query) {
-    //     return new Promise((resolve, reject) => {
-    //         sql.query(query, function (err, result) {
-    //             if (err) {
-    //                 reject(err);
-    //             } else {
-    //                 resolve(result);
-    //             }
-    //         })
-    //     })
-    // };
+    insertQuery(sql, query) {
+        return new Promise((resolve, reject) => {
+            sql.query(query, function (err, result) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            })
+        })
+    };
 
     load(data) {
-        return this.sql.getConnection()
-            .then((request) => {
+        return new Promise((resolve, reject) => {
+            this.sql.startConnection()
+                .then(() => {
 
-                var sqlQuery = '';
+                    var transaction = this.sql.transaction();
 
-                var count = 1;
-                for (var item of data) {
-                    sqlQuery = sqlQuery.concat(`INSERT INTO [dbo].[DL_Fact_Monitoring_Event]([cartNumber], [monitoringEventCode], [monitoringEventStartedDate], [eventStartedTime], [monitoringEventEndDate], [eventEndTime], [machineCode], [machineName], [machineProcess], [machineStepProcess], [unitCode], [divisionCode], [divisionName], [unitName], [productionOrderBuyerName], [productionOrderConstruction], [productionOrderDetailCode], [productionOrderDetailColorRequest], [productionOrderDetailColorTemplate], [productionOrderDetailColorTypeName], [productionOrderOrderType], [productionOrderProcessType], [productionOrderSalesContractNo], [monitoringEventRemark], [selectedProductionOrderDetailCode], [selectedProductionOrderDetailColorRequest], [selectedProductionOrderDetailColorTemplate], [selectedProductionOrderDetailColorTypeName], [machineEventName], [eventRange]) VALUES(${item.cartNumber}, ${item.monitoringEventCode}, ${item.monitoringEventStartedDate}, ${item.eventStartedTime}, ${item.monitoringEventEndDate}, ${item.eventEndTime}, ${item.machineCode}, ${item.machineName}, ${item.machineProcess}, ${item.machineStepProcess}, ${item.unitCode}, ${item.divisionCode}, ${item.divisionName}, ${item.unitName}, ${item.productionOrderBuyerName}, ${item.productionOrderConstruction}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.selectedProductionOrderDetailColorTypeName}, ${item.productionOrderOrderType}, ${item.productionOrderProcessType}, ${item.productionOrderSalesContractNo}, ${item.monitoringEventRemark}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.selectedProductionOrderDetailColorTypeName}, ${item.machineEventName}, ${item.eventRange});\n`);
-                    count = count + 1;
-                }
+                    transaction.begin((err) => {
 
-                request.multiple = true;
+                        var request = this.sql.transactionRequest(transaction);
 
-                var fs = require("fs");
-                var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
+                        var command = [];
 
-                fs.writeFile(path, sqlQuery, function (error) {
-                    if (error) {
-                        console.log("write error:  " + error.message);
-                    } else {
-                        console.log("Successful Write to " + path);
-                    }
-                });
+                        var sqlQuery = '';
 
+                        var count = 1;
 
+                        for (var item of data) {
+                            if (item) {
+                                var queryString = `INSERT INTO [dbo].[DL_Fact_Monitoring_Event_Temp]([cartNumber], [monitoringEventCode], [monitoringEventStartedDate], [eventStartedTime], [monitoringEventEndDate], [eventEndTime], [machineCode], [machineName], [machineProcess], [machineStepProcess], [unitCode], [divisionCode], [divisionName], [unitName], [productionOrderBuyerName], [productionOrderConstruction], [productionOrderDetailCode], [productionOrderDetailColorRequest], [productionOrderDetailColorTemplate], [productionOrderDetailColorTypeName], [productionOrderOrderType], [productionOrderProcessType], [productionOrderSalesContractNo], [monitoringEventRemark], [selectedProductionOrderDetailCode], [selectedProductionOrderDetailColorRequest], [selectedProductionOrderDetailColorTemplate], [selectedProductionOrderDetailColorTypeName], [machineEventName], [eventRange], [productionOrderOrderNo], [machineEventNo], [createdBy]) VALUES(${item.cartNumber}, ${item.monitoringEventCode}, ${item.monitoringEventStartedDate}, ${item.eventStartedTime}, ${item.monitoringEventEndDate}, ${item.eventEndTime}, ${item.machineCode}, ${item.machineName}, ${item.machineProcess}, ${item.machineStepProcess}, ${item.unitCode}, ${item.divisionCode}, ${item.divisionName}, ${item.unitName}, ${item.productionOrderBuyerName}, ${item.productionOrderConstruction}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.selectedProductionOrderDetailColorTypeName}, ${item.productionOrderOrderType}, ${item.productionOrderProcessType}, ${item.productionOrderSalesContractNo}, ${item.monitoringEventRemark}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.selectedProductionOrderDetailColorTypeName}, ${item.machineEventName}, ${item.eventRange}, ${item.productionOrderOrderNo}, ${item.machineEventNo}, ${item.createdBy});\n`;
+                                sqlQuery = sqlQuery.concat(queryString);
+                                if (count % 1000 == 0) {
+                                    command.push(this.insertQuery(request, sqlQuery));
+                                    sqlQuery = "";
+                                }
+                                console.log(`add data to query  : ${count}`);
+                                count++;
+                            }
+                        }
 
-                return request.query(sqlQuery)
-                    // return request.query('select count(*) from Dimunit')
-                    // return request.query('select top 1 * from Dimunit')
-                    .then((results) => {
-                        console.log(results);
-                        return Promise.resolve();
+                        if (sqlQuery != "")
+                            command.push(this.insertQuery(request, `${sqlQuery}`));
+
+                        this.sql.multiple = true;
+
+                        return Promise.all(command)
+                            .then((results) => {
+                                request.execute("DL_UPSERT_FACT_MONITORING_EVENT").then((execResult) => {
+                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
+                                        transaction.commit((err) => {
+                                            if (err)
+                                                reject(err);
+                                            else
+                                                resolve(results);
+                                        });
+                                    }).catch((error) => {
+                                        transaction.rollback((err) => {
+                                            console.log("rollback")
+                                            if (err)
+                                                reject(err)
+                                            else
+                                                reject(error);
+                                        });
+                                    })
+                                }).catch((error) => {
+                                    transaction.rollback((err) => {
+                                        console.log("rollback")
+                                        if (err)
+                                            reject(err)
+                                        else
+                                            reject(error);
+                                    });
+                                })
+                            })
+                            .catch((error) => {
+                                transaction.rollback((err) => {
+                                    console.log("rollback");
+                                    if (err)
+                                        reject(err)
+                                    else
+                                        reject(error);
+                                });
+                            });
                     })
-            })
+                })
+                .catch((err) => {
+                    reject(err);
+                })
+        })
             .catch((err) => {
-                console.log(err);
-                return Promise.reject(err);
-            });
+                reject(err);
+            })
     }
 
 };

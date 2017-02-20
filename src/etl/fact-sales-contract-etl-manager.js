@@ -19,13 +19,50 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
     }
 
     run() {
-        return this.extract()
+        var startedDate = new Date()
+        this.migrationLog.insert({
+            description: "Fact Sales Contract from MongoDB to Azure DWH",
+            start: startedDate,
+        })
+        return this.timestamp()
+            .then((time) => this.extract(time))
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
+            .then((results) => {
+                var finishedDate = new Date();
+                var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                var updateLog = {
+                    description: "Fact Sales Contract from MongoDB to Azure DWH",
+                    start: startedDate,
+                    finish: finishedDate,
+                    executionTime: spentTime + " minutes",
+                    status: "Successful"
+                };
+                this.migrationLog.updateOne({ start: startedDate }, updateLog);
+            })
+            .catch((err) => {
+                var finishedDate = new Date();
+                var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                var updateLog = {
+                    description: "Fact Sales Contract from MongoDB to Azure DWH",
+                    start: startedDate,
+                    finish: finishedDate,
+                    executionTime: spentTime + " minutes",
+                    status: err
+                };
+                this.migrationLog.updateOne({ start: startedDate }, updateLog);
+            });
+    };
+
+    timestamp() {
+        return this.migrationLog.find({
+            description: "Fact Sales Contract from MongoDB to Azure DWH",
+            status: "Successful"
+        }).sort({ finish: -1 }).limit(1).toArray()
     }
 
-    extract() {
-        var timestamp = new Date(1970, 1, 1);
+    extract(time) {
+        var timestamp = new Date(time[0].finish);
         return this.salesContractManager.collection.find({
             _deleted: false,
             _updatedDate: {
@@ -36,7 +73,7 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
 
     orderQuantityConvertion(uom, quantity) {
         if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity * 109361/100000;
+            return quantity * 109361 / 100000;
         } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
             return quantity;
         }
@@ -102,7 +139,7 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO DL_Fact_Sales_Contract([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion});\n`;
+                                var queryString = `INSERT INTO DL_Fact_Sales_Contract_Temp([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -118,25 +155,34 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
 
                         this.sql.multiple = true;
 
-                        // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
-
-                        // fs.writeFile(path, sqlQuery, function (error) {
-                        //     if (error) {
-                        //         console.log("write error:  " + error.message);
-                        //     } else {
-                        //         console.log("Successful Write to " + path);
-                        //     }
-                        // });
-
                         return Promise.all(command)
                             .then((results) => {
-                                transaction.commit((err) => {
-                                    if (err)
-                                        reject(err);
-                                    else
-                                        resolve(results);
-                                });
+                                request.execute("DL_UPSERT_FACT_Sales_Contract").then((execResult) => {
+                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
+                                        transaction.commit((err) => {
+                                            if (err)
+                                                reject(err);
+                                            else
+                                                resolve(results);
+                                        });
+                                    }).catch((error) => {
+                                        transaction.rollback((err) => {
+                                            console.log("rollback")
+                                            if (err)
+                                                reject(err)
+                                            else
+                                                reject(error);
+                                        });
+                                    })
+                                }).catch((error) => {
+                                    transaction.rollback((err) => {
+                                        console.log("rollback")
+                                        if (err)
+                                            reject(err)
+                                        else
+                                            reject(error);
+                                    });
+                                })
                             })
                             .catch((error) => {
                                 transaction.rollback((err) => {
@@ -147,11 +193,14 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
                                         reject(error);
                                 });
                             });
-                    });
+                    })
                 })
                 .catch((err) => {
                     reject(err);
                 })
-        });
+        })
+            .catch((err) => {
+                reject(err);
+            })
     }
 }
