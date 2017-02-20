@@ -52,8 +52,8 @@ class MachineDataUtil {
                             no: _machineEvent2.no,
                             name: _machineEvent2.name,
                         }],
-                    machineTypeId: _machineType._id,
-                    machineType: _machineType,
+                    // machineTypeId: _machineType._id,
+                    // machineType: _machineType,
 
                 };
                 return Promise.resolve(data);
@@ -88,8 +88,8 @@ class MachineDataUtil {
                             no: '2',
                             name: 'unitTestName2',
                         }],
-                    machineTypeId: _machineType._id,
-                    machineType: _machineType,
+                    // machineTypeId: _machineType._id,
+                    // machineType: _machineType,
 
                 };
                 return this.getSert(data);

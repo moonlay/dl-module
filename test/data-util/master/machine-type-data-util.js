@@ -30,6 +30,10 @@ class MachineTypeDataUtil {
                     indicator: `range`,
                     dataType: "range (use '-' as delimiter)",
                     defaultValue: "1-10",
+                },{
+                    indicator: `range`,
+                    dataType: "option (use ',' as delimiter)",
+                    defaultValue: "a,b",
                 }];
 
         return Promise.resolve(data);
