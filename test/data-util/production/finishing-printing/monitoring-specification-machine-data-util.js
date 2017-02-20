@@ -15,11 +15,12 @@ class MonitoringSpecificationMachineDataUtil {
                 var _machine = results[0];
                 var itemsArr = [];
                 for (var machine of _machine.machineType.indicators) {
-                    var item = {
+                    var item = {};
+                    item = {
                         indicator: machine.indicator,
                         dataType: machine.dataType,
                         defaultValue: machine.defaultValue,
-                        value: "",
+                        value: machine.dataType == "range (use '-' as delimiter)" ? 5 : "",
 
                     }
                     itemsArr.push(item);

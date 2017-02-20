@@ -283,7 +283,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     for (var lamp of valid.lampStandards) {
                         var lampError = {};
                         if(!_lampStandards || _lampStandards.length<=0 ){
-                            lampError["lampStandard"] = i18n.__("ProductionOrder.lampStandards.lampStandard.isRequired:%s is not exists", i18n.__("ProductionOrder.lampStandards.lampStandard._:LampStandard")); //"lampStandard tidak boleh kosong";
+                            lampError["lampStandards"] = i18n.__("ProductionOrder.lampStandards.lampStandard.isRequired:%s is not exists", i18n.__("ProductionOrder.lampStandards.lampStandard._:LampStandard")); //"lampStandard tidak boleh kosong";
+                        
+                        }
+                        if(!lamp.lampStandard._id){
+                            lampError["lampStandards"] = i18n.__("ProductionOrder.lampStandards.lampStandard.isRequired:%s is not exists", i18n.__("ProductionOrder.lampStandards.lampStandard._:LampStandard")); //"lampStandard tidak boleh kosong";
                         
                         }
                     if (Object.getOwnPropertyNames(lampError).length > 0)
@@ -311,7 +315,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         if (detail.quantity <= 0)
                             detailError["quantity"] = i18n.__("ProductionOrder.details.quantity.isRequired:%s is required", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
                         else if(valid.orderQuantity!=totalqty)
-                            detailError["total"] = i18n.__("ProductionOrder.details.quantity.shouldNot:%s Total should equal Order Quantity", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh berbeda dari jumlah order";
+                            errors["total"] = i18n.__("ProductionOrder.details.quantity.shouldNot:%s Total should equal Order Quantity", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh berbeda dari jumlah order";
                         if(!_uom)
                             detailError["uom"] = i18n.__("ProductionOrder.details.uom.isRequired:%s is not exists", i18n.__("ProductionOrder.details.uom._:Uom")); //"satuan tidak boleh kosong";
                         
@@ -328,7 +332,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             else{
                                 if (!_colors)
                                     detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
+                                else if(!detail.colorType){
+                                    detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
                         
+                                }
                             }
                         }
                         
@@ -385,10 +392,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }
                     else{
                         for (var detail of valid.details) {
-                            for (var _color of _colors) {
-                                if (detail.colorTypeId.toString() === _color._id.toString()) {
-                                    detail.colorTypeId = _color._id;
-                                    detail.colorType = _color;
+                            if(detail.colorType){
+                                for (var _color of _colors) {
+                                    if (detail.colorTypeId.toString() === _color._id.toString()) {
+                                        detail.colorTypeId = _color._id;
+                                        detail.colorType = _color;
+                                    }
                                 }
                             }
                         }

@@ -122,6 +122,53 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             });
     }
 
+    _beforeUpdate(purchaseOrderExternal) {
+        return this.getSingleById(purchaseOrderExternal._id)
+            .then((oldPurchaseOrderExternal) => {
+                var oldItems = [];
+                for (var oldItem of oldPurchaseOrderExternal.items) {
+                    var _item = purchaseOrderExternal.items.find(item => item._id.toString() === oldItem._id.toString());
+                    if (!_item) {
+                        oldItems.push(oldItem);
+                    }
+                }
+
+                if (oldItems.length > 0) {
+                    var getPurchaseOrderIds = oldItems.map((purchaseOrder) => this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrder._id));
+                    var getPurchaseRequestIds = oldItems.map((purchaseOrder) => this.purchaseRequestManager.getSingleByIdOrDefault(purchaseOrder.purchaseRequest._id));
+                    return Promise.all(getPurchaseRequestIds)
+                        .then((purchaseRequests) => {
+                            var jobsUpdatePR = purchaseRequests.map((purchaseRequest) => {
+                                purchaseRequest.status = prStatusEnum.PROCESSING;
+                                return this.purchaseRequestManager.update(purchaseRequest)
+                                    .then((id) => { return this.purchaseRequestManager.getSingleByIdOrDefault(id) });
+                            })
+                            return Promise.all(jobsUpdatePR);
+                        })
+                        .then((purchaseRequests) => {
+                            return Promise.all(getPurchaseOrderIds)
+                                .then((purchaseOrders) => {
+                                    var jobsUpdatePO = purchaseOrders.map((purchaseOrder) => {
+                                        var _purchaseRequest = purchaseRequests.find((purchaseRequest) => purchaseRequest._id.toString() === purchaseOrder.purchaseRequest._id.toString());
+                                        if (_purchaseRequest) {
+                                            purchaseOrder.purchaseRequest = _purchaseRequest;
+                                        }
+                                        purchaseOrder.isPosted = false;
+                                        purchaseOrder.status = poStatusEnum.CREATED;
+                                        return this.purchaseOrderManager.update(purchaseOrder)
+                                            .then((id) => { return this.purchaseOrderManager.getSingleByIdOrDefault(id) });
+                                    })
+                                    return Promise.all(jobsUpdatePO)
+                                })
+                        })
+                        .then((result) => Promise.resolve(purchaseOrderExternal));
+                } else {
+                    return Promise.resolve(purchaseOrderExternal);
+                }
+
+            })
+    }
+
     delete(poExternal) {
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -315,6 +362,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                         if (!poItem.priceBeforeTax || poItem.priceBeforeTax === 0) {
                                             poItemHasError = true;
                                             poItemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
+
+
                                         }/*else if (poItem.priceBeforeTax > poItem.product.price) {
                                             poItemHasError = true;
                                             poItemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax.isGreater:%s must not be greater than default price", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";

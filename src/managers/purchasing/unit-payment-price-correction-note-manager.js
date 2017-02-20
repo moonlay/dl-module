@@ -12,7 +12,7 @@ var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
 var UnitReceiptNoteManager = require('./unit-receipt-note-manager');
 
-module.exports = class unitPaymentQuantityCorrectionNoteManager extends BaseManager {
+module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.purchasing.collection.UnitPaymentCorrectionNote);
@@ -98,6 +98,17 @@ module.exports = class unitPaymentQuantityCorrectionNoteManager extends BaseMana
                                                     }
                                                     else if (valid.correctionType === "Harga Total") {
                                                         if (item.priceTotal === _unitReceiptNoteItem.correction[_unitReceiptNoteItem.correction.length - 1].correctionPriceTotal) {
+                                                            itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
+                                                        }
+                                                    }
+                                                } else {
+                                                    if (valid.correctionType === "Harga Satuan") {
+                                                        if (item.pricePerUnit === _unitReceiptNoteItem.pricePerDealUnit) {
+                                                            itemError["pricePerUnit"] = i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit._:Price Per Unit"));
+                                                        }
+                                                    }
+                                                    else if (valid.correctionType === "Harga Total") {
+                                                        if (item.priceTotal === _unitReceiptNoteItem.pricePerDealUnit * item.quantity) {
                                                             itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
                                                         }
                                                     }

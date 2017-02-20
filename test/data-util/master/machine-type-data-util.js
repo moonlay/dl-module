@@ -16,16 +16,21 @@ class MachineTypeDataUtil {
         data.code = code;
         data.name = `Ordername [${code}]`;
         data.description = `decription [${code}]`;
-        data.indicators = [{
-            indicator: `Tekanan Press Mangle[${code}]`,
-            dataType: "number",
-            defaultValue: 10,
-        },
-            {
-                indicator: `Tekanan Press Mangl[${code}]`,
-                dataType: "string",
-                defaultValue: "10",
-            }];
+        data.indicators =
+            [{
+                indicator: `Tekanan Press Mangle[${code}]`,
+                dataType: "number",
+                defaultValue: 10,
+            },
+                {
+                    indicator: `Tekanan Press Mangl[${code}]`,
+                    dataType: "string",
+                    defaultValue: "10",
+                }, {
+                    indicator: `range`,
+                    dataType: "range (use '-' as delimiter)",
+                    defaultValue: "1-10",
+                }];
 
         return Promise.resolve(data);
     }

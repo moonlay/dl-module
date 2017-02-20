@@ -1,21 +1,22 @@
-'use strict'
+"use strict"
 
 // external deps 
 var ObjectId = require("mongodb").ObjectId;
-var BaseManager = require('module-toolkit').BaseManager;
+var BaseManager = require("module-toolkit").BaseManager;
 var moment = require("moment");
 
 // internal deps 
-require('mongodb-toolkit');
+require("mongodb-toolkit");
 
-var DivisionManager = require('../managers/master/division-manager');
+var MachineManager = require("../managers/master/machine-manager");
 
-module.exports = class DimDivisionEtlManager extends BaseManager {
+module.exports = class DimMachineEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.divisionManager = new DivisionManager(db, user);
+        this.machineManager = new MachineManager(db, user);
     }
+
     run() {
         return this.extract()
             .then((data) => this.transform(data))
@@ -24,18 +25,22 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
     extract() {
         var timestamp = new Date(1970, 1, 1);
-        return this.divisionManager.collection.find({
+        return this.machineManager.collection.find({
             _deleted: false
+
         }).toArray();
     }
 
     transform(data) {
         var result = data.map((item) => {
-
             return {
-                divisionCode: item.code,
-                divisionName: item.name
-            };
+                machineCode: `'${item.code}'`,
+                machineName: `'${item.name}'`,
+                machineManufacture: `'${item.manufacture}'`,
+                machineYear: `'${item.year}'`,
+                machineProcess: `'${item.process}'`,
+                machineCondition: `'${item.condition}'`
+            }
         });
         return Promise.resolve([].concat.apply([], result));
     }
@@ -48,7 +53,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
                 var count = 1;
                 for (var item of data) {
-                    sqlQuery = sqlQuery.concat("insert into DL_Dim_Divisi(ID_Dim_Divisi, Kode_Divisi, Nama_Divisi) values(" + count + ", '" + item.divisionCode + "', '" + item.divisionName + "'); ");
+                    sqlQuery = sqlQuery.concat(`insert into [DL_Dim_Mesin]([Kode Mesin], [Nama Mesin], [Manufaktur Mesin], [Tahun Mesin], [Proses Mesin], [Kondisi Mesin]) values(${item.machineCode}, ${item.machineName}, ${item.machineManufacture}, ${item.machineYear}, ${item.machineProcess}, ${item.machineCondition});\n`);
 
                     count = count + 1;
                 }
@@ -70,3 +75,5 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
             });
     }
 }
+
+

@@ -68,9 +68,9 @@ module.exports = function (productionOrder) {
         tbody = details.map(function (detail, index) {
             var colorReq=detail.colorRequest;
             var colorTemplate=detail.colorTemplate;
-            if(detail.colorRequest.indexOf(' ')<10)
+            if(detail.colorRequest.indexOf(' ')>10 || detail.colorRequest.indexOf(' ')<0)
                 colorReq=detail.colorRequest.length>10?detail.colorRequest.replace(/(.{10})/g,"$&" + " "):detail.colorRequest;
-            if(detail.colorTemplate.indexOf(' ')<10)
+            if(detail.colorTemplate.indexOf(' ')>10 || detail.colorTemplate.indexOf(' ')<0)
                 colorTemplate=detail.colorTemplate.length>10?detail.colorTemplate.replace(/(.{10})/g,"$&" + " "):detail.colorTemplate;
             
             return [{
@@ -130,10 +130,10 @@ module.exports = function (productionOrder) {
         tbody = details.map(function (detail, index) {
             var colorReq=detail.colorRequest;
             var colorTemplate=detail.colorTemplate;
-            if(detail.colorRequest.indexOf(' ')<10)
-                colorReq=detail.colorRequest.length>10?detail.colorRequest.replace(/(.{10})/g,"$&" + " "):detail.colorRequest;
-            if(detail.colorTemplate.indexOf(' ')<10)
-                colorTemplate=detail.colorTemplate.length>10?detail.colorTemplate.replace(/(.{10})/g,"$&" + " "):detail.colorTemplate;
+            if(detail.colorRequest.indexOf(' ')>8 || detail.colorRequest.indexOf(' ')<0)
+                colorReq=detail.colorRequest.length>8?detail.colorRequest.replace(/(.{8})/g,"$&" + " "):detail.colorRequest;
+            if(detail.colorTemplate.indexOf(' ')>8 || detail.colorTemplate.indexOf(' ')<0)
+                colorTemplate=detail.colorTemplate.length>8?detail.colorTemplate.replace(/(.{8})/g,"$&" + " "):detail.colorTemplate;
             
             return [{
                 text: colorTemplate ,

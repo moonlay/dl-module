@@ -34,6 +34,8 @@ it("#01. should success when create etl fact-purchasing", function (done) {
         });
 });
 
+
+
 var data = [{}, {}];
 
 it("#02. should success when transforming data", function (done) {
@@ -68,9 +70,10 @@ it("#04. should success when joining PR to PO", function (done) {
         });
 });
 
-it("#05. should success when joining data to PO External", function (done) {
-    instanceManager.joinPurchaseOrderExternal(data)
-        .then(() => {
+var arr = [{no: {}}, {no: {}}];
+it("#09. should success when remove duplicate data", function (done) {
+    instanceManager.removeDuplicates(arr)
+        .then((a) => {
             done();
         })
         .catch((e) => {
@@ -78,35 +81,17 @@ it("#05. should success when joining data to PO External", function (done) {
         });
 });
 
-it("#06. should success when joining data to Delivery Order", function (done) {
-    instanceManager.joinDeliveryOrder(data)
-        .then(() => {
-            done();
+it("#10. should error when load empty data", function (done) {
+    instanceManager.load({})
+        .then(id => {
+            done("should error when create with empty data");
         })
-        .catch((e) => {
-            done(e);
+        .catch(e => {
+            try {                
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
         });
 });
-
-
-it("#07. should success when joining data to Unit Receipt Note", function (done) {
-    instanceManager.joinUnitReceiptNote(data)
-        .then(() => {
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-
-
-it("#08. should success when joining data to Unit Payment Order", function (done) {
-    instanceManager.joinUnitPaymentOrder(data)
-        .then(() => {
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-

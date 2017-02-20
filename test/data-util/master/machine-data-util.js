@@ -5,6 +5,7 @@ var ObjectId = require("mongodb").ObjectId;
 var generateCode = require("../../../src/utils/code-generator");
 var unitTypeData = require("./unit-data-util");
 var stepTypeData = require("./step-data-util");
+var machineTypeData = require("./machine-type-data-util");
 var machineEventData = require("./machine-event-data-util");
 var machineTypeData = require("./machine-type-data-util");
 
@@ -40,6 +41,8 @@ class MachineDataUtil {
                     manufacture: `manufacture [${code}]`,
                     year: now.getFullYear(),
                     condition: `condition [${code}]`,
+                    machineTypeId: _machineType._id,
+                    machineType: _machineType,
                     machineEvents: [{
                         code: _machineEvent1.code,
                         no: _machineEvent1.no,
@@ -74,6 +77,8 @@ class MachineDataUtil {
                     manufacture: "Manufacture untuk unit test",
                     year: 1900,
                     condition: "Baik",
+                    machineTypeId: _machineType._id,
+                    machineType: _machineType,
                     machineEvents: [{
                         code: 'unitTestCode01',
                         no: '1',

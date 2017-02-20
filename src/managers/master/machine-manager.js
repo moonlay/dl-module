@@ -12,6 +12,7 @@ var i18n = require('dl-i18n');
 var CodeGenerator = require('../../utils/code-generator');
 var UnitManager = require('./unit-manager');
 var StepManager = require('./step-manager');
+var MachineTypeManager = require('./machine-type-manager');
 
 module.exports = class MachineManager extends BaseManager {
     constructor(db, user) {
@@ -19,6 +20,7 @@ module.exports = class MachineManager extends BaseManager {
         this.collection = this.db.collection(map.master.collection.Machine);
         this.unitManager = new UnitManager(db, user);
         this.stepManager = new StepManager(db, user);
+        this.machineTypeManager = new MachineTypeManager(db, user);
     }
 
     _getQuery(paging) {
@@ -91,16 +93,16 @@ module.exports = class MachineManager extends BaseManager {
         });
         var getUnit = valid.unit && ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(new ObjectId(valid.unit._id)) : Promise.resolve(null);
         var getStep = valid.step && ObjectId.isValid(valid.step._id) ? this.stepManager.getSingleByIdOrDefault(new ObjectId(valid.step._id)) : Promise.resolve(null);
+        var getMachineType = valid.machineType && ObjectId.isValid(valid.machineType._id) ? this.machineTypeManager.getSingleByIdOrDefault(new ObjectId(valid.machineType._id)) : Promise.resolve(null);
 
         // 2. begin: Validation.
-        return Promise.all([getMachinePromise, getUnit, getStep])
+        return Promise.all([getMachinePromise, getUnit, getStep, getMachineType])
             .then(results => {
                 var _machine = results[0];
                 var _unit = results[1];
                 var _step = results[2];
+                var _machineType = results[3];
 
-                // if (!valid.code || valid.code == '')
-                //     errors["code"] = i18n.__("Machine.code.isExists:%s is required", i18n.__("Machine.code._:Code")); //"Code harus diisi";
                 if (_machine) {
                     errors["code"] = i18n.__("Machine.code.isExists:%s is already exists", i18n.__("Machine.code._:Code")); //"Code sudah ada";
                 }
@@ -108,11 +110,23 @@ module.exports = class MachineManager extends BaseManager {
                 if (!valid.name || valid.name == "")
                     errors["name"] = i18n.__("Machine.name.isRequired:%s is required", i18n.__("Machine.name._:Name")); //"Nama Tidak Boleh Kosong";
 
-                if (!_unit)
+                if (!valid.unit)
+                    errors["unit"] = i18n.__("Machine.unit.isRequired:%s is required", i18n.__("Machine.unit._:Unit")); //"Unit Tidak Boleh Kosong";
+
+                if (!valid.step)
+                    errors["step"] = i18n.__("Machine.step.isRequired:%s is required", i18n.__("Machine.step._:Step")); //"Step Tidak Boleh Kosong";
+
+                if (!valid.machineType)
+                    errors["machineType"] = i18n.__("Machine.machineType.isRequired:%s is required", i18n.__("Machine.machineType._:Machine Type")); //"Machine Type Tidak Boleh Kosong";
+
+                if (valid.unit && !_unit)
                     errors["unit"] = i18n.__("Machine.unit.isExists:%s is not exists", i18n.__("Machine.unit._:Unit")); //"Unit tidak ada";
 
-                if (!_step)
+                if (valid.step && !_step)
                     errors["step"] = i18n.__("Machine.step.isExists:%s is not exists", i18n.__("Machine.step._:Step")); //"Step tidak ada";
+
+                if (valid.machineType && !_machineType)
+                    errors["machineType"] = i18n.__("Machine.machineType.isExists:%s is not exists", i18n.__("Machine.machineType._:Machine Type")); //"MachineType tidak ada";
 
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -127,6 +141,10 @@ module.exports = class MachineManager extends BaseManager {
                 if(_step){
                     valid.step = _step;
                     valid.stepId = new ObjectId(_step._id);
+                }
+                if(_machineType){
+                    valid.machineType = _machineType;
+                    valid.machineTypeId = new ObjectId(_machineType._id);
                 }
 
                 if (!valid.stamp)

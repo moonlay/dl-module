@@ -21,12 +21,39 @@ before("#00. connect db", function (done) {
         });
 });
 
-it("#01. should success when create etl for dim-supplier", function (done) {
-    instanceManager.run()
-        .then(() => {
-            done();
+// it("#01. should success when create etl for dim-supplier", function (done) {
+//     instanceManager.run()
+//         .then((a) => {
+//             done();
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
+
+// var data = [{}, {}];
+
+// it("#01. should success when transforming data", function (done) {
+//     instanceManager.transform(data)
+//         .then(() => {
+//             done();
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
+
+it("#02. should error when load empty data", function (done) {
+    instanceManager.load({})
+        .then(id => {
+            done("should error when create with empty data");
         })
-        .catch((e) => {
-            done(e);
+        .catch(e => {
+            try {                
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
         });
 });

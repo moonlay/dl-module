@@ -70,9 +70,9 @@ module.exports = class DimCategoryEtlManager extends BaseManager {
         var result = data.map((item) => {
 
             return {
-                categoryCode: item.code,
-                categoryName: item.name,
-                categoryType: item.name.toLowerCase() == 'bahan baku' ? 'BAHAN BAKU' : 'NON BAHAN BAKU'
+                categoryCode: item.code ? `'${item.code}'` : null,
+                categoryName: item.name ? `'${item.name}'` : null,
+                categoryType: item.name ? `'${item.name.toLowerCase() == 'bahan baku' ? 'BAHAN BAKU' : 'NON BAHAN BAKU'}'` : null
             };
         });
         return Promise.resolve([].concat.apply([], result));
@@ -86,7 +86,7 @@ module.exports = class DimCategoryEtlManager extends BaseManager {
 
                 var count = 1;
                 for (var item of data) {
-                    sqlQuery = sqlQuery.concat("insert into DL_Dim_Kategori(ID_Dim_Kategori, Kode_Kategori, Nama_Kategori, Jenis_Kategori) values(" + count + ", '" + item.categoryCode + "', '" + item.categoryName + "', '" + item.categoryType + "'); ");
+                    sqlQuery = sqlQuery.concat(`insert into DL_Dim_Kategori(ID_Dim_Kategori, Kode_Kategori, Nama_Kategori, Jenis_Kategori) values(${count}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType}); `);
 
                     count = count + 1;
                 }
