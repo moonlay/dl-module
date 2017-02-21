@@ -4,7 +4,6 @@
 var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require('module-toolkit').BaseManager;
 var moment = require("moment");
-var startedDate = new Date();
 
 // internal deps 
 require('mongodb-toolkit');
@@ -19,6 +18,7 @@ module.exports = class DimCategoryEtlManager extends BaseManager {
         this.migrationLog = this.db.collection("migration-log");
     }
     run() {
+        var startedDate = new Date();
         this.migrationLog.insert({
             description: "Dim Category from MongoDB to Azure DWH",
             start: startedDate,
