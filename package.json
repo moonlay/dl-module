@@ -24,7 +24,7 @@
     "dl-i18n": "git+https://github.com/danliris/dl-i18n.git",
     "dl-models": "https://github.com/danliris/dl-models",
     "hashids": "^1.1.0",
-    "module-toolkit": "git+https://github.com/pinkgorilla/module-toolkit.git",
+    "module-toolkit": "git+https://github.com/pinkgorilla/module-toolkit.git#dev",
     "moment": "^2.14.1",
     "mongo-factory": "^1.0.0",
     "mongodb": "^2.2.5",

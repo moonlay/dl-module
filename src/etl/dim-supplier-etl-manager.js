@@ -63,8 +63,8 @@ module.exports = class DimSupplierEtlManager extends BaseManager {
         }).limit(1).toArray()
     }
 
-    extract(data) {
-        var timestamp = new Date(data[0].finish);
+    extract(time) {
+        var timestamp = new Date(time[0].finish);
         return this.supplierManager.collection.find({
             _deleted: false,
             _createdBy: {
@@ -80,53 +80,108 @@ module.exports = class DimSupplierEtlManager extends BaseManager {
         var result = data.map((item) => {
 
             return {
-                supplierCode: `'${item.code}'`,
-                supplierName: `'${item.name.replace(/'/g, '"')}'`
+                supplierCode: item.code ? `'${item.code}'` : null,
+                supplierName: item.name ? `'${item.name.replace(/'/g, '"')}'` : null
             };
         });
         return Promise.resolve([].concat.apply([], result));
     }
 
-    load(data) {
-        return this.sql.getConnection()
-            .then((request) => {
-
-                var sqlQuery = '';
-
-                var count = 1;
-                for (var item of data) {
-                    sqlQuery = sqlQuery.concat(`insert into DL_Dim_Supplier(ID_Dim_Supplier, Kode_Supplier, Nama_Supplier) values(${count}, ${item.supplierCode}, ${item.supplierName}); `);
-
-                    count = count + 1;
+    insertQuery(sql, query) {
+        return new Promise((resolve, reject) => {
+            sql.query(query, function (err, result) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
                 }
-
-                request.multiple = true;
-
-                // var fs = require("fs");
-                // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
-
-                // fs.writeFile(path, sqlQuery, function (error) {
-                //     if (error) {
-                //         console.log("write error:  " + error.message);
-                //     } else {
-                //         console.log("Successful Write to " + path);
-                //     }
-                // });
-
-                var deleteTempTable = (`DELETE FROM DL_Dim_Supplier_Temp; `);
-                var storedProcedure = (`exec dl_upsert_dim_supplier; `);
-
-                return request.query(sqlQuery + storedProcedure + deleteTempTable)
-                    // return request.query('select count(*) from DimSupplier')
-                    // return request.query('select top 1 * from DimSupplier')
-                    .then((results) => {
-                        console.log(results);
-                        return Promise.resolve(results);
-                    })
             })
+        })
+    }
+
+    load(data) {
+        return new Promise((resolve, reject) => {
+            this.sql.startConnection()
+                .then(() => {
+
+                    var transaction = this.sql.transaction();
+
+                    transaction.begin((err) => {
+
+                        var request = this.sql.transactionRequest(transaction);
+
+                        var command = [];
+
+                        var sqlQuery = '';
+
+                        var count = 1;
+
+                        for (var item of data) {
+                            if (item) {
+                                var queryString = `insert into DL_Dim_Supplier_Temp(ID_Dim_Supplier, Kode_Supplier, Nama_Supplier) values(${count}, ${item.supplierCode}, ${item.supplierName});\n`;
+                                sqlQuery = sqlQuery.concat(queryString);
+                                if (count % 1000 == 0) {
+                                    command.push(this.insertQuery(request, sqlQuery));
+                                    sqlQuery = "";
+                                }
+                                console.log(`add data to query  : ${count}`);
+                                count++;
+                            }
+                        }
+
+
+                        if (sqlQuery !== "")
+
+                            command.push(this.insertQuery(request, `${sqlQuery}`));
+
+                        this.sql.multiple = true;
+
+                        return Promise.all(command)
+                            .then((results) => {
+                                request.execute("DL_UPSERT_DIM_SUPPLIER").then((execResult) => {
+                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
+                                        transaction.commit((err) => {
+                                            if (err)
+                                                reject(err);
+                                            else
+                                                resolve(results);
+                                        });
+                                    }).catch((error) => {
+                                        transaction.rollback((err) => {
+                                            console.log("rollback")
+                                            if (err)
+                                                reject(err)
+                                            else
+                                                reject(error);
+                                        });
+                                    })
+                                }).catch((error) => {
+                                    transaction.rollback((err) => {
+                                        console.log("rollback")
+                                        if (err)
+                                            reject(err)
+                                        else
+                                            reject(error);
+                                    });
+                                })
+                            })
+                            .catch((error) => {
+                                transaction.rollback((err) => {
+                                    console.log("rollback");
+                                    if (err)
+                                        reject(err)
+                                    else
+                                        reject(error);
+                                });
+                            });
+                    })
+                })
+                .catch((err) => {
+                    reject(err);
+                })
+        })
             .catch((err) => {
-                console.log(err);
-                return Promise.reject(err);
-            });
+                reject(err);
+            })
     }
 }

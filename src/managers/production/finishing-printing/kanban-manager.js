@@ -2,13 +2,13 @@
 
 var ObjectId = require("mongodb").ObjectId;
 require("mongodb-toolkit");
+var assert = require('assert');
 var DLModels = require("dl-models");
 var map = DLModels.map;
-var StepManager = require('../../master/step-manager');
+var generateCode = require("../../../utils/code-generator");
 var ProductionOrderManager = require('../../sales/production-order-manager');
 var InstructionManager = require('../../master/instruction-manager');
 var Kanban = DLModels.production.finishingPrinting.Kanban;
-var Partition = DLModels.production.finishingPrinting.Partition;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 
@@ -22,8 +22,8 @@ module.exports = class KanbanManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -35,186 +35,141 @@ module.exports = class KanbanManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            var colorFilter = {
-                "color": {
-                    "$regex": regex
-                }
-            };
-            var gradeFilter = {
-                "grade": {
-                    "$regex": regex
-                }
-            };
-            var colorTypeFilter = {
-                "colorType.name": {
-                    "$regex": regex
-                }
-            };
-            keywordFilter["$or"] = [orderNoFilter, colorFilter, gradeFilter, colorTypeFilter];
+            keywordFilter["$or"] = [orderNoFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
     }
 
     _beforeInsert(data) {
+        data.code = generateCode();
+        if (data.cart){
+            data.cart.code = generateCode();
+        }
         data._createdDate = new Date();
         return Promise.resolve(data);
     }
 
-    _validate(dailyOperation) {
+    _validate(kanban) {
         var errors = {};
-        return new Promise((resolve, reject) => {
-            var valid = dailyOperation;
-            //1. begin: Declare promises.
-           var getProductionOrder = valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(new ObjectId(valid.productionOrderId)) : Promise.resolve(null);
-            var getInstruction = valid.instructionId && ObjectId.isValid(valid.instructionId) ? this.instructionManager.getSingleByIdOrDefault(new ObjectId(valid.instructionId)) : Promise.resolve(null);
-            Promise.all([getProductionOrder,getInstruction])
-                .then(results => {
-                    var _productionOrder = results[0];
-                    var _instruction = results[1];
-                    var getData = Promise.resolve(null);
-                    if(_productionOrder){
-                        if(_productionOrder.orderType){
-                            if(_productionOrder.orderType.name.trim().toLowerCase() != "printing" && _productionOrder.orderType.name.trim().toLowerCase() != "yarn dyed"){
-                                getData = this.getSingleByQueryOrDefault({
-                                    '$and' : [{
-                                            _id: {
-                                                '$ne': new ObjectId(valid._id)
-                                            }
-                                        },{
-                                            "productionOrderId" : valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? (new ObjectId(valid.productionOrderId)) : {}
-                                        },{
-                                            '_deleted' : false
-                                        },{
-                                            'color' : valid.color
-                                        },{
-                                            'colorTypeId' : valid.colorTypeId && ObjectId.isValid(valid.colorTypeId) ? (new ObjectId(valid.colorTypeId)) : {}
-                                        }]
-                                });
-                            }else{
-                                getData = this.getSingleByQueryOrDefault({
-                                    '$and' : [{
-                                            _id: {
-                                                '$ne': new ObjectId(valid._id)
-                                            }
-                                        },{
-                                            "productionOrderId" : valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? (new ObjectId(valid.productionOrderId)) : {}
-                                        },{
-                                            '_deleted' : false
-                                        },{
-                                            'color' : valid.color
-                                        }]
-                                });
+        var valid = kanban;
+
+        var getKanbanPromise = this.collection.singleOrDefault({
+            _id: {
+                '$ne': new ObjectId(valid._id)
+            },
+            code: valid.code
+        });
+        var getProductionOrder = valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(new ObjectId(valid.productionOrderId)) : Promise.resolve(null);
+        var getProductionOrderDetail = (valid.selectedProductionOrderDetail && valid.selectedProductionOrderDetail.code) ? this.productionOrderManager.getSingleProductionOrderDetail(valid.selectedProductionOrderDetail.code) : Promise.resolve(null);
+        var getInstruction = valid.instructionId && ObjectId.isValid(valid.instructionId) ? this.instructionManager.getSingleByIdOrDefault(new ObjectId(valid.instructionId)) : Promise.resolve(null);
+
+        return Promise.all([getKanbanPromise, getProductionOrder, getProductionOrderDetail, getInstruction])
+            .then(results => {
+                var _kanban = results[0];
+                var _productionOrder = results[1];
+                var _productionOrderDetail = results[2];
+                var _instruction = results[3];
+
+                return Promise.all([this.getKanbanListByColorAndOrderNumber(valid._id, _productionOrder, _productionOrderDetail)])
+                    .then(_kanbanListByColor => {
+
+                        if (_kanban)
+                            errors["code"] = i18n.__("Kanban.code.isExists:%s is exists", i18n.__("Kanban.code._:Code"));
+                        if (!valid.productionOrder)
+                            errors["productionOrder"] = i18n.__("Kanban.productionOrder.isRequired:%s is required", i18n.__("Kanban.productionOrder._:ProductionOrder")); //"Production Order harus diisi";
+                        else if (!_productionOrder)
+                            errors["productionOrder"] = i18n.__("Kanban.productionOrder.notFound:%s not found", i18n.__("Kanban.productionOrder._:ProductionOrder")); //"Production Order tidak ditemukan";
+                        
+                        if (!_productionOrderDetail)
+                            errors["selectedProductionOrderDetail"] = i18n.__("Kanban.selectedProductionOrderDetail.isRequired:%s is required", i18n.__("Kanban.selectedProductionOrderDetail._:Color")); //"Color harus diisi";
+
+                        if (!valid.cart)
+                            errors["cart"] = i18n.__("Kanban.cart.isRequired:%s is required", i18n.__("Kanban.cart._:Cart")); //"Cart harus diisi";                        
+                        else{
+                            var currentQty = 0;
+                            if (_kanbanListByColor[0] && _kanbanListByColor[0].data.length > 0){
+                                for (var item of _kanbanListByColor[0].data){
+                                    currentQty += Number(item.cart.qty);
+                                }
                             }
+                            currentQty += Number(valid.cart.qty);
+                            if (currentQty > _productionOrderDetail.quantity)
+                                errors["cart"] = i18n.__("Kanban.cart.qtyOverlimit:%s overlimit", i18n.__("Kanban.cart._:Total Qty")); //"Total Qty in cart over limit";
                         }
-                    }
-                    Promise.all([getData])
-                        .then(result => {
-                            var _dataDaily = result[0];
-                            var now = new Date();
-                            
-                            if(!valid.productionOrderId || valid.productionOrderId.toString() == "")
-                                errors["productionOrder"] = i18n.__("Kanban.productionOrder.isRequired:%s is required", i18n.__("Kanban.productionOrder._:ProductionOrder")); //"Production Order harus diisi";
-                            else if(!_productionOrder)
-                                errors["productionOrder"] = i18n.__("Kanban.productionOrder.notFound:%s not found", i18n.__("Kanban.productionOrder._:ProductionOrder")); //"Production Order tidak ditemukan";
-                            else if(_dataDaily)
-                                errors["productionOrder"] = i18n.__("Kanban.productionOrder.isExists:%s with same color is ready exists", i18n.__("Kanban.productionOrder._:ProductionOrder")); //"Production Order tidak ditemukan";
+                        
 
-                            if(!valid.color || valid.color == '')
-                                errors["color"] = i18n.__("Kanban.color.isRequired:%s is required", i18n.__("Kanban.color._:Color")); //"color tidak ditemukan";
-                            else if(_dataDaily)
-                                errors["color"] = i18n.__("Kanban.color.isExists:%s with same Production Order is ready exists", i18n.__("Kanban.color._:Color")); //"Color tidak ditemukan";
+                        if (!valid.instruction)
+                            errors["instruction"] = i18n.__("Kanban.instruction.isRequired:%s is required", i18n.__("Kanban.instruction._:Instruction")); //"Instruction harus diisi";
+                        else if (!_instruction)
+                            errors["instruction"] = i18n.__("Kanban.instruction.notFound:%s not found", i18n.__("Kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
 
-                            if(!valid.instructionId || valid.instructionId.toString() == '')
-                                errors["instruction"] = i18n.__("Kanban.instruction.isRequired:%s is required", i18n.__("Kanban.kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
-                            else if(!_instruction)
-                                errors["instruction"] = i18n.__("Kanban.instruction.isRequired:%s is required", i18n.__("DailyOperation.instruction._:Instruction")); //"Instruction tidak ditemukan";
-                            
-                            if(!valid.steps || valid.steps.length == 0)
-                                errors["steps"] = i18n.__("Kanban.steps.isRequired:%s is required", i18n.__("DailyOperation.steps._:Steps")); //"Flow Proses harus diisi minimal satu";
-                            
+                        if (Object.getOwnPropertyNames(errors).length > 0) {
+                            var ValidationError = require('module-toolkit').ValidationError;
+                            return Promise.reject(new ValidationError('data does not pass validation', errors));
+                        }
 
-                            if(!valid.partitions || valid.partitions.length == 0){
-                                errors["partitions"] = i18n.__("Kanban.partitions.isRequired:%s is required", i18n.__("DailyOperation.partitions._:Partitions")); //"Flow Proses harus diisi minimal satu";
-                            }else{
-                                var itemErrors = [];
-                                var itemDuplicateErrors = [];
-                                var valueArr = valid.partitions.map(function (item) { return item.no });
-                                var isDuplicate = valueArr.some(function (item, idx) {
-                                    var itemError = {};
-                                    if (valueArr.indexOf(item) != idx) {
-                                        itemError["no"] = i18n.__("Kanban.partitions.no.isDuplicate:%s is duplicate", i18n.__("Kanban.partitions.no._:No")); //"No Partisi tidak boleh kembar";
-                                    }
-                                    if (Object.getOwnPropertyNames(itemError).length > 0) {
-                                        itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
-                                        itemDuplicateErrors[idx] = itemError;
-                                    } else {
-                                        itemDuplicateErrors[idx] = itemError;
-                                    }
-                                    return valueArr.indexOf(item) != idx
-                                });
-                                for (var item of valid.partitions) {
-                                    var itemError = {};
-                                    var _index = valid.partitions.indexOf(item);
-                                    if (!item.no || item.no == "") {
-                                        itemError["no"] = i18n.__("Kanban.partitions.no.isRequired:%s is required", i18n.__("Kanban.partitions.no._:No")); //"Nomor kereta tidak boleh kosong";
-                                    } else if (isDuplicate) {
-                                        if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
-                                            Object.assign(itemError, itemDuplicateErrors[_index]);
-                                        }
-                                    }
-                                    if (item.lengthFabric <= 0) {
-                                        itemError["lengthFabric"] = i18n.__("Kanban.partitions.lengthFabric.isRequired:%s is required", i18n.__("Kanban.partitions.lengthFabric._:LengthFabric")); //Jumlah barang tidak boleh kosong";
-                                    }
-                                    itemErrors.push(itemError);
-                                }
-                                
-                                for (var itemError of itemErrors) {
-                                    if (Object.getOwnPropertyNames(itemError).length > 0) {
-                                        errors["partitions"] = itemErrors;
-                                        break;
-                                    }
-                                }
-                            }
-                            
-                            if (Object.getOwnPropertyNames(errors).length > 0) {
-                                var ValidationError = require('module-toolkit').ValidationError;
-                                return Promise.reject(new ValidationError('data does not pass validation', errors));
-                            }
+                        if (_instruction) {
+                            valid.instructionId = _instruction._id;
+                        }
+                        if (_productionOrder) {
+                            valid.productionOrderId = _productionOrder._id;
+                            valid.productionOrder = _productionOrder;
+                        }
 
-                            if(_instruction){
-                                valid.instructionId = _instruction._id;
-                                valid.instruction = _instruction;
-                            }
-                            if(_productionOrder){
-                                valid.productionOrderId = _productionOrder._id;
-                                valid.productionOrder = _productionOrder;
-                            }
-
-                            if (!valid.stamp){
-                                valid = new Kanban(valid);
-                            }
-                            valid.stamp(this.user.username, "manager");
-                            resolve(valid);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-            });
+                        if (!valid.stamp) {
+                            valid = new Kanban(valid);
+                        }
+                        valid.stamp(this.user.username, "manager");
+                        return Promise.resolve(valid);
+                    })
+            })
     }
 
-     _createIndexes() {
+    _createIndexes() {
         var dateIndex = {
             name: `ix_${map.production.finishingPrinting.collection.Kanban}__updatedDate`,
             key: {
                 _updatedDate: -1
             }
         }
+        var codeIndex = {
+            name: `ix_${map.production.finishingPrinting.collection.MonitoringEvent}_code`,
+            key: {
+                code: 1
+            },
+            unique: true
+        };
 
-        return this.collection.createIndexes([dateIndex]);
+        return this.collection.createIndexes([dateIndex, codeIndex]);
+    }
+
+    getKanbanListByColorAndOrderNumber(kanbanId, productionOrder, productionOrderDetail) {
+
+        if (productionOrder && productionOrderDetail) {
+            var _defaultFilter = {
+                _deleted: false
+            }, kanbanFilter = {},
+                productionOrderFilter = {},
+                productionOrderDetailFilter = {},
+                query = {};
+
+            if (kanbanId){
+                kanbanFilter = { _id: {'$ne': new ObjectId(kanbanId)}};
+            }
+
+            if (productionOrder && productionOrder.orderNo != '') {
+                productionOrderFilter = { 'productionOrder.orderNo': productionOrder.orderNo };
+            }
+            if (productionOrderDetail && productionOrderDetail.code != '') {
+                productionOrderDetailFilter = { 'selectedProductionOrderDetail.code': productionOrderDetail.code };
+            }
+
+            query = { '$and': [_defaultFilter, kanbanFilter, productionOrderFilter, productionOrderDetailFilter] };
+
+            return this.collection.where(query).execute();
+        }
+        else
+            Promise.resolve(null);
     }
 };

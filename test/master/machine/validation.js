@@ -45,7 +45,7 @@ it('#02. should error when create new data with non existent unit, step, machine
 
             manager.create(machine)
                 .then(id => {
-                    done("should error when create new data with dateStart greater than today");
+                    done("should error when create new data with non existent unit, step, machineType");
                 })
                 .catch(e => {
                     try {

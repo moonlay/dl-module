@@ -11,36 +11,16 @@ class KanbanDataUtil {
                     .then(result => {
                         var _instruction = result[0];
                         var _productionOrder = result[1];
-                        var detail = {};
-                        for(var a of _productionOrder.details){
-                            detail = a;
-                        }
-                        var code= codeGenerator();
+                        var _selectedProductionOrderDetail = (_productionOrder.details && _productionOrder.details.length > 0) ? _productionOrder.details[0] : {};
 
                         var data = {
+                            code : codeGenerator(),
                             productionOrderId : _productionOrder._id,
                             productionOrder : _productionOrder,
-                            color : detail.colorRequest,
-                            colorTypeId : detail.colorTypeId,
-                            colorType : detail.colorType,
-                            grade : `grade ${code}`,
-                            lengthFabric : _productionOrder.orderQuantity,
-                            partitions : [{
-                                no : `${code}1`,
-                                lengthFabric : 15,
-                                uomId : _productionOrder.uomId,
-                                uom : _productionOrder.uom,
-                                reference : ''
-                            },{
-                                no : `${code}2`,
-                                lengthFabric : 15,
-                                uomId : _productionOrder.uomId,
-                                uom : _productionOrder.uom,
-                                reference : ''
-                            }],
+                            selectedProductionOrderDetail: _selectedProductionOrderDetail,
+                            cart: { code : "cartUnitTestCode", cartNumber : "unitTestCartNumber", qty : 1, pcs : 1},
                             instructionId : _instruction._id,
                             instruction : _instruction,
-                            steps : _instruction.steps
                         };
 
                         return data;

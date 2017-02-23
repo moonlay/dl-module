@@ -4,7 +4,6 @@
 var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require('module-toolkit').BaseManager;
 var moment = require("moment");
-var startedDate = new Date();
 
 // internal deps 
 require('mongodb-toolkit');
@@ -18,13 +17,15 @@ module.exports = class DimCategoryEtlManager extends BaseManager {
         this.categoryManager = new CategoryManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
+
     run() {
+        var startedDate = new Date();
         this.migrationLog.insert({
             description: "Dim Category from MongoDB to Azure DWH",
             start: startedDate,
         })
         return this.getTimestamp()
-            .then((timestamp) => this.extract(timestamp))
+            .then((time) => this.extract(time))
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
             .then(() => {
@@ -59,8 +60,8 @@ module.exports = class DimCategoryEtlManager extends BaseManager {
         }).sort({ finish: -1 }).limit(1).toArray();
     }
 
-    extract(timestamp) {
-        var timestamps = new Date(timestamp[0].finish);
+    extract(time) {
+        var timestamp = new Date(time[0].finish);
         return this.categoryManager.collection.find({
             _deleted: false
         }).toArray();
@@ -78,32 +79,101 @@ module.exports = class DimCategoryEtlManager extends BaseManager {
         return Promise.resolve([].concat.apply([], result));
     }
 
-    load(data) {
-        return this.sql.getConnection()
-            .then((request) => {
-
-                var sqlQuery = '';
-
-                var count = 1;
-                for (var item of data) {
-                    sqlQuery = sqlQuery.concat(`insert into DL_Dim_Kategori(ID_Dim_Kategori, Kode_Kategori, Nama_Kategori, Jenis_Kategori) values(${count}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType}); `);
-
-                    count = count + 1;
+    insertQuery(sql, query) {
+        return new Promise((resolve, reject) => {
+            sql.query(query, function (err, result) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
                 }
-
-                request.multiple = true;
-
-                return request.query(sqlQuery)
-                    // return request.query('select count(*) from DimKategori')
-                    // return request.query('select top 1 * from DimKategori')
-                    .then((results) => {
-                        console.log(results);
-                        return Promise.resolve();
-                    })
             })
+        })
+    }
+
+    load(data) {
+        return new Promise((resolve, reject) => {
+            this.sql.startConnection()
+                .then(() => {
+
+                    var transaction = this.sql.transaction();
+
+                    transaction.begin((err) => {
+
+                        var request = this.sql.transactionRequest(transaction);
+
+                        var command = [];
+
+                        var sqlQuery = '';
+
+                        var count = 1;
+
+                        for (var item of data) {
+                            if (item) {
+                                var queryString = `insert into DL_Dim_Kategori_Temp(ID_Dim_Kategori, Kode_Kategori, Nama_Kategori, Jenis_Kategori) values(${count}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType});\n`;
+                                sqlQuery = sqlQuery.concat(queryString);
+                                if (count % 1000 == 0) {
+                                    command.push(this.insertQuery(request, sqlQuery));
+                                    sqlQuery = "";
+                                }
+                                console.log(`add data to query  : ${count}`);
+                                count++;
+                            }
+                        }
+
+
+                        if (sqlQuery !== "")
+
+                            command.push(this.insertQuery(request, `${sqlQuery}`));
+
+                        this.sql.multiple = true;
+
+                        return Promise.all(command)
+                            .then((results) => {
+                                request.execute("DL_UPSERT_DIM_KATEGORI").then((execResult) => {
+                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
+                                        transaction.commit((err) => {
+                                            if (err)
+                                                reject(err);
+                                            else
+                                                resolve(results);
+                                        });
+                                    }).catch((error) => {
+                                        transaction.rollback((err) => {
+                                            console.log("rollback")
+                                            if (err)
+                                                reject(err)
+                                            else
+                                                reject(error);
+                                        });
+                                    })
+                                }).catch((error) => {
+                                    transaction.rollback((err) => {
+                                        console.log("rollback")
+                                        if (err)
+                                            reject(err)
+                                        else
+                                            reject(error);
+                                    });
+                                })
+                            })
+                            .catch((error) => {
+                                transaction.rollback((err) => {
+                                    console.log("rollback");
+                                    if (err)
+                                        reject(err)
+                                    else
+                                        reject(error);
+                                });
+                            });
+                    })
+                })
+                .catch((err) => {
+                    reject(err);
+                })
+        })
             .catch((err) => {
-                console.log(err);
-                return Promise.reject(err);
-            });
+                reject(err);
+            })
     }
 }
