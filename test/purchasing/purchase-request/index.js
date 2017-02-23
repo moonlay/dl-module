@@ -9,3 +9,7 @@ describe("CREATE SCENARIOS", function() {
 describe("POST SCENARIOS", function() {
     require("./post");
 });
+
+describe("UNPOST SCENARIOS", function() {
+    require("./unpost");
+});

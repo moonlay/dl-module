@@ -162,7 +162,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                             break;
                         }
                     }
-                    
+
                 }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -439,5 +439,53 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, noIndex]);
+    }
+
+    unpost(purchaseRequestId) {
+        return this.getSingleByIdOrDefault(purchaseRequestId)
+            .then((purchaseRequest) => this.validateUnpost(purchaseRequest))
+            .then((purchaseRequest) => {
+                purchaseRequest.isPosted = false;
+                purchaseRequest.status = prStatusEnum.CREATED;
+                return this.collection
+                    .updateOne({
+                        _id: purchaseRequest._id
+                    }, {
+                        $set: purchaseRequest
+                    })
+                    .then((result) => Promise.resolve(purchaseRequest._id));
+
+            })
+    }
+
+    validateUnpost(purchaseRequest) {
+        var purchaseRequestError = {};
+        var valid = purchaseRequest;
+
+        return this.getSingleByIdOrDefault(valid._id)
+            .then((pr) => {
+                if (!pr.isPosted) {
+                    purchaseRequestError["no"] = i18n.__("purchaseRequest.isPosted:%s is not yet being posted", i18n.__("purchaseRequest.isPosted._:Posted"));
+                }
+
+                if (pr.isUsed) {
+                    purchaseRequestError["isUsed"] = i18n.__("purchaseRequest.isUsed:%s is already used", i18n.__("purchaseRequest.isUsed._:Used"));
+                }
+
+                if (pr.purchaseOrderIds.length > 0) {
+                    purchaseRequestError["purchaseOrderIds"] = i18n.__("purchaseRequest.purchaseOrderIds:%s is already used", i18n.__("purchaseRequest.purchaseOrderIds._:Used"));
+                }
+
+                if (Object.getOwnPropertyNames(purchaseRequestError).length > 0) {
+                    var ValidationError = require("module-toolkit").ValidationError;
+                    return Promise.reject(new ValidationError("data does not pass validation", purchaseRequestError));
+                }
+
+                if (!pr.stamp) {
+                    pr = new PurchaseRequest(pr);
+                }
+                pr.stamp(this.user.username, 'manager');
+                return Promise.resolve(pr);
+            });
     }
 };

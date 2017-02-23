@@ -257,7 +257,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     })
             })
     }
-    
+
     delete(purchaseOrder) {
         return new Promise((resolve, reject) => {
             this._createIndexes()
@@ -269,10 +269,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                 .then(id => {
                                     this.purchaseRequestManager.getSingleById(validData.purchaseRequest._id)
                                         .then(PR => {
-                                            PR.isUsed = false;
                                             PR.status = prStatusEnum.POSTED;
                                             var poIndex = PR.purchaseOrderIds.indexOf(validData._id);
                                             PR.purchaseOrderIds.splice(poIndex, 1);
+                                            if (PR.purchaseOrderIds.length === 0) {
+                                                PR.isUsed = false;
+                                            }
                                             this.purchaseRequestManager.update(PR)
                                                 .then(results => {
                                                     resolve(id);

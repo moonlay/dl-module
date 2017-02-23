@@ -110,10 +110,10 @@ module.exports = class MonitoringEventManager extends BaseManager {
                     }
                 }
 
-                if (!valid.timeInMillisStart || valid.timeInMillisStart === 0)
+                if (valid.timeInMillisStart === undefined)
                     errors["timeInMillisStart"] = i18n.__("MonitoringEvent.timeInMillisStart.isRequired:%s is required", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start")); //"Time Mulai tidak boleh kosong";
 
-                if (!valid.timeInMillisEnd || valid.timeInMillisEnd === 0)
+                if (valid.timeInMillisEnd === undefined)
                     errors["timeInMillisEnd"] = i18n.__("MonitoringEvent.timeInMillisEnd.isRequired:%s is required", i18n.__("MonitoringEvent.timeInMillisEnd._:Time End")); //"Time Mulai tidak boleh kosong";
 
                 if (valid.dateStart && valid.dateStart != '' && valid.dateEnd && valid.dateEnd != '' && valid.dateStart === valid.dateEnd){
