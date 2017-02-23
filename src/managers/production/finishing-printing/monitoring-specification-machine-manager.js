@@ -56,7 +56,7 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             };
 
 
-            keywordFilter['$or'] = [codeFilter, dateFilter, filterMachineName,filterProductionOrder];
+            keywordFilter['$or'] = [codeFilter, dateFilter, filterMachineName, filterProductionOrder];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -156,6 +156,8 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
                 }
 
+
+
                 if (!valid.stamp)
                     valid = new MonitoringSpecificationMachine(valid);
 
@@ -218,7 +220,8 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             item["Machine"] = monitoringSpecificationMachine.machine ? monitoringSpecificationMachine.machine.name : '';
             item["Tanggal"] = monitoringSpecificationMachine.date ? moment(new Date(monitoringSpecificationMachine.date)).format(dateFormat) : '';
             item["Jam"] = monitoringSpecificationMachine.time ? moment(new Date(monitoringSpecificationMachine.time)).format(timeFormat) : '';
-
+            item["No Surat Order Produksi"] = monitoringSpecificationMachine.productionOrder ? monitoringSpecificationMachine.productionOrder.orderNo : '';
+            item["Cart Number"] = monitoringEvent.cartNumber;
             //dinamic items
             for (var indicator of monitoringSpecificationMachine.items) {
                 item[indicator.indicator] = indicator ? indicator.value : '';
