@@ -10,7 +10,7 @@ var machine = require("../../master/machine-data-util");
 class MonitoringSpecificationMachineDataUtil {
 
     getNewData() {
-        return Promise.all([machine.getTestData(),productionOrder.getNewTestData()])
+        return Promise.all([machine.getTestData(), productionOrder.getNewTestData()])
             .then((results) => {
                 var _machine = results[0];
                 var _productionOrder = results[1];
@@ -18,11 +18,11 @@ class MonitoringSpecificationMachineDataUtil {
                 for (var machine of _machine.machineType.indicators) {
                     var item = {};
                     item = {
-                        indicator: machine.indicator,
-                        dataType: machine.dataType,
-                        defaultValue: machine.defaultValue,
-                        value: machine.dataType == "range (use '-' as delimiter)" ? 5 : "",
-                        satuan:"test satuan",
+                        indicator: machine.indicator ? machine.indicator : "",
+                        dataType: machine.dataType ? machine.dataType : "",
+                        defaultValue: machine.defaultValue ? machine.defaultValue : "",
+                        value: machine.dataType == "range (use '-' as delimiter)" ? 5 : "a",
+                        satuan: "test satuan",
 
                     }
                     itemsArr.push(item);
@@ -34,9 +34,46 @@ class MonitoringSpecificationMachineDataUtil {
                     time: "10.00",
                     machineId: _machine._id,
                     machine: _machine,
-                    productionOrderId:_productionOrder._id,
-                    productionOrder:_productionOrder,
-                    cartNumber:"test",
+                    productionOrderId: _productionOrder._id,
+                    productionOrder: _productionOrder,
+                    cartNumber: "test",
+                    items: itemsArr
+
+                };
+
+                return Promise.resolve(data);
+            });
+    }
+
+    getNewDataItems() {
+        return Promise.all([machine.getTestData(), productionOrder.getNewTestData()])
+            .then((results) => {
+                var _machine = results[0];
+                var _productionOrder = results[1];
+                var itemsArr = [];
+                for (var machine of _machine.machineType.indicators) {
+                    var item = {};
+
+                    item = {
+                        indicator: machine.indicator ? machine.indicator : "",
+                        dataType: machine.dataType ? machine.dataType : "",
+                        defaultValue: machine.defaultValue ? machine.defaultValue : "",
+                        value: "",
+                        satuan: "",
+
+                    }
+                    itemsArr.push(item);
+                }
+
+                var data = {
+                    code: `UT/MSM/${codeGenerator()}`,
+                    date: new Date(),
+                    time: "10.00",
+                    machineId: _machine._id,
+                    machine: _machine,
+                    productionOrderId: _productionOrder._id,
+                    productionOrder: _productionOrder,
+                    cartNumber: "test",
                     items: itemsArr
 
                 };

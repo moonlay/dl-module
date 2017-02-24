@@ -21,7 +21,7 @@ before('#00. connect db', function (done) {
 });
 
 var createdId;
-it("#01. should success when create new data", function(done) {
+it("#01. should success when create new data", function (done) {
     MonitoringSpecificationMachine.getNewData()
         .then((data) => monitoringSpecificationMachineManager.create(data))
         .then((id) => {
@@ -35,7 +35,7 @@ it("#01. should success when create new data", function(done) {
 });
 
 var createdData;
-it(`#02. should success when get created data with id`, function(done) {
+it(`#02. should success when get created data with id`, function (done) {
     monitoringSpecificationMachineManager.getSingleById(createdId)
         .then((data) => {
             data.should.instanceof(Object);
@@ -53,12 +53,13 @@ var resultForExcelTest = {};
 it('#03. should success when create report', function (done) {
     var info = {};
     info.machineId = createdData.machineId;
+    info.productionOrderId = createdData.productionOrderId;
     info.dateFrom = createdData.date;
     info.dateTo = createdData.date;
 
     monitoringSpecificationMachineManager.getMonitoringSpecificationMachineReport(info)
-        .then(result => {             
-            resultForExcelTest = result; 
+        .then(result => {
+            resultForExcelTest = result;
             var monitoringSpecificationMachine = result.data;
             monitoringSpecificationMachine.should.instanceof(Array);
             monitoringSpecificationMachine.length.should.not.equal(0);
@@ -73,7 +74,7 @@ it('#04. should success when get data for Excel Report', function (done) {
     var query = {};
 
     monitoringSpecificationMachineManager.getXls(resultForExcelTest, query)
-        .then(xlsData => {             
+        .then(xlsData => {
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
             xlsData.should.have.property('name');
@@ -84,7 +85,7 @@ it('#04. should success when get data for Excel Report', function (done) {
 });
 
 
-it("#05. should success when destroy all unit test data", function(done) {
+it("#05. should success when destroy all unit test data", function (done) {
     monitoringSpecificationMachineManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();
