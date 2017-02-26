@@ -80,10 +80,43 @@ it("#01. should success when create new support data (buyer, account, process ty
                 done(e);
             });
 });
+
+it("#02. should success when delete all exist data production order", function(done) {
+    manager.read({size : 50})
+            .then(results => {
+                if(results.data.length === 0){
+                    done();
+                }else{
+                    var destroyData = [];
+                    for(var pOrder of results.data){
+                        var des = manager.destroy(pOrder._id);
+                        destroyData.push(des);
+                    }
+                    if(destroyData.length === 0){
+                        done();
+                    }else{
+                        Promise.all(destroyData)
+                                .then(data => {
+                                    data.should.be.instanceof(Array);
+                                    for(var a of data)
+                                        a.should.equal(true);
+                                    done();
+                                })
+                                .catch(e => {
+                                    done(e);
+                                });
+                    }
+                }
+            })
+            .catch(e => {
+                done(e);
+            });
+});    
+
 var scId = [];
 var selesContractNo;
 var orderNo;
-it("#02. should success when create new 10 data Production Order with 2 detail color in each data production order", function(done) {
+it("#03. should success when create new 10 data Production Order with 2 detail color in each data production order", function(done) {
     var dataReport = [];
     for(var a = 0; a < 5; a++){
         var data = dataUtil.getNewData({buyer : dataBuyer1, process : dataProcessType1, account : dataAccount1});
@@ -96,10 +129,12 @@ it("#02. should success when create new 10 data Production Order with 2 detail c
     Promise.all(dataReport)
             .then(dataResults => {
                 var createData = [];
+                var numberIndex = 0;
                 for(var a of dataResults){
+                    numberIndex++;
                     var code = codeGenerator();
-                    a.salesContractNo = code;
-                    a.orderNo = code;
+                    a.salesContractNo = `${code}${numberIndex}`;
+                    a.orderNo = `${code}${numberIndex}`;
                     var dataProdOrder = manager.create(a);
                     createData.push(dataProdOrder);
                     salesContractNo = a.salesContractNo;
@@ -119,7 +154,7 @@ it("#02. should success when create new 10 data Production Order with 2 detail c
             });
 });
 
-it("#03. should success get all data Production Order when searh report without parameter", function(done) {
+it("#04. should success get all data Production Order when searh report without parameter", function(done) {
     manager.getReport({})
             .then(data => {
                 data.should.be.instanceof(Array);
@@ -131,7 +166,7 @@ it("#03. should success get all data Production Order when searh report without 
             });
 });
 
-it("#04. should success get all data Production Order (2 data) when searh report with Sales Contract No parameter", function(done) {
+it("#05. should success get all data Production Order (2 data) when searh report with Sales Contract No parameter", function(done) {
     manager.getReport({ salesContractNo : salesContractNo })
             .then(data => {
                 data.should.be.instanceof(Array);
@@ -143,7 +178,7 @@ it("#04. should success get all data Production Order (2 data) when searh report
             });
 });
 
-it("#05. should success get all data Production Order (2 data) when searh report with Order No parameter", function(done) {
+it("#06. should success get all data Production Order (2 data) when searh report with Order No parameter", function(done) {
     manager.getReport({ orderNo : orderNo })
             .then(data => {
                 data.should.be.instanceof(Array);
@@ -155,7 +190,7 @@ it("#05. should success get all data Production Order (2 data) when searh report
             });
 });
 
-it("#06. should success get all data Production Order (20 data) when searh report with Order Type parameter", function(done) {
+it("#07. should success get all data Production Order (20 data) when searh report with Order Type parameter", function(done) {
     manager.getReport({ orderTypeId : dataProcessType1.orderTypeId })
             .then(data => {
                 data.should.be.instanceof(Array);
@@ -167,7 +202,7 @@ it("#06. should success get all data Production Order (20 data) when searh repor
             });
 });
 
-it("#07. should success get all data Production Order (10 data) when searh report with Process Type parameter", function(done) {
+it("#08. should success get all data Production Order (10 data) when searh report with Process Type parameter", function(done) {
     manager.getReport({ processTypeId : dataProcessType1._id })
             .then(data1 => {
                 data1.should.be.instanceof(Array);
@@ -187,7 +222,7 @@ it("#07. should success get all data Production Order (10 data) when searh repor
             });
 });
 
-it("#08. should success get all data Production Order (10 data) when searh report with buyer parameter", function(done) {
+it("#09. should success get all data Production Order (10 data) when searh report with buyer parameter", function(done) {
     manager.getReport({ buyerId : dataBuyer1._id })
             .then(data1 => {
                 data1.should.be.instanceof(Array);
@@ -207,7 +242,7 @@ it("#08. should success get all data Production Order (10 data) when searh repor
             });
 });
 
-it("#09. should success get all data Production Order (10 data) when searh report with account parameter", function(done) {
+it("#10. should success get all data Production Order (10 data) when searh report with account parameter", function(done) {
     manager.getReport({ accountId : dataAccount1._id })
             .then(data1 => {
                 data1.should.be.instanceof(Array);
@@ -227,7 +262,7 @@ it("#09. should success get all data Production Order (10 data) when searh repor
             });
 });
 
-it("#10. should success when destroy all data Production Order", function(done) {
+it("#11. should success when destroy all data Production Order", function(done) {
     var destroyData = [];
     for(var id of scId){
         var data = manager.destroy(id);

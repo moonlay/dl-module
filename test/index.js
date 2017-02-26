@@ -68,13 +68,10 @@ describe('#dl-module', function (done) {
     test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');		
     //Production
 
-
-    //test('@sales/production-order', './sales/production-order/create');
-
-    // test('@production/daily-operation', './production/finishing-printing/daily-operation');
-    // test('@production/finishing-printing/monitoring-specification-machine', './production/finishing-printing/monitoring-specification-machine');
-    // test('@PRODUCTION/MONITORING-EVENT', './production/finishing-printing/monitoring-event');
-
+    //test('@PRODUCTION/DAILY OPERATION', './production/finishing-printing/daily-operation');
+    test('@production/finishing-printing/monitoring-specification-machine', './production/finishing-printing/monitoring-specification-machine');
+    test('@PRODUCTION/FINISHING-PRINTING/KANBAN', './production/finishing-printing/kanban');
+    test('@PRODUCTION/MONITORING-EVENT', './production/finishing-printing/monitoring-event');
     // test('@production/winding-quality-sampling-manager', './production/spinning/winding/winding-quality-sampling-manager-test');
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
 

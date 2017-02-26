@@ -28,9 +28,7 @@ it('#01. should error when create with empty data ', function (done) {
         .catch(e => {
             try {
                 e.errors.should.have.property('dateStart');
-                e.errors.should.have.property('dateEnd');
                 e.errors.should.have.property('timeInMillisStart');
-                e.errors.should.have.property('timeInMillisEnd');
                 e.errors.should.have.property('machine');
                 e.errors.should.have.property('productionOrder');
                 e.errors.should.have.property('selectedProductionOrderDetail');
@@ -73,9 +71,15 @@ it('#02. should error when create new data with dateStart greater than today', f
 it('#03. should error when create new data with timeStart greater than today', function (done) {
     MonitoringEvent.getNewData()
         .then(me => {
-            var dateNow = new Date();
-            var timeInMillisNow = dateNow.getTime() % 86400000;
-            me.dateStart = moment(dateNow).format('YYYY-MM-DD');
+            var dateNow = moment().format('YYYY-MM-DD');
+            var timeInMillisNow = (function(){
+                var setupMoment = moment();
+                setupMoment.set('year', 1970);
+                setupMoment.set('month', 0);
+                setupMoment.set('date', 1);  
+                return Number(setupMoment.format('x'));
+            })();
+            me.dateStart = dateNow;
             me.timeInMillisStart = timeInMillisNow + 60000;
 
             monitoringEventManager.create(me)
@@ -126,9 +130,15 @@ it('#04. should error when create new data with dateEnd greater than today', fun
 it('#05. should error when create new data with timeEnd greater than today', function (done) {
     MonitoringEvent.getNewData()
         .then(me => {
-            var dateNow = new Date();
-            var timeInMillisNow = dateNow.getTime() % 86400000;
-            me.dateEnd = moment(dateNow).format('YYYY-MM-DD');
+            var dateNow = moment().format('YYYY-MM-DD');
+            var timeInMillisNow = (function(){
+                var setupMoment = moment();
+                setupMoment.set('year', 1970);
+                setupMoment.set('month', 0);
+                setupMoment.set('date', 1);  
+                return Number(setupMoment.format('x'));
+            })();
+            me.dateEnd = dateNow;
             me.timeInMillisEnd = timeInMillisNow + 60000;
 
             monitoringEventManager.create(me)
@@ -204,7 +214,67 @@ it('#07. should error when create new data with timeStart greater than timeEnd i
         });
 });
 
-it('#08. should success when get Query', function (done) {
+it('#08. dateEnd & timeInMillisEnd should be the same with dateStart & timeInMillisStart when create new data without dateEnd', function (done) {
+    MonitoringEvent.getNewData()
+        .then(me => {
+            delete me.dateEnd;
+
+            monitoringEventManager.create(me)
+                .then(id => {
+                    monitoringEventManager.getSingleById(id)
+                        .then((data) => {
+                            data.should.instanceof(Object);
+                            validate(data);
+
+                            if (data.timeInMillisStart.valueOf() === data.timeInMillisEnd.valueOf() && data.timeInMillisStart === data.timeInMillisEnd)
+                                done();
+                            else
+                                done("dateEnd & timeInMillisEnd should be the same with dateStart & timeInMillisStart when create new data without dateEnd");
+                        })
+                        .catch((e) => {
+                            done(e);
+                        });
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#09. timeInMillisEnd should be the same timeInMillisStart when create new data with dateEnd but without timeInMillisEnd', function (done) {
+    MonitoringEvent.getNewData()
+        .then(me => {
+            delete me.timeInMillisEnd;
+
+            monitoringEventManager.create(me)
+                .then(id => {
+                    monitoringEventManager.getSingleById(id)
+                        .then((data) => {
+                            data.should.instanceof(Object);
+                            validate(data);
+                            
+                            if (data.timeInMillisStart === data.timeInMillisEnd)
+                                done();
+                            else
+                                done("timeInMillisEnd should be the same timeInMillisStart when create new data with dateEnd but without timeInMillisEnd");
+                        })
+                        .catch((e) => {
+                            done(e);
+                        });
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});		
+
+it('#10. should success when get Query', function (done) {
     var paging = {};
     paging.keyword = '123';
     var query = monitoringEventManager._getQuery(paging)

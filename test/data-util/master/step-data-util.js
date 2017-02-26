@@ -1,6 +1,7 @@
 "use strict";
 var _getSert = require("../getsert");
 var generateCode = require("../../../src/utils/code-generator");
+var UomDataUtil = require("./uom-data-util");
 
 class StepDataUtil {
     getSert(input) {
@@ -13,30 +14,90 @@ class StepDataUtil {
     }
 
     getNewData() {
-        var Model = require("dl-models").master.Step;
-        var data = new Model();
+        return UomDataUtil.getTestData()
+            .then(uom => {
+                var Model = require("dl-models").master.Step;
+                var data = new Model();
 
-        var code = generateCode();
+                var code = generateCode();
 
-        data.process = code;
-        var item1 = `data 1 ${code}`;
-        var item2 = `data 2 ${code}`;
-        data.itemMonitoring.push(item1);
-        data.itemMonitoring.push(item2);
+                data.process = code;
+                var item1 = `data 1 ${code}`;
+                var item2 = `data 2 ${code}`;
+                data.itemMonitoring.push(item1);
+                data.itemMonitoring.push(item2);
 
-        return Promise.resolve(data);
+                var process1 = {
+                    name : `data 1 ${code}`,
+                    value : `value 1 ${code}`,
+                    uomId : uom._id,
+                    uom : uom
+                } 
+                var process2 = {
+                    name : `data 2 ${code}`,
+                    value : `value 2 ${code}`,
+                    uomId : uom._id,
+                    uom : uom
+                }
+                data.stepIndicators.push(process1);
+                data.stepIndicators.push(process2); 
+
+                return Promise.resolve(data);
+            });
     }
 
-    getTestData(data, items) {
-        var _process = data ? data : "GAS SINGEING DAN DESIZING";
-        var _itemMonitoring = items ? items : [
-                'Speed (m/mnt)', 'Pressure Burner (mBar)', 'Titik Api', 'Pressure Saturator (Bar)', 'Hasil Bakar Bulu (baik/tidak)'
-            ];
-        var data = {
-            process: _process,
-            itemMonitoring:_itemMonitoring
-        };
-        return this.getSert(data);
+    getTestData(data, items, indicator) {
+        return UomDataUtil.getTestData()
+            .then(uom => {
+                var _process = data ? data : "GAS SINGEING DAN DESIZING";
+                var _itemMonitoring = items ? items : [
+                        'Speed (m/mnt)', 'Pressure Burner (mBar)', 'Titik Api', 'Pressure Saturator (Bar)', 'Hasil Bakar Bulu (baik/tidak)'
+                    ];
+                var _stepIndicator = indicator ? indicator : [
+                    {
+                        name : 'SETTING',
+                        value : '3'
+                    },
+                    {
+                        name : 'PRESS. BURNER',
+                        value : '14',
+                        uomId : uom._id,
+                        uom : uom
+                    },
+                    {
+                        name : 'TEMP. SATURATOR',
+                        value : '65',
+                        uomId : uom._id,
+                        uom : uom
+                    },
+                    {
+                        name : 'SPEED',
+                        value : '90',
+                        uomId : uom._id,
+                        uom : uom
+                    },
+                    {
+                        name : 'TITIK API',
+                        value : '3'
+                    },
+                    {
+                        name : 'LEBAR KAIN',
+                        value : '',
+                        uomId : uom._id,
+                        uom : uom
+                    },
+                    {
+                        name : 'COUNTER',
+                        value : ''
+                    }
+                ];
+                var data = {
+                    process: _process,
+                    itemMonitoring:_itemMonitoring,
+                    stepIndicators:_stepIndicator
+                };
+                return this.getSert(data);
+            });
     }
 }
 module.exports = new StepDataUtil();

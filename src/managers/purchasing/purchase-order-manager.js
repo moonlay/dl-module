@@ -269,11 +269,11 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                 .then(id => {
                                     this.purchaseRequestManager.getSingleById(validData.purchaseRequest._id)
                                         .then(PR => {
-                                            PR.status = prStatusEnum.POSTED;
                                             var poIndex = PR.purchaseOrderIds.indexOf(validData._id);
                                             PR.purchaseOrderIds.splice(poIndex, 1);
                                             if (PR.purchaseOrderIds.length === 0) {
                                                 PR.isUsed = false;
+                                                PR.status = prStatusEnum.POSTED;
                                             }
                                             this.purchaseRequestManager.update(PR)
                                                 .then(results => {

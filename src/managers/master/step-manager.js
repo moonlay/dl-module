@@ -58,13 +58,17 @@ module.exports = class StepManager extends BaseManager {
                 if(!valid.itemMonitoring || valid.itemMonitoring.length < 1)
                     errors["itemMonitoring"] = i18n.__("Step.itemMonitoring.isRequired:%s is required", i18n.__("Step.itemMonitoring._:ItemMonitoring")); //"minimal harus ada 1 detail";
 
+                if(!valid.stepIndicators || valid.stepIndicators.length < 1)
+                    errors["stepIndicators"] = i18n.__("Step.stepIndicators.isRequired:%s is required", i18n.__("Step.stepIndicators._:StepIndicators")); //"minimal harus ada 1 detail";
+
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
                 }
-
-                valid = new Step(valid);
+                if (!valid.stamp){
+                    valid = new Step(valid);
+                }
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
             });

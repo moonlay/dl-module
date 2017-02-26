@@ -19,7 +19,7 @@ class MachineTypeDataUtil {
         data.indicators =
             [{
                 indicator: `Tekanan Press Mangle[${code}]`,
-                dataType: "number",
+                dataType: "numeric",
                 defaultValue: 10,
             },
                 {
@@ -30,6 +30,10 @@ class MachineTypeDataUtil {
                     indicator: `range`,
                     dataType: "range (use '-' as delimiter)",
                     defaultValue: "1-10",
+                },{
+                    indicator: `option`,
+                    dataType: "option (use ',' as delimiter)",
+                    defaultValue: "a,b",
                 }];
 
         return Promise.resolve(data);

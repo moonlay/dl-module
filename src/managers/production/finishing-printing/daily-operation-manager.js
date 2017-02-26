@@ -107,7 +107,7 @@ module.exports = class DailyOperationManager extends BaseManager {
             var valid = dailyOperation;
             //1. begin: Declare promises.
             var getStep = valid.stepId && ObjectId.isValid(valid.stepId) ? this.stepManager.getSingleByIdOrDefault(new ObjectId(valid.stepId)) : Promise.resolve(null);
-            var getProductionOrder = valid.productionOrder && valid.productionOrder.orderNo && valid.productionOrder.orderNo != '' ? this.productionOrderManager.getSingleProductionOrder(valid.productionOrder.orderNo) : Promise.resolve(null);
+            var getProductionOrder = valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(new ObjectId(valid.productionOrderId)) : Promise.resolve(null);
             var getMachine = valid.machineId && ObjectId.isValid(valid.machineId) ? this.machineManager.getSingleByIdOrDefault(new ObjectId(valid.machineId)) : Promise.resolve(null);
             var getInstruction = valid.instructionId && ObjectId.isValid(valid.instructionId) ? this.instructionManager.getSingleByIdOrDefault(new ObjectId(valid.instructionId)) : Promise.resolve(null);
             var getProduct = valid.materialId && ObjectId.isValid(valid.materialId) ? this.productManager.getSingleByIdOrDefault(new ObjectId(valid.materialId)) : Promise.resolve(null);
@@ -125,40 +125,40 @@ module.exports = class DailyOperationManager extends BaseManager {
                             if(_productionOrder.orderType.name.trim().toLowerCase() != "printing" && _productionOrder.orderType.name.trim().toLowerCase() != "yarn dyed"){
                                 getData = this.getSingleByQueryOrDefault({
                                     '$and' : [{
-                                            "productionOrder.orderNo" : valid.productionOrder ? valid.productionOrder.orderNo : ""
+                                            "productionOrderId" : valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? (new ObjectId(valid.productionOrderId)) : {}
                                         },{
                                             '_deleted' : false
                                         },{
-                                            'materialId' : valid.materialId && ObjectId.isValid(valid.materialId) ? (new ObjectId(valid.materialId)) : ""
+                                            'materialId' : valid.materialId && ObjectId.isValid(valid.materialId) ? (new ObjectId(valid.materialId)) : {}
                                         },{
-                                            'materialConstructionId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.materialConstructionId)) : ""
+                                            'materialConstructionId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.materialConstructionId)) : {}
                                         },{
-                                            'yarnMaterialId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.yarnMaterialId)) : ""
+                                            'yarnMaterialId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.yarnMaterialId)) : {}
                                         },{
                                             'color' : valid.color
                                         },{
-                                            'colorTypeId' : valid.colorTypeId && ObjectId.isValid(valid.colorTypeId) ? (new ObjectId(valid.colorTypeId)) : ""
+                                            'colorTypeId' : valid.colorTypeId && ObjectId.isValid(valid.colorTypeId) ? (new ObjectId(valid.colorTypeId)) : {}
                                         }]
                                 });
                                 getDailyOperation = this.getSingleByQueryOrDefault({
                                         '$and' : [{
-                                            "productionOrder.orderNo" : valid.productionOrder ? valid.productionOrder.orderNo : ""
+                                            "productionOrderId" : valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? (new ObjectId(valid.productionOrderId)) : {}
                                         },{
                                             '_deleted' : false
                                         },{
-                                            'materialId' : valid.materialId && ObjectId.isValid(valid.materialId) ? (new ObjectId(valid.materialId)) : ""
+                                            'materialId' : valid.materialId && ObjectId.isValid(valid.materialId) ? (new ObjectId(valid.materialId)) : {}
                                         },{
-                                            'materialConstructionId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.materialConstructionId)) : ""
+                                            'materialConstructionId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.materialConstructionId)) : {}
                                         },{
-                                            'yarnMaterialId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.yarnMaterialId)) : ""
+                                            'yarnMaterialId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.yarnMaterialId)) : {}
                                         },{
                                             'color' : valid.color
                                         },{
-                                            'colorTypeId' : valid.colorTypeId && ObjectId.isValid(valid.colorTypeId) ? (new ObjectId(valid.colorTypeId)) : ""
+                                            'colorTypeId' : valid.colorTypeId && ObjectId.isValid(valid.colorTypeId) ? (new ObjectId(valid.colorTypeId)) : {}
                                         },{
                                             'kanban.partitions' : {
                                                 '$elemMatch' : {
-                                                    'code' : valid.code, 'no' : valid.no, 'machineId' : valid.machineId && ObjectId.isValid(valid.machineId) ? (new ObjectId(valid.machineId)) : "" 
+                                                    'code' : valid.code, 'no' : valid.no, 'machineId' : valid.machineId && ObjectId.isValid(valid.machineId) ? (new ObjectId(valid.machineId)) : {} 
                                                 }
                                             }
                                         }]
@@ -166,36 +166,36 @@ module.exports = class DailyOperationManager extends BaseManager {
                             }else{
                                 getData = this.getSingleByQueryOrDefault({
                                     '$and' : [{
-                                            "productionOrder.orderNo" : valid.productionOrder ? valid.productionOrder.orderNo : ""
+                                            "productionOrderId" : valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? (new ObjectId(valid.productionOrderId)) : {}
                                         },{
                                             '_deleted' : false
                                         },{
-                                            'materialId' : valid.materialId && ObjectId.isValid(valid.materialId) ? (new ObjectId(valid.materialId)) : ""
+                                            'materialId' : valid.materialId && ObjectId.isValid(valid.materialId) ? (new ObjectId(valid.materialId)) : {}
                                         },{
-                                            'materialConstructionId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.materialConstructionId)) : ""
+                                            'materialConstructionId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.materialConstructionId)) : {}
                                         },{
-                                            'yarnMaterialId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.yarnMaterialId)) : ""
+                                            'yarnMaterialId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.yarnMaterialId)) : {}
                                         },{
                                             'color' : valid.color
                                         }]
                                 });
                                 getDailyOperation = this.getSingleByQueryOrDefault({
                                         '$and' : [{
-                                            "productionOrder.orderNo" : valid.productionOrder ? valid.productionOrder.orderNo : ""
+                                            "productionOrderId" : valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? (new ObjectId(valid.productionOrderId)) : {}
                                         },{
                                             '_deleted' : false
                                         },{
-                                            'materialId' : valid.materialId && ObjectId.isValid(valid.materialId) ? (new ObjectId(valid.materialId)) : ""
+                                            'materialId' : valid.materialId && ObjectId.isValid(valid.materialId) ? (new ObjectId(valid.materialId)) : {}
                                         },{
-                                            'materialConstructionId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.materialConstructionId)) : ""
+                                            'materialConstructionId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.materialConstructionId)) : {}
                                         },{
-                                            'yarnMaterialId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.yarnMaterialId)) : ""
+                                            'yarnMaterialId' : valid.productionOrder ? (new ObjectId(valid.productionOrder.yarnMaterialId)) : {}
                                         },{
                                             'color' : valid.color
                                         },{
                                             'kanban.partitions' : {
                                                 '$elemMatch' : {
-                                                    'code' : valid.code, 'no' : valid.no, 'machineId' : valid.machineId && ObjectId.isValid(valid.machineId) ? (new ObjectId(valid.machineId)) : "" 
+                                                    'code' : valid.code, 'no' : valid.no, 'machineId' : valid.machineId && ObjectId.isValid(valid.machineId) ? (new ObjectId(valid.machineId)) : {} 
                                                 }
                                             }
                                         }]
@@ -210,8 +210,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                             var now = new Date();
                             
                             if(!valid.productionOrder)
-                                errors["productionOrder"] = i18n.__("DailyOperation.productionOrder.isRequired:%s is required", i18n.__("DailyOperation.productionOrder._:ProductionOrder")); //"Production Order harus diisi";
-                            else if(!valid.productionOrder.orderNo || valid.productionOrder.orderNo == '')
                                 errors["productionOrder"] = i18n.__("DailyOperation.productionOrder.isRequired:%s is required", i18n.__("DailyOperation.productionOrder._:ProductionOrder")); //"Production Order harus diisi";
                             else if(!_productionOrder)
                                 errors["productionOrder"] = i18n.__("DailyOperation.productionOrder.notFound:%s not found", i18n.__("DailyOperation.productionOrder._:ProductionOrder")); //"Production Order tidak ditemukan";
@@ -417,7 +415,13 @@ module.exports = class DailyOperationManager extends BaseManager {
                             this.collection
                                 .update(validData)
                                 .then(id => {
-                                    resolve(id);
+                                    this.productionOrderManager.updateIsUse(validData.productionOrder, true)
+                                        .then(productId => {
+                                            resolve(id);
+                                        })
+                                    .catch(e => {
+                                        reject(e);
+                                    });
                                 })
                                 .catch(e => {
                                     reject(e);
@@ -469,7 +473,22 @@ module.exports = class DailyOperationManager extends BaseManager {
                         this.collection
                             .update(validData)
                             .then(id => {
-                                resolve(id);
+                                this.getSingleById(id)
+                                    .then(dataEdit => {
+                                        if(dataEdit.kanban.partitions.length == 0){
+                                            this.productionOrderManager.updateIsUse(validData.productionOrder, false)
+                                                .then(productId => {
+                                                    resolve(id);
+                                                })
+                                            .catch(e => {
+                                                reject(e);
+                                            });
+                                        }else
+                                            resolve(id);
+                                    })
+                                .catch(e => {
+                                    reject(e);
+                                });
                             })
                             .catch(e => {
                                 reject(e);

@@ -7,6 +7,7 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var MonitoringSpecificationMachine = DLModels.production.finishingPrinting.MonitoringSpecificationMachine;
 var MachineManager = require('../../master/machine-manager');
+var ProductionOrderManager = require('../../sales/production-order-manager');
 var CodeGenerator = require('../../../utils/code-generator');
 var BaseManager = require('module-toolkit').BaseManager;
 
@@ -18,7 +19,7 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
         super(db, user);
         this.collection = this.db.collection(map.production.finishingPrinting.collection.MonitoringSpecificationMachine);
 
-       
+        this.productionOrderManager = new ProductionOrderManager(db, user);
         this.machineManager = new MachineManager(db, user);
 
     }
@@ -48,9 +49,14 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
                     '$regex': regex
                 }
             };
+            var filterProductionOrder = {
+                "productionOrder.orderNo": {
+                    '$regex': regex
+                }
+            };
 
 
-            keywordFilter['$or'] = [codeFilter, dateFilter, filterMachineName];
+            keywordFilter['$or'] = [codeFilter, dateFilter, filterMachineName, filterProductionOrder];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -65,7 +71,7 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
 
     _validate(monitoringSpecificationMachine) {
         var errors = {};
-        
+
         var valid = monitoringSpecificationMachine;
         // 1. begin: Declare promises.
         var getMonitoringSpecificationMachinePromise = this.collection.singleOrDefault({
@@ -76,17 +82,16 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             code: valid.code,
         });
 
-        
+
         var getMachine = ObjectId.isValid(valid.machineId) ? this.machineManager.getSingleByIdOrDefault(new ObjectId(valid.machineId)) : Promise.resolve(null);
+        var getProductionOrder = ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(new ObjectId(valid.productionOrderId)) : Promise.resolve(null);
 
-
-        return Promise.all([getMonitoringSpecificationMachinePromise, getMachine])
+        return Promise.all([getMonitoringSpecificationMachinePromise, getMachine, getProductionOrder])
             .then(results => {
 
                 var _monitoringSpecificationMachine = results[0];
                 var _machine = results[1];
-
-
+                var _productionOrder = results[2];
 
                 if (_monitoringSpecificationMachine)
                     errors["code"] = i18n.__("MonitoringSpecificationMachine.code.isRequired:%s is not exists", i18n.__("MonitoringSpecificationMachine.code._:Code"));
@@ -99,19 +104,46 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
 
                 if (!_machine)
                     errors["machine"] = i18n.__("MonitoringSpecificationMachine.machine.name.isRequired:%s is not exists", i18n.__("MonitoringSpecificationMachine.machine.name._:Machine")); //"machine tidak boleh kosong";
-                // else if (!valid.machine._id)
-                //     errors["machine"] = i18n.__("MonitoringSpecificationMachine.machine.name.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.machine.name._:Machine")); //"machine tidak boleh kosong";
 
-                if (valid.items) {
+                if (!_productionOrder)
+                    errors["productionOrder"] = i18n.__("MonitoringSpecificationMachine.productionOrder.orderNo.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.productionOrder.orderNo_:Production Order Number")); //"ProductionOrder tidak boleh kosong";
+
+                if (!valid.cartNumber || valid.cartNumber == '')
+                    errors["cartNumber"] = i18n.__("MonitoringSpecificationMachine.cartNumber.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.cartNumber._:Cart Number")); //"Nomor Kereta tidak boleh kosong";
+
+                if (!valid.items) {
+                    errors["items"] = i18n.__("MonitoringSpecificationMachine.items.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.items._:Items")); //"items tidak boleh kosong";
+                }
+                else if (valid.items) {
                     var itemErrors = [];
                     for (var item of valid.items) {
-                        var itemError = {}
+                        var itemError = {};
+                        if (!item.satuan || item.satuan == "" ) {
+                            itemError["satuan"] = i18n.__("MonitoringSpecificationMachine.items.satuan.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.items.satuan._:Satuan")); //"Satuan tidak boleh kosong";
+                        }
+
                         if (item.dataType == "range (use '-' as delimiter)") {
                             var range = item.defaultValue.split("-");
-                            if (item.value < parseInt(range[0]) || item.value > parseInt(range[1])) {
+                            if (item.value < parseInt(range[0]) || item.value > parseInt(range[1]) ||item.value=="") {
                                 itemError["value"] = i18n.__("MonitoringSpecificationMachine.items.value.isIncorrect:%s range is incorrect", i18n.__("MonitoringSpecificationMachine.items.value._:value")); //"range incorrect";                       
                             }
                         }
+
+                        if (item.dataType == "string") {
+
+                            if (!item.value || item.value == "" ) {
+                                itemError["value"] = i18n.__("MonitoringSpecificationMachine.items.value.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.items.value._:value")); //"is required";                       
+                            }
+                        }
+
+                        if (item.dataType == "numeric") {
+
+                            if (!item.value || item.value == "" || item.value == 0 ) {
+                                itemError["value"] = i18n.__("MonitoringSpecificationMachine.items.value.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.items.value._:value")); //"is required";                       
+                            }
+                        }
+
+
                         itemErrors.push(itemError);
 
                     }
@@ -127,6 +159,10 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
                 if (_machine) {
                     valid.machine = _machine;
                     valid.machineId = new ObjectId(_machine._id);
+                }
+                if (_productionOrder) {
+                    valid.productionOrderId = new ObjectId(_productionOrder._id);
+                    valid.productionOrder = _productionOrder;
                 }
 
                 valid.date = new Date(valid.date);
@@ -149,7 +185,7 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
     getMonitoringSpecificationMachineReport(info) {
         var _defaultFilter = {
             _deleted: false
-        }, machineFilter = {},
+        }, machineFilter = {}, productionOrderFilter = {},
             monitoringSpecificationMachineFilter = {},
             dateFromFilter = {},
             dateToFilter = {},
@@ -164,6 +200,11 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             machineFilter = { 'machine._id': machineId };
         }
 
+        if (info.productionOrderId && info.productionOrderId != '') {
+            var productionOrderId = ObjectId.isValid(info.productionOrderId) ? new ObjectId(info.productionOrderId) : {};
+            productionOrderFilter = { 'productionOrder._id': productionOrderId };
+        }
+
         var filterDate = {
             "date": {
                 $gte: new Date(dateFrom),
@@ -171,7 +212,7 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             }
         };
 
-        query = { '$and': [_defaultFilter, machineFilter, filterDate] };
+        query = { '$and': [_defaultFilter, machineFilter, productionOrderFilter, filterDate] };
 
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -198,7 +239,8 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             item["Machine"] = monitoringSpecificationMachine.machine ? monitoringSpecificationMachine.machine.name : '';
             item["Tanggal"] = monitoringSpecificationMachine.date ? moment(new Date(monitoringSpecificationMachine.date)).format(dateFormat) : '';
             item["Jam"] = monitoringSpecificationMachine.time ? moment(new Date(monitoringSpecificationMachine.time)).format(timeFormat) : '';
-
+            item["No Surat Order Produksi"] = monitoringSpecificationMachine.productionOrder ? monitoringSpecificationMachine.productionOrder.orderNo : '';
+            item["Cart Number"] = monitoringSpecificationMachine.cartNumber;
             //dinamic items
             for (var indicator of monitoringSpecificationMachine.items) {
                 item[indicator.indicator] = indicator ? indicator.value : '';
@@ -212,6 +254,8 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
         xls.options["Machine"] = "string";
         xls.options["Tanggal"] = "string";
         xls.options["Jam"] = "string";
+        xls.options["No Surat Order Produksi"] = "string";
+        xls.options["Cart Number"] = "string";
 
 
         if (query.dateFrom && query.dateTo) {

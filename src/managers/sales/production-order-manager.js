@@ -5,7 +5,6 @@ require("mongodb-toolkit");
 
 var DLModels = require('dl-models');
 var map = DLModels.map;
-var SalesContract=DLModels.sales.SalesContract;
 var ProductionOrder=DLModels.sales.ProductionOrder;
 var ProductionOrderDetail=DLModels.sales.ProductionOrderDetail;
 var ProductionOrderLampStandard=DLModels.sales.ProductionOrderLampStandard;
@@ -32,7 +31,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         
-        this.collection = this.db.collection(map.sales.collection.SalesContract);
+        this.collection = this.db.collection(map.sales.collection.ProductionOrder);
         DailyOperationCollection=this.db.collection(map.production.finishingPrinting.collection.DailyOperation);
         this.LampStandardManager = new LampStandardManager(db, user);
         this.BuyerManager= new BuyerManager(db,user);
@@ -64,24 +63,53 @@ module.exports = class ProductionOrderManager extends BaseManager {
             };
            
            var filterOrderNo = {
-               'productionOrders': {
-                   $elemMatch: {orderNo: {'$regex': regex }
-                    }
+               'orderNo': {
+                    '$regex': regex
+                }
+            };
+
+            var filterBuyerName = {
+               'buyer.name': {
+                    '$regex': regex
+                }
+            };
+
+            var filterBuyerType = {
+               'buyer.type': {
+                    '$regex': regex
+                }
+            };
+
+            var filterProcessType = {
+               'processType.name': {
+                    '$regex': regex
                 }
             };
 
             keywordFilter = {
-                '$or': [filterSalesContract, filterOrderNo]
+                '$or': [filterSalesContract, filterOrderNo,filterBuyerName,filterBuyerType,filterProcessType]
             };
         }
         query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
         return query;
     }
 
+    _beforeInsert(productionOrder) {
+        productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
+        productionOrder._createdDate = new Date();
+        return Promise.resolve(productionOrder);
+    }
+
      _validate(productionOrder) {
         var errors = {};
 
         var valid=productionOrder;
+        var getProductionOrder = this.collection.singleOrDefault({
+            _id: {
+                '$ne': new ObjectId(valid._id)
+            },
+            orderNo: valid.orderNo
+        });
 
         var getBuyer = ObjectId.isValid(valid.buyerId) ? this.BuyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
         var getUom = valid.uom && ObjectId.isValid(valid.uomId) ? this.UomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
@@ -112,22 +140,25 @@ module.exports = class ProductionOrderManager extends BaseManager {
             }
         }
 
-        return Promise.all([getBuyer, getUom,  getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount].concat(getColorTypes,getLampStandards))
+        return Promise.all([getProductionOrder, getBuyer, getUom,  getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount].concat(getColorTypes,getLampStandards))
             .then(results => {
-                var _buyer = results[0];
-                var _uom = results[1];
-                var _material = results[2];
-                var _process = results[3];
-                var _order = results[4];
-                var _finish= results[5];
-                var _yarn = results[6];
-                var _standard = results[7];
-                var _construction = results[8];
-                var _account = results[9];
-                var _colors = results.slice(10, 10+ getColorTypes.length);
-                var _lampStandards= results.slice(10+ getColorTypes.length, results.length);
+                var _productionOrder =results[0];
+                var _buyer = results[1];
+                var _uom = results[2];
+                var _material = results[3];
+                var _process = results[4];
+                var _order = results[5];
+                var _finish= results[6];
+                var _yarn = results[7];
+                var _standard = results[8];
+                var _construction = results[9];
+                var _account = results[10];
+                var _colors = results.slice(11, 11+ getColorTypes.length);
+                var _lampStandards= results.slice(11+ getColorTypes.length, results.length);
 
-
+                if(_productionOrder){
+                    errors["orderNo"] = i18n.__("ProductionOrder.orderNo.isExist:%s is Exist", i18n.__("Product.orderNo._:orderNo")); //"orderNo sudah ada";
+                }
                 if (valid.uom) {
                     if (!valid.uom.unit || valid.uom.unit == '')
                         errors["uom"] = i18n.__("ProductionOrder.uom.isRequired:%s is required", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
@@ -314,8 +345,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             detailError["colorRequest"] = i18n.__("ProductionOrder.details.colorRequest.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorRequest._:ColorRequest")); //"colorRequest tidak boleh kosong";
                         if (detail.quantity <= 0)
                             detailError["quantity"] = i18n.__("ProductionOrder.details.quantity.isRequired:%s is required", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
-                        else if(valid.orderQuantity!=totalqty)
-                            errors["total"] = i18n.__("ProductionOrder.details.quantity.shouldNot:%s Total should equal Order Quantity", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh berbeda dari jumlah order";
+                        if(valid.orderQuantity!=totalqty)
+                            detailError["total"] = i18n.__("ProductionOrder.details.quantity.shouldNot:%s Total should equal Order Quantity", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh berbeda dari jumlah order";
+                    
                         if(!_uom)
                             detailError["uom"] = i18n.__("ProductionOrder.details.uom.isRequired:%s is not exists", i18n.__("ProductionOrder.details.uom._:Uom")); //"satuan tidak boleh kosong";
                         
@@ -325,6 +357,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         if (!detail.colorTemplate || detail.colorTemplate=="")
                             detailError["colorTemplate"] = i18n.__("ProductionOrder.details.colorTemplate.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorTemplate._:ColorTemplate")); //"colorTemplate tidak boleh kosong";
                         
+                        }
                         if(_order){
                             if(_order.name.toLowerCase()=="yarn dyed" || _order.name.toLowerCase()=="printing" ){
                                 _colors={};
@@ -335,8 +368,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 else if(!detail.colorType){
                                     detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
                         
-                                }
                             }
+                            
                         }
                         
                         if (Object.getOwnPropertyNames(detailError).length > 0)
@@ -367,9 +400,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if(valid.lampStandards.length>0){
                     for(var lamp of valid.lampStandards){
                         for (var _lampStandard of _lampStandards) {
-                            if (lamp.lampStandardId.toString() === _lampStandard._id.toString()) {
-                                lamp.lampStandardId = _lampStandard._id;
-                                lamp.lampStandard = _lampStandard;
+                            if(_lampStandard){
+                                if (lamp.lampStandardId.toString() === _lampStandard._id.toString()) {
+                                    lamp.lampStandardId = _lampStandard._id;
+                                    lamp.lampStandard = _lampStandard;
+                                }
                             }
                         }
                     }
@@ -394,9 +429,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         for (var detail of valid.details) {
                             if(detail.colorType){
                                 for (var _color of _colors) {
-                                    if (detail.colorTypeId.toString() === _color._id.toString()) {
-                                        detail.colorTypeId = _color._id;
-                                        detail.colorType = _color;
+                                    if(_color){
+                                        if (detail.colorTypeId.toString() === _color._id.toString()) {
+                                            detail.colorTypeId = _color._id;
+                                            detail.colorType = _color;
+                                        }
                                     }
                                 }
                             }
@@ -447,296 +484,29 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
      _createIndexes() {
         var dateIndex = {
-            name: `ix_${map.sales.collection.SalesContract}__updatedDate`,
+            name: `ix_${map.sales.collection.ProductionOrder}__updatedDate`,
             key: {
                 _updatedDate: -1
             }
         }
 
         var noIndex = {
-            name: `ix_${map.sales.collection.SalesContract}_no`,
+            name: `ix_${map.sales.collection.ProductionOrder}_orderNo`,
             key: {
-                salesContractNo: 1
-            }
+                orderNo: 1
+            },
+            unique: true
         }
 
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
-
-    create(productionOrder) {
-         return new Promise((resolve, reject) => {
-            this._validate(productionOrder)
-                .then(validproductionOrder => {
-                    var prodOrd=[];
-                    prodOrd.push(validproductionOrder);
-                    validproductionOrder.account.password="";
-                    validproductionOrder._createdDate=new Date();
-                   this.collection.singleOrDefault({
-                        "$and": [{
-                        salesContractNo: validproductionOrder.salesContractNo},
-                        {_deleted:false}]
-                    }).then(result=>{
-                        if(result!=null){
-                            for(var prodOrders of result.productionOrders){
-                                prodOrd.push(prodOrders);
-                            }
-                            result.productionOrders=prodOrd;
-                            if (!result.stamp){
-                                result = new SalesContract(result);
-                            }
-                            var dailyOperation = [];
-                            for(var a of validproductionOrder.details){
-                                var newDailyOperation = new DailyOperation();
-                                newDailyOperation.salesContract = validproductionOrder.salesContractNo;
-                                newDailyOperation.productionOrder = validproductionOrder;
-                                newDailyOperation.materialId = new ObjectId(validproductionOrder.materialId);
-                                newDailyOperation.material = validproductionOrder.material;
-                                newDailyOperation.materialConstructionId = new ObjectId(validproductionOrder.materialConstructionId);
-                                newDailyOperation.materialConstruction = validproductionOrder.materialConstruction;
-                                newDailyOperation.yarnMaterialId = new ObjectId(validproductionOrder.yarnMaterialId);
-                                newDailyOperation.yarnMaterial = validproductionOrder.yarnMaterial;
-                                newDailyOperation.color = a.colorRequest;
-                                if(validproductionOrder.orderType.name.toLowerCase()=="yarn dyed" || validproductionOrder.orderType.name.toLowerCase()=="printing"){
-                                    newDailyOperation.colorTypeId = null;
-                                    newDailyOperation.colorType = null;
-                                }
-                                else{
-                                    newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
-                                    newDailyOperation.colorType = a.colorType;
-                                }
-                                newDailyOperation.stamp(this.user.username, "manager");
-                                dailyOperation.push(newDailyOperation);
-                            }
-
-                            result.stamp(this.user.username, "manager");
-                            this.collection.update(result)
-                                .then(id => {
-                                    DailyOperationCollection.insertMany(dailyOperation)
-                                    .then(dOperation => {
-                                        resolve(id);
-                                    })
-                                    .catch(e => {
-                                        reject(e);
-                                    });
-                                })
-                                .catch(e => {
-                                    reject(e);
-                                })
-                        }
-                        else{
-                            var SalesContractData={
-                                salesContractNo: validproductionOrder.salesContractNo,
-                                date:new Date(),
-                                productionOrders:prodOrd
-                            };
-                            if (!SalesContractData.stamp){
-                                SalesContractData = new SalesContract(SalesContractData);
-                            }
-                            
-                            var dailyOperation = [];
-                            for(var a of validproductionOrder.details){
-                                var newDailyOperation = new DailyOperation();
-                                newDailyOperation.salesContract = validproductionOrder.salesContractNo;
-                                newDailyOperation.productionOrder = validproductionOrder;
-                                newDailyOperation.materialId = new ObjectId(validproductionOrder.materialId);
-                                newDailyOperation.material = validproductionOrder.material;
-                                newDailyOperation.materialConstructionId = new ObjectId(validproductionOrder.materialConstructionId);
-                                newDailyOperation.materialConstruction = validproductionOrder.materialConstruction;
-                                newDailyOperation.yarnMaterialId = new ObjectId(validproductionOrder.yarnMaterialId);
-                                newDailyOperation.yarnMaterial = validproductionOrder.yarnMaterial;
-                                newDailyOperation.color = a.colorRequest;
-                                if(validproductionOrder.orderType.name.toLowerCase()=="yarn dyed" || validproductionOrder.orderType.name.toLowerCase()=="printing"){
-                                    newDailyOperation.colorTypeId = null;
-                                    newDailyOperation.colorType = null;
-                                }
-                                else{
-                                    newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
-                                    newDailyOperation.colorType = a.colorType;
-                                }
-                                newDailyOperation.stamp(this.user.username, "manager");
-                                dailyOperation.push(newDailyOperation);
-                            }
-
-                            SalesContractData.stamp(this.user.username, "manager");
-                            SalesContractData._createdDate=new Date();
-                            this.collection.insert(SalesContractData)
-                                .then(id => {
-                                    DailyOperationCollection.insertMany(dailyOperation)
-                                    .then(dOperation => {
-                                        resolve(id);
-                                    })
-                                    .catch(e => {
-                                        reject(e);
-                                    });
-                                })
-                                .catch(e => {
-                                    reject(e);
-                                });
-
-                        }
-                    }).catch(e => {
-                        reject(e);
-                    })
-                           
-                })
-                .catch(e => {
-                    reject(e);
-                })
-        });
-    }
-
-
-   update(data){
-       return new Promise((resolve, reject) => {
-            this._validate(data)
-            .then(validproductionOrder => {
-                validproductionOrder.account.password="";
-                this.collection.singleOrDefault({
-                    "$and": [{
-                        salesContractNo: validproductionOrder.salesContractNo},
-                        {_deleted:false}]
-                }).then(result=>{
-                    var newProdOrder=[];
-                    var prodOrd=result.productionOrders;
-                    for(var i of prodOrd){
-                        if(i.orderNo==validproductionOrder.orderNo){
-                            i=validproductionOrder;
-                            var query={
-                                "productionOrder.orderNo":data.orderNo
-                            }
-                            DailyOperationCollection.deleteMany(query);
-                            var dailyOperation = [];
-                            for(var a of i.details){
-                                var newDailyOperation = new DailyOperation();
-                                newDailyOperation.salesContract = i.salesContractNo;
-                                newDailyOperation.productionOrder = i;
-                                newDailyOperation.materialId = new ObjectId(i.materialId);
-                                newDailyOperation.material = i.material;
-                                newDailyOperation.materialConstructionId = new ObjectId(i.materialConstructionId);
-                                newDailyOperation.materialConstruction = i.materialConstruction;
-                                newDailyOperation.yarnMaterialId = new ObjectId(i.yarnMaterialId);
-                                newDailyOperation.yarnMaterial = i.yarnMaterial;
-                                newDailyOperation.color = a.colorRequest;
-                                if(validproductionOrder.orderType.name.toLowerCase()=="yarn dyed" || validproductionOrder.orderType.name.toLowerCase()=="printing"){
-                                    newDailyOperation.colorTypeId = null;
-                                    newDailyOperation.colorType = null;
-                                }
-                                else{
-                                    newDailyOperation.colorTypeId = new ObjectId(a.colorTypeId);
-                                    newDailyOperation.colorType = a.colorType;
-                                }
-                                newDailyOperation.stamp(this.user.username, "manager");
-                                dailyOperation.push(newDailyOperation);
-                            }
-                        }
-                        newProdOrder.push(i);
-                    }
-                    result.productionOrders=newProdOrder;
-                    if (!result.stamp){
-                        result = new SalesContract(result);
-                    }
-                    result.stamp(this.user.username, "manager");
-                    this.collection.update(result)
-                    .then(id => {
-                        DailyOperationCollection.insertMany(dailyOperation)
-                        .then(dOperation => {
-                            resolve(id);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                    })
-                    .catch(e => {
-                        reject(e);
-                    })
-                    
-                }).catch(e => {
-                        reject(e);
-                    })
-            }).catch(e => {
-                reject(e);
-            })
-       })
-       
-   }
-
-
-   delete(data){
-       return new Promise((resolve, reject) => {
-                     this.collection.singleOrDefault({
-                        "$and": [{
-                        salesContractNo: data.salesContractNo},
-                        {_deleted:false}]
-                    }).then(id=>{
-                        if(id.productionOrders.length==1){
-                            id._deleted=true;
-                            this.collection.update(id)
-                                .then(id => {
-                                     DailyOperationCollection.updateMany(
-                                        {
-                                            "productionOrder.orderNo":data.orderNo
-                                        },
-                                        { $set: { "_deleted" : true } }
-                                    )
-                                    .then(dOperation => {
-                                        resolve(id);
-                                    })
-                                    .catch(e => {
-                                        reject(e);
-                                    });
-                                })
-                                .catch(e => {
-                                    reject(e);
-                                })
-                        }
-                        else{
-                            for(var i of id.productionOrders){
-                                if(i.orderNo==data.orderNo){
-                                    for(var j=0; j<id.productionOrders.length;j++){
-                                        id.productionOrders.splice(j,1);
-                                    }
-                                }
-                            }
-                            this.collection.update(id)
-                                .then(id => {
-                                    DailyOperationCollection.updateMany(
-                                        {
-                                            "productionOrder.orderNo":data.orderNo
-                                        },
-                                        { $set: { "_deleted" : true } }
-                                    )
-                                    .then(dOperation => {
-                                        resolve(id);
-                                    })
-                                    .catch(e => {
-                                        reject(e);
-                                    });
-                                })
-                                .catch(e => {
-                                    reject(e);
-                                })
-                        }
-                        
-                    }).catch(e => {
-                        reject(e);
-                    });
-                }).catch(e => {
-                    reject(e);
-                });
-       
-   }
-
-   pdf(id,no) {
+    
+   pdf(id) {
         return new Promise((resolve, reject) => {
 
             this.getSingleById(id)
-                .then(salesContract => {
-                    var productionOrder={};
-                    for(var i of salesContract.productionOrders){
-                        if(i.orderNo==no){
-                            productionOrder=i;
-                        }
-                    }
+                .then(productionOrder => {
+                    
                     var getDefinition = require("../../pdf/definitions/production-order");
                     var definition = getDefinition(productionOrder);
 
@@ -752,75 +522,34 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 .catch(e => {
                     reject(e);
                 });
-
-        });
-    }
-
-    getSingleProductionOrder(data){
-       return new Promise((resolve, reject) => {
-            var query = {"productionOrders": { "$elemMatch": { "orderNo": data}}};
-            this.collection.singleOrDefault(query).then((result) => {
-                var dataReturn = {};
-                for(var a of result.productionOrders){
-                    if(data === a.orderNo)
-                        dataReturn = new ProductionOrder(a);
-                }
-                resolve(dataReturn);
-            });
         });
     }
 
     getSingleProductionOrderDetail(detailCode){
         return new Promise((resolve, reject) => {
-            var query = {"productionOrders.details": { "$elemMatch": { "code": detailCode}}};
+            var query = {"details": { "$elemMatch": { "code": detailCode}}};
             this.collection.singleOrDefault(query).then((result) => {
                 var dataReturn = {};
                 if (result){
-                    for(var productionOrder of result.productionOrders){
-                        for (var detail of productionOrder.details){
-                            if (detailCode === detail.code)
-                                dataReturn = new ProductionOrderDetail(detail);
-                        }
+                    for (var detail of result.details){
+                        if (detailCode === detail.code)
+                            dataReturn = new ProductionOrderDetail(detail);
                     }
                 }
                 resolve(dataReturn);
             });
         });
     }
-
-    getDataProductionOrder(data){
-       return new Promise((resolve, reject) => {
-            var regex = new RegExp(data.keyword, "i");
-            var dataReturn= [];
-            this.collection.aggregate([{ $unwind : "$productionOrders" }])
-            .match({
-                $and:[{
-                    "productionOrders.orderNo" : {"$regex" : regex}
-                },{"_deleted" : false}]
-            })
-            .limit(20)
-            .toArray(function(err, result) {
-                        for(var a of result){
-                            var pOrder = new ProductionOrder(a.productionOrders)
-                            dataReturn.push(pOrder);
-                        }
-                        resolve(dataReturn);
-                    });
-        });
-    }
     
     getReport(query){
         return new Promise((resolve, reject) => {
-            var date = {
-                "productionOrders._createdDate" : {
-                    "$gte" : (!query || !query.sdate ? (new Date("1900-01-01")) : (new Date(`${query.sdate} 00:00:00`))),
-                    "$lte" : (!query || !query.edate ? (new Date()) : (new Date(`${query.edate} 23:59:59`)))
-                }
+            var deletedQuery = {
+                _deleted: false
             };
             var salesQuery = {};
             if(query.salesContractNo != ''){
                 salesQuery = {
-                    "productionOrders.salesContractNo" : {
+                    "salesContractNo" : {
                         "$regex" : (new RegExp(query.salesContractNo, "i"))
                     } 
                 };
@@ -828,7 +557,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             var orderQuery = {};
             if(query.orderNo != ''){
                 orderQuery = {
-                    "productionOrders.orderNo" : {
+                    "orderNo" : {
                         "$regex" : (new RegExp(query.orderNo, "i"))
                     }
                 };
@@ -836,53 +565,58 @@ module.exports = class ProductionOrderManager extends BaseManager {
             var orderTypeQuery = {};
             if(query.orderTypeId){
                 orderTypeQuery = {
-                    "productionOrders.orderTypeId" : (new ObjectId(query.orderTypeId))
+                    "orderTypeId" : (new ObjectId(query.orderTypeId))
                 };
             }
             var processTypeQuery = {};
             if(query.processTypeId){
                 processTypeQuery ={
-                    "productionOrders.processTypeId" : (new ObjectId(query.processTypeId))
+                    "processTypeId" : (new ObjectId(query.processTypeId))
                 };
             }
             var buyerQuery = {};
             if(query.buyerId){
                 buyerQuery = {
-                    "productionOrders.buyerId" : (new ObjectId(query.buyerId))
+                    "buyerId" : (new ObjectId(query.buyerId))
                 };
             }
             var accountQuery = {};
             if(query.accountId){
                 accountQuery = {
-                    "productionOrders.accountId" : (new ObjectId(query.accountId))
+                    "accountId" : (new ObjectId(query.accountId))
                 };
             }
-            var Query = {"$and" : [{_deleted: false}, date, salesQuery,orderQuery,orderTypeQuery, processTypeQuery, buyerQuery, accountQuery]};
+            var date = {
+                "_createdDate" : {
+                    "$gte" : (!query || !query.sdate ? (new Date("1900-01-01")) : (new Date(`${query.sdate} 00:00:00`))),
+                    "$lte" : (!query || !query.edate ? (new Date()) : (new Date(`${query.edate} 23:59:59`)))
+                }
+            };
+            var Query = {"$and" : [date, salesQuery,orderQuery,orderTypeQuery, processTypeQuery, buyerQuery, accountQuery,deletedQuery]};
             this.collection
-                .aggregate([
-                    {$unwind : "$productionOrders"}, 
-                    {$unwind: "$productionOrders.details"},
-                    {$sort : {"productionOrders._createdDate" : -1}}, 
+                .aggregate([ 
+                    {$unwind: "$details"}, 
                     {$match : Query},
                     {$project :{
-                        "salesContractNo" : "$productionOrders.salesContractNo",
-                        "createdDate" : "$productionOrders._createdDate",
-                        "orderNo" : "$productionOrders.orderNo",
-                        "orderType" : "$productionOrders.orderType.name",
-                        "processType" : "$productionOrders.processType.name",
-                        "buyer" : "$productionOrders.buyer.name",
-                        "buyerType" : "$productionOrders.buyer.type",
-                        "orderQuantity" : "$productionOrders.orderQuantity",
-                        "uom" : "$productionOrders.uom.unit",
-                        "colorTemplate" : "$productionOrders.details.colorTemplate",
-                        "colorRequest" : "$productionOrders.details.colorRequest",
-                        "colorType" : "$productionOrders.details.colorType.name",
-                        "quantity" : "$productionOrders.details.quantity",
-                        "uomDetail" : "$productionOrders.details.uom.unit",
-                        "deliveryDate" : "$productionOrders.deliveryDate",
-                        "firstname" : "$productionOrders.account.profile.firstname",
-                        "lastname" : "$productionOrders.account.profile.lastname"
-                    }}
+                        "salesContractNo" : 1,
+                        "_createdDate" : 1,
+                        "orderNo" : 1,
+                        "orderType" : "$orderType.name",
+                        "processType" : "$processType.name",
+                        "buyer" : "$buyer.name",
+                        "buyerType" : "$buyer.type",
+                        "orderQuantity" : "$orderQuantity",
+                        "uom" : "$uom.unit",
+                        "colorTemplate" : "$details.colorTemplate",
+                        "colorRequest" : "$details.colorRequest",
+                        "colorType" : "$details.colorType.name",
+                        "quantity" : "$details.quantity",
+                        "uomDetail" : "$details.uom.unit",
+                        "deliveryDate" : "$deliveryDate",
+                        "firstname" : "$account.profile.firstname",
+                        "lastname" : "$account.profile.lastname"
+                    }},
+                    {$sort : {"_createdDate" : -1}}
                 ])
                 .toArray(function(err, result) {
                     resolve(result);

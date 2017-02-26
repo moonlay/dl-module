@@ -384,7 +384,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                 if (!poItem.priceBeforeTax || poItem.priceBeforeTax === 0) {
                                                     poItemHasError = true;
                                                     poItemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
-                                                } else if (product) {
+                                                } else if (!ObjectId.isValid(valid._id) && product) {
                                                     if (poItem.priceBeforeTax > product.price) {
                                                         poItemHasError = true;
                                                         poItemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax.isGreater:%s must not be greater than default price", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";

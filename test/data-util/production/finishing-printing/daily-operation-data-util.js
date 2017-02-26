@@ -17,24 +17,19 @@ class DailyOperationDataUtil {
                                 .then((results) => {
                                     var _productionOrder = results[0];
                                     var _machine = data && data.machine ? data.machine : results[1];
-                                    var pOrder = {};
                                     var color = '';
                                     var colorType = {};
-                                    for (var a of _productionOrder.productionOrders){
-                                        pOrder = a;
-                                        for (var c of a.details){
-                                            color = c.colorRequest;
-                                            colorType = c.colorType;
-                                            break;
-                                        }
+                                    for (var c of _productionOrder.details){
+                                        color = c.colorRequest;
+                                        colorType = c.colorType;
                                         break;
                                     }
                                     var data = {
                                         name : `instruction for production order ${_productionOrder.orderNo}`,
-                                        orderType : pOrder.orderType,
+                                        orderType : _productionOrder.orderType,
                                         colorType : colorType,
-                                        product : pOrder.material,
-                                        construction : pOrder.construction,
+                                        product : _productionOrder.material,
+                                        construction : _productionOrder.construction,
                                         steps : [_machine.step.process]
                                     }
                                     return instructionDataUtil.getTestData(data)
@@ -53,13 +48,14 @@ class DailyOperationDataUtil {
                                                             var data = {
                                                                 code : code,
                                                                 salesContract : _productionOrder.salesContractNo,
-                                                                productionOrder : new pOrderModel(pOrder),
-                                                                materialId : pOrder.materialId,
-                                                                material : pOrder.material,
-                                                                materialConstructionId : pOrder.materialConstructionId,
-                                                                materialConstruction : pOrder.materialConstruction,
-                                                                yarnMaterialId : pOrder.yarnMaterialId,
-                                                                yarnMaterial : pOrder.yarnMaterial,
+                                                                productionOrderId : _productionOrder._id,
+                                                                productionOrder : new pOrderModel(_productionOrder),
+                                                                materialId : _productionOrder.materialId,
+                                                                material : _productionOrder.material,
+                                                                materialConstructionId : _productionOrder.materialConstructionId,
+                                                                materialConstruction : _productionOrder.materialConstruction,
+                                                                yarnMaterialId : _productionOrder.yarnMaterialId,
+                                                                yarnMaterial : _productionOrder.yarnMaterial,
                                                                 color : color,
                                                                 colorTypeId : colorType._id,
                                                                 colorType : colorType,

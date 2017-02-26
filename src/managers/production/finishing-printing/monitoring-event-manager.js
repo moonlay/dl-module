@@ -61,11 +61,15 @@ module.exports = class MonitoringEventManager extends BaseManager {
      _validate(monitoringEvent) {
         var errors = {};
         var valid = monitoringEvent;
-        var dateNow = new Date();
-        var dateNowString = moment(dateNow).format('YYYY-MM-DD');
-        var timeInMillisNow = dateNow.getTime() % 86400000;
-        var dateStart = new Date(valid.dateStart);
-        var dateEnd = new Date(valid.dateEnd);
+        var dateNow = moment().format('YYYY-MM-DD');
+
+        var timeInMillisNow = (function(){
+            var setupMoment = moment();
+            setupMoment.set('year', 1970);
+            setupMoment.set('month', 0);
+            setupMoment.set('date', 1);  
+            return Number(setupMoment.format('x'));
+        })();
 
         var getMonitoringEventPromise = this.collection.singleOrDefault({
             _id: {
@@ -75,7 +79,7 @@ module.exports = class MonitoringEventManager extends BaseManager {
         });
 
         var getMachine = ObjectId.isValid(valid.machineId) ? this.machineManager.getSingleByIdOrDefault(new ObjectId(valid.machineId)) : Promise.resolve(null);
-        var getProductionOrder = (valid.productionOrder && valid.productionOrder.orderNo) ? this.productionOrderManager.getSingleProductionOrder(valid.productionOrder.orderNo) : Promise.resolve(null);
+        var getProductionOrder = ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(valid.productionOrderId) : Promise.resolve(null);
         var getProductionOrderDetail = (valid.selectedProductionOrderDetail && valid.selectedProductionOrderDetail.code) ? this.productionOrderManager.getSingleProductionOrderDetail(valid.selectedProductionOrderDetail.code) : Promise.resolve(null);
 
         return Promise.all([getMonitoringEventPromise, getMachine, getProductionOrder, getProductionOrderDetail])
@@ -90,20 +94,20 @@ module.exports = class MonitoringEventManager extends BaseManager {
 
                 if (!valid.dateStart || valid.dateStart == '')
                     errors["dateStart"] = i18n.__("MonitoringEvent.dateStart.isRequired:%s is required", i18n.__("MonitoringEvent.dateStart._:Date Start")); //"Tanggal Mulai tidak boleh kosong";
-                else if (dateStart > dateNow)
+                else if (valid.dateStart > dateNow)
                     errors["dateStart"] = i18n.__("MonitoringEvent.dateStart.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateStart._:Date Start"));//"Tanggal Mulai tidak boleh lebih besar dari tanggal hari ini";
-                else if (valid.dateStart === dateNowString && valid.timeInMillisStart > timeInMillisNow)
+                else if (valid.dateStart === dateNow && valid.timeInMillisStart > timeInMillisNow)
                     errors["timeInMillisStart"] = i18n.__("MonitoringEvent.timeInMillisStart.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start"));//"Time Mulai tidak boleh lebih besar dari time hari ini";
 
-                if (!valid.dateEnd || valid.dateEnd == '')
-                    errors["dateEnd"] = i18n.__("MonitoringEvent.dateEnd.isRequired:%s is required", i18n.__("MonitoringEvent.dateEnd._:Date End")); //"Tanggal Selesai tidak boleh kosong";
-                else if (dateEnd > dateNow)
-                    errors["dateEnd"] = i18n.__("MonitoringEvent.dateEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateEnd._:Date End"));//"Tanggal Selesai tidak boleh lebih besar dari tanggal hari ini";
-                else if (valid.dateEnd === dateNowString && valid.timeInMillisEnd > timeInMillisNow)
-                    errors["timeInMillisEnd"] = i18n.__("MonitoringEvent.timeInMillisEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisEnd._:Time End"));//"Time Selesai tidak boleh lebih besar dari time hari ini";
+                if (valid.dateEnd && valid.dateEnd != ''){
+                    if (valid.dateEnd > dateNow)
+                        errors["dateEnd"] = i18n.__("MonitoringEvent.dateEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateEnd._:Date End"));//"Tanggal Selesai tidak boleh lebih besar dari tanggal hari ini";
+                    else if (valid.dateEnd === dateNow && valid.timeInMillisEnd > timeInMillisNow)
+                        errors["timeInMillisEnd"] = i18n.__("MonitoringEvent.timeInMillisEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisEnd._:Time End"));//"Time Selesai tidak boleh lebih besar dari time hari ini";
+                }
 
                 if (valid.dateStart && valid.dateStart != '' && valid.dateEnd && valid.dateEnd != ''){
-                    if (dateStart > dateEnd){
+                    if (valid.dateStart > valid.dateEnd){
                         var errorMessage = i18n.__("MonitoringEvent.dateStart.isGreaterThanDateEnd:%s is greater than Date End", i18n.__("MonitoringEvent.dateStart._:Date Start")); //"Tanggal Mulai tidak boleh lebih besar dari Tanggal Selesai";
                         errors["dateStart"] = errorMessage;
                         errors["dateEnd"] = errorMessage;
@@ -112,9 +116,6 @@ module.exports = class MonitoringEventManager extends BaseManager {
 
                 if (valid.timeInMillisStart === undefined)
                     errors["timeInMillisStart"] = i18n.__("MonitoringEvent.timeInMillisStart.isRequired:%s is required", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start")); //"Time Mulai tidak boleh kosong";
-
-                if (valid.timeInMillisEnd === undefined)
-                    errors["timeInMillisEnd"] = i18n.__("MonitoringEvent.timeInMillisEnd.isRequired:%s is required", i18n.__("MonitoringEvent.timeInMillisEnd._:Time End")); //"Time Mulai tidak boleh kosong";
 
                 if (valid.dateStart && valid.dateStart != '' && valid.dateEnd && valid.dateEnd != '' && valid.dateStart === valid.dateEnd){
                     if (valid.timeInMillisStart > valid.timeInMillisEnd){
@@ -145,10 +146,17 @@ module.exports = class MonitoringEventManager extends BaseManager {
                 }
 
                 if (valid.dateStart)
-                    valid.dateStart = dateStart;
+                    valid.dateStart = new Date(valid.dateStart);
                 
-                if (valid.dateEnd)
-                    valid.dateEnd = dateEnd;
+                if (valid.dateEnd){
+                    valid.dateEnd = new Date(valid.dateEnd);
+                    if (!valid.timeInMillisEnd)
+                        valid.timeInMillisEnd = valid.timeInMillisStart;
+                }
+                else{
+                    valid.dateEnd = new Date(valid.dateStart);
+                    valid.timeInMillisEnd = valid.timeInMillisStart;
+                }
 
                 if (_machine){
                     valid.machineId = _machine._id;
@@ -156,6 +164,7 @@ module.exports = class MonitoringEventManager extends BaseManager {
                 }
 
                 if (_productionOrder){
+                    valid.productionOrderId = _productionOrder._id;
                     valid.productionOrder = _productionOrder;
                 }
 

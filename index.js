@@ -55,7 +55,8 @@ module.exports = {
             finishingPrinting: {
                 DailyOperationManager: require('./src/managers/production/finishing-printing/daily-operation-manager'),
                 MonitoringEventManager: require('./src/managers/production/finishing-printing/monitoring-event-manager'),
-                MonitoringSpecificationMachineManager: require('./src/managers/production/finishing-printing/monitoring-specification-machine-manager')
+                MonitoringSpecificationMachineManager: require('./src/managers/production/finishing-printing/monitoring-specification-machine-manager'),
+                KanbanManager: require('./src/managers/production/finishing-printing/kanban-manager')
             }
         },
         sales:{
@@ -104,7 +105,8 @@ module.exports = {
             production: {
                 dailyOperation: require('./test/data-util/production/finishing-printing/daily-operation-data-util'),
                 monitoringEvent: require('./test/data-util/production/finishing-printing/monitoring-event-data-util'),
-                monitoringSpecificationMachine: require('./test/data-util/production/finishing-printing/monitoring-specification-machine-data-util')
+                monitoringSpecificationMachine: require('./test/data-util/production/finishing-printing/monitoring-specification-machine-data-util'),
+                kanban: require('./test/data-util/production/finishing-printing/kanban-data-util')
             },
             sales:{
                 productionOrder: require('./test/data-util/sales/production-order-data-util')
@@ -117,6 +119,9 @@ module.exports = {
         dimCategory: require("./src/etl/dim-category-etl-manager"),
         dimDivision: require("./src/etl/dim-unit-etl-manager"),
         dimSupplier: require("./src/etl/dim-supplier-etl-manager"),
-        dimUnit: require("./src/etl/dim-unit-etl-manager")
+        dimUnit: require("./src/etl/dim-unit-etl-manager"),
+        dimMachine: require("./src/etl/dim-machine-etl-manager"),
+        factMonitoringEvent: require("./src/etl/fact-monitoring-event-etl-manager"),
+        factSalesContract: require("./src/etl/fact-sales-contract-etl-manager")
     }
 }

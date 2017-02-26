@@ -9,8 +9,7 @@ class MonitoringEventDataUtil {
     getNewData() {
         return Promise.all([productionOrder.getNewTestData(), machine.getTestData()])
             .then((results) => {
-                var _salesContract = results[0];
-                var _productionOrder = _salesContract && _salesContract.productionOrders.length > 0 ? results[0].productionOrders[0] : {};
+                var _productionOrder = results[0];
                 var _selectedProductionOrderDetail = (_productionOrder.details && _productionOrder.details.length > 0) ? _productionOrder.details[0] : {};
 
                 var _machine = results[1];
@@ -23,6 +22,7 @@ class MonitoringEventDataUtil {
                     timeInMillisEnd: 24000,
                     machineId: _machine._id,
                     machine: _machine,
+                    productionOrderId: _productionOrder._id,
                     productionOrder: _productionOrder,
                     selectedProductionOrderDetail: _selectedProductionOrderDetail,
                     cartNumber: "Cart Number for UnitTest",

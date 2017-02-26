@@ -71,7 +71,7 @@ it("#04. should success when joining PR to PO", function (done) {
 });
 
 var arr = [{no: {}}, {no: {}}];
-it("#09. should success when remove duplicate data", function (done) {
+it("#05. should success when remove duplicate data", function (done) {
     instanceManager.removeDuplicates(arr)
         .then((a) => {
             done();
@@ -81,7 +81,7 @@ it("#09. should success when remove duplicate data", function (done) {
         });
 });
 
-it("#10. should error when load empty data", function (done) {
+it("#06. should error when load empty data", function (done) {
     instanceManager.load({})
         .then(id => {
             done("should error when create with empty data");

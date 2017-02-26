@@ -174,7 +174,53 @@ it('#09. should success when get data for Excel Report', function (done) {
         });
 });
 
-it("#10. should success when destroy all unit test data", function(done) {
+it('#10. should success when get data for Excel Report using dateFrom only', function (done) {
+    var query = {};
+    query.dateFrom = "2017-01-01";
+
+    monitoringEventManager.getXls(resultForExcelTest, query)
+        .then(xlsData => {             
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#11. should success when get data for Excel Report using dateTo only', function (done) {
+    var query = {};
+    query.dateTo = "2017-01-01";
+
+    monitoringEventManager.getXls(resultForExcelTest, query)
+        .then(xlsData => {             
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#12. should success when get data for Excel Report using both dateFrom and dateTo', function (done) {
+    var query = {};
+    query.dateFrom = "2017-01-01";
+    query.dateTo = "2017-02-01";
+
+    monitoringEventManager.getXls(resultForExcelTest, query)
+        .then(xlsData => {             
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it("#13. should success when destroy all unit test data", function(done) {
     monitoringEventManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();
