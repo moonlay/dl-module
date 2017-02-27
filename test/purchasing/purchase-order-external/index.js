@@ -17,3 +17,7 @@ describe("CANCEL SCENARIOS", function() {
 describe("CLOSE SCENARIOS", function() {
     require("./close");
 });
+
+describe("UPDATE SCENARIOS", function() {
+    require("./update");
+});

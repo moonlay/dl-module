@@ -65,9 +65,9 @@ module.exports = function (purchaseRequest) {
     var subheader2 = [{
         columns: [
             {
-                width: '40%',
+                width: '50%',
                 columns: [{
-                    width: '35%',
+                    width: '25%',
                     stack: ['Bagian', 'Budget' , 'Nomor']
                 }, {
                         width: '5%',
@@ -80,7 +80,7 @@ module.exports = function (purchaseRequest) {
 
             },
             {
-                width: '30%',
+                width: '20%',
                 text: ''
             },
             {

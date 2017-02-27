@@ -292,4 +292,21 @@ module.exports = class ProductManager extends BaseManager {
                 });
             });
     }
+
+     readById(paging) {
+        var _paging = Object.assign({
+            order: {},
+            filter: {},
+            select: []
+        }, paging);
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this.collection
+                    .where(_paging.filter)
+                    .select(_paging.select)
+                    .order(_paging.order)
+                    .execute();
+            });
+    }
 };
