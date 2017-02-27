@@ -67,7 +67,7 @@ module.exports = function (purchaseRequest) {
             {
                 width: '50%',
                 columns: [{
-                    width: '25  %',
+                    width: '25%',
                     stack: ['Bagian', 'Budget' , 'Nomor']
                 }, {
                         width: '5%',
