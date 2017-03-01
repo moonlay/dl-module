@@ -6,6 +6,7 @@ var DLModels = require('dl-models');
 var assert = require('assert');
 var map = DLModels.map;
 var PurchaseOrder = DLModels.purchasing.PurchaseOrder;
+var PurchaseRequest = DLModels.purchasing.PurchaseRequest;
 var PurchaseOrderItem = DLModels.purchasing.PurchaseOrderItem;
 var PurchaseRequestManager = require('./purchase-request-manager');
 var generateCode = require('../../utils/code-generator');
@@ -57,7 +58,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         return id.toString() === searchId.toString();
                     });
                     if (!poId) {
-                        errors["purchaseRequest"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest tidak boleh sudah dipakai";
+                        errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest tidak boleh sudah dipakai";
                     }
                 }
                 // /*
@@ -239,63 +240,92 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             .then((purchaseOrder) => {
                 return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
                     .then((purchaseRequest) => {
-                        purchaseRequest.isUsed = true;
-                        purchaseRequest.purchaseOrderIds = purchaseRequest.purchaseOrderIds || [];
-                        purchaseRequest.status = prStatusEnum.PROCESSING;
-                        purchaseRequest.purchaseOrderIds.push(id);
-                        return this.purchaseRequestManager.update(purchaseRequest)
-                            .then(() => {
-                                purchaseOrder.purchaseRequest = purchaseRequest
-                                return this.collection
-                                    .updateOne({
-                                        _id: purchaseOrder._id
-                                    }, {
-                                        $set: purchaseOrder
-                                    })
-                                    .then((result) => Promise.resolve(purchaseOrder._id));
-                            });
+                        var purchaseOrderError = {};
+                        if (purchaseRequest.isUsed) {
+                            purchaseOrderError["purchaseRequestId"] = i18n.__("purchaseRequest.isUsed:%s is already used", i18n.__("purchaseRequest.isUsed._:Used"));
+                        }
+                        if (purchaseRequest.purchaseOrderIds.length > 1) {
+                            var poId = purchaseRequest.purchaseOrderIds.find((_poId) => _poId.toString() === id.toString());
+                            if (poId) {
+                                purchaseOrderError["purchaseRequestId"] = i18n.__("purchaseRequest.purchaseOrderIds:%s is already used", i18n.__("purchaseRequest.purchaseOrderIds._:Used"));
+                            }
+                        }
+                        if (Object.getOwnPropertyNames(purchaseOrderError).length > 0) {
+                            var ValidationError = require("module-toolkit").ValidationError;
+                            return Promise.reject(new ValidationError("data does not pass validation", purchaseOrderError));
+                        }
+
+                        if (!purchaseRequest.stamp) {
+                            purchaseRequest = new PurchaseRequest(purchaseRequest);
+                        }
+                        purchaseRequest.stamp(this.user.username, 'manager');
+                        return Promise.resolve(purchaseRequest)
                     })
+                    .then((purchaseRequest) => {
+                        purchaseRequest.purchaseOrderIds = purchaseRequest.purchaseOrderIds || [];
+                        purchaseRequest.purchaseOrderIds.push(id);
+                        return this.purchaseRequestManager.collection
+                            .updateOne({
+                                _id: purchaseRequest._id
+                            }, {
+                                $set: { "isUsed": true, "status": prStatusEnum.PROCESSING, "purchaseOrderIds": purchaseRequest.purchaseOrderIds }
+                            })
+                            .then((result) => { return this.purchaseRequestManager.getSingleById(purchaseRequest._id) })
+                    })
+                    .then((purchaseRequest) => {
+                        if (purchaseOrder.purchaseRequestId.toString() === purchaseRequest._id.toString()) {
+                            purchaseOrder.purchaseRequest = purchaseRequest
+                            return this.collection
+                                .updateOne({
+                                    _id: purchaseOrder._id
+                                }, {
+                                    $set: purchaseOrder
+                                })
+                                .then((result) => Promise.resolve(purchaseOrder._id));
+                        }
+                    });
             })
     }
 
     delete(purchaseOrder) {
-        return new Promise((resolve, reject) => {
-            this._createIndexes()
-                .then((createIndexResults) => {
-                    this._validate(purchaseOrder)
-                        .then(validData => {
-                            validData._deleted = true;
-                            this.collection.update(validData)
-                                .then(id => {
-                                    this.purchaseRequestManager.getSingleById(validData.purchaseRequest._id)
-                                        .then(PR => {
-                                            var poIndex = PR.purchaseOrderIds.indexOf(validData._id);
-                                            PR.purchaseOrderIds.splice(poIndex, 1);
-                                            if (PR.purchaseOrderIds.length === 0) {
-                                                PR.isUsed = false;
-                                                PR.status = prStatusEnum.POSTED;
-                                            }
-                                            this.purchaseRequestManager.update(PR)
-                                                .then(results => {
-                                                    resolve(id);
-                                                })
-                                                .catch(e => {
-                                                    reject(e);
-                                                });
-                                        })
-                                })
-                                .catch(e => {
-                                    reject(e);
-                                });
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this._validate(purchaseOrder)
+                    .then(validData => {
+                        // validData._deleted = true;
+                        return this.collection
+                            .updateOne({
+                                _id: validData._id
+                            }, {
+                                $set: { "_deleted": true }
+                            })
+                            .then((result) => Promise.resolve(validData._id))
+                            .then((purchaseOrderId) => {
+                                return this.purchaseRequestManager.getSingleById(validData.purchaseRequest._id)
+                                    .then(purchaseRequest => {
+                                        var poIndex = purchaseRequest.purchaseOrderIds.indexOf(validData._id);
+                                        purchaseRequest.purchaseOrderIds.splice(poIndex, 1);
+                                        if (purchaseRequest.purchaseOrderIds.length === 0) {
+                                            purchaseRequest.isUsed = false;
+                                            purchaseRequest.status = prStatusEnum.POSTED;
+                                        }
+                                        return this.purchaseRequestManager.collection
+                                            .updateOne({
+                                                _id: purchaseRequest._id
+                                            }, {
+                                                $set: { "isUsed": purchaseRequest.isUsed, "status": purchaseRequest.status, "purchaseOrderIds": purchaseRequest.purchaseOrderIds }
+                                            })
+                                            .then((result) => Promise.resolve(purchaseOrderId))
+                                    })
+                            })
+                    })
+                    .catch(e => {
+                        reject(e);
+                    });
+            })
+            .catch(e => {
+                reject(e);
+            });
     }
 
     split(purchaseOrder) {
@@ -320,7 +350,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                                     }
                                                 }
                                             }
-
                                             sourcePo.items = sourcePo.items.filter((item, index) => {
                                                 return item.defaultQuantity > 0;
                                             })

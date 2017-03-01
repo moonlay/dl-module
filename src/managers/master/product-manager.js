@@ -88,7 +88,7 @@ module.exports = class ProductManager extends BaseManager {
                     if (!valid.uom.unit || valid.uom.unit == '')
                         errors["uom"] = i18n.__("Product.uom.isRequired:%s is required", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
                 }
-                else if (_uom){
+                else if (_uom) {
                     errors["uom"] = i18n.__("Product.uom.noExists:%s is not exists", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
                 }
 
@@ -105,6 +105,8 @@ module.exports = class ProductManager extends BaseManager {
                 if (!valid.stamp)
                     valid = new Product(valid);
                 valid.stamp(this.user.username, 'manager');
+                valid.currency.rate = parseFloat(valid.currency.rate);
+                valid.price = parseFloat(valid.price);
                 return Promise.resolve(valid);
             });
     }
@@ -141,7 +143,7 @@ module.exports = class ProductManager extends BaseManager {
                                     var data = [];
                                     if (dataFile != "") {
                                         for (var i = 1; i < dataFile.length; i++) {
-                                            data.push({ "code": dataFile[i][0], "name": dataFile[i][1], "uom": dataFile[i][2], "currency": dataFile[i][3], "price": dataFile[i][4], "tags":dataFile[i][5], "description": dataFile[i][6] });
+                                            data.push({ "code": dataFile[i][0], "name": dataFile[i][1], "uom": dataFile[i][2], "currency": dataFile[i][3], "price": dataFile[i][4], "tags": dataFile[i][5], "description": dataFile[i][6] });
                                         }
                                     }
                                     var dataError = [], errorMessage;
@@ -201,7 +203,7 @@ module.exports = class ProductManager extends BaseManager {
                                         }
 
                                         if (errorMessage !== "") {
-                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags":data[i]["tags"], "description": data[i]["description"], "Error": errorMessage });
+                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "Error": errorMessage });
                                         }
                                     }
                                     if (dataError.length === 0) {
@@ -212,8 +214,8 @@ module.exports = class ProductManager extends BaseManager {
                                                 for (var j = 0; j < uom.length; j++) {
                                                     if (data[i]["uom"] == uom[j]["unit"] && data[i]["currency"] == currency[c]["code"]) {
                                                         valid.currency = currency[c];
-                                                        valid.currency.rate = parseInt(valid.currency.rate);
-                                                        valid.price = parseInt(valid.price);
+                                                        valid.currency.rate = parseFloat(valid.currency.rate);
+                                                        valid.price = parseFloat(valid.price);
                                                         valid.uomId = new ObjectId(uom[j]["_id"]);
                                                         valid.uom = uom[j];
                                                         valid.stamp(this.user.username, 'manager');
@@ -245,7 +247,7 @@ module.exports = class ProductManager extends BaseManager {
                 })
         })
     }
-    
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.collection.Product}__updatedDate`,
@@ -265,35 +267,35 @@ module.exports = class ProductManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, codeIndex]);
     }
 
-    getProductByTags(key,tag){
+    getProductByTags(key, tag) {
         return new Promise((resolve, reject) => {
-            var regex=new RegExp(key,"i");
-            var regex2= new RegExp(tag,"i");
+            var regex = new RegExp(key, "i");
+            var regex2 = new RegExp(tag, "i");
             this.collection.aggregate(
-                    [{
-                        $match: {
-                            $and:[{
-                                    $and:[{
-                                        "tags": regex2
-                                    },{
+                [{
+                    $match: {
+                        $and: [{
+                            $and: [{
+                                "tags": regex2
+                            }, {
                                     "_deleted": false
                                 }]
-                        },{
+                        }, {
                                 "name": {
                                     "$regex": regex
                                 }
                             }]
-                        }
-                    }]
-                )
-                .toArray(function(err, result) {
+                    }
+                }]
+            )
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
-            });
+        });
     }
 
-     readById(paging) {
+    readById(paging) {
         var _paging = Object.assign({
             order: {},
             filter: {},
