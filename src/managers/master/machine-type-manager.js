@@ -114,13 +114,9 @@ module.exports = class MachineTypeManager extends BaseManager {
                             if (!indicator.indicator) {
                                 itemError["indicator"] = i18n.__("MachineType.indicators.indicator.isRequired:%s is required", i18n.__("MachineType.indicators.indicator._:indicator")); //"indicator tidak boleh kosong";
                             }
-                            if (!indicator.defaultValue) {
-                                itemError["defaultValue"] = i18n.__("MachineType.indicators.defaultValue.isRequired:%s is required", i18n.__("MachineType.indicators.defaultValue._:defaultValue")); //"defaultValue tidak boleh kosong";
-                            }
 
-                            //data type validation: option and range  
                             if (indicator.dataType) {
-                                if (indicator.dataType == "option (use ',' as delimiter)") {
+                                if (indicator.dataType == "input pilihan") {
                                     if (indicator.defaultValue) {
                                         var optionValue = indicator.defaultValue.split(",");
                                         if (optionValue.length <= 1 || (optionValue.find((o) => o.trim().length == 0)) == "") {
@@ -128,7 +124,7 @@ module.exports = class MachineTypeManager extends BaseManager {
                                         }
                                     }
 
-                                } else if (indicator.dataType == "range (use '-' as delimiter)") {
+                                } else if (indicator.dataType == "input skala angka") {
                                     if (indicator.defaultValue) {
                                         var rangeValue = indicator.defaultValue.split("-");
                                         if (rangeValue.length <= 1 || rangeValue.length > 2 || !parseInt(rangeValue[0]) || !parseInt(rangeValue[1])) {

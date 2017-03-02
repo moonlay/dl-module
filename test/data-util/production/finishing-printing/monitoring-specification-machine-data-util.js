@@ -21,8 +21,8 @@ class MonitoringSpecificationMachineDataUtil {
                         indicator: machine.indicator ? machine.indicator : "",
                         dataType: machine.dataType ? machine.dataType : "",
                         defaultValue: machine.defaultValue ? machine.defaultValue : "",
-                        value: machine.dataType == "range (use '-' as delimiter)" ? 5 : "a",
-                        satuan: "test satuan",
+                        uom: machine.uom ? machine.uom : "",
+                        value: machine.dataType == "input skala angka" ? 5 : "a",
 
                     }
                     itemsArr.push(item);
@@ -58,9 +58,8 @@ class MonitoringSpecificationMachineDataUtil {
                         indicator: machine.indicator ? machine.indicator : "",
                         dataType: machine.dataType ? machine.dataType : "",
                         defaultValue: machine.defaultValue ? machine.defaultValue : "",
+                        uom: machine.uom ? machine.uom : "",
                         value: "",
-                        satuan: "",
-
                     }
                     itemsArr.push(item);
                 }

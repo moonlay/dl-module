@@ -93,69 +93,72 @@ module.exports = class MonitoringEventManager extends BaseManager {
                     errors["code"] = i18n.__("MonitoringEvent.code.isExists:%s is exists", i18n.__("MonitoringEvent.code._:Code"));
 
                 if (!valid.dateStart || valid.dateStart == '')
-                    errors["dateStart"] = i18n.__("MonitoringEvent.dateStart.isRequired:%s is required", i18n.__("MonitoringEvent.dateStart._:Date Start")); //"Tanggal Mulai tidak boleh kosong";
+                    errors["dateStart"] = i18n.__("MonitoringEvent.dateStart.isRequired:%s is required", i18n.__("MonitoringEvent.dateStart._:Date Start"));
                 else if (valid.dateStart > dateNow)
-                    errors["dateStart"] = i18n.__("MonitoringEvent.dateStart.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateStart._:Date Start"));//"Tanggal Mulai tidak boleh lebih besar dari tanggal hari ini";
+                    errors["dateStart"] = i18n.__("MonitoringEvent.dateStart.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateStart._:Date Start"));
                 else if (valid.dateStart === dateNow && valid.timeInMillisStart > timeInMillisNow)
-                    errors["timeInMillisStart"] = i18n.__("MonitoringEvent.timeInMillisStart.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start"));//"Time Mulai tidak boleh lebih besar dari time hari ini";
+                    errors["timeInMillisStart"] = i18n.__("MonitoringEvent.timeInMillisStart.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start"));
 
                 if (valid.dateEnd && valid.dateEnd != ''){
+                    if (valid.timeInMillisEnd === undefined)
+                        errors["timeInMillisEnd"] = i18n.__("MonitoringEvent.timeInMillisEnd.isRequired:%s is required", i18n.__("MonitoringEvent.timeInMillisEnd._:Time End"));
+
                     if (valid.dateEnd > dateNow)
-                        errors["dateEnd"] = i18n.__("MonitoringEvent.dateEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateEnd._:Date End"));//"Tanggal Selesai tidak boleh lebih besar dari tanggal hari ini";
+                        errors["dateEnd"] = i18n.__("MonitoringEvent.dateEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateEnd._:Date End"));
                     else if (valid.dateEnd === dateNow && valid.timeInMillisEnd > timeInMillisNow)
-                        errors["timeInMillisEnd"] = i18n.__("MonitoringEvent.timeInMillisEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisEnd._:Time End"));//"Time Selesai tidak boleh lebih besar dari time hari ini";
+                        errors["timeInMillisEnd"] = i18n.__("MonitoringEvent.timeInMillisEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisEnd._:Time End"));
                 }
+
+                if (valid.timeInMillisEnd && (!valid.dateEnd || valid.dateEnd === ''))
+                    errors["dateEnd"] = i18n.__("MonitoringEvent.dateEnd.isRequired:%s is required", i18n.__("MonitoringEvent.dateEnd._:Date End"));
 
                 if (valid.dateStart && valid.dateStart != '' && valid.dateEnd && valid.dateEnd != ''){
                     if (valid.dateStart > valid.dateEnd){
-                        var errorMessage = i18n.__("MonitoringEvent.dateStart.isGreaterThanDateEnd:%s is greater than Date End", i18n.__("MonitoringEvent.dateStart._:Date Start")); //"Tanggal Mulai tidak boleh lebih besar dari Tanggal Selesai";
+                        var errorMessage = i18n.__("MonitoringEvent.dateStart.isGreaterThanDateEnd:%s is greater than Date End", i18n.__("MonitoringEvent.dateStart._:Date Start")); 
                         errors["dateStart"] = errorMessage;
                         errors["dateEnd"] = errorMessage;
                     }
                 }
 
                 if (valid.timeInMillisStart === undefined)
-                    errors["timeInMillisStart"] = i18n.__("MonitoringEvent.timeInMillisStart.isRequired:%s is required", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start")); //"Time Mulai tidak boleh kosong";
+                    errors["timeInMillisStart"] = i18n.__("MonitoringEvent.timeInMillisStart.isRequired:%s is required", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start")); 
 
                 if (valid.dateStart && valid.dateStart != '' && valid.dateEnd && valid.dateEnd != '' && valid.dateStart === valid.dateEnd){
                     if (valid.timeInMillisStart > valid.timeInMillisEnd){
-                        var errorMessage = i18n.__("MonitoringEvent.timeInMillisStart.isGreaterThanTimeInMillisEnd:%s is greater than Time End", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start")); //"Time Mulai tidak boleh lebih besar dari Time Selesai";
+                        var errorMessage = i18n.__("MonitoringEvent.timeInMillisStart.isGreaterThanTimeInMillisEnd:%s is greater than Time End", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start")); 
                         errors["timeInMillisStart"] = errorMessage;
                         errors["timeInMillisEnd"] = errorMessage;
                     }
                 }    
 
                 if (!_machine)
-                    errors["machine"] = i18n.__("MonitoringEvent.machine.name.isRequired:%s is required", i18n.__("MonitoringEvent.machine.name._:Machine")); //"Nama Mesin tidak boleh kosong";
+                    errors["machine"] = i18n.__("MonitoringEvent.machine.name.isRequired:%s is required", i18n.__("MonitoringEvent.machine.name._:Machine")); 
 
                 if (!_productionOrder)
-                    errors["productionOrder"] = i18n.__("MonitoringEvent.productionOrder.isRequired:%s is required", i18n.__("MonitoringEvent.productionOrder._:Production Order Number")); //"ProductionOrder tidak boleh kosong";
+                    errors["productionOrder"] = i18n.__("MonitoringEvent.productionOrder.isRequired:%s is required", i18n.__("MonitoringEvent.productionOrder._:Production Order Number")); 
 
                 if (!_productionOrderDetail)
-                    errors["selectedProductionOrderDetail"] = i18n.__("MonitoringEvent.selectedProductionOrderDetail.isRequired:%s is required", i18n.__("MonitoringEvent.selectedProductionOrderDetail._:Color")); //"selectedProductionOrderDetail / Color tidak boleh kosong";
+                    errors["selectedProductionOrderDetail"] = i18n.__("MonitoringEvent.selectedProductionOrderDetail.isRequired:%s is required", i18n.__("MonitoringEvent.selectedProductionOrderDetail._:Color")); 
 
                 if (!valid.cartNumber || valid.cartNumber == '')
-                    errors["cartNumber"] = i18n.__("MonitoringEvent.cartNumber.isRequired:%s is required", i18n.__("MonitoringEvent.cartNumber._:Cart Number")); //"Nomor Kereta tidak boleh kosong";
+                    errors["cartNumber"] = i18n.__("MonitoringEvent.cartNumber.isRequired:%s is required", i18n.__("MonitoringEvent.cartNumber._:Cart Number")); 
 
                 if (!valid.machineEvent)
-                    errors["machineEvent"] = i18n.__("MonitoringEvent.machineEvent.isRequired:%s is required", i18n.__("MonitoringEvent.machineEvent._:Machine Event")); //"Event Mesin tidak boleh kosong";
+                    errors["machineEvent"] = i18n.__("MonitoringEvent.machineEvent.isRequired:%s is required", i18n.__("MonitoringEvent.machineEvent._:Machine Event")); 
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
                 }
 
-                if (valid.dateStart)
+                if (valid.dateStart && valid.dateStart != '')
                     valid.dateStart = new Date(valid.dateStart);
                 
-                if (valid.dateEnd){
+                if (valid.dateEnd && valid.dateEnd != '')
                     valid.dateEnd = new Date(valid.dateEnd);
-                    if (!valid.timeInMillisEnd)
-                        valid.timeInMillisEnd = valid.timeInMillisStart;
-                }
                 else{
-                    valid.dateEnd = new Date(valid.dateStart);
-                    valid.timeInMillisEnd = valid.timeInMillisStart;
+                    valid.dateEnd = null;
+                    valid.timeInMillisEnd = null;
                 }
 
                 if (_machine){

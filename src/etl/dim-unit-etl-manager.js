@@ -67,6 +67,9 @@ module.exports = class DimUnitEtlManager extends BaseManager {
     extract(time) {
         var timestamp = new Date(time[0].finish);
         return this.unitManager.collection.find({
+            _updatedDate: {
+                "$gt": timestamp
+            },
             _deleted: false
         }).toArray();
     }

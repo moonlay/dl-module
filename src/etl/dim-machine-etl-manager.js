@@ -63,6 +63,9 @@ module.exports = class DimMachineEtlManager extends BaseManager {
     extract(time) {
         var timestamp = new Date(time[0].finish);
         return this.machineManager.collection.find({
+            _updatedDate: {
+                "$gt": timestamp
+            },
             _deleted: false
 
         }).toArray();

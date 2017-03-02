@@ -214,29 +214,23 @@ it('#07. should error when create new data with timeStart greater than timeEnd i
         });
 });
 
-it('#08. dateEnd & timeInMillisEnd should be the same with dateStart & timeInMillisStart when create new data without dateEnd', function (done) {
+it('#08. should error when create new data with dateEnd without timeEnd', function (done) {
     MonitoringEvent.getNewData()
         .then(me => {
-            delete me.dateEnd;
+            delete me.timeInMillisEnd;
 
             monitoringEventManager.create(me)
                 .then(id => {
-                    monitoringEventManager.getSingleById(id)
-                        .then((data) => {
-                            data.should.instanceof(Object);
-                            validate(data);
-
-                            if (data.timeInMillisStart.valueOf() === data.timeInMillisEnd.valueOf() && data.timeInMillisStart === data.timeInMillisEnd)
-                                done();
-                            else
-                                done("dateEnd & timeInMillisEnd should be the same with dateStart & timeInMillisStart when create new data without dateEnd");
-                        })
-                        .catch((e) => {
-                            done(e);
-                        });
+                    done("should error when create new data with dateEnd without timeEnd");
                 })
                 .catch(e => {
-                    done(e);
+                    try {
+                        e.errors.should.have.property('timeInMillisEnd');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
                 });
         })
         .catch(e => {
@@ -244,37 +238,50 @@ it('#08. dateEnd & timeInMillisEnd should be the same with dateStart & timeInMil
         });
 });
 
-it('#09. timeInMillisEnd should be the same timeInMillisStart when create new data with dateEnd but without timeInMillisEnd', function (done) {
+it('#09. should error when create new data with timeEnd without dateEnd', function (done) {
     MonitoringEvent.getNewData()
         .then(me => {
-            delete me.timeInMillisEnd;
+            delete me.dateEnd;
 
             monitoringEventManager.create(me)
                 .then(id => {
-                    monitoringEventManager.getSingleById(id)
-                        .then((data) => {
-                            data.should.instanceof(Object);
-                            validate(data);
-                            
-                            if (data.timeInMillisStart === data.timeInMillisEnd)
-                                done();
-                            else
-                                done("timeInMillisEnd should be the same timeInMillisStart when create new data with dateEnd but without timeInMillisEnd");
-                        })
-                        .catch((e) => {
-                            done(e);
-                        });
+                    done("should error when create new data with timeEnd without dateEnd");
                 })
                 .catch(e => {
-                    done(e);
+                    try {
+                        e.errors.should.have.property('dateEnd');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
                 });
         })
         .catch(e => {
             done(e);
         });
-});		
+});
 
-it('#10. should success when get Query', function (done) {
+it('#10. should success when create new data without both dateEnd and timeEnd', function (done) {
+    MonitoringEvent.getNewData()
+        .then(me => {
+            delete me.dateEnd;
+            delete me.timeInMillisEnd;
+
+            monitoringEventManager.create(me)
+                .then(id => {
+                    done();
+                })
+                .catch(e => {
+                    done(x);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#11. should success when get Query', function (done) {
     var paging = {};
     paging.keyword = '123';
     var query = monitoringEventManager._getQuery(paging)

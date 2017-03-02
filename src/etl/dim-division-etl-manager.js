@@ -66,6 +66,9 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
     extract(time) {
         var timestamp = new Date(1970, 1, 1);
         return this.divisionManager.collection.find({
+            _updatedDate: {
+                "$gt": timestamp
+            },
             _deleted: false
         }).toArray();
     }

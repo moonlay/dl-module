@@ -204,31 +204,26 @@ module.exports = class PurchaseRequestManager extends BaseManager {
     _beforeInsert(purchaseRequest) {
         purchaseRequest.no = generateCode();
         purchaseRequest.status = prStatusEnum.CREATED;
-        PurchaseRequest._createdDate = new Date();
+        purchaseRequest._createdDate = new Date();
         return Promise.resolve(purchaseRequest);
     }
 
     post(listPurchaseRequest) {
-        var purchaseRequests = [];
-        var tasks = [];
+        var getPurchaseRequests = [];
         return new Promise((resolve, reject) => {
             for (var purchaseRequest of listPurchaseRequest) {
-                purchaseRequests.push(this.getSingleByIdOrDefault(purchaseRequest._id));
+                getPurchaseRequests.push(this.getSingleByIdOrDefault(purchaseRequest._id));
             }
-            Promise.all(purchaseRequests)
+            Promise.all(getPurchaseRequests)
                 .then(validPurchaseRequest => {
+                    var jobUpdatePr = [];
                     for (var pr of listPurchaseRequest) {
-                        for (var _pr of validPurchaseRequest) {
-                            if (_pr._id.equals(pr._id)) {
-                                _pr.isPosted = true;
-                                _pr.status = prStatusEnum.POSTED;
-                                tasks.push(this.update(_pr));
-                                break;
-                            }
+                        var purchaseRequest = validPurchaseRequest.find((_pr) => _pr._id.toString() === pr._id.toString());
+                        if (purchaseRequest) {
+                            jobUpdatePr.push(this.updatePost(purchaseRequest))
                         }
-
                     }
-                    Promise.all(tasks)
+                    Promise.all(jobUpdatePr)
                         .then(result => {
                             resolve(result);
                         })
@@ -242,6 +237,36 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 });
         });
 
+    }
+
+    updatePost(purchaseRequest) {
+        var purchaseRequestError = {};
+
+        if (purchaseRequest.isPosted) {
+            purchaseRequestError["no"] = i18n.__("purchaseRequest.isPosted:%s already posted", i18n.__("purchaseRequest.isPosted._:Posted"));
+        }
+        if (Object.getOwnPropertyNames(purchaseRequestError).length > 0) {
+            var ValidationError = require("module-toolkit").ValidationError;
+            return Promise.reject(new ValidationError("data does not pass validation", purchaseRequestError));
+        }
+
+        if (!purchaseRequest.stamp) {
+            purchaseRequest = new PurchaseRequest(purchaseRequest);
+        }
+        purchaseRequest.stamp(this.user.username, 'manager');
+
+        return Promise.resolve(purchaseRequest)
+            .then((purchaseRequest) => {
+                purchaseRequest.isPosted = true;
+                purchaseRequest.status = prStatusEnum.POSTED;
+                return this.collection
+                    .updateOne({
+                        _id: purchaseRequest._id
+                    }, {
+                        $set: purchaseRequest
+                    })
+                    .then((result) => Promise.resolve(purchaseRequest._id));
+            })
     }
 
     pdf(id) {

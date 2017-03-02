@@ -95,3 +95,18 @@ it("#06. should error when load empty data", function (done) {
             }
         });
 });
+
+it("#07. should error when insert empty data", function (done) {
+    instanceManager.insertQuery(this.sql, "")
+        .then((id) => {
+            done("should error when create with empty data");
+        })
+        .catch((e) => {
+            try {                
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});

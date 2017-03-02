@@ -131,7 +131,7 @@ it('#05. should failed when create new purchase-order with already used purchase
             done(purchaseRequest, "purchase-request cannot be used to create purchase-order due unposted status");
         })
         .catch(e => {
-            e.errors.should.have.property('purchaseRequest');
+            e.errors.should.have.property('purchaseRequestId');
             done();
         });
 });

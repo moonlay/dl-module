@@ -7,6 +7,12 @@ var moment = require('moment');
 var MonitoringSpecificationMachineManager = require("../../../../src/managers/production/finishing-printing/monitoring-specification-machine-manager");
 var monitoringSpecificationMachineManager = null;
 
+//delete unitest data
+var DLModels = require('dl-models');
+var map = DLModels.map;
+var MachineType = DLModels.master.MachineType;
+
+
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
