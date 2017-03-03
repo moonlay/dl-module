@@ -2,37 +2,38 @@
 
 // external deps 
 var ObjectId = require("mongodb").ObjectId;
-var BaseManager = require("module-toolkit").BaseManager;
+var BaseManager = require('module-toolkit').BaseManager;
 var moment = require("moment");
 
+
 // internal deps 
-require("mongodb-toolkit");
+require('mongodb-toolkit');
 
-var SalesContractManager = require("../managers/sales/production-order-manager");
+var BuyerManager = require('../managers/master/buyer-manager');
 
-module.exports = class FactSalesContractEtlManager extends BaseManager {
+module.exports = class DimBuyerEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.salesContractManager = new SalesContractManager(db, user);
+        this.buyerManager = new BuyerManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
 
     run() {
-        var startedDate = new Date()
+        var startedDate = new Date();
         this.migrationLog.insert({
-            description: "Fact Sales Contract from MongoDB to Azure DWH",
+            description: "Dim Buyer from MongoDB to Azure DWH",
             start: startedDate,
         })
-        return this.timestamp()
+        return this.getTimeStamp()
             .then((time) => this.extract(time))
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
-            .then((results) => {
+            .then((result) => {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Sales Contract from MongoDB to Azure DWH",
+                    description: "Dim Buyer from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -44,7 +45,7 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Sales Contract from MongoDB to Azure DWH",
+                    description: "Dim Buyer from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -52,84 +53,55 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
                 };
                 this.migrationLog.updateOne({ start: startedDate }, updateLog);
             });
-    };
+    }
 
-    timestamp() {
+    getTimeStamp() {
         return this.migrationLog.find({
-            description: "Fact Sales Contract from MongoDB to Azure DWH",
+            description: "Dim Buyer from MongoDB to Azure DWH",
             status: "Successful"
-        }).sort({ finish: -1 }).limit(1).toArray()
+        }).sort({
+            finishedDate: -1
+        }).limit(1).toArray()
     }
 
     extract(time) {
-        var timestamp = new Date(time[0].finish);
-        return this.salesContractManager.collection.find({
-            _deleted: false,
+        var timestamp = new Date(1970, 1, 1);
+        return this.buyerManager.collection.find({
             _updatedDate: {
-                $gt: timestamp
-            }
+                "$gt": timestamp
+            },
+            _deleted: false
         }).toArray();
-    }
-
-    orderQuantityConvertion(uom, quantity) {
-        if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity * 109361 / 100000;
-        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
-            return quantity;
-        }
-    }
-
-    joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth) {
-        if (material !== null && materialConstruction !== null && yarnMaterialNo !== null && materialWidth !== null) {
-            return `'${material + " " + materialConstruction + " " + yarnMaterialNo + " " + materialWidth}'`;
-        } else {
-            return null;
-        }
     }
 
     transform(data) {
         var result = data.map((item) => {
-            var orderUom = item.uom.unit;
-            var orderQuantity = item.orderQuantity;
-            var material = item.material.name ? item.material.name.replace(/'/g, '"') : null;
-            var materialConstruction = item.materialConstruction ? item.materialConstruction.name.replace(/'/g, '"') : null;
-            var yarnMaterialNo = item.yarnMaterial ? item.yarnMaterial.name.replace(/'/g, '"') : null;
-            var materialWidth = item.materialWidth ? item.materialWidth : null;
-            
+
             return {
-                salesContractNo: item.salesContractNo ? `'${item.salesContractNo}'` : null,
-                productionOrderNo: item.orderNo ? `'${item.orderNo}'` : null,
-                orderType: item.orderType.name ? `'${item.orderType.name}'` : null,
-                processType: item.processType.name ? `'${item.processType.name.replace(/'/g, '"')}'` : null,
-                material: item.material.name ? `'${item.material.name.replace(/'/g, '"')}'` : null,
-                materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
-                yarnMaterialNo: item.yarnMaterial ? `'${item.yarnMaterial.name.replace(/'/g, '"')}'` : null,
-                materialWidth: item.materialWidth ? `'${item.materialWidth}'` : null,
-                orderQuantity: item.orderQuantity ? `${item.orderQuantity}` : null,
-                orderUom: item.uom ? `'${item.uom.unit.replace(/'/g, '"')}'` : null,
-                buyer: item.buyer.name ? `'${item.buyer.name.replace(/'/g, '"')}'` : null,
-                buyerType: item.buyer.type ? `'${item.buyer.type.replace(/'/g, '"')}'` : null,
-                deliveryDate: item.deliveryDate ? `'${moment(item.deliveryDate).format("L")}'` : null,
-                createdDate: item._createdDate ? `'${moment(item._createdDate).format("L")}'` : null,
-                totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
-                construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
-                buyerCode: item.buyer.code ? `'${item.buyer.code}'` : null
-            }
+                buyerAddress: item.address ? `'${item.address.replace(/'/g, '"')}'` : null,
+                buyerCity: item.city ? `'${item.city.replace(/'/g, '"')}'` : null,
+                buyerCode: item.code ? `'${item.code.replace(/'/g, '"')}'` : null,
+                buyerContact: item.contact ? `'${item.contact.replace(/'/g, '"')}'` : null,
+                buyerCountry: item.country ? `'${item.country.replace(/'/g, '"')}'` : null,
+                buyerName: item.name ? `'${item.name.replace(/'/g, '"')}'` : null,
+                buyerNPWP: item.NPWP ? `'${item.NPWP.replace(/'/g, '"')}'` : null,
+                buyerType: item.type ? `'${item.type.replace(/'/g, '"')}'` : null 
+            };
         });
         return Promise.resolve([].concat.apply([], result));
-    };
+    }
 
     insertQuery(sql, query) {
         return new Promise((resolve, reject) => {
-            sql.query(query, function (err, result) {
+            sql.query(query, function(err, result) {
                 if (err) {
                     reject(err);
                 } else {
                     resolve(result);
-                };
-            });
-        });
-    };
+                }
+            })
+        })
+    }
 
     load(data) {
         return new Promise((resolve, reject) => {
@@ -150,7 +122,7 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO DL_Fact_Sales_Contract_Temp([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi], [Konstruksi], [Kode Buyer]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion}, ${item.construction}, ${item.buyerCode});\n`;
+                                var queryString = `INSERT INTO [DL_Dim_Buyer_Temp]([Nama Buyer], [Kode Buyer], [Jenis Buyer], [Kontak Buyer], [NPWP Buyer], [Alamat Buyer], [Negara Buyer], [Kota Buyer]) VALUES(${item.buyerName}, ${item.buyerCode}, ${item.buyerType}, ${item.buyerContact}, ${item.buyerNPWP}, ${item.buyerAddress}, ${item.buyerCountry}, ${item.buyerCity}) ;\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -161,14 +133,28 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
                             }
                         }
 
-                        if (sqlQuery != "")
+
+                        if (sqlQuery !== "")
+
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
+                        
+                        var fs = require("fs");
+                        var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
+
+                        fs.writeFile(path, sqlQuery, function (error) {
+                            if (error) {
+                                console.log("write error:  " + error.message);
+                            } else {
+                                console.log("Successful Write to " + path);
+                            }
+                        });
+
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_UPSERT_FACT_Sales_Contract").then((execResult) => {
+                                request.execute("DL_UPSERT_DIM_BUYER").then((execResult) => {
                                     request.execute("DL_INSERT_DIMTIME").then((execResult) => {
                                         transaction.commit((err) => {
                                             if (err)
