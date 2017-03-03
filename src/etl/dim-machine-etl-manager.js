@@ -36,7 +36,7 @@ module.exports = class DimMachineEtlManager extends BaseManager {
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
-                    status: "success"
+                    status: "Successful"
                 };
                 this.migrationLog.updateOne({ start: startedDate }, updateLog);
             }).catch((err) => {
@@ -55,7 +55,7 @@ module.exports = class DimMachineEtlManager extends BaseManager {
 
     getTimestamp() {
         return this.migrationLog.find({
-            status: "success",
+            status: "Successful",
             description: "Dim Machine from MongoDB to Azure DWH"
         }).sort({ finish: -1 }).limit(1).toArray();
     }
