@@ -118,27 +118,24 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
                     var itemErrors = [];
                     for (var item of valid.items) {
                         var itemError = {};
-                        if (!item.satuan || item.satuan == "" ) {
-                            itemError["satuan"] = i18n.__("MonitoringSpecificationMachine.items.satuan.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.items.satuan._:Satuan")); //"Satuan tidak boleh kosong";
-                        }
 
-                        if (item.dataType == "range (use '-' as delimiter)") {
+                        if (item.dataType == "input pilihan") {
                             var range = item.defaultValue.split("-");
-                            if (item.value < parseInt(range[0]) || item.value > parseInt(range[1]) ||item.value=="") {
+                            if (item.value < parseInt(range[0]) || item.value > parseInt(range[1]) || item.value == "") {
                                 itemError["value"] = i18n.__("MonitoringSpecificationMachine.items.value.isIncorrect:%s range is incorrect", i18n.__("MonitoringSpecificationMachine.items.value._:value")); //"range incorrect";                       
                             }
                         }
 
-                        if (item.dataType == "string") {
+                        if (item.dataType == "input teks") {
 
-                            if (!item.value || item.value == "" ) {
+                            if (!item.value || item.value == "") {
                                 itemError["value"] = i18n.__("MonitoringSpecificationMachine.items.value.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.items.value._:value")); //"is required";                       
                             }
                         }
 
-                        if (item.dataType == "numeric") {
+                        if (item.dataType == "input angka") {
 
-                            if (!item.value || item.value == "" || item.value == 0 ) {
+                            if (!item.value || item.value == "" || item.value == 0) {
                                 itemError["value"] = i18n.__("MonitoringSpecificationMachine.items.value.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.items.value._:value")); //"is required";                       
                             }
                         }
@@ -200,9 +197,8 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             machineFilter = { 'machine._id': machineId };
         }
 
-        if (info.productionOrderId && info.productionOrderId != '') {
-            var productionOrderId = ObjectId.isValid(info.productionOrderId) ? new ObjectId(info.productionOrderId) : {};
-            productionOrderFilter = { 'productionOrder._id': productionOrderId };
+        if (info.productionOrderNumber && info.productionOrderNumber != ''){
+            productionOrderFilter = {'productionOrder.orderNo': info.productionOrderNumber};
         }
 
         var filterDate = {
@@ -236,14 +232,14 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             index++;
             var item = {};
             item["No"] = index;
-            item["Machine"] = monitoringSpecificationMachine.machine ? monitoringSpecificationMachine.machine.name : '';
+            item["Mesin"] = monitoringSpecificationMachine.machine ? monitoringSpecificationMachine.machine.name : '';
             item["Tanggal"] = monitoringSpecificationMachine.date ? moment(new Date(monitoringSpecificationMachine.date)).format(dateFormat) : '';
             item["Jam"] = monitoringSpecificationMachine.time ? moment(new Date(monitoringSpecificationMachine.time)).format(timeFormat) : '';
             item["No Surat Order Produksi"] = monitoringSpecificationMachine.productionOrder ? monitoringSpecificationMachine.productionOrder.orderNo : '';
-            item["Cart Number"] = monitoringSpecificationMachine.cartNumber;
+            item["Nomor Kereta"] = monitoringSpecificationMachine.cartNumber;
             //dinamic items
             for (var indicator of monitoringSpecificationMachine.items) {
-                item[indicator.indicator] = indicator ? indicator.value : '';
+                item[indicator.indicator + " " +"("+indicator.uom+")"] = indicator ? indicator.value : '';
                 xls.options[indicator.indicator] = "string";
             }
 
@@ -251,11 +247,11 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
         }
 
         xls.options["No"] = "number";
-        xls.options["Machine"] = "string";
+        xls.options["Mesin"] = "string";
         xls.options["Tanggal"] = "string";
         xls.options["Jam"] = "string";
         xls.options["No Surat Order Produksi"] = "string";
-        xls.options["Cart Number"] = "string";
+        xls.options["Nomor Kereta"] = "string";
 
 
         if (query.dateFrom && query.dateTo) {

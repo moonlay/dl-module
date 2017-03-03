@@ -79,31 +79,44 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
         }
     }
 
+    joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth) {
+        if (material !== null && materialConstruction !== null && yarnMaterialNo !== null && materialWidth !== null) {
+            return `'${material + " " + materialConstruction + " " + yarnMaterialNo + " " + materialWidth}'`;
+        } else {
+            return null;
+        }
+    }
+
     transform(data) {
         var result = data.map((salesContracts) => {
             var salesContract = salesContracts;
             if (salesContract.productionOrders)
-            var results = salesContract.productionOrders.map((productionOrder) => {
-                var orderUom = productionOrder.uom.unit;
-                var orderQuantity = productionOrder.orderQuantity;
-                return {
-                    salesContractNo: salesContract.salesContractNo ? `'${salesContract.salesContractNo.replace(/'/g, '"')}'` : null,
-                    productionOrderNo: productionOrder.orderNo ? `'${productionOrder.orderNo.replace(/'/g, '"')}'` : null,
-                    orderType: productionOrder.orderType.name ? `'${productionOrder.orderType.name.replace(/'/g, '"')}'` : null,
-                    processType: productionOrder.processType.name ? `'${productionOrder.processType.name.replace(/'/g, '"')}'` : null,
-                    material: productionOrder.material.name ? `'${productionOrder.material.name.replace(/'/g, '"')}'` : null,
-                    materialConstruction: productionOrder.materialConstruction ? `'${productionOrder.materialConstruction.name.replace(/'/g, '"')}'` : null,
-                    yarnMaterialNo: productionOrder.yarnMaterial ? `'${productionOrder.yarnMaterial.name.replace(/'/g, '"')}'` : null,
-                    materialWidth: productionOrder.materialWidth ? `'${productionOrder.materialWidth}'` : null,
-                    orderQuantity: productionOrder.orderQuantity ? `${productionOrder.orderQuantity}` : null,
-                    orderUom: productionOrder.uom ? `'${productionOrder.uom.unit.replace(/'/g, '"')}'` : null,
-                    buyer: productionOrder.buyer.name ? `'${productionOrder.buyer.name.replace(/'/g, '"')}'` : null,
-                    buyerType: productionOrder.buyer.type ? `'${productionOrder.buyer.type.replace(/'/g, '"')}'` : null,
-                    deliveryDate: productionOrder.deliveryDate ? `'${moment(productionOrder.deliveryDate).format("L")}'` : null,
-                    createdDate: productionOrder._createdDate ? `'${moment(productionOrder._createdDate).format("L")}'` : null,
-                    totalOrderConvertion: productionOrder.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null
+                var results = salesContract.productionOrders.map((productionOrder) => {
+                    var orderUom = productionOrder.uom.unit;
+                    var orderQuantity = productionOrder.orderQuantity;
+                    var material = productionOrder.material.name ? productionOrder.material.name.replace(/'/g, '"') : null;
+                    var materialConstruction = productionOrder.materialConstruction ? productionOrder.materialConstruction.name.replace(/'/g, '"') : null;
+                    var yarnMaterialNo = productionOrder.yarnMaterial ? productionOrder.yarnMaterial.name.replace(/'/g, '"') : null;
+                    var materialWidth = productionOrder.materialWidth ? productionOrder.materialWidth : null;
+                    return {
+                        salesContractNo: salesContract.salesContractNo ? `'${salesContract.salesContractNo.replace(/'/g, '"')}'` : null,
+                        productionOrderNo: productionOrder.orderNo ? `'${productionOrder.orderNo.replace(/'/g, '"')}'` : null,
+                        orderType: productionOrder.orderType.name ? `'${productionOrder.orderType.name.replace(/'/g, '"')}'` : null,
+                        processType: productionOrder.processType.name ? `'${productionOrder.processType.name.replace(/'/g, '"')}'` : null,
+                        material: productionOrder.material.name ? `'${productionOrder.material.name.replace(/'/g, '"')}'` : null,
+                        materialConstruction: productionOrder.materialConstruction ? `'${productionOrder.materialConstruction.name.replace(/'/g, '"')}'` : null,
+                        yarnMaterialNo: productionOrder.yarnMaterial ? `'${productionOrder.yarnMaterial.name.replace(/'/g, '"')}'` : null,
+                        materialWidth: productionOrder.materialWidth ? `'${productionOrder.materialWidth}'` : null,
+                        orderQuantity: productionOrder.orderQuantity ? `${productionOrder.orderQuantity}` : null,
+                        orderUom: productionOrder.uom ? `'${productionOrder.uom.unit.replace(/'/g, '"')}'` : null,
+                        buyer: productionOrder.buyer.name ? `'${productionOrder.buyer.name.replace(/'/g, '"')}'` : null,
+                        buyerType: productionOrder.buyer.type ? `'${productionOrder.buyer.type.replace(/'/g, '"')}'` : null,
+                        deliveryDate: productionOrder.deliveryDate ? `'${moment(productionOrder.deliveryDate).format("L")}'` : null,
+                        createdDate: productionOrder._createdDate ? `'${moment(productionOrder._createdDate).format("L")}'` : null,
+                        totalOrderConvertion: productionOrder.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
+                        construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth)
                 }
-            });
+                });
             return [].concat.apply([], results);
         });
         return Promise.resolve([].concat.apply([], result));
@@ -140,7 +153,7 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO DL_Fact_Sales_Contract_Temp([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion});\n`;
+                                var queryString = `INSERT INTO DL_Fact_Sales_Contract_Temp([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi], [Konstruksi]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion}, ${item.construction});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     command.push(this.insertQuery(request, sqlQuery));

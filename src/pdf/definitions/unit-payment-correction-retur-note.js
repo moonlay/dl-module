@@ -34,7 +34,7 @@ module.exports = function (unitPaymentCorrection) {
         }, '\n',
         {
             stack: [
-                `Nomor : ${unitPaymentCorrection.unitPaymentOrder.no}`,
+                `Nomor : ${unitPaymentCorrection.returNoteNo}`,
                 `(Atas Faktur Pajak Nomor : ${unitPaymentCorrection.unitPaymentOrder.incomeTaxNo} Tanggal : ${moment(unitPaymentCorrection.unitPaymentOrder.incomeTaxDate).format(locale.date.format)})`
             ],
             style: ['size09', 'center']

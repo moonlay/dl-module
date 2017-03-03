@@ -26,9 +26,9 @@ it('#01. should error when create with empty data ', function (done) {
         })
         .catch(e => {
             try {
-                
+
                 e.errors.should.have.property("name");
-               
+
                 e.errors.should.have.property("indicators");
                 done();
             }
@@ -48,5 +48,24 @@ it('#02. should success when create new data', function (done) {
         })
         .catch(e => {
             done(e);
+        });
+});
+
+it("#03. should error when create items with empty data", function (done) {
+    MachineType.getNewDataIndicators()
+        .then((data) => machineTypeManager.create(data))
+        .then((id) => {
+            done("Should not be able to create with empty data");
+        })
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
         });
 });

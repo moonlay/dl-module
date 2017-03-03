@@ -47,10 +47,25 @@ it("#02. should success when transforming data for dim-category", function(done)
 
 it("#03. should error when load empty data", function (done) {
     instanceManager.load({})
-        .then(id => {
+        .then((id) => {
             done("should error when create with empty data");
         })
-        .catch(e => {
+        .catch((e) => {
+            try {                
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});
+
+it("#04. should error when insert empty data", function (done) {
+    instanceManager.insertQuery(this.sql, "")
+        .then((id) => {
+            done("should error when create with empty data");
+        })
+        .catch((e) => {
             try {                
                 done();
             }

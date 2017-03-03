@@ -123,26 +123,42 @@ module.exports = function (kanban) {
             style: 'tableHeader'
         }, {
             text: 'FLOW PROSESS',
-            style: 'tableHeader'
-        }];
+            style: 'tableHeader',
+            colSpan: 2}, ''
+    ];
 
     var tbody = (function() {
         var flowProcess = [];
 
         for (var step of steps){
-            var stepCell = getTableCell(step.process);
-            flowProcess.push(getFlowProcess(stepCell));
-            for (var stepIndicator of step.stepIndicators){
-                    var stepIndicatorCell = getStepIndicatorCell(stepIndicator.name, stepIndicator.value, stepIndicator.uom);
-                    flowProcess.push(getFlowProcess(stepIndicatorCell));
-                }
+            var stepCell = getStepCell(step.process);
+            flowProcess.push(getFlowProcess(stepCell, ''));
+            flowProcess.push(getFlowProcess('', ''));
+            
+            var leftColumn = [];
+            var rightColumn = [];
+
+            for (i=0;i<step.stepIndicators.length;i++){
+                var stepIndicatorCell = getStepIndicatorCell(step.stepIndicators[i].name, step.stepIndicators[i].value, step.stepIndicators[i].uom);
+                if (i % 2 > 0)
+                    rightColumn.push(stepIndicatorCell);
+                else
+                    leftColumn.push(stepIndicatorCell);
+            }
+
+            if (leftColumn.length > rightColumn.length){
+                rightColumn.push('');
+            }
+            for (i=0;i<leftColumn.length;i++){
+                flowProcess.push(getFlowProcess(leftColumn[i], rightColumn[i]));
+            }
         }
-        
+        console.log(flowProcess);
         return flowProcess;
     })();
 
-    function getFlowProcess(row){
-        return [getTableCell(''), getTableCell(''), getTableCell(''), getTableCell(''), getTableCell(''), getTableCell(''), row];
+    function getFlowProcess(leftCell, rightCell){
+        return [getTableCell('\n'), getTableCell(''), getTableCell(''), getTableCell(''), getTableCell(''), getTableCell(''), leftCell, rightCell];
     }
 
     function getTableCell(cellValue){
@@ -152,28 +168,42 @@ module.exports = function (kanban) {
         };
     }
 
+    function getStepCell(cellValue){
+        return {
+            text: cellValue,
+            margin: [0, 5],
+            style: ['size08', 'center'],
+            colSpan:2,
+            rowSpan:2
+        };
+    }
+
+    function getStepIndicatorRow(leftCell, rightCell) {
+        return {columns: [leftCell, rightCell]};
+    }
+
     function getStepIndicatorCell(name, value, uom){
         var valueInUom = uom && uom.unit ? value + " " + uom.unit : value;
         return {
             width:'100%',
             columns: [{
-                        width: '35%',
+                        width: '*',
                         text: name
                     }, {
                         width: '5%',
                         text: ':'
                     }, {
-                        width: '*',
+                        width: '30%',
                         text: valueInUom
                     }],
             style: ['size08']
         };
-    }    
+    }        
 
 
     var table = [{
         table: {
-            widths: ['2%', '4%', '4%', '25%', '4%', '4%', '*'],
+            widths: ['2%', '4%', '4%', '*', '4%', '4%', '30%', '30%'],
             headerRows: 1,
             body: [].concat([thead], tbody)
         }
@@ -273,9 +303,9 @@ module.exports = function (kanban) {
     var pageBreak = [{text:'', pageBreak: 'after'}];	
 
     var kanbanPDFDefinition = {
-            pageSize: 'A5',
-            pageOrientation: 'landscape',
-            pageMargins: 20,
+            pageSize: 'A4',
+            pageOrientation: 'portrait',
+            pageMargins: 10,
             content: [].concat(header, subheader, subheader2, table, pageBreak, table2),
             styles: {
                 size06: {
