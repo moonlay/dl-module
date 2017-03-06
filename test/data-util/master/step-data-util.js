@@ -28,12 +28,12 @@ class StepDataUtil {
                 var process1 = {
                     name : `data 1 ${code}`,
                     value : `value 1 ${code}`,
-                    uom : `uom1 ${code}`
+                    uom : `uom 1 ${code}`
                 } 
                 var process2 = {
                     name : `data 2 ${code}`,
                     value : `value 2 ${code}`,
-                    uom : `uom2 ${code}`
+                    uom : `uom 2 ${code}`
                 }
                 data.stepIndicators.push(process1);
                 data.stepIndicators.push(process2); 
@@ -80,7 +80,7 @@ class StepDataUtil {
                         value : ''
                     }
                 ];
-                var data = {
+                 var data = {
                     process: _process,
                     itemMonitoring:_itemMonitoring,
                     stepIndicators:_stepIndicator

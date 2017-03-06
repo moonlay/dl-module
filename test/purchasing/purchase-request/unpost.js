@@ -6,7 +6,7 @@ var PurchaseRequestManager = require("../../../src/managers/purchasing/purchase-
 var purchaseRequestManager = null;
 var prStatusEnum = require("dl-models").purchasing.enum.PurchaseRequestStatus;
 
-before('#00. connect db', function (done) {
+before('#00. connect db', function(done) {
     helper.getDb()
         .then(db => {
             purchaseRequestManager = new PurchaseRequestManager(db, {
@@ -20,7 +20,8 @@ before('#00. connect db', function (done) {
 });
 
 var purchaseRequest;
-it('#01. should success when create new posted data', function (done) {
+
+it('#01. should success when create new posted data', function(done) {
     PurchaseRequest.getPostedData()
         .then(pr => {
             purchaseRequest = pr;
