@@ -35,6 +35,7 @@ var dataProcessType1;
 var dataProcessType2;
 var dataAccount1;
 var dataAccount2;
+
 it("#01. should success when create new support data (buyer, account, process type)", function(done) {
     var processType1 = processTypeDataUtil.getNewData();
     var buyer1 = buyerDataUtil.getNewData();
@@ -82,7 +83,7 @@ it("#01. should success when create new support data (buyer, account, process ty
 });
 
 it("#02. should success when delete all exist data production order", function(done) {
-    manager.read({size : 50})
+    manager.read({size : 100})
             .then(results => {
                 if(results.data.length === 0){
                     done();
