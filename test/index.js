@@ -22,6 +22,7 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');    
     test('@ETL/FACT-MONITORING-EVENT', './etl/fact-monitoring-event');    
     test('@ETL/FACT-SALES-CONTRACT', './etl/fact-sales-contract');    
+    test('@ETL/FACT-PRODUCTION-ORDER', './etl/fact-production-order');    
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
