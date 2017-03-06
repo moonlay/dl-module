@@ -14,8 +14,6 @@ class StepDataUtil {
     }
 
     getNewData() {
-        return UomDataUtil.getTestData()
-            .then(uom => {
                 var Model = require("dl-models").master.Step;
                 var data = new Model();
 
@@ -30,25 +28,20 @@ class StepDataUtil {
                 var process1 = {
                     name : `data 1 ${code}`,
                     value : `value 1 ${code}`,
-                    uomId : uom._id,
-                    uom : uom
+                    uom : `uom1 ${code}`
                 } 
                 var process2 = {
                     name : `data 2 ${code}`,
                     value : `value 2 ${code}`,
-                    uomId : uom._id,
-                    uom : uom
+                    uom : `uom2 ${code}`
                 }
                 data.stepIndicators.push(process1);
                 data.stepIndicators.push(process2); 
 
                 return Promise.resolve(data);
-            });
     }
 
     getTestData(data, items, indicator) {
-        return UomDataUtil.getTestData()
-            .then(uom => {
                 var _process = data ? data : "GAS SINGEING DAN DESIZING";
                 var _itemMonitoring = items ? items : [
                         'Speed (m/mnt)', 'Pressure Burner (mBar)', 'Titik Api', 'Pressure Saturator (Bar)', 'Hasil Bakar Bulu (baik/tidak)'
@@ -61,20 +54,17 @@ class StepDataUtil {
                     {
                         name : 'PRESS. BURNER',
                         value : '14',
-                        uomId : uom._id,
-                        uom : uom
+                        uom : 'mBar'
                     },
                     {
                         name : 'TEMP. SATURATOR',
                         value : '65',
-                        uomId : uom._id,
-                        uom : uom
+                        uom : 'C'
                     },
                     {
                         name : 'SPEED',
                         value : '90',
-                        uomId : uom._id,
-                        uom : uom
+                        uom : 'm/mnt'
                     },
                     {
                         name : 'TITIK API',
@@ -83,8 +73,7 @@ class StepDataUtil {
                     {
                         name : 'LEBAR KAIN',
                         value : '',
-                        uomId : uom._id,
-                        uom : uom
+                        uom : 'inchi'
                     },
                     {
                         name : 'COUNTER',
@@ -97,7 +86,6 @@ class StepDataUtil {
                     stepIndicators:_stepIndicator
                 };
                 return this.getSert(data);
-            });
     }
 }
 module.exports = new StepDataUtil();
