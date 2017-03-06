@@ -62,7 +62,7 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(1970, 1, 1);
+        var timestamp = new Date(time[0].start);
         return this.productionOrderManager.collection.find({
             _deleted: false,
             _updatedDate: {
