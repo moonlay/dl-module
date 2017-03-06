@@ -444,8 +444,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             $and: [{
                                 $and: [{
                                     "date": {
-                                        $gte: startdate,
-                                        $lte: enddate
+                                        $gte: new Date(startdate),
+                                        $lte: new Date(enddate)
                                     }
                                 }, {
                                         "_deleted": false
@@ -518,8 +518,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                 $and: [{
                                     $and: [{
                                         "date": {
-                                            $gte: startdate,
-                                            $lte: enddate
+                                            $gte: new Date(startdate),
+                                            $lte: new Date(enddate)
                                         }
                                     }, {
                                             "_deleted": false
@@ -555,8 +555,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     $and: [{
                                         $and: [{
                                             "date": {
-                                                $gte: startdate,
-                                                $lte: enddate
+                                                $gte: new Date(startdate),
+                                                $lte: new Date(enddate)
                                             }
                                         }, {
                                                 "_deleted": false
@@ -662,8 +662,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             $and: [{
                                 $and: [{
                                     "date": {
-                                        $gte: startdate,
-                                        $lte: enddate
+                                        $gte: new Date(startdate),
+                                        $lte: new Date(enddate)
                                     }
                                 }, {
                                         "_deleted": false
@@ -736,8 +736,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             $and: [{
                                 $and: [{
                                     "date": {
-                                        $gte: startdate,
-                                        $lte: enddate
+                                        $gte: new Date(startdate),
+                                        $lte: new Date(enddate)
                                     }
                                 }, {
                                         "_deleted": false
