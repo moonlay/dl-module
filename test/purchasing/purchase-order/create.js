@@ -13,7 +13,7 @@ var PurchaseOrderManager = require("../../../src/managers/purchasing/purchase-or
 var purchaseOrderManager = null;
 var purchaseOrder;
 
-before('#00. connect db', function(done) {
+before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
             purchaseRequestManager = new PurchaseRequestManager(db, {
@@ -38,7 +38,7 @@ before('#00. connect db', function(done) {
         });
 });
 
-it('#01. should failed when create new purchase-order with unposted purchase-request', function(done) {
+it('#01. should failed when create new purchase-order with unposted purchase-request', function (done) {
     purchaseOrderDataUtil.getNewData(purchaseRequest)
         .then((purchaseOrder) => {
             return purchaseOrderManager.create(purchaseOrder);
@@ -52,40 +52,33 @@ it('#01. should failed when create new purchase-order with unposted purchase-req
         });
 });
 
-it('#02. should success when create new purchase-order with posted purchase-request', function(done) {
-
+it('#02. should success when create new purchase-order with posted purchase-request', function (done) {
     purchaseRequestManager.post([purchaseRequest])
-        .then(purchaseRequestIds => {
-            var prId = purchaseRequestIds[0];
-            purchaseRequestManager.getSingleById(prId)
-                .then(pr => {
-                    purchaseRequest = pr;
-                    purchaseOrderDataUtil.getNewData(purchaseRequest)
-                        .then((purchaseOrder) => {
-                            return purchaseOrderManager.create(purchaseOrder);
-                        })
-                        .then((id) => {
-                            return purchaseOrderManager.getSingleById(id);
-                        })
-                        .then(po => {
-                            purchaseOrder = po;
-                            // validatePO(purchaseOrder);
-                            done();
-                        })
-                        .catch(e => {
-                            done(e);
-                        });
+        .then(pr => {
+            purchaseRequest = pr[0];
+            purchaseOrderDataUtil.getNewData(purchaseRequest)
+                .then((purchaseOrder) => {
+                    return purchaseOrderManager.create(purchaseOrder);
+                })
+                .then((id) => {
+                    return purchaseOrderManager.getSingleById(id);
+                })
+                .then(po => {
+                    purchaseOrder = po;
+                    // validatePO(purchaseOrder);
+                    done();
                 })
                 .catch(e => {
                     done(e);
                 });
+
         })
         .catch(e => {
             done(e);
         });
 });
 
-it('#03. purchase-request.isUsed should be true after create purchase-order and purchase-request.purchaseOrderIds should contains puchase-orderId', function(done) {
+it('#03. purchase-request.isUsed should be true after create purchase-order and purchase-request.purchaseOrderIds should contains puchase-orderId', function (done) {
     var prId = purchaseRequest._id;
     purchaseRequestManager.getSingleById(prId)
         .then(pr => {
@@ -102,7 +95,7 @@ it('#03. purchase-request.isUsed should be true after create purchase-order and 
         });
 });
 
-it('#04. purchase-order items should the same as purchase-request items', function(done) {
+it('#04. purchase-order items should the same as purchase-request items', function (done) {
     purchaseOrder.items.length.should.equal(purchaseRequest.items.length);
     for (var poItem of purchaseOrder.items) {
         var prItem = purchaseRequest.items.find(prItem => {
@@ -115,7 +108,7 @@ it('#04. purchase-order items should the same as purchase-request items', functi
     done();
 });
 
-it('#05. should failed when create new purchase-order with already used purchase-request', function(done) {
+it('#05. should failed when create new purchase-order with already used purchase-request', function (done) {
     purchaseOrderDataUtil.getNewData(purchaseRequest)
         .then((purchaseOrder) => {
             return purchaseOrderManager.create(purchaseOrder);

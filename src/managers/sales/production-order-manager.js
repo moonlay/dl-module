@@ -239,14 +239,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if (!valid.deliveryDate || valid.deliveryDate === "") {
                      errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.isRequired:%s is required", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"deliveryDate tidak boleh kosong";
                 }
-                else{
-                    valid.deliveryDate=new Date(valid.deliveryDate);
-                    var today=new Date();
-                    today.setHours(0,0,0,0);
-                    if(today>valid.deliveryDate){
-                        errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.shouldNot:%s should not be less than today's date", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"deliveryDate tidak boleh kurang dari tanggal hari ini";
-                    }
-                }
+                // else{
+                //     valid.deliveryDate=new Date(valid.deliveryDate);
+                //     var today=new Date();
+                //     today.setHours(0,0,0,0);
+                //     if(today>valid.deliveryDate){
+                //         errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.shouldNot:%s should not be less than today's date", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"deliveryDate tidak boleh kurang dari tanggal hari ini";
+                //     }
+                // }
 
                 if(_order){
                     if(_order.name.trim().toLowerCase()=="printing"){
