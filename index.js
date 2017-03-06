@@ -125,6 +125,7 @@ module.exports = {
         dimUnit: require("./src/etl/dim-unit-etl-manager"),
         dimMachine: require("./src/etl/dim-machine-etl-manager"),
         factMonitoringEvent: require("./src/etl/fact-monitoring-event-etl-manager"),
+        factProductionOrder: require("./src/etl/fact-production-order-etl-manager"),
         factSalesContract: require("./src/etl/fact-sales-contract-etl-manager")
     }
 }
