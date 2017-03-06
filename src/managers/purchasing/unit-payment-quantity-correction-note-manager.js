@@ -7,6 +7,7 @@ var map = DLModels.map;
 var i18n = require('dl-i18n');
 var PurchaseOrderManager = require('./purchase-order-manager');
 var UnitPaymentCorrectionNote = DLModels.purchasing.UnitPaymentCorrectionNote;
+var UnitPaymentOrder = DLModels.purchasing.UnitPaymentOrder;
 var UnitPaymentOrderManager = require('./unit-payment-order-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
@@ -315,7 +316,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                 } else {
                                     correctionQty = fulfillment.unitReceiptNoteDeliveredQuantity - realization.quantity;
                                 }
-                                
+
                                 _correction.correctionDate = unitPaymentPriceCorrectionNote.date;
                                 _correction.correctionNo = unitPaymentPriceCorrectionNote.no;
                                 _correction.correctionRemark = `Koreksi ${unitPaymentPriceCorrectionNote.correctionType}`;
@@ -326,7 +327,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                             }
                         }
                     }
-                    return this.purchaseOrderManager.update(purchaseOrder);
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 })
             jobs.push(job);
         })
@@ -377,7 +378,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                     item.purchaseOrder = purchaseOrder;
                                 }
                             }
-                            return this.unitReceiptNoteManager.update(unitReceiptNote);
+                            return this.unitReceiptNoteManager.updateCollectionUnitReceiptNote(unitReceiptNote);
                         })
                 })
             jobs.push(job);
@@ -403,6 +404,10 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                 unitPaymentOrderItem.unitReceiptNote = _unitReceiptNote;
                             }
                         }
+                        if (!_unitPaymentOrder.stamp) {
+                            _unitPaymentOrder = new UnitPaymentOrder(_unitPaymentOrder);
+                        }
+                        _unitPaymentOrder.stamp(this.user.username, 'manager');
                         return this.unitPaymentOrderManager.collection.update(_unitPaymentOrder)
                     })
                     .then((results) => {

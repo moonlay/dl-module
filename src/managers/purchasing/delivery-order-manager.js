@@ -343,7 +343,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             prItem.deliveryOrderNos.push(deliveryOrder.no);
                         }
                     }
-                    return this.purchaseRequestManager.update(purchaseRequest);
+                    return this.purchaseRequestManager.updateCollectionPR(purchaseRequest);
                 })
             jobs.push(job);
         })
@@ -412,14 +412,11 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
                         .then((purchaseRequest) => {
                             purchaseRequest.status = purchaseOrder.isClosed ? prStatusEnum.COMPLETE : prStatusEnum.ARRIVING;
-                            return this.purchaseRequestManager.update(purchaseRequest)
-                        })
-                        .then(purchaseRequestId => {
-                            return this.purchaseRequestManager.getSingleById(purchaseRequestId);
+                            return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
                         })
                         .then((purchaseRequest) => {
                             purchaseOrder.purchaseRequest = purchaseRequest;
-                            return this.purchaseOrderManager.update(purchaseOrder);
+                            return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                         });
                 })
             jobs.push(job);
@@ -569,8 +566,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             }
                         }
                     }
-                    return this.purchaseRequestManager.update(purchaseRequest);
-                })
+                    return this.purchaseRequestManager.updateCollectionPR(purchaseRequest);
+                });
             jobs.push(job);
         })
 
@@ -588,83 +585,83 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             map.get(key).push(realization);
         }
 
-        var jobs = [];
-        map.forEach((realizations, purchaseOrderId) => {
-            var job = this.purchaseOrderManager.getSingleById(purchaseOrderId)
-                .then((purchaseOrder) => {
-                    for (var realization of realizations) {
-                        var productId = realization.productId;
-                        var poItem = purchaseOrder.items.find(item => item.product._id.toString() === productId.toString());
-                        if (poItem) {
-                            var deliveryOrder = realization.deliveryOrder;
-                            poItem.fulfillments = poItem.fulfillments || [];
-                            if (deliveryOrder._id) {
-                                var item = poItem.fulfillments.find(item => item.deliveryOrderNo === deliveryOrder.no);
-                                if (item) {
-                                    var index = poItem.fulfillments.indexOf(item);
-                                    poItem.fulfillments[index].deliveryOrderNo = deliveryOrder.no;
-                                    poItem.fulfillments[index].deliveryOrderDeliveredQuantity = realization.deliveredQuantity;
-                                    poItem.fulfillments[index].deliveryOrderDate = deliveryOrder.date;
-                                    poItem.fulfillments[index].supplierDoDate = deliveryOrder.supplierDoDate;
-                                } else {
-                                    var fulfillment = {
-                                        deliveryOrderNo: deliveryOrder.no,
-                                        deliveryOrderDeliveredQuantity: realization.deliveredQuantity,
-                                        deliveryOrderDate: deliveryOrder.date,
-                                        supplierDoDate: deliveryOrder.supplierDoDate
-                                    };
-
+        return this.getSingleById(realization.deliveryOrder._id)
+            .then((oldDeliveryOrder) => {
+                var jobs = [];
+                map.forEach((realizations, purchaseOrderId) => {
+                    var job = this.purchaseOrderManager.getSingleById(purchaseOrderId)
+                        .then((purchaseOrder) => {
+                            for (var realization of realizations) {
+                                var productId = realization.productId;
+                                var poItem = purchaseOrder.items.find(item => item.product._id.toString() === productId.toString());
+                                if (poItem) {
+                                    var deliveryOrder = realization.deliveryOrder;
                                     poItem.fulfillments = poItem.fulfillments || [];
-                                    poItem.fulfillments.push(fulfillment);
+                                    if (deliveryOrder._id) {
+                                        var item = poItem.fulfillments.find(item => item.deliveryOrderNo === oldDeliveryOrder.no);
+                                        if (item) {
+                                            var index = poItem.fulfillments.indexOf(item);
+                                            poItem.fulfillments[index].deliveryOrderNo = deliveryOrder.no;
+                                            poItem.fulfillments[index].deliveryOrderDeliveredQuantity = realization.deliveredQuantity;
+                                            poItem.fulfillments[index].deliveryOrderDate = deliveryOrder.date;
+                                            poItem.fulfillments[index].supplierDoDate = deliveryOrder.supplierDoDate;
+                                        } else {
+                                            var fulfillment = {
+                                                deliveryOrderNo: deliveryOrder.no,
+                                                deliveryOrderDeliveredQuantity: realization.deliveredQuantity,
+                                                deliveryOrderDate: deliveryOrder.date,
+                                                supplierDoDate: deliveryOrder.supplierDoDate
+                                            };
+
+                                            poItem.fulfillments = poItem.fulfillments || [];
+                                            poItem.fulfillments.push(fulfillment);
+                                        }
+                                    }
+                                    var _listDO = poItem.fulfillments.map((fulfillment) => fulfillment.deliveryOrderNo);
+                                    var _listDOUnique = _listDO.filter(function (elem, index, self) {
+                                        return index == self.indexOf(elem);
+                                    })
+
+                                    poItem.realizationQuantity = _listDOUnique
+                                        .map(deliveryOrderNo => {
+                                            var _fulfillment = poItem.fulfillments.find((fulfillment) => fulfillment.deliveryOrderNo === deliveryOrderNo);
+                                            return _fulfillment ? _fulfillment.deliveryOrderDeliveredQuantity : 0;
+                                        })
+                                        .reduce((prev, curr, index) => {
+                                            return prev + curr;
+                                        }, 0);
+                                    if (purchaseOrder.status.value <= 5 || !purchaseOrder.isClosed) {
+                                        poItem.isClosed = poItem.realizationQuantity === poItem.dealQuantity;
+                                    }
                                 }
                             }
-                            var _listDO = poItem.fulfillments.map((fulfillment) => fulfillment.deliveryOrderNo);
-                            var _listDOUnique = _listDO.filter(function (elem, index, self) {
-                                return index == self.indexOf(elem);
-                            })
-
-                            poItem.realizationQuantity = _listDOUnique
-                                .map(deliveryOrderNo => {
-                                    var _fulfillment = poItem.fulfillments.find((fulfillment) => fulfillment.deliveryOrderNo === deliveryOrderNo);
-                                    return _fulfillment ? _fulfillment.deliveryOrderDeliveredQuantity : 0;
-                                })
-                                .reduce((prev, curr, index) => {
-                                    return prev + curr;
-                                }, 0);
                             if (purchaseOrder.status.value <= 5 || !purchaseOrder.isClosed) {
-                                poItem.isClosed = poItem.realizationQuantity === poItem.dealQuantity;
+                                purchaseOrder.isClosed = purchaseOrder.items
+                                    .map((item) => item.isClosed)
+                                    .reduce((prev, curr, index) => {
+                                        return prev && curr
+                                    }, true);
                             }
-                        }
-                    }
-                    if (purchaseOrder.status.value <= 5 || !purchaseOrder.isClosed) {
-                        purchaseOrder.isClosed = purchaseOrder.items
-                            .map((item) => item.isClosed)
-                            .reduce((prev, curr, index) => {
-                                return prev && curr
-                            }, true);
-                    }
-                    if (purchaseOrder.status.value <= 5) {
-                        purchaseOrder.status = purchaseOrder.isClosed ? poStatusEnum.ARRIVED : poStatusEnum.ARRIVING;
-                    }
-                    return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
-                        .then((purchaseRequest) => {
-                            purchaseRequest.status = purchaseOrder.isClosed ? prStatusEnum.COMPLETE : prStatusEnum.ARRIVING;
-                            return this.purchaseRequestManager.update(purchaseRequest)
+                            if (purchaseOrder.status.value <= 5) {
+                                purchaseOrder.status = purchaseOrder.isClosed ? poStatusEnum.ARRIVED : poStatusEnum.ARRIVING;
+                            }
+                            return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
+                                .then((purchaseRequest) => {
+                                    purchaseRequest.status = purchaseOrder.isClosed ? prStatusEnum.COMPLETE : prStatusEnum.ARRIVING;
+                                    return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
+                                })
+                                .then((purchaseRequest) => {
+                                    purchaseOrder.purchaseRequest = purchaseRequest;
+                                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                                });
                         })
-                        .then(purchaseRequestId => {
-                            return this.purchaseRequestManager.getSingleById(purchaseRequestId);
-                        })
-                        .then((purchaseRequest) => {
-                            purchaseOrder.purchaseRequest = purchaseRequest;
-                            return this.purchaseOrderManager.update(purchaseOrder);
-                        });
+                    jobs.push(job);
                 })
-            jobs.push(job);
-        })
 
-        return Promise.all(jobs).then((results) => {
-            return Promise.resolve(realizations);
-        })
+                return Promise.all(jobs).then((results) => {
+                    return Promise.resolve(realizations);
+                })
+            })
     }
 
     updatePurchaseRequestDeleteDO(realizations) {
@@ -700,7 +697,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
                     purchaseRequest.status = prStatus > 0 ? prStatusEnum.ARRIVING : prStatusEnum.ORDERED;
 
-                    return this.purchaseRequestManager.update(purchaseRequest);
+                    return this.purchaseRequestManager.updateCollectionPR(purchaseRequest);
                 })
             jobs.push(job);
         })
@@ -771,7 +768,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             if (purchaseOrder.status.value <= 5) {
                                 purchaseOrder.status = poStatus > 0 ? poStatusEnum.ARRIVING : poStatusEnum.ORDERED;
                             }
-                            return this.purchaseOrderManager.update(purchaseOrder);
+                            return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                         });
                 })
             jobs.push(job);
@@ -943,5 +940,19 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         });
                 });
             });
+    }
+
+    updateCollectionDeliveryOrder(deliveryOrder) {
+        if (!deliveryOrder.stamp) {
+            deliveryOrder = new DeliveryOrder(deliveryOrder);
+        }
+        deliveryOrder.stamp(this.user.username, 'manager');
+        return this.collection
+            .updateOne({
+                _id: deliveryOrder._id
+            }, {
+                $set: deliveryOrder
+            })
+            .then((result) => Promise.resolve(deliveryOrder._id));
     }
 };
