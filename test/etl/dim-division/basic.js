@@ -73,3 +73,17 @@ it("#04. should error when insert empty data", function (done) {
             }
         });
 });
+
+it("#05. should success when load data", function (done) {
+    var data = [{
+        divisionCode: "",
+        divisionName: ""
+    }]
+    instanceManager.load(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
