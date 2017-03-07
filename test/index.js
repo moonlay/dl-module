@@ -13,6 +13,7 @@ describe('#dl-module', function (done) {
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
+    test('@ETL/DIM-BUYER', './etl/dim-buyer');
     test('@ETL/DIM-CATEGORY', './etl/dim-category');
     test('@ETL/DIM-DIVISION', './etl/dim-division');
     test('@ETL/DIM-SUPPLIER', './etl/dim-supplier');
