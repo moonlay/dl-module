@@ -8,20 +8,20 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var WeavingSalesContractManager = require("../managers/sales/weaving-sales-contract-manager");
+var FinishingPrintingSalesContractManager = require("../managers/sales/finishing-printing-sales-contract-manager");
 
-module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
+module.exports = class FactFinishingPrintingSalesContractManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.weavingSalesContractManager = new WeavingSalesContractManager(db, user);
+        this.finishingPrintingSalesContractManager = new FinishingPrintingSalesContractManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
 
     run() {
         var startedDate = new Date()
         this.migrationLog.insert({
-            description: "Fact Weaving Sales Contract from MongoDB to Azure DWH",
+            description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
             start: startedDate,
         })
         return this.timestamp()
@@ -32,7 +32,7 @@ module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Weaving Sales Contract from MongoDB to Azure DWH",
+                    description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -44,7 +44,7 @@ module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Weaving Sales Contract from MongoDB to Azure DWH",
+                    description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -56,14 +56,14 @@ module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
 
     timestamp() {
         return this.migrationLog.find({
-            description: "Fact Weaving Sales Contract from MongoDB to Azure DWH",
+            description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
             status: "Successful"
         }).sort({ finish: -1 }).limit(1).toArray()
     }
 
     extract(time) {
         var timestamp = new Date(1970, 1, 1);
-        return this.weavingSalesContractManager.collection.find({
+        return this.finishingPrintingSalesContractManager.collection.find({
             _deleted: false,
             _updatedDate: {
                 $gt: timestamp
@@ -106,7 +106,7 @@ module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
                 orderUom: item.uom ? `'${item.uom.unit.replace(/'/g, '"')}'` : null,
                 totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
                 buyerCode: item.buyer ? `'${item.buyer.code}'` : null,
-                productionType: `'${"Weaving"}'`,
+                productionType: `'${"Finishing Printing"}'`,
                 construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
                 materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
                 materialWidth: item.materialWidth ? `'${item.materialWidth}'` : null,
