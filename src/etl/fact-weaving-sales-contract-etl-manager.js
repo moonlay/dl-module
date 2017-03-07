@@ -8,20 +8,20 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var SalesContractManager = require("../managers/sales/sales-contract-manager");
+var WeavingSalesContractManager = require("../managers/sales/weaving-sales-contract-manager");
 
-module.exports = class FactSalesContractEtlManager extends BaseManager {
+module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.salesContractManager = new SalesContractManager(db, user);
+        this.weavingSalesContractManager = new WeavingSalesContractManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
 
     run() {
         var startedDate = new Date()
         this.migrationLog.insert({
-            description: "Fact Sales Contract from MongoDB to Azure DWH",
+            description: "Fact Weaving Sales Contract from MongoDB to Azure DWH",
             start: startedDate,
         })
         return this.timestamp()
@@ -32,7 +32,7 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Sales Contract from MongoDB to Azure DWH",
+                    description: "Fact Weaving Sales Contract from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -44,7 +44,7 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Sales Contract from MongoDB to Azure DWH",
+                    description: "Fact Weaving Sales Contract from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -56,14 +56,14 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
 
     timestamp() {
         return this.migrationLog.find({
-            description: "Fact Sales Contract from MongoDB to Azure DWH",
+            description: "Fact Weaving Sales Contract from MongoDB to Azure DWH",
             status: "Successful"
         }).sort({ finish: -1 }).limit(1).toArray()
     }
 
     extract(time) {
-        var timestamp = new Date(time[0].finish);
-        return this.salesContractManager.collection.find({
+        var timestamp = new Date(1970, 1, 1);
+        return this.weavingSalesContractManager.collection.find({
             _deleted: false,
             _updatedDate: {
                 $gt: timestamp
@@ -152,7 +152,7 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
                             if (item) {
                                 var queryString = `INSERT INTO DL_Fact_Sales_Contract_Temp([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi], [Konstruksi], [Kode Buyer]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion}, ${item.construction}, ${item.buyerCode});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 1000 == 0) {
+                                if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "";
                                 }
