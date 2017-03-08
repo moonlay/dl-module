@@ -50,7 +50,7 @@ it("#03. should error when load empty data", function (done) {
             done("should error when create with empty data");
         })
         .catch(e => {
-            try {                
+            try {
                 done();
             }
             catch (ex) {
@@ -65,7 +65,7 @@ it("#04. should error when insert empty data", function (done) {
             done("should error when create with empty data");
         })
         .catch((e) => {
-            try {                
+            try {
                 done();
             }
             catch (ex) {
@@ -76,7 +76,9 @@ it("#04. should error when insert empty data", function (done) {
 
 it("#05. should success when load data", function (done) {
     var data = [];
-    instanceManager.load(data)
+    instanceManager.extract([{ finish: new Date(1970, 1, 1) }])
+        .then((data) => instanceManager.transform([]))
+        .then((data) => instanceManager.load([]))
         .then(() => {
             done();
         })
