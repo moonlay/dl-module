@@ -74,15 +74,15 @@ it("#04. should error when insert empty data", function (done) {
         });
 });
 
-it("#05. should success when load data", function (done) {
-    var data = [];
-    instanceManager.extract([{ finish: new Date(1970, 1, 1) }])
-        .then((data) => instanceManager.transform([]))
-        .then((data) => instanceManager.load([]))
-        .then(() => {
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#05. should success when load data", function (done) {
+//     var data = [];
+//     instanceManager.extract([{ finish: new Date(1970, 1, 1) }])
+//         .then((data) => instanceManager.transform([]))
+//         .then((data) => instanceManager.load([]))
+//         .then(() => {
+//             done();
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
