@@ -8,7 +8,6 @@ var map = DLModels.map;
 var ProductionOrder=DLModels.sales.ProductionOrder;
 var ProductionOrderDetail=DLModels.sales.ProductionOrderDetail;
 var ProductionOrderLampStandard=DLModels.sales.ProductionOrderLampStandard;
-var DailyOperation=DLModels.production.finishingPrinting.DailyOperation;
 var LampStandardManager=require('../master/lamp-standard-manager');
 var BuyerManager=require('../master/buyer-manager');
 var UomManager = require('../master/uom-manager');
@@ -24,7 +23,6 @@ var AccountManager = require ('../auth/account-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var generateCode = require("../../utils/code-generator");
-var DailyOperationCollection=null;
 var assert = require('assert');
 
 module.exports = class ProductionOrderManager extends BaseManager {
@@ -32,7 +30,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
         super(db, user);
         
         this.collection = this.db.collection(map.sales.collection.ProductionOrder);
-        DailyOperationCollection=this.db.collection(map.production.finishingPrinting.collection.DailyOperation);
         this.LampStandardManager = new LampStandardManager(db, user);
         this.BuyerManager= new BuyerManager(db,user);
         this.UomManager = new UomManager(db, user);
