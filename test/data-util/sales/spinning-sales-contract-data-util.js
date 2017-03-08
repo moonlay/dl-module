@@ -35,6 +35,7 @@ class SpinningSalesContractDataUtil {
                     orderQuantity:30,
                     shippingQuantityTolerance:5,
                     incomeTax:'Exclude PPn',
+                    price:8000,
 
                     paymentMethod:`Telegraphic Transfer (TT)`,
                     paymentRequirement:`Payment Requirement`,

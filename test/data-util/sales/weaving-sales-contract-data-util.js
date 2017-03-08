@@ -48,6 +48,7 @@ class WeavingSalesContractDataUtil {
                     shippingQuantityTolerance:5,
                     materialWidth:'Width',
                     incomeTax:'Exclude PPn',
+                    price:8000,
 
                     paymentMethod:`Telegraphic Transfer (TT)`,
                     paymentRequirement:`Payment Requirement`,
