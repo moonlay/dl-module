@@ -1,4 +1,4 @@
-var Say = require('../../utils/say');
+var say = require('../../utils/say');
 var global = require('../../global');
 
 module.exports = function (unitPaymentCorrection) {
@@ -262,10 +262,10 @@ module.exports = function (unitPaymentCorrection) {
     var total = unitPaymentCorrection.correctionType === "Jumlah" ? totalKoreksiJumlah : totalKoreksiHarga;
 
     var terbilang = unitPaymentCorrection.correctionType === "Jumlah" ? {
-        text: `Terbilang : ${Say(sum + useIncomeTax)}`,
+        text: `Terbilang : ${say(sum + useIncomeTax, unitPaymentCorrection.items.find(r => true).currency.description)}`,
         style: ['size09', 'bold']
     } : {
-            text: `Terbilang : ${Say(sum)}`,
+            text: `Terbilang : ${say(sum, unitPaymentCorrection.items.find(r => true).currency.description)}`,
             style: ['size09', 'bold']
         };
 

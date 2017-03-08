@@ -128,6 +128,13 @@ module.exports = class MachineManager extends BaseManager {
                 if (valid.machineType && !_machineType)
                     errors["machineType"] = i18n.__("Machine.machineType.isExists:%s is not exists", i18n.__("Machine.machineType._:Machine Type")); //"MachineType tidak ada";
 
+                if(valid.monthlyCapacity && valid.monthlyCapacity !== '')
+                {
+                    if(valid.monthlyCapacity < 0)
+                    {
+                        errors["monthlyCapacity"] = i18n.__("Machine.monthlyCapacity.notLess:%s should not be less than 0", i18n.__("Machine.monthlyCapacity._:Monthly Capacity")); //"monthlyCapacity tidak boleh kurang dari 0";
+                    }
+                }
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;

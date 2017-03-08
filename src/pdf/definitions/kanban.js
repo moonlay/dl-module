@@ -122,7 +122,7 @@ module.exports = function (kanban) {
             text: 'PARAF',
             style: 'tableHeader'
         }, {
-            text: 'FLOW PROSESS',
+            text: 'FLOW PROSES',
             style: 'tableHeader',
             colSpan: 2}, ''
     ];
@@ -183,7 +183,7 @@ module.exports = function (kanban) {
     }
 
     function getStepIndicatorCell(name, value, uom){
-        var valueInUom = uom && uom.unit ? value + " " + uom.unit : value;
+        var valueInUom = uom ? value + " " + uom : value;
         return {
             width:'100%',
             columns: [{
@@ -300,7 +300,7 @@ module.exports = function (kanban) {
                         }
                     }];
                 
-    var pageBreak = [{text:'', pageBreak: 'after'}];	
+    var pageBreak = [{text:'\n\n'}];	
 
     var kanbanPDFDefinition = {
             pageSize: 'A4',
