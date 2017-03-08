@@ -113,10 +113,6 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                     errors["paymentMethod"]=i18n.__("SpinningSalesContract.paymentMethod.isRequired:%s is required", i18n.__("SpinningSalesContract.paymentMethod._:PaymentMethod")); //"paymentMethod tidak boleh kosong";
                 }
 
-                if(!valid.paymentRequirement || valid.paymentRequirement===''){
-                    errors["paymentRequirement"]=i18n.__("SpinningSalesContract.paymentRequirement.isRequired:%s is required", i18n.__("SpinningSalesContract.paymentRequirement._:PaymentRequirement")); //"paymentRequirement tidak boleh kosong";
-                }
-
                 if(!_quality){
                     errors["quality"]=i18n.__("SpinningSalesContract.quality.isRequired:%s is not exsist", i18n.__("SpinningSalesContract.quality._:Quality")); //"quality tidak boleh kosong";
                 }
@@ -129,9 +125,6 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                 else if (!valid.comodityId)
                     errors["comodity"] = i18n.__("SpinningSalesContract.comodity.isRequired:%s is required", i18n.__("SpinningSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
 
-                if(!valid.rollLength || valid.rollLength===''){
-                    errors["rollLength"]=i18n.__("SpinningSalesContract.rollLength.isRequired:%s is required", i18n.__("SpinningSalesContract.rollLength._:RollLength")); //"rollLength tidak boleh kosong";
-                }
 
                 if(!valid.condition || valid.condition===''){
                     errors["condition"]=i18n.__("SpinningSalesContract.condition.isRequired:%s is required", i18n.__("SpinningSalesContract.condition._:Condition")); //"condition tidak boleh kosong";
@@ -161,9 +154,13 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                     errors["shippingQuantityTolerance"] =i18n.__("SpinningSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("SpinningSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
 
+                if (!valid.price || valid.price === 0)
+                    errors["price"] = i18n.__("SpinningSalesContract.price.isRequired:%s is required", i18n.__("SpinningSalesContract.price._:Price")); //"price tidak boleh kosong";
+                
                 if(!valid.deliveredTo || valid.deliveredTo===''){
                     errors["deliveredTo"]=i18n.__("SpinningSalesContract.deliveredTo.isRequired:%s is required", i18n.__("SpinningSalesContract.deliveredTo._:DeliveredTo")); //"deliveredTo tidak boleh kosong";
                 }
+
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                      errors["deliverySchedule"] = i18n.__("SpinningSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("SpinningSalesContract.deliverySchedule._:DeliverySchedule")); //"deliverySchedule tidak boleh kosong";
                 }
@@ -235,27 +232,27 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
     
-//    pdf(id) {
-//         return new Promise((resolve, reject) => {
+   pdf(id) {
+        return new Promise((resolve, reject) => {
 
-//             this.getSingleById(id)
-//                 .then(productionOrder => {
+            this.getSingleById(id)
+                .then(salesContract => {
                     
-//                     var getDefinition = require("../../pdf/definitions/production-order");
-//                     var definition = getDefinition(productionOrder);
+                    var getDefinition = require("../../pdf/definitions/finishing-printing-sales-contract");
+                    var definition = getDefinition(salesContract);
 
-//                     var generatePdf = require("../../pdf/pdf-generator");
-//                     generatePdf(definition)
-//                         .then(binary => {
-//                             resolve(binary);
-//                         })
-//                         .catch(e => {
-//                             reject(e);
-//                         });
-//                 })
-//                 .catch(e => {
-//                     reject(e);
-//                 });
-//         });
-//     }
+                    var generatePdf = require("../../pdf/pdf-generator");
+                    generatePdf(definition)
+                        .then(binary => {
+                            resolve(binary);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
 }

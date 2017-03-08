@@ -47,7 +47,6 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
         var query = {};
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
-            
             var filterSalesContract = {
                 'salesContractNo': {
                     '$regex': regex
@@ -101,10 +100,11 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
         var getComodity= ObjectId.isValid(valid.comodityId) ? this.ComodityManager.getSingleByIdOrDefault(valid.comodityId) : Promise.resolve(null);
         var getQuality= ObjectId.isValid(valid.qualityId) ? this.QualityManager.getSingleByIdOrDefault(valid.qualityId) : Promise.resolve(null);
         var getBankAccount= ObjectId.isValid(valid.accountBankId) ? this.AccountBankManager.getSingleByIdOrDefault(valid.accountBankId) : Promise.resolve(null);
-
+        var getAgent = ObjectId.isValid(valid.agentId) ? this.BuyerManager.getSingleByIdOrDefault(valid.agentId) : Promise.resolve(null);
+        
         
 
-        return Promise.all([getSalesContractPromise, getBuyer, getUom,  getProduct, getProcessType, getOrderType, getYarnMaterial, getMaterialConstruction, getComodity, getQuality, getBankAccount])
+        return Promise.all([getSalesContractPromise, getBuyer, getUom,  getProduct, getProcessType, getOrderType, getYarnMaterial, getMaterialConstruction, getComodity, getQuality, getBankAccount,getAgent])
             .then(results => {
                 var _salesContract = results[0];
                 var _buyer = results[1];
@@ -117,6 +117,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 var _comodity=results[8];
                 var _quality=results[9];
                 var _bank=results[10];
+                var _agent=results[11];
 
                 if (valid.uom) {
                     if (!valid.uom.unit || valid.uom.unit == '')
@@ -145,10 +146,6 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
 
                 if(!valid.paymentMethod || valid.paymentMethod===''){
                     errors["paymentMethod"]=i18n.__("FinishingPrintingSalesContract.paymentMethod.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.paymentMethod._:PaymentMethod")); //"paymentMethod tidak boleh kosong";
-                }
-
-                if(!valid.paymentRequirement || valid.paymentRequirement===''){
-                    errors["paymentRequirement"]=i18n.__("FinishingPrintingSalesContract.paymentRequirement.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.paymentRequirement._:PaymentRequirement")); //"paymentRequirement tidak boleh kosong";
                 }
 
                 if(!_quality){
@@ -182,10 +179,6 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 else if (!valid.processTypeId)
                     errors["orderType"] = i18n.__("FinishingPrintingSalesContract.orderType.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.orderType._:OrderType")); //"orderType tidak boleh kosong";
                 
-                if(!valid.rollLength || valid.rollLength===''){
-                    errors["rollLength"]=i18n.__("FinishingPrintingSalesContract.rollLength.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.rollLength._:RollLength")); //"rollLength tidak boleh kosong";
-                }
-
                 if(!valid.condition || valid.condition===''){
                     errors["condition"]=i18n.__("FinishingPrintingSalesContract.condition.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.condition._:Condition")); //"condition tidak boleh kosong";
                 }
@@ -194,25 +187,41 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                     errors["packing"]=i18n.__("FinishingPrintingSalesContract.packing.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.packing._:Packing")); //"packing tidak boleh kosong";
                 }
 
+                if(!valid.deliveredTo || valid.deliveredTo===''){
+                    errors["deliveredTo"]=i18n.__("FinishingPrintingSalesContract.deliveredTo.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.deliveredTo._:DeliveredTo")); //"deliveredTo tidak boleh kosong";
+                }
+
                 if (!_buyer)
                     errors["buyer"] = i18n.__("FinishingPrintingSalesContract.buyer.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.buyer._:Buyer")); //"Buyer tidak boleh kosong";
                 else if (!valid.buyerId)
                     errors["buyer"] = i18n.__("FinishingPrintingSalesContract.buyer.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.buyer._:Buyer")); //"Buyer tidak boleh kosong";
                 
+                if(valid.buyer){
+                    if(valid.buyer.type.toLowerCase()=="ekspor"||valid.buyer.type.toLowerCase()=="export"){
+                        if(valid.agentId){
+                            if(!valid.comission){
+                                errors["comission"] = i18n.__("FinishingPrintingSalesContract.comission.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.comission._:Comission")); //"comission tidak boleh kosong";
+                
+                            }
+                        }
+                    }
+                }
+
+                if(!valid.orderQuantity|| valid.orderQuantity<=0){
+                    errors["orderQuantity"] = i18n.__("FinishingPrintingSalesContract.orderQuantity.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh kosong";
+                
+                }
                 if (!_bank)
-                    errors["accountBank"] = i18n.__("FinishingPrintingSalesContract.accountBank.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.accountBank._:Buyer")); //"accountBank tidak boleh kosong";
+                    errors["accountBank"] = i18n.__("FinishingPrintingSalesContract.accountBank.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.accountBank._:AccountBank")); //"accountBank tidak boleh kosong";
                 else if (!valid.accountBankId)
-                    errors["accountBank"] = i18n.__("FinishingPrintingSalesContract.accountBank.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.accountBank._:Buyer")); //"accountBank tidak boleh kosong";
+                    errors["accountBank"] = i18n.__("FinishingPrintingSalesContract.accountBank.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.accountBank._:AccountBank")); //"accountBank tidak boleh kosong";
                 
                 if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
                     errors["shippingQuantityTolerance"] = i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
                 else if(valid.shippingQuantityTolerance>100){
                     errors["shippingQuantityTolerance"] =i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
-
-                if(!valid.deliveredTo || valid.deliveredTo===''){
-                    errors["deliveredTo"]=i18n.__("FinishingPrintingSalesContract.deliveredTo.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.deliveredTo._:DeliveredTo")); //"deliveredTo tidak boleh kosong";
-                }
+                
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                      errors["deliverySchedule"] = i18n.__("FinishingPrintingSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.deliverySchedule._:DeliverySchedule")); //"deliverySchedule tidak boleh kosong";
                 }
@@ -243,13 +252,20 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                         if (!detail.price || detail.price<=0)
                             detailError["price"] = i18n.__("FinishingPrintingSalesContract.details.price.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.details.price._:Price")); //"price tidak boleh kosong";
                         
-                        
+                        if(valid.accountBank){
+                            detail.currency=valid.accountBank.currency;
+                            detail.currencyId=new ObjectId(valid.accountBank.currency._id);
+                        }
                         if (Object.getOwnPropertyNames(detailError).length > 0)
                             detailErrors.push(detailError);
                     }
                     if (detailErrors.length > 0)
                         errors.details = detailErrors;
                     
+                }
+                if(_agent){
+                    valid.agentId=new ObjectId(_agent._id);
+                    valid.agent=_agent;
                 }
 
                 if(_buyer){
@@ -328,27 +344,27 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
     
-//    pdf(id) {
-//         return new Promise((resolve, reject) => {
+    pdf(id) {
+        return new Promise((resolve, reject) => {
 
-//             this.getSingleById(id)
-//                 .then(productionOrder => {
+            this.getSingleById(id)
+                .then(salesContract => {
                     
-//                     var getDefinition = require("../../pdf/definitions/production-order");
-//                     var definition = getDefinition(productionOrder);
+                    var getDefinition = require("../../pdf/definitions/finishing-printing-sales-contract");
+                    var definition = getDefinition(salesContract);
 
-//                     var generatePdf = require("../../pdf/pdf-generator");
-//                     generatePdf(definition)
-//                         .then(binary => {
-//                             resolve(binary);
-//                         })
-//                         .catch(e => {
-//                             reject(e);
-//                         });
-//                 })
-//                 .catch(e => {
-//                     reject(e);
-//                 });
-//         });
-//     }
+                    var generatePdf = require("../../pdf/pdf-generator");
+                    generatePdf(definition)
+                        .then(binary => {
+                            resolve(binary);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
 }
