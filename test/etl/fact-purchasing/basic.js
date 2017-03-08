@@ -34,11 +34,18 @@ it("#01. should success when create etl fact-purchasing", function (done) {
         });
 });
 
-
-
-var data = [{}, {}];
-
 it("#02. should success when transforming data", function (done) {
+    var data = [
+        {
+            purchaseOrder: {
+                items: [
+                    {
+                        fulfillments: [{}]
+                    }
+            ]},
+            purchaseRequest: {}
+        }
+        ]    
     instanceManager.transform(data)
         .then(() => {
             done();
