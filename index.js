@@ -134,6 +134,8 @@ module.exports = {
         dimMachine: require("./src/etl/dim-machine-etl-manager"),
         factMonitoringEvent: require("./src/etl/fact-monitoring-event-etl-manager"),
         factProductionOrder: require("./src/etl/fact-production-order-etl-manager"),
-        factSalesContract: require("./src/etl/fact-sales-contract-etl-manager")
+        factWeavingSalesContract: require("./src/etl/fact-weaving-sales-contract-etl-manager"),
+        factFinishingPrintingSalesContract: require("./src/etl/fact-finishing-printing-sales-contract-etl-manager"),
+        factSpinningSalesContract: require("./src/etl/fact-spinning-sales-contract-etl-manager")
     }
 }
