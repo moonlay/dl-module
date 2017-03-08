@@ -71,3 +71,13 @@ it("#04. should error when insert empty data", function (done) {
             }
         });
 });
+
+it("#05. should success when joining URN to UPO", function (done) {
+    instanceManager.joinUnitPaymentOrder(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
