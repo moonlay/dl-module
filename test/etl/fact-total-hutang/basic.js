@@ -82,3 +82,29 @@ it("#05. should success when joining URN to UPO", function (done) {
             done(e);
         });
 });
+
+it("#05. should success when load data", function (done) {
+    var data = [{
+        unitPaymentOrderNo: null,
+        unitPaymentOrderDate: null,
+        supplierName: null,
+        categoryType: null,
+        invoicePrice: null,
+        unitReceiptNoteQuantity: null,
+        purchaseOrderExternalCurrencyRate: null,
+        total: null,
+        categoryName: null,
+        divisionName: null,
+        unitName: null,
+        unitReceiptNoteNo: null,
+        productName: null,
+        productCode: null
+    }]
+    instanceManager.load(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
