@@ -63,3 +63,28 @@ it('#02. should error when create new data with non existent unit, step, machine
             done(e);
         });
 });
+
+it('#03. should error when create new data with monthly capacity less then 0', function (done) {
+    MachineDataUtil.getNewData()
+        .then(machine => {
+
+            machine.monthlyCapacity = -1; 
+
+            manager.create(machine)
+                .then(id => {
+                    done("should error when create new data with monthly capacity less then 0");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('monthlyCapacity');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});

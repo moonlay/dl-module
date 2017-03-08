@@ -341,7 +341,7 @@ module.exports = function (unitPaymentOrder) {
         }, '\n',
         {
             width: '25%',
-            text: `Terbilang : ${say((sum + incomeTax) - vat)}`,
+            text: `Terbilang : ${say((sum + incomeTax) - vat,unitPaymentOrder.currency.description)}`,
             style: ['size09', 'bold']
         }, '\n',
         {

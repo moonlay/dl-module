@@ -99,8 +99,6 @@ module.exports = class ProductManager extends BaseManager {
                 }
 
                 valid.uom = _uom;
-                valid.price = parseInt(valid.price);
-                valid.currency.rate = parseInt(valid.currency.rate);
                 valid.uomId = new ObjectId(valid.uom._id);
                 if (!valid.stamp)
                     valid = new Product(valid);
