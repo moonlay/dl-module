@@ -34,11 +34,19 @@ it("#01. should success when create etl fact-purchasing", function (done) {
         });
 });
 
-
-
-var data = [{}, {}];
-
 it("#02. should success when transforming data", function (done) {
+    var data = [
+        {
+            purchaseOrder: {
+                items: [
+                    {
+                        fulfillments: [{}]
+                    }
+                ]
+            },
+            purchaseRequest: {}
+        }
+    ];
     instanceManager.transform(data)
         .then(() => {
             done();
@@ -50,6 +58,7 @@ it("#02. should success when transforming data", function (done) {
 
 
 it("#03. should success when extracting PR from PO", function (done) {
+    var data = [];
     instanceManager.getPRFromPO(data)
         .then(() => {
             done();
@@ -61,6 +70,7 @@ it("#03. should success when extracting PR from PO", function (done) {
 
 
 it("#04. should success when joining PR to PO", function (done) {
+    var data = [];
     instanceManager.joinPurchaseOrder(data)
         .then(() => {
             done();
@@ -70,8 +80,9 @@ it("#04. should success when joining PR to PO", function (done) {
         });
 });
 
-var arr = [{no: {}}, {no: {}}];
+
 it("#05. should success when remove duplicate data", function (done) {
+    var arr = [{ no: {} }, { no: {} }];
     instanceManager.removeDuplicates(arr)
         .then((a) => {
             done();
@@ -87,7 +98,7 @@ it("#06. should error when load empty data", function (done) {
             done("should error when create with empty data");
         })
         .catch(e => {
-            try {                
+            try {
                 done();
             }
             catch (ex) {
@@ -102,7 +113,7 @@ it("#07. should error when insert empty data", function (done) {
             done("should error when create with empty data");
         })
         .catch((e) => {
-            try {                
+            try {
                 done();
             }
             catch (ex) {
