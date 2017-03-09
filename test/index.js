@@ -13,16 +13,19 @@ describe('#dl-module', function (done) {
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
+    test('@ETL/DIM-BUYER', './etl/dim-buyer');
     test('@ETL/DIM-CATEGORY', './etl/dim-category');
     test('@ETL/DIM-DIVISION', './etl/dim-division');
     test('@ETL/DIM-SUPPLIER', './etl/dim-supplier');
     test('@ETL/DIM-MACHINE', './etl/dim-machine');
     test('@ETL/DIM-UNIT', './etl/dim-unit');
     test('@ETL/FACT-TOTAL-HUTANG', './etl/fact-total-hutang');
-    test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');    
-    test('@ETL/FACT-MONITORING-EVENT', './etl/fact-monitoring-event');    
-    test('@ETL/FACT-SALES-CONTRACT', './etl/fact-sales-contract');   
-    test('@ETL/DIM-BUYER', './etl/dim-buyer'); 
+    test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');
+    test('@ETL/FACT-MONITORING-EVENT', './etl/fact-monitoring-event');
+    test('@ETL/FACT-PRODUCTION-ORDER', './etl/fact-production-order');
+    test('@ETL/FACT-WEAVING-SALES-CONTRACT', './etl/fact-weaving-sales-contract');
+    test('@ETL/FACT-FINISHING-PRINTING-SALES-CONTRACT', './etl/fact-finishing-printing-sales-contract');
+    test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/fact-spinning-sales-contract');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
@@ -61,20 +64,20 @@ describe('#dl-module', function (done) {
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
     test('@PURCHASING/PURCHASE ORDER', './purchasing/purchase-order');
-    test('@PURCHASING/PURCHASE ORDER EXTERNAL', './purchasing/purchase-order-external'); 
-    test('@PURCHASING/DELIVERY ORDER', './purchasing/delivery-order'); 
-    test('@PURCHASING/UNIT RECEIPT NOTE', './purchasing/unit-receipt-note'); 
-    test('@PURCHASING/UNIT PAYMENT ORDER', './purchasing/unit-payment-order'); 
+    test('@PURCHASING/PURCHASE ORDER EXTERNAL', './purchasing/purchase-order-external');
+    test('@PURCHASING/DELIVERY ORDER', './purchasing/delivery-order');
+    test('@PURCHASING/UNIT RECEIPT NOTE', './purchasing/unit-receipt-note');
+    test('@PURCHASING/UNIT PAYMENT ORDER', './purchasing/unit-payment-order');
     test('@PURCHASING/UNIT PAYMENT PRICE CORRECTION', './purchasing/unit-payment-price-correction-note');
     test('@PURCHASING/UNIT PAYMENT QUANTITY CORRECTION', './purchasing/unit-payment-quantity-correction-note');
-    test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');	
+    test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');
 
     //Sales
-    test('@SALES/PRODUCTION-ORDER', './sales/production-order');	
+    test('@SALES/PRODUCTION-ORDER', './sales/production-order');
     test('@SALES/FINISHING PRINTING SALES CONTRACT', './sales/finishing-printing-sales-contract');
     test('@SALES/SPINNING SALES CONTRACT', './sales/spinning-sales-contract');
     test('@SALES/WEAVING SALES CONTRACT', './sales/weaving-sales-contract');
-    
+
     //Production
     test('@PRODUCTION/FINISHING-PRINTING/KANBAN', './production/finishing-printing/kanban');
     test('@PRODUCTION/DAILY OPERATION', './production/finishing-printing/daily-operation');
