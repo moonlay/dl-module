@@ -123,36 +123,22 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 if(!_construction){
                     errors["materialConstruction"]=i18n.__("WeavingSalesContract.materialConstruction.isRequired:%s is not exsist", i18n.__("WeavingSalesContract.materialConstruction._:MaterialConstruction")); //"materialConstruction tidak boleh kosong";
                 }
-                else if(!valid.materialConstructionId){
-                    errors["materialConstruction"]=i18n.__("WeavingSalesContract.materialConstruction.isRequired:%s is required", i18n.__("WeavingSalesContract.materialConstruction._:MaterialConstruction")); //"materialConstruction tidak boleh kosong";
-                }
+                
 
                 if(!_yarn){
                     errors["yarnMaterial"]=i18n.__("WeavingSalesContract.yarnMaterial.isRequired:%s is not exsist", i18n.__("WeavingSalesContract.yarnMaterial._:YarnMaterial")); //"yarnMaterial tidak boleh kosong";
                 }
-                else if(!valid.yarnMaterialId){
-                    errors["yarnMaterial"]=i18n.__("WeavingSalesContract.yarnMaterial.isRequired:%s is required", i18n.__("WeavingSalesContract.yarnMaterial._:YarnMaterial")); //"yarnMaterial tidak boleh kosong";
-                }
-
+                
                 if(!valid.paymentMethod || valid.paymentMethod===''){
                     errors["paymentMethod"]=i18n.__("WeavingSalesContract.paymentMethod.isRequired:%s is required", i18n.__("WeavingSalesContract.paymentMethod._:PaymentMethod")); //"paymentMethod tidak boleh kosong";
-                }
-
-                if(!valid.paymentRequirement || valid.paymentRequirement===''){
-                    errors["paymentRequirement"]=i18n.__("WeavingSalesContract.paymentRequirement.isRequired:%s is required", i18n.__("WeavingSalesContract.paymentRequirement._:PaymentRequirement")); //"paymentRequirement tidak boleh kosong";
                 }
 
                 if(!_quality){
                     errors["quality"]=i18n.__("WeavingSalesContract.quality.isRequired:%s is not exsist", i18n.__("WeavingSalesContract.quality._:Quality")); //"quality tidak boleh kosong";
                 }
-                else if(!valid.qualityId){
-                    errors["quality"]=i18n.__("WeavingSalesContract.quality.isRequired:%s is required", i18n.__("WeavingSalesContract.quality._:Quality")); //"quality tidak boleh kosong";
-                }
-
+                
                 if (!_material)
                     errors["material"] = i18n.__("WeavingSalesContract.material.isRequired:%s is not exists", i18n.__("WeavingSalesContract.material._:Material")); //"material tidak boleh kosong";
-                else if (!valid.materialId)
-                    errors["material"] = i18n.__("WeavingSalesContract.material.isRequired:%s is required", i18n.__("WeavingSalesContract.material._:Material")); //"material tidak boleh kosong";
                 
                 if(!valid.materialWidth||valid.materialWidth===''){
                     errors["materialWidth"] = i18n.__("WeavingSalesContract.materialWidth.isRequired:%s is required", i18n.__("WeavingSalesContract.materialWidth._:MaterialWidth")); //"lebar material tidak boleh kosong";
@@ -160,13 +146,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
 
                 if (!_comodity)
                     errors["comodity"] = i18n.__("WeavingSalesContract.comodity.isRequired:%s is not exists", i18n.__("WeavingSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
-                else if (!valid.comodityId)
-                    errors["comodity"] = i18n.__("WeavingSalesContract.comodity.isRequired:%s is required", i18n.__("WeavingSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
-
-                if(!valid.rollLength || valid.rollLength===''){
-                    errors["rollLength"]=i18n.__("WeavingSalesContract.rollLength.isRequired:%s is required", i18n.__("WeavingSalesContract.rollLength._:RollLength")); //"rollLength tidak boleh kosong";
-                }
-
+                
                 if(!valid.condition || valid.condition===''){
                     errors["condition"]=i18n.__("WeavingSalesContract.condition.isRequired:%s is required", i18n.__("WeavingSalesContract.condition._:Condition")); //"condition tidak boleh kosong";
                 }
@@ -177,13 +157,9 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
 
                 if (!_buyer)
                     errors["buyer"] = i18n.__("WeavingSalesContract.buyer.isRequired:%s is not exists", i18n.__("WeavingSalesContract.buyer._:Buyer")); //"Buyer tidak boleh kosong";
-                else if (!valid.buyerId)
-                    errors["buyer"] = i18n.__("WeavingSalesContract.buyer.isRequired:%s is required", i18n.__("WeavingSalesContract.buyer._:Buyer")); //"Buyer tidak boleh kosong";
                 
                 if (!_bank)
                     errors["accountBank"] = i18n.__("WeavingSalesContract.accountBank.isRequired:%s is not exists", i18n.__("WeavingSalesContract.accountBank._:Buyer")); //"accountBank tidak boleh kosong";
-                else if (!valid.accountBankId)
-                    errors["accountBank"] = i18n.__("WeavingSalesContract.accountBank.isRequired:%s is required", i18n.__("WeavingSalesContract.accountBank._:Buyer")); //"accountBank tidak boleh kosong";
                 
                 if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
                     errors["shippingQuantityTolerance"] = i18n.__("WeavingSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
@@ -191,9 +167,13 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                     errors["shippingQuantityTolerance"] =i18n.__("WeavingSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
 
+                if (!valid.price || valid.price === 0)
+                    errors["price"] = i18n.__("WeavingSalesContract.price.isRequired:%s is required", i18n.__("WeavingSalesContract.price._:Price")); //"price tidak boleh kosong";
+                
                 if(!valid.deliveredTo || valid.deliveredTo===''){
-                    errors["deliveredTo"]=i18n.__("WeavingSalesContract.deliveredTo.isRequired:%s is required", i18n.__("WeavingSalesContract.deliveredTo._:deliveredTo")); //"deliveredTo tidak boleh kosong";
+                    errors["deliveredTo"]=i18n.__("WeavingSalesContract.deliveredTo.isRequired:%s is required", i18n.__("WeavingSalesContract.deliveredTo._:DeliveredTo")); //"deliveredTo tidak boleh kosong";
                 }
+
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                      errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kosong";
                 }
@@ -278,27 +258,27 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
     
-//    pdf(id) {
-//         return new Promise((resolve, reject) => {
+    pdf(id) {
+        return new Promise((resolve, reject) => {
 
-//             this.getSingleById(id)
-//                 .then(productionOrder => {
+            this.getSingleById(id)
+                .then(salesContract => {
                     
-//                     var getDefinition = require("../../pdf/definitions/production-order");
-//                     var definition = getDefinition(productionOrder);
+                    var getDefinition = require("../../pdf/definitions/finishing-printing-sales-contract");
+                    var definition = getDefinition(salesContract);
 
-//                     var generatePdf = require("../../pdf/pdf-generator");
-//                     generatePdf(definition)
-//                         .then(binary => {
-//                             resolve(binary);
-//                         })
-//                         .catch(e => {
-//                             reject(e);
-//                         });
-//                 })
-//                 .catch(e => {
-//                     reject(e);
-//                 });
-//         });
-//     }
+                    var generatePdf = require("../../pdf/pdf-generator");
+                    generatePdf(definition)
+                        .then(binary => {
+                            resolve(binary);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
 }
