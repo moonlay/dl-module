@@ -26,6 +26,7 @@ class FinishingPrintingSalesContractDataUtil {
                 var _yarn=results[6];
                 var _construction=results[7];
                 var _bank=results[8];
+                var _agent=results[1];;
 
                 var data = {
                     
@@ -56,15 +57,15 @@ class FinishingPrintingSalesContractDataUtil {
                     materialWidth:'Width',
 
                     paymentMethod:`Telegraphic Transfer (TT)`,
-                    paymentRequirement:`Payment Requirement`,
                     rollLength:`length`,
                     packing:`pack`,
                     deliverySchedule:new Date(),
+                    deliveredTo:'City-Country',
                     remark:`desc`,
-                    useIncomeTax:false,
+                    useIncomeTax:true,
                     transportFee:'Fee',
-                    deliveredTo:'DeliveredTo',
-                    agent:'Agent',
+                    agentId:_agent._id,
+                    agent:_agent,
                     comission:200,
                     condition:'Condition',
                     attachment:'attachment',
@@ -72,11 +73,15 @@ class FinishingPrintingSalesContractDataUtil {
                     details: [{
                         color:`Purple`,
                         price:1000,
-                        useIncomeTax:false,
+                        useIncomeTax:true,
+                        currencyId:_bank.currency._id,
+                        currency: _bank.currency
                     }, {
                         color:`Purple`,
                         price:1000,
-                        useIncomeTax:false
+                        useIncomeTax:false,
+                        currencyId:_bank.currency._id,
+                        currency: _bank.currency
                     }]
                 };
                 return Promise.resolve(data);
