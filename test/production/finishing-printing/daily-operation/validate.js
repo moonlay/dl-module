@@ -1,5 +1,6 @@
 require("should");
 var dataUtil = require("../../../data-util/production/finishing-printing/daily-operation-data-util");
+var stepDataUtil = require("../../../data-util/master/step-data-util");
 var helper = require("../../../helper");
 var validate = require("dl-models").validator.production.finishingPrinting.dailyOperation;
 var codeGenerator = require('../../../../src/utils/code-generator');
@@ -8,9 +9,11 @@ var moment = require('moment');
 var DailyOperationManager = require("../../../../src/managers/production/finishing-printing/daily-operation-manager");
 var KanbanManager = require("../../../../src/managers/production/finishing-printing/kanban-manager");
 var MachineManager = require("../../../../src/managers/master/machine-manager");
+var StepManager = require("../../../../src/managers/master/step-manager");
 var dailyOperationManager;
 var kanbanManager;
 var machineManager;
+var stepManager;
 
 before('#00. connect db', function(done) {
     helper.getDb()
@@ -22,6 +25,9 @@ before('#00. connect db', function(done) {
                 username: 'dev'
             });
             machineManager = new MachineManager(db, {
+                username: 'dev'
+            });
+            stepManager = new StepManager(db, {
                 username: 'dev'
             });
             done();
@@ -119,7 +125,45 @@ it("#03. should error when create new and no document machine on collection data
             });
 });
 
-it("#04. should success when create new without output data", function(done) {
+it("#04. should error when create new and no document step on collection database", function(done) {
+    stepDataUtil.getTestData('Test Data', null, null)
+        .then(dataStep => {
+            dataUtil.getNewData()
+                    .then(data => {
+                        data.stepId = dataStep._id;
+                        data.step = dataStep;
+                        stepManager.destroy(data.stepId)
+                                .then(itemDes => {
+                                    itemDes.should.be.Boolean();
+                                    itemDes.should.equal(true);
+                                    dailyOperationManager.create(data)
+                                            .then((item) => {
+                                                done("should error when create new and no document step on collection database");
+                                            })
+                                            .catch((e) => {
+                                                try {
+                                                    e.errors.should.have.property('step');
+                                                    done();
+                                                }
+                                                catch (ex) {
+                                                    done(ex);
+                                                }
+                                            });
+                                })
+                                .catch((e) => {
+                                    done(e);
+                                });
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+                    })
+    .catch((e) => {
+        done(e);
+    });
+});
+
+it("#05. should success when create new without output data", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 delete data.dateOutput;
@@ -147,7 +191,7 @@ it("#04. should success when create new without output data", function(done) {
             });
 });
 
-it("#05. should error when create new with 0 input qty", function(done) {
+it("#06. should error when create new with 0 input qty", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 data.input  = 0;
@@ -170,7 +214,7 @@ it("#05. should error when create new with 0 input qty", function(done) {
             });
 });
 
-it("#06. should error when create new data with dateStart greater than today", function(done) {
+it("#07. should error when create new data with dateStart greater than today", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 var dateTomorrow = new Date().setDate(new Date().getDate() + 1);
@@ -194,7 +238,7 @@ it("#06. should error when create new data with dateStart greater than today", f
             });
 });
 
-it("#07. should error when create new data with time input greater than today", function(done) {
+it("#08. should error when create new data with time input greater than today", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 var dateNow = new Date();
@@ -220,7 +264,7 @@ it("#07. should error when create new data with time input greater than today", 
             });
 });
 
-it("#08. should error when create new data without date output", function(done) {
+it("#09. should error when create new data without date output", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 delete data.dateOutput;
@@ -243,7 +287,7 @@ it("#08. should error when create new data without date output", function(done) 
             });
 });
 
-it("#09. should error when create new data without date output", function(done) {
+it("#10. should error when create new data without date output", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 delete data.timeOutput;
@@ -270,7 +314,7 @@ it("#09. should error when create new data without date output", function(done) 
             });
 });
 
-it("#10. should error when create new data with date output greater than today", function(done) {
+it("#11. should error when create new data with date output greater than today", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 var dateTomorrow = new Date().setDate(new Date().getDate() + 1);
@@ -294,7 +338,7 @@ it("#10. should error when create new data with date output greater than today",
             });
 });
 
-it("#11. should error when create new data with time output greater than today", function(done) {
+it("#12. should error when create new data with time output greater than today", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 var dateNow = new Date();
@@ -320,7 +364,7 @@ it("#11. should error when create new data with time output greater than today",
             });
 });
 
-it("#12. should error when create new data with date input greater than date output", function(done) {
+it("#13. should error when create new data with date input greater than date output", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 data.dateInput = '2017-01-02';
@@ -345,7 +389,7 @@ it("#12. should error when create new data with date input greater than date out
             });
 });
 
-it("#13. should error when create new data with time input greater time date output", function(done) {
+it("#14. should error when create new data with time input greater time date output", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 data.dateInput = '2017-01-01';
@@ -372,7 +416,7 @@ it("#13. should error when create new data with time input greater time date out
             });
 });
 
-it("#14. should error when create new data with goodOutput greater than input", function(done) {
+it("#15. should error when create new data with goodOutput greater than input", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 data.goodOutput = data.input + 10;
@@ -395,7 +439,7 @@ it("#14. should error when create new data with goodOutput greater than input", 
             });
 });
 
-it("#15. should error when create new data with badOutput greater than input", function(done) {
+it("#16. should error when create new data with badOutput greater than input", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 data.badOutput = data.input + 10;
@@ -418,7 +462,7 @@ it("#15. should error when create new data with badOutput greater than input", f
             });
 });
 
-it("#16. should error when create new data with sum between badOutput and goodOutput greater than input", function(done) {
+it("#17. should error when create new data with sum between badOutput and goodOutput greater than input", function(done) {
     dataUtil.getNewData()
             .then(data => {
                 data.badOutput += 1;

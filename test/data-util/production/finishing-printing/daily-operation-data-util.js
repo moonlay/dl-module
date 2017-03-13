@@ -14,7 +14,11 @@ class DailyOperationDataUtil {
                         return Promise.all([machineDataUtil.getTestData()])
                                 .then((machine) => {
                                     var _machine = machine[0];
-                                    var dataSteps = [];
+                                    var tempStep = {};
+                                    for(var a of _machine.steps){
+                                        tempStep = a.step;
+                                        break;
+                                    }
                                     var code = codeGenerator();
                                     var dateNow = new Date();
                                     var dateNowString = moment(dateNow).format('YYYY-MM-DD');
@@ -24,6 +28,8 @@ class DailyOperationDataUtil {
                                         shift : `shift ${code}`,
                                         machineId : _machine._id,
                                         machine : _machine,
+                                        stepId : tempStep._id,
+                                        step : tempStep,
                                         dateInput : dateNowString,
                                         timeInput : 10000,
                                         input : 20,
