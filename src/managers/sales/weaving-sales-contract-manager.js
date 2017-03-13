@@ -200,7 +200,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                     valid.buyerId = new ObjectId(_buyer._id);
                     valid.buyer = _buyer;
                     if (valid.buyer.type.trim().toLowerCase() == "ekspor") {
-                        if (!valid.termOfShipment == "") {
+                        if (!valid.termOfShipment || valid.termOfShipment == "") {
                             errors["termOfShipment"] = i18n.__("WeavingSalesContract.termOfShipment.isRequired:%s is required", i18n.__("WeavingSalesContract.termOfShipment._:termOfShipment")); //"termOfShipment tidak boleh kosong";
                         }
                     }
@@ -276,7 +276,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             this.getSingleById(id)
                 .then(salesContract => {
 
-                    var getDefinition = require("../../pdf/definitions/weaving-sales-contract-manager");
+                    var getDefinition = require("../../pdf/definitions/weaving-sales-contract");
                     var definition = getDefinition(salesContract);
 
                     var generatePdf = require("../../pdf/pdf-generator");
