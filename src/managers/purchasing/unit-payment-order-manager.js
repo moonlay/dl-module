@@ -403,7 +403,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     } else {
                         purchaseOrder.status = poStatusEnum.PAYMENT;
                     }
-                    return this.purchaseOrderManager.update(purchaseOrder);
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 })
             jobs.push(job);
         })
@@ -496,7 +496,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     } else {
                         purchaseOrder.status = poStatusEnum.PAYMENT;
                     }
-                    return this.purchaseOrderManager.update(purchaseOrder);
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 })
             jobs.push(job);
         })
@@ -560,7 +560,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     purchaseOrder.status = isPaid && purchaseOrder.isClosed ? poStatusEnum.PAYMENT : (purchaseOrder.isClosed ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING);
                     purchaseOrder.status = purchaseOrder.status.value === 7 && fulfillment.unitReceiptNoteDeliveredQuantity < fulfillment.deliveryOrderDeliveredQuantity ? poStatusEnum.RECEIVING : poStatusEnum.RECEIVED;
 
-                    return this.purchaseOrderManager.update(purchaseOrder);
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 })
             jobs.push(job);
         })
@@ -594,7 +594,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                 }
                             }
                             unitReceiptNote.isPaid = true;
-                            return this.unitReceiptNoteManager.update(unitReceiptNote);
+                            return this.unitReceiptNoteManager.updateCollectionUnitReceiptNote(unitReceiptNote);
                         })
                 })
             jobs.push(job);
@@ -630,7 +630,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                 }
                             }
                             unitReceiptNote.isPaid = false;
-                            return this.unitReceiptNoteManager.update(unitReceiptNote);
+                            return this.unitReceiptNoteManager.updateCollectionUnitReceiptNote(unitReceiptNote);
                         })
                 })
             jobs.push(job);

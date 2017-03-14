@@ -67,8 +67,8 @@ class PurchaseRequestDataUtil {
                     .getManager(PurchaseRequestManager)
                     .then((prManager) => {
                         return prManager.post([pr])
-                            .then((ids) => {
-                                var id = ids[0];
+                            .then((prs) => {
+                                var id = prs[0]._id;
                                 return prManager.getSingleById(id);
                             });
                     });

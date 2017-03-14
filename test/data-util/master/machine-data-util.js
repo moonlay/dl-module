@@ -52,8 +52,7 @@ class MachineDataUtil {
                             no: _machineEvent2.no,
                             name: _machineEvent2.name,
                         }],
-                    // machineTypeId: _machineType._id,
-                    // machineType: _machineType,
+                    monthlyCapacity : 1000
 
                 };
                 return Promise.resolve(data);
@@ -88,8 +87,7 @@ class MachineDataUtil {
                             no: '2',
                             name: 'unitTestName2',
                         }],
-                    // machineTypeId: _machineType._id,
-                    // machineType: _machineType,
+                    monthlyCapacity : 1000
 
                 };
                 return this.getSert(data);

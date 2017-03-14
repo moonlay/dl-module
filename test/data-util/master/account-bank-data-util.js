@@ -8,7 +8,8 @@ class AccountBankDataUtil {
         var ManagerType = require("../../../src/managers/master/account-bank-manager");
         return _getSert(input, ManagerType, (data) => {
             return {
-                code: data.code
+                accountNumber: data.accountNumber,
+                bankName:data.bankName
             };
         });
     }

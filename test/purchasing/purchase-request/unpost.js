@@ -20,6 +20,7 @@ before('#00. connect db', function(done) {
 });
 
 var purchaseRequest;
+
 it('#01. should success when create new posted data', function(done) {
     PurchaseRequest.getPostedData()
         .then(pr => {
@@ -46,14 +47,11 @@ it('#02. should isPosted = true', function (done) {
 
 it('#03. should success when unposting purchase-request', function (done) {
     purchaseRequestManager.unpost(purchaseRequest._id)
-        .then((prId) => {
-            purchaseRequestManager.getSingleById(prId)
-                .then((pr) => {
-                    purchaseRequest = pr;
-                    purchaseRequest.isPosted.should.equal(false);
-                    JSON.stringify(purchaseRequest.status).should.equal(JSON.stringify(prStatusEnum.CREATED));
-                    done();
-                })
+        .then((pr) => {
+            purchaseRequest = pr;
+            purchaseRequest.isPosted.should.equal(false);
+            JSON.stringify(purchaseRequest.status).should.equal(JSON.stringify(prStatusEnum.CREATED));
+            done();
         })
         .catch(e => {
             done(e);

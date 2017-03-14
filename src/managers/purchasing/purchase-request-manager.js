@@ -249,23 +249,11 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             var ValidationError = require("module-toolkit").ValidationError;
             return Promise.reject(new ValidationError("data does not pass validation", purchaseRequestError));
         }
-
-        if (!purchaseRequest.stamp) {
-            purchaseRequest = new PurchaseRequest(purchaseRequest);
-        }
-        purchaseRequest.stamp(this.user.username, 'manager');
-
         return Promise.resolve(purchaseRequest)
             .then((purchaseRequest) => {
                 purchaseRequest.isPosted = true;
                 purchaseRequest.status = prStatusEnum.POSTED;
-                return this.collection
-                    .updateOne({
-                        _id: purchaseRequest._id
-                    }, {
-                        $set: purchaseRequest
-                    })
-                    .then((result) => Promise.resolve(purchaseRequest._id));
+                return this.updateCollectionPR(purchaseRequest);
             })
     }
 
@@ -472,14 +460,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             .then((purchaseRequest) => {
                 purchaseRequest.isPosted = false;
                 purchaseRequest.status = prStatusEnum.CREATED;
-                return this.collection
-                    .updateOne({
-                        _id: purchaseRequest._id
-                    }, {
-                        $set: purchaseRequest
-                    })
-                    .then((result) => Promise.resolve(purchaseRequest._id));
-
+                return this.updateCollectionPR(purchaseRequest);
             })
     }
 
@@ -512,5 +493,19 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 pr.stamp(this.user.username, 'manager');
                 return Promise.resolve(pr);
             });
+    }
+
+    updateCollectionPR(purchaseRequest) {
+        if (!purchaseRequest.stamp) {
+            purchaseRequest = new PurchaseRequest(purchaseRequest);
+        }
+        purchaseRequest.stamp(this.user.username, 'manager');
+        return this.collection
+            .updateOne({
+                _id: purchaseRequest._id
+            }, {
+                $set: purchaseRequest
+            })
+            .then((result) => { return this.getSingleByIdOrDefault(purchaseRequest._id) });
     }
 };

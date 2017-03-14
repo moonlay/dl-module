@@ -8,7 +8,6 @@ var map = DLModels.map;
 var ProductionOrder=DLModels.sales.ProductionOrder;
 var ProductionOrderDetail=DLModels.sales.ProductionOrderDetail;
 var ProductionOrderLampStandard=DLModels.sales.ProductionOrderLampStandard;
-var DailyOperation=DLModels.production.finishingPrinting.DailyOperation;
 var LampStandardManager=require('../master/lamp-standard-manager');
 var BuyerManager=require('../master/buyer-manager');
 var UomManager = require('../master/uom-manager');
@@ -24,7 +23,6 @@ var AccountManager = require ('../auth/account-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var generateCode = require("../../utils/code-generator");
-var DailyOperationCollection=null;
 var assert = require('assert');
 
 module.exports = class ProductionOrderManager extends BaseManager {
@@ -32,7 +30,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
         super(db, user);
         
         this.collection = this.db.collection(map.sales.collection.ProductionOrder);
-        DailyOperationCollection=this.db.collection(map.production.finishingPrinting.collection.DailyOperation);
         this.LampStandardManager = new LampStandardManager(db, user);
         this.BuyerManager= new BuyerManager(db,user);
         this.UomManager = new UomManager(db, user);
@@ -160,7 +157,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     errors["orderNo"] = i18n.__("ProductionOrder.orderNo.isExist:%s is Exist", i18n.__("Product.orderNo._:orderNo")); //"orderNo sudah ada";
                 }
                 if (valid.uom) {
-                    if (!valid.uom.unit || valid.uom.unit == '')
+                    if (!_uom)
                         errors["uom"] = i18n.__("ProductionOrder.uom.isRequired:%s is required", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
                 }
                 else
@@ -172,46 +169,28 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                 if (!_material)
                     errors["material"] = i18n.__("ProductionOrder.material.isRequired:%s is not exists", i18n.__("ProductionOrder.material._:Material")); //"material tidak boleh kosong";
-                else if (!valid.materialId)
-                    errors["material"] = i18n.__("ProductionOrder.material.isRequired:%s is required", i18n.__("ProductionOrder.material._:Material")); //"material tidak boleh kosong";
                 
                 if (!_process)
                     errors["processType"] = i18n.__("ProductionOrder.processType.isRequired:%s is not exists", i18n.__("ProductionOrder.processType._:ProcessType")); //"processType tidak boleh kosong";
-                else if (!valid.processTypeId)
-                    errors["processType"] = i18n.__("ProductionOrder.processType.isRequired:%s is required", i18n.__("ProductionOrder.processType._:ProcessType")); //"processType tidak boleh kosong";
                 
                 if (!_order)
                     errors["orderType"] = i18n.__("ProductionOrder.orderType.isRequired:%s is not exists", i18n.__("ProductionOrder.orderType._:OrderType")); //"orderType tidak boleh kosong";
-                else if (!valid.processTypeId)
-                    errors["orderType"] = i18n.__("ProductionOrder.orderType.isRequired:%s is required", i18n.__("ProductionOrder.orderType._:OrderType")); //"orderType tidak boleh kosong";
                 
                 if (!_yarn)
                     errors["yarnMaterial"] = i18n.__("ProductionOrder.yarnMaterial.isRequired:%s is not exists", i18n.__("ProductionOrder.yarnMaterial._:YarnMaterial")); //"yarnMaterial tidak boleh kosong";
-                else if (!valid.yarnMaterialId)
-                    errors["yarnMaterial"] = i18n.__("ProductionOrder.yarnMaterial.isRequired:%s is required", i18n.__("ProductionOrder.yarnMaterial._:YarnMaterial")); //"yarnMaterial tidak boleh kosong";
                 
                 if (!_construction)
                     errors["materialConstruction"] = i18n.__("ProductionOrder.materialConstruction.isRequired:%s is not exists", i18n.__("ProductionOrder.materialConstruction._:MaterialConstruction")); //"materialConstruction tidak boleh kosong";
-                else if (!valid.materialConstructionId)
-                    errors["materialConstructionId"] = i18n.__("ProductionOrder.materialConstruction.isRequired:%s is required", i18n.__("ProductionOrder.materialConstruction._:MaterialConstruction")); //"materialConstruction tidak boleh kosong";
                 
-
                 if (!_finish)
                     errors["finishType"] = i18n.__("ProductionOrder.finishType.isRequired:%s is not exists", i18n.__("ProductionOrder.finishType._:FinishType")); //"finishType tidak boleh kosong";
-                else if (!valid.finishTypeId)
-                    errors["finishType"] = i18n.__("ProductionOrder.finishType.isRequired:%s is required", i18n.__("ProductionOrder.finishType._:FinishType")); //"finishType tidak boleh kosong";
                 
                 if (!_standard)
                     errors["standardTest"] = i18n.__("ProductionOrder.standardTest.isRequired:%s is not exists", i18n.__("ProductionOrder.standardTest._:StandardTest")); //"standardTest tidak boleh kosong";
-                else if (!valid.standardTestId)
-                    errors["standardTest"] = i18n.__("ProductionOrder.standardTest.isRequired:%s is required", i18n.__("ProductionOrder.standardTest._:StandardTest")); //"standardTest tidak boleh kosong";
                 
                 if(!_account){
                     errors["account"] = i18n.__("ProductionOrder.account.isRequired:%s is not exists", i18n.__("ProductionOrder.account._:Account")); //"account tidak boleh kosong";
                 }
-                else if (!valid.accountId)
-                    errors["account"] = i18n.__("ProductionOrder.account.isRequired:%s is required", i18n.__("ProductionOrder.account._:Account")); //"account tidak boleh kosong";
-                
                 if(!valid.packingInstruction || valid.packingInstruction===''){
                     errors["packingInstruction"]=i18n.__("ProductionOrder.packingInstruction.isRequired:%s is required", i18n.__("ProductionOrder.packingInstruction._:PackingInstruction")); //"PackingInstruction tidak boleh kosong";
                 }
@@ -239,14 +218,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if (!valid.deliveryDate || valid.deliveryDate === "") {
                      errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.isRequired:%s is required", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"deliveryDate tidak boleh kosong";
                 }
-                else{
-                    valid.deliveryDate=new Date(valid.deliveryDate);
-                    var today=new Date();
-                    today.setHours(0,0,0,0);
-                    if(today>valid.deliveryDate){
-                        errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.shouldNot:%s should not be less than today's date", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"deliveryDate tidak boleh kurang dari tanggal hari ini";
-                    }
-                }
+                // else{
+                //     valid.deliveryDate=new Date(valid.deliveryDate);
+                //     var today=new Date();
+                //     today.setHours(0,0,0,0);
+                //     if(today>valid.deliveryDate){
+                //         errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.shouldNot:%s should not be less than today's date", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"deliveryDate tidak boleh kurang dari tanggal hari ini";
+                //     }
+                // }
 
                 if(_order){
                     if(_order.name.trim().toLowerCase()=="printing"){
@@ -277,8 +256,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                 if (!_buyer)
                     errors["buyer"] = i18n.__("ProductionOrder.buyer.isRequired:%s is not exists", i18n.__("ProductionOrder.buyer._:Buyer")); //"Buyer tidak boleh kosong";
-                else if (!valid.buyerId)
-                    errors["buyer"] = i18n.__("ProductionOrder.buyer.isRequired:%s is required", i18n.__("ProductionOrder.buyer._:Buyer")); //"Buyer tidak boleh kosong";
                 
                  if (!valid.orderQuantity || valid.orderQuantity === 0)
                     errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.isRequired:%s is required", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh kosong";
@@ -342,11 +319,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         var detailError = {};
                         detail.code=generateCode();
                         if (!detail.colorRequest || detail.colorRequest=="")
-                            detailError["colorRequest"] = i18n.__("ProductionOrder.details.colorRequest.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorRequest._:ColorRequest")); //"colorRequest tidak boleh kosong";
+                            detailError["colorRequest"] = i18n.__("ProductionOrder.details.colorRequest.isRequired:%s is required", i18n.__("ProductionOrder.details.colorRequest._:ColorRequest")); //"colorRequest tidak boleh kosong";
                         if (detail.quantity <= 0)
-                            detailError["quantity"] = i18n.__("ProductionOrder.details.quantity.isRequired:%s is required", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
+                            detailError["quantity"] = i18n.__("ProductionOrder.details.quantity.isRequired:%s is required", i18n.__("ProductionOrder.details.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
                         if(valid.orderQuantity!=totalqty)
-                            detailError["total"] = i18n.__("ProductionOrder.details.quantity.shouldNot:%s Total should equal Order Quantity", i18n.__("PurchaseRequest.details.quantity._:Quantity")); //Jumlah barang tidak boleh berbeda dari jumlah order";
+                            detailError["total"] = i18n.__("ProductionOrder.details.quantity.shouldNot:%s Total should equal Order Quantity", i18n.__("ProductionOrder.details.quantity._:Quantity")); //Jumlah barang tidak boleh berbeda dari jumlah order";
                     
                         if(!_uom)
                             detailError["uom"] = i18n.__("ProductionOrder.details.uom.isRequired:%s is not exists", i18n.__("ProductionOrder.details.uom._:Uom")); //"satuan tidak boleh kosong";
@@ -355,7 +332,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             detail.uomId=new ObjectId(_uom._id);
                         }
                         if (!detail.colorTemplate || detail.colorTemplate=="")
-                            detailError["colorTemplate"] = i18n.__("ProductionOrder.details.colorTemplate.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorTemplate._:ColorTemplate")); //"colorTemplate tidak boleh kosong";
+                            detailError["colorTemplate"] = i18n.__("ProductionOrder.details.colorTemplate.isRequired:%s is required", i18n.__("ProductionOrder.details.colorTemplate._:ColorTemplate")); //"colorTemplate tidak boleh kosong";
                         
                         }
                         if(_order){
@@ -364,9 +341,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                             else{
                                 if (!_colors)
-                                    detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
+                                    detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("ProductionOrder.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
                                 else if(!detail.colorType){
-                                    detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("PurchaseRequest.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
+                                    detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("ProductionOrder.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
                         
                             }
                             

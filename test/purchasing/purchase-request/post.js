@@ -34,8 +34,8 @@ it('#01. should success when create new data', function(done) {
 
 it('#02. should success when post', function(done) {
     purchaseRequestManager.post([purchaseRequest])
-        .then(purchaseRequestIds => {
-            var prId = purchaseRequestIds[0];
+        .then(purchaseRequests => {
+            var prId = purchaseRequests[0]._id;
             purchaseRequestManager.getSingleById(prId)
                 .then(pr => {
                     purchaseRequest = pr;
