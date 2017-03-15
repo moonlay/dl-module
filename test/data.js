@@ -19,7 +19,8 @@ module.exports = {
         machineType: require('./data-util/master/machine-type-data-util'),
         machineEvent: require('./data-util/master/machine-event-data-util'),
         comodity: require('./data-util/master/comodity-data-util'),
-        quality: require('./data-util/master/quality-data-util')
+        quality: require('./data-util/master/quality-data-util'),
+        termOfPayment: require('./data-util/master/term-of-payment-data-util')
 
     },
     purchasing:{

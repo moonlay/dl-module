@@ -17,6 +17,7 @@ var YarnMaterialManager = require ('../master/yarn-material-manager');
 var AccountBankManager = require ('../master/account-bank-manager');
 var ComodityManager = require ('../master/comodity-manager');
 var QualityManager = require ('../master/quality-manager');
+var TermOfPaymentManager = require ('../master/term-of-payment-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var generateCode = require("../../utils/code-generator");
@@ -37,6 +38,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
         this.ComodityManager=new ComodityManager(db,user);
         this.QualityManager=new QualityManager(db,user);
         this.AccountBankManager=new AccountBankManager(db,user);
+        this.TermOfPaymentManager=new TermOfPaymentManager(db,user);
     }
 
     _getQuery(paging) {
@@ -101,10 +103,10 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
         var getQuality= ObjectId.isValid(valid.qualityId) ? this.QualityManager.getSingleByIdOrDefault(valid.qualityId) : Promise.resolve(null);
         var getBankAccount= ObjectId.isValid(valid.accountBankId) ? this.AccountBankManager.getSingleByIdOrDefault(valid.accountBankId) : Promise.resolve(null);
         var getAgent = ObjectId.isValid(valid.agentId) ? this.BuyerManager.getSingleByIdOrDefault(valid.agentId) : Promise.resolve(null);
-        
+        var getTermOfPayment=ObjectId.isValid(valid.termOfPaymentId) ? this.TermOfPaymentManager.getSingleByIdOrDefault(valid.termOfPaymentId) : Promise.resolve(null);
         
 
-        return Promise.all([getSalesContractPromise, getBuyer, getUom,  getProduct, getProcessType, getOrderType, getYarnMaterial, getMaterialConstruction, getComodity, getQuality, getBankAccount,getAgent])
+        return Promise.all([getSalesContractPromise, getBuyer, getUom,  getProduct, getProcessType, getOrderType, getYarnMaterial, getMaterialConstruction, getComodity, getQuality, getBankAccount,getAgent,getTermOfPayment])
             .then(results => {
                 var _salesContract = results[0];
                 var _buyer = results[1];
@@ -118,6 +120,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 var _quality=results[9];
                 var _bank=results[10];
                 var _agent=results[11];
+                var _payment=results[12];
 
                 if (valid.uom) {
                     if (!valid.uom.unit || valid.uom.unit == '')
@@ -134,16 +137,14 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                     errors["materialConstruction"]=i18n.__("FinishingPrintingSalesContract.materialConstruction.isRequired:%s is not exsist", i18n.__("FinishingPrintingSalesContract.materialConstruction._:MaterialConstruction")); //"materialConstruction tidak boleh kosong";
                 }
                 
+                if(!_payment){
+                    errors["termOfPayment"]=i18n.__("FinishingPrintingSalesContract.termOfPayment.isRequired:%s is not exsist", i18n.__("FinishingPrintingSalesContract.termOfPayment._:TermOfPayment")); //"termOfPayment tidak boleh kosong";
+                }
 
                 if(!_yarn){
                     errors["yarnMaterial"]=i18n.__("FinishingPrintingSalesContract.yarnMaterial.isRequired:%s is not exsist", i18n.__("FinishingPrintingSalesContract.yarnMaterial._:YarnMaterial")); //"yarnMaterial tidak boleh kosong";
                 }
                 
-
-                if(!valid.paymentMethod || valid.paymentMethod===''){
-                    errors["paymentMethod"]=i18n.__("FinishingPrintingSalesContract.paymentMethod.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.paymentMethod._:PaymentMethod")); //"paymentMethod tidak boleh kosong";
-                }
-
                 if(!_quality){
                     errors["quality"]=i18n.__("FinishingPrintingSalesContract.quality.isRequired:%s is not exsist", i18n.__("FinishingPrintingSalesContract.quality._:Quality")); //"quality tidak boleh kosong";
                 }
@@ -160,6 +161,8 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                     errors["materialWidth"] = i18n.__("FinishingPrintingSalesContract.materialWidth.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.materialWidth._:MaterialWidth")); //"lebar material tidak boleh kosong";
                 }
 
+                
+
                 if (!_comodity)
                     errors["comodity"] = i18n.__("FinishingPrintingSalesContract.comodity.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
                 
@@ -173,10 +176,6 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                     errors["condition"]=i18n.__("FinishingPrintingSalesContract.condition.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.condition._:Condition")); //"condition tidak boleh kosong";
                 }
 
-                if(!valid.packing || valid.packing===''){
-                    errors["packing"]=i18n.__("FinishingPrintingSalesContract.packing.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.packing._:Packing")); //"packing tidak boleh kosong";
-                }
-
                 if(!valid.deliveredTo || valid.deliveredTo===''){
                     errors["deliveredTo"]=i18n.__("FinishingPrintingSalesContract.deliveredTo.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.deliveredTo._:DeliveredTo")); //"deliveredTo tidak boleh kosong";
                 }
@@ -186,8 +185,14 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 
                 if(valid.buyer){
                     if(valid.buyer.type.toLowerCase()=="ekspor"||valid.buyer.type.toLowerCase()=="export"){
-                        if(valid.agentId){
-                            if(!valid.comission){
+                        if(!valid.termOfShipment||valid.termOfShipment===''){
+                            errors["termOfShipment"] = i18n.__("FinishingPrintingSalesContract.termOfShipment.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.termOfShipment._:TermOfShipment")); //"term Of Shipment tidak boleh kosong";
+                        }
+                        if (!valid.amount || valid.amount === 0)
+                            errors["amount"] = i18n.__("FinishingPrintingSalesContract.amount.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.amount._:Amount")); //"amount tidak boleh kosong";
+                
+                        if(_agent){
+                            if(!valid.comission||valid.comission==""){
                                 errors["comission"] = i18n.__("FinishingPrintingSalesContract.comission.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.comission._:Comission")); //"comission tidak boleh kosong";
                 
                             }
@@ -207,7 +212,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 else if(valid.shippingQuantityTolerance>100){
                     errors["shippingQuantityTolerance"] =i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
-                
+
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                      errors["deliverySchedule"] = i18n.__("FinishingPrintingSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.deliverySchedule._:DeliverySchedule")); //"deliverySchedule tidak boleh kosong";
                 }
@@ -252,6 +257,10 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 if(_agent){
                     valid.agentId=new ObjectId(_agent._id);
                     valid.agent=_agent;
+                }
+                else{
+                    valid.agentId=null;
+                    valid.agent=null;
                 }
 
                 if(_buyer){

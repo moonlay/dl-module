@@ -7,16 +7,18 @@ var uom = require('../master/uom-data-util');
 var comodity = require('../master/comodity-data-util');
 var quality = require('../master/quality-data-util');
 var bankAccount = require('../master/account-bank-data-util');
+var termOfPayment = require('../master/term-of-payment-data-util');
 
 class SpinningSalesContractDataUtil {
     getNewData() {
-        return Promise.all([uom.getTestData(), buyer.getTestData(), quality.getTestData(), comodity.getTestData(), bankAccount.getTestData()])
+        return Promise.all([uom.getTestData(), buyer.getTestData(), quality.getTestData(), comodity.getTestData(), bankAccount.getTestData(),termOfPayment.getTestData()])
             .then((results) => {
                 var _uom = results[0];
                 var _buyer = results[1];
                 var _quality = results[2];
                 var _comodity=results[3];
                 var _bank=results[4];
+                var _payment=results[5];
 
                 var data = {
                     
@@ -32,6 +34,8 @@ class SpinningSalesContractDataUtil {
                     accountBank:_bank,
                     comodity:_comodity,
                     comodityId:_comodity._id,
+                    termOfPaymentId:_payment._id,
+                    termOfPayment:_payment,
                     orderQuantity:30,
                     shippingQuantityTolerance:5,
                     incomeTax:'Exclude PPn',
