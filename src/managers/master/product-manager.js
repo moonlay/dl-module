@@ -26,7 +26,7 @@ module.exports = class ProductManager extends BaseManager {
     _getQuery(paging) {
         var _default = {
             _deleted: false,
-            
+
         },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
@@ -142,7 +142,15 @@ module.exports = class ProductManager extends BaseManager {
                                     var data = [];
                                     if (dataFile != "") {
                                         for (var i = 1; i < dataFile.length; i++) {
-                                            data.push({ "code": dataFile[i][0], "name": dataFile[i][1], "uom": dataFile[i][2], "currency": dataFile[i][3], "price": dataFile[i][4], "tags": dataFile[i][5], "description": dataFile[i][6] });
+                                            data.push({
+                                                "code": dataFile[i][0].trim(),
+                                                "name": dataFile[i][1].trim(),
+                                                "uom": dataFile[i][2].trim(),
+                                                "currency": dataFile[i][3].trim(),
+                                                "price": dataFile[i][4],
+                                                "tags": dataFile[i][5].trim(),
+                                                "description": dataFile[i][6].trim()
+                                            });
                                         }
                                     }
                                     var dataError = [], errorMessage;

@@ -19,8 +19,8 @@ module.exports = class CurrencyManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -82,7 +82,7 @@ module.exports = class CurrencyManager extends BaseManager {
             })
     }
 
-     getCurrency() {
+    getCurrency() {
         return new Promise((resolve, reject) => {
             var query = {
                 _deleted: false
@@ -109,7 +109,12 @@ module.exports = class CurrencyManager extends BaseManager {
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
-                            data.push({ "code": dataFile[i][0], "symbol": dataFile[i][1], "rate": dataFile[i][2], "description": dataFile[i][3] });
+                            data.push({
+                                "code": dataFile[i][0].trim(),
+                                "symbol": dataFile[i][1].trim(),
+                                "rate": dataFile[i][2].trim(),
+                                "description": dataFile[i][3].trim()
+                            });
                         }
                     }
                     var dataError = [], errorMessage;
@@ -142,7 +147,7 @@ module.exports = class CurrencyManager extends BaseManager {
                             if (currency[j]["code"] === data[i]["code"]) {
                                 errorMessage = errorMessage + "Kode tidak boleh duplikat, ";
                             }
-                             if (currency[j]["description"] === data[i]["description"]) {
+                            if (currency[j]["description"] === data[i]["description"]) {
                                 errorMessage = errorMessage + "Keterangan tidak boleh duplikat";
                             }
                         }
