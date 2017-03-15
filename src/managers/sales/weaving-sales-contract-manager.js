@@ -64,7 +64,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             };
 
             keywordFilter = {
-                '$or': [filterSalesContract, filterBuyerName, filterBuyerType, filterType]
+                '$or': [filterSalesContract, filterBuyerName, filterBuyerType]
             };
         }
         query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
