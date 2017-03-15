@@ -96,8 +96,6 @@ module.exports = class CategoryManager extends BaseManager {
         });
     }
 
-
-
     insert(dataFile) {
         return new Promise((resolve, reject) => {
             var category;
@@ -107,7 +105,11 @@ module.exports = class CategoryManager extends BaseManager {
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
-                            data.push({ "code": dataFile[i][0], "name": dataFile[i][1], "codeRequirement": dataFile[i][2] });
+                            data.push({
+                                "code": dataFile[i][0].trim(),
+                                "name": dataFile[i][1].trim(),
+                                "codeRequirement": dataFile[i][2].trim()
+                            });
                         }
                     }
                     var dataError = [], errorMessage;

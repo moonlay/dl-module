@@ -20,8 +20,8 @@ module.exports = class DivisionManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -79,6 +79,7 @@ module.exports = class DivisionManager extends BaseManager {
                 return Promise.resolve(valid);
             });
     }
+
     getDivision() {
         return new Promise((resolve, reject) => {
             var query = {
@@ -106,29 +107,32 @@ module.exports = class DivisionManager extends BaseManager {
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
-                            data.push({ "name": dataFile[i][0], "description": dataFile[i][1] });
+                            data.push({
+                                "name": dataFile[i][0].trim(),
+                                "description": dataFile[i][1].trim()
+                            });
                         }
                     }
                     var dataError = [], errorMessage;
                     for (var i = 0; i < data.length; i++) {
-                        errorMessage = ""; 
+                        errorMessage = "";
                         if (data[i]["name"] === "" || data[i]["name"] === undefined) {
                             errorMessage = errorMessage + "Nama tidak boleh kosong, ";
                         }
-                        for (var j = 0; j < division.length; j++) { 
+                        for (var j = 0; j < division.length; j++) {
                             if ((division[j]["name"]).toLowerCase() === (data[i]["name"]).toLowerCase()) {
                                 errorMessage = errorMessage + "Nama tidak boleh duplikat";
                             }
                         }
                         if (errorMessage !== "") {
-                            dataError.push({"name": data[i]["name"], "description": data[i]["description"], "Error": errorMessage });
+                            dataError.push({ "name": data[i]["name"], "description": data[i]["description"], "Error": errorMessage });
                         }
                     }
                     if (dataError.length === 0) {
                         var newDivision = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Division(data[i]);
-                            valid.code= generateCode();
+                            valid.code = generateCode();
                             valid.stamp(this.user.username, 'manager');
                             this.collection.insert(valid)
                                 .then(id => {
