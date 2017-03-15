@@ -92,10 +92,12 @@ module.exports = class DailyOperationManager extends BaseManager {
             //1. begin: Declare promises.
             var getKanban = valid.kanbanId && ObjectId.isValid(valid.kanbanId) ? this.kanbanManager.getSingleByIdOrDefault(new ObjectId(valid.kanbanId)) : Promise.resolve(null);
             var getMachine = valid.machineId && ObjectId.isValid(valid.machineId) ? this.machineManager.getSingleByIdOrDefault(new ObjectId(valid.machineId)) : Promise.resolve(null);
-            Promise.all([getKanban,getMachine])
+            var getStep = valid.stepId && ObjectId.isValid(valid.stepId) ? this.stepManager.getSingleByIdOrDefault(new ObjectId(valid.stepId)) : Promise.resolve(null);
+            Promise.all([getKanban,getMachine,getStep])
                 .then(results => {
                     var _kanban = results[0];
                     var _machine = results[1];
+                    var _step = results[2];
                     var now = new Date();
                     
                     if(!valid.kanbanId || valid.kanbanId.toString() === "")
@@ -107,6 +109,12 @@ module.exports = class DailyOperationManager extends BaseManager {
                         errors["machine"] = i18n.__("DailyOperation.machine.isRequired:%s is required", i18n.__("DailyOperation.machine._:Machine")); //"Machine tidak ditemukan";
                     }else if(!_machine){
                         errors["machine"] = i18n.__("DailyOperation.machine.isNotExists:%s is not exists", i18n.__("DailyOperation.machine._:Machine")); //"Machine tidak ditemukan";
+                    }
+
+                    if(!valid.stepId || valid.stepId.toString() === ""){
+                        errors["step"] = i18n.__("DailyOperation.step.isRequired:%s is required", i18n.__("DailyOperation.step._:Step")); //"Step tidak ditemukan";
+                    }else if(!_step){
+                        errors["step"] = i18n.__("DailyOperation.step.isNotExists:%s is not exists", i18n.__("DailyOperation.step._:step")); //"Step tidak ditemukan";
                     }
 
                     if (!valid.dateInput || valid.dateInput === '')
@@ -195,6 +203,16 @@ module.exports = class DailyOperationManager extends BaseManager {
                     if(_machine){
                         valid.machine = _machine;
                         valid.machineId = _machine._id;
+                    }
+                    if(_step){
+                        valid.stepId = _step._id;
+                        var step = {};
+                        for(var a of valid.kanban.instruction.steps){
+                            if(a._id.toString() === _step._id.toString())
+                                step = a;
+                        }
+                        valid.step = step;
+                        valid.step._id = _step._id;
                     }
 
                     if(valid.dateInput)

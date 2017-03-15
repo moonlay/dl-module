@@ -12,10 +12,11 @@ var material = require('../master/product-data-util');
 var yarnMaterial = require('../master/yarn-material-data-util');
 var materialConstruction = require('../master/material-construction-data-util');
 var bankAccount = require('../master/account-bank-data-util');
+var termOfPayment = require('../master/term-of-payment-data-util');
 
 class FinishingPrintingSalesContractDataUtil {
     getNewData() {
-        return Promise.all([uom.getTestData(), buyer.getTestData(), quality.getTestData(), processType.getTestData(), material.getTestData(), comodity.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), bankAccount.getTestData()])
+        return Promise.all([uom.getTestData(), buyer.getTestData(), quality.getTestData(), processType.getTestData(), material.getTestData(), comodity.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), bankAccount.getTestData(),termOfPayment.getTestData()])
             .then((results) => {
                 var _uom = results[0];
                 var _buyer = results[1];
@@ -26,7 +27,8 @@ class FinishingPrintingSalesContractDataUtil {
                 var _yarn=results[6];
                 var _construction=results[7];
                 var _bank=results[8];
-                var _agent=results[1];;
+                var _agent=results[1];
+                var _payment=results[9];
 
                 var data = {
                     
@@ -52,6 +54,8 @@ class FinishingPrintingSalesContractDataUtil {
                     yarnMaterialId:_yarn._id,
                     comodity:_comodity,
                     comodityId:_comodity._id,
+                    termOfPaymentId:_payment._id,
+                    termOfPayment:_payment,
                     orderQuantity:30,
                     shippingQuantityTolerance:5,
                     materialWidth:'Width',

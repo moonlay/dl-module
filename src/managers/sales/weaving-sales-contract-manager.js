@@ -9,6 +9,7 @@ var WeavingSalesContract = DLModels.sales.WeavingSalesContract;
 var BuyerManager = require('../master/buyer-manager');
 var UomManager = require('../master/uom-manager');
 var ProductManager = require('../master/product-manager');
+var TermOfPaymentManager = require('../master/term-of-payment-manager');
 var MaterialConstructionManager = require('../master/material-construction-manager');
 var YarnMaterialManager = require('../master/yarn-material-manager');
 var AccountBankManager = require('../master/account-bank-manager');
@@ -27,6 +28,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
         this.buyerManager = new BuyerManager(db, user);
         this.UomManager = new UomManager(db, user);
         this.ProductManager = new ProductManager(db, user);
+        this.TermOfPaymentManager = new TermOfPaymentManager(db, user);
         this.YarnMaterialManager = new YarnMaterialManager(db, user);
         this.MaterialConstructionManager = new MaterialConstructionManager(db, user);
         this.ComodityManager = new ComodityManager(db, user);
@@ -95,10 +97,10 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
         var getComodity = valid.comodity && ObjectId.isValid(valid.comodity._id) ? this.ComodityManager.getSingleByIdOrDefault(valid.comodity._id) : Promise.resolve(null);
         var getQuality = valid.quality && ObjectId.isValid(valid.quality._id) ? this.QualityManager.getSingleByIdOrDefault(valid.quality._id) : Promise.resolve(null);
         var getBankAccount = valid.accountBank && ObjectId.isValid(valid.accountBank._id) ? this.AccountBankManager.getSingleByIdOrDefault(valid.accountBank._id) : Promise.resolve(null);
+        var getTermOfPayment = valid.termOfPayment && ObjectId.isValid(valid.termOfPayment._id) ? this.TermOfPaymentManager.getSingleByIdOrDefault(valid.termOfPayment._id) : Promise.resolve(null);
 
 
-
-        return Promise.all([getSalesContractPromise, getBuyer, getUom, getProduct, getYarnMaterial, getMaterialConstruction, getComodity, getQuality, getBankAccount])
+        return Promise.all([getSalesContractPromise, getBuyer, getUom, getProduct, getYarnMaterial, getMaterialConstruction, getComodity, getQuality, getBankAccount, getTermOfPayment])
             .then(results => {
                 var _salesContract = results[0];
                 var _buyer = results[1];
@@ -109,6 +111,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 var _comodity = results[6];
                 var _quality = results[7];
                 var _bank = results[8];
+                var _payment = results[9];
 
                 if (valid.uom) {
                     if (!valid.uom.unit || valid.uom.unit == '')
@@ -126,12 +129,13 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 }
 
 
-                if (!_yarn) {
-                    errors["yarnMaterial"] = i18n.__("WeavingSalesContract.yarnMaterial.isRequired:%s is not exsist", i18n.__("WeavingSalesContract.yarnMaterial._:YarnMaterial")); //"yarnMaterial tidak boleh kosong";
+                if (!_payment) {
+                    errors["termOfPayment"] = i18n.__("FinishingPrintingSalesContract.termOfPayment.isRequired:%s is not exsist", i18n.__("FinishingPrintingSalesContract.termOfPayment._:TermOfPayment")); //"termOfPayment tidak boleh kosong";
                 }
 
-                if (!valid.paymentMethod || valid.paymentMethod === '') {
-                    errors["paymentMethod"] = i18n.__("WeavingSalesContract.paymentMethod.isRequired:%s is required", i18n.__("WeavingSalesContract.paymentMethod._:PaymentMethod")); //"paymentMethod tidak boleh kosong";
+
+                if (!_yarn) {
+                    errors["yarnMaterial"] = i18n.__("WeavingSalesContract.yarnMaterial.isRequired:%s is not exsist", i18n.__("WeavingSalesContract.yarnMaterial._:YarnMaterial")); //"yarnMaterial tidak boleh kosong";
                 }
 
                 if (!_quality) {
@@ -164,7 +168,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
 
                 if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
                     errors["shippingQuantityTolerance"] = i18n.__("WeavingSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
-                else if (valid.shippingQuantityTolerance > 100) {
+                if (valid.shippingQuantityTolerance > 100) {
                     errors["shippingQuantityTolerance"] = i18n.__("WeavingSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
 
@@ -179,7 +183,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                     errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kosong";
                 }
                 if (!valid.incomeTax || valid.incomeTax === '') {
-                    errors["incomeTax"] = i18n.__("SpinningSalesContract.incomeTax.isRequired:%s is required", i18n.__("SpinningSalesContract.incomeTax._:IncomeTax")); //"incomeTax tidak boleh kosong";
+                    errors["incomeTax"] = i18n.__("WeavingSalesContract.incomeTax.isRequired:%s is required", i18n.__("WeavingSalesContract.incomeTax._:IncomeTax")); //"incomeTax tidak boleh kosong";
                 }
                 else {
                     valid.deliverySchedule = new Date(valid.deliverySchedule);
@@ -190,9 +194,16 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                     }
                 }
 
+
+
                 if (_buyer) {
                     valid.buyerId = new ObjectId(_buyer._id);
                     valid.buyer = _buyer;
+                    if (valid.buyer.type.trim().toLowerCase() == "ekspor") {
+                        if (!valid.termOfShipment || valid.termOfShipment == "") {
+                            errors["termOfShipment"] = i18n.__("WeavingSalesContract.termOfShipment.isRequired:%s is required", i18n.__("WeavingSalesContract.termOfShipment._:termOfShipment")); //"termOfShipment tidak boleh kosong";
+                        }
+                    }
                 }
                 if (_quality) {
                     valid.qualityId = new ObjectId(_quality._id);
@@ -265,7 +276,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             this.getSingleById(id)
                 .then(salesContract => {
 
-                    var getDefinition = require("../../pdf/definitions/finishing-printing-sales-contract");
+                    var getDefinition = require("../../pdf/definitions/weaving-sales-contract");
                     var definition = getDefinition(salesContract);
 
                     var generatePdf = require("../../pdf/pdf-generator");
