@@ -19,7 +19,7 @@ module.exports = function (salesContract) {
     
     var detail= salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + salesContract.uom.unit +"\n";
     detailprice+= salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + salesContract.uom.unit + ' ' + ppn;
-    amount=salesContract.price;
+    amount=salesContract.price * salesContract.orderQuantity;
     
     var comoDesc="";
     if(salesContract.comodityDescription!=""){
