@@ -13,6 +13,7 @@ describe('#dl-module', function (done) {
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
+    //Etl
     test('@ETL/DIM-BUYER', './etl/dim-buyer');
     test('@ETL/DIM-CATEGORY', './etl/dim-category');
     test('@ETL/DIM-DIVISION', './etl/dim-division');
@@ -26,6 +27,7 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-WEAVING-SALES-CONTRACT', './etl/fact-weaving-sales-contract');
     test('@ETL/FACT-FINISHING-PRINTING-SALES-CONTRACT', './etl/fact-finishing-printing-sales-contract');
     test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/fact-spinning-sales-contract');
+    test('@ETL/FACT-DAILY-OPERATIONS', './etl/fact-daily-operations');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
