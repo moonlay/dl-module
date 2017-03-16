@@ -306,7 +306,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         purchaseOrder.status = totalReceived === totalDealQuantity ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING;
                         // purchaseOrder.status = fulfillment.unitReceiptNoteDeliveredQuantity < fulfillment.deliveryOrderDeliveredQuantity ? poStatusEnum.RECEIVING : purchaseOrder.status;
                     }
-                    return this.purchaseOrderManager.update(purchaseOrder);
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 })
             jobs.push(job);
         })
@@ -369,7 +369,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         purchaseOrder.status = totalReceived === totalDealQuantity ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING;
                         // purchaseOrder.status = fulfillment.unitReceiptNoteDeliveredQuantity < fulfillment.deliveryOrderDeliveredQuantity ? poStatusEnum.RECEIVING : purchaseOrder.status;
                     }
-                    return this.purchaseOrderManager.update(purchaseOrder);
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 })
             jobs.push(job);
         })
@@ -440,7 +440,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         }, false);
                     if (purchaseOrder.status.value <= 7) {
                         purchaseOrder.status = poStatus ? poStatusEnum.RECEIVING : (unitReceiptNote.deliveryOrder.isClosed ? poStatusEnum.ARRIVED : poStatusEnum.ARRIVING);
-                    } return this.purchaseOrderManager.update(purchaseOrder);
+                    } return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 })
             jobs.push(job);
         })
@@ -503,7 +503,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         return prev && curr
                     }, true);
 
-                return this.deliveryOrderManager.update(deliveryOrder)
+                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
                     .then((results) => {
                         return Promise.resolve(unitReceiptNote);
                     })
@@ -569,7 +569,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         return prev && curr
                     }, true);
 
-                return this.deliveryOrderManager.update(deliveryOrder)
+                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
                     .then((results) => {
                         return Promise.resolve(unitReceiptNote);
                     })
@@ -627,7 +627,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         return prev && curr
                     }, true);
 
-                return this.deliveryOrderManager.update(deliveryOrder)
+                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
                     .then((results) => {
                         return Promise.resolve(unitReceiptNote);
                     })
@@ -811,5 +811,20 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         });
                 });
             });
+    }
+
+    updateCollectionUnitReceiptNote(unitReceiptNote) {
+        if (!unitReceiptNote.stamp) {
+            unitReceiptNote = new UnitReceiptNote(unitReceiptNote);
+        }
+
+        unitReceiptNote.stamp(this.user.username, 'manager');
+        return this.collection
+            .updateOne({
+                _id: unitReceiptNote._id
+            }, {
+                $set: unitReceiptNote
+            })
+            .then((result) => Promise.resolve(unitReceiptNote._id));
     }
 };

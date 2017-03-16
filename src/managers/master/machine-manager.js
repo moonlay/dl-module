@@ -7,6 +7,7 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var Machine = DLModels.master.Machine;
 var MachineEvent = DLModels.master.MachineEvent;
+var ArrayStep = DLModels.master.ArrayStep;
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var CodeGenerator = require('../../utils/code-generator');
@@ -91,17 +92,26 @@ module.exports = class MachineManager extends BaseManager {
             },
             code: valid.code
         });
+        var getStep = [];
+        for(var dataStep of valid.steps || []){
+            if(dataStep.hasOwnProperty("stepId")){
+                if (ObjectId.isValid(dataStep.stepId)){
+                    getStep.push(this.stepManager.getSingleByIdOrDefault(new ObjectId(dataStep.stepId)));
+                }
+            }
+        }
         var getUnit = valid.unit && ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(new ObjectId(valid.unit._id)) : Promise.resolve(null);
-        var getStep = valid.step && ObjectId.isValid(valid.step._id) ? this.stepManager.getSingleByIdOrDefault(new ObjectId(valid.step._id)) : Promise.resolve(null);
+        // var getStep = valid.step && ObjectId.isValid(valid.step._id) ? this.stepManager.getSingleByIdOrDefault(new ObjectId(valid.step._id)) : Promise.resolve(null);
         var getMachineType = valid.machineType && ObjectId.isValid(valid.machineType._id) ? this.machineTypeManager.getSingleByIdOrDefault(new ObjectId(valid.machineType._id)) : Promise.resolve(null);
 
         // 2. begin: Validation.
-        return Promise.all([getMachinePromise, getUnit, getStep, getMachineType])
+        return Promise.all([getMachinePromise, getUnit, getMachineType].concat(getStep)) // getStep
             .then(results => {
                 var _machine = results[0];
                 var _unit = results[1];
-                var _step = results[2];
-                var _machineType = results[3];
+                // var _step = results[2];
+                var _machineType = results[2];
+                var _steps = results.slice(3, results.length) || [];
 
                 if (_machine) {
                     errors["code"] = i18n.__("Machine.code.isExists:%s is already exists", i18n.__("Machine.code._:Code")); //"Code sudah ada";
@@ -113,8 +123,57 @@ module.exports = class MachineManager extends BaseManager {
                 if (!valid.unit)
                     errors["unit"] = i18n.__("Machine.unit.isRequired:%s is required", i18n.__("Machine.unit._:Unit")); //"Unit Tidak Boleh Kosong";
 
-                if (!valid.step)
-                    errors["step"] = i18n.__("Machine.step.isRequired:%s is required", i18n.__("Machine.step._:Step")); //"Step Tidak Boleh Kosong";
+                if (valid.steps && valid.steps.length > 0){
+                    var stepErrors = [];
+                    for (var tempStep of valid.steps || []) {
+                        var itemError = {};
+                        var _index = valid.steps.indexOf(tempStep);
+                        if(!tempStep || !tempStep.stepId || tempStep.stepId.toString() === "")
+                            itemError["step"] = i18n.__("Machine.steps.process.isRequired:%s is required", i18n.__("Machine.steps.process._:Step"));
+                        else{
+                            var itemDuplicateErrors = [];
+                            var valueArr = valid.steps.map(function (item) { return item.stepId.toString() });
+                            var isDuplicate = valueArr.some(function (item, idx) {
+                                var itemError = {};
+                                if (valueArr.indexOf(item) != idx) {
+                                    itemError["step"] = i18n.__("Machine.steps.process.isDuplicate:%s is duplicate", i18n.__("Machine.steps.process._:Step")); //"Nama barang tidak boleh kosong";
+                                }
+                                if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                    itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                                    itemDuplicateErrors[idx] = itemError;
+                                } else {
+                                    itemDuplicateErrors[idx] = itemError;
+                                }
+                                return valueArr.indexOf(item) != idx
+                            });
+                            if(isDuplicate){
+                                if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                                    Object.assign(itemError, itemDuplicateErrors[_index]);
+                                }
+                            } else {
+                                var isExist = false;
+                                for(var a of _steps){
+                                    if(tempStep.stepId.toString() === a._id.toString()){
+                                        isExist = true;
+                                        break;
+                                    }
+                                }
+                                if(!isExist)
+                                    itemError["step"] = i18n.__("Machine.steps.process.isNotExists:%s is not exists", i18n.__("Machine.steps.process._:Step"));
+                            }
+                        }
+                        stepErrors.push(itemError);
+                    }
+
+                    for (var stepError of stepErrors) {
+                        if (Object.getOwnPropertyNames(stepError).length > 0) {
+                            errors["steps"] = stepErrors;
+                            break;
+                        }
+                    }
+                }
+                else
+                    errors["steps"] = i18n.__("Machine.steps.isRequired:%s is required", i18n.__("Machine.steps._:Steps")); //"Steps harus diisi minimal satu";
 
                 if (!valid.machineType)
                     errors["machineType"] = i18n.__("Machine.machineType.isRequired:%s is required", i18n.__("Machine.machineType._:Machine Type")); //"Machine Type Tidak Boleh Kosong";
@@ -122,12 +181,19 @@ module.exports = class MachineManager extends BaseManager {
                 if (valid.unit && !_unit)
                     errors["unit"] = i18n.__("Machine.unit.isExists:%s is not exists", i18n.__("Machine.unit._:Unit")); //"Unit tidak ada";
 
-                if (valid.step && !_step)
-                    errors["step"] = i18n.__("Machine.step.isExists:%s is not exists", i18n.__("Machine.step._:Step")); //"Step tidak ada";
+                // if (valid.step && !_step)
+                //     errors["step"] = i18n.__("Machine.step.isExists:%s is not exists", i18n.__("Machine.step._:Step")); //"Step tidak ada";
 
                 if (valid.machineType && !_machineType)
                     errors["machineType"] = i18n.__("Machine.machineType.isExists:%s is not exists", i18n.__("Machine.machineType._:Machine Type")); //"MachineType tidak ada";
 
+                if(valid.monthlyCapacity && valid.monthlyCapacity !== '')
+                {
+                    if(valid.monthlyCapacity < 0)
+                    {
+                        errors["monthlyCapacity"] = i18n.__("Machine.monthlyCapacity.notLess:%s should not be less than 0", i18n.__("Machine.monthlyCapacity._:Monthly Capacity")); //"monthlyCapacity tidak boleh kurang dari 0";
+                    }
+                }
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
@@ -138,10 +204,20 @@ module.exports = class MachineManager extends BaseManager {
                     valid.unit = _unit;
                     valid.unitId = new ObjectId(_unit._id);
                 }
-                if(_step){
-                    valid.step = _step;
-                    valid.stepId = new ObjectId(_step._id);
+                // if(_step){
+                //     valid.step = _step;
+                //     valid.stepId = new ObjectId(_step._id);
+                // }
+                var steps = [];
+                for(var a of _steps){
+                    var stepTemp = new ArrayStep();
+                    stepTemp.stepId = new ObjectId(a._id);
+                    stepTemp.step = a;
+                    stepTemp.stamp(this.user.username, 'manager')
+                    steps.push(stepTemp);
                 }
+                if(steps.length > 0)
+                    valid.steps = steps;
                 if(_machineType){
                     valid.machineType = _machineType;
                     valid.machineTypeId = new ObjectId(_machineType._id);

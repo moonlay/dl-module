@@ -1,4 +1,3 @@
-var Say = require('../../utils/say');
 var global = require('../../global');
 
 module.exports = function (unitPaymentCorrection) {

@@ -66,6 +66,7 @@ module.exports = class DimMachineEtlManager extends BaseManager {
             _updatedDate: {
                 "$gt": timestamp
             },
+            "unit.division.code": "7LM8JOVL",
             _deleted: false
 
         }).toArray();

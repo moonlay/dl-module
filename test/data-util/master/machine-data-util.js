@@ -20,13 +20,14 @@ class MachineDataUtil {
     }
 
     getNewData() {
-        return Promise.all([unitTypeData.getTestData(), stepTypeData.getTestData(), machineEventData.getTestData(), machineEventData.getTestData2(), machineTypeData.getNewTestData()])
+        return Promise.all([unitTypeData.getTestData(), stepTypeData.getTestData(), stepTypeData.getTestData2() , machineEventData.getTestData(), machineEventData.getTestData2(), machineTypeData.getNewTestData()])
             .then(results => {
                 var _unit = results[0];
-                var _step = results[1];
-                var _machineEvent1 = results[2];
-                var _machineEvent2 = results[3];
-                var _machineType = results[4];
+                var _step1 = results[1];
+                var _step2 = results[2];
+                var _machineEvent1 = results[3];
+                var _machineEvent2 = results[4];
+                var _machineType = results[5];
                 var now = new Date();
                 var code = generateCode();
 
@@ -35,14 +36,22 @@ class MachineDataUtil {
                     name: `name [${code}]`,
                     unitId: _unit._id,
                     unit: _unit,
-                    stepId: _step._id,
-                    step: _step,
                     process: `process [${code}]`,
                     manufacture: `manufacture [${code}]`,
                     year: now.getFullYear(),
                     condition: `condition [${code}]`,
                     machineTypeId: _machineType._id,
                     machineType: _machineType,
+                    steps: [
+                        {
+                            stepId : _step1._id,
+                            step : _step1
+                        },
+                        {
+                            stepId : _step2._id,
+                            step : _step2
+                        }
+                    ],
                     machineEvents: [{
                         code: _machineEvent1.code,
                         no: _machineEvent1.no,
@@ -52,8 +61,7 @@ class MachineDataUtil {
                             no: _machineEvent2.no,
                             name: _machineEvent2.name,
                         }],
-                    // machineTypeId: _machineType._id,
-                    // machineType: _machineType,
+                    monthlyCapacity : 1000
 
                 };
                 return Promise.resolve(data);
@@ -61,24 +69,33 @@ class MachineDataUtil {
     }
 
     getTestData() {
-        return Promise.all([unitTypeData.getTestData(), stepTypeData.getTestData(), machineTypeData.getNewTestData()])
+        return Promise.all([unitTypeData.getTestData(), stepTypeData.getTestData(), stepTypeData.getTestData2(), machineTypeData.getNewTestData()])
             .then(results => {
                 var _unit = results[0];
-                var _step = results[1];
-                var _machineType = results[2];
+                var _step1 = results[1];
+                var _step2 = results[2];
+                var _machineType = results[3];
                 var data = {
                     code: "MCH/TEST/2016",
                     name: "Test Machine",
                     unitId: _unit._id,
                     unit: _unit,
-                    stepId: _step._id,
-                    step: _step,
                     process: "Process untuk unit test",
                     manufacture: "Manufacture untuk unit test",
                     year: 1900,
                     condition: "Baik",
                     machineTypeId: _machineType._id,
                     machineType: _machineType,
+                    steps: [
+                        {
+                            stepId : _step1._id,
+                            step : _step1
+                        },
+                        {
+                            stepId : _step2._id,
+                            step : _step2
+                        }
+                    ],
                     machineEvents: [{
                         code: 'unitTestCode01',
                         no: '1',
@@ -88,8 +105,7 @@ class MachineDataUtil {
                             no: '2',
                             name: 'unitTestName2',
                         }],
-                    // machineTypeId: _machineType._id,
-                    // machineType: _machineType,
+                    monthlyCapacity : 1000
 
                 };
                 return this.getSert(data);

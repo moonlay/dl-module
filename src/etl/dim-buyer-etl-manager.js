@@ -65,7 +65,7 @@ module.exports = class DimBuyerEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(1970, 1, 1);
+        var timestamp = new Date(time[0].finish);
         return this.buyerManager.collection.find({
             _updatedDate: {
                 "$gt": timestamp

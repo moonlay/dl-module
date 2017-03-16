@@ -33,7 +33,9 @@ module.exports = {
             FinishTypeManager: require('./src/managers/master/finish-type-manager'),
             StandardTestManager: require('./src/managers/master/standard-test-manager'),
             YarnMaterialManager: require('./src/managers/master/yarn-material-manager'),
-            ComodityManager: require('./src/managers/master/comodity-manager')
+            ComodityManager: require('./src/managers/master/comodity-manager'),
+            QualityManager: require('./src/managers/master/quality-manager'),
+            TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager')
         },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
@@ -61,7 +63,10 @@ module.exports = {
             }
         },
         sales:{
-            ProductionOrderManager: require('./src/managers/sales/production-order-manager')
+            ProductionOrderManager: require('./src/managers/sales/production-order-manager'),
+            FinishingPrintingSalesContractManager: require('./src/managers/sales/finishing-printing-sales-contract-manager'),
+            SpinningSalesContractManager: require('./src/managers/sales/spinning-sales-contract-manager'),
+            WeavingSalesContractManager: require('./src/managers/sales/weaving-sales-contract-manager')
         }
 
     },
@@ -99,7 +104,9 @@ module.exports = {
                 finishType: require('./test/data-util/master/finish-type-data-util'),
                 standardTest: require('./test/data-util/master/standard-test-data-util'),
                 colorType: require('./test/data-util/master/color-type-data-util'),
-                comodity: require('./test/data-util/master/comodity-data-util')
+                comodity: require('./test/data-util/master/comodity-data-util'),
+                quality: require('./test/data-util/master/quality-data-util'),
+                termOfPayment: require('./test/data-util/master/term-of-payment-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util")
@@ -111,7 +118,10 @@ module.exports = {
                 kanban: require('./test/data-util/production/finishing-printing/kanban-data-util')
             },
             sales:{
-                productionOrder: require('./test/data-util/sales/production-order-data-util')
+                productionOrder: require('./test/data-util/sales/production-order-data-util'),
+                finishingPrintingSalesContract: require('./test/data-util/sales/finishing-printing-sales-contract-data-util'),
+                weavingSalesContract: require('./test/data-util/sales/weaving-sales-contract-data-util'),
+                spinningSalesContract: require('./test/data-util/sales/spinning-sales-contract-data-util')
             }
         }
     },
@@ -125,6 +135,9 @@ module.exports = {
         dimUnit: require("./src/etl/dim-unit-etl-manager"),
         dimMachine: require("./src/etl/dim-machine-etl-manager"),
         factMonitoringEvent: require("./src/etl/fact-monitoring-event-etl-manager"),
-        factSalesContract: require("./src/etl/fact-sales-contract-etl-manager")
+        factProductionOrder: require("./src/etl/fact-production-order-etl-manager"),
+        factWeavingSalesContract: require("./src/etl/fact-weaving-sales-contract-etl-manager"),
+        factFinishingPrintingSalesContract: require("./src/etl/fact-finishing-printing-sales-contract-etl-manager"),
+        factSpinningSalesContract: require("./src/etl/fact-spinning-sales-contract-etl-manager")
     }
 }

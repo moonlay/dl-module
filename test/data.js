@@ -17,7 +17,10 @@ module.exports = {
         processType: require('./data-util/master/process-type-data-util'),
         colorType: require('./data-util/master/color-type-data-util'),
         machineType: require('./data-util/master/machine-type-data-util'),
-        machineEvent: require('./data-util/master/machine-event-data-util')
+        machineEvent: require('./data-util/master/machine-event-data-util'),
+        comodity: require('./data-util/master/comodity-data-util'),
+        quality: require('./data-util/master/quality-data-util'),
+        termOfPayment: require('./data-util/master/term-of-payment-data-util')
 
     },
     purchasing:{

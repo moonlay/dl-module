@@ -9,7 +9,7 @@ function terbilang(d, f) {
 
     if (frac != 0)
         strHasil = terbilang(Math.round(frac * 100), true);
-    strHasil = `${f?"sen":"rupiah"} ${strHasil}`.trim();
+    strHasil = `${f? f :"rupiah"} ${strHasil}`.trim();
     var nDigit = 0;
     var nPosisi = 0;
 

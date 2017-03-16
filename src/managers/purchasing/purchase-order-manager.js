@@ -267,23 +267,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         purchaseRequest.status = prStatusEnum.PROCESSING;
                         purchaseRequest.purchaseOrderIds = purchaseRequest.purchaseOrderIds || [];
                         purchaseRequest.purchaseOrderIds.push(id);
-                        return this.purchaseRequestManager.collection
-                            .updateOne({
-                                _id: purchaseRequest._id
-                            }, {
-                                $set: purchaseRequest
-                            })
-                            .then((result) => { return this.purchaseRequestManager.getSingleById(purchaseRequest._id) })
+                        return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
                     })
                     .then((purchaseRequest) => {
                         if (purchaseOrder.purchaseRequestId.toString() === purchaseRequest._id.toString()) {
                             purchaseOrder.purchaseRequest = purchaseRequest
-                            return this.collection
-                                .updateOne({
-                                    _id: purchaseOrder._id
-                                }, {
-                                    $set: purchaseOrder
-                                })
+                            return this.updateCollectionPurchaseOrder(purchaseOrder)
                                 .then((result) => Promise.resolve(purchaseOrder._id));
                         }
                     });
@@ -312,17 +301,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                             purchaseRequest.isUsed = false;
                                             purchaseRequest.status = prStatusEnum.POSTED;
                                         }
-                                        if (!purchaseRequest.stamp) {
-                                            purchaseRequest = new PurchaseRequest(purchaseRequest);
-                                        }
-                                        purchaseRequest.stamp(this.user.username, 'manager');
-                                        return this.purchaseRequestManager.collection
-                                            .updateOne({
-                                                _id: purchaseRequest._id
-                                            }, {
-                                                $set: purchaseRequest
-                                            })
-                                            .then((result) => Promise.resolve(purchaseOrderId))
+                                        return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
+                                            .then((result) => Promise.resolve(purchaseOrderId));
                                     })
                             })
                     })
@@ -464,8 +444,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             $and: [{
                                 $and: [{
                                     "date": {
-                                        $gte: startdate,
-                                        $lte: enddate
+                                        $gte: new Date(startdate),
+                                        $lte: new Date(enddate)
                                     }
                                 }, {
                                         "_deleted": false
@@ -538,8 +518,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                 $and: [{
                                     $and: [{
                                         "date": {
-                                            $gte: startdate,
-                                            $lte: enddate
+                                            $gte: new Date(startdate),
+                                            $lte: new Date(enddate)
                                         }
                                     }, {
                                             "_deleted": false
@@ -575,8 +555,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     $and: [{
                                         $and: [{
                                             "date": {
-                                                $gte: startdate,
-                                                $lte: enddate
+                                                $gte: new Date(startdate),
+                                                $lte: new Date(enddate)
                                             }
                                         }, {
                                                 "_deleted": false
@@ -682,8 +662,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             $and: [{
                                 $and: [{
                                     "date": {
-                                        $gte: startdate,
-                                        $lte: enddate
+                                        $gte: new Date(startdate),
+                                        $lte: new Date(enddate)
                                     }
                                 }, {
                                         "_deleted": false
@@ -756,8 +736,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             $and: [{
                                 $and: [{
                                     "date": {
-                                        $gte: startdate,
-                                        $lte: enddate
+                                        $gte: new Date(startdate),
+                                        $lte: new Date(enddate)
                                     }
                                 }, {
                                         "_deleted": false
@@ -952,5 +932,19 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     reject(e);
                 });
         });
+    }
+
+    updateCollectionPurchaseOrder(purchaseOrder) {
+        if (!purchaseOrder.stamp) {
+            purchaseOrder = new PurchaseOrder(purchaseOrder);
+        }
+        purchaseOrder.stamp(this.user.username, 'manager');
+        return this.collection
+            .updateOne({
+                _id: purchaseOrder._id
+            }, {
+                $set: purchaseOrder
+            })
+            .then((result) => { return this.getSingleByIdOrDefault(purchaseOrder._id) });
     }
 };
