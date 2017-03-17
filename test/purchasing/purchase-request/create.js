@@ -56,6 +56,9 @@ it('#02. should error when create new data using duplicate item', function (done
     PurchaseRequest.getNewData()
         .then(pr => {
             pr.items[1] = pr.items[0];
+            var item = Object.assign({},pr.items[1]);
+            delete item.product;
+            pr.items.push(item);
             purchaseRequestManager.create(pr)
                 .then(id => {
                     done("should error when create with empty data");
