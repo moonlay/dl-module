@@ -89,8 +89,9 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
         var getQuality = valid.quality && ObjectId.isValid(valid.quality._id) ? this.QualityManager.getSingleByIdOrDefault(valid.quality._id) : Promise.resolve(null);
         var getBankAccount = valid.accountBank && ObjectId.isValid(valid.accountBank._id) ? this.AccountBankManager.getSingleByIdOrDefault(valid.accountBank._id) : Promise.resolve(null);
         var getTermOfPayment = valid.termOfPayment && ObjectId.isValid(valid.termOfPayment._id) ? this.TermOfPaymentManager.getSingleByIdOrDefault(valid.termOfPayment._id) : Promise.resolve(null);
+        var getAgent = valid.agent && ObjectId.isValid(valid.agent._id) ? this.buyerManager.getSingleByIdOrDefault(valid.agent._id) : Promise.resolve(null);
 
-        return Promise.all([getSalesContractPromise, getBuyer, getUom, getComodity, getQuality, getBankAccount, getTermOfPayment])
+        return Promise.all([getSalesContractPromise, getBuyer, getUom, getComodity, getQuality, getBankAccount, getTermOfPayment, getAgent])
             .then(results => {
                 var _salesContract = results[0];
                 var _buyer = results[1];
@@ -99,6 +100,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                 var _quality = results[4];
                 var _bank = results[5];
                 var _payment = results[6];
+                var _agent = results[7];
 
                 if (valid.uom) {
                     if (!valid.uom.unit || valid.uom.unit == '')
@@ -126,15 +128,6 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                 else if (!valid.comodity)
                     errors["comodity"] = i18n.__("SpinningSalesContract.comodity.isRequired:%s is required", i18n.__("SpinningSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
 
-
-                if (!valid.condition || valid.condition === '') {
-                    errors["condition"] = i18n.__("SpinningSalesContract.condition.isRequired:%s is required", i18n.__("SpinningSalesContract.condition._:Condition")); //"condition tidak boleh kosong";
-                }
-
-                if (!valid.packing || valid.packing === '') {
-                    errors["packing"] = i18n.__("SpinningSalesContract.packing.isRequired:%s is required", i18n.__("SpinningSalesContract.packing._:Packing")); //"packing tidak boleh kosong";
-                }
-
                 if (!valid.incomeTax || valid.incomeTax === '') {
                     errors["incomeTax"] = i18n.__("SpinningSalesContract.incomeTax.isRequired:%s is required", i18n.__("SpinningSalesContract.incomeTax._:IncomeTax")); //"incomeTax tidak boleh kosong";
                 }
@@ -143,7 +136,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                     errors["buyer"] = i18n.__("SpinningSalesContract.buyer.isRequired:%s is not exists", i18n.__("SpinningSalesContract.buyer._:Buyer")); //"Buyer tidak boleh kosong";
 
                 if (!_bank)
-                    errors["accountBank"] = i18n.__("SpinningSalesContract.accountBank.isRequired:%s is not exists", i18n.__("SpinningSalesContract.accountBank._:Buyer")); //"accountBank tidak boleh kosong";
+                    errors["accountBank"] = i18n.__("SpinningSalesContract.accountBank.isRequired:%s is not exists", i18n.__("SpinningSalesContract.accountBank._:accountBank")); //"accountBank tidak boleh kosong";
 
                 if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
                     errors["shippingQuantityTolerance"] = i18n.__("SpinningSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("SpinningSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
@@ -174,9 +167,14 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                 if (_buyer) {
                     valid.buyerId = new ObjectId(_buyer._id);
                     valid.buyer = _buyer;
-                    if (valid.buyer.type.trim().toLowerCase() == "ekspor") {
+                    if (valid.buyer.type.trim().toLowerCase() == "ekspor" || valid.buyer.type.trim().toLowerCase() == "export") {
                         if (!valid.termOfShipment || valid.termOfShipment == "") {
                             errors["termOfShipment"] = i18n.__("SpinningSalesContract.termOfShipment.isRequired:%s is required", i18n.__("SpinningSalesContract.termOfShipment._:termOfShipment")); //"termOfShipment tidak boleh kosong";
+                        }
+                        if (_agent) {
+                            if (!valid.comission || valid.comission == "") {
+                                errors["comission"] = i18n.__("FinishingPrintingSalesContract.comission.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.comission._:Comission")); //"comission tidak boleh kosong";
+                            }
                         }
                     }
                 }
