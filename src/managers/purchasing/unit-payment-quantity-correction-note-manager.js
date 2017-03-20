@@ -253,11 +253,11 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         });
     }
 
-    _beforeInsert(unitPaymentPriceCorrectionNote) {
-        unitPaymentPriceCorrectionNote.no = generateCode();
-        if (unitPaymentPriceCorrectionNote.unitPaymentOrder.useIncomeTax)
-            unitPaymentPriceCorrectionNote.returNoteNo = generateCode();
-        return Promise.resolve(unitPaymentPriceCorrectionNote)
+    _beforeInsert(unitPaymentQuantityCorrectionNote) {
+        unitPaymentQuantityCorrectionNote.no = generateCode("correctionPrice");
+        if (unitPaymentQuantityCorrectionNote.unitPaymentOrder.useIncomeTax)
+            unitPaymentQuantityCorrectionNote.returNoteNo = generateCode("returCode");
+        return Promise.resolve(unitPaymentQuantityCorrectionNote)
     }
 
     _afterInsert(id) {
