@@ -15,6 +15,7 @@ module.exports = function (salesContract) {
     var remark = [];
     var footer = [];
     var detailprice = "";
+    var deliverySchedule = moment(salesContract.deliverySchedule);
 
     var ppn = salesContract.incomeTax;
 
@@ -163,7 +164,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                        text: `${deliverySchedule.format('MMMM YYYY')}`,
                         style: ['size09']
                     }]
             }, {
@@ -565,7 +566,7 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text: `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                    text: `${deliverySchedule.format('MMMM YYYY')}`,
                     style: ['size09']
                 }]
         }, {
