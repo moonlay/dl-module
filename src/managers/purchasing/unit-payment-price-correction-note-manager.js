@@ -321,9 +321,9 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
     }
 
     _beforeInsert(unitPaymentQuantityCorrectionNote) {
-        unitPaymentQuantityCorrectionNote.no = generateCode();
+        unitPaymentQuantityCorrectionNote.no = generateCode("correctionPrice");
         if (unitPaymentQuantityCorrectionNote.unitPaymentOrder.useIncomeTax)
-            unitPaymentQuantityCorrectionNote.returNoteNo = generateCode();
+            unitPaymentQuantityCorrectionNote.returNoteNo = generateCode("returCode");
         return Promise.resolve(unitPaymentQuantityCorrectionNote)
     }
 
