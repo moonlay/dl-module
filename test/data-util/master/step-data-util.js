@@ -22,8 +22,8 @@ class StepDataUtil {
                 data.process = code;
                 var item1 = `data 1 ${code}`;
                 var item2 = `data 2 ${code}`;
-                data.itemMonitoring.push(item1);
-                data.itemMonitoring.push(item2);
+                //data.itemMonitoring.push(item1);
+               // data.itemMonitoring.push(item2);
 
                 var process1 = {
                     name : `data 1 ${code}`,
@@ -82,7 +82,7 @@ class StepDataUtil {
                 ];
                  var data = {
                     process: _process,
-                    itemMonitoring:_itemMonitoring,
+                   // itemMonitoring:_itemMonitoring,
                     stepIndicators:_stepIndicator
                 };
                 return this.getSert(data);
@@ -121,7 +121,7 @@ class StepDataUtil {
                 ];
                  var data = {
                     process: _process,
-                    itemMonitoring:_itemMonitoring,
+                   // itemMonitoring:_itemMonitoring,
                     stepIndicators:_stepIndicator
                 };
                 return this.getSert(data);

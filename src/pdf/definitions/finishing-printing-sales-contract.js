@@ -38,7 +38,7 @@ module.exports = function (salesContract) {
     if(salesContract.comodityDescription!=""){
         comoDesc='\n'+salesContract.comodityDescription;
     }
-    var code=generateCode();
+    var code=salesContract.salesContractNo;
 
     if(salesContract.buyer.type.toLowerCase()=="export"||salesContract.buyer.type.toLowerCase()=="ekspor"){
         moment.locale();
@@ -642,7 +642,7 @@ module.exports = function (salesContract) {
                 style: ['center']
             }, {
                     width: '50%',
-                    stack: ['Hormat Kami,', '\n\n\n\n', '(    SURATMI   )', 'Kabag. Penj. F/P'],
+                    stack: ['Hormat Kami,', '\n\n\n\n', '(   RUDY KURNIAWAN  )', 'Kadiv. Penjualan'],
                     style: ['center']
                 }],
             style: ['size09']
