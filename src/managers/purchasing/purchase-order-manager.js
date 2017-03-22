@@ -155,6 +155,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                 poItem.defaultUom = _prItem.product.uom;
                                 break;
                             }
+                        poItem.defaultQuantity = Number(poItem.defaultQuantity);
                     }
                 }
 

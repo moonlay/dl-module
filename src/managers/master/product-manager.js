@@ -104,8 +104,8 @@ module.exports = class ProductManager extends BaseManager {
                 if (!valid.stamp)
                     valid = new Product(valid);
                 valid.stamp(this.user.username, 'manager');
-                valid.currency.rate = parseFloat(valid.currency.rate);
-                valid.price = parseFloat(valid.price);
+                valid.currency.rate = Number(valid.currency.rate);
+                valid.price = Number(valid.price);
                 return Promise.resolve(valid);
             });
     }
@@ -213,8 +213,8 @@ module.exports = class ProductManager extends BaseManager {
                                                 for (var j = 0; j < uom.length; j++) {
                                                     if (data[i]["uom"] == uom[j]["unit"] && data[i]["currency"] == currency[c]["code"]) {
                                                         valid.currency = currency[c];
-                                                        valid.currency.rate = parseFloat(valid.currency.rate);
-                                                        valid.price = parseFloat(valid.price);
+                                                        valid.currency.rate = Number(valid.currency.rate);
+                                                        valid.price = Number(valid.price);
                                                         valid.uomId = new ObjectId(uom[j]["_id"]);
                                                         valid.uom = uom[j];
                                                         valid.stamp(this.user.username, 'manager');
