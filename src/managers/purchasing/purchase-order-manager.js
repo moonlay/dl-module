@@ -436,33 +436,77 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
     getDataPOUnit(startdate, enddate) {
-        return new Promise((resolve, reject) => {
-            if (startdate !== undefined && enddate !== undefined && startdate !== "" && enddate !== "") {
+        var validStartDate = startdate && startdate !== "" && startdate != "undefined" ? new Date(startdate) : new Date(null);
+        var validEndDate = enddate && enddate !== "" && enddate != "undefined" ? new Date(enddate) : new Date();
 
+        return new Promise((resolve, reject) => {
+            this.collection.aggregate(
+                [{
+                    $match: {
+                        $and: [{
+                            $and: [{
+                                "date": {
+                                    $gte: validStartDate,
+                                    $lte: validEndDate
+                                }
+                            }, {
+                                    "_deleted": false
+                                }
+
+                            ]
+                        }, {
+                                "purchaseOrderExternal.isPosted": true
+                            }]
+
+                    }
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: "$unit.division",
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                }
+                            }
+                        }
+                    }]
+            )
+            .toArray(function (err, result) {
+                assert.equal(err, null);
+                resolve(result);
+            });
+        });
+    }
+
+    getDataPODetailUnit(startdate, enddate, divisiId) {
+        var validStartDate = startdate && startdate !== "" && startdate != "undefined" ? new Date(startdate) : new Date(null);
+        var validEndDate = enddate && enddate !== "" && enddate != "undefined" ? new Date(enddate) : new Date();
+
+        return new Promise((resolve, reject) => {
+            if (divisiId === undefined) {
                 this.collection.aggregate(
                     [{
                         $match: {
                             $and: [{
                                 $and: [{
                                     "date": {
-                                        $gte: new Date(startdate),
-                                        $lte: new Date(enddate)
+                                        $gte: validStartDate,
+                                        $lte: validEndDate
                                     }
                                 }, {
                                         "_deleted": false
-                                    }
-
-                                ]
+                                    }]
                             }, {
                                     "purchaseOrderExternal.isPosted": true
                                 }]
-
                         }
+
                     }, {
                             $unwind: "$items"
                         }, {
                             $group: {
-                                _id: "$unit.division",
+                                _id: "$unit.name",
                                 "pricetotal": {
                                     $sum: {
                                         $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
@@ -475,23 +519,33 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         assert.equal(err, null);
                         resolve(result);
                     });
-
             }
             else {
                 this.collection.aggregate(
                     [{
                         $match: {
                             $and: [{
-                                "purchaseOrderExternal.isPosted": true
+                                $and: [{
+                                    $and: [{
+                                        "date": {
+                                            $gte: validStartDate,
+                                            $lte: validEndDate
+                                        }
+                                    }, {
+                                            "_deleted": false
+                                        }]
+                                }, {
+                                        "purchaseOrderExternal.isPosted": true
+                                    }]
                             }, {
-                                    "_deleted": false
+                                    "unit.division._id": new ObjectId(divisiId)
                                 }]
                         }
                     }, {
                             $unwind: "$items"
                         }, {
                             $group: {
-                                _id: "$unit.division",
+                                _id: "$unit.name",
                                 "pricetotal": {
                                     $sum: {
                                         $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
@@ -500,302 +554,98 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             }
                         }]
                 )
-                    .toArray(function (err, result) {
-                        assert.equal(err, null);
-                        resolve(result);
-                    });
-
-            }
-        });
-    }
-
-    getDataPODetailUnit(startdate, enddate, divisiId) {
-        return new Promise((resolve, reject) => {
-            if (startdate !== undefined && enddate !== undefined && startdate !== "" && enddate !== "") {
-                if (divisiId === undefined) {
-                    this.collection.aggregate(
-                        [{
-                            $match: {
-                                $and: [{
-                                    $and: [{
-                                        "date": {
-                                            $gte: new Date(startdate),
-                                            $lte: new Date(enddate)
-                                        }
-                                    }, {
-                                            "_deleted": false
-                                        }]
-                                }, {
-                                        "purchaseOrderExternal.isPosted": true
-                                    }]
-                            }
-
-                        }, {
-                                $unwind: "$items"
-                            }, {
-                                $group: {
-                                    _id: "$unit.name",
-                                    "pricetotal": {
-                                        $sum: {
-                                            $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                        }
-                                    }
-                                }
-                            }]
-                    )
-                        .toArray(function (err, result) {
-                            assert.equal(err, null);
-                            resolve(result);
-                        });
-                }
-                else {
-                    this.collection.aggregate(
-                        [{
-                            $match: {
-                                $and: [{
-                                    $and: [{
-                                        $and: [{
-                                            "date": {
-                                                $gte: new Date(startdate),
-                                                $lte: new Date(enddate)
-                                            }
-                                        }, {
-                                                "_deleted": false
-                                            }]
-                                    }, {
-                                            "purchaseOrderExternal.isPosted": true
-                                        }]
-                                }, {
-                                        "unit.division._id": new ObjectId(divisiId)
-                                    }]
-                            }
-                        }, {
-                                $unwind: "$items"
-                            }, {
-                                $group: {
-                                    _id: "$unit.name",
-                                    "pricetotal": {
-                                        $sum: {
-                                            $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                        }
-                                    }
-                                }
-                            }]
-                    )
-                        .toArray(function (err, result) {
-                            assert.equal(err, null);
-                            resolve(result);
-                        });
-                }
-            }
-            else {
-                if (divisiId == undefined) {
-                    this.collection.aggregate(
-                        [{
-                            $match: {
-                                $and: [{
-                                    "purchaseOrderExternal.isPosted": true
-                                }, {
-                                        "_deleted": false
-                                    }]
-                            }
-
-                        }, {
-                                $unwind: "$items"
-                            }, {
-                                $group: {
-                                    _id: "$unit.name",
-                                    "pricetotal": {
-                                        $sum: {
-                                            $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                        }
-                                    }
-                                }
-                            }]
-                    )
-                        .toArray(function (err, result) {
-                            assert.equal(err, null);
-                            resolve(result);
-                        });
-                }
-                else {
-                    this.collection.aggregate(
-                        [{
-                            $match: {
-                                $and: [{
-                                    $and: [{
-                                        "purchaseOrderExternal.isPosted": true
-                                    }, {
-                                            "_deleted": false
-                                        }]
-                                }, {
-                                        "unit.division._id": new ObjectId(divisiId)
-                                    }]
-                            }
-                        }, {
-                                $unwind: "$items"
-                            }, {
-                                $group: {
-                                    _id: "$unit.name",
-                                    "pricetotal": {
-                                        $sum: {
-                                            $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                        }
-                                    }
-                                }
-                            }]
-                    )
-                        .toArray(function (err, result) {
-                            assert.equal(err, null);
-                            resolve(result);
-                        });
-                }
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
             }
         });
     }
 
     getDataPOCategory(startdate, enddate) {
+        var validStartDate = startdate && startdate !== "" && startdate != "undefined" ? new Date(startdate) : new Date(null);
+        var validEndDate = enddate && enddate !== "" && enddate != "undefined" ? new Date(enddate) : new Date();
+
         return new Promise((resolve, reject) => {
-            if (startdate !== undefined && enddate !== undefined && startdate !== "" && enddate !== "") {
-                this.collection.aggregate(
-                    [{
-                        $match: {
+            this.collection.aggregate(
+                [{
+                    $match: {
+                        $and: [{
                             $and: [{
-                                $and: [{
-                                    "date": {
-                                        $gte: new Date(startdate),
-                                        $lte: new Date(enddate)
-                                    }
-                                }, {
-                                        "_deleted": false
-                                    }
-
-                                ]
-                            }, {
-                                    "purchaseOrderExternal.isPosted": true
-                                }]
-
-                        }
-                    }, {
-                            $unwind: "$items"
-                        }, {
-                            $group: {
-                                _id: "$category.name",
-                                "pricetotal": {
-                                    $sum: {
-                                        $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                    }
+                                "date": {
+                                    $gte: validStartDate,
+                                    $lte: validEndDate
                                 }
-                            }
-                        }]
-                )
-                    .toArray(function (err, result) {
-                        assert.equal(err, null);
-                        resolve(result);
-                    });
-
-            }
-            else {
-                this.collection.aggregate(
-                    [{
-                        $match: {
-
-                            $and: [{
-                                "purchaseOrderExternal.isPosted": true
                             }, {
                                     "_deleted": false
-                                }]
-                        }
-                    }, {
-                            $unwind: "$items"
+                                }
+
+                            ]
                         }, {
-                            $group: {
-                                _id: "$category.name",
-                                "pricetotal": {
-                                    $sum: {
-                                        $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                    }
+                                "purchaseOrderExternal.isPosted": true
+                            }]
+
+                    }
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: "$category.name",
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                                 }
                             }
-                        }]
-                )
-                    .toArray(function (err, result) {
-                        assert.equal(err, null);
-                        resolve(result);
-                    });
-
-            }
+                        }
+                    }]
+            )
+            .toArray(function (err, result) {
+                assert.equal(err, null);
+                resolve(result);
+            });
         });
     }
 
     getDataPOUnitCategory(startdate, enddate) {
+        var validStartDate = startdate && startdate !== "" && startdate != "undefined" ? new Date(startdate) : new Date(null);
+        var validEndDate = enddate && enddate !== "" && enddate != "undefined" ? new Date(enddate) : new Date();
+
         return new Promise((resolve, reject) => {
-            if (startdate != undefined && enddate != undefined && startdate != "" && enddate != "") {
-                this.collection.aggregate(
-                    [{
-                        $match: {
+            this.collection.aggregate(
+                [{
+                    $match: {
+                        $and: [{
                             $and: [{
-                                $and: [{
-                                    "date": {
-                                        $gte: new Date(startdate),
-                                        $lte: new Date(enddate)
-                                    }
-                                }, {
-                                        "_deleted": false
-                                    }]
-                            }, {
-                                    "isPosted": true
-                                }]
-                        }
-
-                    }, {
-                            $unwind: "$items"
-                        }, {
-                            $group: {
-                                _id: { division: "$unit.division.name", unit: "$unit.name", category: "$category.name" },
-                                "pricetotal": {
-                                    $sum: {
-                                        $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                    }
+                                "date": {
+                                    $gte: validStartDate,
+                                    $lte: validEndDate
                                 }
-                            }
-                        }]
-                ).sort({ "_id": 1 })
-                    .toArray(function (err, result) {
-                        assert.equal(err, null);
-                        resolve(result);
-                    });
-            }
-
-            else {
-                this.collection.aggregate(
-                    [{
-                        $match: {
-                            $and: [{
-                                "isPosted": true
                             }, {
                                     "_deleted": false
                                 }]
-
-                        }
-                    }, {
-                            $unwind: "$items"
                         }, {
-                            $group: {
-                                _id: { division: "$unit.division.name", unit: "$unit.name", category: "$category.name" },
-                                "pricetotal": {
-                                    $sum: {
-                                        $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                    }
+                                "isPosted": true
+                            }]
+                    }
+
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: { division: "$unit.division.name", unit: "$unit.name", category: "$category.name" },
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                                 }
                             }
-                        }]
-                ).sort({ "_id": 1 })
-                    .toArray(function (err, result) {
-                        assert.equal(err, null);
-                        resolve(result);
-                    });
-            }
+                        }
+                    }]
+            )
+            .sort({ "_id": 1 })
+            .toArray(function (err, result) {
+                assert.equal(err, null);
+                resolve(result);
+            });
         });
     }
 
