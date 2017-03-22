@@ -24,32 +24,33 @@ module.exports = class ProductManager extends BaseManager {
     }
 
     _getQuery(paging) {
-        var deleted = {
-            _deleted: false
-        };
-        var query = paging.keyword ? {
-            '$and': [deleted]
-        } : deleted;
+        var _default = {
+            _deleted: false,
+            
+        },
+            pagingFilter = paging.filter || {},
+            keywordFilter = {},
+
+            query = {};
 
         if (paging.keyword) {
-            var regex = new RegExp(paging.keyword, "i");
-            var filterCode = {
+            var keyRegex = new RegExp(paging.keyword, "i");
+            var codeFilter = {
                 'code': {
-                    '$regex': regex
+                    '$regex': keyRegex
                 }
             };
-            var filterName = {
+            var nameFilter = {
                 'name': {
-                    '$regex': regex
+                    '$regex': keyRegex
                 }
-            };
-            var $or = {
-                '$or': [filterCode, filterName]
             };
 
-            query['$and'].push($or);
+            keywordFilter['$or'] = [codeFilter, nameFilter];
         }
 
+
+        query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
     }
 
@@ -310,7 +311,7 @@ module.exports = class ProductManager extends BaseManager {
             });
     }
 
-     readById(paging) {
+    readById(paging) {
         var _paging = Object.assign({
             order: {},
             filter: {},

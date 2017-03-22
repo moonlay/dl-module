@@ -34,7 +34,8 @@ module.exports = {
             StandardTestManager: require('./src/managers/master/standard-test-manager'),
             YarnMaterialManager: require('./src/managers/master/yarn-material-manager'),
             ComodityManager: require('./src/managers/master/comodity-manager'),
-            QualityManager: require('./src/managers/master/quality-manager')
+            QualityManager: require('./src/managers/master/quality-manager'),
+            TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager')
         },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
@@ -104,7 +105,8 @@ module.exports = {
                 standardTest: require('./test/data-util/master/standard-test-data-util'),
                 colorType: require('./test/data-util/master/color-type-data-util'),
                 comodity: require('./test/data-util/master/comodity-data-util'),
-                quality: require('./test/data-util/master/quality-data-util')
+                quality: require('./test/data-util/master/quality-data-util'),
+                termOfPayment: require('./test/data-util/master/term-of-payment-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util")
@@ -133,6 +135,9 @@ module.exports = {
         dimUnit: require("./src/etl/dim-unit-etl-manager"),
         dimMachine: require("./src/etl/dim-machine-etl-manager"),
         factMonitoringEvent: require("./src/etl/fact-monitoring-event-etl-manager"),
-        factSalesContract: require("./src/etl/fact-sales-contract-etl-manager")
+        factProductionOrder: require("./src/etl/fact-production-order-etl-manager"),
+        factWeavingSalesContract: require("./src/etl/fact-weaving-sales-contract-etl-manager"),
+        factFinishingPrintingSalesContract: require("./src/etl/fact-finishing-printing-sales-contract-etl-manager"),
+        factSpinningSalesContract: require("./src/etl/fact-spinning-sales-contract-etl-manager")
     }
 }

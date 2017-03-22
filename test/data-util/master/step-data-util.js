@@ -87,5 +87,44 @@ class StepDataUtil {
                 };
                 return this.getSert(data);
     }
+
+    getTestData2(data, items, indicator) {
+                var _process = data ? data : "SCOURING";
+                var _itemMonitoring = items ? items : [
+                        'Speed (m/mnt)', 'TEMP. L BOX', 'TIMING', 'LEBAR KAIN'
+                    ];
+                var _stepIndicator = indicator ? indicator : [
+                    {
+                        name : 'SPEED',
+                        value : '60',
+                        uom : 'm/mnt'
+                    },
+                    {
+                        name : 'TEMP. L BOX',
+                        value : '100',
+                        uom : 'C'
+                    },
+                    {
+                        name : 'TIMING',
+                        value : '30',
+                        uom : 'menit'
+                    },
+                    {
+                        name : 'LEBAR KAIN',
+                        value : '90',
+                        uom : 'inch'
+                    },
+                    {
+                        name : 'COUNTER',
+                        value : ''
+                    }
+                ];
+                 var data = {
+                    process: _process,
+                    itemMonitoring:_itemMonitoring,
+                    stepIndicators:_stepIndicator
+                };
+                return this.getSert(data);
+    }
 }
 module.exports = new StepDataUtil();

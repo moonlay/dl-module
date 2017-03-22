@@ -8,20 +8,20 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var SalesContractManager = require("../managers/sales/production-order-manager");
+var SpinningSalesContractManager = require("../managers/sales/spinning-sales-contract-manager");
 
-module.exports = class FactSalesContractEtlManager extends BaseManager {
+module.exports = class FactSpinningSalesContractEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.salesContractManager = new SalesContractManager(db, user);
+        this.spinningSalesContractManager = new SpinningSalesContractManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
 
     run() {
         var startedDate = new Date()
         this.migrationLog.insert({
-            description: "Fact Sales Contract from MongoDB to Azure DWH",
+            description: "Fact Spinning Sales Contract from MongoDB to Azure DWH",
             start: startedDate,
         })
         return this.timestamp()
@@ -32,7 +32,7 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Sales Contract from MongoDB to Azure DWH",
+                    description: "Fact Spinning Sales Contract from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -44,7 +44,7 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Sales Contract from MongoDB to Azure DWH",
+                    description: "Fact Spinning Sales Contract from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -56,14 +56,14 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
 
     timestamp() {
         return this.migrationLog.find({
-            description: "Fact Sales Contract from MongoDB to Azure DWH",
+            description: "Fact Spinning Sales Contract from MongoDB to Azure DWH",
             status: "Successful"
         }).sort({ finish: -1 }).limit(1).toArray()
     }
 
     extract(time) {
-        var timestamp = new Date(time[0].finish);
-        return this.salesContractManager.collection.find({
+        var timestamp = new Date(1970, 1, 1);
+        return this.spinningSalesContractManager.collection.find({
             _deleted: false,
             _updatedDate: {
                 $gt: timestamp
@@ -95,25 +95,22 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
             var materialConstruction = item.materialConstruction ? item.materialConstruction.name.replace(/'/g, '"') : null;
             var yarnMaterialNo = item.yarnMaterial ? item.yarnMaterial.name.replace(/'/g, '"') : null;
             var materialWidth = item.materialWidth ? item.materialWidth : null;
-            
+
             return {
                 salesContractNo: item.salesContractNo ? `'${item.salesContractNo}'` : null,
-                productionOrderNo: item.orderNo ? `'${item.orderNo}'` : null,
-                orderType: item.orderType ? `'${item.orderType.name}'` : null,
-                processType: item.processType ? `'${item.processType.name.replace(/'/g, '"')}'` : null,
-                material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null,
-                materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
-                yarnMaterialNo: item.yarnMaterial ? `'${item.yarnMaterial.name.replace(/'/g, '"')}'` : null,
-                materialWidth: item.materialWidth ? `'${item.materialWidth}'` : null,
-                orderQuantity: item.orderQuantity ? `${item.orderQuantity}` : null,
-                orderUom: item.uom ? `'${item.uom.unit.replace(/'/g, '"')}'` : null,
+                salesContractDate: item._createdDate ? `'${moment(item._createdDate).format("L")}'` : null,
                 buyer: item.buyer ? `'${item.buyer.name.replace(/'/g, '"')}'` : null,
                 buyerType: item.buyer ? `'${item.buyer.type.replace(/'/g, '"')}'` : null,
-                deliveryDate: item.deliveryDate ? `'${moment(item.deliveryDate).format("L")}'` : null,
-                createdDate: item._createdDate ? `'${moment(item._createdDate).format("L")}'` : null,
+                orderType: item.orderType ? `'${item.orderType.name}'` : null,
+                orderQuantity: item.orderQuantity ? `${item.orderQuantity}` : null,
+                orderUom: item.uom ? `'${item.uom.unit.replace(/'/g, '"')}'` : null,
                 totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
+                buyerCode: item.buyer ? `'${item.buyer.code}'` : null,
+                productionType: `'${"Spinning"}'`,
                 construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
-                buyerCode: item.buyer ? `'${item.buyer.code}'` : null
+                materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
+                materialWidth: item.materialWidth ? `'${item.materialWidth}'` : null,
+                material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null
             }
         });
         return Promise.resolve([].concat.apply([], result));
@@ -150,9 +147,9 @@ module.exports = class FactSalesContractEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO DL_Fact_Sales_Contract_Temp([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi], [Konstruksi], [Kode Buyer]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion}, ${item.construction}, ${item.buyerCode});\n`;
+                                var queryString = `INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material]) VALUES(${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 1000 == 0) {
+                                if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "";
                                 }

@@ -139,7 +139,12 @@ module.exports = function (kanban) {
             var rightColumn = [];
 
             for (i=0;i<step.stepIndicators.length;i++){
-                var stepIndicatorCell = getStepIndicatorCell(step.stepIndicators[i].name, step.stepIndicators[i].value, step.stepIndicators[i].uom);
+                var stepIndicatorCell;
+                if (step.stepIndicators[i])
+                    stepIndicatorCell = getStepIndicatorCell(step.stepIndicators[i].name, step.stepIndicators[i].value, step.stepIndicators[i].uom);
+                else
+                    stepIndicatorCell = getStepIndicatorCell("-", "-", "");
+
                 if (i % 2 > 0)
                     rightColumn.push(stepIndicatorCell);
                 else
@@ -153,7 +158,6 @@ module.exports = function (kanban) {
                 flowProcess.push(getFlowProcess(leftColumn[i], rightColumn[i]));
             }
         }
-        console.log(flowProcess);
         return flowProcess;
     })();
 
@@ -211,76 +215,65 @@ module.exports = function (kanban) {
         
     var tbody2 = [];
 
-    var theader2 = [
-        {text: '\nNO PCS', style: 'tableHeader', rowSpan:2, alignment: 'center'}, 
-        {text: 'PANJANG', style: 'tableHeader', colSpan: 3, alignment: 'center'}, '', '',
-        {text: 'SG', style: 'tableHeader', alignment: 'center'},
-        {text: '\nCBR', style: 'tableHeader', rowSpan:2, alignment: 'center'},
-        {text: '\nMERCERIZE', style: 'tableHeader', rowSpan:2, alignment: 'center'},
-        {text: '\nWD', style: 'tableHeader', rowSpan:2, alignment: 'center'},
-        {text: '\nSTENTER', style: 'tableHeader', rowSpan:2, alignment: 'center'},
-        {text: '\nPRINT', style: 'tableHeader', rowSpan:2, alignment: 'center'},
-        {text: '\nSTEAM', style: 'tableHeader', rowSpan:2, alignment: 'center'},
-        {text: '\nWASHING', style: 'tableHeader', rowSpan:2, alignment: 'center'},
-        {text: '\nSTENTER', style: 'tableHeader', rowSpan:2, alignment: 'center'},
-        {text: '\nSANFOR', style: 'tableHeader', rowSpan:2, alignment: 'center'},
-        {text: '\nQC', style: 'tableHeader', rowSpan:2, alignment: 'center'}
-    ]
+    var theader2 = (function(){
+        var header = [];
+        header.push({text: '\nNO PCS', style: 'tableHeader', rowSpan:2, alignment: 'center'});
+        header.push({text: 'PANJANG', style: 'tableHeader', colSpan: 3, alignment: 'center'});
+        header.push('');
+        header.push('');
 
-    var theader3 = [
-        '', 
-        {text: 'ASLI', style: 'tableHeader', alignment: 'center'}, 
-        {text: 'GRADE', style: 'tableHeader', alignment: 'center'}, 
-        {text: 'CHECK', style: 'tableHeader', alignment: 'center'}, 
-        {text: 'DESIZING', style: 'tableHeader', alignment: 'center'}, 
-        '', 
-        '', 
-        '', 
-        '', 
-        '', 
-        '', 
-        '', 
-        '', 
-        '', 
-        '', 
-    ]
+        for (i=0;i<steps.length;i++){
+            var name = steps[i].process;
+            header.push({text: '\n' + name, style: 'tableHeader', rowSpan:2, alignment: 'center'});
+        }
+
+        header.push({text: '\nQC', style: 'tableHeader', rowSpan:2, alignment: 'center'});
+        return header;
+    })();
+
+    var theader3 = (function(){
+        var header = [];
+        header.push('');
+        header.push({text: 'ASLI', style: 'tableHeader', alignment: 'center'});
+        header.push({text: 'GRADE', style: 'tableHeader', alignment: 'center'});
+        header.push({text: 'CHECK', style: 'tableHeader', alignment: 'center'});
+
+        for (i=0;i<steps.length;i++){
+            header.push('');
+        }
+        
+        header.push('');
+        return header;
+    })();
 
     function getIndexedRow(index){
-        return [
-            {text: index, style: ["size06"], alignment: 'center'}, '', '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            ''
-        ]
+        var indexedRow = [];
+        indexedRow.push({text: index, style: ["size06"], alignment: 'center'})
+        indexedRow.push('');
+        indexedRow.push('');
+        indexedRow.push('');
+
+        for (i=0;i<steps.length;i++){
+            indexedRow.push('');
+        }
+        
+        indexedRow.push('');
+        return indexedRow;
     }
         
     function getFooter(label){
-        return [
-            {text: label, style: 'tableHeader', colSpan:3, alignment: 'center'}, 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            '', 
-            ''
-        ]
+        var footer = [];
+        footer.push({text: label, style: 'tableHeader', colSpan:3, alignment: 'center'})
+        footer.push('');
+        footer.push('');
+        footer.push('');
+
+        for (i=0;i<steps.length;i++){
+            footer.push('');
+        }
+
+        footer.push('');
+        return footer;
     }
         
     var tfooter2 = getFooter('\nPARAF CHECK\n\n')
@@ -288,17 +281,27 @@ module.exports = function (kanban) {
         
     tbody2.push(theader2);
     tbody2.push(theader3);
-    for (i = 1; i <= 20; i++) { 
-        tbody2.push(getIndexedRow(i))
+    for (index = 1; index <= 20; index++) { 
+        tbody2.push(getIndexedRow(index))
     }
     tbody2.push(tfooter2);
     tbody2.push(tfooter3);
 
+    var table2Widths = ['2%', '3%', '3%', '3%']
+    var stepWidth = 87 / steps.length;
+    stepWidth = stepWidth + "%";
+    for (step in steps)
+    {
+        table2Widths.push(stepWidth);
+    }
+    table2Widths.push('2%');
+
     var table2 = [{table: {
-                            headerRows: 2,
-                            body: tbody2
-                        }
-                    }];
+                        widths: table2Widths,
+                        headerRows: 2,
+                        body: tbody2
+                    }
+                }];
                 
     var pageBreak = [{text:'\n\n'}];	
 

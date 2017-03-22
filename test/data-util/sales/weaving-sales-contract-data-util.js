@@ -10,10 +10,11 @@ var material = require('../master/product-data-util');
 var yarnMaterial = require('../master/yarn-material-data-util');
 var materialConstruction = require('../master/material-construction-data-util');
 var bankAccount = require('../master/account-bank-data-util');
+var termOfPayment = require('../master/term-of-payment-data-util');
 
 class WeavingSalesContractDataUtil {
     getNewData() {
-        return Promise.all([uom.getTestData(), buyer.getTestData(), quality.getTestData(), material.getTestData(), comodity.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), bankAccount.getTestData()])
+        return Promise.all([uom.getTestData(), buyer.getTestData(), quality.getTestData(), material.getTestData(), comodity.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), bankAccount.getTestData(),termOfPayment.getTestData()])
             .then((results) => {
                 var _uom = results[0];
                 var _buyer = results[1];
@@ -23,6 +24,7 @@ class WeavingSalesContractDataUtil {
                 var _yarn=results[5];
                 var _construction=results[6];
                 var _bank=results[7];
+                var _payment=results[8];
 
                 var data = {
                     
@@ -32,6 +34,7 @@ class WeavingSalesContractDataUtil {
                     uom: _uom,
                     buyerId: _buyer._id,
                     buyer: _buyer,
+                    
                     qualityId: _quality._id,
                     quality: _quality,
                     materialConstructionId:_construction._id,
@@ -44,14 +47,18 @@ class WeavingSalesContractDataUtil {
                     yarnMaterialId:_yarn._id,
                     comodity:_comodity,
                     comodityId:_comodity._id,
+                    termOfPaymentId:_payment._id,
+                    termOfPayment:_payment,
                     orderQuantity:30,
                     shippingQuantityTolerance:5,
                     materialWidth:'Width',
                     incomeTax:'Exclude PPn',
+                    price:8000,
 
-                    paymentMethod:`Telegraphic Transfer (TT)`,
+                    // paymentMethod:`Telegraphic Transfer (TT)`,
                     paymentRequirement:`Payment Requirement`,
-                    rollLength:`length`,
+                    // rollLength:`length`,
+                    termOfShipment:"test",
                     packing:`pack`,
                     deliverySchedule:new Date(),
                     remark:`desc`,
