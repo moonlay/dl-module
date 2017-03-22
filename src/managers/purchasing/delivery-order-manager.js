@@ -239,6 +239,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                             }
                                         }
                                     }
+                                    fulfillment.deliveredQuantity = Number(fulfillment.deliveredQuantity);
+                                    fulfillment.purchaseOrderQuantity = Number(fulfillment.purchaseOrderQuantity);
                                 }
                                 break;
                             }
@@ -313,7 +315,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     purchaseRequestId: fulfillment.purchaseOrder.purchaseRequestId,
                     purchaseOrderExternalId: doItem.purchaseOrderExternalId,
                     productId: fulfillment.productId,
-                    deliveredQuantity: fulfillment.deliveredQuantity
+                    deliveredQuantity: Number(fulfillment.deliveredQuantity)
                 }
             })
         })
@@ -373,7 +375,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             var deliveryOrder = realization.deliveryOrder;
                             var fulfillment = {
                                 deliveryOrderNo: deliveryOrder.no,
-                                deliveryOrderDeliveredQuantity: realization.deliveredQuantity,
+                                deliveryOrderDeliveredQuantity: Number(realization.deliveredQuantity),
                                 deliveryOrderDate: deliveryOrder.date,
                                 supplierDoDate: deliveryOrder.supplierDoDate
                             };
@@ -602,13 +604,13 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                         if (item) {
                                             var index = poItem.fulfillments.indexOf(item);
                                             poItem.fulfillments[index].deliveryOrderNo = deliveryOrder.no;
-                                            poItem.fulfillments[index].deliveryOrderDeliveredQuantity = realization.deliveredQuantity;
+                                            poItem.fulfillments[index].deliveryOrderDeliveredQuantity = Number(realization.deliveredQuantity);
                                             poItem.fulfillments[index].deliveryOrderDate = deliveryOrder.date;
                                             poItem.fulfillments[index].supplierDoDate = deliveryOrder.supplierDoDate;
                                         } else {
                                             var fulfillment = {
                                                 deliveryOrderNo: deliveryOrder.no,
-                                                deliveryOrderDeliveredQuantity: realization.deliveredQuantity,
+                                                deliveryOrderDeliveredQuantity: Number(realization.deliveredQuantity),
                                                 deliveryOrderDate: deliveryOrder.date,
                                                 supplierDoDate: deliveryOrder.supplierDoDate
                                             };
