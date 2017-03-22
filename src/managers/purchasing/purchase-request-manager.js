@@ -189,6 +189,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                             break;
                         }
                     }
+                    prItem.quantity = Number(prItem.quantity);
                 }
 
                 if (!valid.stamp)
