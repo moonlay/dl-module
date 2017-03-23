@@ -26,7 +26,7 @@ module.exports = function (productionOrder) {
                 width: '*',
                 stack: [{
                     text: iso,
-                    style: ['size06','bold'],
+                    style: ['size07','bold'],
                     alignment: "right"
                 }, {
                         text: 'SURAT PERINTAH PRODUKSI',
@@ -36,7 +36,7 @@ module.exports = function (productionOrder) {
             }]
 
         }]
-    }];
+    },'\n'];
 
     var thead=[];
     var tbody=[];
@@ -46,7 +46,7 @@ module.exports = function (productionOrder) {
     var remarks=productionOrder.remark.split(" ");
     for(var i=0; i<remarks.length; i++){
         if(remarks[i].length>21)
-            remarks[i]=remarks[i].replace(/(.{21})/g,"$&" + '\n');
+            remarks[i]=remarks[i].replace(/(.{20})/g,"$&" + '\n');
     }
     remark=remarks.toString().replace(/,/g, " ");
 
@@ -54,7 +54,7 @@ module.exports = function (productionOrder) {
     var packings=productionOrder.packingInstruction.split(" ");
     for(var i=0; i<packings.length; i++){
         if(packings[i].length>21)
-            packings[i]=packings[i].replace(/(.{21})/g,"$&" + '\n');
+            packings[i]=packings[i].replace(/(.{20})/g,"$&" + '\n');
     }
     packing=packings.toString().replace(/,/g, " ");
 
@@ -87,30 +87,30 @@ module.exports = function (productionOrder) {
             var words2=detail.colorTemplate.split(" ");
             for(var i=0; i<words.length; i++){
                 if(words[i].length>10)
-                    words[i]=words[i].replace(/(.{10})/g,"$&" + '\n');
+                    words[i]=words[i].replace(/(.{9})/g,"$&" + '\n');
             }
             for(var i=0; i<words2.length; i++){
                 if(words2[i].length>10)
-                    words2[i]=words2[i].replace(/(.{10})/g,"$&" + '\n');
+                    words2[i]=words2[i].replace(/(.{9})/g,"$&" + '\n');
             }
             colorReq=words.toString().replace(/,/g, " ");
             colorTemplate=words2.toString().replace(/,/g, " ")
             return [{
                 text: colorTemplate ,
-                style: ['size06', 'center']
+                style: ['size07', 'center']
             },{
                 text: colorReq ,
-                style: ['size06', 'center'],
+                style: ['size07', 'center'],
             },{
                 text: parseFloat(detail.quantity).toLocaleString(locale) + " "+detail.uom.unit ,
-                style: ['size06', 'center']
+                style: ['size07', 'center']
             } ]
         });
 
         tbody = tbody.length > 0 ? tbody : [
             [{
                 text: "tidak ada detail",
-                style: ['size06', 'center'],
+                style: ['size07', 'center'],
                 colSpan: 3
             }, "", ""]
         ];
@@ -156,34 +156,34 @@ module.exports = function (productionOrder) {
             var words2=detail.colorTemplate.split(" ");
             for(var i=0; i<words.length; i++){
                 if(words[i].length>8)
-                    words[i]=words[i].replace(/(.{8})/g,"$&" + '\n');
+                    words[i]=words[i].replace(/(.{7})/g,"$&" + '\n');
             }
             for(var i=0; i<words2.length; i++){
                 if(words2[i].length>8)
-                    words2[i]=words2[i].replace(/(.{8})/g,"$&" + '\n');
+                    words2[i]=words2[i].replace(/(.{7})/g,"$&" + '\n');
             }
             colorReq=words.toString().replace(/,/g, " ");
             colorTemplate=words2.toString().replace(/,/g, " ")
             
             return [{
                 text: colorTemplate ,
-                style: ['size06', 'center']
+                style: ['size07', 'center']
             },{
                 text: colorReq ,
-                style: ['size06', 'center'],
+                style: ['size07', 'center'],
             },{
                 text: detail.colorType.name ,
-                style: ['size06', 'center']
+                style: ['size07', 'center']
             },{
                 text: parseFloat(detail.quantity).toLocaleString(locale) + " "+detail.uom.unit ,
-                style: ['size06', 'center']
+                style: ['size07', 'center']
             } ]
         });
 
         tbody = tbody.length > 0 ? tbody : [
             [{
                 text: "tidak ada detail",
-                style: ['size06', 'center'],
+                style: ['size07', 'center'],
                 colSpan: 4
             }, "", "",""]
         ];
@@ -199,8 +199,20 @@ module.exports = function (productionOrder) {
 
     var datas=[];
     if(productionOrder.orderType.name.trim().toLowerCase()=="printing"){
-        datas=[
-            {
+        datas=[{
+                columns: [
+                    {
+                        width: '40%',
+                        text: 'No. Sales Contract'
+                    }, {
+                        width: '3%',
+                        text:':'
+                    },
+                    {
+                        width: '*',
+                        text:productionOrder.salesContractNo
+                    }]
+            },{
                 columns: [
                     {
                         width: '40%',
@@ -568,8 +580,20 @@ module.exports = function (productionOrder) {
         ];
     }
     else{ //jika jenis order != PRINTING
-        datas=[
-            {
+        datas=[{
+                columns: [
+                    {
+                        width: '40%',
+                        text: 'No. Sales Contract'
+                    }, {
+                        width: '3%',
+                        text:':'
+                    },
+                    {
+                        width: '*',
+                        text:productionOrder.salesContractNo
+                    }]
+            }, {
                 columns: [
                     {
                         width: '40%',
@@ -884,7 +908,7 @@ module.exports = function (productionOrder) {
        var Lamptbody = lampStandards.map(function (lamp, index) {
             return [{
                 text: lamp.lampStandard.name ,
-                style: ['size06', 'left']
+                style: ['size07', 'left']
             } ]
         });
 
@@ -942,7 +966,7 @@ module.exports = function (productionOrder) {
             body:[
                 [{
                     stack:[datas],
-                    style: ['size06']
+                    style: ['size07']
                     },
                     {stack:[Lamptable,'\n',table]}
                 ],

@@ -125,9 +125,10 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 }
                 else {
                     var itemErrors = [];
-                    var itemDuplicateErrors = [];
                     var valueArr = valid.items.map(function (item) { return item.productId.toString() });
-                    var isDuplicate = valueArr.some(function (item, idx) {
+
+                    var itemDuplicateErrors = new Array(valueArr.length);
+                    valueArr.some(function (item, idx) {
                         var itemError = {};
                         if (valueArr.indexOf(item) != idx) {
                             itemError["product"] = i18n.__("PurchaseRequest.items.product.name.isDuplicate:%s is duplicate", i18n.__("PurchaseRequest.items.product.name._:Product")); //"Nama barang tidak boleh kosong";
@@ -138,17 +139,14 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         } else {
                             itemDuplicateErrors[idx] = itemError;
                         }
-                        return valueArr.indexOf(item) != idx
                     });
                     for (var item of valid.items) {
                         var itemError = {};
                         var _index = valid.items.indexOf(item);
                         if (!item.product || !item.product._id) {
                             itemError["product"] = i18n.__("PurchaseRequest.items.product.name.isRequired:%s is required", i18n.__("PurchaseRequest.items.product.name._:Product")); //"Nama barang tidak boleh kosong";
-                        } else if (isDuplicate) {
-                            if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
-                                Object.assign(itemError, itemDuplicateErrors[_index]);
-                            }
+                        } else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                            Object.assign(itemError, itemDuplicateErrors[_index]);
                         }
                         if (item.quantity <= 0) {
                             itemError["quantity"] = i18n.__("PurchaseRequest.items.quantity.isRequired:%s is required", i18n.__("PurchaseRequest.items.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
@@ -191,6 +189,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                             break;
                         }
                     }
+                    prItem.quantity = Number(prItem.quantity);
                 }
 
                 if (!valid.stamp)

@@ -19,17 +19,17 @@ module.exports = function (salesContract) {
     var amount=0;
     var ppn =salesContract.incomeTax;
     var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + salesContract.uom.unit + "\n";
-    detailprice += salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + salesContract.uom.unit + ' ' + ppn;
-    amount = salesContract.price;
+    detailprice = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + salesContract.uom.unit + ' ' + ppn;
+    amount = salesContract.price * salesContract.orderQuantity;
 
     var comoDesc = "";
     if (salesContract.comodityDescription != "") {
         comoDesc = '\n' + salesContract.comodityDescription;
     }
-    var code = generateCode();
+    var code = salesContract.salesContractNo;
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
-        moment.locale();
+        
         header = [{
             columns: [{
                 width: '*',

@@ -55,8 +55,8 @@ module.exports = class StepManager extends BaseManager {
                     errors["process"] = i18n.__("Step.process.isExists:%s is already exists", i18n.__("Step.process._:Process")); //"Process sudah ada";
                 }
 
-                if(!valid.itemMonitoring || valid.itemMonitoring.length < 1)
-                    errors["itemMonitoring"] = i18n.__("Step.itemMonitoring.isRequired:%s is required", i18n.__("Step.itemMonitoring._:ItemMonitoring")); //"minimal harus ada 1 detail";
+                // if(!valid.itemMonitoring || valid.itemMonitoring.length < 1)
+                //     errors["itemMonitoring"] = i18n.__("Step.itemMonitoring.isRequired:%s is required", i18n.__("Step.itemMonitoring._:ItemMonitoring")); //"minimal harus ada 1 detail";
 
                 if(!valid.stepIndicators || valid.stepIndicators.length < 1)
                     errors["stepIndicators"] = i18n.__("Step.stepIndicators.isRequired:%s is required", i18n.__("Step.stepIndicators._:StepIndicators")); //"minimal harus ada 1 detail";
