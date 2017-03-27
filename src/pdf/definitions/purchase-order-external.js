@@ -72,7 +72,8 @@ module.exports = function (pox) {
                     'Kecamatan Grogol',
                     'Sukoharjo 57193 - INDONESIA',
                     'PO.BOX 166 Solo 57100',
-                    'Telp. (0271) 739793, 732888, 7652913',
+                    'Telp. (0271) 714400, 7652913',
+                    'Fax. (0271) 735222, 740777'
                 ],
                 style: ['size07', 'bold']
             }, {
@@ -138,7 +139,7 @@ module.exports = function (pox) {
             }, {
                 text: 'Yang bertanda tangan di bawah ini, '
             }, {
-                text: 'PT. DAN LIRIS, SOLO',
+                text: 'PT. AMBASSADOR GARMINDO, SOLO',
                 style: ['bold']
             }, {
                 text: ' (selanjutnya disebut sebagai pihak Pembeli) dan '
