@@ -37,7 +37,7 @@ module.exports = function (unitPaymentCorrection) {
             columns: [
                 {
                     width: '40%',
-                    text: 'PT DAN LIRIS',
+                    text: 'PT. AMBASSADOR GARMINDO',
                     style: ['size15', 'bold', 'left']
                 }, {
                     width: '60%',
@@ -54,10 +54,10 @@ module.exports = function (unitPaymentCorrection) {
                 }, {
                     width: '30%',
                     stack: [
-                        {
-                            text: iso,
-                            style: ['size09', 'bold']
-                        },
+                        // {
+                        //     text: iso,
+                        //     style: ['size09', 'bold']
+                        // },
                         `SUKOHARJO, ${moment(unitPaymentCorrection.unitPaymentOrder.date).format(locale.date.format)}`,
                         `(${unitPaymentCorrection.unitPaymentOrder.supplier.code}) ${unitPaymentCorrection.unitPaymentOrder.supplier.name}`,
                         `${unitPaymentCorrection.unitPaymentOrder.supplier.address}`],
