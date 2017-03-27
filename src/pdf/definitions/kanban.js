@@ -14,10 +14,10 @@ module.exports = function (kanban) {
 
     var orderNo = kanban.productionOrder.orderNo;
     var buyer = kanban.productionOrder.buyer.name;
-    var color = kanban.selectedProductionOrderDetail.colorType ? kanban.selectedProductionOrderDetail.colorRequest + " - " + kanban.selectedProductionOrderDetail.colorType.name : kanban.selectedProductionOrderDetail.colorRequest; 
+    var color = kanban.selectedProductionOrderDetail.colorType ? kanban.selectedProductionOrderDetail.colorRequest + " - " + kanban.selectedProductionOrderDetail.colorType.name + " - " + kanban.productionOrder.designCode : kanban.selectedProductionOrderDetail.colorRequest + " - " + kanban.productionOrder.designCode; 
     var standardHandfeel = kanban.productionOrder.handlingStandard;
     var finishWidth = kanban.productionOrder.finishWidth;
-    var material = kanban.productionOrder.material.name + " " + kanban.productionOrder.materialConstruction.name;
+    var material = kanban.productionOrder.material.name + " " + kanban.productionOrder.materialConstruction.name + kanban.productionOrder.materialWidth;
     var yarnNumber = kanban.productionOrder.yarnMaterial.name;
     var grade = kanban.grade;
     var cartQty = kanban.cart.qty;
