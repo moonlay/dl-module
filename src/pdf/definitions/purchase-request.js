@@ -17,7 +17,7 @@ module.exports = function (purchaseRequest) {
             columns: [{
                 width: '*',
                 stack: [{
-                    text: 'PT DAN LIRIS',
+                    text: 'PT. AMBASSADOR GARMINDO',
                     style: ['size15'],
                     alignment: "center"
                 }, {
@@ -46,11 +46,12 @@ module.exports = function (purchaseRequest) {
         columns: [{
             columns: [{
                 width: '*',
-                stack: [{
-                    text: iso,
-                    style: ['size09', 'bold'],
-                    alignment: "right"
-                },
+                stack: [
+                //     {
+                //     text: iso,
+                //     style: ['size09', 'bold'],
+                //     alignment: "right"
+                // },
                     {
                         text: 'ORDER PEMESANAN',
                         style: ['size09', 'bold'],
