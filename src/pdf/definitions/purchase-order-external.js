@@ -139,7 +139,7 @@ module.exports = function (pox) {
             }, {
                 text: 'Yang bertanda tangan di bawah ini, '
             }, {
-                text: 'PT. DAN LIRIS, SOLO',
+                text: 'PT. AMBASSADOR GARMINDO, SOLO',
                 style: ['bold']
             }, {
                 text: ' (selanjutnya disebut sebagai pihak Pembeli) dan '
