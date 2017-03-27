@@ -17,8 +17,16 @@ module.exports = function (salesContract) {
     var remark = [];
     var footer = [];
     var detailprice = "";
-
-    
+    var uom="";
+    var convertion=0;
+    if(salesContract.uom.unit.toLowerCase()=="ball"){
+        uom="BALES";
+        convertion=salesContract.orderQuantity*181.44;
+    }
+    else{
+        uom=salesContract.uom.unit;
+        convertion=salesContract.orderQuantity;
+    }
 
     var appx="";
     var appxLocal="";
@@ -38,9 +46,9 @@ module.exports = function (salesContract) {
 
     var ppn = salesContract.incomeTax;
 
-    var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + salesContract.uom.unit + "\n";
+    var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / KG' + "\n";
     detailprice += salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + salesContract.uom.unit + ' ' + ppn;
-    amount = salesContract.price * salesContract.orderQuantity;
+    amount = salesContract.price * convertion;
 
     var comoDesc = "";
     if (salesContract.comodityDescription != "") {
@@ -135,7 +143,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( "+`${numSpell(salesContract.orderQuantity)}`  +" ) " + salesContract.uom.unit,
+                        text:"ABOUT : "+ parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + uom +" ( ABOUT : "+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+" KG )",
                         style: ['size09']
                     }]
             }, {
