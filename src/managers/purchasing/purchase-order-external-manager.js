@@ -520,10 +520,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                         for (var _purchaseOrderItem of _po.items) {
                                             if (_purchaseOrderItem.product._id.toString() === _poItem.product._id.toString()) {
                                                 _purchaseOrderItem.product = _poItem.product;
-                                                _purchaseOrderItem.dealQuantity = _poItem.dealQuantity;
+                                                _purchaseOrderItem.dealQuantity = Number(_poItem.dealQuantity);
                                                 _purchaseOrderItem.dealUom = _poItem.dealUom;
                                                 _purchaseOrderItem.useIncomeTax = _poItem.useIncomeTax;
-                                                _purchaseOrderItem.priceBeforeTax = _poItem.priceBeforeTax;
+                                                _purchaseOrderItem.priceBeforeTax = Number(_poItem.priceBeforeTax);
                                                 _purchaseOrderItem.pricePerDealUnit = _poItem.useIncomeTax ? (100 * _poItem.priceBeforeTax) / 110 : _poItem.priceBeforeTax;
                                                 _purchaseOrderItem.conversion = _poItem.conversion;
                                                 break;
@@ -602,13 +602,13 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                     var _purchaseOrder = purchaseOrderExternal.items.find((_purchaseOrder) => _purchaseOrder._id.toString() === purchaseOrder._id.toString());
                                                     var itemExternal = _purchaseOrder.items.find((_item) => _item.product._id.toString() === poItem.product._id.toString());
                                                     if (itemExternal) {
-                                                        poItem.dealQuantity = itemExternal.dealQuantity;
+                                                        poItem.dealQuantity = Number(itemExternal.dealQuantity);
                                                         poItem.dealUom = itemExternal.dealUom;
-                                                        poItem.priceBeforeTax = itemExternal.priceBeforeTax;
+                                                        poItem.priceBeforeTax = Number(itemExternal.priceBeforeTax);
                                                         poItem.pricePerDealUnit = itemExternal.useIncomeTax ? (100 * itemExternal.priceBeforeTax) / 110 : itemExternal.priceBeforeTax;
-                                                        poItem.conversion = itemExternal.conversion;
+                                                        poItem.conversion = Number(itemExternal.conversion);
                                                         poItem.currency = purchaseOrderExternal.currency;
-                                                        poItem.currencyRate = purchaseOrderExternal.currencyRate;
+                                                        poItem.currencyRate = Number(purchaseOrderExternal.currencyRate);
                                                     }
                                                 }
                                                 return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder)

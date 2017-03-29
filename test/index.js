@@ -63,6 +63,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/COMODITY', './master/comodity');
     test('@MASTER/QUALITY', './master/quality');
     test('@MASTER/TERM OF PAYMENT', './master/term-of-payment');
+    test('@MASTER/DESIGN-MOTIVE', './master/design-motive');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');

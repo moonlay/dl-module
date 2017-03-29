@@ -73,6 +73,7 @@ module.exports = class VatManager extends BaseManager {
                 }
 
                 valid = new Vat(vat);
+                valid.rate = Number(valid.rate);
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
             });
@@ -136,7 +137,7 @@ module.exports = class VatManager extends BaseManager {
                             }
                         }
                         if (errorMessage !== "") {
-                            dataError.push({ "name": data[i]["name"], "rate": data[i]["rate"], "description": data[i]["description"], "Error": errorMessage });
+                            dataError.push({ "name": data[i]["name"], "rate": Number(data[i]["rate"]), "description": data[i]["description"], "Error": errorMessage });
                         }
                     }
                     if (dataError.length === 0) {

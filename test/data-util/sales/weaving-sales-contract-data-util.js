@@ -71,7 +71,8 @@ class WeavingSalesContractDataUtil {
                     comission:200,
                     condition:'Condition',
                     attachment:'attachment',
-                    // remark:'Remark Test'
+                    remark:'Remark Test',
+                    pieceLength:'pieceLength',
                 };
                 return Promise.resolve(data);
             });

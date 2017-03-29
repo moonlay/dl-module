@@ -20,7 +20,37 @@ class MachineDataUtil {
     }
 
     getNewData() {
-        return Promise.all([unitTypeData.getTestData(), stepTypeData.getTestData(), stepTypeData.getTestData2() , machineEventData.getTestData(), machineEventData.getTestData2(), machineTypeData.getNewTestData()])
+        var step = {
+            process : "SCOURING",
+            alias : "SC",
+            indicator : [
+                    {
+                        name : 'SPEED',
+                        value : '60',
+                        uom : 'm/mnt'
+                    },
+                    {
+                        name : 'TEMP. L BOX',
+                        value : '100',
+                        uom : 'C'
+                    },
+                    {
+                        name : 'TIMING',
+                        value : '30',
+                        uom : 'menit'
+                    },
+                    {
+                        name : 'LEBAR KAIN',
+                        value : '90',
+                        uom : 'inch'
+                    },
+                    {
+                        name : 'COUNTER',
+                        value : ''
+                    }
+                ]
+        };
+        return Promise.all([unitTypeData.getTestData(), stepTypeData.getTestData(), stepTypeData.getTestData(step) , machineEventData.getTestData(), machineEventData.getTestData2(), machineTypeData.getNewTestData()])
             .then(results => {
                 var _unit = results[0];
                 var _step1 = results[1];
@@ -71,7 +101,37 @@ class MachineDataUtil {
     }
 
     getTestData() {
-        return Promise.all([unitTypeData.getTestData(), stepTypeData.getTestData(), stepTypeData.getTestData2(), machineTypeData.getNewTestData()])
+        var step = {
+            process : "SCOURING",
+            alias : "SC",
+            indicator : [
+                    {
+                        name : 'SPEED',
+                        value : '60',
+                        uom : 'm/mnt'
+                    },
+                    {
+                        name : 'TEMP. L BOX',
+                        value : '100',
+                        uom : 'C'
+                    },
+                    {
+                        name : 'TIMING',
+                        value : '30',
+                        uom : 'menit'
+                    },
+                    {
+                        name : 'LEBAR KAIN',
+                        value : '90',
+                        uom : 'inch'
+                    },
+                    {
+                        name : 'COUNTER',
+                        value : ''
+                    }
+                ]
+        };
+        return Promise.all([unitTypeData.getTestData(), stepTypeData.getTestData(), stepTypeData.getTestData(step), machineTypeData.getNewTestData()])
             .then(results => {
                 var _unit = results[0];
                 var _step1 = results[1];

@@ -77,6 +77,7 @@ module.exports = class CurrencyManager extends BaseManager {
                 }
 
                 valid = new Currency(currency);
+                valid.rate = Number(valid.rate);
                 valid.stamp(this.user.username, 'manager');
                 return Promise.resolve(valid);
             })
@@ -159,7 +160,7 @@ module.exports = class CurrencyManager extends BaseManager {
                         var newCurrency = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Currency(data[i]);
-                            valid.rate = parseInt(valid.rate);
+                            valid.rate = Number(valid.rate);
                             valid.stamp(this.user.username, 'manager');
                             this.collection.insert(valid)
                                 .then(id => {

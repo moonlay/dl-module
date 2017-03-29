@@ -155,6 +155,9 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                 }
                             }
                         }
+                        item.quantity = Number(item.quantity);
+                        item.pricePerUnit = Number(item.pricePerUnit);
+                        item.priceTotal = Number(item.priceTotal);
                     }
 
                     if (!valid.stamp)
@@ -320,7 +323,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                 _correction.correctionDate = unitPaymentPriceCorrectionNote.date;
                                 _correction.correctionNo = unitPaymentPriceCorrectionNote.no;
                                 _correction.correctionRemark = `Koreksi ${unitPaymentPriceCorrectionNote.correctionType}`;
-                                _correction.correctionQuantity = correctionQty;
+                                _correction.correctionQuantity = Number(correctionQty);
                                 _correction.correctionPriceTotal = correctionQty * realization.pricePerUnit * realization.currency.rate;
 
                                 fulfillment.correction.push(_correction);
@@ -366,9 +369,9 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                     var _correction = {
                                         correctionDate: unitPaymentPriceCorrectionNote.date,
                                         correctionNo: unitPaymentPriceCorrectionNote.no,
-                                        correctionQuantity: realization.quantity,
-                                        correctionPricePerUnit: realization.pricePerUnit,
-                                        correctionPriceTotal: realization.priceTotal,
+                                        correctionQuantity: Number(realization.quantity),
+                                        correctionPricePerUnit: Number(realization.pricePerUnit),
+                                        correctionPriceTotal: Number(realization.priceTotal),
                                         correctionRemark: `Koreksi ${unitPaymentPriceCorrectionNote.correctionType}`
                                     };
                                     item.correction.push(_correction);
