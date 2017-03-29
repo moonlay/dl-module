@@ -82,6 +82,8 @@ module.exports = class KanbanManager extends BaseManager {
                 var _productionOrderDetail = results[2];
                 var _instruction = results[3];
                 var _kanban = results[4];
+                if (_kanban)
+                    _kanban.currentStepIndex = _kanban.currentStepIndex || 0; // old kanban data does not have currentStepIndex
 
                 return Promise.all([this.getKanbanListByColorAndOrderNumber(valid._id, _productionOrder, _productionOrderDetail)])
                     .then(_kanbanListByColor => {
@@ -90,7 +92,7 @@ module.exports = class KanbanManager extends BaseManager {
                             errors["code"] = i18n.__("Kanban.code.isExists:%s is exists", i18n.__("Kanban.code._:Code"));
 
                         if (_kanban && !_kanban.isComplete && valid.isComplete && _kanban.currentStepIndex < _kanban.instruction.steps.length){
-                            errors["isComplete"] = i18n.__("Kanban.isComplete.incompleteSteps:%s steps are incomplete", i18n.__("Kanban.code._:Code"));
+                            errors["isComplete"] = i18n.__("Kanban.isComplete.incompleteSteps:%s steps are incomplete", i18n.__("Kanban.code._:Kanban"));
                         }
 
                         if (!valid.productionOrder)
@@ -192,22 +194,15 @@ module.exports = class KanbanManager extends BaseManager {
             Promise.resolve(null);
     }
 
-    pdf(id) {
+    pdf(kanban) {
         return new Promise((resolve, reject) => {
+            var getDefinition = require("../../../pdf/definitions/kanban");
+            var definition = getDefinition(kanban);
 
-            this.getSingleById(id)
-                .then(kanban => {
-                    var getDefinition = require("../../../pdf/definitions/kanban");
-                    var definition = getDefinition(kanban);
-
-                    var generatePdf = require("../../../pdf/pdf-generator");
-                    generatePdf(definition)
-                        .then(binary => {
-                            resolve(binary);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
+            var generatePdf = require("../../../pdf/pdf-generator");
+            generatePdf(definition)
+                .then(binary => {
+                    resolve(binary);
                 })
                 .catch(e => {
                     reject(e);

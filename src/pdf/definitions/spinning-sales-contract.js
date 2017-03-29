@@ -1,5 +1,7 @@
 var global = require('../../global');
 var generateCode = require('../../utils/code-generator');
+var say = require('../../utils/say');
+var numSpell = require('../../utils/number-spelling');
 
 module.exports = function (salesContract) {
 
@@ -15,6 +17,24 @@ module.exports = function (salesContract) {
     var remark = [];
     var footer = [];
     var detailprice = "";
+
+    
+
+    var appx="";
+    var appxLocal="";
+    var date=parseInt(salesContract.deliverySchedule.getDate());
+    if(date>=1 && date<=10){
+        appx="EARLY";
+        appxLocal="AWAL";
+    }
+    else if(date>=11 && date<=20){
+        appx="MIDDLE";
+        appxLocal="PERTENGAHAN";
+    }
+    else if(date>=21 && date<=31){
+        appx="END";
+        appxLocal="AKHIR";
+    }
 
     var ppn = salesContract.incomeTax;
 
@@ -115,7 +135,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " " + salesContract.uom.unit,
+                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( "+`${numSpell(salesContract.orderQuantity)}`  +" ) " + salesContract.uom.unit,
                         style: ['size09']
                     }]
             }, {
@@ -147,7 +167,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.accountBank.currency.symbol + " " + `${parseFloat(amount).toLocaleString(locale, locale.currency)}`,
+                        text: salesContract.accountBank.currency.symbol + " " + `${parseFloat(amount).toLocaleString(locale, locale.currency)}`+" ( "+ `${numSpell(amount)}`+" "+ salesContract.accountBank.currency.description+" )" ,
                         style: ['size09']
                     }]
             }, {
@@ -163,7 +183,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                        text:appx+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
                         style: ['size09']
                     }]
             }, {
@@ -229,42 +249,39 @@ module.exports = function (salesContract) {
             style: ['size09']
         }];
 
-        var re = [{
+        remark = [{
             columns: [{
                 width: '*',
                 stack: ['\n', {
                     text: 'REMARK :',
                     style: ['size09'],
                     alignment: "left"
-                }, {
-                        text: '- Beneficiary : P.T. DAN LIRIS KELURAHAN BANARAN, KECAMATAN GROGOL SUKOHARJO - INDONESIA (Phone No. 0271-740888 / 714400). \n' + 'Payment Transferred to: \n' + 'PAYMENT TO BE TRANSFERRED TO BANK ' + salesContract.accountBank.bankName + '\n' + salesContract.accountBank.bankAddress + '\n' + 'ACCOUNT NAME : ' + salesContract.accountBank.accountName + '\n' + 'ACCOUNT NO : ' + salesContract.accountBank.accountNumber + ' SWIFT CODE : ' + salesContract.accountBank.swiftCode,
-                        style: ['size09'],
-                        alignment: "left"
-                    }, {
-                        text: '- TT. Payment to be negotiable with BANK ' + salesContract.accountBank.bankName,
-                        style: ['size09'],
-                        alignment: "left"
-                    }, {
-                        text: salesContract.remark,
-                        style: ['size09'],
-                        alignment: "left"
-                    }]
+                }, 
+                    { 
+                        ul:[
+                            {
+                                text: 'All instructions regarding sticker, shipping marks etc. to be received 1 (one) month prior to shipment.',
+                                style: ['size10'],
+                                alignment: "justify"
+                            },{
+                                text: 'Beneficiary : P.T. DAN LIRIS KELURAHAN BANARAN, KECAMATAN GROGOL SUKOHARJO - INDONESIA (Phone No. 0271-740888 / 714400). \n'+'Payment Transferred to: \n' + 'PAYMENT TO BE TRANSFERRED TO BANK '+ salesContract.accountBank.bankName + '\n' + salesContract.accountBank.bankAddress + '\n' + 'ACCOUNT NAME : ' + salesContract.accountBank.accountName + '\n' + 'ACCOUNT NO : ' + salesContract.accountBank.accountNumber + ' SWIFT CODE : ' + salesContract.accountBank.swiftCode ,
+                                style: ['size10'],
+                                alignment: "justify"
+                            },{
+                                text:salesContract.termOfPayment.termOfPayment+' to be negotiable with BANK '+ salesContract.accountBank.bankName,
+                                style: ['size10'],
+                                alignment: "justify"
+                            },{
+                                text: 'Please find enclosed some Indonesia Banking Regulations.',
+                                style: ['size10'],
+                                alignment: "justify"
+                            },{
+                                text: 'If you find anything not order, please let us know immediately.',
+                                style: ['size10'],
+                                alignment: "justify"
+                            }]
+                        }]
             }]
-        }];
-
-        remark = [{
-            table: {
-                widths: ['100%'],
-                body: [
-                    [{
-                        stack: [re],
-                        style: ['size09']
-                    }
-                    ]
-                ]
-            },
-            layout: 'noBorders',
-            dontBreakRows: true
         }];
 
         //AGENT COMMISSION AGREEMENT
@@ -288,17 +305,17 @@ module.exports = function (salesContract) {
 
             var subheader2 = [{
                 stack: ['\n', {
-                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + ' ' + salesContract.uom.unit + ' of' + '\n' + salesContract.comodity.name + comoDesc,
+                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${numSpell(salesContract.orderQuantity)}` +" )" + ' ' + salesContract.uom.unit + ' of' + '\n' + salesContract.comodity.name + comoDesc,
                     style: ['size09'],
-                    alignment: "left"
+                    alignment: "justify"
                 }, '\n', {
                         text: 'Placed with us, P.T. DAN LIRIS - SOLO INDONESIA, is inclusive of ' + salesContract.comission + ' sales commission' + '\n' + 'each ' + salesContract.uom.unit + ' on ' + salesContract.termOfShipment + ' value, payable to you upon final negotiation and clearance of ' + salesContract.termOfPayment.termOfPayment + '.',
                         style: ['size09'],
-                        alignment: "left"
+                        alignment: "justify"
                     }, '\n', '\n', {
                         text: 'Kindly acknowledge receipt by undersigning this Commission Agreement letter and returned one copy to us after having been confirmed and signed by you.',
                         style: ['size09'],
-                        alignment: "left"
+                        alignment: "justify"
                     }]
             }, '\n', '\n'];
 
@@ -453,14 +470,14 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " " + salesContract.uom.unit,
+                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " +`${say(salesContract.orderQuantity," )")}` +" "+ salesContract.uom.unit,
                     style: ['size09']
                 }]
         }, {
             columns: [
                 {
                     width: '25%',
-                    text: 'Kwalitas',
+                    text: 'Kualitas',
                     style: ['size09']
                 }, {
                     width: '3%',
@@ -565,7 +582,7 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text: `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                    text:appxLocal+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
                     style: ['size09']
                 }]
         }, {
