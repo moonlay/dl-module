@@ -38,6 +38,7 @@ it("#02. should success when transforming data", function (done) {
     var data = [
         {
             purchaseOrder: {
+                _deleted: false,
                 _createdDate: new Date(),
                 purchaseOrderExternal: {
                     date: new Date(1970, 1, 1)
@@ -53,6 +54,7 @@ it("#02. should success when transforming data", function (done) {
                 ]
             },
             purchaseRequest: {
+                _deleted: false,
                 category: {
                     name: ""
                 },
@@ -61,6 +63,7 @@ it("#02. should success when transforming data", function (done) {
         },
         {
             purchaseOrder: {
+                _deleted: false,
                 _createdDate: new Date(),
                 purchaseOrderExternal: {
                     date: new Date()
@@ -83,6 +86,7 @@ it("#02. should success when transforming data", function (done) {
             }
         },
         {
+            _deleted: true,
             purchaseOrder: {
                 _createdDate: new Date("2017-03-29T16:13:51+07:00"),
                 purchaseOrderExternal: {
@@ -99,10 +103,71 @@ it("#02. should success when transforming data", function (done) {
                 ]
             },
             purchaseRequest: {
+                _deleted: false,
                 category: {
                     name: "BUKAN BAHAN BAKU"
                 },
                 date: new Date("2017-04-08T16:14:08+07:00")
+            }
+        },
+        {
+            _deleted: true,
+            purchaseOrder: {
+                _createdDate: new Date("2017-03-29T16:13:51+07:00"),
+                purchaseOrderExternal: {
+                    date: new Date("2017-04-16T16:14:08+07:00")
+                },
+                items: [
+                    {
+                        fulfillments: [
+                            {
+                                deliveryOrderDate: new Date("2017-06-29T16:14:08+07:00")
+                            }
+                        ]
+                    }
+                ]
+            },
+            purchaseRequest: {
+                _deleted: false,
+                category: {
+                    name: "BUKAN BAHAN BAKU"
+                },
+                date: new Date("2017-04-08T16:14:08+07:00")
+            }
+        },
+        {
+            _deleted: true,
+            purchaseOrder: {
+                _createdDate: new Date("2017-03-29T16:13:51+07:00"),
+                purchaseOrderExternal: {
+                    date: new Date("2017-04-16T16:14:08+07:00")
+                },
+                items: [
+                    {
+                        fulfillments: [
+                        ]
+                    }
+                ]
+            },
+            purchaseRequest: {
+                _deleted: false,
+                category: {
+                    name: "BUKAN BAHAN BAKU"
+                },
+                date: new Date("2017-04-08T16:14:08+07:00")
+            }
+        },
+        {
+            purchaseOrder: null,
+            purchaseRequest: {
+                _deleted: false,
+                category: {
+                    name: "BUKAN BAHAN BAKU"
+                },
+                date: new Date("2017-04-08T16:14:08+07:00"),
+                items: [
+
+                ]
             }
         }
     ];
