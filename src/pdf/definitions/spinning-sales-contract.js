@@ -21,7 +21,7 @@ module.exports = function (salesContract) {
     var convertion=0;
     if(salesContract.uom.unit.toLowerCase()=="ball"){
         uom="BALES";
-        convertion=salesContract.orderQuantity*181.44;
+        convertion=parseFloat(salesContract.orderQuantity ) * parseFloat(181.44);
     }
     else{
         uom=salesContract.uom.unit;
@@ -57,7 +57,7 @@ module.exports = function (salesContract) {
     var code = salesContract.salesContractNo;
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
-        moment.locale();
+        moment.locale('en-EN');
         header = [{
             columns: [{
                 width: '*',
@@ -143,7 +143,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:"ABOUT : "+ parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + uom +" ( ABOUT : "+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+" KG )",
+                        text:"ABOUT : "+ parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" " + uom +" ( ABOUT : "+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+" KG )",
                         style: ['size09']
                     }]
             }, {

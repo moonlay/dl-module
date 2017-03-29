@@ -77,7 +77,7 @@ module.exports = function (salesContract) {
     }
 
     if(salesContract.buyer.type.toLowerCase()=="export"||salesContract.buyer.type.toLowerCase()=="ekspor"){
-        moment.locale();
+        moment.locale('en-EN');
         header = [{
                 columns: [{
                     width: '*',
@@ -154,19 +154,19 @@ module.exports = function (salesContract) {
                 columns: [
                     {
                         width: '25%',
-                        text: 'Quality',
+                        text: 'Quantity',
                         style: ['size10']
                     }, {
                         width: '3%',
-                        text:':',
+                        text: ':',
                         style: ['size10']
                     },
                     {
                         width: '*',
-                        text:salesContract.quality.name,
+                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(salesContract.orderQuantity)}` +') '+ uom,
                         style: ['size10']
                     }]
-        },{
+            },{
                 columns: [
                     {
                         width: '25%',
