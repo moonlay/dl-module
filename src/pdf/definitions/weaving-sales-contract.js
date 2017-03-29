@@ -136,7 +136,23 @@ module.exports = function (salesContract) {
                         text: salesContract.quality.name,
                         style: ['size10']
                     }]
-            }, {
+            },{
+                columns: [
+                    {
+                        width: '25%',
+                        text: 'Piece Length',
+                        style: ['size10']
+                    }, {
+                        width: '3%',
+                        text:':',
+                        style: ['size10']
+                    },
+                    {
+                        width: '*',
+                        text:salesContract.pieceLength,
+                        style: ['size10']
+                    }]
+        }, {
                 columns: [
                     {
                         width: '25%',
@@ -614,7 +630,23 @@ module.exports = function (salesContract) {
                         text:appxLocal+" "+`${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
                         style: ['size10']
                     }]
-            }, {
+            },{
+                columns: [
+                    {
+                        width: '25%',
+                        text: 'Piece Length',
+                        style: ['size10']
+                    }, {
+                        width: '3%',
+                        text:':',
+                        style: ['size10']
+                    },
+                    {
+                        width: '*',
+                        text:salesContract.pieceLength,
+                        style: ['size10']
+                    }]
+        }, {
                 columns: [
                     {
                         width: '25%',
