@@ -57,7 +57,7 @@ module.exports = function (salesContract) {
     var code = salesContract.salesContractNo;
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
-        moment.locale();
+        moment.locale('en-EN');
         header = [{
             columns: [{
                 width: '*',
