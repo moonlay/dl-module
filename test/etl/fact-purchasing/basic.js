@@ -40,7 +40,7 @@ it("#02. should success when transforming data", function (done) {
             purchaseOrder: {
                 _createdDate: new Date(),
                 purchaseOrderExternal: {
-                    date: new Date(1970, 1, 1) 
+                    date: new Date(1970, 1, 1)
                 },
                 items: [
                     {
@@ -48,7 +48,7 @@ it("#02. should success when transforming data", function (done) {
                             {
                                 deliveryOrderDate: new Date()
                             }
-                            ]
+                        ]
                     }
                 ]
             },
@@ -63,7 +63,7 @@ it("#02. should success when transforming data", function (done) {
             purchaseOrder: {
                 _createdDate: new Date(),
                 purchaseOrderExternal: {
-                    date: new Date() 
+                    date: new Date()
                 },
                 items: [
                     {
@@ -71,7 +71,7 @@ it("#02. should success when transforming data", function (done) {
                             {
                                 deliveryOrderDate: new Date()
                             }
-                            ]
+                        ]
                     }
                 ]
             },
@@ -80,6 +80,29 @@ it("#02. should success when transforming data", function (done) {
                     name: "BAHAN BAKU"
                 },
                 date: new Date()
+            }
+        },
+        {
+            purchaseOrder: {
+                _createdDate: new Date("2017-03-29T16:13:51+07:00"),
+                purchaseOrderExternal: {
+                    date: new Date("2017-04-16T16:14:08+07:00")
+                },
+                items: [
+                    {
+                        fulfillments: [
+                            {
+                                deliveryOrderDate: new Date("2017-05-29T16:14:08+07:00")
+                            }
+                        ]
+                    }
+                ]
+            },
+            purchaseRequest: {
+                category: {
+                    name: "BUKAN BAHAN BAKU"
+                },
+                date: new Date("2017-04-08T16:14:08+07:00")
             }
         }
     ];
@@ -98,7 +121,7 @@ it("#03. should success when extracting PR from PO", function (done) {
         {
             purchaseRequest: {}
         }
-        ];
+    ];
     instanceManager.getPRFromPO(data)
         .then(() => {
             done();
