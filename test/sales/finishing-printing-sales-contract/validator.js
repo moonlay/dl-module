@@ -97,7 +97,7 @@ it('#03. should error when create new data with shippingQuantityTolerance more t
         });
 });
 
-it('#04. should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, processType, orderType', function (done) {
+it('#04. should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, orderType', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
 
@@ -109,11 +109,10 @@ it('#04. should error when create new data with non existent quality, comodity, 
             sc.yarnMaterialId = '';
             sc.uom.unit = '';
             sc.orderTypeId = '';
-            sc.processTypeId = '';
 
             finishingPrintingSalesContractManager.create(sc)
                 .then(id => {
-                    done("should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, processType, orderType");
+                    done("should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, orderType");
                 })
                 .catch(e => {
                     try {
@@ -124,7 +123,6 @@ it('#04. should error when create new data with non existent quality, comodity, 
                         e.errors.should.have.property('yarnMaterial');
                         e.errors.should.have.property('uom');
                         e.errors.should.have.property('orderType');
-                        e.errors.should.have.property('processType');
                         done();
                     }
                     catch (ex) {
@@ -168,7 +166,7 @@ it('#06. it should error when create new data with export buyer with agent witho
 
             finishingPrintingSalesContractManager.create(sc)
                 .then(id => {
-                    done("should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, processType, orderType");
+                    done("should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, orderType");
                 })
                 .catch(e => {
                     try {
