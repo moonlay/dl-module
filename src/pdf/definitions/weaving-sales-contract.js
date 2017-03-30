@@ -50,10 +50,12 @@ module.exports = function (salesContract) {
 
     var deliverySchedule = moment(salesContract.deliverySchedule);
     var detailprice = "";
+
     var amount = 0;
     var ppn = salesContract.incomeTax;
     var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom + "\n";
     detailprice += salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + uomLocal + ' ' + ppn;
+
     amount = salesContract.price * salesContract.orderQuantity;
 
     var comoDesc = "";

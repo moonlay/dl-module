@@ -150,7 +150,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                     item.uomId = new ObjectId(_unitReceiptNoteItem.deliveredUom._id);
                                     item.uom._id = new ObjectId(_unitReceiptNoteItem.deliveredUom._id);
                                     item.currency = _unitReceiptNoteItem.currency;
-                                    item.currencyRate = _unitReceiptNoteItem.currencyRate;
+                                    item.currencyRate = Number(_unitReceiptNoteItem.currencyRate);
                                     break;
                                 }
                             }
