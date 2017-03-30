@@ -237,6 +237,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                                     break;
                                                 }
                                             }
+                                            fulfillment.deliveredQuantity = Number(fulfillment.deliveredQuantity);
+                                            fulfillment.purchaseOrderQuantity = Number(fulfillment.purchaseOrderQuantity);
                                         }
                                     }
                                     fulfillment.deliveredQuantity = Number(fulfillment.deliveredQuantity);

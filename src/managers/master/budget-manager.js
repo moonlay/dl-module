@@ -19,8 +19,8 @@ module.exports = class BudgetManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -79,7 +79,7 @@ module.exports = class BudgetManager extends BaseManager {
             });
     }
 
-     getBudget() {
+    getBudget() {
         return new Promise((resolve, reject) => {
             var query = {
                 _deleted: false
@@ -95,7 +95,7 @@ module.exports = class BudgetManager extends BaseManager {
                     reject(e);
                 });
         });
-    } 
+    }
 
     insert(dataFile) {
         return new Promise((resolve, reject) => {
@@ -106,7 +106,10 @@ module.exports = class BudgetManager extends BaseManager {
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
-                            data.push({ "code": dataFile[i][0], "name": dataFile[i][1] });
+                            data.push({
+                                "code": dataFile[i][0].trim(),
+                                "name": dataFile[i][1].trim()
+                            });
                         }
                     }
                     var dataError = [], errorMessage;

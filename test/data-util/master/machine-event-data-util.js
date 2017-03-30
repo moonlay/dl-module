@@ -10,7 +10,7 @@ class MachineEventDataUtil {
         data.code = code;
         data.no = '99';
         data.name = `unitTestNewDataName[${code}]`;
-
+        data.category = `category[${code}]`;
         return Promise.resolve(data);
     }
 
@@ -21,6 +21,7 @@ class MachineEventDataUtil {
         data.code = code;
         data.no = '1';
         data.name = `unitTestName[${code}]`;
+        data.category = `category[${code}]`;
 
         return Promise.resolve(data);
     }
@@ -32,6 +33,7 @@ class MachineEventDataUtil {
         data.code = code;
         data.no = '2';
         data.name = `unitTestName2[${code}]`;
+        data.category = `category[${code}]`;
 
         return Promise.resolve(data);
     }
