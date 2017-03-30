@@ -165,17 +165,17 @@ module.exports = class AccountManager extends BaseManager {
         return new Promise((resolve, reject) => {
             var valid = account;
             // 1. begin: Declare promises.
-            var getAccountPromise = this.collection.firstOrDefault({
+            var getAccountPromise = valid && valid.username ? this.collection.firstOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                    username: {
-                        '$regex': new RegExp((valid.username || '').trim(), "i")
+                    username:{ 
+                        $regex: new RegExp("^" + valid.username.trim() + "$", "i")
                     }
                 }]
-            });
+            }) : Promise.resolve(null);
             valid.roles = valid.roles instanceof Array ? valid.roles : [];
             var roleIds = valid.roles.map((r) => new ObjectId(r._id));
             var getRoles = this.roleCollection.find({
