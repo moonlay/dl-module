@@ -363,4 +363,72 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 });
         });
     }
+
+    getReport(query){
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                _deleted: false
+            };
+            var salesQuery = {};
+            if(query.salesContractNo != ''){
+                salesQuery = {
+                    "salesContractNo" : {
+                        "$regex" : (new RegExp(query.salesContractNo, "i"))
+                    } 
+                };
+            }
+            var orderTypeQuery = {};
+            if(query.orderTypeId){
+                orderTypeQuery = {
+                    "orderTypeId" : (new ObjectId(query.orderTypeId))
+                };
+            }
+            var comodityQuery = {};
+            if(query.comodityId){
+                comodityQuery ={
+                    "comodityId" : (new ObjectId(query.comodityId))
+                };
+            }
+            var buyerQuery = {};
+            if(query.buyerId){
+                buyerQuery = {
+                    "buyerId" : (new ObjectId(query.buyerId))
+                };
+            }
+            var date = {
+                "_createdDate" : {
+                    "$gte" : (!query || !query.sdate ? (new Date("1900-01-01")) : (new Date(`${query.sdate} 00:00:00`))),
+                    "$lte" : (!query || !query.edate ? (new Date()) : (new Date(`${query.edate} 23:59:59`)))
+                }
+            };
+            var Query = {"$and" : [date, salesQuery,orderTypeQuery, comodityQuery, buyerQuery, deletedQuery]};
+            this.collection
+                .aggregate([ 
+                    {$unwind: "$details"}, 
+                    {$match : Query},
+                    {$project :{
+                        "salesContractNo" : 1,
+                        "_createdDate" : 1,
+                        "buyer" : "$buyer.name",
+                        "buyerType" : "$buyer.type",
+                        "orderType" : "$orderType.name",
+                        "comodity": "$comodity.name",
+                        "orderQuantity" : "$orderQuantity",
+                        "uom" : "$uom.unit",
+                        "termOfPayment" : "$termOfPayment.termOfPayment",
+                        "deliverySchedule" : "$deliverySchedule",
+                        "agent" : "$agent.name",
+                        "comission" : "$comission",
+                        "color" : "$details.color",
+                        "price" : "$details.price",
+                        "currency" : "$accountBank.currency.name",
+                        "ppn" : "$details.isUseIncomeTax"
+                    }},
+                    {$sort : {"_createdDate" : -1}}
+                ])
+                .toArray(function(err, result) {
+                    resolve(result);
+                })
+        });
+    }
 }
