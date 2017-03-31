@@ -18,7 +18,7 @@ class KanbanDataUtil {
                             productionOrderId : _productionOrder._id,
                             productionOrder : _productionOrder,
                             selectedProductionOrderDetail: _selectedProductionOrderDetail,
-                            cart: { code : "cartUnitTestCode", cartNumber : "unitTestCartNumber", qty : _productionOrder.orderQuantity, pcs : _productionOrder.orderQuantity/2},
+                            cart: { code : "cartUnitTestCode", cartNumber : "unitTestCartNumber", qty : 10, pcs : _productionOrder.orderQuantity/2},
                             instructionId : _instruction._id,
                             instruction : _instruction,
                             grade : 'unitTestGrade',
