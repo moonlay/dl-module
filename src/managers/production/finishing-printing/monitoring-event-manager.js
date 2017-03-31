@@ -18,15 +18,16 @@ module.exports = class MonitoringEventManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.collection(map.production.finishingPrinting.collection.MonitoringEvent);
-        
+
         this.machineManager = new MachineManager(db, user);
         this.productionOrderManager = new ProductionOrderManager(db, user);
     }
 
     _getQuery(paging) {
         var deletedFilter = {
-            _deleted: false
-        }, keywordFilter = {};
+                _deleted: false
+            },
+            keywordFilter = {};
 
         var query = {};
         if (paging.keyword) {
@@ -54,20 +55,22 @@ module.exports = class MonitoringEventManager extends BaseManager {
                 '$or': [filterMachineName, filterProductionOrder, filterMachineEvent]
             };
         }
-        query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
+        query = {
+            '$and': [deletedFilter, paging.filter, keywordFilter]
+        }
         return query;
     }
 
-     _validate(monitoringEvent) {
+    _validate(monitoringEvent) {
         var errors = {};
         var valid = monitoringEvent;
-        var dateNow = moment().format('YYYY-MM-DD');
+        var dateNow = new Date(); //moment().format('YYYY-MM-DD');
 
-        var timeInMillisNow = (function(){
+        var timeInMillisNow = (function() {
             var setupMoment = moment();
             setupMoment.set('year', 1970);
             setupMoment.set('month', 0);
-            setupMoment.set('date', 1);  
+            setupMoment.set('date', 1);
             return Number(setupMoment.format('x'));
         })();
 
@@ -83,7 +86,7 @@ module.exports = class MonitoringEventManager extends BaseManager {
         var getProductionOrderDetail = (valid.selectedProductionOrderDetail && valid.selectedProductionOrderDetail.code) ? this.productionOrderManager.getSingleProductionOrderDetail(valid.selectedProductionOrderDetail.code) : Promise.resolve(null);
 
         return Promise.all([getMonitoringEventPromise, getMachine, getProductionOrder, getProductionOrderDetail])
-            .then(results =>{
+            .then(results => {
                 var _monitoringEvent = results[0];
                 var _machine = results[1];
                 var _productionOrder = results[2];
@@ -92,59 +95,54 @@ module.exports = class MonitoringEventManager extends BaseManager {
                 if (_monitoringEvent)
                     errors["code"] = i18n.__("MonitoringEvent.code.isExists:%s is exists", i18n.__("MonitoringEvent.code._:Code"));
 
-                if (!valid.dateStart || valid.dateStart == '')
+                if (!valid.dateStart)
                     errors["dateStart"] = i18n.__("MonitoringEvent.dateStart.isRequired:%s is required", i18n.__("MonitoringEvent.dateStart._:Date Start"));
-                else if (valid.dateStart > dateNow)
-                    errors["dateStart"] = i18n.__("MonitoringEvent.dateStart.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateStart._:Date Start"));
-                else if (valid.dateStart === dateNow && valid.timeInMillisStart > timeInMillisNow)
-                    errors["timeInMillisStart"] = i18n.__("MonitoringEvent.timeInMillisStart.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start"));
-
-                if (valid.dateEnd && valid.dateEnd != ''){
-                    if (valid.timeInMillisEnd === undefined)
-                        errors["timeInMillisEnd"] = i18n.__("MonitoringEvent.timeInMillisEnd.isRequired:%s is required", i18n.__("MonitoringEvent.timeInMillisEnd._:Time End"));
-
-                    if (valid.dateEnd > dateNow)
-                        errors["dateEnd"] = i18n.__("MonitoringEvent.dateEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateEnd._:Date End"));
-                    else if (valid.dateEnd === dateNow && valid.timeInMillisEnd > timeInMillisNow)
-                        errors["timeInMillisEnd"] = i18n.__("MonitoringEvent.timeInMillisEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisEnd._:Time End"));
-                }
-
-                if (valid.timeInMillisEnd && (!valid.dateEnd || valid.dateEnd === ''))
-                    errors["dateEnd"] = i18n.__("MonitoringEvent.dateEnd.isRequired:%s is required", i18n.__("MonitoringEvent.dateEnd._:Date End"));
-
-                if (valid.dateStart && valid.dateStart != '' && valid.dateEnd && valid.dateEnd != ''){
-                    if (valid.dateStart > valid.dateEnd){
-                        var errorMessage = i18n.__("MonitoringEvent.dateStart.isGreaterThanDateEnd:%s is greater than Date End", i18n.__("MonitoringEvent.dateStart._:Date Start")); 
-                        errors["dateStart"] = errorMessage;
-                        errors["dateEnd"] = errorMessage;
+                else {
+                    valid.dateStart = new Date(valid.dateStart);
+                    if (isNaN(valid.dateStart.valueOf()))
+                        errors["dateStart"] = i18n.__("MonitoringEvent.dateStart.isValidFormat:%s is not in valid format", i18n.__("MonitoringEvent.dateStart._:Date Start"));
+                    else {
+                        valid.timeInMillisStart = valid.dateStart.getTime();
+                        if (valid.dateStart > dateNow)
+                            errors["dateStart"] = i18n.__("MonitoringEvent.dateStart.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateStart._:Date Start"));
+                        // else if (valid.dateStart === dateNow && valid.timeInMillisStart > timeInMillisNow)
+                        //     errors["timeInMillisStart"] = i18n.__("MonitoringEvent.timeInMillisStart.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start"));
                     }
                 }
 
-                if (valid.timeInMillisStart === undefined)
-                    errors["timeInMillisStart"] = i18n.__("MonitoringEvent.timeInMillisStart.isRequired:%s is required", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start")); 
-
-                if (valid.dateStart && valid.dateStart != '' && valid.dateEnd && valid.dateEnd != '' && valid.dateStart === valid.dateEnd){
-                    if (valid.timeInMillisStart > valid.timeInMillisEnd){
-                        var errorMessage = i18n.__("MonitoringEvent.timeInMillisStart.isGreaterThanTimeInMillisEnd:%s is greater than Time End", i18n.__("MonitoringEvent.timeInMillisStart._:Time Start")); 
-                        errors["timeInMillisStart"] = errorMessage;
-                        errors["timeInMillisEnd"] = errorMessage;
+                if (valid.dateEnd) {
+                    valid.dateEnd = new Date(monitoringEvent.dateEnd);
+                    if (isNaN(valid.dateEnd.valueOf()))
+                        errors["dateEnd"] = i18n.__("MonitoringEvent.dateEnd.isValidFormat:%s is not in valid format", i18n.__("MonitoringEvent.dateEnd._:Date End"));
+                    else {
+                        valid.timeInMillisEnd = valid.dateEnd.getTime();
+                        if (valid.dateEnd > dateNow)
+                            errors["dateEnd"] = i18n.__("MonitoringEvent.dateEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.dateEnd._:Date End"));
+                        else if (valid.dateStart > valid.dateEnd) {
+                            var errorMessage = i18n.__("MonitoringEvent.dateStart.isGreaterThanDateEnd:%s is greater than Date End", i18n.__("MonitoringEvent.dateStart._:Date Start"));
+                            errors["dateStart"] = errorMessage;
+                            errors["dateEnd"] = errorMessage;
+                        }
+                        // else if (valid.dateEnd === dateNow && valid.timeInMillisEnd > timeInMillisNow)
+                        //     errors["timeInMillisEnd"] = i18n.__("MonitoringEvent.timeInMillisEnd.isGreater:%s is greater than today", i18n.__("MonitoringEvent.timeInMillisEnd._:Time End"));
                     }
-                }    
+                }
+
 
                 if (!_machine)
-                    errors["machine"] = i18n.__("MonitoringEvent.machine.name.isRequired:%s is required", i18n.__("MonitoringEvent.machine.name._:Machine")); 
+                    errors["machine"] = i18n.__("MonitoringEvent.machine.name.isRequired:%s is required", i18n.__("MonitoringEvent.machine.name._:Machine"));
 
                 if (!_productionOrder)
-                    errors["productionOrder"] = i18n.__("MonitoringEvent.productionOrder.isRequired:%s is required", i18n.__("MonitoringEvent.productionOrder._:Production Order Number")); 
+                    errors["productionOrder"] = i18n.__("MonitoringEvent.productionOrder.isRequired:%s is required", i18n.__("MonitoringEvent.productionOrder._:Production Order Number"));
 
                 if (!_productionOrderDetail)
-                    errors["selectedProductionOrderDetail"] = i18n.__("MonitoringEvent.selectedProductionOrderDetail.isRequired:%s is required", i18n.__("MonitoringEvent.selectedProductionOrderDetail._:Color")); 
+                    errors["selectedProductionOrderDetail"] = i18n.__("MonitoringEvent.selectedProductionOrderDetail.isRequired:%s is required", i18n.__("MonitoringEvent.selectedProductionOrderDetail._:Color"));
 
                 if (!valid.cartNumber || valid.cartNumber == '')
-                    errors["cartNumber"] = i18n.__("MonitoringEvent.cartNumber.isRequired:%s is required", i18n.__("MonitoringEvent.cartNumber._:Cart Number")); 
+                    errors["cartNumber"] = i18n.__("MonitoringEvent.cartNumber.isRequired:%s is required", i18n.__("MonitoringEvent.cartNumber._:Cart Number"));
 
                 if (!valid.machineEvent)
-                    errors["machineEvent"] = i18n.__("MonitoringEvent.machineEvent.isRequired:%s is required", i18n.__("MonitoringEvent.machineEvent._:Machine Event")); 
+                    errors["machineEvent"] = i18n.__("MonitoringEvent.machineEvent.isRequired:%s is required", i18n.__("MonitoringEvent.machineEvent._:Machine Event"));
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
@@ -153,72 +151,93 @@ module.exports = class MonitoringEventManager extends BaseManager {
 
                 if (valid.dateStart && valid.dateStart != '')
                     valid.dateStart = new Date(valid.dateStart);
-                
+
                 if (valid.dateEnd && valid.dateEnd != '')
                     valid.dateEnd = new Date(valid.dateEnd);
-                else{
+                else {
                     valid.dateEnd = null;
                     valid.timeInMillisEnd = null;
                 }
 
-                if (_machine){
+                if (_machine) {
                     valid.machineId = _machine._id;
                     valid.machine = _machine;
                 }
 
-                if (_productionOrder){
+                if (_productionOrder) {
                     valid.productionOrderId = _productionOrder._id;
                     valid.productionOrder = _productionOrder;
                 }
 
-                if (_productionOrderDetail){
+                if (_productionOrderDetail) {
                     valid.selectedProductionOrderDetail = _productionOrderDetail;
                 }
 
                 if (!valid.stamp)
                     valid = new MonitoringEvent(valid);
-                    
+
                 valid.stamp(this.user.username, 'manager');
                 return Promise.resolve(valid);
             })
     }
 
-    getMonitoringEventReport(info){
+    getMonitoringEventReport(info) {
         var _defaultFilter = {
-            _deleted: false
-        }, machineFilter = {},
-        machineEventFilter = {},
-        productionOrderFilter = {},
-        dateFromFilter = {},
-        dateToFilter = {},
-        query = {};
+                _deleted: false
+            },
+            machineFilter = {},
+            machineEventFilter = {},
+            productionOrderFilter = {},
+            dateFromFilter = {},
+            dateToFilter = {},
+            query = {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
         var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
 
-        if (info.machineId && info.machineId != ''){
+        if (info.machineId && info.machineId != '') {
             var machineId = ObjectId.isValid(info.machineId) ? new ObjectId(info.machineId) : {};
-            machineFilter = {'machine._id': machineId};
+            machineFilter = {
+                'machine._id': machineId
+            };
         }
-        if (info.machineEventCode && info.machineEventCode != ''){
-            machineEventFilter = {'machineEvent.code': info.machineEventCode};
+        if (info.machineEventCode && info.machineEventCode != '') {
+            machineEventFilter = {
+                'machineEvent.code': info.machineEventCode
+            };
         }
-        if (info.productionOrderNumber && info.productionOrderNumber != ''){
-            productionOrderFilter = {'productionOrder.orderNo': info.productionOrderNumber};
+        if (info.productionOrderNumber && info.productionOrderNumber != '') {
+            productionOrderFilter = {
+                'productionOrder.orderNo': info.productionOrderNumber
+            };
         }
         dateFromFilter = {
-            '$or': [
-                { 'dateStart': {$gte : dateFrom}}, 
-                { 'dateEnd': {$gte : dateFrom}}]
-        };
-        
-        dateToFilter = {
-            '$or': [
-                { 'dateStart': {$lte : dateTo}}, 
-                { 'dateEnd': {$lte : dateTo}}]
+            '$or': [{
+                'dateStart': {
+                    $gte: dateFrom
+                }
+            }, {
+                'dateEnd': {
+                    $gte: dateFrom
+                }
+            }]
         };
 
-        query = { '$and': [_defaultFilter, machineFilter, machineEventFilter, productionOrderFilter, dateFromFilter, dateToFilter] };
+        dateToFilter = {
+            '$or': [{
+                'dateStart': {
+                    $lte: dateTo
+                }
+            }, {
+                'dateEnd': {
+                    $lte: dateTo
+                }
+            }]
+        };
+
+        query = {
+            '$and': [_defaultFilter, machineFilter, machineEventFilter, productionOrderFilter, dateFromFilter, dateToFilter]
+        };
 
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -228,7 +247,7 @@ module.exports = class MonitoringEventManager extends BaseManager {
             });
     }
 
-    getXls(result, query){
+    getXls(result, query) {
         var xls = {};
         xls.data = [];
         xls.options = [];
@@ -237,7 +256,7 @@ module.exports = class MonitoringEventManager extends BaseManager {
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
 
-        for(var monitoringEvent of result.data){
+        for (var monitoringEvent of result.data) {
             index++;
             var item = {};
             item["No"] = index;
@@ -251,7 +270,7 @@ module.exports = class MonitoringEventManager extends BaseManager {
             item["Cart Number"] = monitoringEvent.cartNumber;
             item["Machine Event"] = monitoringEvent.machineEvent ? monitoringEvent.machineEvent.name : '';
             item["Remark"] = monitoringEvent.remark;
-            
+
             xls.data.push(item);
         }
 
@@ -267,13 +286,13 @@ module.exports = class MonitoringEventManager extends BaseManager {
         xls.options["Machine Event"] = "string";
         xls.options["Remark"] = "string";
 
-        if(query.dateFrom && query.dateTo){
+        if (query.dateFrom && query.dateTo) {
             xls.name = `Monitoring Event Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        else if(!query.dateFrom && query.dateTo){
+        else if (!query.dateFrom && query.dateTo) {
             xls.name = `Monitoring Event Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        else if(query.dateFrom && !query.dateTo){
+        else if (query.dateFrom && !query.dateTo) {
             xls.name = `Monitoring Event Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
         }
         else
