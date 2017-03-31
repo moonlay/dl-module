@@ -160,7 +160,6 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             }
                         }
                         item.deliveredQuantity = Number(item.deliveredQuantity);
-
                     }
 
                     if (!valid.stamp)

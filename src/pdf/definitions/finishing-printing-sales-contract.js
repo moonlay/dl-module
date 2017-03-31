@@ -76,6 +76,7 @@ module.exports = function (salesContract) {
         motive=salesContract.designMotive.name;
     }
 
+
     if(salesContract.buyer.type.toLowerCase()=="export"||salesContract.buyer.type.toLowerCase()=="ekspor"){
         moment.locale('en-EN');
         header = [{

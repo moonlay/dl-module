@@ -85,7 +85,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
 
         //get Object from ...
         var getBuyer = valid.buyer && ObjectId.isValid(valid.buyer._id) ? this.buyerManager.getSingleByIdOrDefault(valid.buyer._id) : Promise.resolve(null);
-        var getUom = valid.uom && ObjectId.isValid(valid.uom._id) ? this.UomManager.getSingleByIdOrDefault(valid.uom._id) : Promise.resolve(null);
+        var getUom = this.UomManager.collection.find({unit: "BALL"}).toArray();
         var getComodity = valid.comodity && ObjectId.isValid(valid.comodity._id) ? this.ComodityManager.getSingleByIdOrDefault(valid.comodity._id) : Promise.resolve(null);
         var getQuality = valid.quality && ObjectId.isValid(valid.quality._id) ? this.QualityManager.getSingleByIdOrDefault(valid.quality._id) : Promise.resolve(null);
         var getBankAccount = valid.accountBank && ObjectId.isValid(valid.accountBank._id) ? this.AccountBankManager.getSingleByIdOrDefault(valid.accountBank._id) : Promise.resolve(null);
@@ -96,20 +96,14 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
             .then(results => {
                 var _salesContract = results[0];
                 var _buyer = results[1];
-                var _uom = results[2];
+                var uom = results[2];
+                var _uom = uom[0];
                 var _comodity = results[3];
                 var _quality = results[4];
                 var _bank = results[5];
                 var _payment = results[6];
                 var _agent = results[7];
                 var deliverySchedule = moment(valid.deliverySchedule).format("YYYY-MM-DD");
-
-                if (valid.uom) {
-                    if (!valid.uom.unit || valid.uom.unit == '')
-                        errors["uom"] = i18n.__("SpinningSalesContract.uom.isRequired:%s is required", i18n.__("SpinningSalesContract.uom._:Uom")); //"Satuan tidak boleh kosong";
-                }
-                else
-                    errors["uom"] = i18n.__("SpinningSalesContract.uom.isRequired:%s is required", i18n.__("SpinningSalesContract.uom._:Uom")); //"Satuan tidak boleh kosong";
 
                 if (_salesContract) {
                     errors["salesContractNo"] = i18n.__("SpinningSalesContract.salesContractNo.isExist:%s is Exist", i18n.__("SpinningSalesContract.salesContractNo._:SalesContractNo")); //"no Sales Contract tidak boleh kosong";
@@ -191,7 +185,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                 }
 
                 if (_uom) {
-                    valid.uom_id = new ObjectId(_uom._id);
+                    valid.uomId = new ObjectId(_uom._id);
                     valid.uom = _uom;
                 }
 
