@@ -5,11 +5,11 @@ var ribuan = ["", "ribu", "juta", "milyar", "triliyun", "kuadrilyun", "kuintiliu
 
 function terbilang(d, f) {
     var strHasil = "";
-    var frac = d - Math.trunc(d);
+    var frac = d.toString().includes(".") ? Number(d.toString().substr(d.toString().indexOf(".")+1)):0;
 
     if (frac != 0)
-        strHasil = terbilang(Math.round(frac * 100), true);
-    strHasil = `${f? f :"rupiah"} ${strHasil}`.trim();
+        strHasil = terbilang(frac, "koma");
+
     var nDigit = 0;
     var nPosisi = 0;
 
@@ -58,6 +58,12 @@ function terbilang(d, f) {
                 break;
         }
     }
+    if (f === "koma") {
+        strHasil = `${f} ${strHasil}`.trim();
+    } else {
+        strHasil = ` ${strHasil} ${f ? f : "rupiah"}`.trim();
+    }
+
     strHasil = strHasil.trim().toLowerCase();
     if (strHasil.length > 0) {
         strHasil = strHasil.substr(0, 1).toUpperCase() +
