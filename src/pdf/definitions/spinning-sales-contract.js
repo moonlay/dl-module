@@ -17,6 +17,7 @@ module.exports = function (salesContract) {
     var remark = [];
     var footer = [];
     var detailprice = "";
+
     var uom="";
     var convertion=0;
     if(salesContract.uom.unit.toLowerCase()=="ball"){
@@ -58,6 +59,7 @@ module.exports = function (salesContract) {
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
         moment.locale('en-EN');
+
         header = [{
             columns: [{
                 width: '*',
@@ -256,7 +258,6 @@ module.exports = function (salesContract) {
             }],
             style: ['size09']
         }];
-
         remark = [{
             columns: [{
                 width: '*',
@@ -290,6 +291,7 @@ module.exports = function (salesContract) {
                             }]
                         }]
             }]
+
         }];
 
         //AGENT COMMISSION AGREEMENT
@@ -324,6 +326,7 @@ module.exports = function (salesContract) {
                         text: 'Kindly acknowledge receipt by undersigning this Commission Agreement letter and returned one copy to us after having been confirmed and signed by you.',
                         style: ['size09'],
                         alignment: "justify"
+
                     }]
             }, '\n', '\n'];
 
@@ -626,6 +629,7 @@ module.exports = function (salesContract) {
                     style: ['size09']
                 }]
         }, {
+
             text: 'Demikian konfirmasi order ini kami sampaikan untuk diketahui dan dipergunakan seperlunya. tembusan surat ini mohon dikirim kembali setelah ditanda tangani dan dibubuhi cap perusahaan.',
             style: ['size09'],
             alignment: "left"
