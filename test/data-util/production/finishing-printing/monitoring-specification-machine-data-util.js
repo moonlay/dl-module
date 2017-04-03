@@ -31,7 +31,7 @@ class MonitoringSpecificationMachineDataUtil {
                 var data = {
                     code: `UT/MSM/${codeGenerator()}`,
                     date: new Date(),
-                    time: "10.00",
+                    time: new Date(),
                     machineId: _machine._id,
                     machine: _machine,
                     productionOrderId: _productionOrder._id,
@@ -67,7 +67,7 @@ class MonitoringSpecificationMachineDataUtil {
                 var data = {
                     code: `UT/MSM/${codeGenerator()}`,
                     date: new Date(),
-                    time: "10.00",
+                    time: new Date(),
                     machineId: _machine._id,
                     machine: _machine,
                     productionOrderId: _productionOrder._id,
