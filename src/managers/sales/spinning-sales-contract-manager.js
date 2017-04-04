@@ -85,7 +85,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
 
         //get Object from ...
         var getBuyer = valid.buyer && ObjectId.isValid(valid.buyer._id) ? this.buyerManager.getSingleByIdOrDefault(valid.buyer._id) : Promise.resolve(null);
-        var getUom = this.UomManager.collection.find({unit: "BALL"}).toArray();
+        var getUom = this.UomManager.collection.find({ unit: "BALL" }).toArray();
         var getComodity = valid.comodity && ObjectId.isValid(valid.comodity._id) ? this.ComodityManager.getSingleByIdOrDefault(valid.comodity._id) : Promise.resolve(null);
         var getQuality = valid.quality && ObjectId.isValid(valid.quality._id) ? this.QualityManager.getSingleByIdOrDefault(valid.quality._id) : Promise.resolve(null);
         var getBankAccount = valid.accountBank && ObjectId.isValid(valid.accountBank._id) ? this.AccountBankManager.getSingleByIdOrDefault(valid.accountBank._id) : Promise.resolve(null);
@@ -134,9 +134,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                 if (!_bank)
                     errors["accountBank"] = i18n.__("SpinningSalesContract.accountBank.isRequired:%s is not exists", i18n.__("SpinningSalesContract.accountBank._:accountBank")); //"accountBank tidak boleh kosong";
 
-                if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
-                    errors["shippingQuantityTolerance"] = i18n.__("SpinningSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("SpinningSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
-                else if (valid.shippingQuantityTolerance > 100) {
+                if (valid.shippingQuantityTolerance > 100 || valid.shippingQuantityTolerance < 0) {
                     errors["shippingQuantityTolerance"] = i18n.__("SpinningSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("SpinningSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
 
