@@ -72,12 +72,8 @@ module.exports = function (pox) {
                     'Kecamatan Grogol',
                     'Sukoharjo 57193 - INDONESIA',
                     'PO.BOX 166 Solo 57100',
-<<<<<<< HEAD
                     'Telp. (0271) 714400, 7652913',
                     'Fax. (0271) 735222, 740777'
-=======
-                    'Telp. (0271) 739793, 732888, 7652913',
->>>>>>> Ambassador-Garmindo/dev
                 ],
                 style: ['size07', 'bold']
             }, {
