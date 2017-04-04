@@ -23,9 +23,19 @@ before('#00. connect db', function(done) {
                 username: 'dev'
             });
 
-            Promise.all([purchaseOrderDataUtil.getNewTestData(), purchaseOrderDataUtil.getNewTestData()])
+            var get2newPurchaseOrder = new Promise((resolve, reject) => {
+                purchaseOrderDataUtil.getNewTestData()
+                    .then(po1 => {
+                        purchaseOrderDataUtil.getNewTestData()
+                            .then(po2 => {
+                                resolve([po1, po2])
+                            })
+                    })
+            })
+
+            Promise.all([get2newPurchaseOrder])
                 .then(results => {
-                    purchaseOrders = results;
+                    purchaseOrders = results[0];
                     done();
                 })
                 .catch(e => {
