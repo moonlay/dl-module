@@ -167,9 +167,9 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 if (!_bank)
                     errors["accountBank"] = i18n.__("WeavingSalesContract.accountBank.isRequired:%s is not exists", i18n.__("WeavingSalesContract.accountBank._:accountBank")); //"accountBank tidak boleh kosong";
 
-                if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
-                    errors["shippingQuantityTolerance"] = i18n.__("WeavingSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
-                if (valid.shippingQuantityTolerance > 100) {
+                // if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
+                //     errors["shippingQuantityTolerance"] = i18n.__("WeavingSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
+                if (valid.shippingQuantityTolerance > 100 || valid.shippingQuantityTolerance < 0) {
                     errors["shippingQuantityTolerance"] = i18n.__("WeavingSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
 
@@ -260,10 +260,6 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                     valid.materialConstruction = _construction;
                 }
 
-                //set GMT+7
-                // var date = new Date(valid.deliverySchedule);
-                // date.setHours(new Date(valid.deliverySchedule).getHours() + 7);
-                // valid.deliverySchedule = new Date(date);
                 valid.deliverySchedule = new Date(valid.deliverySchedule);
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -323,4 +319,103 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 });
         });
     }
+
+    // getWeavingSalesContractReport(info) {
+    //     var _defaultFilter = {
+    //         _deleted: false
+    //     }, buyerFilter = {},
+    //         dateFromFilter = {},
+    //         dateToFilter = {},
+    //         query = {};
+
+    //     var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+    //     var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
+    //     var now = new Date();
+
+    //     if (info.buyerId && info.buyerId != '') {
+    //         var buyerId = ObjectId.isValid(info.buyerId) ? new ObjectId(info.buyerId) : {};
+    //         buyerFilter = { 'buyer._id': buyerId };
+    //     }
+
+    //     var salesContractNoFilter = {
+    //         "salesContractNo": {
+    //             '$regex': info.salesContractNo
+    //         }
+    //     }
+
+    //     var filterDate = {
+    //         "date": {
+    //             $gte: new Date(dateFrom),
+    //             $lte: new Date(dateTo)
+    //         }
+    //     };
+
+    //     query = { '$and': [_defaultFilter, buyerFilter, salesContractNoFilter, filterDate] };
+
+    //     return this._createIndexes()
+    //         .then((createIndexResults) => {
+    //             return this.collection
+    //                 .where(query)
+    //                 .execute();
+    //         });
+    // }
+
+    // getXls(result, query) {
+    //     var xls = {};
+    //     xls.data = [];
+    //     xls.options = [];
+    //     xls.name = '';
+
+    //     var index = 0;
+    //     var dateFormat = "DD/MM/YYYY";
+    //     var timeFormat = "HH : mm";
+
+    //     for (var weavingSalesContract of result.data) {
+    //         index++;
+    //         var item = {};
+    //         item["No"] = index;
+    //         item["Nomor Sales Contract"] = weavingSalesContract ? weavingSalesContract.salesContractNo : '';
+    //         item["Tanggal Sales Contract"] = monitoringSpecificationMachine.date ? moment(new Date(monitoringSpecificationMachine.date)).format(dateFormat) : '';
+    //         item["Buyer"] = monitoringSpecificationMachine.time ? moment(new Date(monitoringSpecificationMachine.time)).format(timeFormat) : '';
+    //         item["Jenis Buyer"] = monitoringSpecificationMachine.productionOrder ? monitoringSpecificationMachine.productionOrder.orderNo : '';
+    //         item["Komoditas"] = monitoringSpecificationMachine.cartNumber;
+    //         item["Jumlah Order"] = monitoringSpecificationMachine.cartNumber;
+    //         item["Satuan"] = monitoringSpecificationMachine.cartNumber;
+    //         item["Syarat Pembayaran"] = monitoringSpecificationMachine.cartNumber;
+    //         item["Jadwal Pengiriman"] = monitoringSpecificationMachine.cartNumber;
+    //         item["Agen"] = monitoringSpecificationMachine.cartNumber;
+    //         item["Komisi"] = monitoringSpecificationMachine.cartNumber;
+    //         item["Status"] = monitoringSpecificationMachine.cartNumber;
+    //         //dinamic items
+    //         for (var indicator of monitoringSpecificationMachine.items) {
+    //             item[indicator.indicator + " " + "(" + indicator.uom + ")"] = indicator ? indicator.value : '';
+    //             xls.options[indicator.indicator] = "string";
+    //         }
+
+    //         xls.data.push(item);
+    //     }
+
+    //     xls.options["No"] = "number";
+    //     xls.options["Mesin"] = "string";
+    //     xls.options["Tanggal"] = "string";
+    //     xls.options["Jam"] = "string";
+    //     xls.options["No Surat Order Produksi"] = "string";
+    //     xls.options["Nomor Kereta"] = "string";
+
+
+    //     if (query.dateFrom && query.dateTo) {
+    //         xls.name = `Monitoring Specification Machine Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+    //     }
+    //     else if (!query.dateFrom && query.dateTo) {
+    //         xls.name = `Monitoring Specification Machine Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+    //     }
+    //     else if (query.dateFrom && !query.dateTo) {
+    //         xls.name = `Monitoring Specification Machine Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+    //     }
+    //     else
+    //         xls.name = `Monitoring Specification Machine Report.xlsx`;
+
+    //     return Promise.resolve(xls);
+    // }
+
 }
