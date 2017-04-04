@@ -9,6 +9,7 @@ var MonitoringEvent = DLModels.production.finishingPrinting.MonitoringEvent;
 var generateCode = require("../../../utils/code-generator");
 var MachineManager = require('../../master/machine-manager');
 var ProductionOrderManager = require('../../sales/production-order-manager');
+// var MonitoringSpecificationMachinerManager = require('../../finishing-printing/monitoring-specification-machine-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var moment = require('moment');
@@ -21,12 +22,13 @@ module.exports = class MonitoringEventManager extends BaseManager {
 
         this.machineManager = new MachineManager(db, user);
         this.productionOrderManager = new ProductionOrderManager(db, user);
+        // this.monitoringSpecificationMachinerManager = new MonitoringSpecificationMachinerManager(db, user);
     }
 
     _getQuery(paging) {
         var deletedFilter = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             keywordFilter = {};
 
         var query = {};
@@ -66,7 +68,7 @@ module.exports = class MonitoringEventManager extends BaseManager {
         var valid = monitoringEvent;
         var dateNow = new Date(); //moment().format('YYYY-MM-DD');
 
-        var timeInMillisNow = (function() {
+        var timeInMillisNow = (function () {
             var setupMoment = moment();
             setupMoment.set('year', 1970);
             setupMoment.set('month', 0);
@@ -183,8 +185,8 @@ module.exports = class MonitoringEventManager extends BaseManager {
 
     getMonitoringEventReport(info) {
         var _defaultFilter = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             machineFilter = {},
             machineEventFilter = {},
             productionOrderFilter = {},
@@ -217,10 +219,10 @@ module.exports = class MonitoringEventManager extends BaseManager {
                     $gte: dateFrom
                 }
             }, {
-                'dateEnd': {
-                    $gte: dateFrom
-                }
-            }]
+                    'dateEnd': {
+                        $gte: dateFrom
+                    }
+                }]
         };
 
         dateToFilter = {
@@ -229,10 +231,10 @@ module.exports = class MonitoringEventManager extends BaseManager {
                     $lte: dateTo
                 }
             }, {
-                'dateEnd': {
-                    $lte: dateTo
-                }
-            }]
+                    'dateEnd': {
+                        $lte: dateTo
+                    }
+                }]
         };
 
         query = {
@@ -300,6 +302,80 @@ module.exports = class MonitoringEventManager extends BaseManager {
 
         return Promise.resolve(xls);
     }
+    /*
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        var getEvent = [];
+
+        for (var monitoringEvent of result.data) {
+            var info = {};
+            var time = moment(monitoringEvent.timeInMillisStart).format('HH:mm').split(":");
+            var date = monitoringEvent.dateStart.toString();
+            var dateTime = new Date(date);
+
+            dateTime.setHours(time[0]);
+            dateTime.setMinutes(time[1]);
+
+            info.date = dateTime;
+            info.machineId = monitoringEvent.machineId;
+            info.productionOrderNumber = monitoringEvent.productionOrder.orderNo;
+            getEvent.push(this.monitoringSpecificationMachinerManager.getMonitoringSpecificationMachineByEvent(info));
+        }
+
+        Promise.all(getEvent)
+
+
+        for (var monitoringEvent of result.data) {
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["Machine"] = monitoringEvent.machine ? monitoringEvent.machine.name : '';
+            item["Production Order Number"] = monitoringEvent.productionOrder ? monitoringEvent.productionOrder.orderNo : '';
+            item["Color"] = monitoringEvent.selectedProductionOrderDetail && monitoringEvent.selectedProductionOrderDetail.colorType ? monitoringEvent.selectedProductionOrderDetail.colorType.name : '';
+            item["Date Start"] = monitoringEvent.dateStart ? moment(new Date(monitoringEvent.dateStart)).format(dateFormat) : '';
+            item["Time Start"] = monitoringEvent.timeInMillisStart ? moment(monitoringEvent.timeInMillisStart).format('HH:mm') : '';
+            item["Date End"] = monitoringEvent.dateEnd ? moment(new Date(monitoringEvent.dateEnd)).format(dateFormat) : '';
+            item["Time End"] = monitoringEvent.timeInMillisEnd ? moment(monitoringEvent.timeInMillisEnd).format('HH:mm') : '';
+            item["Cart Number"] = monitoringEvent.cartNumber;
+            item["Machine Event"] = monitoringEvent.machineEvent ? monitoringEvent.machineEvent.name : '';
+            item["Remark"] = monitoringEvent.remark;
+
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Machine"] = "string";
+        xls.options["Production Order Number"] = "string";
+        xls.options["Color"] = "string";
+        xls.options["Date Start"] = "string";
+        xls.options["Time Start"] = "string";
+        xls.options["Date End"] = "string";
+        xls.options["Time End"] = "string";
+        xls.options["Cart Number"] = "string";
+        xls.options["Machine Event"] = "string";
+        xls.options["Remark"] = "string";
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Monitoring Event Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Monitoring Event Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Monitoring Event Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Monitoring Event Report.xlsx`;
+
+        return Promise.resolve(xls);
+    }*/
 
     _beforeInsert(monitoringEvent) {
         monitoringEvent.code = generateCode();
@@ -326,4 +402,6 @@ module.exports = class MonitoringEventManager extends BaseManager {
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
     }
+
+
 }
