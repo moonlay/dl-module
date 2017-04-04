@@ -3,6 +3,8 @@ var helper = require("../../helper");
 
 var purchaseOrderDataUtil = require("../../data-util/purchasing/purchase-order-data-util");
 var validatePR = require("dl-models").validator.purchasing.purchaseOrder;
+var PurchaseOrderManager = require("../../../src/managers/purchasing/purchase-order-manager");
+var purchaseOrderManager = null;
 var purchaseOrders;
 var purchaseOrderExternalDataUtil = require("../../data-util/purchasing/purchase-order-external-data-util");
 var validatePO = require("dl-models").validator.purchasing.purchaseOrderExternal;
