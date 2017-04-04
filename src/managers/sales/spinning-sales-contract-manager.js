@@ -254,5 +254,5 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                     reject(e);
                 });
         });
-    }
+    }       
 }
