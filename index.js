@@ -35,7 +35,8 @@ module.exports = {
             YarnMaterialManager: require('./src/managers/master/yarn-material-manager'),
             ComodityManager: require('./src/managers/master/comodity-manager'),
             QualityManager: require('./src/managers/master/quality-manager'),
-            TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager')
+            TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager'),
+            DesignMotiveManager: require('./src/managers/master/design-motive-manager')
         },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
@@ -106,7 +107,8 @@ module.exports = {
                 colorType: require('./test/data-util/master/color-type-data-util'),
                 comodity: require('./test/data-util/master/comodity-data-util'),
                 quality: require('./test/data-util/master/quality-data-util'),
-                termOfPayment: require('./test/data-util/master/term-of-payment-data-util')
+                termOfPayment: require('./test/data-util/master/term-of-payment-data-util'),
+                designMotive: require('./test/data-util/master/design-motive-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util")

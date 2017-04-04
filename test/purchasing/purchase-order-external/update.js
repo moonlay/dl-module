@@ -6,7 +6,6 @@ var validatePR = require("dl-models").validator.purchasing.purchaseOrder;
 var PurchaseOrderManager = require("../../../src/managers/purchasing/purchase-order-manager");
 var purchaseOrderManager = null;
 var purchaseOrders;
-
 var purchaseOrderExternalDataUtil = require("../../data-util/purchasing/purchase-order-external-data-util");
 var validatePO = require("dl-models").validator.purchasing.purchaseOrderExternal;
 var PurchaseOrderExternalManager = require("../../../src/managers/purchasing/purchase-order-external-manager");
@@ -60,7 +59,7 @@ it('#01. should success when create new purchase-order-external with purchase-or
 });
 
 it('#02. should success when update purchase-order-external', function (done) {
-    purchaseOrderExternal.items.splice(0,1);
+    purchaseOrderExternal.items.splice(0, 1);
     purchaseOrderExternalManager.update(purchaseOrderExternal)
         .then((id) => {
             return purchaseOrderExternalManager.getSingleById(id);

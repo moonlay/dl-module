@@ -180,7 +180,7 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                                             item.uomId = new ObjectId(_unitReceiptNoteItem.deliveredUom._id);
                                             item.uom._id = new ObjectId(_unitReceiptNoteItem.deliveredUom._id);
                                             item.currency = _unitReceiptNoteItem.currency;
-                                            item.currencyRate = _unitReceiptNoteItem.currencyRate;
+                                            item.currencyRate = Number(_unitReceiptNoteItem.currencyRate);
                                             break;
                                         }
                                     }
@@ -188,6 +188,9 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                                 }
                             }
                         }
+                        item.quantity = Number(item.quantity);
+                        item.pricePerUnit = Number(item.pricePerUnit);
+                        item.priceTotal = Number(item.priceTotal);
                     }
 
                     if (!valid.stamp)
@@ -320,11 +323,11 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
         });
     }
 
-    _beforeInsert(unitPaymentQuantityCorrectionNote) {
-        unitPaymentQuantityCorrectionNote.no = generateCode();
-        if (unitPaymentQuantityCorrectionNote.unitPaymentOrder.useIncomeTax)
-            unitPaymentQuantityCorrectionNote.returNoteNo = generateCode();
-        return Promise.resolve(unitPaymentQuantityCorrectionNote)
+    _beforeInsert(unitPaymentPriceCorrectionNote) {
+        unitPaymentPriceCorrectionNote.no = generateCode("correctionQuantity");
+        if (unitPaymentPriceCorrectionNote.unitPaymentOrder.useIncomeTax)
+            unitPaymentPriceCorrectionNote.returNoteNo = generateCode("returCode");
+        return Promise.resolve(unitPaymentPriceCorrectionNote)
     }
 
     _afterInsert(id) {
@@ -383,8 +386,8 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                             var _correction = {};
                             _correction.correctionDate = unitPaymentQuantityCorrectionNote.date;
                             _correction.correctionNo = unitPaymentQuantityCorrectionNote.no;
-                            _correction.correctionQuantity = correction.quantity;
-                            _correction.correctionPriceTotal = correctionPriceTotal;
+                            _correction.correctionQuantity = Number(correction.quantity);
+                            _correction.correctionPriceTotal = Number(correctionPriceTotal);
                             _correction.correctionRemark = `Koreksi ${unitPaymentQuantityCorrectionNote.correctionType}`;
                             fulfillment.correction.push(_correction);
                         }
@@ -428,9 +431,9 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                                     var _correction = {
                                         correctionDate: unitPaymentQuantityCorrectionNote.date,
                                         correctionNo: unitPaymentQuantityCorrectionNote.no,
-                                        correctionQuantity: realization.quantity,
-                                        correctionPricePerUnit: realization.pricePerUnit,
-                                        correctionPriceTotal: realization.priceTotal,
+                                        correctionQuantity: Number(realization.quantity),
+                                        correctionPricePerUnit: Number(realization.pricePerUnit),
+                                        correctionPriceTotal: Number(realization.priceTotal),
                                         correctionRemark: `Koreksi ${unitPaymentQuantityCorrectionNote.correctionType}`
                                     };
                                     item.correction.push(_correction);

@@ -23,10 +23,9 @@ before('#00. connect db', function(done) {
 
 var dataDaily;
 it("#01. should success when create data", function(done) {
-    dataUtil.getNewData()
+    dataUtil.getNewData("input")
             .then(data => {
                 data.dateInput = '2017-02-01';
-                data.dateOutput = '2017-02-15';
                 dailyOperationManager.create(data)
                     .then((item) => {
                         dailyOperationManager.getSingleByIdOrDefault(item)

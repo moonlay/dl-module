@@ -101,7 +101,7 @@ module.exports = class UomManager extends BaseManager {
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
-                            data.push({ "unit": dataFile[i][0] });
+                            data.push({ "unit": dataFile[i][0].trim() });
                         }
                     }
                     var dataError = [], errorMessage;

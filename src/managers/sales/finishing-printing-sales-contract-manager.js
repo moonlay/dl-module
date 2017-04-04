@@ -10,7 +10,7 @@ var FinishingPrintingSalesContractDetail=DLModels.sales.FinishingPrintingSalesCo
 var BuyerManager=require('../master/buyer-manager');
 var UomManager = require('../master/uom-manager');
 var ProductManager = require('../master/product-manager');
-var ProcessTypeManager = require('../master/process-type-manager');
+var DesignMotiveManager = require('../master/design-motive-manager');
 var OrderTypeManager = require('../master/order-type-manager');
 var MaterialConstructionManager = require ('../master/material-construction-manager');
 var YarnMaterialManager = require ('../master/yarn-material-manager');
@@ -31,7 +31,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
         this.BuyerManager= new BuyerManager(db,user);
         this.UomManager = new UomManager(db, user);
         this.ProductManager = new ProductManager(db, user);
-        this.ProcessTypeManager = new ProcessTypeManager(db, user);
+        this.DesignMotiveManager = new DesignMotiveManager(db, user);
         this.OrderTypeManager = new OrderTypeManager(db, user);
         this.YarnMaterialManager= new YarnMaterialManager(db,user);
         this.MaterialConstructionManager=new MaterialConstructionManager(db,user);
@@ -95,7 +95,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
         var getBuyer = ObjectId.isValid(valid.buyerId) ? this.BuyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
         var getUom = valid.uom && ObjectId.isValid(valid.uomId) ? this.UomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
         var getProduct = ObjectId.isValid(valid.materialId) ? this.ProductManager.getSingleByIdOrDefault(valid.materialId) : Promise.resolve(null);
-        var getProcessType = ObjectId.isValid(valid.processTypeId) ? this.ProcessTypeManager.getSingleByIdOrDefault(valid.processTypeId) : Promise.resolve(null);
+        var getMotive = ObjectId.isValid(valid.designMotiveId) ? this.DesignMotiveManager.getSingleByIdOrDefault(valid.designMotiveId) : Promise.resolve(null);
         var getOrderType = ObjectId.isValid(valid.orderTypeId) ? this.OrderTypeManager.getSingleByIdOrDefault(valid.orderTypeId) : Promise.resolve(null);
         var getYarnMaterial= ObjectId.isValid(valid.yarnMaterialId) ? this.YarnMaterialManager.getSingleByIdOrDefault(valid.yarnMaterialId) : Promise.resolve(null);
         var getMaterialConstruction = ObjectId.isValid(valid.materialConstructionId) ? this.MaterialConstructionManager.getSingleByIdOrDefault(valid.materialConstructionId) : Promise.resolve(null);
@@ -106,13 +106,13 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
         var getTermOfPayment=ObjectId.isValid(valid.termOfPaymentId) ? this.TermOfPaymentManager.getSingleByIdOrDefault(valid.termOfPaymentId) : Promise.resolve(null);
         
 
-        return Promise.all([getSalesContractPromise, getBuyer, getUom,  getProduct, getProcessType, getOrderType, getYarnMaterial, getMaterialConstruction, getComodity, getQuality, getBankAccount,getAgent,getTermOfPayment])
+        return Promise.all([getSalesContractPromise, getBuyer, getUom,  getProduct, getMotive, getOrderType, getYarnMaterial, getMaterialConstruction, getComodity, getQuality, getBankAccount,getAgent,getTermOfPayment])
             .then(results => {
                 var _salesContract = results[0];
                 var _buyer = results[1];
                 var _uom = results[2];
                 var _material = results[3];
-                var _process = results[4];
+                var _motive = results[4];
                 var _order = results[5];
                 var _yarn= results[6];
                 var _construction= results[7];
@@ -165,9 +165,6 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
 
                 if (!_comodity)
                     errors["comodity"] = i18n.__("FinishingPrintingSalesContract.comodity.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
-                
-                if (!_process)
-                    errors["processType"] = i18n.__("FinishingPrintingSalesContract.processType.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.processType._:ProcessType")); //"processType tidak boleh kosong";
                 
                 if (!_order)
                     errors["orderType"] = i18n.__("FinishingPrintingSalesContract.orderType.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.orderType._:OrderType")); //"orderType tidak boleh kosong";
@@ -275,9 +272,13 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                     valid.uomId=new ObjectId(_uom._id);
                     valid.uom=_uom;
                 }
-                if(_process){
-                    valid.processTypeId=new ObjectId(_process._id);
-                    valid.processType=_process;
+                if(_motive){
+                    valid.designMotiveId=new ObjectId(_motive._id);
+                    valid.designMotive=_motive;
+                }
+                else{
+                    valid.designMotiveId=null;
+                    valid.designMotive=null;
                 }
                 if(_order){
                     valid.orderTypeId=new ObjectId(_order._id);
