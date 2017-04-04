@@ -159,7 +159,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                 break;
                             }
                         }
-
+                        item.deliveredQuantity = Number(item.deliveredQuantity);
                     }
 
                     if (!valid.stamp)
@@ -270,13 +270,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                 if (!fulfillment.hasOwnProperty("unitReceiptNoteNo")) {
                                     fulfillment.unitReceiptNoteNo = unitReceiptNote.no;
                                     fulfillment.unitReceiptNoteDate = unitReceiptNote.date;
-                                    fulfillment.unitReceiptNoteDeliveredQuantity = item.deliveredQuantity;
+                                    fulfillment.unitReceiptNoteDeliveredQuantity = Number(item.deliveredQuantity);
                                     fulfillment.unitReceiptDeliveredUom = item.deliveredUom;
                                 } else {
                                     var _fulfillment = Object.assign({}, fulfillment);
                                     _fulfillment.unitReceiptNoteNo = unitReceiptNote.no;
                                     _fulfillment.unitReceiptNoteDate = unitReceiptNote.date;
-                                    _fulfillment.unitReceiptNoteDeliveredQuantity = item.deliveredQuantity;
+                                    _fulfillment.unitReceiptNoteDeliveredQuantity = Number(item.deliveredQuantity);
                                     _fulfillment.unitReceiptDeliveredUom = item.deliveredUom;
                                     poItem.fulfillments.push(_fulfillment);
                                 }
@@ -341,7 +341,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             if (fulfillment) {
                                 fulfillment.unitReceiptNoteNo = unitReceiptNote.no;
                                 fulfillment.unitReceiptNoteDate = unitReceiptNote.date;
-                                fulfillment.unitReceiptNoteDeliveredQuantity = item.deliveredQuantity;
+                                fulfillment.unitReceiptNoteDeliveredQuantity = Number(item.deliveredQuantity);
                                 fulfillment.unitReceiptDeliveredUom = item.deliveredUom;
                             }
                         }
@@ -474,7 +474,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             if (fulfillment) {
                                 var _realizationQuantity = {
                                     no: unitReceiptNote.no,
-                                    deliveredQuantity: _item.deliveredQuantity
+                                    deliveredQuantity: Number(_item.deliveredQuantity)
                                 }
                                 fulfillment.realizationQuantity.push(_realizationQuantity);
                             }
@@ -535,11 +535,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                 var _realizationQuantity = fulfillment.realizationQuantity.find(realqty => realqty.no === unitReceiptNote.no);
                                 if (_realizationQuantity) {
                                     _realizationQuantity.no = unitReceiptNote.no;
-                                    _realizationQuantity.deliveredQuantity = _item.deliveredQuantity;
+                                    _realizationQuantity.deliveredQuantity = Number(_item.deliveredQuantity);
                                 } else {
                                     var _realizationQuantity = {
                                         no: unitReceiptNote.no,
-                                        deliveredQuantity: _item.deliveredQuantity
+                                        deliveredQuantity: Number(_item.deliveredQuantity)
                                     }
                                     fulfillment.realizationQuantity.push(_realizationQuantity);
                                 }

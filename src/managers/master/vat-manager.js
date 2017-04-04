@@ -19,8 +19,8 @@ module.exports = class VatManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -73,6 +73,7 @@ module.exports = class VatManager extends BaseManager {
                 }
 
                 valid = new Vat(vat);
+                valid.rate = Number(valid.rate);
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
             });
@@ -104,8 +105,7 @@ module.exports = class VatManager extends BaseManager {
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
-                            data.push({ "name": dataFile[i][0], "rate": dataFile[i][1], "description": dataFile[i][2] });
-                        }
+                            data.push({ "name": dataFile[i][0], "rate": Number(dataFile[i][1]), "description": dataFile[i][2] });                        }
                     }
                     var dataError = [], errorMessage;
                     for (var i = 0; i < data.length; i++) {
@@ -121,9 +121,8 @@ module.exports = class VatManager extends BaseManager {
                         }
                         else {
                             var rateTemp = (data[i]["rate"]).toString().split(".");
-                            if (rateTemp[1]===undefined)
-                            { 
-                            }else if (rateTemp[1].length > 2) {
+                            if (rateTemp[1] === undefined) {
+                            } else if (rateTemp[1].length > 2) {
                                 errorMessage = errorMessage + "Rate maksimal memiliki 2 digit dibelakang koma, ";
                             }
                         }
@@ -133,7 +132,7 @@ module.exports = class VatManager extends BaseManager {
                             }
                         }
                         if (errorMessage !== "") {
-                            dataError.push({"name": data[i]["name"], "rate": data[i]["rate"], "description": data[i]["description"], "Error": errorMessage });
+                            dataError.push({ "name": data[i]["name"], "rate": Number(data[i]["rate"]), "description": data[i]["description"], "Error": errorMessage });
                         }
                     }
                     if (dataError.length === 0) {
@@ -162,7 +161,7 @@ module.exports = class VatManager extends BaseManager {
                 })
         })
     }
-    
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.collection.Vat}__updatedDate`,

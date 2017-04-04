@@ -6,14 +6,13 @@ var validatePR = require("dl-models").validator.purchasing.purchaseOrder;
 var PurchaseOrderManager = require("../../../src/managers/purchasing/purchase-order-manager");
 var purchaseOrderManager = null;
 var purchaseOrders;
-
 var purchaseOrderExternalDataUtil = require("../../data-util/purchasing/purchase-order-external-data-util");
 var validatePO = require("dl-models").validator.purchasing.purchaseOrderExternal;
 var PurchaseOrderExternalManager = require("../../../src/managers/purchasing/purchase-order-external-manager");
 var purchaseOrderExternalManager = null;
 var purchaseOrderExternal = {};
 
-before('#00. connect db', function (done) {
+before('#00. connect db', function(done) {
     helper.getDb()
         .then(db => {
             purchaseOrderManager = new PurchaseOrderManager(db, {
@@ -23,9 +22,19 @@ before('#00. connect db', function (done) {
                 username: 'dev'
             });
 
-            Promise.all([purchaseOrderDataUtil.getNewTestData(), purchaseOrderDataUtil.getNewTestData()])
+            var get2newPurchaseOrder = new Promise((resolve, reject) => {
+                purchaseOrderDataUtil.getNewTestData()
+                    .then(po1 => {
+                        purchaseOrderDataUtil.getNewTestData()
+                            .then(po2 => {
+                                resolve([po1, po2])
+                            })
+                    })
+            })
+
+            Promise.all([get2newPurchaseOrder])
                 .then(results => {
-                    purchaseOrders = results;
+                    purchaseOrders = results[0];
                     done();
                 })
                 .catch(e => {
@@ -50,7 +59,7 @@ it('#01. should success when create new purchase-order-external with purchase-or
 });
 
 it('#02. should success when update purchase-order-external', function (done) {
-    purchaseOrderExternal.items.splice(0,1);
+    purchaseOrderExternal.items.splice(0, 1);
     purchaseOrderExternalManager.update(purchaseOrderExternal)
         .then((id) => {
             return purchaseOrderExternalManager.getSingleById(id);

@@ -2,37 +2,34 @@
 var _getSert = require("../getsert");
 var generateCode = require("../../../src/utils/code-generator");
 
-class ComodityDataUtil {
+class DesignMotiveDataUtil {
     getSert(input) {
-        var ManagerType = require("../../../src/managers/master/comodity-manager");
+        var ManagerType = require("../../../src/managers/master/design-motive-manager");
         return _getSert(input, ManagerType, (data) => {
             return {
-                code: data.code,
-                name: data.name
+                code: data.code
             };
         });
     }
 
     getNewData() {
-        var Model = require('dl-models').master.Comodity;
+        var Model = require('dl-models').master.DesignMotive;
         var data = new Model();
 
         var code = generateCode();
 
         data.code = code;
-        data.name = `Comodity[${code}]`;
-        data.type = 'Finishing Printing';
+        data.name = `motive[${code}]`;
 
         return Promise.resolve(data);
     }
 
     getTestData() {
         var data = {
-            code: "UT/COMODITY/01",
-            name: "100 % COTTON FABRIC",
-            type: "Finishing Printing"
+            code: "UT/motive/01",
+            name: "motive001"
         };
         return this.getSert(data);
     }
 }
-module.exports = new ComodityDataUtil();
+module.exports = new DesignMotiveDataUtil();

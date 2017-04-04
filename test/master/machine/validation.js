@@ -152,3 +152,62 @@ it('#05. should error when create new data with monthly capacity less then 0', f
             done(e);
         });
 });
+
+it('#06. should error when create new data with empty data machine event', function (done) {
+    MachineDataUtil.getNewData()
+        .then(machine => {
+            var event = {
+                        code: '',
+                        no: '',
+                        name: '',
+                        category : ''
+                    };
+            machine.machineEvents.push(event);
+
+            manager.create(machine)
+                .then(id => {
+                    done("should error when create new data with empty data machine event");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('machineEvents');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#07. should error when create new data with duplicate no and name on data machine event', function (done) {
+    MachineDataUtil.getNewData()
+        .then(machine => {
+            var event = {};
+            for(var a of machine.machineEvents){
+                event = a;
+            }
+            event.code = 'code1';
+            machine.machineEvents.push(event);
+
+            manager.create(machine)
+                .then(id => {
+                    done("should error when create new data with duplicate no and name on data machine event");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('machineEvents');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
