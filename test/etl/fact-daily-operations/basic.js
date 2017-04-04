@@ -68,8 +68,8 @@ it("#02. should success when transforming data", function (done) {
                 }
             },
             input: 50,
-            goodOutput: 50,
-            badOutput: 1
+            goodOutput: 49,
+            badOutput: null
         }
     ];
     instanceManager.transform(data)
