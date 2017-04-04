@@ -163,6 +163,7 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
                 }
 
                 valid.date = new Date(valid.date);
+                valid.time = new Date(valid.time);
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
