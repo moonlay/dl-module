@@ -166,13 +166,38 @@ it('#06. it should error when create new data with export buyer with agent witho
 
             finishingPrintingSalesContractManager.create(sc)
                 .then(id => {
-                    done("should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, orderType");
+                    done("should error when create new data with export buyer with agent without comission, amount, term of shipment");
                 })
                 .catch(e => {
                     try {
                         e.errors.should.have.property('comission');
                         e.errors.should.have.property('amount');
                         e.errors.should.have.property('termOfShipment');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#07. it should error when create new data with shippingQuantityTolerance more than 100', function (done) {
+    FinishingPrintingSalesContractDataUtil.getNewData()
+        .then(sc => {
+
+            sc.shippingQuantityTolerance=120;
+
+            finishingPrintingSalesContractManager.create(sc)
+                .then(id => {
+                    done("should error when create new data with shippingQuantityTolerance more than 100");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('shippingQuantityTolerance');
                         done();
                     }
                     catch (ex) {
