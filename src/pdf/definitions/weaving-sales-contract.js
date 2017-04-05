@@ -53,6 +53,10 @@ module.exports = function (salesContract) {
 
     var amount = 0;
     var ppn = salesContract.incomeTax;
+    if(ppn=="Include PPn"){
+        ppn="Include PPn 10%";
+    }
+
     var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom + "\n";
     detailprice += salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + uomLocal + ' ' + ppn;
 
@@ -78,10 +82,15 @@ module.exports = function (salesContract) {
                         style: ['size10'],
                         alignment: "right"
                     }, {
-                        text: 'MESSRS,\n' + salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country + '\n' + salesContract.buyer.contact,
-                        style: ['size10'],
-                        alignment: "left"
-                    }, {
+                        columns: [{
+                            width: '40%',
+                            stack: [{
+                                text:'MESSRS,\n'+ salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country + '\n' + salesContract.buyer.contact,
+                                style: ['size10'],
+                                alignment: "left"
+                            }]
+                        }]
+                    },'\n', {
                         text: 'SALES CONTRACT NO: ' + no,
                         style: ['size11', 'bold'],
                         alignment: "center"
@@ -199,7 +208,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.accountBank.currency.symbol + " " + `${parseFloat(amount).toLocaleString(locale, locale.currency)}`+" ( "+`${numSpell(amount)}`+ salesContract.accountBank.currency.description.toUpperCase() + " )",
+                        text: salesContract.accountBank.currency.symbol + " " + `${parseFloat(amount).toLocaleString(locale, locale.currency)}`+" ( "+`${numSpell(amount)}`+ salesContract.accountBank.currency.description.toUpperCase() + " ) (APPROXIMATELLY)",
                         style: ['size10']
                     }]
             }, {
@@ -263,7 +272,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.condition,
+                        text: '- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- '+ salesContract.shippingQuantityTolerance +"% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - LOCAL CONTAINER DELIVERY CHARGES AT DESTINATION FOR BUYER'S ACCOUNT. \n"+ salesContract.condition,
                         style: ['size10']
                     }]
             }];
@@ -455,7 +464,7 @@ module.exports = function (salesContract) {
             text: 'Dengan Hormat,\n' + 'Sesuai dengan pesanan/ order Bapak/Ibu kepada kami, maka bersama ini kami kirimkan surat persetujuan pesanan dengan ketentuan dan syarat-syarat di bawah ini :',
             style: ['size10'],
             alignment: "left"
-        },
+        },'\n',
             {
                 columns: [
                     {
@@ -680,8 +689,8 @@ module.exports = function (salesContract) {
                         text: salesContract.remark,
                         style: ['size10']
                     }]
-            }, {
-                text: 'Demikian konfirmasi order ini kami sampaikan untuk diketahui dan dipergunakan seperlunya. tembusan surat ini mohon dikirim kembali setelah ditanda tangani dan dibubuhi cap perusahaan.',
+            },'\n', {
+                text: 'Demikian konfirmasi order ini kami sampaikan untuk diketahui dan dipergunakan seperlunya. Tembusan surat ini mohon dikirim kembali setelah ditanda tangani dan dibubuhi cap perusahaan.',
                 style: ['size10'],
                 alignment: "left"
             }];
@@ -695,7 +704,7 @@ module.exports = function (salesContract) {
                 style: ['center']
             }, {
                     width: '50%',
-                    stack: ['Hormat Kami,', '\n\n\n\n', '(   RUDY KURNIAWAN  )', 'Kadiv. Penjualan'],
+                    stack: ['Hormat Kami,', '\n\n\n\n', '(   RUDY KURNIAWAN  )', 'Kadiv. Penjualan Tekstil'],
                     style: ['center']
                 }],
             style: ['size10']

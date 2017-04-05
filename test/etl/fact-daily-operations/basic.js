@@ -43,7 +43,9 @@ it("#02. should success when transforming data", function (done) {
                     }
                 }
             },
-            input: 1
+            input: 50,
+            goodOutput: 50,
+            badOutput: null
         },
         {
             kanban: {
@@ -53,8 +55,22 @@ it("#02. should success when transforming data", function (done) {
                     }
                 }
             },
-            input: 1
+            input: 50,
+            goodOutput: 50,
+            badOutput: 1
         },
+        {
+            kanban: {
+                selectedProductionOrderDetail: {
+                    uom: {
+                        unit: "mtr"
+                    }
+                }
+            },
+            input: 50,
+            goodOutput: 49,
+            badOutput: null
+        }
     ];
     instanceManager.transform(data)
         .then(() => {
