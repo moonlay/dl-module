@@ -62,7 +62,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(1970, 1, 1);
+        var timestamp = new Date(time[0].start);
         return this.dailyOperationManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
@@ -80,13 +80,13 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
     getStatus(diff) {
         if (diff > 0) {
-            return "Penyusutan";
+            return "Pemuaian";
         }
         else if (diff === 0) {
             return "Tetap";
         }
         else if (diff < 0) {
-            return "Pemuaian";
+            return "Penyusutan";
         }
     }
 
@@ -120,9 +120,9 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                 kanbanInstructionCode: item.kanban.instruction ? `'${item.kanban.instruction.code}'` : null,
                 kanbanInstructionName: item.kanban.instruction ? `'${item.kanban.instruction.name}'` : null,
                 orderType: item.kanban.productionOrder && item.kanban.productionOrder.orderType ? `'${item.kanban.productionOrder.orderType.name}'` : null,
-                selectedProductionOrderDetailCode: item.kanban.selectedProductionOrderDetail.code ? `'${item.kanban.selectedProductionOrderDetail.code}'` : null,
-                selectedProductionOrderDetailColorRequest: item.kanban.selectedProductionOrderDetail.colorRequest ? `'${item.kanban.selectedProductionOrderDetail.colorRequest}'` : null,
-                selectedProductionOrderDetailColorTemplate: item.kanban.selectedProductionOrderDetail.colorTemplate ? `'${item.kanban.selectedProductionOrderDetail.colorTemplate}'` : null,
+                selectedProductionOrderDetailCode: item.kanban.selectedProductionOrderDetail.code ? `'${item.kanban.selectedProductionOrderDetail.code.replace(/'/g, '"')}'` : null,
+                selectedProductionOrderDetailColorRequest: item.kanban.selectedProductionOrderDetail.colorRequest ? `'${item.kanban.selectedProductionOrderDetail.colorRequest.replace(/'/g, '"')}'` : null,
+                selectedProductionOrderDetailColorTemplate: item.kanban.selectedProductionOrderDetail.colorTemplate ? `'${item.kanban.selectedProductionOrderDetail.colorTemplate.replace(/'/g, '"')}'` : null,
                 machineCode: item.machine && item.machine.code ? `'${item.machine.code}'` : null,
                 machineCondition: item.machine && item.machine.condition ? `'${item.machine.condition}'` : null,
                 machineManufacture: item.machine && item.machine.manufacture ? `'${item.machine.manufacture}'` : null,
@@ -134,9 +134,9 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                 goodOutputQuantityConvertion: item.goodOutput && item.kanban.selectedProductionOrderDetail.uom ? `${this.orderQuantityConvertion(orderUom, item.goodOutput)}` : null,
                 badOutputQuantityConvertion: item.badOutput && item.kanban.selectedProductionOrderDetail.uom ? `${this.orderQuantityConvertion(orderUom, item.badOutput)}` : null,
                 failedOutputQuantityConvertion: item.failedOutput && item.kanban.selectedProductionOrderDetail.uom ? `${this.orderQuantityConvertion(orderUom, item.failedOutput)}` : null,
-                outputQuantity: item.badOutput && item.goodOutput ? `${this.orderQuantityConvertion(orderUom, item.goodOutput + item.badOutput)}` : null,
-                inputOutputDiff: item.badOutput && item.goodOutput ? `${this.orderQuantityConvertion(orderUom, item.input - (item.goodOutput + item.badOutput))}` : null,
-                status: item.badOutput && item.goodOutput ? `'${this.getStatus(item.input - (item.goodOutput + item.badOutput))}'` : null
+                outputQuantity: item.badOutput || item.goodOutput  ? `${this.orderQuantityConvertion(orderUom, item.goodOutput + item.badOutput)}` : null,
+                inputOutputDiff: item.badOutput || item.goodOutput  ? `${this.orderQuantityConvertion(orderUom, (item.goodOutput + item.badOutput) - item.input)}` : null,
+                status: item.badOutput || item.goodOutput  ? `'${this.getStatus((item.goodOutput + item.badOutput) - item.input)}'` : null
             }
 
         });
@@ -189,6 +189,17 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
+
+                        var fs = require("fs");
+                        var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
+
+                        fs.writeFile(path, sqlQuery, function (error) {
+                            if (error) {
+                                console.log("write error:  " + error.message);
+                            } else {
+                                console.log("Successful Write to " + path);
+                            }
+                        });
 
                         return Promise.all(command)
                             .then((results) => {

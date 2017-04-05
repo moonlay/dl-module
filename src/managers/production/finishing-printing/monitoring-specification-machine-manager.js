@@ -163,6 +163,7 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
                 }
 
                 valid.date = new Date(valid.date);
+                valid.time = new Date(valid.time);
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
@@ -197,8 +198,8 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             machineFilter = { 'machine._id': machineId };
         }
 
-        if (info.productionOrderNumber && info.productionOrderNumber != ''){
-            productionOrderFilter = {'productionOrder.orderNo': info.productionOrderNumber};
+        if (info.productionOrderNumber && info.productionOrderNumber != '') {
+            productionOrderFilter = { 'productionOrder.orderNo': info.productionOrderNumber };
         }
 
         var filterDate = {
@@ -239,7 +240,7 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             item["Nomor Kereta"] = monitoringSpecificationMachine.cartNumber;
             //dinamic items
             for (var indicator of monitoringSpecificationMachine.items) {
-                item[indicator.indicator + " " +"("+indicator.uom+")"] = indicator ? indicator.value : '';
+                item[indicator.indicator + " " + "(" + indicator.uom + ")"] = indicator ? indicator.value : '';
                 xls.options[indicator.indicator] = "string";
             }
 
@@ -286,6 +287,41 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
+    }
+
+    getMonitoringSpecificationMachineByEvent(info) {
+        var _defaultFilter = {
+            _deleted: false
+        }, machineFilter = {}, productionOrderFilter = {}, query = {};
+
+        var date = info.date ? (new Date(info.date)) : (new Date());
+        var now = new Date();
+
+        if (info.machineId && info.machineId != '') {
+            var machineId = ObjectId.isValid(info.machineId) ? new ObjectId(info.machineId) : {};
+            machineFilter = { 'machineId': machineId };
+        }
+
+        if (info.productionOrderNumber && info.productionOrderNumber != '') {
+            productionOrderFilter = { 'productionOrder.orderNo': info.productionOrderNumber };
+        }
+
+        var filterDate = {
+            "time": {
+                $lte: new Date(date)
+            }
+        };
+
+        query = { '$and': [_defaultFilter, machineFilter, filterDate, productionOrderFilter] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this.collection
+                    .where(query)
+                    .order({ "time": -1 })
+                    .take(1)
+                    .execute();
+            });
     }
 
 }
