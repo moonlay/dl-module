@@ -111,7 +111,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                     var idxStep = 0;
                     if(_kanban){
                         var stepArr = _kanban.instruction.steps.map(function (item) { return item.process.toString() });
-                        idxStep = stepArr.indexOf(_step.process);
+                        idxStep = (stepArr.indexOf(_step.process) + 1);
                         currentStepIndex = _kanban.currentStepIndex;
                         if(idxStep < currentStepIndex)
                             thisStep = _kanban.instruction.steps[currentStepIndex].process;
@@ -367,7 +367,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var steps = tempKanban.instruction.steps.map(function (item) { return item.process.toString() });
                                 var idx = steps.indexOf(daily.step.process);
                                 tempKanban.currentQty = daily.goodOutput;
-                                tempKanban.currentStepIndex = idx;
+                                tempKanban.currentStepIndex = (idx + 1);
                                 this.kanbanManager.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
@@ -400,7 +400,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var steps = tempKanban.instruction.steps.map(function (item) { return item.process });
                                 var idx = steps.indexOf(daily.step.process);
                                 tempKanban.currentQty = daily.goodOutput;
-                                tempKanban.currentStepIndex = idx;
+                                tempKanban.currentStepIndex = (idx + 1);
                                 this.kanbanManager.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
@@ -459,7 +459,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                                         }
                                                     }
                                                     kanban.currentQty = dataOutput.goodOutput;
-                                                    kanban.currentStepIndex = steps.indexOf(dataOutput.step.process);
+                                                    kanban.currentStepIndex = (steps.indexOf(dataOutput.step.process) + 1);
                                                 }else{
                                                     kanban.currentQty = kanban.cart.qty;
                                                     kanban.currentStepIndex = 0;
