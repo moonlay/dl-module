@@ -148,14 +148,9 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 if(!_quality){
                     errors["quality"]=i18n.__("FinishingPrintingSalesContract.quality.isRequired:%s is not exsist", i18n.__("FinishingPrintingSalesContract.quality._:Quality")); //"quality tidak boleh kosong";
                 }
-                else if(!valid.qualityId){
-                    errors["quality"]=i18n.__("FinishingPrintingSalesContract.quality.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.quality._:Quality")); //"quality tidak boleh kosong";
-                }
 
                 if (!_material)
                     errors["material"] = i18n.__("FinishingPrintingSalesContract.material.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.material._:Material")); //"material tidak boleh kosong";
-                else if (!valid.materialId)
-                    errors["material"] = i18n.__("FinishingPrintingSalesContract.material.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.material._:Material")); //"material tidak boleh kosong";
                 
                 if(!valid.materialWidth||valid.materialWidth===''){
                     errors["materialWidth"] = i18n.__("FinishingPrintingSalesContract.materialWidth.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.materialWidth._:MaterialWidth")); //"lebar material tidak boleh kosong";
@@ -204,9 +199,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 if (!_bank)
                     errors["accountBank"] = i18n.__("FinishingPrintingSalesContract.accountBank.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.accountBank._:AccountBank")); //"accountBank tidak boleh kosong";
                  
-                if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
-                    errors["shippingQuantityTolerance"] = i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
-                else if(valid.shippingQuantityTolerance>100){
+                if(valid.shippingQuantityTolerance>100){
                     errors["shippingQuantityTolerance"] =i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
 
@@ -363,4 +356,6 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 });
         });
     }
+
+    
 }
