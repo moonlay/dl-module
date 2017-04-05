@@ -58,7 +58,7 @@ module.exports = function (unitPaymentCorrection) {
                             text: iso,
                             style: ['size09', 'bold']
                         },
-                        `SUKOHARJO, ${moment(unitPaymentCorrection.unitPaymentOrder.date).format(locale.date.format)}`,
+                        `SUKOHARJO, ${moment(unitPaymentCorrection.date).format(locale.date.format)}`,
                         `(${unitPaymentCorrection.unitPaymentOrder.supplier.code}) ${unitPaymentCorrection.unitPaymentOrder.supplier.name}`,
                         `${unitPaymentCorrection.unitPaymentOrder.supplier.address}`],
                     alignment: 'left',
