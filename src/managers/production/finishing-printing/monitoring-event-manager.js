@@ -304,100 +304,109 @@ module.exports = class MonitoringEventManager extends BaseManager {
     }*/
 
     getXls(result, query) {
-        return new Promise((resolve, reject) => {
-            var xls = {};
-            xls.data = [];
-            xls.options = [];
-            xls.name = '';
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
 
-            var index = 0;
-            var dateFormat = "DD/MM/YYYY";
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
 
-            var getSpecificationMachine = [];
+        var getSpecificationMachine = [];
 
-            for (var monitoringEvent of result.data) {
-                var info = {};
-                var time = moment(monitoringEvent.timeInMillisStart).format('HH:mm').split(":");
-                var date = monitoringEvent.dateStart.toString();
-                var dateTime = new Date(date);
+        for (var monitoringEvent of result.data) {
+            var time = moment(monitoringEvent.timeInMillisStart).format('HH:mm').split(":");
+            var _date = moment(monitoringEvent.dateStart).format('YYYY-MM-DD').split("-");
+            var date = new Date(Number(_date[0]), Number(_date[1]), Number(_date[2]), Number(time[0]), Number(time[1]), 0, 0);
 
-                dateTime.setHours(time[0]);
-                dateTime.setMinutes(time[1]);
+            var _defaultFilter = {
+                _deleted: false
+            }, machineFilter = {}, productionOrderFilter = {}, query = {};
 
-                info.date = dateTime;
-                info.machineId = monitoringEvent.machineId;
-                info.productionOrderNumber = monitoringEvent.productionOrder.orderNo;
-                getSpecificationMachine.push(this.monitoringSpecificationMachinerManager.getMonitoringSpecificationMachineByEvent(info));
+            if (monitoringEvent.machineId && monitoringEvent.machineId != '') {
+                var machineId = ObjectId.isValid(monitoringEvent.machineId) ? new ObjectId(monitoringEvent.machineId) : {};
+                machineFilter = { 'machineId': machineId };
             }
 
-            Promise.all(getSpecificationMachine)
-                .then((specificationMachines) => {
-                    for (var monitoringEvent of result.data) {
-                        var machine = specificationMachines[result.data.indexOf(monitoringEvent)].data[0];
-                        index++;
-                        var item = {};
-                        item["No"] = index;
-                        item["Production Order Number"] = monitoringEvent.productionOrder ? monitoringEvent.productionOrder.orderNo : '';
-                        item["Color"] = monitoringEvent.selectedProductionOrderDetail && monitoringEvent.selectedProductionOrderDetail.colorType ? monitoringEvent.selectedProductionOrderDetail.colorType.name : '';
-                        item["Date Start"] = monitoringEvent.dateStart ? moment(new Date(monitoringEvent.dateStart)).format(dateFormat) : '';
-                        item["Time Start"] = monitoringEvent.timeInMillisStart ? moment(monitoringEvent.timeInMillisStart).format('HH:mm') : '';
-                        item["Date End"] = monitoringEvent.dateEnd ? moment(new Date(monitoringEvent.dateEnd)).format(dateFormat) : '';
-                        item["Time End"] = monitoringEvent.timeInMillisEnd ? moment(monitoringEvent.timeInMillisEnd).format('HH:mm') : '';
-                        item["Cart Number"] = monitoringEvent.cartNumber;
-                        item["Machine"] = monitoringEvent.machine ? monitoringEvent.machine.name : '';
-                        item["Machine Event"] = monitoringEvent.machineEvent ? monitoringEvent.machineEvent.name : '';
+            if (monitoringEvent.productionOrderNumber && monitoringEvent.productionOrderNumber != '') {
+                productionOrderFilter = { 'productionOrder.orderNo': monitoringEvent.productionOrderNumber };
+            }
 
-                        if (machine) {
-                            var indicators = [];
-                            item["Tanggal"] = machine.date ? moment(new Date(machine.date)).format(dateFormat) : '';
-                            item["Jam"] = machine.time ? moment(new Date(machine.time)).format(timeFormat) : '';
+            var filterDate = {
+                "time": {
+                    $lte: new Date(date)
+                }
+            };
 
-                            var indicators = [];
-                            for (var indicator of machine.items) {
-                                indicators.push(`${indicator.indicator} : ${indicator.value} ${indicator.uom}`);
-                            }
-                            item["Indikator"] = indicators.join("\n");
+            query = { '$and': [_defaultFilter, machineFilter, filterDate, productionOrderFilter] };
+
+            getSpecificationMachine.push(this.monitoringSpecificationMachinerManager.getSingleByQueryOrDefault(query));
+        }
+        return Promise.all(getSpecificationMachine)
+            .then((specificationMachines) => {
+                for (var monitoringEvent of result.data) {
+                    var machine = specificationMachines[result.data.indexOf(monitoringEvent)];
+                    index++;
+                    var item = {};
+                    item["No"] = index;
+                    item["Production Order Number"] = monitoringEvent.productionOrder ? monitoringEvent.productionOrder.orderNo : '';
+                    item["Color"] = monitoringEvent.selectedProductionOrderDetail && monitoringEvent.selectedProductionOrderDetail.colorType ? monitoringEvent.selectedProductionOrderDetail.colorType.name : '';
+                    item["Date Start"] = monitoringEvent.dateStart ? moment(new Date(monitoringEvent.dateStart)).format(dateFormat) : '';
+                    item["Time Start"] = monitoringEvent.timeInMillisStart ? moment(monitoringEvent.timeInMillisStart).format('HH:mm') : '';
+                    item["Date End"] = monitoringEvent.dateEnd ? moment(new Date(monitoringEvent.dateEnd)).format(dateFormat) : '';
+                    item["Time End"] = monitoringEvent.timeInMillisEnd ? moment(monitoringEvent.timeInMillisEnd).format('HH:mm') : '';
+                    item["Cart Number"] = monitoringEvent.cartNumber;
+                    item["Machine"] = monitoringEvent.machine ? monitoringEvent.machine.name : '';
+                    item["Machine Event"] = monitoringEvent.machineEvent ? monitoringEvent.machineEvent.name : '';
+
+                    if (machine) {
+                        var indicators = [];
+                        item["Tanggal"] = machine.date ? moment(new Date(machine.date)).format(dateFormat) : '';
+                        item["Jam"] = machine.time ? moment(new Date(machine.time)).format(timeFormat) : '';
+
+                        var indicators = [];
+                        for (var indicator of machine.items) {
+                            indicators.push(`${indicator.indicator} : ${indicator.value} ${indicator.uom}`);
                         }
-                        else {
-                            item["Tanggal"] = '';
-                            item["Jam"] = '';
-                            item["Indikator"] = '';
-                        }
-                        item["Remark"] = monitoringEvent.remark;
-
-                        xls.data.push(item);
+                        item["Indikator"] = indicators.join("; ");
                     }
-
-                    xls.options["No"] = "number";
-                    xls.options["Machine"] = "string";
-                    xls.options["Production Order Number"] = "string";
-                    xls.options["Color"] = "string";
-                    xls.options["Date Start"] = "string";
-                    xls.options["Time Start"] = "string";
-                    xls.options["Date End"] = "string";
-                    xls.options["Time End"] = "string";
-                    xls.options["Cart Number"] = "string";
-                    xls.options["Machine Event"] = "string";
-                    xls.options["Remark"] = "string";
-
-                    if (query.dateFrom && query.dateTo) {
-                        xls.name = `Monitoring Event Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                    else {
+                        item["Tanggal"] = '';
+                        item["Jam"] = '';
+                        item["Indikator"] = '';
                     }
-                    else if (!query.dateFrom && query.dateTo) {
-                        xls.name = `Monitoring Event Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
-                    }
-                    else if (query.dateFrom && !query.dateTo) {
-                        xls.name = `Monitoring Event Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
-                    }
-                    else
-                        xls.name = `Monitoring Event Report.xlsx`;
+                    item["Remark"] = monitoringEvent.remark;
 
-                    return Promise.resolve(xls);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        })
+                    xls.data.push(item);
+                }
+
+                xls.options["No"] = "number";
+                xls.options["Machine"] = "string";
+                xls.options["Production Order Number"] = "string";
+                xls.options["Color"] = "string";
+                xls.options["Date Start"] = "string";
+                xls.options["Time Start"] = "string";
+                xls.options["Date End"] = "string";
+                xls.options["Time End"] = "string";
+                xls.options["Cart Number"] = "string";
+                xls.options["Machine Event"] = "string";
+                xls.options["Remark"] = "string";
+
+                if (query.dateFrom && query.dateTo) {
+                    xls.name = `Monitoring Event Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                }
+                else if (!query.dateFrom && query.dateTo) {
+                    xls.name = `Monitoring Event Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                }
+                else if (query.dateFrom && !query.dateTo) {
+                    xls.name = `Monitoring Event Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+                }
+                else
+                    xls.name = `Monitoring Event Report.xlsx`;
+
+                return Promise.resolve(xls);
+            })
     }
 
     _beforeInsert(monitoringEvent) {
@@ -425,6 +434,4 @@ module.exports = class MonitoringEventManager extends BaseManager {
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
     }
-
-
 }
