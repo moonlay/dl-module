@@ -5,3 +5,7 @@ describe("BASIC CRUD SCENARIOS", function() {
 describe("VALIDATION SCENARIOS", function() {
     require("./validator");
 });
+
+describe("REPORT SCENARIOS", function() {
+    require("./report");
+});

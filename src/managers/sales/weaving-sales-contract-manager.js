@@ -20,6 +20,8 @@ var i18n = require('dl-i18n');
 var generateCode = require("../../utils/code-generator");
 var assert = require('assert');
 
+var moment = require('moment');
+
 module.exports = class WeavingSalesContractManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
@@ -221,7 +223,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                         //     errors["agent"] = i18n.__("WeavingSalesContract.agent.isRequired:%s is required", i18n.__("WeavingSalesContract.agent._:agent")); //"agent tidak boleh kosong jika type buyer ekspor";
                         // }
 
-                        if (valid.agent) {
+                        if (valid.agent != null) {
                             if (!valid.comission) {
                                 errors["comission"] = i18n.__("WeavingSalesContract.comission.isRequired:%s is required", i18n.__("WeavingSalesContract.comission._:comission")); //"comission tidak boleh kosong jika agent valid";
                             }
@@ -277,25 +279,6 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             });
     }
 
-    _createIndexes() {
-        var dateIndex = {
-            name: `ix_${map.sales.collection.WeavingSalesContract}__updatedDate`,
-            key: {
-                _updatedDate: -1
-            }
-        }
-
-        var noIndex = {
-            name: `ix_${map.sales.collection.WeavingSalesContract}_salesContractNo`,
-            key: {
-                salesContractNo: 1
-            },
-            unique: true
-        }
-
-        return this.collection.createIndexes([dateIndex, noIndex]);
-    }
-
     pdf(id) {
         return new Promise((resolve, reject) => {
 
@@ -320,102 +303,143 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
         });
     }
 
-    // getWeavingSalesContractReport(info) {
-    //     var _defaultFilter = {
-    //         _deleted: false
-    //     }, buyerFilter = {},
-    //         dateFromFilter = {},
-    //         dateToFilter = {},
-    //         query = {};
+    getWeavingSalesContractReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        }, buyerFilter = {}, comodityFilter = {},
+            weavingSalesContractFilter = {},
+            dateFromFilter = {},
+            dateToFilter = {},
+            query = {};
 
-    //     var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-    //     var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
-    //     var now = new Date();
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
+        var now = new Date();
 
-    //     if (info.buyerId && info.buyerId != '') {
-    //         var buyerId = ObjectId.isValid(info.buyerId) ? new ObjectId(info.buyerId) : {};
-    //         buyerFilter = { 'buyer._id': buyerId };
-    //     }
+        if (info.buyerId && info.buyerId != '') {
+            var buyerId = ObjectId.isValid(info.buyerId) ? new ObjectId(info.buyerId) : {};
+            buyerFilter = { 'buyer._id': buyerId };
+        }
 
-    //     var salesContractNoFilter = {
-    //         "salesContractNo": {
-    //             '$regex': info.salesContractNo
-    //         }
-    //     }
+        if (info.comodityId && info.comodityId != '') {
+            var comodityId = ObjectId.isValid(info.comodityId) ? new ObjectId(info.comodityId) : {};
+            comodityFilter = { 'comodity._id': comodityId };
+        }
 
-    //     var filterDate = {
-    //         "date": {
-    //             $gte: new Date(dateFrom),
-    //             $lte: new Date(dateTo)
-    //         }
-    //     };
+        var salesContractNoFilter = {
+            "salesContractNo": info.salesContractNo,
+        }
 
-    //     query = { '$and': [_defaultFilter, buyerFilter, salesContractNoFilter, filterDate] };
-
-    //     return this._createIndexes()
-    //         .then((createIndexResults) => {
-    //             return this.collection
-    //                 .where(query)
-    //                 .execute();
-    //         });
-    // }
-
-    // getXls(result, query) {
-    //     var xls = {};
-    //     xls.data = [];
-    //     xls.options = [];
-    //     xls.name = '';
-
-    //     var index = 0;
-    //     var dateFormat = "DD/MM/YYYY";
-    //     var timeFormat = "HH : mm";
-
-    //     for (var weavingSalesContract of result.data) {
-    //         index++;
-    //         var item = {};
-    //         item["No"] = index;
-    //         item["Nomor Sales Contract"] = weavingSalesContract ? weavingSalesContract.salesContractNo : '';
-    //         item["Tanggal Sales Contract"] = monitoringSpecificationMachine.date ? moment(new Date(monitoringSpecificationMachine.date)).format(dateFormat) : '';
-    //         item["Buyer"] = monitoringSpecificationMachine.time ? moment(new Date(monitoringSpecificationMachine.time)).format(timeFormat) : '';
-    //         item["Jenis Buyer"] = monitoringSpecificationMachine.productionOrder ? monitoringSpecificationMachine.productionOrder.orderNo : '';
-    //         item["Komoditas"] = monitoringSpecificationMachine.cartNumber;
-    //         item["Jumlah Order"] = monitoringSpecificationMachine.cartNumber;
-    //         item["Satuan"] = monitoringSpecificationMachine.cartNumber;
-    //         item["Syarat Pembayaran"] = monitoringSpecificationMachine.cartNumber;
-    //         item["Jadwal Pengiriman"] = monitoringSpecificationMachine.cartNumber;
-    //         item["Agen"] = monitoringSpecificationMachine.cartNumber;
-    //         item["Komisi"] = monitoringSpecificationMachine.cartNumber;
-    //         item["Status"] = monitoringSpecificationMachine.cartNumber;
-    //         //dinamic items
-    //         for (var indicator of monitoringSpecificationMachine.items) {
-    //             item[indicator.indicator + " " + "(" + indicator.uom + ")"] = indicator ? indicator.value : '';
-    //             xls.options[indicator.indicator] = "string";
-    //         }
-
-    //         xls.data.push(item);
-    //     }
-
-    //     xls.options["No"] = "number";
-    //     xls.options["Mesin"] = "string";
-    //     xls.options["Tanggal"] = "string";
-    //     xls.options["Jam"] = "string";
-    //     xls.options["No Surat Order Produksi"] = "string";
-    //     xls.options["Nomor Kereta"] = "string";
+        var filterDate = {
+            "_createdDate": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
 
 
-    //     if (query.dateFrom && query.dateTo) {
-    //         xls.name = `Monitoring Specification Machine Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
-    //     }
-    //     else if (!query.dateFrom && query.dateTo) {
-    //         xls.name = `Monitoring Specification Machine Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
-    //     }
-    //     else if (query.dateFrom && !query.dateTo) {
-    //         xls.name = `Monitoring Specification Machine Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
-    //     }
-    //     else
-    //         xls.name = `Monitoring Specification Machine Report.xlsx`;
 
-    //     return Promise.resolve(xls);
-    // }
+        query = { '$and': [_defaultFilter, buyerFilter, salesContractNoFilter, comodityFilter,filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this.collection
+                    .where(query)
+                    .execute();
+            });
+    }
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
+
+        for (var weavingSalesContract of result.data) {
+            index++;
+
+            var agent = weavingSalesContract.agent.code + "-" + weavingSalesContract.agent.name;
+
+            var item = {};
+            item["No"] = index;
+            item["Nomor Sales Contract"] = weavingSalesContract ? weavingSalesContract.salesContractNo : '';
+            item["Tanggal Sales Contract"] = weavingSalesContract._createdDate ? moment(new Date(weavingSalesContract._createdDate)).format(dateFormat) : '';
+            item["Buyer"] = weavingSalesContract.buyer ? weavingSalesContract.buyer.name : '';
+            item["Jenis Buyer"] = weavingSalesContract.buyer ? weavingSalesContract.buyer.type : '';
+            item["Nomor Disposisi"] = weavingSalesContract ? weavingSalesContract.dispositionNumber : '';
+            item["Komoditas"] = weavingSalesContract.comodity ? weavingSalesContract.comodity.name : '';
+            item["Jumlah Order"] = weavingSalesContract ? weavingSalesContract.orderQuantity : '';
+            item["Satuan"] = weavingSalesContract.uom ? weavingSalesContract.uom.unit : '';
+            item["Toleransi"] = weavingSalesContract ? weavingSalesContract.shippingQuantityTolerance : '';
+            item["Kualitas"] = weavingSalesContract.quality ? weavingSalesContract.quality.name : '';
+            item["Harga"] = weavingSalesContract ? weavingSalesContract.price : '';
+            item["Satuan"] = weavingSalesContract.uom ? weavingSalesContract.uom.unit : '';
+            item["Mata Uang"] = weavingSalesContract.accountBank.currency ? weavingSalesContract.accountBank.currency.code : '';
+            item["Syarat Pembayaran"] = weavingSalesContract.termOfPayment ? weavingSalesContract.termOfPayment.termOfPayment : '';
+            item["Pembayaran ke Rekening"] = weavingSalesContract.accountBank ? weavingSalesContract.accountBank.accountName + "-" + weavingSalesContract.accountBank.bankName + "-" + weavingSalesContract.accountBank.accountNumber + "-" + weavingSalesContract.accountBank.currency.code : '';
+            item["Jadwal Pengiriman"] = weavingSalesContract ? moment(new Date(weavingSalesContract.deliverySchedule)).format(dateFormat) : '';
+            item["Agen"] = weavingSalesContract.agent ? weavingSalesContract.agent.code + "-" + weavingSalesContract.agent.name : '';
+            item["Komisi"] = weavingSalesContract ? weavingSalesContract.comission : '';
+
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Nomor Sales Contract"] = "string";
+        xls.options["Tanggal Sales Contract"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Jenis Buyer"] = "string";
+        xls.options["Nomor Disposisi"] = "number";
+        xls.options["Komoditas"] = "string";
+        xls.options["Jumlah Order"] = "number";
+        xls.options["Satuan"] = "string";
+        xls.options["Toleransi"] = "number";
+        xls.options["Kualitas"] = "string";
+        xls.options["Harga"] = "number";
+        xls.options["Mata Uang"] = "string";
+        xls.options["Syarat Pembayaran"] = "string";
+        xls.options["Pembayaran ke Rekening"] = "string";
+        xls.options["Jadwal Pengiriman"] = "string";
+        xls.options["Agen"] = "string";
+        xls.options["Komisi"] = "string";
+
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Sales Contract - Weaving  Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Sales Contract - Weaving Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Sales Contract - Weaving Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Sales Contract - Weaving Report.xlsx`;
+
+        return Promise.resolve(xls);
+    }
+
+    _createIndexes() {
+        var dateIndex = {
+            name: `ix_${map.sales.collection.WeavingSalesContract}__updatedDate`,
+            key: {
+                _updatedDate: -1
+            }
+        }
+
+        var noIndex = {
+            name: `ix_${map.sales.collection.WeavingSalesContract}_salesContractNo`,
+            key: {
+                salesContractNo: 1
+            },
+            unique: true
+        }
+
+        return this.collection.createIndexes([dateIndex, noIndex]);
+    }
 
 }
