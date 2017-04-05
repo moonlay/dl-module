@@ -145,34 +145,3 @@ it("#05. should success when create new data export buyer", function(done) {
                 });
         });
 });
-
-it('#06. it should error when create new data with export buyer with agent without comission, amount, term of shipment', function(done) {
-    SpinningSalesContractDataUtil.getNewData()
-        .then((sc) => {
-
-            sc.buyer = createdDataBuyer;
-            sc.buyerId = createdDataBuyerId;
-            sc.comission = '';
-            sc.amount = 0;
-            sc.termOfShipment = '';
-
-            spinningSalesContractManager.create(sc)
-                .then((id) => {
-                    done("should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, orderType");
-                })
-                .catch((e) => {
-                    try {
-                        e.errors.should.have.property('comission');
-                        e.errors.should.have.property('amount');
-                        e.errors.should.have.property('termOfShipment');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
