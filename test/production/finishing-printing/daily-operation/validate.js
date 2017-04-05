@@ -837,7 +837,7 @@ it("#31. on step 2 : should success when create new data Output", function(done)
                             kanbanManager.getSingleById(daily.kanbanId)
                                 .then(kanban => {
                                     var stepArr = kanban.instruction.steps.map(function (item) { return item.process });
-                                    var stepIdx = stepArr.indexOf(step2.process);
+                                    var stepIdx = (stepArr.indexOf(step2.process) + 1);
                                     kanban.currentStepIndex.should.equal(stepIdx);
                                     kanban.currentQty.should.equal(data.goodOutput);
                                     kanban.isComplete.should.equal(false);
@@ -1150,7 +1150,7 @@ it("#43. on step 3 : should success when output data with step 3", function(done
                             kanbanManager.getSingleById(data.kanbanId)
                                 .then(kanban => {
                                     var stepArr = kanban.instruction.steps.map(function (item) { return item.process });
-                                    var stepIdx = stepArr.indexOf(step3.process);
+                                    var stepIdx = (stepArr.indexOf(step3.process) + 1);
                                     kanban.currentStepIndex.should.equal(stepIdx);
                                     kanban.currentQty.should.equal(data.goodOutput);
                                     done()
@@ -1184,7 +1184,7 @@ it("#44. on step 3 : should success when delete output data with step 3", functi
                                 .then(daily => {
                                     daily.goodOutput.should.equal(kanban.currentQty);
                                     var stepArr = kanban.instruction.steps.map(function (item) { return item.process });
-                                    var stepIdx = stepArr.indexOf(step2.process);
+                                    var stepIdx = (stepArr.indexOf(step2.process) + 1);
                                     kanban.currentStepIndex.should.equal(stepIdx);
                                     done();
                                 })
