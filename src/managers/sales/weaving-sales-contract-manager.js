@@ -20,6 +20,8 @@ var i18n = require('dl-i18n');
 var generateCode = require("../../utils/code-generator");
 var assert = require('assert');
 
+var moment = require('moment');
+
 module.exports = class WeavingSalesContractManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
@@ -277,25 +279,6 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             });
     }
 
-    _createIndexes() {
-        var dateIndex = {
-            name: `ix_${map.sales.collection.WeavingSalesContract}__updatedDate`,
-            key: {
-                _updatedDate: -1
-            }
-        }
-
-        var noIndex = {
-            name: `ix_${map.sales.collection.WeavingSalesContract}_salesContractNo`,
-            key: {
-                salesContractNo: 1
-            },
-            unique: true
-        }
-
-        return this.collection.createIndexes([dateIndex, noIndex]);
-    }
-
     pdf(id) {
         return new Promise((resolve, reject) => {
 
@@ -324,6 +307,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
         var _defaultFilter = {
             _deleted: false
         }, buyerFilter = {}, comodityFilter = {},
+            weavingSalesContractFilter = {},
             dateFromFilter = {},
             dateToFilter = {},
             query = {};
@@ -347,13 +331,15 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
         }
 
         var filterDate = {
-            "date": {
+            "_createdDate": {
                 $gte: new Date(dateFrom),
                 $lte: new Date(dateTo)
             }
         };
 
-        query = { '$and': [_defaultFilter, buyerFilter, comodityFilter, salesContractNoFilter, filterDate] };
+
+
+        query = { '$and': [_defaultFilter, buyerFilter, salesContractNoFilter, comodityFilter,filterDate] };
 
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -435,6 +421,25 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             xls.name = `Sales Contract - Weaving Report.xlsx`;
 
         return Promise.resolve(xls);
+    }
+
+    _createIndexes() {
+        var dateIndex = {
+            name: `ix_${map.sales.collection.WeavingSalesContract}__updatedDate`,
+            key: {
+                _updatedDate: -1
+            }
+        }
+
+        var noIndex = {
+            name: `ix_${map.sales.collection.WeavingSalesContract}_salesContractNo`,
+            key: {
+                salesContractNo: 1
+            },
+            unique: true
+        }
+
+        return this.collection.createIndexes([dateIndex, noIndex]);
     }
 
 }
