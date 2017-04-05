@@ -48,7 +48,7 @@ module.exports = function (pox) {
     });
 
 
-    var iso = "FM-AG2-00-P3-01-005";
+    var iso = "FM-AG2-00-PJ-01-005";
     var number = pox.no;
     var currency = pox.currency.code;
     var supplier = pox.supplier.name;
