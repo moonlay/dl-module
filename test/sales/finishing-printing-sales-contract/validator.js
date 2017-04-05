@@ -185,7 +185,7 @@ it('#06. it should error when create new data with export buyer with agent witho
         });
 });
 
-it('#06. it should error when create new data with shippingQuantityTolerance more than 100', function (done) {
+it('#07. it should error when create new data with shippingQuantityTolerance more than 100', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
 
