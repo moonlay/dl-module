@@ -350,15 +350,15 @@ module.exports = class MonitoringEventManager extends BaseManager {
                     index++;
                     var item = {};
                     item["No"] = index;
-                    item["Production Order Number"] = monitoringEvent.productionOrder ? monitoringEvent.productionOrder.orderNo : '';
-                    item["Color"] = monitoringEvent.selectedProductionOrderDetail && monitoringEvent.selectedProductionOrderDetail.colorType ? monitoringEvent.selectedProductionOrderDetail.colorType.name : '';
-                    item["Date Start"] = monitoringEvent.dateStart ? moment(new Date(monitoringEvent.dateStart)).format(dateFormat) : '';
-                    item["Time Start"] = monitoringEvent.timeInMillisStart ? moment(monitoringEvent.timeInMillisStart).format('HH:mm') : '';
-                    item["Date End"] = monitoringEvent.dateEnd ? moment(new Date(monitoringEvent.dateEnd)).format(dateFormat) : '';
-                    item["Time End"] = monitoringEvent.timeInMillisEnd ? moment(monitoringEvent.timeInMillisEnd).format('HH:mm') : '';
-                    item["Cart Number"] = monitoringEvent.cartNumber;
-                    item["Machine"] = monitoringEvent.machine ? monitoringEvent.machine.name : '';
-                    item["Machine Event"] = monitoringEvent.machineEvent ? monitoringEvent.machineEvent.name : '';
+                    item["No Order Produksi"] = monitoringEvent.productionOrder ? monitoringEvent.productionOrder.orderNo : '';
+                    item["Warna"] = monitoringEvent.selectedProductionOrderDetail && monitoringEvent.selectedProductionOrderDetail.colorType ? monitoringEvent.selectedProductionOrderDetail.colorType.name : '';
+                    item["Tanggal Mulai"] = monitoringEvent.dateStart ? moment(new Date(monitoringEvent.dateStart)).format(dateFormat) : '';
+                    item["Jam Mulai"] = monitoringEvent.timeInMillisStart ? moment(monitoringEvent.timeInMillisStart).format('HH:mm') : '';
+                    item["Tanggal Selesai"] = monitoringEvent.dateEnd ? moment(new Date(monitoringEvent.dateEnd)).format(dateFormat) : '';
+                    item["Jam Selesai"] = monitoringEvent.timeInMillisEnd ? moment(monitoringEvent.timeInMillisEnd).format('HH:mm') : '';
+                    item["Nomor Kereta"] = monitoringEvent.cartNumber;
+                    item["Mesin"] = monitoringEvent.machine ? monitoringEvent.machine.name : '';
+                    item["Event Mesin"] = monitoringEvent.machineEvent ? monitoringEvent.machineEvent.name : '';
 
                     if (machine) {
                         var indicators = [];
@@ -376,22 +376,22 @@ module.exports = class MonitoringEventManager extends BaseManager {
                         item["Jam"] = '';
                         item["Indikator"] = '';
                     }
-                    item["Remark"] = monitoringEvent.remark;
+                    item["Keterangan"] = monitoringEvent.remark;
 
                     xls.data.push(item);
                 }
 
                 xls.options["No"] = "number";
-                xls.options["Machine"] = "string";
-                xls.options["Production Order Number"] = "string";
-                xls.options["Color"] = "string";
-                xls.options["Date Start"] = "string";
-                xls.options["Time Start"] = "string";
-                xls.options["Date End"] = "string";
-                xls.options["Time End"] = "string";
-                xls.options["Cart Number"] = "string";
-                xls.options["Machine Event"] = "string";
-                xls.options["Remark"] = "string";
+                xls.options["Mesin"] = "string";
+                xls.options["No Order Produksi"] = "string";
+                xls.options["Warna"] = "string";
+                xls.options["Tanggal Mulai"] = "string";
+                xls.options["Jam Mulai"] = "string";
+                xls.options["Tanggal Selesai"] = "string";
+                xls.options["Jam Selesai"] = "string";
+                xls.options["Nomor Kereta"] = "string";
+                xls.options["Event Mesin"] = "string";
+                xls.options["Keterangan"] = "string";
 
                 if (query.dateFrom && query.dateTo) {
                     xls.name = `Monitoring Event Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
