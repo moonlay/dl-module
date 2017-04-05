@@ -121,9 +121,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
 
                 if (!_comodity)
                     errors["comodity"] = i18n.__("SpinningSalesContract.comodity.isRequired:%s is not exists", i18n.__("SpinningSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
-                else if (!valid.comodity)
-                    errors["comodity"] = i18n.__("SpinningSalesContract.comodity.isRequired:%s is required", i18n.__("SpinningSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
-
+                    
                 if (!valid.incomeTax || valid.incomeTax === '') {
                     errors["incomeTax"] = i18n.__("SpinningSalesContract.incomeTax.isRequired:%s is required", i18n.__("SpinningSalesContract.incomeTax._:IncomeTax")); //"incomeTax tidak boleh kosong";
                 }
