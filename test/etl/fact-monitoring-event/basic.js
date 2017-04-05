@@ -34,7 +34,13 @@ it("#01. should success when create etl fact-monitoring-event", function (done) 
 });
 
 it("#02. should success when transforming data", function (done) {
-    var data = [{}, {}];
+    var data = [
+        {
+            timeInMillisStart: 13980000,
+            timeInMillisEnd: 13980000,
+            dateStart: "2017-02-05T07:00:00+07:00",
+            dateEnd: "2017-02-05T07:00:00+07:00"
+        }, {}];
     instanceManager.transform(data)
         .then(() => {
             done();
