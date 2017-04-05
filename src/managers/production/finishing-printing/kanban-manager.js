@@ -117,17 +117,26 @@ module.exports = class KanbanManager extends BaseManager {
                                     cartCurrentQty += Number(item.cart.qty);
                                 }
                             }
-                            var productionOrderQty = 0;
-                            if(_uom){
-                                if(_productionOrder.uomId.toString() === _uom._id.toString())
-                                    productionOrderQty = _productionOrderDetail.quantity;
-                                else
-                                    productionOrderQty = (_productionOrderDetail.quantity * 0.9144);
-                            }else
-                                productionOrderQty = _productionOrderDetail.quantity;
-                            cartCurrentQty += Number(valid.cart.qty);
-                            if (cartCurrentQty > productionOrderQty)
-                                errors["cart"] = i18n.__("Kanban.cart.qtyOverlimit:%s overlimit", i18n.__("Kanban.cart._:Total Qty")); //"Total Qty in cart over limit";
+                            if(_productionOrder){
+                                var productionOrderQty = 0;
+                                var tolerance = 0;
+                                if(_productionOrder.shippingQuantityTolerance !== 0 && _uom){
+                                    if(_productionOrder.uomId.toString() === _uom._id.toString())
+                                        tolerance = (_productionOrder.shippingQuantityTolerance / 100) * _productionOrderDetail.quantity;
+                                    else
+                                        tolerance = (_productionOrder.shippingQuantityTolerance / 100) * (_productionOrderDetail.quantity * 0.9144);
+                                }
+                                if(_uom){
+                                    if(_productionOrder.uomId.toString() === _uom._id.toString())
+                                        productionOrderQty = _productionOrderDetail.quantity + tolerance;
+                                    else
+                                        productionOrderQty = (_productionOrderDetail.quantity * 0.9144) + tolerance;
+                                }else
+                                    productionOrderQty = _productionOrderDetail.quantity + tolerance;
+                                cartCurrentQty += Number(valid.cart.qty);
+                                if (cartCurrentQty > productionOrderQty)
+                                    errors["cart"] = i18n.__("Kanban.cart.qtyOverlimit:%s overlimit", i18n.__("Kanban.cart._:Total Qty")); //"Total Qty in cart over limit";
+                            }
                         }
                         
                         if (!valid.grade || valid.grade == '')
