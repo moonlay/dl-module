@@ -19,6 +19,7 @@ class SpinningSalesContractDataUtil {
                 var _comodity = results[3];
                 var _bank = results[4];
                 var _payment = results[5];
+                var _agent = results[1];
 
                 var data = {
 
@@ -51,7 +52,7 @@ class SpinningSalesContractDataUtil {
                     useIncomeTax: false,
                     transportFee: 'Fee',
                     deliveredTo: 'DeliveredTo',
-                    agent: 'Agent',
+                    agent: _agent,
                     comission: 200,
                     condition: 'Condition',
                     attachment: 'attachment',

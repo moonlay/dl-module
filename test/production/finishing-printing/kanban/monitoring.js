@@ -23,6 +23,7 @@ before('#00. connect db', function(done) {
         });
 });
 
+var code;
 it('#01. should success when create 20 kanban data', function (done) {
    
     var data = []; 
@@ -35,7 +36,10 @@ it('#01. should success when create 20 kanban data', function (done) {
         
     } 
     Promise.all(data) 
-        .then((result) => { 
+        .then((result) => {
+            for(var a of result){
+                code = a.code;
+            } 
             done(); 
         }).catch(e => {
             done(e);
@@ -53,6 +57,18 @@ it('#01. should success when create 20 kanban data', function (done) {
     kanbanManager.getDataReport(query)
     .then(kanban => {
         kanban.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+ it('#03. should success when get data Kanban', function (done) {
+    var query={};
+    kanbanManager.read({"keyword" : code})
+    .then(kanban => {
+        kanban.data.should.instanceof(Array);
         done();
     }).catch(e => {
             done(e);

@@ -121,8 +121,6 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
 
                 if (!_comodity)
                     errors["comodity"] = i18n.__("SpinningSalesContract.comodity.isRequired:%s is not exists", i18n.__("SpinningSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
-                else if (!valid.comodity)
-                    errors["comodity"] = i18n.__("SpinningSalesContract.comodity.isRequired:%s is required", i18n.__("SpinningSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
 
                 if (!valid.incomeTax || valid.incomeTax === '') {
                     errors["incomeTax"] = i18n.__("SpinningSalesContract.incomeTax.isRequired:%s is required", i18n.__("SpinningSalesContract.incomeTax._:IncomeTax")); //"incomeTax tidak boleh kosong";
@@ -254,5 +252,144 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                     reject(e);
                 });
         });
-    }       
+    }
+
+    getSpinningSalesContractReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        }, buyerFilter = {}, comodityFilter = {},
+            spinningSalesContractFilter = {},
+            dateFromFilter = {},
+            dateToFilter = {},
+            query = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
+        var now = new Date();
+
+        if (info.buyerId && info.buyerId != '') {
+            var buyerId = ObjectId.isValid(info.buyerId) ? new ObjectId(info.buyerId) : {};
+            buyerFilter = { 'buyer._id': buyerId };
+        }
+
+        if (info.comodityId && info.comodityId != '') {
+            var comodityId = ObjectId.isValid(info.comodityId) ? new ObjectId(info.comodityId) : {};
+            comodityFilter = { 'comodity._id': comodityId };
+        }
+
+        var salesContractNoFilter = {
+            "salesContractNo": info.salesContractNo,
+        }
+
+        var filterDate = {
+            "_createdDate": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+
+
+        query = { '$and': [_defaultFilter, buyerFilter, salesContractNoFilter, comodityFilter, filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this.collection
+                    .where(query)
+                    .execute();
+            });
+    }
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
+
+        for (var spinningSalesContract of result.data) {
+            index++;
+
+            var agent = spinningSalesContract.agent.code + "-" + spinningSalesContract.agent.name;
+
+            var item = {};
+            item["No"] = index;
+            item["Nomor Sales Contract"] = spinningSalesContract ? spinningSalesContract.salesContractNo : '';
+            item["Tanggal Sales Contract"] = spinningSalesContract._createdDate ? moment(new Date(spinningSalesContract._createdDate)).format(dateFormat) : '';
+            item["Buyer"] = spinningSalesContract.buyer ? spinningSalesContract.buyer.name : '';
+            item["Jenis Buyer"] = spinningSalesContract.buyer ? spinningSalesContract.buyer.type : '';
+            item["Nomor Disposisi"] = spinningSalesContract ? spinningSalesContract.dispositionNumber : '';
+            item["Komoditas"] = spinningSalesContract.comodity ? spinningSalesContract.comodity.name : '';
+            item["Jumlah Order"] = spinningSalesContract ? spinningSalesContract.orderQuantity : '';
+            item["Satuan"] = spinningSalesContract.uom ? spinningSalesContract.uom.unit : '';
+            item["Toleransi"] = spinningSalesContract ? spinningSalesContract.shippingQuantityTolerance : '';
+            item["Kualitas"] = spinningSalesContract.quality ? spinningSalesContract.quality.name : '';
+            item["Harga"] = spinningSalesContract ? spinningSalesContract.price : '';
+            item["Satuan"] = spinningSalesContract.uom ? spinningSalesContract.uom.unit : '';
+            item["Mata Uang"] = spinningSalesContract.accountBank.currency ? spinningSalesContract.accountBank.currency.code : '';
+            item["Syarat Pembayaran"] = spinningSalesContract.termOfPayment ? spinningSalesContract.termOfPayment.termOfPayment : '';
+            item["Pembayaran ke Rekening"] = spinningSalesContract.accountBank ? spinningSalesContract.accountBank.accountName + "-" + spinningSalesContract.accountBank.bankName + "-" + spinningSalesContract.accountBank.accountNumber + "-" + spinningSalesContract.accountBank.currency.code : '';
+            item["Jadwal Pengiriman"] = spinningSalesContract ? moment(new Date(spinningSalesContract.deliverySchedule)).format(dateFormat) : '';
+            item["Agen"] = spinningSalesContract.agent ? spinningSalesContract.agent.code + "-" + spinningSalesContract.agent.name : '';
+            item["Komisi"] = spinningSalesContract ? spinningSalesContract.comission : '';
+
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Nomor Sales Contract"] = "string";
+        xls.options["Tanggal Sales Contract"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Jenis Buyer"] = "string";
+        xls.options["Nomor Disposisi"] = "number";
+        xls.options["Komoditas"] = "string";
+        xls.options["Jumlah Order"] = "number";
+        xls.options["Satuan"] = "string";
+        xls.options["Toleransi"] = "number";
+        xls.options["Kualitas"] = "string";
+        xls.options["Harga"] = "number";
+        xls.options["Mata Uang"] = "string";
+        xls.options["Syarat Pembayaran"] = "string";
+        xls.options["Pembayaran ke Rekening"] = "string";
+        xls.options["Jadwal Pengiriman"] = "string";
+        xls.options["Agen"] = "string";
+        xls.options["Komisi"] = "string";
+
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Sales Contract - Spinning  Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Sales Contract - Spinning Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Sales Contract - Spinning Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Sales Contract - Spinning Report.xlsx`;
+
+        return Promise.resolve(xls);
+    }
+
+    _createIndexes() {
+        var dateIndex = {
+            name: `ix_${map.sales.collection.WeavingSalesContract}__updatedDate`,
+            key: {
+                _updatedDate: -1
+            }
+        }
+
+        var noIndex = {
+            name: `ix_${map.sales.collection.WeavingSalesContract}_salesContractNo`,
+            key: {
+                salesContractNo: 1
+            },
+            unique: true
+        }
+
+        return this.collection.createIndexes([dateIndex, noIndex]);
+    }
 }
