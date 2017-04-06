@@ -60,7 +60,7 @@ it('#03. should success when create report', function (done) {
     var info = {};
     info.buyerId = createdData.buyerId;
     info.comodityId = createdData.comodityId;
-    info.salesContractNo = createdData.salesContractNo;
+    info.salesContractNo = createdData._id;
     info.dateFrom = createdData._createdDate;
     info.dateTo = createdData._createdDate;
 
