@@ -88,9 +88,10 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 if (_duplicateFabricQualityControl)
                     errors["code"] = i18n.__("FabricQualityControl.code.isExist: %s is exist", i18n.__("FabricQualityControl.code._:Code"));
 
-                if (!_kanban) {
+                if (!valid.kanbanId || valid.kanbanId === '')
+                    errors["kanbanId"] = i18n.__("FabricQualityControl.kanbanId.isRequired:%s is required", i18n.__("FabricQualityControl.kanbanId._:Kanban")); //"Grade harus diisi";   
+                else if (!_kanban)
                     errors["kanbanId"] = i18n.__("FabricQualityControl.kanbanId: %s not found", i18n.__("FabricQualityControl.KanbanId._:Kanban"));
-                }
 
                 if (valid.pointSystem !== 10 && valid.pointSystem !== 4)
                     errors["pointSystem"] = i18n.__("FabricQualityControl.pointSystem.invalid:%s is not valid", i18n.__("FabricQualityControl.pointSystem._:Point System")); //"Grade harus diisi";   
@@ -112,7 +113,6 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                     errors["fabricGradeTests"] = i18n.__("FabricQualityControl.fabricGradeTests.isRequired:%s is required", i18n.__("FabricQualityControl.fabricGradeTests._: Fabric Grade Tests")); //"Harus ada minimal 1 barang";
                 }
                 else {
-
                     var fabricGradeTestsErrors = [];
                     valid.fabricGradeTests.forEach((item, index) => {
                         var fabricGradeTestsError = {};
@@ -148,6 +148,11 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                     return Promise.reject(new ValidationError('data does not pass validation', errors));
                 }
 
+
+                valid.productionOrderNo = _kanban.productionOrder.orderNo;
+                valid.productionOrderType = _kanban.productionOrder.orderType.name;
+                valid.kanbanCode = _kanban.code;
+                
                 valid.fabricGradeTests.forEach(test => {
                     test.pointSystem = valid.pointSystem;
                     this.calculateGrade(test);
