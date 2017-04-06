@@ -307,7 +307,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
         var _defaultFilter = {
             _deleted: false
         }, buyerFilter = {}, comodityFilter = {},
-            weavingSalesContractFilter = {},
+            salesContractNoFilter = {},
             dateFromFilter = {},
             dateToFilter = {},
             query = {};
@@ -326,8 +326,9 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             comodityFilter = { 'comodity._id': comodityId };
         }
 
-        var salesContractNoFilter = {
-            "salesContractNo": info.salesContractNo,
+        if (info.salesContractNo && info.salesContractNo != '') {
+            var salesContractNo = ObjectId.isValid(info.salesContractNo) ? new ObjectId(info.salesContractNo) : {};
+            salesContractNoFilter = { '_id': salesContractNo };
         }
 
         var filterDate = {
@@ -337,9 +338,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             }
         };
 
-
-
-        query = { '$and': [_defaultFilter, buyerFilter, salesContractNoFilter, comodityFilter,filterDate] };
+        query = { '$and': [_defaultFilter, buyerFilter, salesContractNoFilter, comodityFilter, filterDate] };
 
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -361,8 +360,6 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
 
         for (var weavingSalesContract of result.data) {
             index++;
-
-            var agent = weavingSalesContract.agent.code + "-" + weavingSalesContract.agent.name;
 
             var item = {};
             item["No"] = index;

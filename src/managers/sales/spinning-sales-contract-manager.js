@@ -259,6 +259,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
             _deleted: false
         }, buyerFilter = {}, comodityFilter = {},
             spinningSalesContractFilter = {},
+            salesContractNoFilter = {},
             dateFromFilter = {},
             dateToFilter = {},
             query = {};
@@ -277,8 +278,9 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
             comodityFilter = { 'comodity._id': comodityId };
         }
 
-        var salesContractNoFilter = {
-            "salesContractNo": info.salesContractNo,
+        if (info.salesContractNo && info.salesContractNo != '') {
+            var salesContractNo = ObjectId.isValid(info.salesContractNo) ? new ObjectId(info.salesContractNo) : {};
+            salesContractNoFilter = { '_id': salesContractNo };
         }
 
         var filterDate = {
