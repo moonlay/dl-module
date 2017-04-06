@@ -152,7 +152,13 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 valid.productionOrderNo = _kanban.productionOrder.orderNo;
                 valid.productionOrderType = _kanban.productionOrder.orderType.name;
                 valid.kanbanCode = _kanban.code;
-                
+                valid.buyer = _kanban.productionOrder.buyer.name;
+                valid.orderQuantity = _kanban.productionOrder.orderQuantity;
+                valid.cartNo = _kanban.cart.code;
+                valid.color = _kanban.selectedProductionOrderDetail.colorRequest;
+                valid.construction = `${_kanban.productionOrder.material.name} / ${_kanban.productionOrder.materialConstruction.name} / ${_kanban.productionOrder.materialWidth}`;
+                valid.packingInstruction = `${_kanban.productionOrder.packingInstruction}`;
+
                 valid.fabricGradeTests.forEach(test => {
                     test.pointSystem = valid.pointSystem;
                     this.calculateGrade(test);
