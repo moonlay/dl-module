@@ -118,7 +118,8 @@ module.exports = {
                 dailyOperation: require('./test/data-util/production/finishing-printing/daily-operation-data-util'),
                 monitoringEvent: require('./test/data-util/production/finishing-printing/monitoring-event-data-util'),
                 monitoringSpecificationMachine: require('./test/data-util/production/finishing-printing/monitoring-specification-machine-data-util'),
-                kanban: require('./test/data-util/production/finishing-printing/kanban-data-util')
+                kanban: require('./test/data-util/production/finishing-printing/kanban-data-util'),
+                fabricQualityControl: require('./test/data-util/production/finishing-printing/fabric-quality-control-data-util')
             },
             sales:{
                 productionOrder: require('./test/data-util/sales/production-order-data-util'),
