@@ -60,7 +60,8 @@ module.exports = {
                 DailyOperationManager: require('./src/managers/production/finishing-printing/daily-operation-manager'),
                 MonitoringEventManager: require('./src/managers/production/finishing-printing/monitoring-event-manager'),
                 MonitoringSpecificationMachineManager: require('./src/managers/production/finishing-printing/monitoring-specification-machine-manager'),
-                KanbanManager: require('./src/managers/production/finishing-printing/kanban-manager')
+                KanbanManager: require('./src/managers/production/finishing-printing/kanban-manager'),
+                FabricQualityControlManager: require('./src/managers/production/finishing-printing/fabric-quality-control-manager')
             }
         },
         sales:{
