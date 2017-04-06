@@ -95,6 +95,8 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 if (valid.pointSystem !== 10 && valid.pointSystem !== 4)
                     errors["pointSystem"] = i18n.__("FabricQualityControl.pointSystem.invalid:%s is not valid", i18n.__("FabricQualityControl.pointSystem._:Point System")); //"Grade harus diisi";   
 
+                if (!valid.dateIm)
+                    errors["dateIm"] = i18n.__("FabricQualityControl.dateIm.isRequired:%s is required", i18n.__("FabricQualityControl.dateIm._:Date")); //"Grade harus diisi";
 
                 if (!valid.shiftIm || valid.shiftIm === '')
                     errors["shiftIm"] = i18n.__("FabricQualityControl.shiftIm.isRequired:%s is required", i18n.__("FabricQualityControl.shiftIm._:Shift")); //"Grade harus diisi";   
