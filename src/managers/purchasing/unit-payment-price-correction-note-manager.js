@@ -89,33 +89,36 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                                         itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.isRequired:%s is required", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
                                     }
                                     for (var _unitReceiptNote of _unitPaymentOrder.items) {
-                                        for (var _unitReceiptNoteItem of _unitReceiptNote.unitReceiptNote.items) {
-                                            if (_unitReceiptNoteItem.product._id.toString() === item.product._id.toString()) {
-                                                if (_unitReceiptNoteItem.correction.length > 0) {
-                                                    if (valid.correctionType === "Harga Satuan") {
-                                                        if (item.pricePerUnit === _unitReceiptNoteItem.correction[_unitReceiptNoteItem.correction.length - 1].correctionPricePerUnit) {
-                                                            itemError["pricePerUnit"] = i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit._:Price Per Unit"));
+                                        if (_unitReceiptNote.unitReceiptNote.no === item.unitReceiptNoteNo) {
+                                            for (var _unitReceiptNoteItem of _unitReceiptNote.unitReceiptNote.items) {
+                                                if (_unitReceiptNoteItem.product._id.toString() === item.product._id.toString()) {
+                                                    if (_unitReceiptNoteItem.correction.length > 0) {
+                                                        if (valid.correctionType === "Harga Satuan") {
+                                                            if (item.pricePerUnit === _unitReceiptNoteItem.correction[_unitReceiptNoteItem.correction.length - 1].correctionPricePerUnit) {
+                                                                itemError["pricePerUnit"] = i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit._:Price Per Unit"));
+                                                            }
+                                                        }
+                                                        else if (valid.correctionType === "Harga Total") {
+                                                            if (item.priceTotal === _unitReceiptNoteItem.correction[_unitReceiptNoteItem.correction.length - 1].correctionPriceTotal) {
+                                                                itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
+                                                            }
+                                                        }
+                                                    } else {
+                                                        if (valid.correctionType === "Harga Satuan") {
+                                                            if (item.pricePerUnit === _unitReceiptNoteItem.pricePerDealUnit) {
+                                                                itemError["pricePerUnit"] = i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit._:Price Per Unit"));
+                                                            }
+                                                        }
+                                                        else if (valid.correctionType === "Harga Total") {
+                                                            if (item.priceTotal === _unitReceiptNoteItem.pricePerDealUnit * item.quantity) {
+                                                                itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
+                                                            }
                                                         }
                                                     }
-                                                    else if (valid.correctionType === "Harga Total") {
-                                                        if (item.priceTotal === _unitReceiptNoteItem.correction[_unitReceiptNoteItem.correction.length - 1].correctionPriceTotal) {
-                                                            itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
-                                                        }
-                                                    }
-                                                } else {
-                                                    if (valid.correctionType === "Harga Satuan") {
-                                                        if (item.pricePerUnit === _unitReceiptNoteItem.pricePerDealUnit) {
-                                                            itemError["pricePerUnit"] = i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit._:Price Per Unit"));
-                                                        }
-                                                    }
-                                                    else if (valid.correctionType === "Harga Total") {
-                                                        if (item.priceTotal === _unitReceiptNoteItem.pricePerDealUnit * item.quantity) {
-                                                            itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
-                                                        }
-                                                    }
+                                                    break;
                                                 }
-                                                break;
                                             }
+                                            break;
                                         }
                                     }
                                     itemErrors.push(itemError);
