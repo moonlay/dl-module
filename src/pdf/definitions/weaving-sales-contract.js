@@ -18,17 +18,21 @@ module.exports = function (salesContract) {
     var footer = [];
 
     var uom="";
+    var uom1="";
     var uomLocal="";
     if(salesContract.uom.unit.toLowerCase()=="yds"){
         uom="YARDS";
+        uom1="YARD";
         uomLocal="YARD";
     }
     else if(salesContract.uom.unit.toLowerCase()=="mtr"){
         uom="METRES";
+        uom1="METRE";
         uomLocal="METER";
     }
     else{
         uom=salesContract.uom.unit;
+        uom1=salesContract.uom.unit;
         uomLocal=salesContract.uom.unit;
     }
 
@@ -57,7 +61,7 @@ module.exports = function (salesContract) {
         ppn="Include PPn 10%";
     }
 
-    var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom + "\n";
+    var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom1 + "\n";
     detailprice += salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + uomLocal + ' ' + ppn;
 
     amount = salesContract.price * salesContract.orderQuantity;
@@ -224,7 +228,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appx+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                        text:appx+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
                         style: ['size10']
                     }]
             }, {
@@ -638,7 +642,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appxLocal+" "+`${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                        text:appxLocal+" "+`${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
                         style: ['size10']
                     }]
             },{

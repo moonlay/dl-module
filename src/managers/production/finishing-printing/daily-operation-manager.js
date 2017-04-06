@@ -368,6 +368,8 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var idx = steps.indexOf(daily.step.process);
                                 tempKanban.currentQty = daily.goodOutput;
                                 tempKanban.currentStepIndex = (idx + 1);
+                                tempKanban.goodOutput=daily.goodOutput;
+                                tempKanban.badOutput=daily.badOutput;
                                 this.kanbanManager.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
@@ -401,6 +403,8 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var idx = steps.indexOf(daily.step.process);
                                 tempKanban.currentQty = daily.goodOutput;
                                 tempKanban.currentStepIndex = (idx + 1);
+                                tempKanban.goodOutput=daily.goodOutput;
+                                tempKanban.badOutput=daily.badOutput;
                                 this.kanbanManager.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
@@ -460,9 +464,14 @@ module.exports = class DailyOperationManager extends BaseManager {
                                                     }
                                                     kanban.currentQty = dataOutput.goodOutput;
                                                     kanban.currentStepIndex = (steps.indexOf(dataOutput.step.process) + 1);
+                                                    kanban.goodOutput=dataOutput.goodOutput;
+                                                    kanban.badOutput=dataOutput.badOutput;
+                                                    
                                                 }else{
                                                     kanban.currentQty = kanban.cart.qty;
                                                     kanban.currentStepIndex = 0;
+                                                    kanban.goodOutput=0;
+                                                    kanban.badOutput=0;
                                                 }
                                                 this.kanbanManager.update(kanban)
                                                     .then(kanbanId =>{
