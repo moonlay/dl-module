@@ -28,6 +28,9 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-FINISHING-PRINTING-SALES-CONTRACT', './etl/fact-finishing-printing-sales-contract');
     test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/fact-spinning-sales-contract');
     test('@ETL/FACT-DAILY-OPERATIONS', './etl/fact-daily-operations');
+    test('@ETL/DIM-DIVISION-AG', './etl/dim-division-ag');
+    test('@ETL/DIM-SUPPLIER-AG', './etl/dim-supplier-ag');
+    test('@ETL/FACT-PEMBELIAN-AG', './etl/fact-pembelian-ag');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
