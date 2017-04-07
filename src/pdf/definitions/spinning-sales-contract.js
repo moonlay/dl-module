@@ -201,7 +201,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appx+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                        text:appx+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
                         style: ['size09']
                     }]
             }, {
@@ -601,7 +601,7 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text:appxLocal+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                    text:appxLocal+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
                     style: ['size09']
                 }]
         }, {

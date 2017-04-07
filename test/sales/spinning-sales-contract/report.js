@@ -7,6 +7,11 @@ var moment = require('moment');
 var SpinningSalesContractManager = require("../../../src/managers/sales/spinning-sales-contract-manager");
 var spinningSalesContractManager = null;
 
+//delete unitest data
+var DLModels = require('dl-models');
+var map = DLModels.map;
+var MachineType = DLModels.master.MachineType;
+
 
 before('#00. connect db', function (done) {
     helper.getDb()
@@ -55,7 +60,7 @@ it('#03. should success when create report', function (done) {
     var info = {};
     info.buyerId = createdData.buyerId;
     info.comodityId = createdData.comodityId;
-    info.salesContractNo = createdData.salesContractNo;
+    info.salesContractNo = createdData._id;
     info.dateFrom = createdData._createdDate;
     info.dateTo = createdData._createdDate;
 
