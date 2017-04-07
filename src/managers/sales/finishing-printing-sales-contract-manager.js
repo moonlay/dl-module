@@ -521,13 +521,16 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
             item["Nomor Disposisi"] = sc.dispositionNumber;
             item["Jenis Order"] = sc.orderType;
             item["Komoditas"] = sc.comodity;
-            item["Jumlah Order"] = sc.orderQuantity;
+            item["Kualitas"] = sc.quality;
+            item["Jumlah Order SC"] = sc.orderQuantity;
+            item["Jumlah Sudah Dibuatkan SPP"] = sc.productionOrderQuantity;
             item["Satuan"] = sc.uom;
             item["Toleransi(%)"] = sc.tolerance;
             item["Syarat Pembayaran"] = sc.termOfPayment;
             item["Pembayaran ke Rekening"] = bank;
             item["Jadwal Pengiriman"] = moment(new Date(sc.deliverySchedule)).format(dateFormat);
             item["Agen"] = sc.agent;
+            item["Komisi"]=sc.comission;
             item["Warna"] = sc.color;
             item["Harga"] = sc.price;
             item["Mata Uang"] = sc.currency;
@@ -546,13 +549,16 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
             "Nomor Disposisi":"string",
             "Jenis Order" : "string",
             "Komoditas" : "string",
-            "Jumlah Order" : "number",
+            "Kualitas" : "string",
+            "Jumlah Order SC" : "number",
+            "Jumlah Sudah Dibuatkan SPP" : "number",
             "Satuan" : "string",
             "Toleransi(%)" : "number",
             "Syarat Pembayaran" : "string",
             "Pembayaran ke Rekening": "string",
             "Jadwal Pengiriman" : "string",
             "Agen" : "string",
+            "Komisi" : "string",
             "Warna" : "string",
             "Harga" : "number",
             "Mata Uang" : "string",
