@@ -371,6 +371,8 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
 
     getReport(query){
         return new Promise((resolve, reject) => {
+            var global = require('../../global');
+            var locale = global.config.locale;
             var deletedQuery = {
                 _deleted: false
             };
@@ -475,7 +477,9 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                                     }
                                 }
                                 a.status=status;
-                                a.productionOrderQuantity=qty;
+                                a.productionOrderQuantity=parseFloat(qty).toLocaleString(locale);
+                                a.orderQuantity=parseFloat(a.orderQuantity).toLocaleString(locale);
+                                a.price=parseFloat(a.price).toLocaleString(locale);
                             }
                             resolve(sc);
                         
