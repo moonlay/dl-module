@@ -134,17 +134,17 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
                         this.sql.multiple = true;
 
-                        var fs = require("fs");
+                        // var fs = require("fs");
 
-                        var path = "C:\\Users\\aditya.henanda\\Desktop\\fact.txt";
+                        // var path = "C:\\Users\\aditya.henanda\\Desktop\\fact.txt";
 
-                        fs.writeFile(path, sqlQuery, function (error) {
-                            if (error) {
-                                console.log("write error:  " + error.message);
-                            } else {
-                                console.log("Successful Write to " + path);
-                            }
-                        });
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
 
 
                         return Promise.all(command)
