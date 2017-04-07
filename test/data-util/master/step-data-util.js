@@ -26,6 +26,7 @@ class StepDataUtil {
                 // data.itemMonitoring.push(item1);
                 // data.itemMonitoring.push(item2);
 
+
                 var process1 = {
                     name : `data 1 ${code}`,
                     value : `value 1 ${code}`,
@@ -42,13 +43,13 @@ class StepDataUtil {
                 return Promise.resolve(data);
     }
 
-    getTestData(data, items, indicator) {
-                var _process = data ? data : "GAS SINGEING DAN DESIZING";
+    getTestData(step) {
+                var _process = step && step.process ? step.process : "GAS SINGEING DAN DESIZING";
                 // var _itemMonitoring = items ? items : [
                 //         'Speed (m/mnt)', 'Pressure Burner (mBar)', 'Titik Api', 'Pressure Saturator (Bar)', 'Hasil Bakar Bulu (baik/tidak)'
                 //     ];
-                var _alias="";
-                var _stepIndicator = indicator ? indicator : [
+                var _alias = step && step.alias ? step.alias : "GS DZ";
+                var _stepIndicator = step && step.indicators ? step.indicators : [
                     {
                         name : 'SETTING',
                         value : '3'
@@ -84,51 +85,50 @@ class StepDataUtil {
                 ];
                  var data = {
                     process: _process,
-                    // itemMonitoring:_itemMonitoring,
                     alias:_alias,
                     stepIndicators:_stepIndicator
                 };
                 return this.getSert(data);
     }
 
-    getTestData2(data, items, indicator) {
-                var _process = data ? data : "SCOURING";
-                // var _itemMonitoring = items ? items : [
-                //         'Speed (m/mnt)', 'TEMP. L BOX', 'TIMING', 'LEBAR KAIN'
-                //     ];
-                var _alias="";
-                var _stepIndicator = indicator ? indicator : [
-                    {
-                        name : 'SPEED',
-                        value : '60',
-                        uom : 'm/mnt'
-                    },
-                    {
-                        name : 'TEMP. L BOX',
-                        value : '100',
-                        uom : 'C'
-                    },
-                    {
-                        name : 'TIMING',
-                        value : '30',
-                        uom : 'menit'
-                    },
-                    {
-                        name : 'LEBAR KAIN',
-                        value : '90',
-                        uom : 'inch'
-                    },
-                    {
-                        name : 'COUNTER',
-                        value : ''
-                    }
-                ];
-                 var data = {
-                    process: _process,
-                    alias:_alias,
-                    stepIndicators:_stepIndicator
-                };
-                return this.getSert(data);
-    }
+    // getTestData2(data, items, indicator) {
+    //             var _process = data ? data : "SCOURING";
+    //             // var _itemMonitoring = items ? items : [
+    //             //         'Speed (m/mnt)', 'TEMP. L BOX', 'TIMING', 'LEBAR KAIN'
+    //             //     ];
+    //             var _alias="";
+    //             var _stepIndicator = indicator ? indicator : [
+    //                 {
+    //                     name : 'SPEED',
+    //                     value : '60',
+    //                     uom : 'm/mnt'
+    //                 },
+    //                 {
+    //                     name : 'TEMP. L BOX',
+    //                     value : '100',
+    //                     uom : 'C'
+    //                 },
+    //                 {
+    //                     name : 'TIMING',
+    //                     value : '30',
+    //                     uom : 'menit'
+    //                 },
+    //                 {
+    //                     name : 'LEBAR KAIN',
+    //                     value : '90',
+    //                     uom : 'inch'
+    //                 },
+    //                 {
+    //                     name : 'COUNTER',
+    //                     value : ''
+    //                 }
+    //             ];
+    //              var data = {
+    //                 process: _process,
+    //                 alias:_alias,
+    //                 stepIndicators:_stepIndicator
+    //             };
+    //             return this.getSert(data);
+    // }
 }
 module.exports = new StepDataUtil();

@@ -1,5 +1,7 @@
 var global = require('../../global');
 var generateCode = require('../../utils/code-generator');
+var say = require('../../utils/say');
+var numSpell = require('../../utils/number-spelling');
 
 module.exports = function (salesContract) {
 
@@ -16,11 +18,41 @@ module.exports = function (salesContract) {
     var footer = [];
     var detailprice = "";
 
-    var ppn = salesContract.incomeTax;
+    var uom="";
+    var convertion=0;
+    if(salesContract.uom.unit.toLowerCase()=="ball"){
+        uom="BALES";
+        convertion=parseFloat(salesContract.orderQuantity ) * parseFloat(181.44);
+    }
+    else{
+        uom=salesContract.uom.unit;
+        convertion=salesContract.orderQuantity;
+    }
 
-    var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + salesContract.uom.unit + "\n";
+    var appx="";
+    var appxLocal="";
+    var date=parseInt(salesContract.deliverySchedule.getDate());
+    if(date>=1 && date<=10){
+        appx="EARLY";
+        appxLocal="AWAL";
+    }
+    else if(date>=11 && date<=20){
+        appx="MIDDLE";
+        appxLocal="PERTENGAHAN";
+    }
+    else if(date>=21 && date<=31){
+        appx="END";
+        appxLocal="AKHIR";
+    }
+
+    var ppn = salesContract.incomeTax;
+    if(ppn=="Include PPn"){
+        ppn="Include PPn 10%";
+    }
+
+    var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / KG' + "\n";
     detailprice += salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + salesContract.uom.unit + ' ' + ppn;
-    amount = salesContract.price * salesContract.orderQuantity;
+    amount = salesContract.price * convertion;
 
     var comoDesc = "";
     if (salesContract.comodityDescription != "") {
@@ -29,7 +61,8 @@ module.exports = function (salesContract) {
     var code = salesContract.salesContractNo;
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
-        moment.locale();
+        moment.locale('en-EN');
+
         header = [{
             columns: [{
                 width: '*',
@@ -41,11 +74,16 @@ module.exports = function (salesContract) {
                     text: 'Date, ' + `${moment(salesContract._createdDate).format('MMMM DD,YYYY')}`,
                     style: ['size09'],
                     alignment: "right"
-                }, {
-                    text: 'MESSRS,\n' + salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country + '\n' + salesContract.buyer.contact,
-                    style: ['size09'],
-                    alignment: "left"
-                }, {
+                },{
+                        columns: [{
+                            width: '40%',
+                            stack: [{
+                                text:'MESSRS,\n'+ salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country + '\n' + salesContract.buyer.contact,
+                                style: ['size10'],
+                                alignment: "left"
+                            }]
+                        }]
+                    },'\n', {
                     text: 'SALES CONTRACT NO: ' + no,
                     style: ['size11', 'bold'],
                     alignment: "center"
@@ -115,7 +153,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " " + salesContract.uom.unit,
+                        text:"ABOUT : "+ parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" " + uom +" ( ABOUT : "+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+" KG )",
                         style: ['size09']
                     }]
             }, {
@@ -147,7 +185,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.accountBank.currency.symbol + " " + `${parseFloat(amount).toLocaleString(locale, locale.currency)}`,
+                        text: salesContract.accountBank.currency.symbol + " " + `${parseFloat(amount).toLocaleString(locale, locale.currency)}`+" ( "+ `${numSpell(amount)}`+" "+ salesContract.accountBank.currency.description+" ) (APPROXIMATELLY)" ,
                         style: ['size09']
                     }]
             }, {
@@ -163,7 +201,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                        text:appx+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
                         style: ['size09']
                     }]
             }, {
@@ -211,7 +249,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.condition,
+                        text:'- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- '+ salesContract.shippingQuantityTolerance +'% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - CARTON BOX (NET WEIGHT : 1.8 / CONE, 1 BOX: 18 CONE) CONTAMINATION FREE. \n'+ salesContract.condition,
                         style: ['size09']
                     }]
             }];
@@ -228,43 +266,40 @@ module.exports = function (salesContract) {
             }],
             style: ['size09']
         }];
-
-        var re = [{
+        remark = [{
             columns: [{
                 width: '*',
                 stack: ['\n', {
                     text: 'REMARK :',
                     style: ['size09'],
                     alignment: "left"
-                }, {
-                        text: '- Beneficiary : P.T. DAN LIRIS KELURAHAN BANARAN, KECAMATAN GROGOL SUKOHARJO - INDONESIA (Phone No. 0271-740888 / 714400). \n' + 'Payment Transferred to: \n' + 'PAYMENT TO BE TRANSFERRED TO BANK ' + salesContract.accountBank.bankName + '\n' + salesContract.accountBank.bankAddress + '\n' + 'ACCOUNT NAME : ' + salesContract.accountBank.accountName + '\n' + 'ACCOUNT NO : ' + salesContract.accountBank.accountNumber + ' SWIFT CODE : ' + salesContract.accountBank.swiftCode,
-                        style: ['size09'],
-                        alignment: "left"
-                    }, {
-                        text: '- TT. Payment to be negotiable with BANK ' + salesContract.accountBank.bankName,
-                        style: ['size09'],
-                        alignment: "left"
-                    }, {
-                        text: salesContract.remark,
-                        style: ['size09'],
-                        alignment: "left"
-                    }]
+                }, 
+                    { 
+                        ul:[
+                            {
+                                text: 'All instructions regarding sticker, shipping marks etc. to be received 1 (one) month prior to shipment.',
+                                style: ['size10'],
+                                alignment: "justify"
+                            },{
+                                text: 'Beneficiary : P.T. DAN LIRIS KELURAHAN BANARAN, KECAMATAN GROGOL SUKOHARJO - INDONESIA (Phone No. 0271-740888 / 714400). \n'+'Payment Transferred to: \n' + 'PAYMENT TO BE TRANSFERRED TO BANK '+ salesContract.accountBank.bankName + '\n' + salesContract.accountBank.bankAddress + '\n' + 'ACCOUNT NAME : ' + salesContract.accountBank.accountName + '\n' + 'ACCOUNT NO : ' + salesContract.accountBank.accountNumber + ' SWIFT CODE : ' + salesContract.accountBank.swiftCode ,
+                                style: ['size10'],
+                                alignment: "justify"
+                            },{
+                                text:salesContract.termOfPayment.termOfPayment+' to be negotiable with BANK '+ salesContract.accountBank.bankName,
+                                style: ['size10'],
+                                alignment: "justify"
+                            },{
+                                text: 'Please find enclosed some Indonesia Banking Regulations.',
+                                style: ['size10'],
+                                alignment: "justify"
+                            },{
+                                text: 'If you find anything not order, please let us know immediately.',
+                                style: ['size10'],
+                                alignment: "justify"
+                            }]
+                        }]
             }]
-        }];
 
-        remark = [{
-            table: {
-                widths: ['100%'],
-                body: [
-                    [{
-                        stack: [re],
-                        style: ['size09']
-                    }
-                    ]
-                ]
-            },
-            layout: 'noBorders',
-            dontBreakRows: true
         }];
 
         //AGENT COMMISSION AGREEMENT
@@ -288,17 +323,18 @@ module.exports = function (salesContract) {
 
             var subheader2 = [{
                 stack: ['\n', {
-                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + ' ' + salesContract.uom.unit + ' of' + '\n' + salesContract.comodity.name + comoDesc,
+                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${numSpell(salesContract.orderQuantity)}` +")" + ' ' + uom + ' ( ABOUT: '+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+ ' KG ) of' + '\n' + salesContract.comodity.name + comoDesc,
                     style: ['size09'],
-                    alignment: "left"
+                    alignment: "justify"
                 }, '\n', {
-                        text: 'Placed with us, P.T. DAN LIRIS - SOLO INDONESIA, is inclusive of ' + salesContract.comission + ' sales commission' + '\n' + 'each ' + salesContract.uom.unit + ' on ' + salesContract.termOfShipment + ' value, payable to you upon final negotiation and clearance of ' + salesContract.termOfPayment.termOfPayment + '.',
+                        text: 'Placed with us, P.T. DAN LIRIS - SOLO INDONESIA, is inclusive of ' + salesContract.comission + ' sales commission' + '\n' + 'each KG' + ' on ' + salesContract.termOfShipment + ' value, payable to you upon final negotiation and clearance of ' + salesContract.termOfPayment.termOfPayment + '.',
                         style: ['size09'],
-                        alignment: "left"
+                        alignment: "justify"
                     }, '\n', '\n', {
                         text: 'Kindly acknowledge receipt by undersigning this Commission Agreement letter and returned one copy to us after having been confirmed and signed by you.',
                         style: ['size09'],
-                        alignment: "left"
+                        alignment: "justify"
+
                     }]
             }, '\n', '\n'];
 
@@ -407,7 +443,7 @@ module.exports = function (salesContract) {
             text: 'Dengan Hormat,\n' + 'Sesuai dengan pesanan/ order Bapak/Ibu kepada kami, maka bersama ini kami kirimkan surat persetujuan pesanan dengan ketentuan dan syarat-syarat di bawah ini :',
             style: ['size09'],
             alignment: "left"
-        },
+        },'\n',
         {
             columns: [
                 {
@@ -453,14 +489,14 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " " + salesContract.uom.unit,
+                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " +`${say(salesContract.orderQuantity," )")}` +" "+ salesContract.uom.unit,
                     style: ['size09']
                 }]
         }, {
             columns: [
                 {
                     width: '25%',
-                    text: 'Kwalitas',
+                    text: 'Kualitas',
                     style: ['size09']
                 }, {
                     width: '3%',
@@ -565,7 +601,7 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text: `${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                    text:appxLocal+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
                     style: ['size09']
                 }]
         }, {
@@ -600,8 +636,9 @@ module.exports = function (salesContract) {
                     text: salesContract.remark,
                     style: ['size09']
                 }]
-        }, {
-            text: 'Demikian konfirmasi order ini kami sampaikan untuk diketahui dan dipergunakan seperlunya. tembusan surat ini mohon dikirim kembali setelah ditanda tangani dan dibubuhi cap perusahaan.',
+        },'\n', {
+
+            text: 'Demikian konfirmasi order ini kami sampaikan untuk diketahui dan dipergunakan seperlunya. Tembusan surat ini mohon dikirim kembali setelah ditanda tangani dan dibubuhi cap perusahaan.',
             style: ['size09'],
             alignment: "left"
         }];
@@ -615,7 +652,7 @@ module.exports = function (salesContract) {
                 style: ['center']
             }, {
                 width: '50%',
-                stack: ['Hormat Kami,', '\n\n\n\n', '(    RUDY KURNIAWAN   )', 'Kadiv. Penjualan'],
+                stack: ['Hormat Kami,', '\n\n\n\n', '(    RUDY KURNIAWAN   )', 'Kadiv. Penjualan Tekstil'],
                 style: ['center']
             }],
             style: ['size09']

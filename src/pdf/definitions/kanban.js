@@ -15,12 +15,13 @@ module.exports = function (kanban) {
     var orderNo = kanban.productionOrder.orderNo;
     var buyer = kanban.productionOrder.buyer.name;
     var color = kanban.selectedProductionOrderDetail.colorType ? kanban.selectedProductionOrderDetail.colorRequest + " - " + kanban.selectedProductionOrderDetail.colorType.name : kanban.selectedProductionOrderDetail.colorRequest; 
+    color =  kanban.productionOrder.designCode && kanban.productionOrder.designCode !== "" ? color + " - " + kanban.productionOrder.designCode : color;
     var standardHandfeel = kanban.productionOrder.handlingStandard;
     var finishWidth = kanban.productionOrder.finishWidth;
-    var material = kanban.productionOrder.material.name + " " + kanban.productionOrder.materialConstruction.name;
+    var material = kanban.productionOrder.material.name + " " + kanban.productionOrder.materialConstruction.name + " - " + kanban.productionOrder.materialWidth;
     var yarnNumber = kanban.productionOrder.yarnMaterial.name;
     var grade = kanban.grade;
-    var cartQty = kanban.cart.qty;
+    var cartQty = kanban.cart.qty <= 0 ? " " : kanban.cart.qty;
     var cartNumber = kanban.cart.cartNumber;
 
     var header = [{
@@ -281,7 +282,7 @@ module.exports = function (kanban) {
         
     tbody2.push(theader2);
     tbody2.push(theader3);
-    for (index = 1; index <= 20; index++) { 
+    for (index = 1; index <= 30; index++) { 
         tbody2.push(getIndexedRow(index))
     }
     tbody2.push(tfooter2);

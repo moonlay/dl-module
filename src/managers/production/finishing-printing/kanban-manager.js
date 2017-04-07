@@ -8,6 +8,7 @@ var map = DLModels.map;
 var generateCode = require("../../../utils/code-generator");
 var ProductionOrderManager = require('../../sales/production-order-manager');
 var InstructionManager = require('../../master/instruction-manager');
+var UomManager = require('../../master/uom-manager');
 var Kanban = DLModels.production.finishingPrinting.Kanban;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
@@ -18,6 +19,7 @@ module.exports = class KanbanManager extends BaseManager {
         this.collection = this.db.use(map.production.finishingPrinting.collection.Kanban);
         this.instructionManager = new InstructionManager(db, user);
         this.productionOrderManager = new ProductionOrderManager(db, user);
+        this.uomManager = new UomManager(db, user);
     }
 
     _getQuery(paging) {
@@ -64,28 +66,40 @@ module.exports = class KanbanManager extends BaseManager {
         var errors = {};
         var valid = kanban;
 
-        var getKanbanPromise = this.collection.singleOrDefault({
+        var getDuplicateKanbanPromise = this.collection.singleOrDefault({
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
             code: valid.code
         });
+        var getUom = this.uomManager.collection.find({unit: "MTR"}).toArray();
         var getProductionOrder = valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(new ObjectId(valid.productionOrderId)) : Promise.resolve(null);
         var getProductionOrderDetail = (valid.selectedProductionOrderDetail && valid.selectedProductionOrderDetail.code) ? this.productionOrderManager.getSingleProductionOrderDetail(valid.selectedProductionOrderDetail.code) : Promise.resolve(null);
         var getInstruction = valid.instructionId && ObjectId.isValid(valid.instructionId) ? this.instructionManager.getSingleByIdOrDefault(new ObjectId(valid.instructionId)) : Promise.resolve(null);
+        var getKanban = valid._id && ObjectId.isValid(valid._id) ? this.getSingleById(valid._id) : Promise.resolve(null);
 
-        return Promise.all([getKanbanPromise, getProductionOrder, getProductionOrderDetail, getInstruction])
+        return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getInstruction, getKanban, getUom])
             .then(results => {
-                var _kanban = results[0];
+                var _kanbanDuplicate = results[0];
                 var _productionOrder = results[1];
                 var _productionOrderDetail = results[2];
                 var _instruction = results[3];
+                var _kanban = results[4];
+                var uom = results[5];
+                var _uom = uom[0];
+                if (_kanban)
+                    _kanban.currentStepIndex = _kanban.currentStepIndex || 0; // old kanban data does not have currentStepIndex
 
                 return Promise.all([this.getKanbanListByColorAndOrderNumber(valid._id, _productionOrder, _productionOrderDetail)])
                     .then(_kanbanListByColor => {
 
-                        if (_kanban)
+                        if (_kanbanDuplicate)
                             errors["code"] = i18n.__("Kanban.code.isExists:%s is exists", i18n.__("Kanban.code._:Code"));
+
+                        if (_kanban && !_kanban.isComplete && valid.isComplete && _kanban.currentStepIndex < _kanban.instruction.steps.length){
+                            errors["isComplete"] = i18n.__("Kanban.isComplete.incompleteSteps:%s steps are incomplete", i18n.__("Kanban.code._:Kanban"));
+                        }
+
                         if (!valid.productionOrder)
                             errors["productionOrder"] = i18n.__("Kanban.productionOrder.isRequired:%s is required", i18n.__("Kanban.productionOrder._:ProductionOrder")); //"Production Order harus diisi";
                         else if (!_productionOrder)
@@ -97,15 +111,32 @@ module.exports = class KanbanManager extends BaseManager {
                         if (!valid.cart)
                             errors["cart"] = i18n.__("Kanban.cart.isRequired:%s is required", i18n.__("Kanban.cart._:Cart")); //"Cart harus diisi";                        
                         else{
-                            var currentQty = 0;
+                            var cartCurrentQty = 0;
                             if (_kanbanListByColor[0] && _kanbanListByColor[0].data.length > 0){
                                 for (var item of _kanbanListByColor[0].data){
-                                    currentQty += Number(item.cart.qty);
+                                    cartCurrentQty += Number(item.cart.qty);
                                 }
                             }
-                            currentQty += Number(valid.cart.qty);
-                            if (currentQty > _productionOrderDetail.quantity)
-                                errors["cart"] = i18n.__("Kanban.cart.qtyOverlimit:%s overlimit", i18n.__("Kanban.cart._:Total Qty")); //"Total Qty in cart over limit";
+                            if(_productionOrder){
+                                var productionOrderQty = 0;
+                                var tolerance = 0;
+                                if(_productionOrder.shippingQuantityTolerance !== 0 && _uom){
+                                    if(_productionOrder.uomId.toString() === _uom._id.toString())
+                                        tolerance = (_productionOrder.shippingQuantityTolerance / 100) * _productionOrderDetail.quantity;
+                                    else
+                                        tolerance = (_productionOrder.shippingQuantityTolerance / 100) * (_productionOrderDetail.quantity * 0.9144);
+                                }
+                                if(_uom){
+                                    if(_productionOrder.uomId.toString() === _uom._id.toString())
+                                        productionOrderQty = _productionOrderDetail.quantity + tolerance;
+                                    else
+                                        productionOrderQty = (_productionOrderDetail.quantity * 0.9144) + tolerance;
+                                }else
+                                    productionOrderQty = _productionOrderDetail.quantity + tolerance;
+                                cartCurrentQty += Number(valid.cart.qty);
+                                if (cartCurrentQty > productionOrderQty)
+                                    errors["cart"] = i18n.__("Kanban.cart.qtyOverlimit:%s overlimit", i18n.__("Kanban.cart._:Total Qty")); //"Total Qty in cart over limit";
+                            }
                         }
                         
                         if (!valid.grade || valid.grade == '')
@@ -127,6 +158,12 @@ module.exports = class KanbanManager extends BaseManager {
                         if (_productionOrder) {
                             valid.productionOrderId = _productionOrder._id;
                             valid.productionOrder = _productionOrder;
+                            valid.cart.uomId = _productionOrder.uomId;
+                            valid.cart.uom = _productionOrder.uom;
+                        }
+                        if(_uom){
+                            valid.cart.uomId = _uom._id;
+                            valid.cart.uom = _uom;
                         }
 
                         if (!valid.stamp) {
@@ -185,22 +222,15 @@ module.exports = class KanbanManager extends BaseManager {
             Promise.resolve(null);
     }
 
-    pdf(id) {
+    pdf(kanban) {
         return new Promise((resolve, reject) => {
+            var getDefinition = require("../../../pdf/definitions/kanban");
+            var definition = getDefinition(kanban);
 
-            this.getSingleById(id)
-                .then(kanban => {
-                    var getDefinition = require("../../../pdf/definitions/kanban");
-                    var definition = getDefinition(kanban);
-
-                    var generatePdf = require("../../../pdf/pdf-generator");
-                    generatePdf(definition)
-                        .then(binary => {
-                            resolve(binary);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
+            var generatePdf = require("../../../pdf/pdf-generator");
+            generatePdf(definition)
+                .then(binary => {
+                    resolve(binary);
                 })
                 .catch(e => {
                     reject(e);

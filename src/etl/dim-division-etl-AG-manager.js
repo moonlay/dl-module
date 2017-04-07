@@ -68,6 +68,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
         return this.divisionManager.collection.find({
             _updatedDate: {
                 "$gt": timestamp
+                // "$gt": new Date(1970, 1, 1)
             },
             _deleted: false
         }).toArray();
@@ -133,21 +134,23 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
                         this.sql.multiple = true;
 
-                        // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
+                        var fs = require("fs");
 
-                        // fs.writeFile(path, sqlQuery, function (error) {
-                        //     if (error) {
-                        //         console.log("write error:  " + error.message);
-                        //     } else {
-                        //         console.log("Successful Write to " + path);
-                        //     }
-                        // });
+                        var path = "C:\\Users\\aditya.henanda\\Desktop\\fact.txt";
+
+                        fs.writeFile(path, sqlQuery, function (error) {
+                            if (error) {
+                                console.log("write error:  " + error.message);
+                            } else {
+                                console.log("Successful Write to " + path);
+                            }
+                        });
+
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_Upsert_Dim_Divisi").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
+                                request.execute("AG_Upsert_Dim_Divisi").then((execResult) => {
+                                    request.execute("AG_INSERT_DIMTIME").then((execResult) => {
                                         transaction.commit((err) => {
                                             if (err)
                                                 reject(err);
