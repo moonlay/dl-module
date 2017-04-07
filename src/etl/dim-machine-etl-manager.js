@@ -61,14 +61,12 @@ module.exports = class DimMachineEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(time[0].finish);
+        var timestamp = new Date(time[0].start);
         return this.machineManager.collection.find({
             _updatedDate: {
                 "$gt": timestamp
             },
-            "unit.division.code": "7LM8JOVL",
-            _deleted: false
-
+            "unit.division.code": "7LM8JOVL"
         }).toArray();
     }
 
@@ -80,7 +78,9 @@ module.exports = class DimMachineEtlManager extends BaseManager {
                 machineManufacture: `'${item.manufacture}'`,
                 machineYear: `'${item.year}'`,
                 machineProcess: `'${item.process}'`,
-                machineCondition: `'${item.condition}'`
+                machineCondition: `'${item.condition}'`,
+                monthlyCapacity: item.monthlyCapacity ? `${item.monthlyCapacity}` : null,
+                deleted: `'${item._deleted}'`
             }
         });
         return Promise.resolve([].concat.apply([], result));
@@ -117,7 +117,7 @@ module.exports = class DimMachineEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `insert into [DL_Dim_Mesin_Temp]([Kode Mesin], [Nama Mesin], [Manufaktur Mesin], [Tahun Mesin], [Proses Mesin], [Kondisi Mesin]) values(${item.machineCode}, ${item.machineName}, ${item.machineManufacture}, ${item.machineYear}, ${item.machineProcess}, ${item.machineCondition});\n`;
+                                var queryString = `insert into [DL_Dim_Mesin_Temp]([Kode Mesin], [Nama Mesin], [Manufaktur Mesin], [Tahun Mesin], [Proses Mesin], [Kondisi Mesin], [Kapasitas Mesin], [deleted]) values(${item.machineCode}, ${item.machineName}, ${item.machineManufacture}, ${item.machineYear}, ${item.machineProcess}, ${item.machineCondition}, ${item.monthlyCapacity}, ${item.deleted});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -134,17 +134,6 @@ module.exports = class DimMachineEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
-
-                        // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
-
-                        // fs.writeFile(path, sqlQuery, function (error) {
-                        //     if (error) {
-                        //         console.log("write error:  " + error.message);
-                        //     } else {
-                        //         console.log("Successful Write to " + path);
-                        //     }
-                        // });
 
                         return Promise.all(command)
                             .then((results) => {

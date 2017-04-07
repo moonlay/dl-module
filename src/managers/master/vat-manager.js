@@ -105,8 +105,7 @@ module.exports = class VatManager extends BaseManager {
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
-                            data.push({ "name": dataFile[i][0], "rate": Number(dataFile[i][1]), "description": dataFile[i][2] });
-                        }
+                            data.push({ "name": dataFile[i][0], "rate": Number(dataFile[i][1]), "description": dataFile[i][2] });                        }
                     }
                     var dataError = [], errorMessage;
                     for (var i = 0; i < data.length; i++) {
@@ -133,7 +132,7 @@ module.exports = class VatManager extends BaseManager {
                             }
                         }
                         if (errorMessage !== "") {
-                            dataError.push({ "name": data[i]["name"], "rate": data[i]["rate"], "description": data[i]["description"], "Error": errorMessage });
+                            dataError.push({ "name": data[i]["name"], "rate": Number(data[i]["rate"]), "description": data[i]["description"], "Error": errorMessage });
                         }
                     }
                     if (dataError.length === 0) {
