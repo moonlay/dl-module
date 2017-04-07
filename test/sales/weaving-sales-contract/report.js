@@ -62,7 +62,7 @@ it('#03. should success when create report', function (done) {
     info.comodityId = createdData.comodityId;
     info.salesContractNo = createdData._id;
     info.dateFrom = createdData._createdDate;
-    info.dateTo = createdData._createdDate;
+    info.dateTo = createdData._createdDate.toISOString().split("T", "1").toString();
 
     weavingSalesContractManager.getWeavingSalesContractReport(info)
         .then(result => {
