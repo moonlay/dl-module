@@ -23,7 +23,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
     run() {
         var startedDate = new Date();
         this.migrationLog.insert({
-            description: "Fact Pembelian from MongoDB to Azure DWH",
+            description: "Fact Pembelian AG from MongoDB to Azure DWH",
             start: startedDate,
         })
         return this.extract()
@@ -33,7 +33,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Pembelian from MongoDB to Azure DWH",
+                    description: "Fact Pembelian AG from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -45,7 +45,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Pembelian from MongoDB to Azure DWH",
+                    description: "Fact Pembelian AG from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -57,31 +57,34 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
     timestamp() {
         return this.migrationLog.find({
-            description: "Fact Pembelian from MongoDB to Azure DWH",
+            description: "Fact Pembelian AG from MongoDB to Azure DWH",
             status: "Successful"
         }).sort({ finish: -1 }).limit(1).toArray()
     }
 
     extractPR(time) {
-        var timestamp = new Date(time[0].start);
+        // var timestamp = new Date(time[0].start);
         return this.purchaseRequestManager.collection.find({
             _createdBy: {
                 "$nin": ["dev", "unit-test"]
             },
             _updatedDate: {
-                "$gt": timestamp
+                "$gt": new Date("2017-02-28T24:00:00.000+07:00"),
+                "$lt": new Date("2017-03-30T24:00:00.000+07:00")
+
             }
         }).toArray()
     }
 
     extractPO(time) {
-        var timestamp = new Date(time[0].start);
+        // var timestamp = new Date(time[0].start);
         return this.purchaseOrderManager.collection.find({
             _createdBy: {
                 "$nin": ["dev", "unit-test"]
             },
             _updatedDate: {
-                "$gt": timestamp
+                "$gt": new Date("2017-02-28T24:00:00.000+07:00"),
+                "$lt": new Date("2017-03-30T24:00:00.000+07:00")
             }
         }).toArray()
     }
@@ -482,9 +485,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-
-                                var queryString = `INSERT INTO dl_fact_pembelian_temp([Nomor PR], [Tanggal PR], [Tanggal Diminta Datang], [Kode Budget], [Nama Budget], [Kode Unit], [Nama Unit], [Kode Divisi], [Nama Divisi], [Kode Kategori], [Nama Kategori], [Jenis Kategori], [Kode Produk], [Nama Produk], [Jumlah Selisih Hari PR-PO Internal], [Selisih Hari PR-PO Internal], [Jumlah Selisih Hari PR-PO Eksternal], [Selisih Hari PR-PO Eksternal], [Nomor PO Internal], [Tanggal PO Internal], [Jumlah Selisih Hari PO Eksternal-PO Internal], [Selisih Hari PO Eksternal-PO Internal], [Nama Staff Pembelian], [Nomor PR di PO Internal], [Nomor PO Eksternal], [Tanggal PO Eksternal], [Jumlah Selisih Hari DO-PO Eksternal], [Selisih Hari DO-PO Eksternal], [Kode Supplier], [Nama Supplier], [Kode Mata Uang], [Nama Mata Uang], [Metode Pembayaran], [Nilai Mata Uang], [Jumlah Barang], [UOM], [Harga Per Unit], [Total Harga], [Tanggal Rencana Kedatangan], [Nomor PR di PO Eksternal], [Nomor DO], [Tanggal DO], [Jumlah Selisih Hari URN-DO], [Selisih Hari URN-DO], [Status Ketepatan Waktu], [Nomor PR di DO], [Nomor URN], [Tanggal URN], [Jumlah Selisih Hari UPO-URN], [Selisih Hari UPO-URN], [Nomor UPO], [Tanggal UPO], [Jumlah Selisih Hari UPO-PO Internal], [Selisih Hari UPO-PO Internal], [Harga Sesuai Invoice], [deleted PR], [deleted PO]) VALUES(${item.purchaseRequestNo}, ${item.purchaseRequestDate === null ? null : item.purchaseRequestDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017").replace("/0201", "/2017")}, ${item.expectedPRDeliveryDate === null ? null : item.expectedPRDeliveryDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017").replace("/0201", "/2017")}, ${item.budgetCode}, ${item.budgetName}, ${item.unitCode}, ${item.unitName}, ${item.divisionCode}, ${item.divisionName}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType}, ${item.productCode}, ${item.productName}, ${item.purchaseRequestDays}, ${item.purchaseRequestDaysRange}, ${item.prPurchaseOrderExternalDays}, ${item.prPurchaseOrderExternalDaysRange}, ${item.purchaseOrderNo}, ${item.purchaseOrderDate === null ? null : item.purchaseOrderDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017").replace("/0201", "/2017")}, ${item.purchaseOrderExternalDays}, ${item.purchaseOrderExternalDaysRange}, ${item.purchasingStaffName}, ${item.prNoAtPo}, ${item.purchaseOrderExternalNo}, ${item.purchaseOrderExternalDate === null ? null : item.purchaseOrderExternalDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017").replace("/0201", "/2017")}, ${item.deliveryOrderDays}, ${item.deliveryOrderDaysRange}, ${item.supplierCode}, ${item.supplierName}, ${item.currencyCode}, ${item.currencyName}, ${item.paymentMethod}, ${item.currencyRate}, ${item.purchaseQuantity}, ${item.uom}, ${item.pricePerUnit}, ${item.totalPrice}, ${item.expectedDeliveryDate === null ? null : item.expectedDeliveryDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017").replace("/0201", "/2017")}, ${item.prNoAtPoExt}, ${item.deliveryOrderNo}, ${item.deliveryOrderDate === null ? null : item.deliveryOrderDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017").replace("/0201", "/2017")}, ${item.unitReceiptNoteDays}, ${item.unitReceiptNoteDaysRange}, ${item.status}, ${item.prNoAtDo}, ${item.unitReceiptNoteNo}, ${item.unitReceiptNoteDate === null ? null : item.unitReceiptNoteDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017").replace("/0201", "/2017")}, ${item.unitPaymentOrderDays}, ${item.unitPaymentOrderDaysRange}, ${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate === null ? null : item.unitPaymentOrderDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017").replace("/0201", "/2017")}, ${item.purchaseOrderDays}, ${item.purchaseOrderDaysRange}, ${item.invoicePrice}, ${item.deletedPR}, ${item.deletedPO});\n`;
-
+                                var queryString = `INSERT INTO ag_fact_pembelian_temp([Nomor PR], [Tanggal PR], [Tanggal Diminta Datang], [Kode Budget], [Nama Budget], [Kode Unit], [Nama Unit], [Kode Divisi], [Nama Divisi], [Kode Kategori], [Nama Kategori], [Jenis Kategori], [Kode Produk], [Nama Produk], [Jumlah Selisih Hari PR-PO Internal], [Selisih Hari PR-PO Internal], [Jumlah Selisih Hari PR-PO Eksternal], [Selisih Hari PR-PO Eksternal], [Nomor PO Internal], [Tanggal PO Internal], [Jumlah Selisih Hari PO Eksternal-PO Internal], [Selisih Hari PO Eksternal-PO Internal], [Nama Staff Pembelian], [Nomor PR di PO Internal], [Nomor PO Eksternal], [Tanggal PO Eksternal], [Jumlah Selisih Hari DO-PO Eksternal], [Selisih Hari DO-PO Eksternal], [Kode Supplier], [Nama Supplier], [Kode Mata Uang], [Nama Mata Uang], [Metode Pembayaran], [Nilai Mata Uang], [Jumlah Barang], [UOM], [Harga Per Unit], [Total Harga], [Tanggal Rencana Kedatangan], [Nomor PR di PO Eksternal], [Nomor DO], [Tanggal DO], [Jumlah Selisih Hari URN-DO], [Selisih Hari URN-DO], [Status Ketepatan Waktu], [Nomor PR di DO], [Nomor URN], [Tanggal URN], [Jumlah Selisih Hari UPO-URN], [Selisih Hari UPO-URN], [Nomor UPO], [Tanggal UPO], [Jumlah Selisih Hari UPO-PO Internal], [Selisih Hari UPO-PO Internal], [Harga Sesuai Invoice], [deleted PR], [deleted PO]) VALUES(${item.purchaseRequestNo}, ${item.purchaseRequestDate === null ? null : item.purchaseRequestDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017")}, ${item.expectedPRDeliveryDate === null ? null : item.expectedPRDeliveryDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017")}, ${item.budgetCode}, ${item.budgetName}, ${item.unitCode}, ${item.unitName}, ${item.divisionCode}, ${item.divisionName}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType}, ${item.productCode}, ${item.productName}, ${item.purchaseRequestDays}, ${item.purchaseRequestDaysRange}, ${item.prPurchaseOrderExternalDays}, ${item.prPurchaseOrderExternalDaysRange}, ${item.purchaseOrderNo}, ${item.purchaseOrderDate === null ? null : item.purchaseOrderDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017")}, ${item.purchaseOrderExternalDays}, ${item.purchaseOrderExternalDaysRange}, ${item.purchasingStaffName}, ${item.prNoAtPo}, ${item.purchaseOrderExternalNo}, ${item.purchaseOrderExternalDate === null ? null : item.purchaseOrderExternalDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017").replace("/0201", "/2017")}, ${item.deliveryOrderDays}, ${item.deliveryOrderDaysRange}, ${item.supplierCode}, ${item.supplierName}, ${item.currencyCode}, ${item.currencyName}, ${item.paymentMethod}, ${item.currencyRate}, ${item.purchaseQuantity}, ${item.uom}, ${item.pricePerUnit}, ${item.totalPrice}, ${item.expectedDeliveryDate === null ? null : item.expectedDeliveryDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017")}, ${item.prNoAtPoExt}, ${item.deliveryOrderNo}, ${item.deliveryOrderDate === null ? null : item.deliveryOrderDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017")}, ${item.unitReceiptNoteDays}, ${item.unitReceiptNoteDaysRange}, ${item.status}, ${item.prNoAtDo}, ${item.unitReceiptNoteNo}, ${item.unitReceiptNoteDate === null ? null : item.unitReceiptNoteDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017")}, ${item.unitPaymentOrderDays}, ${item.unitPaymentOrderDaysRange}, ${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate === null ? null : item.unitPaymentOrderDate.replace("/0017", "/2017").replace("/12017", "/2017").replace("/0200", "/2017")}, ${item.purchaseOrderDays}, ${item.purchaseOrderDaysRange}, ${item.invoicePrice}, ${item.deletedPR}, ${item.deletedPO});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 10000 == 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -504,7 +505,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
                         var fs = require("fs");
 
-                        var path = "C:\\Users\\leslie.aula\\Desktop\\fact.txt";
+                        var path = "C:\\Users\\aditya.henanda\\Desktop\\fact.txt";
 
                         fs.writeFile(path, sqlQuery, function (error) {
                             if (error) {
@@ -516,8 +517,8 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_UPSERT_FACT_PEMBELIAN").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
+                                request.execute("AG_UPSERT_FACT_PEMBELIAN").then((execResult) => {
+                                    request.execute("AG_INSERT_DIMTIME").then((execResult) => {
                                         transaction.commit((err) => {
                                             if (err)
                                                 reject(err);

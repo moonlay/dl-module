@@ -34,6 +34,7 @@ it("#01. should success when create etl fact-purchasing", function (done) {
         });
 });
 
+
 it("#02. should success when transforming data", function (done) {
     var data = [
         {
@@ -197,55 +198,55 @@ it("#03. should success when extracting PR from PO", function (done) {
 });
 
 
-it("#04. should success when joining PR to PO", function (done) {
-    var data = [];
-    instanceManager.joinPurchaseOrder(data)
-        .then(() => {
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#04. should success when joining PR to PO", function (done) {
+//     var data = [];
+//     instanceManager.joinPurchaseOrder(data)
+//         .then(() => {
+//             done();
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
 
-it("#05. should success when remove duplicate data", function (done) {
-    var arr = [{ no: {} }, { no: {} }];
-    instanceManager.removeDuplicates(arr)
-        .then((a) => {
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#05. should success when remove duplicate data", function (done) {
+//     var arr = [{ no: {} }, { no: {} }];
+//     instanceManager.removeDuplicates(arr)
+//         .then((a) => {
+//             done();
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
-it("#06. should error when load empty data", function (done) {
-    instanceManager.load({})
-        .then(id => {
-            done("should error when create with empty data");
-        })
-        .catch((e) => {
-            try {
-                done();
-            }
-            catch (ex) {
-                done(ex);
-            }
-        });
-});
+// it("#06. should error when load empty data", function (done) {
+//     instanceManager.load({})
+//         .then(id => {
+//             done("should error when create with empty data");
+//         })
+//         .catch((e) => {
+//             try {
+//                 done();
+//             }
+//             catch (ex) {
+//                 done(ex);
+//             }
+//         });
+// });
 
-it("#07. should error when insert empty data", function (done) {
-    instanceManager.insertQuery(this.sql, "")
-        .then((id) => {
-            done("should error when create with empty data");
-        })
-        .catch((e) => {
-            try {
-                done();
-            }
-            catch (ex) {
-                done(ex);
-            }
-        });
-});
+// it("#07. should error when insert empty data", function (done) {
+//     instanceManager.insertQuery(this.sql, "")
+//         .then((id) => {
+//             done("should error when create with empty data");
+//         })
+//         .catch((e) => {
+//             try {
+//                 done();
+//             }
+//             catch (ex) {
+//                 done(ex);
+//             }
+//         });
+// });
