@@ -554,7 +554,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
             "Jenis Order" : "string",
             "Komoditas" : "string",
             "Kualitas" : "string",
-            "Jumlah Order" : "number",
+            "Jumlah Order SC" : "number",
             "Jumlah Sudah Dibuatkan SPP" : "number",
             "Satuan" : "string",
             "Toleransi(%)" : "number",
