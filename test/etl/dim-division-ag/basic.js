@@ -73,3 +73,4 @@ it("#04. should error when insert empty data", function (done) {
             }
         });
 });
+
