@@ -1,6 +1,6 @@
 var helper = require("../../helper");
 // var Manager = require("../../../src/etl/fact-purchasing-etl-manager");
-var Manager = require("../../../src/etl/fact-pembelian");
+var Manager = require("../../../src/etl/fact-pembelian-ag");
 var instanceManager = null;
 var should = require("should");
 var sqlHelper = require("../../sql-helper");
@@ -22,7 +22,7 @@ before("#00. connect db", function (done) {
         });
 });
 
-it("#01. should success when create etl fact-purchasing", function (done) {
+it("#01. should success when create etl fact-pembelian-ag", function (done) {
     instanceManager.run()
         .then((a) => {
             console.log(a);
