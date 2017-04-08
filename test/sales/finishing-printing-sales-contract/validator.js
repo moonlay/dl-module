@@ -166,7 +166,7 @@ it('#06. it should error when create new data with export buyer with agent witho
 
             finishingPrintingSalesContractManager.create(sc)
                 .then(id => {
-                    done("should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, orderType");
+                    done("should error when create new data with export buyer with agent without comission, amount, term of shipment");
                 })
                 .catch(e => {
                     try {

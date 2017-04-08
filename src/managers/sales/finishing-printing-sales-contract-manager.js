@@ -7,6 +7,7 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var FinishingPrintingSalesContract=DLModels.sales.FinishingPrintingSalesContract;
 var FinishingPrintingSalesContractDetail=DLModels.sales.FinishingPrintingSalesContractDetail;
+var ProductionOrder =DLModels.sales.ProductionOrder;
 var BuyerManager=require('../master/buyer-manager');
 var UomManager = require('../master/uom-manager');
 var ProductManager = require('../master/product-manager');
@@ -22,12 +23,17 @@ var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var generateCode = require("../../utils/code-generator");
 var assert = require('assert');
+var productionOrderCollection=null;
+var kanbanCollection=null;
+var moment = require('moment');
 
 module.exports = class FinishingPrintingSalesContractManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
 
         this.collection = this.db.collection(map.sales.collection.FinishingPrintingSalesContract);
+        this.productionOrderCollection = this.db.collection(map.sales.collection.ProductionOrder);
+        this.kanbanCollection=this.db.use(map.production.finishingPrinting.collection.Kanban);
         this.BuyerManager= new BuyerManager(db,user);
         this.UomManager = new UomManager(db, user);
         this.ProductManager = new ProductManager(db, user);
@@ -204,9 +210,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 if (!_bank)
                     errors["accountBank"] = i18n.__("FinishingPrintingSalesContract.accountBank.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.accountBank._:AccountBank")); //"accountBank tidak boleh kosong";
                  
-                if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
-                    errors["shippingQuantityTolerance"] = i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
-                else if(valid.shippingQuantityTolerance>100){
+                if(valid.shippingQuantityTolerance>100){
                     errors["shippingQuantityTolerance"] =i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("FinishingPrintingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
 
@@ -362,5 +366,212 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                     reject(e);
                 });
         });
+    }
+
+
+    getReport(query){
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                _deleted: false
+            };
+            var salesQuery = {};
+            if(query.salesContractNo != ''){
+                salesQuery = {
+                    "salesContractNo" : {
+                        "$regex" : (new RegExp(query.salesContractNo, "i"))
+                    } 
+                };
+            }
+            var orderTypeQuery = {};
+            if(query.orderTypeId){
+                orderTypeQuery = {
+                    "orderTypeId" : (new ObjectId(query.orderTypeId))
+                };
+            }
+            var comodityQuery = {};
+            if(query.comodityId){
+                comodityQuery ={
+                    "comodityId" : (new ObjectId(query.comodityId))
+                };
+            }
+            var buyerQuery = {};
+            if(query.buyerId){
+                buyerQuery = {
+                    "buyerId" : (new ObjectId(query.buyerId))
+                };
+            }
+            var date = {
+                "_createdDate" : {
+                    "$gte" : (!query || !query.sdate ? (new Date("1900-01-01")) : (new Date(`${query.sdate} 00:00:00`))),
+                    "$lte" : (!query || !query.edate ? (new Date()) : (new Date(`${query.edate} 23:59:59`)))
+                }
+            };
+            var Query = {"$and" : [date, salesQuery,orderTypeQuery, comodityQuery, buyerQuery, deletedQuery]};
+            var prodOrder=map.sales.collection.ProductionOrder;
+
+            this.collection.aggregate([ 
+                    {$unwind: "$details"}, 
+                    {$lookup: {from: "prodOrder",localField: "salesContractNo",foreignField: "salesContractNo",as: "productionOrder"}},
+                    {$match : Query},
+                    {$project :{
+                        "salesContractNo" : 1,
+                        "_createdDate" : 1,
+                        "buyer" : "$buyer.name",
+                        "buyerType" : "$buyer.type",
+                        "dispositionNumber":"$dispositionNumber",
+                        "orderType" : "$orderType.name",
+                        "comodity": "$comodity.name",
+                        "quality": "$quality.name",
+                        "orderQuantity" : "$orderQuantity",
+                        "tolerance" : "$shippingQuantityTolerance",
+                        "uom" : "$uom.unit",
+                        "termOfPayment" : "$termOfPayment.termOfPayment",
+                        "bank":"$accountBank",
+                        "deliverySchedule" : "$deliverySchedule",
+                        "agent" : "$agent.name",
+                        "comission" : "$comission",
+                        "color" : "$details.color",
+                        "price" : "$details.price",
+                        "currency" : "$accountBank.currency.code",
+                        "ppn" : "$details.useIncomeTax",
+                        "tax": "$useIncomeTax"
+                    }
+                },
+                    {$sort : {"_createdDate" : -1}}
+                ])
+                .toArray().then(sc=>{
+                 if(sc.length>0){
+                    var prodOrd=[];
+                    var kanban=[];
+                    for(var a of sc){
+                        prodOrd.push(this.productionOrderCollection.find({"salesContractNo":a.salesContractNo, "_deleted":false})
+                        .toArray()); 
+                        kanban.push(this.kanbanCollection.find({"productionOrder.salesContractNo":a.salesContractNo, "_deleted":false})
+                        .toArray()); 
+                        }
+                    Promise.all(prodOrd.concat(kanban)).then(result=>{
+                        var sliceProdOrder=result.slice(0, sc.length-1);
+                        var sliceKanban=result.slice(sc.length, ((sc.length+sc.length)-1) )
+                            for(var a of sc){
+                                var status="Belum dibuat SPP";
+                                var qty=0;
+                                for(var b of sliceProdOrder){
+                                    if(b.length>0){
+                                        if(b[0].salesContractNo===a.salesContractNo){
+                                            status="Sudah dibuat SPP";
+                                        }
+                                        for(var sppQty of b){
+                                            if(sppQty.salesContractNo===a.salesContractNo){
+                                                qty+=sppQty.orderQuantity;
+                                            }
+                                        }
+                                    }
+                                }
+                                for(var c of sliceKanban){
+                                    if(c.length>0){
+                                        if(c[0].productionOrder.salesContractNo===a.salesContractNo){
+                                            status="Sudah dibuat Kanban";
+                                        }
+                                    }
+                                }
+                                a.status=status;
+                                a.productionOrderQuantity=qty;
+                            }
+                            resolve(sc);
+                        
+                    })
+                }
+                else{
+                    resolve(sc);
+                }
+        })
+             });
+    }
+
+    getXls(result,query){
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for(var sc of result.info){
+            index++;
+            var item = {};
+            var sctax="";
+            if(sc.tax){
+                if(sc.ppn){
+                    sctax="Including PPN";
+                }
+                else{
+                    sctax="Excluding PPN";
+                }
+            }
+            else{
+                sctax="Tanpa PPN";
+            }
+            var bank=sc.bank.accountName + " - " + sc.bank.bankName + ' - ' + sc.bank.accountNumber;
+            item["No"] = index;
+            item["Nomor Sales Contract"] = sc.salesContractNo;
+            item["Tanggal Sales Contract"] = moment(new Date(sc._createdDate)).format(dateFormat);
+            item["Buyer"] = sc.buyer;
+            item["Jenis Buyer"] = sc.buyerType;
+            item["Nomor Disposisi"] = sc.dispositionNumber;
+            item["Jenis Order"] = sc.orderType;
+            item["Komoditas"] = sc.comodity;
+            item["Jumlah Order"] = sc.orderQuantity;
+            item["Satuan"] = sc.uom;
+            item["Toleransi(%)"] = sc.tolerance;
+            item["Syarat Pembayaran"] = sc.termOfPayment;
+            item["Pembayaran ke Rekening"] = bank;
+            item["Jadwal Pengiriman"] = moment(new Date(sc.deliverySchedule)).format(dateFormat);
+            item["Agen"] = sc.agent;
+            item["Warna"] = sc.color;
+            item["Harga"] = sc.price;
+            item["Mata Uang"] = sc.currency;
+            item["PPN"] = sctax;
+            item["Status"] = sc.status;
+
+            xls.data.push(item);
+        }
+
+        xls.options = {
+            "No" : "number",
+            "Nomor Sales Contract" : "string",
+            "Tanggal Sales Contract" : "string",
+            "Buyer" : "string",
+            "Tipe Buyer" : "string",
+            "Nomor Disposisi":"string",
+            "Jenis Order" : "string",
+            "Komoditas" : "string",
+            "Jumlah Order" : "number",
+            "Satuan" : "string",
+            "Toleransi(%)" : "number",
+            "Syarat Pembayaran" : "string",
+            "Pembayaran ke Rekening": "string",
+            "Jadwal Pengiriman" : "string",
+            "Agen" : "string",
+            "Warna" : "string",
+            "Harga" : "number",
+            "Mata Uang" : "string",
+            "PPN" : "string",
+            "Status" : "string"
+        };
+
+        if(query.dateFrom && query.dateTo){
+            xls.name = `Laporan Sales Contract - Finishing Printing ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(!query.dateFrom && query.dateTo){
+            xls.name = `Laporan Sales Contract - Finishing Printing ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(query.dateFrom && !query.dateTo){
+            xls.name = `Laporan Sales Contract - Finishing Printing ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Laporan Sales Contract - Finishing Printing.xlsx`;
+
+        return Promise.resolve(xls);
     }
 }

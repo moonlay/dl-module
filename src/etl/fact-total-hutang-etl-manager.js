@@ -76,7 +76,7 @@ module.exports = class FactTotalHutang extends BaseManager {
             }
         }).toArray()
             .then((unitReceiptNotes) => {
-                return this.joinUnitPaymentOrder(unitReceiptNotes)
+                return this.joinUnitPaymentOrder(unitReceiptNotes);
             })
     }
 
@@ -105,9 +105,9 @@ module.exports = class FactTotalHutang extends BaseManager {
                 })
         });
         return Promise.all(joinUnitPaymentOrders)
-            .then((joinUnitPaymentOrder => {
+            .then((joinUnitPaymentOrder) => {
                 return Promise.resolve([].concat.apply([], joinUnitPaymentOrder));
-            }))
+            })
             .catch((e) => {
                 console.log(e);
                 reject(e);

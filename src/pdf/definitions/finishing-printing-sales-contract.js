@@ -19,17 +19,21 @@ module.exports = function (salesContract) {
     var remark=[];
     var footer=[];
     var uom="";
+    var uom1="";
     var uomLocal="";
     if(salesContract.uom.unit.toLowerCase()=="yds"){
         uom="YARDS";
+        uom1="YARD";
         uomLocal="YARD";
     }
     else if(salesContract.uom.unit.toLowerCase()=="mtr"){
         uom="METRES";
+        uom1="METRE";
         uomLocal="METER";
     }
     else{
         uom=salesContract.uom.unit;
+        uom1=salesContract.uom.unit;
         uomLocal=salesContract.uom.unit;
     }
 
@@ -59,10 +63,13 @@ module.exports = function (salesContract) {
                 ppn='INCLUDING PPN 10%';
             }
             else{
-                ppn='EXCLUDING PPN 10%';
+                ppn='EXCLUDING PPN';
             }
         }
-        detail+= i.color + " " + i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom +"\n";
+        else{
+            ppn='TANPA PPN';
+        }
+        detail+= i.color + " " + i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom1 +"\n";
         detailprice+= i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uomLocal + ' ' + ppn + ' ' + '( ' + i.color + ' )' + "\n";
        
     }
@@ -91,10 +98,15 @@ module.exports = function (salesContract) {
                         style: ['size10'],
                         alignment: "right"
                     },{
-                        text:'MESSRS,\n'+ salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country + '\n' + salesContract.buyer.contact,
-                        style: ['size10'],
-                        alignment: "left"
-                    }, {
+                        columns: [{
+                            width: '40%',
+                            stack: [{
+                                text:'MESSRS,\n'+ salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country + '\n' + salesContract.buyer.contact,
+                                style: ['size10'],
+                                alignment: "left"
+                            }]
+                        }]
+                    },'\n', {
                             text: 'SALES CONTRACT NO: ' + no,
                             style: ['size11','bold'],
                             alignment: "center"
@@ -212,7 +224,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:salesContract.accountBank.currency.symbol + " " +`${parseFloat(amount).toLocaleString(locale, locale.currency)}`+" ( "+`${numSpell(amount)}`+ salesContract.accountBank.currency.description.toUpperCase() + " )",
+                        text:salesContract.accountBank.currency.symbol + " " +`${parseFloat(amount).toLocaleString(locale, locale.currency)}`+" ( "+`${numSpell(amount)}`+ salesContract.accountBank.currency.description.toUpperCase() + " ) (APPROXIMATELLY)",
                         style: ['size10']
                     }]
         },{
@@ -228,7 +240,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appx + ' '+`${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                        text:appx + ' '+`${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
                         style: ['size10']
                     }]
         },{
@@ -276,7 +288,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:salesContract.condition,
+                        text: '- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- '+ salesContract.shippingQuantityTolerance +"% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - CONTAINER DELIVERY CHARGES AT DESTINATION FOR BUYER'S ACCOUNT. \n"+ salesContract.condition,
                         style: ['size10']
                     }]
         }];
@@ -485,7 +497,7 @@ module.exports = function (salesContract) {
                 text:'Dengan Hormat,\n'+'Sesuai dengan pesanan/ order Bapak/Ibu kepada kami, maka bersama ini kami kirimkan surat persetujuan pesanan dengan ketentuan dan syarat-syarat di bawah ini :',
                 style: ['size10'],
                 alignment: "left"
-            },
+            },'\n',
             {
                 columns: [
                     {
@@ -675,7 +687,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appxLocal+ ' ' +`${moment(salesContract.deliverySchedule).format('MMMM YYYY')}`,
+                        text:appxLocal+ ' ' +`${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
                         style: ['size10']
                     }]
         },{
@@ -710,7 +722,7 @@ module.exports = function (salesContract) {
                         text:salesContract.condition,
                         style: ['size10']
                     }]
-        },{
+        },'\n',{
                 text:'Demikian konfirmasi order ini kami sampaikan untuk diketahui dan dipergunakan seperlunya. Tembusan surat ini mohon dikirim kembali setelah ditanda tangani dan dibubuhi cap perusahaan.',
                 style: ['size10'],
                 alignment: "left"
@@ -723,7 +735,7 @@ module.exports = function (salesContract) {
                 style: ['center']
             }, {
                     width: '50%',
-                    stack: ['Hormat Kami,', '\n\n\n\n', '(   RUDY KURNIAWAN  )', 'Kadiv. Penjualan'],
+                    stack: ['Hormat Kami,', '\n\n\n\n', '(   RUDY KURNIAWAN  )', 'Kadiv. Penjualan Tekstil'],
                     style: ['center']
                 }],
             style: ['size10']
