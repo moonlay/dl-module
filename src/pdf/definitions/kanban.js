@@ -4,7 +4,8 @@ module.exports = function (kanban) {
 
     var steps = [].concat.apply([], kanban.instruction.steps);
 
-    var iso = "FM-F-PR-09-01-016B/R2";
+    //var iso = "FM-F-PR-09-01-016B/R2";
+    var iso= "FM-FP-00-PC-19-020";
     var number = kanban.no;
 
     var locale = global.config.locale; 
@@ -224,7 +225,8 @@ module.exports = function (kanban) {
         header.push('');
 
         for (i=0;i<steps.length;i++){
-            var name = steps[i].process;
+            // var name = steps[i].process;
+            var name = steps[i].alias ? steps[i].alias : '';
             header.push({text: '\n' + name, style: 'tableHeader', rowSpan:2, alignment: 'center'});
         }
 
