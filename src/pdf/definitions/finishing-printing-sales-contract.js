@@ -78,11 +78,8 @@ module.exports = function (salesContract) {
         comoDesc='\n'+salesContract.comodityDescription;
     }
     var code=salesContract.salesContractNo;
-    var motive='';
-    if(salesContract.designMotive.name){
-        motive=salesContract.designMotive.name;
-    }
-
+    var motive= salesContract.designMotive ? salesContract.designMotive.name : "";
+    var pieceLength=salesContract.pieceLength ? salesContract.pieceLength : "";
 
     if(salesContract.buyer.type.toLowerCase()=="export"||salesContract.buyer.type.toLowerCase()=="ekspor"){
         moment.locale('en-EN');
@@ -192,7 +189,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:salesContract.pieceLength,
+                        text:pieceLength,
                         style: ['size10']
                     }]
         },{
