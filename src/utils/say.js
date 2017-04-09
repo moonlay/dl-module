@@ -5,10 +5,14 @@ var ribuan = ["", "ribu", "juta", "milyar", "triliyun", "kuadrilyun", "kuintiliu
 
 function terbilang(d, f) {
     var strHasil = "";
-    var frac = d.toString().includes(".") ? Number(d.toString().substr(d.toString().indexOf(".") + 1)) : 0;
 
-    if (frac != 0)
-        strHasil = terbilang(frac, "koma");
+    if (d.toString().indexOf(".") !== -1) {
+        var a = Number(d.toFixed(4).toString().substr(d.toFixed(4).toString().indexOf(".") + 1));
+        if (a !== 0) {
+            strHasil = terbilangKoma(d);
+        }
+        d = Number(d.toFixed(4).toString().slice(0,d.toFixed(4).toString().indexOf(".")));
+    }
 
     var nDigit = 0;
     var nPosisi = 0;
@@ -65,9 +69,8 @@ function terbilang(d, f) {
     } else {
         strHasil = ` ${strHasil} ${f ? f : "rupiah"}`.trim();
     }
-    if(strTemp.length>0){
-        if(strTemp[0]==="-")
-        {
+    if (strTemp.length > 0) {
+        if (strTemp[0] === "-") {
             strHasil = `minus ${strHasil}`;
         }
     }
@@ -81,5 +84,20 @@ function terbilang(d, f) {
     return strHasil;
 }
 
+function terbilangKoma(frac) {
+    var a = frac.toString().substr(frac.toString().indexOf(".") + 1);
+    var fixNumber = "";
+    if (a.length > 4) {
+        fixNumber = (frac.toFixed(4)).toString().substr((frac.toFixed(4)).toString().indexOf(".") + 1);
+    } else {
+        fixNumber = a;
+    }
+    var strHasil = "koma";
+    for (var i = 0; i < fixNumber.length; i++) {
+        var temp = Number(fixNumber[i]);
+        strHasil = strHasil + " " + satuan[temp];
+    }
+    return strHasil;
+}
 
 module.exports = terbilang;

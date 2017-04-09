@@ -190,9 +190,9 @@ module.exports = function (unitPaymentCorrection) {
             return prev + curr;
         }, 0);
 
-    var totalIncomeTax = unitPaymentCorrection.unitPaymentOrder.incomeTaxNo.length > 0 ? sum * 0.1 : 0;
+    var useIncomeTax = unitPaymentCorrection.unitPaymentOrder.incomeTaxNo.length > 0 ? sum * 0.1 : 0;
 
-    var totalKoreksiDenganPPN = ['\n',
+    var totalKoreksiJumlah = ['\n',
         {
             columns: [{
                 width: '30%',
@@ -219,7 +219,7 @@ module.exports = function (unitPaymentCorrection) {
                     style: ['size08']
                 }, {
                     width: '65%',
-                    text: parseFloat(totalIncomeTax).toLocaleString(locale, locale.currency),
+                    text: parseFloat(useIncomeTax).toLocaleString(locale, locale.currency),
                     style: ['size08', 'right']
                 }],
             margin: [350, 0, 0, 0]
@@ -234,14 +234,14 @@ module.exports = function (unitPaymentCorrection) {
                     style: ['size08']
                 }, {
                     width: '65%',
-                    text: parseFloat(sum + totalIncomeTax).toLocaleString(locale, locale.currency),
+                    text: parseFloat(sum + useIncomeTax).toLocaleString(locale, locale.currency),
                     style: ['size08', 'right', 'bold']
                 }],
             margin: [350, 0, 0, 0]
         },
         '\n'];
 
-    var totalKoreksiTanpaPPN = ['\n',
+    var totalKoreksiHarga = ['\n',
         {
             columns: [{
                 width: '30%',
@@ -259,10 +259,10 @@ module.exports = function (unitPaymentCorrection) {
             margin: [350, 0, 0, 0]
         }, '\n'];
 
-    var total =  unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? totalKoreksiDenganPPN : totalKoreksiTanpaPPN;
+    var total = unitPaymentCorrection.correctionType === "Jumlah" ? totalKoreksiJumlah : totalKoreksiHarga;
 
-    var terbilang = unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? {
-        text: `Terbilang : ${say(sum + totalIncomeTax, unitPaymentCorrection.items.find(r => true).currency.description)}`,
+    var terbilang = unitPaymentCorrection.correctionType === "Jumlah" ? {
+        text: `Terbilang : ${say(sum + useIncomeTax, unitPaymentCorrection.items.find(r => true).currency.description)}`,
         style: ['size09', 'bold']
     } : {
             text: `Terbilang : ${say(sum, unitPaymentCorrection.items.find(r => true).currency.description)}`,
