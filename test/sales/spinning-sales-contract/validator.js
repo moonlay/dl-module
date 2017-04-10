@@ -45,33 +45,33 @@ it('#01. should error when create with empty data ', function(done) {
         });
 });
 
-it('#02. should error when create new data with deliverySchedule less than today', function(done) {
-    SpinningSalesContractDataUtil.getNewData()
-        .then((me) => {
-            var dateYesterday = new Date().setDate(new Date().getDate() - 1);
+// it('#02. should error when create new data with deliverySchedule less than today', function(done) {
+//     SpinningSalesContractDataUtil.getNewData()
+//         .then((me) => {
+//             var dateYesterday = new Date().setDate(new Date().getDate() - 1);
 
-            me.deliverySchedule = moment(dateYesterday).format('YYYY-MM-DD');
+//             me.deliverySchedule = moment(dateYesterday).format('YYYY-MM-DD');
 
-            spinningSalesContractManager.create(me)
-                .then((id) => {
-                    done("should error when create new data with deliverySchedule less than today");
-                })
-                .catch((e) => {
-                    try {
-                        e.errors.should.have.property('deliverySchedule');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+//             spinningSalesContractManager.create(me)
+//                 .then((id) => {
+//                     done("should error when create new data with deliverySchedule less than today");
+//                 })
+//                 .catch((e) => {
+//                     try {
+//                         e.errors.should.have.property('deliverySchedule');
+//                         done();
+//                     }
+//                     catch (ex) {
+//                         done(ex);
+//                     }
+//                 });
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
-it('#03. should error when create new data with shippingQuantityTolerance more than 100', function(done) {
+it('#02. should error when create new data with shippingQuantityTolerance more than 100', function(done) {
     SpinningSalesContractDataUtil.getNewData()
         .then((sc) => {
 
@@ -96,7 +96,7 @@ it('#03. should error when create new data with shippingQuantityTolerance more t
         });
 });
 
-it('#04. should error when create new data with non existent quality, comodity, buyer, accountBank', function(done) {
+it('#03. should error when create new data with non existent quality, comodity, buyer, accountBank', function(done) {
     SpinningSalesContractDataUtil.getNewData()
         .then((sc) => {
 
@@ -129,7 +129,7 @@ it('#04. should error when create new data with non existent quality, comodity, 
 
 var createdDataBuyer;
 var createdDataBuyerId;
-it("#05. should success when create new data export buyer", function(done) {
+it("#04. should success when create new data export buyer", function(done) {
     buyerDataUtil.getNewData()
         .then((data) => {
             data.type = "Ekspor";
