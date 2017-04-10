@@ -154,14 +154,9 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 if(!_quality){
                     errors["quality"]=i18n.__("FinishingPrintingSalesContract.quality.isRequired:%s is not exsist", i18n.__("FinishingPrintingSalesContract.quality._:Quality")); //"quality tidak boleh kosong";
                 }
-                else if(!valid.qualityId){
-                    errors["quality"]=i18n.__("FinishingPrintingSalesContract.quality.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.quality._:Quality")); //"quality tidak boleh kosong";
-                }
 
                 if (!_material)
                     errors["material"] = i18n.__("FinishingPrintingSalesContract.material.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.material._:Material")); //"material tidak boleh kosong";
-                else if (!valid.materialId)
-                    errors["material"] = i18n.__("FinishingPrintingSalesContract.material.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.material._:Material")); //"material tidak boleh kosong";
                 
                 if(!valid.materialWidth||valid.materialWidth===''){
                     errors["materialWidth"] = i18n.__("FinishingPrintingSalesContract.materialWidth.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.materialWidth._:MaterialWidth")); //"lebar material tidak boleh kosong";
