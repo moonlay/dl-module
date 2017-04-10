@@ -6,7 +6,7 @@ module.exports = function (qualityControl) {
 
     var iso = "Nomor ISO";
 
-    var locale = global.config.locale; 
+    var locale = global.config.locale;
 
     var moment = require("moment");
     moment.locale(locale.name);
@@ -281,22 +281,22 @@ module.exports = function (qualityControl) {
             alignment: "left"
         },
         {
-            text: `${item.initLength}`,
+            text: `${item.initLength} YDS`,
             style: ["size08"],
             alignment: "left"
         },
         {
-            text: `${item.width}`,
+            text: `${item.width} YDS`,
             style: ["size08"],
             alignment: "left"
         },
         {
-            text: `${item.avalLength}`,
+            text: `${item.avalLength} YDS`,
             style: ["size08"],
             alignment: "left"
         },
         {
-            text: `${item.sampleLength}`,
+            text: `${item.sampleLength} YDS`,
             style: ["size08"],
             alignment: "left"
         },
@@ -349,11 +349,35 @@ module.exports = function (qualityControl) {
         }, "", ""]
     ];
 
+    var tfoot2 = [
+        [{
+            text: "ADMIN QC",
+            bold: true,
+            fontSize: 8,
+            color: 'black',
+            alignment: 'center'
+        },
+        {
+            text: "KABAG QC",
+            bold: true,
+            fontSize: 8,
+            color: 'black',
+            alignment: 'center'
+        },
+        {
+            text: "KASUBSIE QC",
+            bold: true,
+            fontSize: 8,
+            color: 'black',
+            alignment: 'center'
+        }]
+    ];
+
     var table2 = [{
         table: {
             widths: ["33%", "33%", "34%"],
             headerRows: 1,
-            body: [].concat([thead2], tbody2)
+            body: [].concat([thead2], tbody2, tfoot2)
         }
     }];
 
