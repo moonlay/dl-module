@@ -78,11 +78,8 @@ module.exports = function (salesContract) {
         comoDesc='\n'+salesContract.comodityDescription;
     }
     var code=salesContract.salesContractNo;
-    var motive='';
-    if(salesContract.designMotive.name){
-        motive=salesContract.designMotive.name;
-    }
-
+    var motive= salesContract.designMotive ? salesContract.designMotive.name : "";
+    var pieceLength=salesContract.pieceLength ? salesContract.pieceLength : "";
 
     if(salesContract.buyer.type.toLowerCase()=="export"||salesContract.buyer.type.toLowerCase()=="ekspor"){
         moment.locale('en-EN');
@@ -192,7 +189,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:salesContract.pieceLength,
+                        text:pieceLength,
                         style: ['size10']
                     }]
         },{
@@ -382,7 +379,7 @@ module.exports = function (salesContract) {
                             style: ['size10'],
                             alignment: "justify"
                         },'\n',{
-                            text:'Placed with us, P.T. DAN LIRIS - SOLO INDONESIA, is inclusive of '+ salesContract.comission + ' sales commission' + '\n' +'each '+ uom + ' on ' +salesContract.termOfShipment+' value, payable to you upon final negotiation and clearance of ' + salesContract.termOfPayment.termOfPayment + '.',
+                            text:'Placed with us, P.T. DAN LIRIS - SOLO INDONESIA, is inclusive of '+ salesContract.comission + ' sales commission' + '\n' +'each '+ uom1 + ' on ' +salesContract.termOfShipment+' value, payable to you upon final negotiation and clearance of ' + salesContract.termOfPayment.termOfPayment + '.',
                             style: ['size10'],
                             alignment: "justify"
                         },'\n','\n',{
