@@ -158,6 +158,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 valid.color = _kanban.selectedProductionOrderDetail.colorRequest;
                 valid.construction = `${_kanban.productionOrder.material.name} / ${_kanban.productionOrder.materialConstruction.name} / ${_kanban.productionOrder.materialWidth}`;
                 valid.packingInstruction = `${_kanban.productionOrder.packingInstruction}`;
+                valid.uom = `${_kanban.productionOrder.uom.unit}`;
 
                 valid.fabricGradeTests.forEach(test => {
                     test.pointSystem = valid.pointSystem;
@@ -233,5 +234,21 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         }
         else
             return "-";
+    }
+
+    pdf(qualityControl) {
+        return new Promise((resolve, reject) => {
+            var getDefinition = require("../../../pdf/definitions/fabric-quality-control");
+            var definition = getDefinition(qualityControl);
+
+            var generatePdf = require("../../../pdf/pdf-generator");
+            generatePdf(definition)
+                .then((binary) => {
+                    resolve(binary);
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        })
     }
 };

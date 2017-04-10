@@ -313,7 +313,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             query = {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo+"T23:59")) : (new Date());
         var now = new Date();
 
         if (info.buyerId && info.buyerId != '') {
@@ -371,7 +371,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             item["Komoditas"] = weavingSalesContract.comodity ? weavingSalesContract.comodity.name : '';
             item["Jumlah Order"] = weavingSalesContract ? weavingSalesContract.orderQuantity : '';
             item["Satuan"] = weavingSalesContract.uom ? weavingSalesContract.uom.unit : '';
-            item["Toleransi"] = weavingSalesContract ? weavingSalesContract.shippingQuantityTolerance : '';
+            item["Toleransi (%)"] = weavingSalesContract ? weavingSalesContract.shippingQuantityTolerance : '';
             item["Kualitas"] = weavingSalesContract.quality ? weavingSalesContract.quality.name : '';
             item["Harga"] = weavingSalesContract ? weavingSalesContract.price : '';
             item["Satuan"] = weavingSalesContract.uom ? weavingSalesContract.uom.unit : '';
@@ -379,7 +379,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             item["Syarat Pembayaran"] = weavingSalesContract.termOfPayment ? weavingSalesContract.termOfPayment.termOfPayment : '';
             item["Pembayaran ke Rekening"] = weavingSalesContract.accountBank ? weavingSalesContract.accountBank.accountName + "-" + weavingSalesContract.accountBank.bankName + "-" + weavingSalesContract.accountBank.accountNumber + "-" + weavingSalesContract.accountBank.currency.code : '';
             item["Jadwal Pengiriman"] = weavingSalesContract ? moment(new Date(weavingSalesContract.deliverySchedule)).format(dateFormat) : '';
-            item["Agen"] = weavingSalesContract.agent ? weavingSalesContract.agent.code + "-" + weavingSalesContract.agent.name : '';
+            item["Agen"] = weavingSalesContract.agent ? weavingSalesContract.agent.name : '';
             item["Komisi"] = weavingSalesContract ? weavingSalesContract.comission : '';
 
             xls.data.push(item);
@@ -394,7 +394,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
         xls.options["Komoditas"] = "string";
         xls.options["Jumlah Order"] = "number";
         xls.options["Satuan"] = "string";
-        xls.options["Toleransi"] = "number";
+        xls.options["Toleransi (%)"] = "number";
         xls.options["Kualitas"] = "string";
         xls.options["Harga"] = "number";
         xls.options["Mata Uang"] = "string";
