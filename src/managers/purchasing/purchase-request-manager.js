@@ -256,7 +256,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             })
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
 
             this.getSingleById(id)
@@ -265,7 +265,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     var definition = getDefinition(purchaseRequest);
 
                     var generatePdf = require("../../pdf/pdf-generator");
-                    generatePdf(definition)
+                    generatePdf(definition, offset)
                         .then(binary => {
                             resolve(binary);
                         })
