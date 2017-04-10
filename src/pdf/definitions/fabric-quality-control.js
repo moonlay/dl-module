@@ -6,8 +6,23 @@ module.exports = function (qualityControl) {
 
     var iso = "Nomor ISO";
 
+    var locale = global.config.locale;
+
     var moment = require("moment");
     moment.locale(locale.name);
+
+    var shiftIm = qualityControl.shiftIm ? qualityControl.shiftIm : "";
+    var operatorIm = qualityControl.operatorIm ? qualityControl.operatorIm : "";
+    var machineNoIm = qualityControl.machineNoIm ? qualityControl.machineNoIm : "";
+    var cartNo = qualityControl.cartNo ? qualityControl.cartNo : "";
+    var productionOrderNo = qualityControl.productionOrderNo ? qualityControl.productionOrderNo : "";
+    var productionOrderType = qualityControl.productionOrderType ? qualityControl.productionOrderType : "";
+    var construction = qualityControl.construction ? qualityControl.construction : "";
+    var buyer = qualityControl.buyer ? qualityControl.buyer : "";
+    var color = qualityControl.color ? qualityControl.color : "";
+    var orderQuantity = qualityControl.orderQuantity ? qualityControl.orderQuantity : "";
+    var packingInstruction = qualityControl.packingInstruction ? qualityControl.packingInstruction : "";
+    var uom = qualityControl.uom ? qualityControl.uom : "";
 
     var header = [{
         columns: [{
@@ -38,7 +53,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${moment(qualityControl.dateIm).format("MMMM DD, YYYY")}`,
+            text: `${moment(qualityControl.dateIm).format("DD MMMM YYYY")}`,
             style: ["size09"]
         }]
     },
@@ -55,7 +70,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.shiftIm}`,
+            text: `${shiftIm}`,
             style: ["size09"]
         }]
     },
@@ -72,7 +87,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.operatorIm}`,
+            text: `${operatorIm}`,
             style: ["size09"]
         }]
     },
@@ -89,7 +104,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.machineNoIm}`,
+            text: `${machineNoIm}`,
             style: ["size09"]
         }]
     },
@@ -106,7 +121,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.cartNo}`,
+            text: `${cartNo}`,
             style: ["size09"]
         }]
     },
@@ -123,7 +138,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.productionOrderNo}`,
+            text: `${productionOrderNo}`,
             style: ["size09"]
         }]
     },
@@ -140,7 +155,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.productionOrderType}`,
+            text: `${productionOrderType}`,
             style: ["size09"]
         }]
     },
@@ -157,7 +172,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.construction}`,
+            text: `${construction}`,
             style: ["size09"]
         }]
     },
@@ -174,7 +189,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.buyer}`,
+            text: `${buyer}`,
             style: ["size09"]
         }]
     },
@@ -191,7 +206,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.color}`,
+            text: `${color}`,
             style: ["size09"]
         }]
     },
@@ -208,7 +223,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.orderQuantity} ${qualityControl.uom}`,
+            text: `${orderQuantity} ${uom}`,
             style: ["size09"]
         }]
     },
@@ -225,7 +240,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${qualityControl.packingInstruction}`,
+            text: `${packingInstruction}`,
             style: ["size09"]
         }]
     }];
@@ -266,34 +281,34 @@ module.exports = function (qualityControl) {
             alignment: "left"
         },
         {
-            text: `${item.initLength}`,
+            text: `${item.initLength} YDS`,
             style: ["size08"],
-            alignment: left
+            alignment: "left"
         },
         {
-            text: `${item.width}`,
+            text: `${item.width} YDS`,
             style: ["size08"],
-            alignment: left
+            alignment: "left"
         },
         {
-            text: `${item.avalLength}`,
+            text: `${item.avalLength} YDS`,
             style: ["size08"],
-            alignment: left
+            alignment: "left"
         },
         {
-            text: `${item.sampleLength}`,
+            text: `${item.sampleLength} YDS`,
             style: ["size08"],
-            alignment: left
+            alignment: "left"
         },
         {
-            text: `${item.score}`,
+            text: `${item.finalScore}`,
             style: ["size08"],
-            alignment: left
+            alignment: "left"
         },
         {
             text: `${item.grade}`,
             style: ["size08"],
-            alignment: left
+            alignment: "left"
         }]
     });
 
@@ -334,11 +349,35 @@ module.exports = function (qualityControl) {
         }, "", ""]
     ];
 
+    var tfoot2 = [
+        [{
+            text: "ADMIN QC",
+            bold: true,
+            fontSize: 8,
+            color: 'black',
+            alignment: 'center'
+        },
+        {
+            text: "KABAG QC",
+            bold: true,
+            fontSize: 8,
+            color: 'black',
+            alignment: 'center'
+        },
+        {
+            text: "KASUBSIE QC",
+            bold: true,
+            fontSize: 8,
+            color: 'black',
+            alignment: 'center'
+        }]
+    ];
+
     var table2 = [{
         table: {
-            widths: ["33.3%", "33.3%", "33.4%"],
+            widths: ["33%", "33%", "34%"],
             headerRows: 1,
-            body: [].concat([thead], tbody, tfoot)
+            body: [].concat([thead2], tbody2, tfoot2)
         }
     }];
 
@@ -346,7 +385,7 @@ module.exports = function (qualityControl) {
         pageSize: 'A4',
         pageOrientation: 'portrait',
         pageMargins: [40, 130, 40, 40],
-        content: [].concat(header, body, table, table2),
+        content: [].concat(header, body, "\n", "\n", table, "\n", "\n", table2),
         styles: {
             size06: {
                 fontSize: 6
