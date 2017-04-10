@@ -38,33 +38,33 @@ it('#01. should error when create with empty data ', function (done) {
         });
 });
 
-it('#02. should error when create new data with deliverySchedule less than today', function (done) {
-    WeavingSalesContractDataUtil.getNewData()
-        .then(me => {
-            var dateYesterday = new Date().setDate(new Date().getDate() -1);
+// it('#02. should error when create new data with deliverySchedule less than today', function (done) {
+//     WeavingSalesContractDataUtil.getNewData()
+//         .then(me => {
+//             var dateYesterday = new Date().setDate(new Date().getDate() -1);
             
-            me.deliverySchedule = moment(dateYesterday).format('YYYY-MM-DD');
+//             me.deliverySchedule = moment(dateYesterday).format('YYYY-MM-DD');
 
-            weavingSalesContractManager.create(me)
-                .then(id => {
-                    done("should error when create new data with deliverySchedule less than today");
-                })
-                .catch(e => {
-                    try {
-                        e.errors.should.have.property('deliverySchedule');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+//             weavingSalesContractManager.create(me)
+//                 .then(id => {
+//                     done("should error when create new data with deliverySchedule less than today");
+//                 })
+//                 .catch(e => {
+//                     try {
+//                         e.errors.should.have.property('deliverySchedule');
+//                         done();
+//                     }
+//                     catch (ex) {
+//                         done(ex);
+//                     }
+//                 });
+//         })
+//         .catch(e => {
+//             done(e);
+//         });
+// });
 
-it('#03. should error when create new data with shippingQuantityTolerance more than 100', function (done) {
+it('#02. should error when create new data with shippingQuantityTolerance more than 100', function (done) {
     WeavingSalesContractDataUtil.getNewData()
         .then(sc => {
 
@@ -89,7 +89,7 @@ it('#03. should error when create new data with shippingQuantityTolerance more t
         });
 });
 
-it('#04. should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial', function (done) {
+it('#03. should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial', function (done) {
     WeavingSalesContractDataUtil.getNewData()
         .then(sc => {
 

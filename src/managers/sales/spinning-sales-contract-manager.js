@@ -146,14 +146,14 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                     errors["deliverySchedule"] = i18n.__("SpinningSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("SpinningSalesContract.deliverySchedule._:DeliverySchedule")); //"deliverySchedule tidak boleh kosong";
                 }
-                else {
-                    valid.deliverySchedule = new Date(valid.deliverySchedule);
-                    var today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    if (today > valid.deliverySchedule) {
-                        errors["deliverySchedule"] = i18n.__("SpinningSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("SpinningSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
-                    }
-                }
+                // else {
+                //     valid.deliverySchedule = new Date(valid.deliverySchedule);
+                //     var today = new Date();
+                //     today.setHours(0, 0, 0, 0);
+                //     if (today > valid.deliverySchedule) {
+                //         errors["deliverySchedule"] = i18n.__("SpinningSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("SpinningSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
+                //     }
+                // }
 
 
                 if (_buyer) {
