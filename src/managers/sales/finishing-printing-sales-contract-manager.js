@@ -154,14 +154,9 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 if(!_quality){
                     errors["quality"]=i18n.__("FinishingPrintingSalesContract.quality.isRequired:%s is not exsist", i18n.__("FinishingPrintingSalesContract.quality._:Quality")); //"quality tidak boleh kosong";
                 }
-                else if(!valid.qualityId){
-                    errors["quality"]=i18n.__("FinishingPrintingSalesContract.quality.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.quality._:Quality")); //"quality tidak boleh kosong";
-                }
 
                 if (!_material)
                     errors["material"] = i18n.__("FinishingPrintingSalesContract.material.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.material._:Material")); //"material tidak boleh kosong";
-                else if (!valid.materialId)
-                    errors["material"] = i18n.__("FinishingPrintingSalesContract.material.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.material._:Material")); //"material tidak boleh kosong";
                 
                 if(!valid.materialWidth||valid.materialWidth===''){
                     errors["materialWidth"] = i18n.__("FinishingPrintingSalesContract.materialWidth.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.materialWidth._:MaterialWidth")); //"lebar material tidak boleh kosong";
@@ -217,14 +212,14 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                      errors["deliverySchedule"] = i18n.__("FinishingPrintingSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.deliverySchedule._:DeliverySchedule")); //"deliverySchedule tidak boleh kosong";
                 }
-                else{
-                    valid.deliverySchedule=new Date(valid.deliverySchedule);
-                    var today=new Date();
-                    today.setHours(0,0,0,0);
-                    if(today>valid.deliverySchedule){
-                        errors["deliverySchedule"] = i18n.__("FinishingPrintingSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("FinishingPrintingSalesContract.deliverySchedule._:DeliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
-                    }
-                }
+                // else{
+                //     valid.deliverySchedule=new Date(valid.deliverySchedule);
+                //     var today=new Date();
+                //     today.setHours(0,0,0,0);
+                //     if(today>valid.deliverySchedule){
+                //         errors["deliverySchedule"] = i18n.__("FinishingPrintingSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("FinishingPrintingSalesContract.deliverySchedule._:DeliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
+                //     }
+                // }
                 valid.details = valid.details || [];
                 if (valid.details && valid.details.length <= 0) {
                     errors["details"] = i18n.__("FinishingPrintingSalesContract.details.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.details._:Details")); //"Harus ada minimal 1 detail";
