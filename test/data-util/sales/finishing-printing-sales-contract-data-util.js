@@ -13,10 +13,11 @@ var yarnMaterial = require('../master/yarn-material-data-util');
 var materialConstruction = require('../master/material-construction-data-util');
 var bankAccount = require('../master/account-bank-data-util');
 var termOfPayment = require('../master/term-of-payment-data-util');
+var motive = require('../master/design-motive-data-util');
 
 class FinishingPrintingSalesContractDataUtil {
     getNewData() {
-        return Promise.all([uom.getTestData(), buyer.getTestData(), quality.getTestData(), processType.getTestData(), material.getTestData(), comodity.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), bankAccount.getTestData(),termOfPayment.getTestData()])
+        return Promise.all([uom.getTestData(), buyer.getTestData(), quality.getTestData(), processType.getTestData(), material.getTestData(), comodity.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), bankAccount.getTestData(),termOfPayment.getTestData(),motive.getTestData()])
             .then((results) => {
                 var _uom = results[0];
                 var _buyer = results[1];
@@ -29,6 +30,7 @@ class FinishingPrintingSalesContractDataUtil {
                 var _bank=results[8];
                 var _agent=results[1];
                 var _payment=results[9];
+                var _motive=results[10];
 
                 var data = {
                     
@@ -59,6 +61,8 @@ class FinishingPrintingSalesContractDataUtil {
                     orderQuantity:30,
                     shippingQuantityTolerance:5,
                     materialWidth:'Width',
+                    designMotive:_motive,
+                    designMotiveId:_motive._id,
 
                     paymentMethod:`Telegraphic Transfer (TT)`,
                     rollLength:`length`,
