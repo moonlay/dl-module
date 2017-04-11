@@ -4,6 +4,7 @@ var validatorPurchasing = require('dl-models').validator.purchasing;
 var UnitPaymentOrderManager = require("../../../src/managers/purchasing/unit-payment-order-manager");
 var unitPaymentOrderManager = null;
 var unitPaymentOrder = require("../../data-util/purchasing/unit-payment-order-data-util");
+var unitReceiptNote = require('../../data-util/purchasing/unit-receipt-note-data-util');
 
 require("should");
 
@@ -48,9 +49,9 @@ it('#01. should success when create new data', function (done) {
 });
 
 
-it('#02. should success when update new blank data', function (done) {
+it('#02. should success when update data (remove item)', function (done) {
     delete createdData.items[0];
-    unitPaymentOrderManager.update({createdData})
+    unitPaymentOrderManager.update({ createdData })
         .then((id) => {
             id.should.be.Object();
             done();
@@ -63,4 +64,23 @@ it('#02. should success when update new blank data', function (done) {
                 done(ex);
             }
         })
+});
+
+it('#03. should success when update data (add item)', function (done) {
+    unitReceiptNote.getNewData()
+        .then((data) => {
+            var _item = {
+                unitReceiptNoteId: data._id,
+                unitReceiptNote: data
+            }
+            createdData.items.push(_item);
+            unitPaymentOrderManager.update({ createdData })
+        })
+        .then((id) => {
+            id.should.be.Object();
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
 });
