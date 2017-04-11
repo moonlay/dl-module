@@ -254,8 +254,9 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
 
     _beforeUpdate(unitPaymentOrder) {
         return this.getSingleById(unitPaymentOrder._id)
-            .then((oldUnitPaymentOrder) => {
-                return this.mergeUnitPaymentOrder(unitPaymentOrder, oldUnitPaymentOrder);
+            .then((oldUnitPaymentOrder) => this.mergeUnitPaymentOrder(unitPaymentOrder, oldUnitPaymentOrder))
+            .then(() => {
+                return Promise.resolve(unitPaymentOrder)
             })
 
     }
@@ -311,9 +312,20 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                 _newRealizations.push(newRealization);
                             }
                         }
-                        return _oldRealizations.length > 0 ? this.updatePurchaseOrderDeleteUnitPaymentOrder(_oldRealizations) : Promise.resolve(null)
+                        var oldJobs = [];
+                        var newJobs=[];
+                        if(_oldRealizations.length > 0 ){
+                                oldJobs.push(this.updatePurchaseOrderDeleteUnitPaymentOrder(_oldRealizations));
+                                oldJobs.push(this.updateUnitReceiptNoteDeleteUnitPaymentOrder(_oldRealizations));
+                        }
+
+                        if(_newRealizations.length > 0 ){
+                                newJobs.push(this.updatePurchaseOrder(_newRealizations));
+                                newJobs.push(this.updateUnitReceiptNote(_newRealizations));
+                        }
+                        return _oldRealizations.length > 0 ? Promise.all(oldJobs) : Promise.resolve(null)
                             .then((res) => {
-                                return _newRealizations.length > 0 ? this.updatePurchaseOrder(_newRealizations) : Promise.resolve(null)
+                                return _newRealizations.length > 0 ?  Promise.all(newJobs) : Promise.resolve(null)
                             })
                             .then((res) => { return Promise.resolve(newUnitPaymentOrder) });
                     })
@@ -557,8 +569,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                             return prev && curr
                         }, false);
 
-                    purchaseOrder.status = isPaid && purchaseOrder.isClosed ? poStatusEnum.PAYMENT : (purchaseOrder.isClosed ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING);
-                    purchaseOrder.status = purchaseOrder.status.value === 7 && fulfillment.unitReceiptNoteDeliveredQuantity < fulfillment.deliveryOrderDeliveredQuantity ? poStatusEnum.RECEIVING : poStatusEnum.RECEIVED;
+                    purchaseOrder.status = isPaid ? poStatusEnum.PAYMENT : (purchaseOrder.isClosed ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING);
 
                     return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 })
