@@ -279,17 +279,17 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             });
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
 
             this.getSingleById(id)
                 .then(salesContract => {
 
                     var getDefinition = require("../../pdf/definitions/weaving-sales-contract");
-                    var definition = getDefinition(salesContract);
+                    var definition = getDefinition(salesContract, offset);
 
                     var generatePdf = require("../../pdf/pdf-generator");
-                    generatePdf(definition)
+                    generatePdf(definition, offset)
                         .then(binary => {
                             resolve(binary);
                         })
@@ -313,7 +313,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             query = {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo+"T23:59")) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
         var now = new Date();
 
         if (info.buyerId && info.buyerId != '') {
