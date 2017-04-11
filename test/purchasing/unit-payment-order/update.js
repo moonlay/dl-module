@@ -51,7 +51,7 @@ it('#01. should success when create new data', function (done) {
 
 it('#02. should success when update data (remove item)', function (done) {
     delete createdData.items[0];
-    unitPaymentOrderManager.update({ createdData })
+    unitPaymentOrderManager.update(createdData)
         .then((id) => {
             id.should.be.Object();
             done();
@@ -74,13 +74,18 @@ it('#03. should success when update data (add item)', function (done) {
                 unitReceiptNote: data
             }
             createdData.items.push(_item);
-            unitPaymentOrderManager.update({ createdData })
+            unitPaymentOrderManager.update(createdData)
         })
         .then((id) => {
             id.should.be.Object();
             done();
         })
-        .catch((e) => {
-            done(e);
-        });
+        .catch(e => {
+            try {
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        })
 });
