@@ -154,10 +154,6 @@ module.exports = class KanbanManager extends BaseManager {
 
                         if (_instruction) {
                             valid.instructionId = _instruction._id;
-                            valid.instruction._id = _instruction._id; 
-                            for(var a of valid.instruction.steps){ 
-                                a._id = new ObjectId(a._id); 
-                            }
                         }
                         if (_productionOrder) {
                             valid.productionOrderId = _productionOrder._id;
