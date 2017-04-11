@@ -31,6 +31,7 @@ describe('#dl-module', function (done) {
     test('@ETL/DIM-DIVISION-AG', './etl/dim-division-ag');
     test('@ETL/DIM-SUPPLIER-AG', './etl/dim-supplier-ag');
     test('@ETL/FACT-PEMBELIAN-AG', './etl/fact-pembelian-ag');
+    test('@ETL/FACT-TOTAL-HUTANG-AG', './etl/fact-total-hutang-ag');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
