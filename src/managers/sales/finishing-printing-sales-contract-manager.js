@@ -220,15 +220,6 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 //         errors["deliverySchedule"] = i18n.__("FinishingPrintingSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("FinishingPrintingSalesContract.deliverySchedule._:DeliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
                 //     }
                 // }
-
-                if(valid.pointSystem){
-                    if(valid.pointSystem===4){
-                        if(!valid.pointLimit || valid.pointLimit<=0){
-                            errors["pointLimit"] = i18n.__("FinishingPrintingSalesContract.pointLimit.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.pointLimit._:PointLimit")); //"pointLimit tidak boleh kosong";
-                        }
-                    }
-                }
-
                 valid.details = valid.details || [];
                 if (valid.details && valid.details.length <= 0) {
                     errors["details"] = i18n.__("FinishingPrintingSalesContract.details.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.details._:Details")); //"Harus ada minimal 1 detail";
