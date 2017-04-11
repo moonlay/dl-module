@@ -184,3 +184,28 @@ it('#05. it should error when create new data with export buyer with agent witho
             done(e);
         });
 });
+
+it('#06. it should error when create new data with poitSystem=4 and pointLimit=0', function (done) {
+    FinishingPrintingSalesContractDataUtil.getNewData()
+        .then(sc => {
+            sc.pointSystem=4;
+            sc.pointLimit=0;
+
+            finishingPrintingSalesContractManager.create(sc)
+                .then(id => {
+                    done("should error when create new data with poitSystem=4 and pointLimit=0");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('pointLimit');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
