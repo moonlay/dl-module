@@ -54,6 +54,7 @@ module.exports = function (salesContract) {
     }
     
     var detail="";
+    var newDetail=[];
     var detailprice="";
     var amount=salesContract.amount;
     for(var i of details){
@@ -69,10 +70,11 @@ module.exports = function (salesContract) {
         else{
             ppn='TANPA PPN';
         }
-        detail+= i.color + " " + i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom1 +"\n";
+        newDetail.push( i.color + " " + i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom1 + ' ');
         detailprice+= i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uomLocal + ' ' + ppn + ' ' + '( ' + i.color + ' )' + "\n";
        
     }
+    detail=newDetail.toString();
     var comoDesc="";
     if(salesContract.comodityDescription!=""){
         comoDesc='\n'+salesContract.comodityDescription;
@@ -205,7 +207,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:detail +salesContract.termOfShipment +'\n' +salesContract.termOfPayment.termOfPayment,
+                        text:detail+'\n' +salesContract.termOfShipment +'\n' +salesContract.termOfPayment.termOfPayment,
                         style: ['size10']
                     }]
         },{
