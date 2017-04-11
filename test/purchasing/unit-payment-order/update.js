@@ -36,7 +36,7 @@ it('#01. should success when create new data', function (done) {
 
 var createdData;
 it('#01. should success when create new data', function (done) {
-    unitPaymentOrderManager.getSingleById(id)
+    unitPaymentOrderManager.getSingleById(createdId)
         .then((data) => {
             data.should.be.Object();
             createdData = data;
