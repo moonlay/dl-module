@@ -256,13 +256,13 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             })
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
 
             this.getSingleById(id)
                 .then(purchaseRequest => {
                     var getDefinition = require("../../pdf/definitions/purchase-request");
-                    var definition = getDefinition(purchaseRequest);
+                    var definition = getDefinition(purchaseRequest, offset);
 
                     var generatePdf = require("../../pdf/pdf-generator");
                     generatePdf(definition)
