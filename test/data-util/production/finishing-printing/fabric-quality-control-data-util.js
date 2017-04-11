@@ -30,7 +30,10 @@ class FabricQualityControlDataUtil {
                     shiftIm: "UT Shift",
                     operatorIm: "UT Operator",
                     machineNoIm: "UT Machine No",
-                    fabricGradeTests: [gradeTest]
+                    fabricGradeTests: [gradeTest],
+                    kanbanCode: kanban.code,
+                    productionOrderNo: kanban.productionOrder.orderNo,
+                    productionOrderType: kanban.productionOrder.orderType.name
                 };
 
                 return data;
