@@ -110,34 +110,34 @@ module.exports = class KanbanManager extends BaseManager {
 
                         if (!valid.cart)
                             errors["cart"] = i18n.__("Kanban.cart.isRequired:%s is required", i18n.__("Kanban.cart._:Cart")); //"Cart harus diisi";                        
-                        else{
-                            var cartCurrentQty = 0;
-                            if (_kanbanListByColor[0] && _kanbanListByColor[0].data.length > 0){
-                                for (var item of _kanbanListByColor[0].data){
-                                    cartCurrentQty += Number(item.cart.qty);
-                                }
-                            }
-                            if(_productionOrder){
-                                var productionOrderQty = 0;
-                                var tolerance = 0;
-                                if(_productionOrder.shippingQuantityTolerance !== 0 && _uom){
-                                    if(_productionOrder.uomId.toString() === _uom._id.toString())
-                                        tolerance = (_productionOrder.shippingQuantityTolerance / 100) * _productionOrderDetail.quantity;
-                                    else
-                                        tolerance = (_productionOrder.shippingQuantityTolerance / 100) * (_productionOrderDetail.quantity * 0.9144);
-                                }
-                                if(_uom){
-                                    if(_productionOrder.uomId.toString() === _uom._id.toString())
-                                        productionOrderQty = _productionOrderDetail.quantity + tolerance;
-                                    else
-                                        productionOrderQty = (_productionOrderDetail.quantity * 0.9144) + tolerance;
-                                }else
-                                    productionOrderQty = _productionOrderDetail.quantity + tolerance;
-                                cartCurrentQty += Number(valid.cart.qty);
-                                if (cartCurrentQty > productionOrderQty)
-                                    errors["cart"] = i18n.__("Kanban.cart.qtyOverlimit:%s overlimit", i18n.__("Kanban.cart._:Total Qty")); //"Total Qty in cart over limit";
-                            }
-                        }
+                        // else{
+                        //     var cartCurrentQty = 0;
+                        //     if (_kanbanListByColor[0] && _kanbanListByColor[0].data.length > 0){
+                        //         for (var item of _kanbanListByColor[0].data){
+                        //             cartCurrentQty += Number(item.cart.qty);
+                        //         }
+                        //     }
+                        //     if(_productionOrder){
+                        //         var productionOrderQty = 0;
+                        //         var tolerance = 0;
+                        //         if(_productionOrder.shippingQuantityTolerance !== 0 && _uom){
+                        //             if(_productionOrder.uomId.toString() === _uom._id.toString())
+                        //                 tolerance = (_productionOrder.shippingQuantityTolerance / 100) * _productionOrderDetail.quantity;
+                        //             else
+                        //                 tolerance = (_productionOrder.shippingQuantityTolerance / 100) * (_productionOrderDetail.quantity * 0.9144);
+                        //         }
+                        //         if(_uom){
+                        //             if(_productionOrder.uomId.toString() === _uom._id.toString())
+                        //                 productionOrderQty = _productionOrderDetail.quantity + tolerance;
+                        //             else
+                        //                 productionOrderQty = (_productionOrderDetail.quantity * 0.9144) + tolerance;
+                        //         }else
+                        //             productionOrderQty = _productionOrderDetail.quantity + tolerance;
+                        //         cartCurrentQty += Number(valid.cart.qty);
+                        //         if (cartCurrentQty > productionOrderQty)
+                        //             errors["cart"] = i18n.__("Kanban.cart.qtyOverlimit:%s overlimit", i18n.__("Kanban.cart._:Total Qty")); //"Total Qty in cart over limit";
+                        //     }
+                        // }
                         
                         if (!valid.grade || valid.grade == '')
                             errors["grade"] = i18n.__("Kanban.grade.isRequired:%s is required", i18n.__("Kanban.grade._:Grade")); //"Grade harus diisi";   
