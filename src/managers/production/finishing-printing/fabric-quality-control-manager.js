@@ -19,6 +19,7 @@ var FabricTestCriterionModel = Models.production.finishingPrinting.qualityContro
 
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
+var moment = require("moment");
 
 module.exports = class FabricQualityControlManager extends BaseManager {
     constructor(db, user) {
@@ -32,8 +33,8 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -201,11 +202,11 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             C: 5,
             D: 10
         } : {
-            A: 1,
-            B: 2,
-            C: 3,
-            D: 4
-        };
+                A: 1,
+                B: 2,
+                C: 3,
+                D: 4
+            };
         fabricGradeTest.criteria = fabricGradeTest.criteria || [];
         var score = fabricGradeTest.criteria.reduce((p, c, i) => {
             return p + ((c.score.A * multiplier.A) + (c.score.B * multiplier.B) + (c.score.C * multiplier.C) + (c.score.D * multiplier.D))
@@ -250,5 +251,133 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                     reject(e);
                 });
         })
+    }
+
+    getReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        };
+        var kanbanCodeFilter = {};
+        var productionOrderNoFilter = {};
+        var productionOrderTypeFilter = {};
+        var shiftImFilter = {};
+        var dateFromFilter = {};
+        var dateToFilter = {};
+        var query = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var now = new Date();
+
+        if (info.kanbanCode && info.kanbanCode !== '') {
+            kanbanCodeFilter = { 'kanbanCode': info.kanbanCode };
+        }
+
+        if (info.productionOrderNo && info.productionOrderNo != '') {
+            productionOrderNoFilter = { 'productionOrderNo': info.productionOrderNo };
+        }
+
+        if (info.productionOrderType && info.productionOrderType != '') {
+            productionOrderTypeFilter = { 'productionOrderType': info.productionOrderType };
+        }
+
+        if (info.shiftIm && info.shiftIm != '') {
+            shiftImFilter = { 'shiftIm': info.shiftIm };
+        }
+
+        var filterDate = {
+            "_createdDate": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+        query = { '$and': [_defaultFilter, kanbanCodeFilter, productionOrderNoFilter, productionOrderTypeFilter, shiftImFilter, filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this.collection
+                    .where(query)
+                    .execute();
+            });
+    }
+
+    getXls(results, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = "";
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var result of results.data) {
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["Nomor Kanban"] = result.kanbanCode ? result.kanbanCode : "";
+            item["Nomor Kereta"] = result.cartNo ? result.cartNo : "";
+            item["Jenis Order"] = result.productionOrderType ? result.productionOrderType : "";
+            item["Nomor Order"] = result.productionOrderNo ? result.productionOrderNo : "";
+            item["Tanggal IM"] = result.dateIm ? moment(result.dateIm).format(dateFormat) : "";
+            item["Shift"] = result.shiftIm ? result.shiftIm : "";
+            item["Operator IM"] = result.operatorIm ? result.operatorIm : "";
+            item["No. Mesin IM"] = result.machineNoIm ? result.machineNoIm : "";
+            item["Konstruksi"] = result.construction ? result.construction : "";
+            item["Buyer"] = result.buyer ? result.buyer : "";
+            item["Warna"] = result.color ? result.color : "";
+            item["Jumlah Order (meter)"] = result.orderQuantity ? result.orderQuantity : 0;
+            item["Packing Instruction"] = result.packingInstruction ? result.packingInstruction : "";
+
+            for (var fabricGradeTest of result.fabricGradeTests) {
+                item["Nomor PCS"] = fabricGradeTest.pcsNo ? fabricGradeTest.pcsNo : "";
+                item["Panjang PCS (meter)"] = fabricGradeTest.initLength;
+                item["Lebar PCS (meter)"] = fabricGradeTest.width;
+                item["Nilai"] = fabricGradeTest.finalScore;
+                item["Grade"] = fabricGradeTest.grade ? fabricGradeTest.grade : "";
+                item["Aval (meter)"] = fabricGradeTest.avalLength;
+                item["Sampel (meter)"] = fabricGradeTest.sampleLength;
+
+                xls.options["Nomor PCS"] = "string";
+                xls.options["Panjang PCS (meter)"] = "number";
+                xls.options["Lebar PCS (meter)"] = "number";
+                xls.options["Nilai"] = "number";
+                xls.options["Grade"] = "string";
+                xls.options["Aval (meter)"] = "number";
+                xls.options["Sampel (meter)"] = "number";
+            }
+
+            xls.data.push(item);
+
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Nomor Kanban"] = "string";
+        xls.options["Nomor Kereta"] = "string";
+        xls.options["Jenis Order"] = "string";
+        xls.options["Nomor Order"] = "string";
+        xls.options["Tanggal IM"] = "string";
+        xls.options["Shift"] = "string";
+        xls.options["Operator IM"] = "string";
+        xls.options["No. Mesin IM"] = "string";
+        xls.options["Konstruksi"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Warna"] = "string";
+        xls.options["Jumlah Order (meter)"] = "string";
+        xls.options["Packing Instruction"] = "string";
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Laporan Pemeriksaan Kain ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Laporan Pemeriksaan Kain ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Laporan Pemeriksaan Kain ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Laporan Pemeriksaan Kain.xlsx`;
+
+        return Promise.resolve(xls);
     }
 };
