@@ -141,62 +141,62 @@ it('#04. should error when create new data with non existent productionOrder, in
         });
 });
 
-it('#05. should error when create new data with overlimit qty and uom non "MTR"', function (done) {
-    KanbanDataUtil.getNewData()
-        .then(kanban => {
+// it('#05. should error when create new data with overlimit qty and uom non "MTR"', function (done) {
+//     KanbanDataUtil.getNewData()
+//         .then(kanban => {
 
-            kanban.cart.qty = kanban.selectedProductionOrderDetail.quantity + 5;
+//             kanban.cart.qty = kanban.selectedProductionOrderDetail.quantity + 5;
 
-            kanbanManager.create(kanban)
-                .then(id => {
-                    done('should error when create new data with overlimit qty and uom non "MTR"');
-                })
-                .catch(e => {
-                    try {
-                        e.errors.should.have.property('cart');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+//             kanbanManager.create(kanban)
+//                 .then(id => {
+//                     done('should error when create new data with overlimit qty and uom non "MTR"');
+//                 })
+//                 .catch(e => {
+//                     try {
+//                         e.errors.should.have.property('cart');
+//                         done();
+//                     }
+//                     catch (ex) {
+//                         done(ex);
+//                     }
+//                 });
+//         })
+//         .catch(e => {
+//             done(e);
+//         });
+// });
 
-it('#06. should error when create new data with overlimit qty and "MTR" uom', function (done) {
-    KanbanDataUtil.getNewData()
-        .then(kanban => {
-            kanban.productionOrder = productionOrder;
-            kanban.productionOrderId = productionOrder._id;
-            var detail = {};
-            for(var a of productionOrder.details){
-                detail = a;
-            }
-            kanban.selectedProductionOrderDetail = detail;
-            kanban.cart.qty = kanban.selectedProductionOrderDetail.quantity + 5;
-            kanbanManager.create(kanban)
-                .then(id => {
-                    done('should error when create new data with overlimit qty and "MTR" uom');
-                })
-                .catch(e => {
-                    try {
-                        e.errors.should.have.property('cart');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+// it('#06. should error when create new data with overlimit qty and "MTR" uom', function (done) {
+//     KanbanDataUtil.getNewData()
+//         .then(kanban => {
+//             kanban.productionOrder = productionOrder;
+//             kanban.productionOrderId = productionOrder._id;
+//             var detail = {};
+//             for(var a of productionOrder.details){
+//                 detail = a;
+//             }
+//             kanban.selectedProductionOrderDetail = detail;
+//             kanban.cart.qty = kanban.selectedProductionOrderDetail.quantity + 5;
+//             kanbanManager.create(kanban)
+//                 .then(id => {
+//                     done('should error when create new data with overlimit qty and "MTR" uom');
+//                 })
+//                 .catch(e => {
+//                     try {
+//                         e.errors.should.have.property('cart');
+//                         done();
+//                     }
+//                     catch (ex) {
+//                         done(ex);
+//                     }
+//                 });
+//         })
+//         .catch(e => {
+//             done(e);
+//         });
+// });
 
-it('#07. should error when set isComplete true with incomplete steps', function (done) {
+it('#05. should error when set isComplete true with incomplete steps', function (done) {
     KanbanDataUtil.getNewData()
         .then(kanban => {
             kanbanManager.create(kanban)
