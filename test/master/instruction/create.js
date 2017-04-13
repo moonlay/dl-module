@@ -236,7 +236,7 @@ before('#00. connect db', function (done) {
 it("#01. should success when create data order type with name Printing", function (done) {
     InstructionDataUtil.getNewData()
         .then(solid => {
-            solid.steps[0].process = "";
+            solid.steps[0].process = null;
             instructionManager.create(solid)
                 .then(id => {
                     done();
