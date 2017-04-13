@@ -155,7 +155,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 valid.kanbanCode = _kanban.code;
                 valid.buyer = _kanban.productionOrder.buyer.name;
                 valid.orderQuantity = _kanban.productionOrder.orderQuantity;
-                valid.cartNo = _kanban.cart.code;
+                valid.cartNo = _kanban.cart.cartNumber;
                 valid.color = _kanban.selectedProductionOrderDetail.colorRequest;
                 valid.construction = `${_kanban.productionOrder.material.name} / ${_kanban.productionOrder.materialConstruction.name} / ${_kanban.productionOrder.materialWidth}`;
                 valid.packingInstruction = `${_kanban.productionOrder.packingInstruction}`;
@@ -286,7 +286,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         }
 
         var filterDate = {
-            "_createdDate": {
+            "dateIm": {
                 $gte: new Date(dateFrom),
                 $lte: new Date(dateTo)
             }
@@ -308,11 +308,10 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         xls.options = [];
         xls.name = "";
 
-        var index = 0;
+        var index = 1;
         var dateFormat = "DD/MM/YYYY";
 
         for (var result of results.data) {
-            index++;
             var item = {};
             item["No"] = index;
             item["Nomor Kanban"] = result.kanbanCode ? result.kanbanCode : "";
@@ -345,6 +344,8 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 xls.options["Grade"] = "string";
                 xls.options["Aval (meter)"] = "number";
                 xls.options["Sampel (meter)"] = "number";
+                index++;
+
             }
 
             xls.data.push(item);
