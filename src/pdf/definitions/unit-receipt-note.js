@@ -4,7 +4,7 @@ module.exports = function (unitReceiptNote) {
 
     var items = [].concat.apply([], unitReceiptNote.items);
 
-    var iso = "FM-PB-00-06-010";
+    var iso = "FM-AG2-00-GU-06-004";
     var number = unitReceiptNote.no;
 
     var locale = global.config.locale;
@@ -22,7 +22,7 @@ module.exports = function (unitReceiptNote) {
                     columns: [{
                         width: '*',
                         stack: [{
-                            text: 'PT DAN LIRIS',
+                            text: 'PT. AMBASSADOR GARMINDO',
                             style: ['size15', 'bold']
                         }, {
                                 text: 'BANARAN, GROGOL, SUKOHARJO',
