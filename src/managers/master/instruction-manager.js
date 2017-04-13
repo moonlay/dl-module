@@ -68,7 +68,7 @@ module.exports = class InstructionManager extends BaseManager {
                 if (!valid.name || valid.name == "")
                     errors["name"] = i18n.__("Instruction.name.isRequired:%s is required", i18n.__("Instruction.name._:Name")); // "Nama harus diisi";
                 else if (_instruction)
-                    errors["name"] = i18n.__("Instruction.name.isExists:%s with same order type, construction and material is already exists", i18n.__("Instruction.name._:Name")); //"Nama sudah ada";
+                    errors["name"] = i18n.__("Instruction.name.isExisted:%s is existed", i18n.__("Instruction.name._:Name")); //"Nama sudah ada";
                 if (!valid.steps || valid.steps.length < 1) {
                     errors["steps"] = i18n.__("Instruction.steps.isRequired:%s is required", i18n.__("Instruction.steps._:Steps")); //"minimal harus ada 1 Step";
                 }
