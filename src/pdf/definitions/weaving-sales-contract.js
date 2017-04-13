@@ -281,7 +281,7 @@ module.exports = function (salesContract, offset) {
                     }]
             }];
 
-        sign = ['\n', '\n', {
+        sign = [ '\n', {
             columns: [{
                 width: '50%',
                 stack: ['Accepted and confirmed : ', '\n\n\n\n', '(                                  )', 'Authorized signature'],
@@ -297,7 +297,7 @@ module.exports = function (salesContract, offset) {
         remark = [{
             columns: [{
                 width: '*',
-                stack: ['\n', {
+                stack: [ {
                     text: 'REMARK :',
                     style: ['size10'],
                     alignment: "left"
@@ -363,7 +363,7 @@ module.exports = function (salesContract, offset) {
                     }]
             }, '\n', '\n'];
 
-            var sign2 = ['\n', '\n', {
+            var sign2 = [ '\n', {
                 columns: [{
                     width: '50%',
                     stack: ['Accepted and confirmed : ', '\n\n\n\n', '(                                  )', 'Authorized signature'],
@@ -749,7 +749,7 @@ module.exports = function (salesContract, offset) {
     var Sc = {
         pageSize: 'A4',
         pageOrientation: 'portrait',
-        pageMargins: [40, 130, 40, 40],
+        pageMargins: [40, 110, 40, 20],
         content: [].concat(header, subheader, body, sign, remark, footer),
         styles: {
             size06: {
