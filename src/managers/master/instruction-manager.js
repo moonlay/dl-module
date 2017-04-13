@@ -73,18 +73,11 @@ module.exports = class InstructionManager extends BaseManager {
                     errors["steps"] = i18n.__("Instruction.steps.isRequired:%s is required", i18n.__("Instruction.steps._:Steps")); //"minimal harus ada 1 Step";
                 }
                 else {
-                    var itemErrors = [];
+
                     for (var step of valid.steps) {
-                        var itemError = {};
+
                         if (step.process == "" || !step.process) {
                             errors["steps"] = i18n.__("Instruction.steps.steps.isRequired:%s is required", i18n.__("Instruction.steps.steps._:Steps")); //"minimal harus ada 1 Step";
-                        }
-                        itemErrors.push(itemError);
-                    }
-                    for (var itemError of itemErrors) {
-                        if (Object.getOwnPropertyNames(itemError).length > 0) {
-                            errors.steps = itemErrors;
-                            break;
                         }
                     }
                 }
