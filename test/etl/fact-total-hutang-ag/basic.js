@@ -1,8 +1,8 @@
 var helper = require("../../helper");
-var Manager = require("../../../src/etl/fact-daily-operations-etl-manager");
+var Manager = require("../../../src/etl/fact-total-hutang-etl-ag-manager");
 var instanceManager = null;
 var should = require("should");
-var sqlHelper = require("../../sql-helper");
+var sqlHelper = require("../../sql-helper")
 
 before("#00. connect db", function (done) {
     Promise.all([helper, sqlHelper])
@@ -17,61 +17,22 @@ before("#00. connect db", function (done) {
             })
                 .catch((e) => {
                     done(e);
-                })
+                });
         });
 });
 
-it("#01. should success when create etl fact-weaving-sales-contract", function (done) {
+it("#01. should success when create etl fact-total-hutang", function (done) {
     instanceManager.run()
         .then((a) => {
-            console.log(a);
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
 
-it("#02. should success when transforming data", function (done) {
-    var data = [
-        {
-            kanban: {
-                selectedProductionOrderDetail: {
-                    uom: {
-                        unit: "yds"
-                    }
-                }
-            },
-            input: 50,
-            goodOutput: 50,
-            badOutput: null
-        },
-        {
-            kanban: {
-                selectedProductionOrderDetail: {
-                    uom: {
-                        unit: "mtr"
-                    }
-                }
-            },
-            input: 50,
-            goodOutput: 50,
-            badOutput: 1
-        },
-        {
-            kanban: {
-                selectedProductionOrderDetail: {
-                    uom: {
-                        unit: "mtr"
-                    }
-                }
-            },
-            input: 50,
-            goodOutput: 49,
-            badOutput: null
-        }
-    ];
+it("#02. should success when transforming data for fact-total-hutang", function (done) {
+    var data = [{}, {}];
     instanceManager.transform(data)
         .then(() => {
             done();
@@ -110,3 +71,15 @@ it("#04. should error when insert empty data", function (done) {
             }
         });
 });
+
+it("#05. should success when joining URN to UPO", function (done) {
+    var data = [{}, {}];
+    instanceManager.joinUnitPaymentOrder(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+

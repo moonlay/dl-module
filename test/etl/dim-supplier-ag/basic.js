@@ -1,5 +1,5 @@
 var helper = require("../../helper");
-var Manager = require("../../../src/etl/fact-production-order-etl-manager");
+var Manager = require("../../../src/etl/dim-supplier-etl-ag-manager");
 var instanceManager = null;
 var should = require("should");
 var sqlHelper = require("../../sql-helper");
@@ -17,64 +17,22 @@ before("#00. connect db", function (done) {
             })
                 .catch((e) => {
                     done(e);
-                })
+                });
         });
 });
 
-it("#01. should success when create etl fact-production-order", function (done) {
+it("#01. should success when create etl for dim-supplier", function (done) {
     instanceManager.run()
-        .then((a) => {
-            console.log(a);
+        .then(() => {
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
 
-
-it("#02. should success when transforming data for fact-production-order", function (done) {
-    var data = [
-        {
-            kanban: null,
-            productionOrder: {
-                uom: {
-                    unit: "mtr"
-                },
-                orderQuantity: 1,
-                material: {
-                    name: "test"
-                },
-                materialConstruction: {
-                    name: "test"
-                },
-                yarnMaterial: {
-                    name: "test"
-                },
-                materialWidth: "test"
-            }
-        },
-        {
-            kanban: null,
-            productionOrder: {
-                uom: {
-                    unit: "yds"
-                },
-                orderQuantity: 1,
-                material: {
-                    name: "test"
-                },
-                materialConstruction: {
-                    name: "test"
-                },
-                yarnMaterial: {
-                    name: "test"
-                },
-                materialWidth: null
-            }
-        }
-    ];
+it("#02. should success when transforming data for dim-category", function(done) {
+    var data = [{}, {}];
     instanceManager.transform(data)
         .then(() => {
             done();
@@ -86,10 +44,10 @@ it("#02. should success when transforming data for fact-production-order", funct
 
 it("#03. should error when load empty data", function (done) {
     instanceManager.load({})
-        .then((id) => {
+        .then(id => {
             done("should error when create with empty data");
         })
-        .catch((e) => {
+        .catch(e => {
             try {                
                 done();
             }

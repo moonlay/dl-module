@@ -41,7 +41,7 @@ class ProductionOrderDataUtil {
                         colorType:color1,
                         colorRequest:`reddish`,
                         colorTemplate:`template1`,
-                        quantity:10,
+                        quantity:20,
                         uomId: _uom._id,
                         uom:_uom,
                     }, {
@@ -62,7 +62,7 @@ class ProductionOrderDataUtil {
                             colorType:color1,
                             colorRequest:`reddish`,
                             colorTemplate:`template1`,
-                            quantity:30,
+                            quantity:40,
                             uomId: _uom._id,
                             uom:_uom,
                         }]
@@ -85,7 +85,7 @@ class ProductionOrderDataUtil {
                     material:_material,
                     materialId:_material._id,
                     materialWidth: `40x45`,
-                    orderQuantity:30,
+                    orderQuantity:40,
                     shippingQuantityTolerance:5,
                     accountId: _account._id,
                     account:_account,

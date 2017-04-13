@@ -35,7 +35,7 @@ module.exports = class FactTotalHutang extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Total Hutang from MongoDB to Azure DWH",
+                    description: "AG Fact Total Hutang from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -47,7 +47,7 @@ module.exports = class FactTotalHutang extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Total Hutang from MongoDB to Azure DWH",
+                    description: "AG Fact Total Hutang from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -59,7 +59,7 @@ module.exports = class FactTotalHutang extends BaseManager {
 
     timestamp() {
         return this.migrationLog.find({
-            description: "Fact Total Hutang from MongoDB to Azure DWH",
+            description: "AG Fact Total Hutang from MongoDB to Azure DWH",
             status: "Successful"
         }).sort({ finish: -1 }).limit(1).toArray()
     }
@@ -73,6 +73,7 @@ module.exports = class FactTotalHutang extends BaseManager {
             },
             _updatedDate: {
                 "$gt": timestamp,
+                // "$gt": new Date(1970, 1, 1)
             }
         }).toArray()
             .then((unitReceiptNotes) => {
@@ -138,7 +139,9 @@ module.exports = class FactTotalHutang extends BaseManager {
                     total: `${unitReceiptNoteItem.pricePerDealUnit * unitReceiptNoteItem.deliveredQuantity * unitReceiptNoteItem.currencyRate}`,
                     unitReceiptNoteNo: `'${unitReceiptNote.no}'`,
                     productName: `'${unitReceiptNoteItem.product.name.replace(/'/g, '"')}'`,
-                    productCode: `'${unitReceiptNoteItem.product.code}'`
+                    productCode: `'${unitReceiptNoteItem.product.code}'`,
+                    deletedUnitRecipe:`'${unitReceiptNote._deleted}'`,
+                    deletedPaymentOrder:`'${unitPaymentOrder._deleted}'`
                 };
             });
 
@@ -178,7 +181,7 @@ module.exports = class FactTotalHutang extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `insert into dl_fact_total_hutang_temp([ID Fact Total Hutang], [Nomor Nota Intern], [Tanggal Nota Intern], [Nama Supplier], [Jenis Kategori], [Harga Sesuai Invoice], [Jumlah Sesuai Bon Unit], [Rate Yang Disepakati], [Total Harga Nota Intern], [Nama Kategori], [Nama Divisi], [Nama Unit], [nomor bon unit], [nama produk], [kode produk]) values(${count}, ${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate}, ${item.supplierName}, ${item.categoryType}, ${item.invoicePrice}, ${item.unitReceiptNoteQuantity}, ${item.purchaseOrderExternalCurrencyRate}, ${item.total}, ${item.categoryName}, ${item.divisionName}, ${item.unitName}, ${item.unitReceiptNoteNo}, ${item.productName}, ${item.productCode});\n`;
+                                var queryString = `insert into AG_fact_total_hutang_temp([ID Fact Total Hutang], [Nomor Nota Intern], [Tanggal Nota Intern], [Nama Supplier], [Jenis Kategori], [Harga Sesuai Invoice], [Jumlah Sesuai Bon Unit], [Rate Yang Disepakati], [Total Harga Nota Intern], [Nama Kategori], [Nama Divisi], [Nama Unit], [nomor bon unit], [nama produk], [kode produk],[deleted Unit Receipt Note],[deleted Unit Payment Order]) values(${count}, ${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate}, ${item.supplierName}, ${item.categoryType}, ${item.invoicePrice}, ${item.unitReceiptNoteQuantity}, ${item.purchaseOrderExternalCurrencyRate}, ${item.total}, ${item.categoryName}, ${item.divisionName}, ${item.unitName}, ${item.unitReceiptNoteNo}, ${item.productName}, ${item.productCode},${item.deletedUnitRecipe},${item.deletedPaymentOrder});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -195,7 +198,8 @@ module.exports = class FactTotalHutang extends BaseManager {
                         this.sql.multiple = true;
 
                         // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
+
+                        // var path = "C:\\Users\\aditya.henanda\\Desktop\\fact.txt";
 
                         // fs.writeFile(path, sqlQuery, function (error) {
                         //     if (error) {
@@ -207,8 +211,8 @@ module.exports = class FactTotalHutang extends BaseManager {
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_UPSERT_FACT_TOTAL_HUTANG").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
+                                request.execute("AG_UPSERT_FACT_TOTAL_HUTANG").then((execResult) => {
+                                    request.execute("AG_INSERT_DIMTIME").then((execResult) => {
                                         transaction.commit((err) => {
                                             if (err)
                                                 reject(err);
