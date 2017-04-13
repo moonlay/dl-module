@@ -69,12 +69,23 @@ module.exports = class InstructionManager extends BaseManager {
                     errors["name"] = i18n.__("Instruction.name.isRequired:%s is required", i18n.__("Instruction.name._:Name")); // "Nama harus diisi";
                 else if (_instruction)
                     errors["name"] = i18n.__("Instruction.name.isExists:%s with same order type, construction and material is already exists", i18n.__("Instruction.name._:Name")); //"Nama sudah ada";
-
                 if (!valid.steps || valid.steps.length < 1) {
                     errors["steps"] = i18n.__("Instruction.steps.isRequired:%s is required", i18n.__("Instruction.steps._:Steps")); //"minimal harus ada 1 Step";
-                } else {
-                    if (valid.steps[0].step == "") {
-                        errors["steps"] = i18n.__("Instruction.steps.isRequired:%s is required", i18n.__("Instruction.steps._:Steps")); //"minimal harus ada 1 Step";
+                }
+                else {
+                    var itemErrors = [];
+                    for (var step of valid.steps) {
+                        var itemError = {};
+                        if (step.process == "" || !step.process) {
+                            errors["steps"] = i18n.__("Instruction.steps.steps.isRequired:%s is required", i18n.__("Instruction.steps.steps._:Steps")); //"minimal harus ada 1 Step";
+                        }
+                        itemErrors.push(itemError);
+                    }
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            errors.steps = itemErrors;
+                            break;
+                        }
                     }
                 }
 
