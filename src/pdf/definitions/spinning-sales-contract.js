@@ -60,6 +60,15 @@ module.exports = function (salesContract) {
     }
     var code = salesContract.salesContractNo;
 
+    if(amount % 1 !=0){
+        amount=parseFloat(amount.toFixed(2));
+    }
+
+    var quantity= salesContract.orderQuantity;
+    if(salesContract.orderQuantity % 1 !=0){
+        quantity=parseFloat(salesContract.orderQuantity.toFixed(2));
+    }
+
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
         moment.locale('en-EN');
 
@@ -323,7 +332,7 @@ module.exports = function (salesContract) {
 
             var subheader2 = [{
                 stack: ['\n', {
-                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${numSpell(salesContract.orderQuantity)}` +")" + ' ' + uom + ' ( ABOUT: '+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+ ' KG ) of' + '\n' + salesContract.comodity.name + comoDesc,
+                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${numSpell(quantity)}` +")" + ' ' + uom + ' ( ABOUT: '+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+ ' KG ) of' + '\n' + salesContract.comodity.name + comoDesc,
                     style: ['size09'],
                     alignment: "justify"
                 }, '\n', {
@@ -489,7 +498,7 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " +`${say(salesContract.orderQuantity," )")}` +" "+ salesContract.uom.unit,
+                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " +`${say(quantity," )")}` +" "+ salesContract.uom.unit,
                     style: ['size09']
                 }]
         }, {
