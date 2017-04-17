@@ -38,6 +38,11 @@ module.exports = {
             TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager'),
             DesignMotiveManager: require('./src/managers/master/design-motive-manager')
         },
+        inventory : {
+            finishingPrinting:{
+                FPPackingReceiptManager:require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager")
+            }
+        },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
             PurchaseOrderExternalManager: require('./src/managers/purchasing/purchase-order-external-manager'),
@@ -61,7 +66,8 @@ module.exports = {
                 MonitoringEventManager: require('./src/managers/production/finishing-printing/monitoring-event-manager'),
                 MonitoringSpecificationMachineManager: require('./src/managers/production/finishing-printing/monitoring-specification-machine-manager'),
                 KanbanManager: require('./src/managers/production/finishing-printing/kanban-manager'),
-                FabricQualityControlManager: require('./src/managers/production/finishing-printing/fabric-quality-control-manager')
+                FabricQualityControlManager: require('./src/managers/production/finishing-printing/fabric-quality-control-manager'),
+                PackingManager: require('./src/managers/production/finishing-printing/packing-manager')
             }
         },
         sales: {
