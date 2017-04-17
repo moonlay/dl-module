@@ -1,9 +1,7 @@
 "use strict";
 
 var ObjectId = require("mongodb").ObjectId;
-require("mongodb-toolkit");
-var assert = require('assert');
-
+require("mongodb-toolkit"); 
 var generateCode = require("../../../utils/code-generator");
 
 var ProductionOrderManager = require('../../sales/production-order-manager');
