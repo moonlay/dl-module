@@ -155,7 +155,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 valid.kanbanCode = _kanban.code;
                 valid.buyer = _kanban.productionOrder.buyer.name;
                 valid.orderQuantity = _kanban.productionOrder.orderQuantity;
-                valid.cartNo = _kanban.cart.code;
+                valid.cartNo = _kanban.cart.cartNumber;
                 valid.color = _kanban.selectedProductionOrderDetail.colorRequest;
                 valid.construction = `${_kanban.productionOrder.material.name} / ${_kanban.productionOrder.materialConstruction.name} / ${_kanban.productionOrder.materialWidth}`;
                 valid.packingInstruction = `${_kanban.productionOrder.packingInstruction}`;
@@ -286,7 +286,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         }
 
         var filterDate = {
-            "_createdDate": {
+            "dateIm": {
                 $gte: new Date(dateFrom),
                 $lte: new Date(dateTo)
             }
@@ -308,11 +308,10 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         xls.options = [];
         xls.name = "";
 
-        var index = 0;
+        var index = 1;
         var dateFormat = "DD/MM/YYYY";
 
         for (var result of results.data) {
-            index++;
             var item = {};
             item["No"] = index;
             item["Nomor Kanban"] = result.kanbanCode ? result.kanbanCode : "";
@@ -322,7 +321,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             item["Tanggal IM"] = result.dateIm ? moment(result.dateIm).format(dateFormat) : "";
             item["Shift"] = result.shiftIm ? result.shiftIm : "";
             item["Operator IM"] = result.operatorIm ? result.operatorIm : "";
-            item["No. Mesin IM"] = result.machineNoIm ? result.machineNoIm : "";
+            item["No Mesin IM"] = result.machineNoIm ? result.machineNoIm : "";
             item["Konstruksi"] = result.construction ? result.construction : "";
             item["Buyer"] = result.buyer ? result.buyer : "";
             item["Warna"] = result.color ? result.color : "";
@@ -345,6 +344,8 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 xls.options["Grade"] = "string";
                 xls.options["Aval (meter)"] = "number";
                 xls.options["Sampel (meter)"] = "number";
+                index++;
+
             }
 
             xls.data.push(item);
@@ -359,7 +360,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         xls.options["Tanggal IM"] = "string";
         xls.options["Shift"] = "string";
         xls.options["Operator IM"] = "string";
-        xls.options["No. Mesin IM"] = "string";
+        xls.options["No Mesin IM"] = "string";
         xls.options["Konstruksi"] = "string";
         xls.options["Buyer"] = "string";
         xls.options["Warna"] = "string";
