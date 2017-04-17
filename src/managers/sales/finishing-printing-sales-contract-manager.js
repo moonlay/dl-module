@@ -170,9 +170,9 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 if (!_order)
                     errors["orderType"] = i18n.__("FinishingPrintingSalesContract.orderType.isRequired:%s is not exists", i18n.__("FinishingPrintingSalesContract.orderType._:OrderType")); //"orderType tidak boleh kosong";
                 
-                if(!valid.condition || valid.condition===''){
-                    errors["condition"]=i18n.__("FinishingPrintingSalesContract.condition.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.condition._:Condition")); //"condition tidak boleh kosong";
-                }
+                // if(!valid.condition || valid.condition===''){
+                //     errors["condition"]=i18n.__("FinishingPrintingSalesContract.condition.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.condition._:Condition")); //"condition tidak boleh kosong";
+                // }
 
                 if(!valid.deliveredTo || valid.deliveredTo===''){
                     errors["deliveredTo"]=i18n.__("FinishingPrintingSalesContract.deliveredTo.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.deliveredTo._:DeliveredTo")); //"deliveredTo tidak boleh kosong";
