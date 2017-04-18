@@ -191,7 +191,7 @@ module.exports = function (unitPaymentCorrection) {
         }, 0);
 
     var useIncomeTax = unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? sum * 0.1 : 0;
-    var useVAT = unitPaymentCorrection.unitPaymentOrder.useVat ? sum * unitPaymentCorrection.unitPaymentOrder.vat.rate : 0;
+    var useVAT = unitPaymentCorrection.unitPaymentOrder.useVat ? sum * (unitPaymentCorrection.unitPaymentOrder.vat.rate/100) : 0;
 
     var jumlah = {
         columns: [{
