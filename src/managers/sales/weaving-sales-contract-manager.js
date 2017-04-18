@@ -217,13 +217,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                             errors["termOfShipment"] = i18n.__("WeavingSalesContract.termOfShipment.isRequired:%s is required", i18n.__("WeavingSalesContract.termOfShipment._:termOfShipment")); //"termOfShipment tidak boleh kosong jika buyer type ekspor";
                         }
 
-                        // valid.agentId = new ObjectId(_agent._id);
-                        // valid.agent = _agent;
-                        // if (!valid.agent) {
-                        //     errors["agent"] = i18n.__("WeavingSalesContract.agent.isRequired:%s is required", i18n.__("WeavingSalesContract.agent._:agent")); //"agent tidak boleh kosong jika type buyer ekspor";
-                        // }
-
-                        if (valid.agent != null) {
+                        if (valid.agentId == "") {
                             if (!valid.comission) {
                                 errors["comission"] = i18n.__("WeavingSalesContract.comission.isRequired:%s is required", i18n.__("WeavingSalesContract.comission._:comission")); //"comission tidak boleh kosong jika agent valid";
                             }
