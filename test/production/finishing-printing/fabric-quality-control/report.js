@@ -1,22 +1,22 @@
 require("should");
-var SpinningSalesContract = require("../../data-util/sales/spinning-sales-contract-data-util");
-var helper = require("../../helper");
-var validate = require("dl-models").validator.sales.spinningSalesContract;
+var FabricQualityControl = require('../../../data-util/production/finishing-printing/fabric-quality-control-data-util');
+var helper = require("../../../helper");
+var validate = require("dl-models").validator.production.finishingPrinting.qualityControl.defect.fabricQualityControl;
 var moment = require('moment');
 
-var SpinningSalesContractManager = require("../../../src/managers/sales/spinning-sales-contract-manager");
-var spinningSalesContractManager = null;
+var FabricQualityControlManager = require("../../../../src/managers/production/finishing-printing/fabric-quality-control-manager");
+var fabricQualityControlManager = null;
 
 //delete unitest data
-var DLModels = require('dl-models');
-var map = DLModels.map;
-var MachineType = DLModels.master.MachineType;
+// var DLModels = require('dl-models');
+// var map = DLModels.map;
+// var MachineType = DLModels.master.MachineType;
 
 
 before('#00. connect db', function (done) {
     helper.getDb()
-        .then(db => {
-            spinningSalesContractManager = new SpinningSalesContractManager(db, {
+        .then((db) => {
+            fabricQualityControlManager = new FabricQualityControlManager(db, {
                 username: 'dev'
             });
             done();
@@ -28,8 +28,8 @@ before('#00. connect db', function (done) {
 
 var createdId;
 it("#01. should success when create new data", function (done) {
-    SpinningSalesContract.getNewData()
-        .then((data) => spinningSalesContractManager.create(data))
+    FabricQualityControl.getNewData()
+        .then((data) => fabricQualityControlManager.create(data))
         .then((id) => {
             id.should.be.Object();
             createdId = id;
@@ -42,7 +42,7 @@ it("#01. should success when create new data", function (done) {
 
 var createdData;
 it(`#02. should success when get created data with id`, function (done) {
-    spinningSalesContractManager.getSingleById(createdId)
+    fabricQualityControlManager.getSingleById(createdId)
         .then((data) => {
             data.should.instanceof(Object);
             validate(data);
@@ -58,18 +58,19 @@ it(`#02. should success when get created data with id`, function (done) {
 var resultForExcelTest = {};
 it('#03. should success when create report', function (done) {
     var info = {};
-    info.buyerId = createdData.buyerId;
-    info.comodityId = createdData.comodityId;
-    info.salesContractNo = createdData._id;
-    info.dateFrom = createdData._createdDate;
-    info.dateTo = createdData._createdDate.toISOString().split("T", "1").toString();;
+    info.kanbanCode = createdData.kanbanCode;
+    info.productionOrderNo = createdData.productionOrderNo;
+    info.productionOrderType = createdData.productionOrderType;
+    info.shiftIm = createdData.shiftIm;
+    info.dateFrom = moment(createdData.dateIm).format("YYYY-MM-DD");
+    info.dateTo = moment(createdData.dateIm).format("YYYY-MM-DD");
 
-    spinningSalesContractManager.getSpinningSalesContractReport(info)
+    fabricQualityControlManager.getReport(info)
         .then(result => {
             resultForExcelTest = result;
-            var spinningSalesContract = result.data;
-            spinningSalesContract.should.instanceof(Array);
-            spinningSalesContract.length.should.not.equal(0);
+            var fabricQualityControl = result.data;
+            fabricQualityControl.should.instanceof(Array);
+            fabricQualityControl.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -80,7 +81,7 @@ it('#03. should success when create report', function (done) {
 it('#04. should success when get data for Excel Report', function (done) {
     var query = {};
 
-    spinningSalesContractManager.getXls(resultForExcelTest, query)
+    fabricQualityControlManager.getXls(resultForExcelTest, query)
         .then(xlsData => {
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
@@ -93,7 +94,7 @@ it('#04. should success when get data for Excel Report', function (done) {
 
 
 it("#05. should success when destroy all unit test data", function (done) {
-    spinningSalesContractManager.destroy(createdData._id)
+    fabricQualityControlManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();
             result.should.equal(true);

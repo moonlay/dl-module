@@ -38,6 +38,11 @@ module.exports = {
             TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager'),
             DesignMotiveManager: require('./src/managers/master/design-motive-manager')
         },
+        inventory : {
+            finishingPrinting:{
+                FPPackingReceiptManager:require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager")
+            }
+        },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
             PurchaseOrderExternalManager: require('./src/managers/purchasing/purchase-order-external-manager'),
@@ -61,10 +66,11 @@ module.exports = {
                 MonitoringEventManager: require('./src/managers/production/finishing-printing/monitoring-event-manager'),
                 MonitoringSpecificationMachineManager: require('./src/managers/production/finishing-printing/monitoring-specification-machine-manager'),
                 KanbanManager: require('./src/managers/production/finishing-printing/kanban-manager'),
-                FabricQualityControlManager: require('./src/managers/production/finishing-printing/fabric-quality-control-manager')
+                FabricQualityControlManager: require('./src/managers/production/finishing-printing/fabric-quality-control-manager'),
+                PackingManager: require('./src/managers/production/finishing-printing/packing-manager')
             }
         },
-        sales:{
+        sales: {
             ProductionOrderManager: require('./src/managers/sales/production-order-manager'),
             FinishingPrintingSalesContractManager: require('./src/managers/sales/finishing-printing-sales-contract-manager'),
             SpinningSalesContractManager: require('./src/managers/sales/spinning-sales-contract-manager'),
@@ -114,14 +120,20 @@ module.exports = {
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util")
             },
+            inventory: {
+                finishingPrinting: {
+                    packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util")
+                }
+            },
             production: {
                 dailyOperation: require('./test/data-util/production/finishing-printing/daily-operation-data-util'),
                 monitoringEvent: require('./test/data-util/production/finishing-printing/monitoring-event-data-util'),
                 monitoringSpecificationMachine: require('./test/data-util/production/finishing-printing/monitoring-specification-machine-data-util'),
                 kanban: require('./test/data-util/production/finishing-printing/kanban-data-util'),
-                fabricQualityControl: require('./test/data-util/production/finishing-printing/fabric-quality-control-data-util')
+                fabricQualityControl: require('./test/data-util/production/finishing-printing/fabric-quality-control-data-util'),
+                packing: require('./test/data-util/production/finishing-printing/packing-data-util')
             },
-            sales:{
+            sales: {
                 productionOrder: require('./test/data-util/sales/production-order-data-util'),
                 finishingPrintingSalesContract: require('./test/data-util/sales/finishing-printing-sales-contract-data-util'),
                 weavingSalesContract: require('./test/data-util/sales/weaving-sales-contract-data-util'),
