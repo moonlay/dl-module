@@ -12,7 +12,7 @@ var PurchaseOrderExternalManager = require("../../../src/managers/purchasing/pur
 var purchaseOrderExternalManager = null;
 var purchaseOrderExternal = {};
 
-before('#00. connect db', function (done) {
+before('#00. connect db', function(done) {
     helper.getDb()
         .then(db => {
             purchaseOrderManager = new PurchaseOrderManager(db, {

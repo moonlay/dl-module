@@ -11,18 +11,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danliris/dl-module.git"
+    "url": "git+https://github.com/ambassador-garmindo/dl-module.git"
   },
   "author": "Moonlay",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/danliris/dl-module/issues"
+    "url": "https://github.com/ambassador-garmindo/issues"
   },
-  "homepage": "https://github.com/danliris/dl-module#readme",
+  "homepage": "https://github.com/ambassador-garmindo/dl-module#readme",
   "dependencies": {
     "assert": "^1.4.1",
-    "dl-i18n": "git+https://github.com/danliris/dl-i18n.git",
-    "dl-models": "https://github.com/danliris/dl-models",
+    "dl-i18n": "git+https://github.com/ambassador-garmindo/dl-i18n.git",
+    "dl-models": "https://github.com/ambassador-garmindo/dl-models",
     "hashids": "^1.1.0",
     "module-toolkit": "git+https://github.com/pinkgorilla/module-toolkit.git",
     "moment": "^2.14.1",

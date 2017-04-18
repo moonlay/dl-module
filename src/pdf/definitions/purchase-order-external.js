@@ -48,7 +48,7 @@ module.exports = function (pox) {
     });
 
 
-    var iso = "FM-PB-00-06-009";
+    var iso = "FM-AG2-00-PJ-01-005";
     var number = pox.no;
     var currency = pox.currency.code;
     var supplier = pox.supplier.name;
@@ -61,7 +61,7 @@ module.exports = function (pox) {
     moment.locale(locale.name);
 
     var header = [{
-        text: 'PT. DAN LIRIS',
+        text: 'PT. AMBASSADOR GARMINDO',
         style: 'bold'
     }, {
             columns: [{
@@ -72,7 +72,7 @@ module.exports = function (pox) {
                     'Kecamatan Grogol',
                     'Sukoharjo 57193 - INDONESIA',
                     'PO.BOX 166 Solo 57100',
-                    'Telp. (0271) 740888, 714400',
+                    'Telp. (0271) 714400, 7652913',
                     'Fax. (0271) 735222, 740777'
                 ],
                 style: ['size07', 'bold']
@@ -139,7 +139,7 @@ module.exports = function (pox) {
             }, {
                 text: 'Yang bertanda tangan di bawah ini, '
             }, {
-                text: 'PT. DAN LIRIS, SOLO',
+                text: 'PT. AMBASSADOR GARMINDO, SOLO',
                 style: ['bold']
             }, {
                 text: ' (selanjutnya disebut sebagai pihak Pembeli) dan '
