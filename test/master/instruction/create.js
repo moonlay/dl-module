@@ -236,7 +236,7 @@ before('#00. connect db', function (done) {
 it("#01. should success when create data order type with name Printing", function (done) {
     InstructionDataUtil.getNewData()
         .then(solid => {
-            solid.steps[0].step = "";
+            solid.steps[0].process = null;
             instructionManager.create(solid)
                 .then(id => {
                     done();
@@ -250,5 +250,24 @@ it("#01. should success when create data order type with name Printing", functio
         })
         .catch((e) => {
             done(e);
+        });
+});
+
+it("#02. should error when create items with empty data", function (done) {
+    InstructionDataUtil.getNewDataItems()
+        .then((data) => instructionManager.create(data))
+        .then((id) => {
+            done("Should not be able to create with empty data");
+        })
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
         });
 });
