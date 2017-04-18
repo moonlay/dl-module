@@ -23,7 +23,7 @@ module.exports = function (unitPaymentOrder) {
     })
     var maxReceiptNoteDate = Math.max.apply(null, receiptNoteDates);
 
-    var iso = "FM-PB-00-06-014";
+    var iso = "FM-AG2-00-PB-02-006";
     var number = unitPaymentOrder.no;
     var currency = unitPaymentOrder.currency.code;
     var locale = global.config.locale;
@@ -50,7 +50,7 @@ module.exports = function (unitPaymentOrder) {
             {
                 width: '40%',
                 stack: [{
-                    text: 'PT DAN LIRIS',
+                    text: 'PT. AMBASSADOR GARMINDO',
                     style: ['size20', 'bold']
                 }, {
                         text: 'BANARAN, GROGOL, SUKOHARJO',
@@ -76,7 +76,8 @@ module.exports = function (unitPaymentOrder) {
                         alignment: "left",
                         text: iso,
                         style: ['size08']
-                    }, {
+                    }, 
+                    {
                             alignment: "left",
                             text: 'SUKOHARJO, ' + `${moment(unitPaymentOrder.date).format(locale.date.format)}`,
                             style: ['size08']
