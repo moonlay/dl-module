@@ -88,6 +88,7 @@ describe('#dl-module', function (done) {
     test('@PRODUCTION/DAILY OPERATION', './production/finishing-printing/daily-operation');
     test('@PRODUCTION/FINISHING-PRINTING/MONITORING-SPECIFICATION-MACHINE', './production/finishing-printing/monitoring-specification-machine');
     test('@PRODUCTION/FINISHING-PRINTING/MONITORING-EVENT', './production/finishing-printing/monitoring-event');
+    test('@PRODUCTION/INSPECTION LOT COLOR', './production/finishing-printing/inspection-lot-color');
 
     // test('@production/winding-quality-sampling-manager', './production/spinning/winding/winding-quality-sampling-manager-test');
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
