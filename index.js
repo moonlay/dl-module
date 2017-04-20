@@ -67,6 +67,7 @@ module.exports = {
                 MonitoringSpecificationMachineManager: require('./src/managers/production/finishing-printing/monitoring-specification-machine-manager'),
                 KanbanManager: require('./src/managers/production/finishing-printing/kanban-manager'),
                 FabricQualityControlManager: require('./src/managers/production/finishing-printing/fabric-quality-control-manager'),
+                InspectionLotColorManager: require('./src/managers/production/finishing-printing/inspection-lot-color-manager'),
                 PackingManager: require('./src/managers/production/finishing-printing/packing-manager')
             }
         },
@@ -131,6 +132,7 @@ module.exports = {
                 monitoringSpecificationMachine: require('./test/data-util/production/finishing-printing/monitoring-specification-machine-data-util'),
                 kanban: require('./test/data-util/production/finishing-printing/kanban-data-util'),
                 fabricQualityControl: require('./test/data-util/production/finishing-printing/fabric-quality-control-data-util'),
+                inspectionLotColor: require('./test/data-util/production/finishing-printing/inspection-lot-color-data-util'),
                 packing: require('./test/data-util/production/finishing-printing/packing-data-util')
             },
             sales: {
