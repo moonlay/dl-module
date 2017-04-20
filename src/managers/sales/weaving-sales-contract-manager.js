@@ -169,8 +169,6 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 if (!_bank)
                     errors["accountBank"] = i18n.__("WeavingSalesContract.accountBank.isRequired:%s is not exists", i18n.__("WeavingSalesContract.accountBank._:accountBank")); //"accountBank tidak boleh kosong";
 
-                // if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
-                //     errors["shippingQuantityTolerance"] = i18n.__("WeavingSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
                 if (valid.shippingQuantityTolerance > 100 || valid.shippingQuantityTolerance < 0) {
                     errors["shippingQuantityTolerance"] = i18n.__("WeavingSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
@@ -184,21 +182,21 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
 
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                     errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kosong";
+                } else {
+
+                    valid.deliverySchedule = new Date(valid.deliverySchedule);
+                    var today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    if (today > valid.deliverySchedule) {
+                        errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
+                    }
+
                 }
 
                 if (!valid.incomeTax || valid.incomeTax === '') {
                     errors["incomeTax"] = i18n.__("WeavingSalesContract.incomeTax.isRequired:%s is required", i18n.__("WeavingSalesContract.incomeTax._:IncomeTax")); //"incomeTax tidak boleh kosong";
                 }
-                // else {
 
-                //     valid.deliverySchedule = new Date(valid.deliverySchedule);
-                //     var today = new Date();
-                //     today.setHours(0, 0, 0, 0);
-                //     if (today > valid.deliverySchedule) {
-                //         errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
-                //     }
-
-                // }
 
                 if (!valid.orderQuantity || valid.orderQuantity === '' || valid.orderQuantity === 0) {
                     errors["orderQuantity"] = i18n.__("WeavingSalesContract.orderQuantity.isRequired:%s should greater than 0", i18n.__("WeavingSalesContract.orderQuantity._:orderQuantity")); //"orderQuantity tidak boleh kosong";
@@ -217,7 +215,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                             errors["termOfShipment"] = i18n.__("WeavingSalesContract.termOfShipment.isRequired:%s is required", i18n.__("WeavingSalesContract.termOfShipment._:termOfShipment")); //"termOfShipment tidak boleh kosong jika buyer type ekspor";
                         }
 
-                        if (valid.agentId == "") {
+                        if (_agent) {
                             if (!valid.comission) {
                                 errors["comission"] = i18n.__("WeavingSalesContract.comission.isRequired:%s is required", i18n.__("WeavingSalesContract.comission._:comission")); //"comission tidak boleh kosong jika agent valid";
                             }
