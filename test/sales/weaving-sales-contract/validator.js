@@ -133,3 +133,50 @@ it('#03. should error when create new data with non existent quality, comodity, 
         });
 });
 
+var createdDataBuyer;
+var createdDataBuyerId;
+it("#04. should success when create new data export buyer", function(done) {
+    buyerDataUtil.getNewData()
+        .then((data) => {
+            data.type = "Ekspor";
+            createdDataBuyer = data;
+            buyerManager.create(data)
+                .then((id) => {
+                    id.should.be.Object();
+                    createdDataBuyerId = id;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        });
+});
+
+it('#05. it should error when create new data with export buyer with agent without comission, term of shipment', function (done) {
+    SpinningSalesContractDataUtil.getNewData()
+        .then(sc => {
+
+            sc.buyer = createdDataBuyer;
+            sc.buyer._id = createdDataBuyerId;
+            sc.comission = '';
+            sc.termOfShipment = '';
+
+            spinningSalesContractManager.create(sc)
+                .then(id => {
+                    done("should error when create new data with export buyer with agent without comission, term of shipment");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('comission');
+                        e.errors.should.have.property('termOfShipment');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
