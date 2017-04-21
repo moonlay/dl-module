@@ -153,7 +153,7 @@ it("#04. should success when create new data export buyer", function(done) {
 });
 
 it('#05. it should error when create new data with export buyer with agent without comission, term of shipment', function (done) {
-    SpinningSalesContractDataUtil.getNewData()
+    WeavingSalesContractDataUtil.getNewData()
         .then(sc => {
 
             sc.buyer = createdDataBuyer;
@@ -161,7 +161,7 @@ it('#05. it should error when create new data with export buyer with agent witho
             sc.comission = '';
             sc.termOfShipment = '';
 
-            spinningSalesContractManager.create(sc)
+            weavingSalesContractManager.create(sc)
                 .then(id => {
                     done("should error when create new data with export buyer with agent without comission, term of shipment");
                 })
