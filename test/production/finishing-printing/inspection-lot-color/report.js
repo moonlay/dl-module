@@ -47,7 +47,20 @@ it("#01. should success when create new data", function(done) {
         });
 });
 
-it("#02. should success when get report without parameter", function(done) {
+it("#02. should success when get read data with keyword", function(done) {
+    inspectionLotColorManager.read({keyword : inspection.kanban.cart.cartNumber})
+        .then((item) => {
+            var lotColor = item.data;
+            lotColor.should.instanceof(Array);
+            lotColor.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#03. should success when get report without parameter", function(done) {
     inspectionLotColorManager.getReport({})
         .then((item) => {
             var lotColor = item.data;
@@ -60,7 +73,7 @@ it("#02. should success when get report without parameter", function(done) {
         });
 });
 
-it("#03. should success when get report with date parameter", function(done) {
+it("#04. should success when get report with date parameter", function(done) {
     var dateTomorrow = new Date().setDate(new Date().getDate() + 1);
     var edate = moment(dateTomorrow).format('YYYY-MM-DD');
     var dateBefore = new Date().setDate(new Date().getDate() - 1);
@@ -77,7 +90,7 @@ it("#03. should success when get report with date parameter", function(done) {
         });
 });
 
-it("#04. should success when get report with kanban parameter", function(done) {
+it("#05. should success when get report with kanban parameter", function(done) {
     inspectionLotColorManager.getReport({kanban : inspection.kanbanId})
         .then((item) => {
             var lotColor = item.data;
@@ -90,7 +103,7 @@ it("#04. should success when get report with kanban parameter", function(done) {
         });
 });
 
-it("#05. should success when get report with production order parameter", function(done) {
+it("#06. should success when get report with production order parameter", function(done) {
     inspectionLotColorManager.getReport({productionOrder : inspection.kanban.productionOrderId})
         .then((item) => {
             var lotColor = item.data;
@@ -103,7 +116,7 @@ it("#05. should success when get report with production order parameter", functi
         });
 });
 
-it("#06. should success when get report xls", function(done) {
+it("#07. should success when get report xls", function(done) {
     inspectionLotColorManager.getReport({})
         .then((item) => {
             var lotColor = item.data;
