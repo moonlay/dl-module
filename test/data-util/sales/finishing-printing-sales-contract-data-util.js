@@ -63,6 +63,7 @@ class FinishingPrintingSalesContractDataUtil {
                     materialWidth:'Width',
                     designMotive:_motive,
                     designMotiveId:_motive._id,
+                    pointSystem:10,
 
                     paymentMethod:`Telegraphic Transfer (TT)`,
                     rollLength:`length`,
