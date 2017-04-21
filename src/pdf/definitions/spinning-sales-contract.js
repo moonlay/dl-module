@@ -69,6 +69,8 @@ module.exports = function (salesContract) {
         quantity=parseFloat(salesContract.orderQuantity.toFixed(2));
     }
 
+    var shipmentDesc=salesContract.shipmentDescription ? '\n' + salesContract.shipmentDescription : '';
+
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
         moment.locale('en-EN');
 
@@ -210,7 +212,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appx+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
+                        text:appx+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}` + shipmentDesc,
                         style: ['size09']
                     }]
             }, {

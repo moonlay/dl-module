@@ -80,7 +80,7 @@ module.exports = function (salesContract, offset) {
         comoDesc = '\n' + salesContract.comodityDescription;
     }
     var code = salesContract.salesContractNo;
-    var shipmentDesc=salesContract.shipmentDescription ? salesContract.shipmentDescription : '';
+    var shipmentDesc=salesContract.shipmentDescription ? '\n' + salesContract.shipmentDescription : '';
 
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
@@ -239,7 +239,7 @@ module.exports = function (salesContract, offset) {
                     },
                     {
                         width: '*',
-                        text: appx + " " + `${moment(salesContract.deliverySchedule).add(offset,'h').format('MMMM YYYY').toUpperCase()}`,
+                        text: appx + " " + `${moment(salesContract.deliverySchedule).add(offset,'h').format('MMMM YYYY').toUpperCase()}` + shipmentDesc,
                         style: ['size10']
                     }]
             }, {

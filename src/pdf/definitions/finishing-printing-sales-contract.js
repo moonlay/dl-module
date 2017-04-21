@@ -153,7 +153,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:salesContract.comodity.name + comoDesc + '\n' + 'CONSTRUCTION : '+ salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth,
+                        text: salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth  + '\n' + salesContract.comodity.name + comoDesc,
                         style: ['size10']
                     }]
             },{
@@ -728,7 +728,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:salesContract.condition,
+                        text:' - Pesanan tidak dapat dibatalkan kecuali disetujui oleh kedua belah pihak. \n - Kelebihan / kekurangan pengiriman maksimal 10% dari jumlah pesanan.' + salesContract.condition,
                         style: ['size10']
                     }]
         },'\n',{
