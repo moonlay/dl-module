@@ -34,16 +34,21 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                 }
             };
             var colorFilter = {
-                "kanban.selectedProductionOrderDetail.color": {
+                "kanban.selectedProductionOrderDetail.colorRequest": {
                     "$regex": regex
                 }
             };
             var cartFilter = {
-                "cart.cartNumber": {
+                "kanban.cart.cartNumber": {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [orderNoFilter, colorFilter, cartFilter];
+            var orderTypeFilter = {
+                "kanban.productionOrder.orderType.name": {
+                    "$regex": regex
+                }
+            };
+            keywordFilter["$or"] = [orderNoFilter, colorFilter, cartFilter, orderTypeFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -133,7 +138,7 @@ module.exports = class InspectionLotColorManager extends BaseManager {
         var dateNow = new Date(dateString);
         var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
         var dateQuery = {
-            "_createdDate" : {
+            "date" : {
                 $gte : (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(`${query.dateFrom} 00:00:00`))),
                 $lte : (!query || !query.dateTo ? date : (new Date(`${query.dateTo} 23:59:59`)))
             }
@@ -174,6 +179,12 @@ module.exports = class InspectionLotColorManager extends BaseManager {
         var dateFormat = "DD/MM/YYYY";
 
         for(var lotColor of result.data){
+            var dateString  = '';
+            if(lotColor.date){
+                var dateTamp = new Date(lotColor.date);
+                var date = new Date(dateTamp.setHours(dateTamp.getHours() + 7));
+                dateString = moment(date).format(dateFormat);
+            }
             for(var detail of lotColor.items)
             {
                 index++;
@@ -184,7 +195,7 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                 item["Warna"] = lotColor.kanban.selectedProductionOrderDetail ? lotColor.kanban.selectedProductionOrderDetail.colorType ? `${lotColor.kanban.selectedProductionOrderDetail.colorType.name} ${lotColor.kanban.selectedProductionOrderDetail.colorRequest}` : lotColor.kanban.selectedProductionOrderDetail.colorRequest : '';
                 item["No Kereta"] = lotColor.kanban ? lotColor.kanban.cart.cartNumber : '';;
                 item["Jenis Order"] = lotColor.kanban.productionOrder ? lotColor.kanban.productionOrder.orderType.name : '';;
-                item["Tgl Pemeriksaan"] = lotColor.date ? moment(new Date(lotColor.date)).format(dateFormat) : '';
+                item["Tgl Pemeriksaan"] = dateString;
                 item["No Pcs"] = detail.pcsNo ? detail.pcsNo : '';
                 item["Lot"] = detail.lot ? detail.lot : '';
                 item["Status"] = detail.status ? detail.status : '';
