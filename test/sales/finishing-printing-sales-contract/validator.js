@@ -209,3 +209,31 @@ it('#06. it should error when create new data with poitSystem=4 and pointLimit=0
             done(e);
         });
 });
+
+it('#07. it should error when create new data without detail', function (done) {
+    FinishingPrintingSalesContractDataUtil.getNewData()
+        .then(sc => {
+            sc.details= [{
+                        color:'',
+                        price:0,
+                        useIncomeTax:true
+                    }];
+
+            finishingPrintingSalesContractManager.create(sc)
+                .then(id => {
+                    done("should error when create new data without detail");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('details');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
