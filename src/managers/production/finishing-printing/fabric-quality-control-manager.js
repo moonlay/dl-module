@@ -96,6 +96,10 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
                 if (valid.pointSystem !== 10 && valid.pointSystem !== 4)
                     errors["pointSystem"] = i18n.__("FabricQualityControl.pointSystem.invalid:%s is not valid", i18n.__("FabricQualityControl.pointSystem._:Point System")); //"Grade harus diisi";   
+                else if (valid.pointSystem === 4) {
+                    if (valid.pointLimit === 0)
+                        errors["pointLimit"] = i18n.__("FabricQualityControl.pointLimit.invalid:%s is not valid", i18n.__("FabricQualityControl.pointLimit._:Point Limit")); //"Jika 4 PointSystem, Limit harus diisi";
+                }
 
                 if (!valid.dateIm)
                     errors["dateIm"] = i18n.__("FabricQualityControl.dateIm.isRequired:%s is required", i18n.__("FabricQualityControl.dateIm._:Date")); //"Grade harus diisi";
@@ -163,6 +167,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
                 valid.fabricGradeTests.forEach(test => {
                     test.pointSystem = valid.pointSystem;
+                    test.pointLimit = valid.pointLimit;
                     this.calculateGrade(test);
                 });
 
@@ -213,16 +218,19 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         }, 0);
 
         var finalLength = fabricGradeTest.initLength - fabricGradeTest.avalLength - fabricGradeTest.sampleLength;
-        var finalScore = finalLength > 0 ? score / finalLength : 0;
-        var grade = this.__scoreGrade(fabricGradeTest.pointSystem, finalScore);
+        var finalArea = fabricGradeTest.initLength * fabricGradeTest.width;
+        var finalScoreTS = finalLength > 0 && fabricGradeTest.pointSystem === 10 ? score / finalLength : 0;
+        var finalScoreFS = finalLength > 0 && fabricGradeTest.pointSystem === 4 ? score * 100 / finalArea : 0;
+        var grade = fabricGradeTest.pointSystem === 10 ? this.__scoreGrade(fabricGradeTest.pointSystem, finalScoreTS, fabricGradeTest.pointLimit) : this.__scoreGrade(fabricGradeTest.pointSystem, finalScoreFS, fabricGradeTest.pointLimit);
 
         fabricGradeTest.score = score;
         fabricGradeTest.finalLength = finalLength;
-        fabricGradeTest.finalScore = finalScore;
+        fabricGradeTest.finalArea = fabricGradeTest.pointSystem === 4 ? finalArea : 0;
+        fabricGradeTest.finalScore = parseFloat(fabricGradeTest.pointSystem === 10 ? finalScoreTS : finalScoreFS);
         fabricGradeTest.grade = grade;
     }
 
-    __scoreGrade(pointSystem, finalScore) {
+    __scoreGrade(pointSystem, finalScore, pointLimit) {
         if (pointSystem === 10) {
             if (finalScore >= 2.71)
                 return "BS";
@@ -233,8 +241,13 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             else
                 return "A";
         }
-        else
-            return "-";
+        else {
+            if (finalScore <= pointLimit) {
+                return "OK";
+            } else {
+                return "Not OK";
+            }
+        }
     }
 
     pdf(qualityControl) {
