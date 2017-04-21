@@ -77,7 +77,8 @@ module.exports = class DailyOperationManager extends BaseManager {
         var errors = {};
         return new Promise((resolve, reject) => {
             var valid = dailyOperation;
-            var dateNow = new Date();
+            var dateTamp = new Date();
+            var dateNow = new Date(dateTamp.setHours(dateTamp.getHours() + 7));
             var dateNowString = moment(dateNow).format('YYYY-MM-DD');
             var timeInMillisNow = (function(){
                 var setupMoment = moment();
@@ -604,7 +605,7 @@ module.exports = class DailyOperationManager extends BaseManager {
         xls.options["BS"] = "number";
         xls.options["Keterangan BQ"] = "string";
 
-        if(query.sdate && query.dateTo){
+        if(query.sdate && query.edate){
             xls.name = `Daily Operation Report ${moment(new Date(query.sdate)).format(dateFormat)} - ${moment(new Date(query.edate)).format(dateFormat)}.xlsx`;
         }
         else if(!query.sdate && query.edate){
