@@ -1,9 +1,7 @@
 "use strict";
 
 var ObjectId = require("mongodb").ObjectId;
-require("mongodb-toolkit");
-var assert = require('assert');
-
+require("mongodb-toolkit"); 
 var generateCode = require("../../../utils/code-generator");
 
 var ProductionOrderManager = require('../../sales/production-order-manager');
@@ -96,10 +94,6 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
                 if (valid.pointSystem !== 10 && valid.pointSystem !== 4)
                     errors["pointSystem"] = i18n.__("FabricQualityControl.pointSystem.invalid:%s is not valid", i18n.__("FabricQualityControl.pointSystem._:Point System")); //"Grade harus diisi";   
-                else if (valid.pointSystem === 4) {
-                    if (valid.pointLimit === 0)
-                        errors["pointLimit"] = i18n.__("FabricQualityControl.pointLimit.invalid:%s is not valid", i18n.__("FabricQualityControl.pointLimit._:Point Limit")); //"Jika 4 PointSystem, Limit harus diisi";
-                }
 
                 if (!valid.dateIm)
                     errors["dateIm"] = i18n.__("FabricQualityControl.dateIm.isRequired:%s is required", i18n.__("FabricQualityControl.dateIm._:Date")); //"Grade harus diisi";
@@ -159,7 +153,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 valid.kanbanCode = _kanban.code;
                 valid.buyer = _kanban.productionOrder.buyer.name;
                 valid.orderQuantity = _kanban.productionOrder.orderQuantity;
-                valid.cartNo = _kanban.cart.cartNumber;
+                valid.cartNo = _kanban.cart.code;
                 valid.color = _kanban.selectedProductionOrderDetail.colorRequest;
                 valid.construction = `${_kanban.productionOrder.material.name} / ${_kanban.productionOrder.materialConstruction.name} / ${_kanban.productionOrder.materialWidth}`;
                 valid.packingInstruction = `${_kanban.productionOrder.packingInstruction}`;
@@ -167,7 +161,6 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
                 valid.fabricGradeTests.forEach(test => {
                     test.pointSystem = valid.pointSystem;
-                    test.pointLimit = valid.pointLimit;
                     this.calculateGrade(test);
                 });
 
@@ -218,19 +211,16 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         }, 0);
 
         var finalLength = fabricGradeTest.initLength - fabricGradeTest.avalLength - fabricGradeTest.sampleLength;
-        var finalArea = fabricGradeTest.initLength * fabricGradeTest.width;
-        var finalScoreTS = finalLength > 0 && fabricGradeTest.pointSystem === 10 ? score / finalLength : 0;
-        var finalScoreFS = finalLength > 0 && fabricGradeTest.pointSystem === 4 ? score * 100 / finalArea : 0;
-        var grade = fabricGradeTest.pointSystem === 10 ? this.__scoreGrade(fabricGradeTest.pointSystem, finalScoreTS, fabricGradeTest.pointLimit) : this.__scoreGrade(fabricGradeTest.pointSystem, finalScoreFS, fabricGradeTest.pointLimit);
+        var finalScore = finalLength > 0 ? score / finalLength : 0;
+        var grade = this.__scoreGrade(fabricGradeTest.pointSystem, finalScore);
 
         fabricGradeTest.score = score;
         fabricGradeTest.finalLength = finalLength;
-        fabricGradeTest.finalArea = fabricGradeTest.pointSystem === 4 ? finalArea : 0;
-        fabricGradeTest.finalScore = parseFloat(fabricGradeTest.pointSystem === 10 ? finalScoreTS : finalScoreFS);
+        fabricGradeTest.finalScore = finalScore;
         fabricGradeTest.grade = grade;
     }
 
-    __scoreGrade(pointSystem, finalScore, pointLimit) {
+    __scoreGrade(pointSystem, finalScore) {
         if (pointSystem === 10) {
             if (finalScore >= 2.71)
                 return "BS";
@@ -241,13 +231,8 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             else
                 return "A";
         }
-        else {
-            if (finalScore <= pointLimit) {
-                return "OK";
-            } else {
-                return "Not OK";
-            }
-        }
+        else
+            return "-";
     }
 
     pdf(qualityControl) {
@@ -299,7 +284,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         }
 
         var filterDate = {
-            "dateIm": {
+            "_createdDate": {
                 $gte: new Date(dateFrom),
                 $lte: new Date(dateTo)
             }
@@ -321,10 +306,11 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         xls.options = [];
         xls.name = "";
 
-        var index = 1;
+        var index = 0;
         var dateFormat = "DD/MM/YYYY";
 
         for (var result of results.data) {
+            index++;
             var item = {};
             item["No"] = index;
             item["Nomor Kanban"] = result.kanbanCode ? result.kanbanCode : "";
@@ -334,7 +320,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             item["Tanggal IM"] = result.dateIm ? moment(result.dateIm).format(dateFormat) : "";
             item["Shift"] = result.shiftIm ? result.shiftIm : "";
             item["Operator IM"] = result.operatorIm ? result.operatorIm : "";
-            item["No Mesin IM"] = result.machineNoIm ? result.machineNoIm : "";
+            item["No. Mesin IM"] = result.machineNoIm ? result.machineNoIm : "";
             item["Konstruksi"] = result.construction ? result.construction : "";
             item["Buyer"] = result.buyer ? result.buyer : "";
             item["Warna"] = result.color ? result.color : "";
@@ -357,8 +343,6 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 xls.options["Grade"] = "string";
                 xls.options["Aval (meter)"] = "number";
                 xls.options["Sampel (meter)"] = "number";
-                index++;
-
             }
 
             xls.data.push(item);
@@ -373,7 +357,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         xls.options["Tanggal IM"] = "string";
         xls.options["Shift"] = "string";
         xls.options["Operator IM"] = "string";
-        xls.options["No Mesin IM"] = "string";
+        xls.options["No. Mesin IM"] = "string";
         xls.options["Konstruksi"] = "string";
         xls.options["Buyer"] = "string";
         xls.options["Warna"] = "string";
