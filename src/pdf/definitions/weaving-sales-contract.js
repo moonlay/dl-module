@@ -80,6 +80,8 @@ module.exports = function (salesContract, offset) {
         comoDesc = '\n' + salesContract.comodityDescription;
     }
     var code = salesContract.salesContractNo;
+    var shipmentDesc=salesContract.shipmentDescription ? salesContract.shipmentDescription : '';
+
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
         moment.locale('en-EN');
@@ -141,7 +143,7 @@ module.exports = function (salesContract, offset) {
                     },
                     {
                         width: '*',
-                        text: salesContract.comodity.name + comoDesc + '\n' + 'CONSTRUCTION : ' + salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth,
+                        text: salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth + '\n' + salesContract.comodity.name + comoDesc  ,
                         style: ['size10']
                     }]
             }, {
