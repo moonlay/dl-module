@@ -5,6 +5,9 @@ module.exports = function (packing, offset) {
     var items = [].concat.apply([], packing.items);
 
     var iso = "FM.FP-GJ-15-003";
+    // var number = packing.code;
+    // var colorName = packing.colorName;
+
     var locale = global.config.locale;
 
     var moment = require('moment');
@@ -246,7 +249,7 @@ module.exports = function (packing, offset) {
 
             {
                 width: '25%',
-                stack: [`Sukoharjo, ${moment(packing.date).add(offset, 'h').format(locale.date.format)} `, 'Diserahkan oleh :', '\n\n\n', '(                               )'],
+                stack: [`Sukoharjo, ${moment(packing.date).add(offset, 'h').format(locale.date.format)} `, 'Diserahkan oleh :', '\n\n\n', `(  ${packing._createdBy}  )`],
                 style: ['center']
             }],
         style: ['size08']
@@ -257,6 +260,7 @@ module.exports = function (packing, offset) {
         pageSize: 'A5',
         pageOrientation: 'landscape',
         pageMargins: 20,
+        // content: [].concat(header, line, subheader, subheader2, table, footer),
         content: [].concat(header, line, subheader, subheader2, table, footer, footer2),
 
         styles: {
