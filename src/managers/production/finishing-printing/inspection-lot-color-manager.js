@@ -139,8 +139,8 @@ module.exports = class InspectionLotColorManager extends BaseManager {
         var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
         var dateQuery = {
             "date" : {
-                $gte : (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(`${query.dateFrom} 00:00:00`))),
-                $lte : (!query || !query.dateTo ? date : (new Date(`${query.dateTo} 23:59:59`)))
+                "$gte" : (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
+                "$lte" : (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
             }
         };
         var kanbanQuery = {};
