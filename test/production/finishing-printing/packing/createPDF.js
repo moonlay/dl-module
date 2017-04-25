@@ -25,7 +25,7 @@ before('#00. connect db', function (done) {
 var createdId;
 it("#01. should success when create new data", function (done) {
     Packing.getNewData()
-    
+
         .then((data) => packingManager.create(data))
         .then((id) => {
             id.should.be.Object();
@@ -51,6 +51,24 @@ it(`#02. should success when get created data with id`, function (done) {
         });
 });
 
+it("#03. should error when create items with empty data", function (done) {
+    Packing.getNewDataItems()
+        .then((data) => packingManager.create(data))
+        .then((id) => {
+            done("Should not be able to create with empty data");
+        })
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
+        });
+});
 
 // var resultForExcelTest = {};
 // it('#03. should success when create report', function (done) {
@@ -75,12 +93,11 @@ it(`#02. should success when get created data with id`, function (done) {
 // });
 
 
-it('#03. should success when create pdf', function (done) {
+it('#04. should success when create pdf', function (done) {
     var query = {};
 
     packingManager.pdf(createdData)
         .then(pdfData => {
-
             done();
         }).catch(e => {
             done(e);
@@ -88,7 +105,7 @@ it('#03. should success when create pdf', function (done) {
 });
 
 
-it("#04. should success when destroy all unit test data", function (done) {
+it("#05. should success when destroy all unit test data", function (done) {
     packingManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();
