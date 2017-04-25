@@ -202,7 +202,7 @@ module.exports = function (packing, offset) {
         }, "", "", "", "", ""]
     ];
 
-    var table = ['\n', {
+    var table = [ {
         table: {
             widths: ['5%', '35%', '10%', '10%', '10%', '30%'],
             headerRows: 1,

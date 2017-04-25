@@ -23,7 +23,7 @@ module.exports = function (unitPaymentOrder) {
     })
     var maxReceiptNoteDate = Math.max.apply(null, receiptNoteDates);
 
-    var iso = "FM-PB-00-06-014";
+    var iso = "FM-PB-00-06-014/R1";
     var number = unitPaymentOrder.no;
     var currency = unitPaymentOrder.currency.code;
     var locale = global.config.locale;
