@@ -146,14 +146,14 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                     errors["deliverySchedule"] = i18n.__("SpinningSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("SpinningSalesContract.deliverySchedule._:DeliverySchedule")); //"deliverySchedule tidak boleh kosong";
                 }
-                else {
-                    valid.deliverySchedule = new Date(valid.deliverySchedule);
-                    var today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    if (today > valid.deliverySchedule) {
-                        errors["deliverySchedule"] = i18n.__("SpinningSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("SpinningSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
-                    }
-                }
+                // else {
+                //     valid.deliverySchedule = new Date(valid.deliverySchedule);
+                //     var today = new Date();
+                //     today.setHours(0, 0, 0, 0);
+                //     if (today > valid.deliverySchedule) {
+                //         errors["deliverySchedule"] = i18n.__("SpinningSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("SpinningSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
+                //     }
+                // }
 
 
                 if (_buyer) {
@@ -265,7 +265,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
             query = {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo+"T23:59")) : (new Date());
         var now = new Date();
 
         if (info.buyerId && info.buyerId != '') {
@@ -327,7 +327,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
             item["Komoditas"] = spinningSalesContract.comodity ? spinningSalesContract.comodity.name : '';
             item["Jumlah Order"] = spinningSalesContract ? spinningSalesContract.orderQuantity : '';
             item["Satuan"] = spinningSalesContract.uom ? spinningSalesContract.uom.unit : '';
-            item["Toleransi"] = spinningSalesContract ? spinningSalesContract.shippingQuantityTolerance : '';
+            item["Toleransi (%)"] = spinningSalesContract ? spinningSalesContract.shippingQuantityTolerance : '';
             item["Kualitas"] = spinningSalesContract.quality ? spinningSalesContract.quality.name : '';
             item["Harga"] = spinningSalesContract ? spinningSalesContract.price : '';
             item["Satuan"] = spinningSalesContract.uom ? spinningSalesContract.uom.unit : '';
@@ -335,7 +335,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
             item["Syarat Pembayaran"] = spinningSalesContract.termOfPayment ? spinningSalesContract.termOfPayment.termOfPayment : '';
             item["Pembayaran ke Rekening"] = spinningSalesContract.accountBank ? spinningSalesContract.accountBank.accountName + "-" + spinningSalesContract.accountBank.bankName + "-" + spinningSalesContract.accountBank.accountNumber + "-" + spinningSalesContract.accountBank.currency.code : '';
             item["Jadwal Pengiriman"] = spinningSalesContract ? moment(new Date(spinningSalesContract.deliverySchedule)).format(dateFormat) : '';
-            item["Agen"] = spinningSalesContract.agent ? spinningSalesContract.agent.code + "-" + spinningSalesContract.agent.name : '';
+            item["Agen"] = spinningSalesContract.agent && spinningSalesContract.agent.name ? spinningSalesContract.agent.name : '';
             item["Komisi"] = spinningSalesContract ? spinningSalesContract.comission : '';
 
             xls.data.push(item);

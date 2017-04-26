@@ -54,8 +54,19 @@ module.exports = function (salesContract) {
     }
     
     var detail="";
+    var newDetail=[];
     var detailprice="";
     var amount=salesContract.amount;
+
+    if(amount % 1 !=0){
+        amount=parseFloat(salesContract.amount.toFixed(2));
+    }
+
+    var quantity= salesContract.orderQuantity;
+    if(salesContract.orderQuantity % 1 !=0){
+        quantity=parseFloat(salesContract.orderQuantity.toFixed(2));
+    }
+
     for(var i of details){
         var ppn="";
         if(salesContract.useIncomeTax){
@@ -69,10 +80,11 @@ module.exports = function (salesContract) {
         else{
             ppn='TANPA PPN';
         }
-        detail+= i.color + " " + i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom1 +"\n";
+        newDetail.push( i.color + " " + i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom1 + ' ');
         detailprice+= i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uomLocal + ' ' + ppn + ' ' + '( ' + i.color + ' )' + "\n";
        
     }
+    detail=newDetail.toString();
     var comoDesc="";
     if(salesContract.comodityDescription!=""){
         comoDesc='\n'+salesContract.comodityDescription;
@@ -141,7 +153,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:salesContract.comodity.name + comoDesc + '\n' + 'CONSTRUCTION : '+ salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth,
+                        text: salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth  + '\n' + salesContract.comodity.name + comoDesc,
                         style: ['size10']
                     }]
             },{
@@ -173,7 +185,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(salesContract.orderQuantity)}` +') '+ uom,
+                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(quantity)}` +') '+ uom,
                         style: ['size10']
                     }]
             },{
@@ -205,7 +217,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:detail +salesContract.termOfShipment +'\n' +salesContract.termOfPayment.termOfPayment,
+                        text:detail+'\n' +salesContract.termOfShipment +'\n' +salesContract.termOfPayment.termOfPayment,
                         style: ['size10']
                     }]
         },{
@@ -290,7 +302,7 @@ module.exports = function (salesContract) {
                     }]
         }];
 
-        sign=['\n', '\n',{
+        sign=['\n',{
             columns: [{
                 width: '50%',
                 stack: ['Accepted and confirmed : ' , '\n\n\n\n', '(                                  )', 'Authorized signature'],
@@ -307,7 +319,7 @@ module.exports = function (salesContract) {
         var re=[{
                 columns: [{
                     width: '*',
-                    stack: ['\n',{
+                    stack: [{
                         text: 'REMARK :' ,
                         style: ['size10'],
                         alignment: "left"
@@ -375,7 +387,7 @@ module.exports = function (salesContract) {
             
             var subheader2=[{
                         stack: ['\n',{
-                            text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(salesContract.orderQuantity)}` +' ) '+uom +' of' +'\n' +  salesContract.comodity.name + comoDesc+ '\n' + 'CONSTRUCTION : '+ salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth,
+                            text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(quantity)}` +' ) '+uom +' of' +'\n' +  salesContract.comodity.name + comoDesc+ '\n' + 'CONSTRUCTION : '+ salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth,
                             style: ['size10'],
                             alignment: "justify"
                         },'\n',{
@@ -389,7 +401,7 @@ module.exports = function (salesContract) {
                         }]
             },'\n','\n'];
 
-            var sign2=['\n', '\n',{
+            var sign2=['\n',{
                 columns: [{
                     width: '50%',
                     stack: ['Accepted and confirmed : ' , '\n\n\n\n', '(                                  )', 'Authorized signature'],
@@ -556,7 +568,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${say(salesContract.orderQuantity," )")}` +" "+uomLocal,
+                        text:parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${say(quantity," )")}` +" "+uomLocal,
                         style: ['size10']
                     }]
         },{
@@ -716,7 +728,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:salesContract.condition,
+                        text:' - Pesanan tidak dapat dibatalkan kecuali disetujui oleh kedua belah pihak. \n - Kelebihan / kekurangan pengiriman maksimal 10% dari jumlah pesanan.' + salesContract.condition,
                         style: ['size10']
                     }]
         },'\n',{
@@ -773,7 +785,7 @@ module.exports = function (salesContract) {
     var Sc = {
         pageSize: 'A4',
         pageOrientation: 'portrait',
-        pageMargins: [40, 130, 40, 40],
+        pageMargins: [40, 110, 40, 20],
         content: [].concat(header, subheader, body, sign,remark, footer),
         styles: {
             size06: {

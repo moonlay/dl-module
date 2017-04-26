@@ -46,33 +46,33 @@ it('#01. should error when create with empty data ', function (done) {
         });
 });
 
-it('#02. should error when create new data with deliverySchedule less than today', function (done) {
-    FinishingPrintingSalesContractDataUtil.getNewData()
-        .then(me => {
-            var dateYesterday = new Date().setDate(new Date().getDate() -1);
+// it('#02. should error when create new data with deliverySchedule less than today', function (done) {
+//     FinishingPrintingSalesContractDataUtil.getNewData()
+//         .then(me => {
+//             var dateYesterday = new Date().setDate(new Date().getDate() -1);
             
-            me.deliverySchedule = moment(dateYesterday).format('YYYY-MM-DD');
+//             me.deliverySchedule = moment(dateYesterday).format('YYYY-MM-DD');
 
-            finishingPrintingSalesContractManager.create(me)
-                .then(id => {
-                    done("should error when create new data with deliverySchedule less than today");
-                })
-                .catch(e => {
-                    try {
-                        e.errors.should.have.property('deliverySchedule');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+//             finishingPrintingSalesContractManager.create(me)
+//                 .then(id => {
+//                     done("should error when create new data with deliverySchedule less than today");
+//                 })
+//                 .catch(e => {
+//                     try {
+//                         e.errors.should.have.property('deliverySchedule');
+//                         done();
+//                     }
+//                     catch (ex) {
+//                         done(ex);
+//                     }
+//                 });
+//         })
+//         .catch(e => {
+//             done(e);
+//         });
+// });
 
-it('#03. should error when create new data with shippingQuantityTolerance more than 100', function (done) {
+it('#02. should error when create new data with shippingQuantityTolerance more than 100', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
 
@@ -97,7 +97,7 @@ it('#03. should error when create new data with shippingQuantityTolerance more t
         });
 });
 
-it('#04. should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, orderType', function (done) {
+it('#03. should error when create new data with non existent quality, comodity, buyer, accountBank, uom, materialConstruction, yarnMaterial, orderType', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
 
@@ -137,7 +137,7 @@ it('#04. should error when create new data with non existent quality, comodity, 
 
 var createdDataBuyer;
 var createdDataBuyerId;
-it("#05. should success when create new data export buyer", function(done) {
+it("#04. should success when create new data export buyer", function(done) {
     buyerDataUtil.getNewData()
     .then((data) =>{
         data.type="Ekspor";
@@ -154,7 +154,7 @@ it("#05. should success when create new data export buyer", function(done) {
     });
 });
 
-it('#06. it should error when create new data with export buyer with agent without comission, amount, term of shipment', function (done) {
+it('#05. it should error when create new data with export buyer with agent without comission, amount, term of shipment', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
 
@@ -173,6 +173,59 @@ it('#06. it should error when create new data with export buyer with agent witho
                         e.errors.should.have.property('comission');
                         e.errors.should.have.property('amount');
                         e.errors.should.have.property('termOfShipment');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#06. it should error when create new data with poitSystem=4 and pointLimit=0', function (done) {
+    FinishingPrintingSalesContractDataUtil.getNewData()
+        .then(sc => {
+            sc.pointSystem=4;
+            sc.pointLimit=0;
+
+            finishingPrintingSalesContractManager.create(sc)
+                .then(id => {
+                    done("should error when create new data with poitSystem=4 and pointLimit=0");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('pointLimit');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#07. it should error when create new data without detail', function (done) {
+    FinishingPrintingSalesContractDataUtil.getNewData()
+        .then(sc => {
+            sc.details= [{
+                        color:'',
+                        price:0,
+                        useIncomeTax:true
+                    }];
+
+            finishingPrintingSalesContractManager.create(sc)
+                .then(id => {
+                    done("should error when create new data without detail");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('details');
                         done();
                     }
                     catch (ex) {

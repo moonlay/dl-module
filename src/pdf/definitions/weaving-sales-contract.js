@@ -3,7 +3,7 @@ var generateCode = require('../../utils/code-generator');
 var say = require('../../utils/say');
 var numSpell = require('../../utils/number-spelling');
 
-module.exports = function (salesContract) {
+module.exports = function (salesContract, offset) {
 
     var locale = global.config.locale;
     var moment = require('moment');
@@ -17,48 +17,48 @@ module.exports = function (salesContract) {
     var remark = [];
     var footer = [];
 
-    var uom="";
-    var uom1="";
-    var uomLocal="";
-    if(salesContract.uom.unit.toLowerCase()=="yds"){
-        uom="YARDS";
-        uom1="YARD";
-        uomLocal="YARD";
+    var uom = "";
+    var uom1 = "";
+    var uomLocal = "";
+    if (salesContract.uom.unit.toLowerCase() == "yds") {
+        uom = "YARDS";
+        uom1 = "YARD";
+        uomLocal = "YARD";
     }
-    else if(salesContract.uom.unit.toLowerCase()=="mtr"){
-        uom="METRES";
-        uom1="METRE";
-        uomLocal="METER";
+    else if (salesContract.uom.unit.toLowerCase() == "mtr") {
+        uom = "METRES";
+        uom1 = "METRE";
+        uomLocal = "METER";
     }
-    else{
-        uom=salesContract.uom.unit;
-        uom1=salesContract.uom.unit;
-        uomLocal=salesContract.uom.unit;
-    }
-
-    var appx="";
-    var appxLocal="";
-    var date=parseInt(salesContract.deliverySchedule.getDate());
-    if(date>=1 && date<=10){
-        appx="EARLY";
-        appxLocal="AWAL";
-    }
-    else if(date>=11 && date<=20){
-        appx="MIDDLE";
-        appxLocal="PERTENGAHAN";
-    }
-    else if(date>=21 && date<=31){
-        appx="END";
-        appxLocal="AKHIR";
+    else {
+        uom = salesContract.uom.unit;
+        uom1 = salesContract.uom.unit;
+        uomLocal = salesContract.uom.unit;
     }
 
-    var deliverySchedule = moment(salesContract.deliverySchedule);
+    var appx = "";
+    var appxLocal = "";
+    var date = parseInt(salesContract.deliverySchedule.getDate());
+    if (date >= 1 && date <= 10) {
+        appx = "EARLY";
+        appxLocal = "AWAL";
+    }
+    else if (date >= 11 && date <= 20) {
+        appx = "MIDDLE";
+        appxLocal = "PERTENGAHAN";
+    }
+    else if (date >= 21 && date <= 31) {
+        appx = "END";
+        appxLocal = "AKHIR";
+    }
+
+    // var deliverySchedule = moment(salesContract.deliverySchedule);
     var detailprice = "";
 
     var amount = 0;
     var ppn = salesContract.incomeTax;
-    if(ppn=="Include PPn"){
-        ppn="Include PPn 10%";
+    if (ppn == "Include PPn") {
+        ppn = "Include PPn 10%";
     }
 
     var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom1 + "\n";
@@ -66,14 +66,25 @@ module.exports = function (salesContract) {
 
     amount = salesContract.price * salesContract.orderQuantity;
 
+    if(amount % 1 !=0){
+        amount=parseFloat(amount.toFixed(2));
+    }
+
+    var quantity= salesContract.orderQuantity;
+    if(salesContract.orderQuantity % 1 !=0){
+        quantity=parseFloat(salesContract.orderQuantity.toFixed(2));
+    }
+
     var comoDesc = "";
     if (salesContract.comodityDescription != "") {
         comoDesc = '\n' + salesContract.comodityDescription;
     }
     var code = salesContract.salesContractNo;
+    var shipmentDesc=salesContract.shipmentDescription ? '\n' + salesContract.shipmentDescription : '';
+
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
-         moment.locale('en-EN');
+        moment.locale('en-EN');
         header = [{
             columns: [{
                 width: '*',
@@ -82,19 +93,19 @@ module.exports = function (salesContract) {
                     style: ['size10'],
                     alignment: "right"
                 }, {
-                        text: 'Date, ' + `${moment(salesContract._createdDate).format('MMMM DD,YYYY')}`,
+                        text: 'Date, ' + `${moment(salesContract._createdDate).add(offset,'h').format('MMMM DD,YYYY')}`,
                         style: ['size10'],
                         alignment: "right"
                     }, {
                         columns: [{
                             width: '40%',
                             stack: [{
-                                text:'MESSRS,\n'+ salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country + '\n' + salesContract.buyer.contact,
+                                text: 'MESSRS,\n' + salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country + '\n' + salesContract.buyer.contact,
                                 style: ['size10'],
                                 alignment: "left"
                             }]
                         }]
-                    },'\n', {
+                    }, '\n', {
                         text: 'SALES CONTRACT NO: ' + no,
                         style: ['size11', 'bold'],
                         alignment: "center"
@@ -132,7 +143,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.comodity.name + comoDesc + '\n' + 'CONSTRUCTION : ' + salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth,
+                        text: salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth + '\n' + salesContract.comodity.name + comoDesc  ,
                         style: ['size10']
                     }]
             }, {
@@ -151,7 +162,7 @@ module.exports = function (salesContract) {
                         text: salesContract.quality.name,
                         style: ['size10']
                     }]
-            },{
+            }, {
                 columns: [
                     {
                         width: '25%',
@@ -159,15 +170,15 @@ module.exports = function (salesContract) {
                         style: ['size10']
                     }, {
                         width: '3%',
-                        text:':',
+                        text: ':',
                         style: ['size10']
                     },
                     {
                         width: '*',
-                        text:salesContract.pieceLength,
+                        text: salesContract.pieceLength,
                         style: ['size10']
                     }]
-        }, {
+            }, {
                 columns: [
                     {
                         width: '25%',
@@ -180,7 +191,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(salesContract.orderQuantity)}` +' ) '+ uom,
+                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + ' ( ' + `${numSpell(quantity)}` + ' ) ' + uom,
                         style: ['size10']
                     }]
             }, {
@@ -212,7 +223,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.accountBank.currency.symbol + " " + `${parseFloat(amount).toLocaleString(locale, locale.currency)}`+" ( "+`${numSpell(amount)}`+ salesContract.accountBank.currency.description.toUpperCase() + " ) (APPROXIMATELLY)",
+                        text: salesContract.accountBank.currency.symbol + " " + `${parseFloat(amount).toLocaleString(locale, locale.currency)}` + " ( " + `${numSpell(amount)}` + salesContract.accountBank.currency.description.toUpperCase() + " ) (APPROXIMATELLY)",
                         style: ['size10']
                     }]
             }, {
@@ -228,7 +239,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appx+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
+                        text: appx + " " + `${moment(salesContract.deliverySchedule).add(offset,'h').format('MMMM YYYY').toUpperCase()}` + shipmentDesc,
                         style: ['size10']
                     }]
             }, {
@@ -276,12 +287,12 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: '- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- '+ salesContract.shippingQuantityTolerance +"% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - LOCAL CONTAINER DELIVERY CHARGES AT DESTINATION FOR BUYER'S ACCOUNT. \n"+ salesContract.condition,
+                        text: '- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- ' + salesContract.shippingQuantityTolerance + "% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - LOCAL CONTAINER DELIVERY CHARGES AT DESTINATION FOR BUYER'S ACCOUNT. \n" + salesContract.condition,
                         style: ['size10']
                     }]
             }];
 
-        sign = ['\n', '\n', {
+        sign = [ '\n', {
             columns: [{
                 width: '50%',
                 stack: ['Accepted and confirmed : ', '\n\n\n\n', '(                                  )', 'Authorized signature'],
@@ -297,34 +308,34 @@ module.exports = function (salesContract) {
         remark = [{
             columns: [{
                 width: '*',
-                stack: ['\n', {
+                stack: [ {
                     text: 'REMARK :',
                     style: ['size10'],
                     alignment: "left"
-                }, { 
-                        ul:[
+                }, {
+                        ul: [
                             {
                                 text: 'All instructions regarding sticker, shipping marks etc. to be received 1 (one) month prior to shipment.',
                                 style: ['size10'],
                                 alignment: "justify"
-                            },{
-                                text: 'Beneficiary : P.T. DAN LIRIS KELURAHAN BANARAN, KECAMATAN GROGOL SUKOHARJO - INDONESIA (Phone No. 0271-740888 / 714400). \n'+'Payment Transferred to: \n' + 'PAYMENT TO BE TRANSFERRED TO BANK '+ salesContract.accountBank.bankName + '\n' + salesContract.accountBank.bankAddress + '\n' + 'ACCOUNT NAME : ' + salesContract.accountBank.accountName + '\n' + 'ACCOUNT NO : ' + salesContract.accountBank.accountNumber + ' SWIFT CODE : ' + salesContract.accountBank.swiftCode ,
+                            }, {
+                                text: 'Beneficiary : P.T. DAN LIRIS KELURAHAN BANARAN, KECAMATAN GROGOL SUKOHARJO - INDONESIA (Phone No. 0271-740888 / 714400). \n' + 'Payment Transferred to: \n' + 'PAYMENT TO BE TRANSFERRED TO BANK ' + salesContract.accountBank.bankName + '\n' + salesContract.accountBank.bankAddress + '\n' + 'ACCOUNT NAME : ' + salesContract.accountBank.accountName + '\n' + 'ACCOUNT NO : ' + salesContract.accountBank.accountNumber + ' SWIFT CODE : ' + salesContract.accountBank.swiftCode,
                                 style: ['size10'],
                                 alignment: "justify"
-                            },{
-                                text:salesContract.termOfPayment.termOfPayment+' to be negotiable with BANK '+ salesContract.accountBank.bankName,
+                            }, {
+                                text: salesContract.termOfPayment.termOfPayment + ' to be negotiable with BANK ' + salesContract.accountBank.bankName,
                                 style: ['size10'],
                                 alignment: "justify"
-                            },{
+                            }, {
                                 text: 'Please find enclosed some Indonesia Banking Regulations.',
                                 style: ['size10'],
                                 alignment: "justify"
-                            },{
+                            }, {
                                 text: 'If you find anything not order, please let us know immediately.',
                                 style: ['size10'],
                                 alignment: "justify"
                             }]
-                        }]
+                    }]
             }]
         }];
 
@@ -333,7 +344,7 @@ module.exports = function (salesContract) {
             var header2 = [{
                 width: '*',
                 stack: [{
-                    text: 'Date, ' + `${moment(salesContract._createdDate).format('MMMM DD,YYYY')}`,
+                    text: 'Date, ' + `${moment(salesContract._createdDate).add(offset,'h').format('MMMM DD,YYYY')}`,
                     style: ['size10'],
                     alignment: "right"
                 }, {
@@ -349,7 +360,7 @@ module.exports = function (salesContract) {
 
             var subheader2 = [{
                 stack: ['\n', {
-                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(salesContract.orderQuantity)}` +' ) ' + uom + ' of' + '\n' + salesContract.comodity.name + comoDesc + '\n' + 'CONSTRUCTION : ' + salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth,
+                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + ' ( ' + `${numSpell(quantity)}` + ' ) ' + uom + ' of' + '\n' + salesContract.comodity.name + comoDesc + '\n' + 'CONSTRUCTION : ' + salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth,
                     style: ['size10'],
                     alignment: "justify"
                 }, '\n', {
@@ -363,7 +374,7 @@ module.exports = function (salesContract) {
                     }]
             }, '\n', '\n'];
 
-            var sign2 = ['\n', '\n', {
+            var sign2 = [ '\n', {
                 columns: [{
                     width: '50%',
                     stack: ['Accepted and confirmed : ', '\n\n\n\n', '(                                  )', 'Authorized signature'],
@@ -439,7 +450,7 @@ module.exports = function (salesContract) {
             columns: [{
                 width: '*',
                 stack: [{
-                    text: 'Sukoharjo, ' + `${moment(salesContract._createdDate).format(locale.date.format)}`,
+                    text: 'Sukoharjo, ' + `${moment(salesContract._createdDate).add(offset,'h').format(locale.date.format)}`,
                     style: ['size10'],
                     alignment: "left"
                 }, {
@@ -468,7 +479,7 @@ module.exports = function (salesContract) {
             text: 'Dengan Hormat,\n' + 'Sesuai dengan pesanan/ order Bapak/Ibu kepada kami, maka bersama ini kami kirimkan surat persetujuan pesanan dengan ketentuan dan syarat-syarat di bawah ini :',
             style: ['size10'],
             alignment: "left"
-        },'\n',
+        }, '\n',
             {
                 columns: [
                     {
@@ -530,7 +541,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +" ( "+`${say(salesContract.orderQuantity," )")}` +" "+ uomLocal,
+                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " + `${say(quantity, " )")}` + " " + uomLocal,
                         style: ['size10']
                     }]
             }, {
@@ -642,10 +653,10 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appxLocal+" "+`${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
+                        text: appxLocal + " " + `${moment(salesContract.deliverySchedule).add(offset,'h').format('MMMM YYYY').toUpperCase()}`,
                         style: ['size10']
                     }]
-            },{
+            }, {
                 columns: [
                     {
                         width: '25%',
@@ -653,15 +664,15 @@ module.exports = function (salesContract) {
                         style: ['size10']
                     }, {
                         width: '3%',
-                        text:':',
+                        text: ':',
                         style: ['size10']
                     },
                     {
                         width: '*',
-                        text:salesContract.pieceLength,
+                        text: salesContract.pieceLength,
                         style: ['size10']
                     }]
-        }, {
+            }, {
                 columns: [
                     {
                         width: '25%',
@@ -693,7 +704,7 @@ module.exports = function (salesContract) {
                         text: salesContract.remark,
                         style: ['size10']
                     }]
-            },'\n', {
+            }, '\n', {
                 text: 'Demikian konfirmasi order ini kami sampaikan untuk diketahui dan dipergunakan seperlunya. Tembusan surat ini mohon dikirim kembali setelah ditanda tangani dan dibubuhi cap perusahaan.',
                 style: ['size10'],
                 alignment: "left"
@@ -749,7 +760,7 @@ module.exports = function (salesContract) {
     var Sc = {
         pageSize: 'A4',
         pageOrientation: 'portrait',
-        pageMargins: [40, 130, 40, 40],
+        pageMargins: [40, 110, 40, 20],
         content: [].concat(header, subheader, body, sign, remark, footer),
         styles: {
             size06: {
