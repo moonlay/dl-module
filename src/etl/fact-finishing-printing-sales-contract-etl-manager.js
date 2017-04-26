@@ -62,7 +62,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
     }
 
     extract(time) {
-        var timestamp = new Date(1970, 1, 1);
+        var timestamp = new Date(time[0].start);
         return this.finishingPrintingSalesContractManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
@@ -72,9 +72,9 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
     orderQuantityConvertion(uom, quantity) {
         if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity * 109361 / 100000;
-        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
             return quantity;
+        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
+            return quantity * 0.9144;
         } else {
             return quantity;
         }
@@ -82,7 +82,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
     joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth) {
         if (material !== null && materialConstruction !== null && yarnMaterialNo !== null && materialWidth !== null) {
-            return `'${material + " " + materialConstruction + " " + yarnMaterialNo + " " + materialWidth}'`;
+            return `'${material.replace(/'/g, '"') + " " + materialConstruction.replace(/'/g, '"') + " " + yarnMaterialNo.replace(/'/g, '"') + " " + materialWidth.replace(/'/g, '"')}'`;
         } else {
             return null;
         }
@@ -108,9 +108,9 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
                 totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
                 buyerCode: item.buyer ? `'${item.buyer.code}'` : null,
                 productionType: `'${"Finishing Printing"}'`,
-                construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
+                construction: this.joinConstructionString(material.replace(/'/g, '"'), materialConstruction.replace(/'/g, '"'), yarnMaterialNo.replace(/'/g, '"'), materialWidth.replace(/'/g, '"')),
                 materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
-                materialWidth: item.materialWidth ? `'${item.materialWidth}'` : null,
+                materialWidth: item.materialWidth ? `'${item.materialWidth.replace(/'/g, '"')}'` : null,
                 material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null,
                 deleted: `'${item._deleted}'`
             }
