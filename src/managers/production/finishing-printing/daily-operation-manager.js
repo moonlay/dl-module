@@ -605,14 +605,14 @@ module.exports = class DailyOperationManager extends BaseManager {
         xls.options["BS"] = "number";
         xls.options["Keterangan BQ"] = "string";
 
-        if(query.sdate && query.edate){
-            xls.name = `Daily Operation Report ${moment(new Date(query.sdate)).format(dateFormat)} - ${moment(new Date(query.edate)).format(dateFormat)}.xlsx`;
+        if(query.dateFrom && query.dateTo){
+            xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        else if(!query.sdate && query.edate){
-            xls.name = `Daily Operation Report ${moment(new Date(query.edate)).format(dateFormat)}.xlsx`;
+        else if(!query.dateFrom && query.dateTo){
+            xls.name = `Daily Operation Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        else if(query.sdate && !query.edate){
-            xls.name = `Daily Operation Report ${moment(new Date(query.sdate)).format(dateFormat)}.xlsx`;
+        else if(query.dateFrom && !query.dateTo){
+            xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
         }
         else
             xls.name = `Daily Operation Report.xlsx`;

@@ -47,6 +47,43 @@ class PackingDataUtil {
             })
     }
 
+        getNewDataItems() {
+        return Promise.all([productionOrderDataUtil.getNewTestData()])
+            .then(result => {
+                var productionOrder = result[0];
+
+
+                var data = {
+                    code: codeGenerator(),
+                    pointSystem: 10,
+                    productionOrderId: productionOrder._id,
+                    productionOrderNo: productionOrder.orderNo,
+                    date: new Date(),
+                    buyer: productionOrder.buyer.name,
+                    buyerLocation: productionOrder.buyer.type,
+                    packingUom: "PCS",
+                    colorCode: productionOrder.details[0].code,
+                    items: [{
+                        lot: "a",
+                        grade: "",
+                        weight: 0,
+                        length: 0,
+                        quantity: 0,
+                        remark: ""
+                    }, {
+                        lot: "a",
+                        grade: "",
+                        weight: 0,
+                        length: 0,
+                        quantity: 0,
+                        remark: ""
+                    }]
+                };
+
+                return data;
+            })
+    }
+
     getNewTestData() {
         return helper
             .getManager(PackingManager)
