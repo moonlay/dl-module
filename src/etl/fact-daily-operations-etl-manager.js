@@ -70,13 +70,13 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
         }).toArray();
     }
 
-    orderQuantityConvertion(uom, quantity) {
-        if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity;
-        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
-            return quantity * 0.9144;
-        }
-    }
+    // orderQuantityConvertion(uom, quantity) {
+    //     if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
+    //         return quantity;
+    //     } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
+    //         return quantity * 0.9144;
+    //     }
+    // }
 
     transform(data) {
         var result = data.map((item) => {
