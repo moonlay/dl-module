@@ -64,7 +64,7 @@ module.exports = class DimSupplierEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(time[0].finish);
+        var timestamp = new Date(time[0].start);
         return this.supplierManager.collection.find({
             _deleted: false,
             _createdBy: {
