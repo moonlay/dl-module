@@ -72,9 +72,9 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
     orderQuantityConvertion(uom, quantity) {
         if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity * 109361 / 100000;
-        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
             return quantity;
+        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
+            return quantity * 0.9144;
         } else {
             return quantity;
         }
