@@ -289,7 +289,7 @@ it("#08. should error when create new data Input with 0 input value", function(d
 
 it("#09. should error when create new data with date Input greater than today", function(done) {
     var data = dataUtilInput;
-    var dateTomorrow = new Date().setDate(new Date().getDate() + 1);
+    var dateTomorrow = new Date().setDate(new Date().getDate() + 2);
     data.dateInput = moment(dateTomorrow).format('YYYY-MM-DD');
     dailyOperationManager.create(data)
         .then(daily => {
@@ -308,7 +308,8 @@ it("#09. should error when create new data with date Input greater than today", 
 
 it("#10. should error when create new data with time Input greater than today", function(done) {
     var data = dataUtilInput;
-    var dateNow = new Date();
+    var dateTamp = new Date();
+    var dateNow = new Date(dateTamp.setHours(dateTamp.getHours() + 7));
     var timeInMillisNow = dateNow.getTime() % 86400000;
     data.dateInput = moment(dateNow).format('YYYY-MM-DD');
     data.timeInput = timeInMillisNow + 60000;
@@ -443,7 +444,7 @@ it("#15. on step 1 : should error when create new data with date Output greater 
     dataUtilOutput.badOutput = 0;
     dataUtilOutput.timeOutput = 20000;
     var data = dataUtilOutput;
-    var dateTomorrow = new Date().setDate(new Date().getDate() + 1);
+    var dateTomorrow = new Date().setDate(new Date().getDate() + 2);
     data.dateOutput = moment(dateTomorrow).format('YYYY-MM-DD');
     dailyOperationManager.create(data)
         .then(daily => {
@@ -462,7 +463,8 @@ it("#15. on step 1 : should error when create new data with date Output greater 
 
 it("#16. on step 1 : should error when create new data with time Output greater than today", function(done) {
     var data = dataUtilOutput;
-    var dateNow = new Date();
+    var dateTamp = new Date();
+    var dateNow = new Date(dateTamp.setHours(dateTamp.getHours() + 7));
     var timeInMillisNow = dateNow.getTime() % 86400000;
     data.dateOutput = moment(dateNow).format('YYYY-MM-DD');
     data.timeOutput = timeInMillisNow + 60000;

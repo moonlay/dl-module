@@ -7,10 +7,17 @@ var moment = require('moment');
 var WeavingSalesContractManager = require("../../../src/managers/sales/weaving-sales-contract-manager");
 var weavingSalesContractManager = null;
 
+var buyerDataUtil = require("../../data-util/master/buyer-data-util");
+var BuyerManager= require("../../../src/managers/master/buyer-manager");
+var buyerManager;
+
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
             weavingSalesContractManager = new WeavingSalesContractManager(db, {
+                username: 'dev'
+            });
+            buyerManager = new BuyerManager(db, {
                 username: 'dev'
             });
             done();
@@ -114,6 +121,54 @@ it('#03. should error when create new data with non existent quality, comodity, 
                         e.errors.should.have.property('materialConstruction');
                         e.errors.should.have.property('yarnMaterial');
                         e.errors.should.have.property('uom');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+var createdDataBuyer;
+var createdDataBuyerId;
+it("#04. should success when create new data export buyer", function(done) {
+    buyerDataUtil.getNewData()
+        .then((data) => {
+            data.type = "Ekspor";
+            createdDataBuyer = data;
+            buyerManager.create(data)
+                .then((id) => {
+                    id.should.be.Object();
+                    createdDataBuyerId = id;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        });
+});
+
+it('#05. it should error when create new data with export buyer with agent without comission, term of shipment', function (done) {
+    WeavingSalesContractDataUtil.getNewData()
+        .then(sc => {
+
+            sc.buyer = createdDataBuyer;
+            sc.buyer._id = createdDataBuyerId;
+            sc.comission = '';
+            sc.termOfShipment = '';
+
+            weavingSalesContractManager.create(sc)
+                .then(id => {
+                    done("should error when create new data with export buyer with agent without comission, term of shipment");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('comission');
+                        e.errors.should.have.property('termOfShipment');
                         done();
                     }
                     catch (ex) {
