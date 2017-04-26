@@ -108,7 +108,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
                 totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
                 buyerCode: item.buyer ? `'${item.buyer.code}'` : null,
                 productionType: `'${"Finishing Printing"}'`,
-                construction: this.joinConstructionString(material.replace(/'/g, '"'), materialConstruction.replace(/'/g, '"'), yarnMaterialNo.replace(/'/g, '"'), materialWidth.replace(/'/g, '"')),
+                construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
                 materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
                 materialWidth: item.materialWidth ? `'${item.materialWidth.replace(/'/g, '"')}'` : null,
                 material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null,
