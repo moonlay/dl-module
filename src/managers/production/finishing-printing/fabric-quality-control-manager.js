@@ -24,7 +24,7 @@ var moment = require("moment");
 module.exports = class FabricQualityControlManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
-        this.collection = this.db.use(Map.production.finishingPrinting.qualityControl.defect.collection.FabricQualityControl); 
+        this.collection = this.db.use(Map.production.finishingPrinting.qualityControl.defect.collection.FabricQualityControl);
 
         this.kanbanManager = new KanbanManager(db, user);
         this.productionOrderManager = new ProductionOrderManager(db, user);
@@ -51,7 +51,22 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [operatorFilter, machineFilter];
+            var productionOrderNoFilter = {
+                "productionOrderNo": {
+                    "$regex": regex
+                }
+            };
+            var cartNoFilter = {
+                "cartNo": {
+                    "$regex": regex
+                }
+            };
+            var productionOrderTypeFilter = {
+                "productionOrderType": {
+                    "$regex": regex
+                }
+            };
+            keywordFilter["$or"] = [operatorFilter, machineFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -96,6 +111,10 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
                 if (valid.pointSystem !== 10 && valid.pointSystem !== 4)
                     errors["pointSystem"] = i18n.__("FabricQualityControl.pointSystem.invalid:%s is not valid", i18n.__("FabricQualityControl.pointSystem._:Point System")); //"Grade harus diisi";   
+                else if (valid.pointSystem === 4) {
+                    if (valid.pointLimit === 0)
+                        errors["pointLimit"] = i18n.__("FabricQualityControl.pointLimit.invalid:%s is not valid", i18n.__("FabricQualityControl.pointLimit._:Point Limit")); //"Jika 4 PointSystem, Limit harus diisi";
+                }
 
                 if (!valid.dateIm)
                     errors["dateIm"] = i18n.__("FabricQualityControl.dateIm.isRequired:%s is required", i18n.__("FabricQualityControl.dateIm._:Date")); //"Grade harus diisi";
@@ -163,6 +182,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
                 valid.fabricGradeTests.forEach(test => {
                     test.pointSystem = valid.pointSystem;
+                    test.pointLimit = valid.pointLimit;
                     this.calculateGrade(test);
                 });
 
@@ -184,15 +204,14 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 _updatedDate: -1
             }
         }
-        var codeIndex = {
-            name: `ix_${Map.production.finishingPrinting.qualityControl.defect.collection.FabricQualityControl}_code`,
+        var productionOrderNoIndex = {
+            name: `ix_${Map.production.finishingPrinting.qualityControl.defect.collection.FabricQualityControl}_productionOrderNo`,
             key: {
-                code: 1
-            },
-            unique: true
-        };
+                productionOrderNo: 1
+            }
+        }
 
-        return this.collection.createIndexes([dateIndex, codeIndex]);
+        return this.collection.createIndexes([dateIndex, productionOrderNoIndex]);
     }
 
     calculateGrade(fabricGradeTest) {
@@ -213,16 +232,19 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         }, 0);
 
         var finalLength = fabricGradeTest.initLength - fabricGradeTest.avalLength - fabricGradeTest.sampleLength;
-        var finalScore = finalLength > 0 ? score / finalLength : 0;
-        var grade = this.__scoreGrade(fabricGradeTest.pointSystem, finalScore);
+        var finalArea = fabricGradeTest.initLength * fabricGradeTest.width;
+        var finalScoreTS = finalLength > 0 && fabricGradeTest.pointSystem === 10 ? score / finalLength : 0;
+        var finalScoreFS = finalLength > 0 && fabricGradeTest.pointSystem === 4 ? score * 100 / finalArea : 0;
+        var grade = fabricGradeTest.pointSystem === 10 ? this.__scoreGrade(fabricGradeTest.pointSystem, finalScoreTS, fabricGradeTest.pointLimit) : this.__scoreGrade(fabricGradeTest.pointSystem, finalScoreFS, fabricGradeTest.pointLimit);
 
         fabricGradeTest.score = score;
         fabricGradeTest.finalLength = finalLength;
-        fabricGradeTest.finalScore = finalScore;
+        fabricGradeTest.finalArea = fabricGradeTest.pointSystem === 4 ? finalArea : 0;
+        fabricGradeTest.finalScore = parseFloat(fabricGradeTest.pointSystem === 10 ? finalScoreTS : finalScoreFS);
         fabricGradeTest.grade = grade;
     }
 
-    __scoreGrade(pointSystem, finalScore) {
+    __scoreGrade(pointSystem, finalScore, pointLimit) {
         if (pointSystem === 10) {
             if (finalScore >= 2.71)
                 return "BS";
@@ -233,8 +255,13 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             else
                 return "A";
         }
-        else
-            return "-";
+        else {
+            if (finalScore <= pointLimit) {
+                return "OK";
+            } else {
+                return "Not OK";
+            }
+        }
     }
 
     pdf(qualityControl) {
@@ -257,8 +284,8 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         var _defaultFilter = {
             _deleted: false
         };
-        var kanbanCodeFilter = {};
         var productionOrderNoFilter = {};
+        var cartNoFilter = {};
         var productionOrderTypeFilter = {};
         var shiftImFilter = {};
         var dateFromFilter = {};
@@ -269,12 +296,12 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
         var now = new Date();
 
-        if (info.kanbanCode && info.kanbanCode !== '') {
-            kanbanCodeFilter = { 'kanbanCode': info.kanbanCode };
-        }
-
         if (info.productionOrderNo && info.productionOrderNo != '') {
             productionOrderNoFilter = { 'productionOrderNo': info.productionOrderNo };
+        }
+
+        if (info.cartNo && info.cartNo != '') {
+            cartNoFilter = { 'cartNo': info.cartNo };
         }
 
         if (info.productionOrderType && info.productionOrderType != '') {
@@ -292,7 +319,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             }
         };
 
-        query = { '$and': [_defaultFilter, kanbanCodeFilter, productionOrderNoFilter, productionOrderTypeFilter, shiftImFilter, filterDate] };
+        query = { '$and': [_defaultFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter, shiftImFilter, filterDate] };
 
         return this._createIndexes()
             .then((createIndexResults) => {
