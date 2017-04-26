@@ -6,10 +6,10 @@ var assert = require('assert');
 
 var generateCode = require("../../../utils/code-generator");
 
-var ProductionOrderManager = require('../../sales/production-order-manager'); 
+var ProductionOrderManager = require('../../sales/production-order-manager');
 
 var Models = require("dl-models");
-var Map = Models.map; 
+var Map = Models.map;
 var PackingModel = Models.production.finishingPrinting.qualityControl.Packing;
 var PackingItemModel = Models.production.finishingPrinting.qualityControl.PackingItem;
 
@@ -20,8 +20,8 @@ var moment = require("moment");
 module.exports = class PackingManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
-        this.collection = this.db.use(Map.production.finishingPrinting.qualityControl.collection.Packing);  
-        this.productionOrderManager = new ProductionOrderManager(db, user); 
+        this.collection = this.db.use(Map.production.finishingPrinting.qualityControl.collection.Packing);
+        this.productionOrderManager = new ProductionOrderManager(db, user);
     }
 
     _getQuery(paging) {
@@ -86,7 +86,7 @@ module.exports = class PackingManager extends BaseManager {
                     errors["productionOrderId"] = i18n.__("Packing.productionOrderId.isRequired:%s is required", i18n.__("Packing.productionOrderId._:Production Order")); //"Grade harus diisi";   
                 else if (!_productionOrder)
                     errors["productionOrderId"] = i18n.__("Packing.productionOrderId: %s not found", i18n.__("Packing.productionOrderId._:Production Order"));
- 
+
                 if (!valid.date)
                     errors["date"] = i18n.__("Packing.date.isRequired:%s is required", i18n.__("Packing.date._:Date")); //"Grade harus diisi";
 
@@ -96,14 +96,13 @@ module.exports = class PackingManager extends BaseManager {
                 var targetColor;
                 if (!valid.colorCode || valid.colorCode === '')
                     errors["colorCode"] = i18n.__("Packing.colorCode.isRequired:%s is required", i18n.__("Packing.colorCode._:Selected Color")); //"Operator IM harus diisi";   
-                else
-                {
-                    targetColor = _productionOrder.details.find((item)=> item.code === valid.colorCode);
-                    if(!targetColor)
+                else {
+                    targetColor = _productionOrder.details.find((item) => item.code === valid.colorCode);
+                    if (!targetColor)
                         errors["colorCode"] = i18n.__("Packing.colorCode.notFound:%s not found", i18n.__("Packing.colorCode._:Selected Color")); //"Operator IM harus diisi";       
-                        
+
                 }
- 
+
                 valid.items = valid.items || [];
                 if (valid.items && valid.items.length <= 0) {
                     errors["items"] = i18n.__("Packing.items.isRequired:%s is required", i18n.__("Packing.items._: Packing Items")); //"Harus ada minimal 1 barang";
@@ -114,17 +113,16 @@ module.exports = class PackingManager extends BaseManager {
                         var itemsError = {};
                         if (!item.lot || item.lot.trim() === "")
                             itemsError["lot"] = i18n.__("Packing.items.lot.isRequired:%s is required", i18n.__("Packing.items.lot._:Lot"));
-                            
+
                         if (!item.grade || item.grade.trim() === "")
                             itemsError["grade"] = i18n.__("Packing.items.grade.isRequired:%s is required", i18n.__("Packing.items.grade._:Grade"));
                         else {
                             var dup = valid.items.find((test, idx) => (item.lot === test.lot && item.grade === test.grade) && index != idx);
-                            if (dup)
-                            {
+                            if (dup) {
                                 itemsError["lot"] = i18n.__("Packing.items.lot.isDuplicate:%s is duplicate", i18n.__("Packing.items.lot._:Lot"));
                                 itemsError["grade"] = i18n.__("Packing.items.grade.isDuplicate:%s is duplicate", i18n.__("Packing.items.grade._:Grade"));
                             }
-                        } 
+                        }
 
                         itemsErrors.push(itemsError);
                     })
@@ -146,8 +144,8 @@ module.exports = class PackingManager extends BaseManager {
 
                 valid.productionOrderId = _productionOrder._id;
                 valid.productionOrderNo = _productionOrder.orderNo;
-                valid.buyer = _productionOrder.buyer.name; 
-                valid.buyerLocation = _productionOrder.buyer.type; 
+                valid.buyer = _productionOrder.buyer.name;
+                valid.buyerLocation = _productionOrder.buyer.type;
                 valid.colorName = targetColor.colorRequest;
                 valid.construction = `${_productionOrder.material.name} / ${_productionOrder.materialConstruction.name} / ${_productionOrder.materialWidth}`;
 
@@ -165,6 +163,23 @@ module.exports = class PackingManager extends BaseManager {
 
 
             })
+    }
+
+
+    pdf(packing, offset) {
+        return new Promise((resolve, reject) => {
+            var getDefinition = require("../../../pdf/definitions/packing");
+            var definition = getDefinition(packing, offset);
+
+            var generatePdf = require("../../../pdf/pdf-generator");
+            generatePdf(definition, offset)
+                .then(binary => {
+                    resolve(binary);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        })
     }
 
     _createIndexes() {

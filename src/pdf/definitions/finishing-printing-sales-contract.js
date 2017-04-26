@@ -728,7 +728,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:' - Pesanan tidak dapat dibatalkan kecuali disetujui oleh kedua belah pihak. \n - Kelebihan / kekurangan pengiriman maksimal 10% dari jumlah pesanan.' + salesContract.condition,
+                        text:' - Pesanan tidak dapat dibatalkan kecuali disetujui oleh kedua belah pihak. \n - Kelebihan / kekurangan pengiriman maksimal 10% dari jumlah pesanan. \n' + salesContract.condition,
                         style: ['size10']
                     }]
         },'\n',{
