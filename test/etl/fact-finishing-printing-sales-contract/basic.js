@@ -49,7 +49,7 @@ it("#02. should success when transforming data", function (done) {
             yarnMaterial: {
                 name: ""
             },
-            materialWidth: 1
+            materialWidth: ""
         },
         {
             uom: {
