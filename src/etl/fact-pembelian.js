@@ -500,17 +500,6 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
                         this.sql.multiple = true;
 
-                        // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\fact.txt";
-
-                        // fs.writeFile(path, sqlQuery, function (error) {
-                        //     if (error) {
-                        //         console.log("write error:  " + error.message);
-                        //     } else {
-                        //         console.log("Successful Write to " + path);
-                        //     }
-                        // });
-
                         return Promise.all(command)
                             .then((results) => {
                                 request.execute("DL_UPSERT_FACT_PEMBELIAN").then((execResult) => {

@@ -70,25 +70,13 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
         }).toArray();
     }
 
-    orderQuantityConvertion(uom, quantity) {
-        if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity * 109361 / 100000;
-        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
-            return quantity;
-        }
-    }
-
-    getStatus(diff) {
-        if (diff > 0) {
-            return "Pemuaian";
-        }
-        else if (diff === 0) {
-            return "Tetap";
-        }
-        else if (diff < 0) {
-            return "Penyusutan";
-        }
-    }
+    // orderQuantityConvertion(uom, quantity) {
+    //     if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
+    //         return quantity;
+    //     } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
+    //         return quantity * 0.9144;
+    //     }
+    // }
 
     transform(data) {
         var result = data.map((item) => {
@@ -101,7 +89,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
             return {
                 _deleted: `'${item._deleted}'`,
-                badOutput: item.badOutput ? `'${item.badOutput}'` : null,
+                badOutput: item.badOutput ? `${item.badOutput}` : null,
                 badOutputDescription: item.badOutputDescription ? `'${item.badOutputDescription}'` : null,
                 code: item.code ? `'${item.code}'` : null,
                 inputDate: item.dateInput ? `'${moment(item.dateInput).format("YYYY-MM-DD")}'` : null,
@@ -126,17 +114,14 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                 machineCode: item.machine && item.machine.code ? `'${item.machine.code}'` : null,
                 machineCondition: item.machine && item.machine.condition ? `'${item.machine.condition}'` : null,
                 machineManufacture: item.machine && item.machine.manufacture ? `'${item.machine.manufacture}'` : null,
-                machineMonthlyCapacity: item.machine && item.machine.monthlyCapacity && item.kanban.selectedProductionOrderDetail.uom ? `${this.orderQuantityConvertion(orderUom, item.machine.monthlyCapacity)}` : null,
+                machineMonthlyCapacity: item.machine && item.machine.monthlyCapacity  ? `${item.machine.monthlyCapacity}` : null,
                 machineName: item.machine && item.machine.name ? `'${item.machine.name}'` : null,
                 machineProcess: item.machine && item.machine.process ? `'${item.machine.process}'` : null,
                 machineYear: item.machine && item.machine.year ? `'${item.machine.year}'` : null,
-                inputQuantityConvertion: item.kanban.selectedProductionOrderDetail.uom && item.input ? `${this.orderQuantityConvertion(orderUom, item.input)}` : null,
-                goodOutputQuantityConvertion: item.goodOutput && item.kanban.selectedProductionOrderDetail.uom ? `${this.orderQuantityConvertion(orderUom, item.goodOutput)}` : null,
-                badOutputQuantityConvertion: item.badOutput && item.kanban.selectedProductionOrderDetail.uom ? `${this.orderQuantityConvertion(orderUom, item.badOutput)}` : null,
-                failedOutputQuantityConvertion: item.failedOutput && item.kanban.selectedProductionOrderDetail.uom ? `${this.orderQuantityConvertion(orderUom, item.failedOutput)}` : null,
-                outputQuantity: item.badOutput || item.goodOutput  ? `${this.orderQuantityConvertion(orderUom, item.goodOutput + item.badOutput)}` : null,
-                inputOutputDiff: item.badOutput || item.goodOutput  ? `${this.orderQuantityConvertion(orderUom, (item.goodOutput + item.badOutput) - item.input)}` : null,
-                status: item.badOutput || item.goodOutput  ? `'${this.getStatus((item.goodOutput + item.badOutput) - item.input)}'` : null
+                inputQuantityConvertion: item.kanban.selectedProductionOrderDetail.uom && item.input ? `${item.input}` : null,
+                goodOutputQuantityConvertion: item.goodOutput && item.kanban.selectedProductionOrderDetail.uom ? `${item.goodOutput}` : null,
+                badOutputQuantityConvertion: item.badOutput && item.kanban.selectedProductionOrderDetail.uom ? `${item.badOutput}` : null,
+                failedOutputQuantityConvertion: item.failedOutput && item.kanban.selectedProductionOrderDetail.uom ? `${item.failedOutput}` : null
             }
 
         });
@@ -174,9 +159,9 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [dbo].[DL_Fact_Daily_Operation_Temp]([_deleted], [badOutput], [badOutputDescription], [code], [inputDate], [outputDate], [goodOutput], [input], [shift], [inputTime], [outputTime], [kanbanCode], [kanbanGrade], [kanbanCartCartNumber], [kanbanCartCode], [kanbanCartPcs], [kanbanCartQty], [kanbanInstructionCode], [kanbanInstructionName], [orderType], [selectedProductionOrderDetailCode], [selectedProductionOrderDetailColorRequest], [selectedProductionOrderDetailColorTemplate], [machineCode], [machineCondition], [machineManufacture], [machineMonthlyCapacity], [machineName], [machineProcess], [machineYear], [inputQuantityConvertion], [goodOutputQuantityConvertion], [badOutputQuantityConvertion], [failedOutputQuantityConvertion], [outputQuantity], [inputOutputDiff], [status]) VALUES(${item._deleted}, ${item.badOutput}, ${item.badOutputDescription}, ${item.code}, ${item.inputDate}, ${item.outputDate}, ${item.goodOutput}, ${item.input}, ${item.shift}, ${item.inputTime}, ${item.outputTime}, ${item.kanbanCode}, ${item.kanbanGrade}, ${item.kanbanCartCartNumber}, ${item.kanbanCartCode}, ${item.kanbanCartPcs}, ${item.kanbanCartQty}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.orderType}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.machineCode}, ${item.machineCondition}, ${item.machineManufacture}, ${item.machineMonthlyCapacity}, ${item.machineName}, ${item.machineProcess}, ${item.machineYear}, ${item.inputQuantityConvertion}, ${item.goodOutputQuantityConvertion}, ${item.badOutputQuantityConvertion}, ${item.failedOutputQuantityConvertion}, ${item.outputQuantity}, ${item.inputOutputDiff}, ${item.status});\n`;
+                                var queryString = `INSERT INTO [dbo].[DL_Fact_Daily_Operation_Temp]([_deleted], [badOutput], [badOutputDescription], [code], [inputDate], [outputDate], [goodOutput], [input], [shift], [inputTime], [outputTime], [kanbanCode], [kanbanGrade], [kanbanCartCartNumber], [kanbanCartCode], [kanbanCartPcs], [kanbanCartQty], [kanbanInstructionCode], [kanbanInstructionName], [orderType], [selectedProductionOrderDetailCode], [selectedProductionOrderDetailColorRequest], [selectedProductionOrderDetailColorTemplate], [machineCode], [machineCondition], [machineManufacture], [machineMonthlyCapacity], [machineName], [machineProcess], [machineYear], [inputQuantityConvertion], [goodOutputQuantityConvertion], [badOutputQuantityConvertion], [failedOutputQuantityConvertion]) VALUES(${item._deleted}, ${item.badOutput}, ${item.badOutputDescription}, ${item.code}, ${item.inputDate}, ${item.outputDate}, ${item.goodOutput}, ${item.input}, ${item.shift}, ${item.inputTime}, ${item.outputTime}, ${item.kanbanCode}, ${item.kanbanGrade}, ${item.kanbanCartCartNumber}, ${item.kanbanCartCode}, ${item.kanbanCartPcs}, ${item.kanbanCartQty}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.orderType}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.machineCode}, ${item.machineCondition}, ${item.machineManufacture}, ${item.machineMonthlyCapacity}, ${item.machineName}, ${item.machineProcess}, ${item.machineYear}, ${item.inputQuantityConvertion}, ${item.goodOutputQuantityConvertion}, ${item.badOutputQuantityConvertion}, ${item.failedOutputQuantityConvertion});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 1000 === 0) {
+                                if (count % 10000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "";
                                 }
@@ -189,17 +174,6 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
-
-                        var fs = require("fs");
-                        var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
-
-                        fs.writeFile(path, sqlQuery, function (error) {
-                            if (error) {
-                                console.log("write error:  " + error.message);
-                            } else {
-                                console.log("Successful Write to " + path);
-                            }
-                        });
 
                         return Promise.all(command)
                             .then((results) => {

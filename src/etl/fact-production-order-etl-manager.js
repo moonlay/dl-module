@@ -64,7 +64,7 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(time[0].start);
+        var timestamp = new Date(1970, 1, 1);
         return this.productionOrderManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
@@ -112,15 +112,15 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
 
     orderQuantityConvertion(uom, quantity) {
         if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity * 109361 / 100000;
-        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
             return quantity;
+        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
+            return quantity * 0.9144;
         }
     }
 
     joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth) {
         if (material !== null && materialConstruction !== null && yarnMaterialNo !== null && materialWidth !== null) {
-            return `'${material + " " + materialConstruction + " " + yarnMaterialNo + " " + materialWidth}'`;
+            return `'${material.replace(/'/g, '"') + " " + materialConstruction.replace(/'/g, '"') + " " + yarnMaterialNo.replace(/'/g, '"') + " " + materialWidth.replace(/'/g, '"')}'`;
         } else {
             return null;
         }
@@ -153,9 +153,9 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
                 deliveryDate: item.deliveryDate ? `'${moment(item.deliveryDate).format("L")}'` : null,
                 createdDate: item._createdDate ? `'${moment(item._createdDate).format("L")}'` : null,
                 totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
-                construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
+                construction: this.joinConstructionString(material.replace(/'/g, '"'), materialConstruction.replace(/'/g, '"'), yarnMaterialNo.replace(/'/g, '"'), materialWidth),
                 buyerCode: item.buyer ? `'${item.buyer.code}'` : null,
-                cartQuantity: kanban && kanban.cart && kanban.cart.qty ? `${this.orderQuantityConvertion(orderUom, kanban.cart.qty)}` : null,
+                cartQuantity: kanban && kanban.cart && kanban.cart.qty ? `${kanban.cart.qty}` : null,
                 kanbanCode: kanban && kanban.code ? `'${kanban.code}'` : null,
                 deleted: `'${item._deleted}'`
             }

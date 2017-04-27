@@ -182,16 +182,17 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
 
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                     errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kosong";
-                } else {
+                } 
+                //else {
 
-                    valid.deliverySchedule = new Date(valid.deliverySchedule);
-                    var today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    if (today > valid.deliverySchedule) {
-                        errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
-                    }
+                //     valid.deliverySchedule = new Date(valid.deliverySchedule);
+                //     var today = new Date();
+                //     today.setHours(0, 0, 0, 0);
+                //     if (today > valid.deliverySchedule) {
+                //         errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
+                //     }
 
-                }
+                // }
 
                 if (!valid.incomeTax || valid.incomeTax === '') {
                     errors["incomeTax"] = i18n.__("WeavingSalesContract.incomeTax.isRequired:%s is required", i18n.__("WeavingSalesContract.incomeTax._:IncomeTax")); //"incomeTax tidak boleh kosong";
