@@ -33,22 +33,22 @@ module.exports = class DailyOperationManager extends BaseManager {
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
             var orderNoFilter = {
-                "productionOrder.orderNo": {
+                "kanban.productionOrder.orderNo": {
                     "$regex": regex
                 }
             };
             var colorFilter = {
-                "selectedProductionOrderDetail.color": {
+                "kanban.selectedProductionOrderDetail.color": {
                     "$regex": regex
                 }
             };
             var colorTypeFilter = {
-                "selectedProductionOrderDetail.colorType.name": {
+                "kanban.selectedProductionOrderDetail.colorType.name": {
                     "$regex": regex
                 }
             };
             var cartFilter = {
-                "cart.cartNumber": {
+                "kanban.cart.cartNumber": {
                     "$regex": regex
                 }
             };
@@ -502,46 +502,124 @@ module.exports = class DailyOperationManager extends BaseManager {
         });
     }
 
-    getDailyOperationReport(query){
-        var date = {
-            "$or" : [{
-                "dateInput" : {
-                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
-                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
-            }},{
-                "dateOutput" : {
-                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
-                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
-                }
-            }],
-            "_deleted" : false
-        };
-        var kanbanQuery = {};
-        if(query.kanban)
-        {
-            kanbanQuery = {
-                "kanbanId" : new ObjectId(query.kanban)
-            };
-        }
-        var machineQuery = {};
-        if(query.machine)
-        {
-            machineQuery = {
-                "machineId" : new ObjectId(query.machine)
-            };
-        }
-        var order = {
-            "dateInput" : -1
-        };
-        var Query = {"$and" : [date, machineQuery, kanbanQuery]};
+    // getDailyOperationReport(query){
+    //     var date = {
+    //         "$or" : [{
+    //             "dateInput" : {
+    //                 "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+    //                 "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+    //         }},{
+    //             "dateOutput" : {
+    //                 "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+    //                 "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+    //             }
+    //         }],
+    //         "_deleted" : false
+    //     };
+    //     var kanbanQuery = {};
+    //     if(query.kanban)
+    //     {
+    //         kanbanQuery = {
+    //             "kanbanId" : new ObjectId(query.kanban)
+    //         };
+    //     }
+    //     var machineQuery = {};
+    //     if(query.machine)
+    //     {
+    //         machineQuery = {
+    //             "machineId" : new ObjectId(query.machine)
+    //         };
+    //     }
+    //     var order = {
+    //         "dateInput" : -1
+    //     };
+    //     var Query = {"$and" : [date, machineQuery, kanbanQuery]};
 
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                return this.collection
-                    .where(Query)
-                    .order(order)
-                    .execute();
-            });
+    //     return this._createIndexes()
+    //         .then((createIndexResults) => {
+    //             return this.collection
+    //                 .where(Query)
+    //                 .order(order)
+    //                 .execute();
+    //         });
+    // }
+
+    getDailyOperationReport(query){
+        return new Promise((resolve, reject) => {
+            // var dateTemp = new Date();
+            // var dateString = moment(dateTemp).format('YYYY-MM-DD');
+            // var dateNow = new Date(dateString);
+            // var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            var date = {
+                "$or" : [{
+                    "dateInput" : {
+                        "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                        "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                }},{
+                    "dateOutput" : {
+                        "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                        "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                    }
+                }],
+                "_deleted" : false
+            };
+            var kanbanQuery = {};
+            if(query.kanban)
+            {
+                kanbanQuery = {
+                    "kanbanId" : new ObjectId(query.kanban)
+                };
+            }
+            var machineQuery = {};
+            if(query.machine)
+            {
+                machineQuery = {
+                    "machineId" : new ObjectId(query.machine)
+                };
+            }
+            var order = {
+                "dateInput" : -1
+            };
+            var QueryInput = {"$and" : [date, machineQuery, kanbanQuery, {"type" : "input"}]};
+            var QueryOutput = {"$and" : [date, machineQuery, kanbanQuery, {"type" : "output"}]};
+            this.collection
+                .find({ $query : QueryInput, $orderby : order })
+                .toArray()
+                .then(input => {
+                    this.collection
+                        .find({ $query : QueryOutput, $orderby : order })
+                        .toArray()
+                        .then(output => {
+                            var data = {
+                                data: [],
+                                count: 0,
+                                size: 0,
+                                total: 0,
+                                page: 0
+                            }
+                            var dataTemp = [];
+                            for(var a of input){
+                                var tamp = a;
+                                for(var b of output){
+                                    if(tamp.code === b.code){
+                                        tamp.badOutput = b.badOutput;
+                                        tamp.goodOutput = b.goodOutput;
+                                        tamp.dateOutput = b.dateOutput;
+                                        tamp.timeOutput = b.timeOutput;
+                                        tamp.badOutputDescription = b.badOutputDescription;
+                                    }
+                                }
+                                dataTemp.push(tamp);
+                            }
+                            if(dataTemp.length > 0){
+                                data.data = dataTemp;
+                                data.count = dataTemp.length;
+                                data.total = dataTemp.length;
+                            }
+                            resolve(data);
+                        });
+                });
+        });
     }
 
     getDataDaily(query){
@@ -605,14 +683,14 @@ module.exports = class DailyOperationManager extends BaseManager {
         xls.options["BS"] = "number";
         xls.options["Keterangan BQ"] = "string";
 
-        if(query.sdate && query.edate){
-            xls.name = `Daily Operation Report ${moment(new Date(query.sdate)).format(dateFormat)} - ${moment(new Date(query.edate)).format(dateFormat)}.xlsx`;
+        if(query.dateFrom && query.dateTo){
+            xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        else if(!query.sdate && query.edate){
-            xls.name = `Daily Operation Report ${moment(new Date(query.edate)).format(dateFormat)}.xlsx`;
+        else if(!query.dateFrom && query.dateTo){
+            xls.name = `Daily Operation Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        else if(query.sdate && !query.edate){
-            xls.name = `Daily Operation Report ${moment(new Date(query.sdate)).format(dateFormat)}.xlsx`;
+        else if(query.dateFrom && !query.dateTo){
+            xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
         }
         else
             xls.name = `Daily Operation Report.xlsx`;
