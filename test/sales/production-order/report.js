@@ -301,14 +301,10 @@ it("#12. should success when destroy all data Production Order", function(done) 
             });
 });
 
-it("#13. should success when create new 10 data Production Order without salesContractNo", function(done) {
+it("#13. should success when create new 5 data Production Order without salesContractNo", function(done) {
     var dataReport = [];
     for(var a = 0; a < 5; a++){
         var data = dataUtil.getNewData2({buyer : dataBuyer1, process : dataProcessType1, account : dataAccount1, salesContract : dataSalesContract});
-        dataReport.push(data);
-    }
-    for(var a = 0; a < 5; a++){
-        var data = dataUtil.getNewData1({buyer : dataBuyer1, process : dataProcessType1, account : dataAccount1});
         dataReport.push(data);
     }
     Promise.all(dataReport)
@@ -343,7 +339,7 @@ it("#14. should success get all data Production Order when searh report without 
     manager.getReport({})
             .then(data => {
                 data.should.be.instanceof(Array);
-                data.length.should.equal(20);
+                data.length.should.equal(10);
                 done();
             })
             .catch(e => {

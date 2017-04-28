@@ -152,7 +152,7 @@ class ProductionOrderDataUtil {
                 var _yarn=results[10];
                 var _construction=results[11];
                 var _account= !dataSupport ? results[12] : dataSupport.account ? dataSupport.account : results[12];
-                var _salesContract = results[13];
+                var _salesContract = !dataSupport ? results[13] : dataSupport.salesContract ? dataSupport.salesContract : results[13];
                 var detail = [{
                         code:`code1/${codeGenerator()}`,
                         colorTypeId:color1._id,
@@ -189,7 +189,7 @@ class ProductionOrderDataUtil {
 
                 var data = {
                     salesContractNo: _salesContract.salesContractNo,
-                    orderNo: `orderNo/${codeGenerator()}`,
+                    orderNo: _salesContract.kanban.productionOrder.orderNo,
                     uomId: _uom._id,
                     uom: _uom,
                     buyerId: _buyer._id,
