@@ -64,7 +64,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(time[0].finish);
+        var timestamp = new Date(time[0].start);
         return this.divisionManager.collection.find({
             _updatedDate: {
                 "$gt": timestamp
@@ -132,17 +132,6 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
-
-                        // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
-
-                        // fs.writeFile(path, sqlQuery, function (error) {
-                        //     if (error) {
-                        //         console.log("write error:  " + error.message);
-                        //     } else {
-                        //         console.log("Successful Write to " + path);
-                        //     }
-                        // });
 
                         return Promise.all(command)
                             .then((results) => {

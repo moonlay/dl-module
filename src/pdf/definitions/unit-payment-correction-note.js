@@ -179,23 +179,42 @@ module.exports = function (unitPaymentCorrection) {
         }
     }];
 
-
     var initialValue = {
         priceTotal: 0
     };
 
-    var sum = (items.length > 0 ? items : [initialValue])
+    var _jumlah = (items.length > 0 ? items : [initialValue])
         .map(item => item.priceTotal)
         .reduce(function (prev, curr, index, arr) {
             return prev + curr;
         }, 0);
 
-    var useIncomeTax = unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? sum * 0.1 : 0;
-    var useVAT = unitPaymentCorrection.unitPaymentOrder.useVat ? sum * (unitPaymentCorrection.unitPaymentOrder.vat.rate/100) : 0;
+    var useIncomeTax = unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? _jumlah * 0.1 : 0;
+    var useVAT = unitPaymentCorrection.unitPaymentOrder.useVat ? _jumlah * (unitPaymentCorrection.unitPaymentOrder.vatRate / 100) : 0;
+    var _subTotal = _jumlah;
+    var summary = _jumlah;
+
+    if (unitPaymentCorrection.correctionType === "Jumlah") {
+        if (unitPaymentCorrection.unitPaymentOrder.useIncomeTax) {
+            _subTotal = _subTotal + useIncomeTax;
+            summary = _subTotal;
+        }
+        if (unitPaymentCorrection.unitPaymentOrder.useVat) {
+            summary = summary - useVAT;
+        }
+    } else {
+        if (unitPaymentCorrection.useIncomeTax) {
+            _subTotal = _subTotal + useIncomeTax;
+            summary = _subTotal;
+        }
+        if (unitPaymentCorrection.useVat) {
+            summary = summary - useVAT;
+        }
+    }
 
     var jumlah = {
         columns: [{
-            width: '30%',
+            width: '35%',
             text: 'Jumlah',
             style: ['size08']
         }, {
@@ -203,91 +222,116 @@ module.exports = function (unitPaymentCorrection) {
                 text: currency,
                 style: ['size08']
             }, {
-                width: '65%',
-                text: parseFloat(sum).toLocaleString(locale, locale.currency),
+                width: '60%',
+                text: parseFloat(_jumlah).toLocaleString(locale, locale.currency),
                 style: ['size08', 'right']
-            }],
-        margin: [350, 0, 0, 0]
+            }]
     };
 
     var incometaxTotal = {
         columns: [{
-            width: '30%',
-            text: 'PPN',
+            width: '35%',
+            text: 'PPn 10%',
             style: ['size08']
         }, {
                 width: '5%',
-                text: currency,
+                text: unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? currency : "-",
                 style: ['size08']
             }, {
-                width: '65%',
-                text: parseFloat(useIncomeTax).toLocaleString(locale, locale.currency),
+                width: '60%',
+                text: unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? parseFloat(useIncomeTax).toLocaleString(locale, locale.currency) : "",
                 style: ['size08', 'right']
-            }],
-        margin: [350, 0, 0, 0]
+            }]
     };
 
     var vatTotal = {
         columns: [{
-            width: '30%',
-            text: 'PPH',
+            width: '55%',
+            text: `PPh ${unitPaymentCorrection.unitPaymentOrder.vat.name} ${unitPaymentCorrection.unitPaymentOrder.vatRate} %`,
             style: ['size08']
         }, {
                 width: '5%',
                 text: currency,
                 style: ['size08']
             }, {
-                width: '65%',
+                width: '40%',
                 text: parseFloat(useVAT).toLocaleString(locale, locale.currency),
                 style: ['size08', 'right']
-            }],
-        margin: [350, 0, 0, 0]
+            }]
+    };
+
+    var vatBayar = {
+        columns: [{
+            width: '55%',
+            text: `Jumlah dibayar Ke Supplier`,
+            style: ['size08']
+        }, {
+                width: '5%',
+                text: currency,
+                style: ['size08']
+            }, {
+                width: '40%',
+                text: parseFloat(summary).toLocaleString(locale, locale.currency),
+                style: ['size08', 'right']
+            }]
+    };
+
+    var subTotal = {
+        columns: [{
+                width: '35%',
+                text: 'Total',
+                style: ['size08']
+            }, {
+                width: '5%',
+                text: currency,
+                style: ['size08']
+            }, {
+                width: '60%',
+                text: parseFloat(_subTotal).toLocaleString(locale, locale.currency),
+                style: ['size08', 'right', 'bold']
+            }]
     };
 
     var total = [];
-    var summary = 0;
+
     if (unitPaymentCorrection.correctionType === "Jumlah") {
-        total.push('\n');
-        total.push(jumlah);
-        summary = sum;
-        if (unitPaymentCorrection.unitPaymentOrder.useIncomeTax) {
-            total.push(incometaxTotal);
-            summary = summary + useIncomeTax;
-        }
-        if (unitPaymentCorrection.unitPaymentOrder.useVat) {
-            total.push(vatTotal);
-            summary = summary + useVAT;
-        }
-    } else {
-        total.push('\n');
-        total.push(jumlah);
-        summary = sum;
-        if (unitPaymentCorrection.useIncomeTax) {
-            total.push(incometaxTotal);
-            summary = summary + useIncomeTax;
-        }
-        if (unitPaymentCorrection.useVat) {
-            total.push(vatTotal);
-            summary = summary + useVAT;
-        }
-    }
-    
-    total.push({
-        columns: [{
-            width: '30%',
-            text: 'Total',
+        total = ['\n',{
+            columns: [
+                {
+                    width: '40%',
+                    stack: ['\n', unitPaymentCorrection.unitPaymentOrder.useVat ? vatTotal : '', unitPaymentCorrection.unitPaymentOrder.useVat ? vatBayar : '\n']
+                },
+                {
+                    width: '20%',
+                    text: ''
+                },
+                {
+                    width: '40%',
+                    stack: [jumlah, incometaxTotal, subTotal]
+                }
+            ],
             style: ['size08']
-        }, {
-                width: '5%',
-                text: currency,
-                style: ['size08']
-            }, {
-                width: '65%',
-                text: parseFloat(summary).toLocaleString(locale, locale.currency),
-                style: ['size08', 'right', 'bold']
-            }],
-        margin: [350, 0, 0, 0]
-    });
+        },'\n'];
+
+    } else {
+        total = ["\n",{
+            columns: [
+                {
+                    width: '40%',
+                    stack: ['\n', unitPaymentCorrection.useVat ? vatTotal : '', unitPaymentCorrection.unitPaymentOrder.useVat ? vatBayar : '']
+                },
+                {
+                    width: '20%',
+                    text: ''
+                },
+                {
+                    width: '40%',
+                    stack: [jumlah, incometaxTotal, subTotal]
+                }
+            ],
+            style: ['size08']
+        },"\n"];
+    }
 
     var terbilang = {
         text: `Terbilang : ${say(summary, unitPaymentCorrection.items.find(r => true).currency.description)}`,
