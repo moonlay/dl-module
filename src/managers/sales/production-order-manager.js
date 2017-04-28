@@ -601,49 +601,108 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     if (prodOrders.length > 0) {
                         var jobsGetDailyOperation = [];
                         for (var prodOrder of prodOrders) {
-                            jobsGetDailyOperation.push(this.dailyOperationCollection.find({ "kanban.productionOrder.orderNo": prodOrder.orderNo,"kanban.selectedProductionOrderDetail.code":prodOrder.colorCode, "_deleted": false })
-                                .limit(1).toArray());
+                            jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
+                                {
+                                    $match: {
+                                        "type": "input",
+                                        "_deleted": false,
+                                        "kanban.selectedProductionOrderDetail.code": prodOrder.colorCode,
+                                        "kanban.productionOrder.orderNo": prodOrder.orderNo
+                                    }
+                                }, {
+                                    $project:
+                                    {
+                                        "orderNo": "$kanban.productionOrder.orderNo",
+                                        "kanbanCode": "$kanban.code",
+                                        "colorCode": "$kanban.selectedProductionOrderDetail.code",
+                                        "input": 1
+                                    }
+                                }
+                            ]).toArray());
                         }
                         Promise.all(jobsGetDailyOperation).then(dailyOperations => {//Get DailyOperation
                             dailyOperations = [].concat.apply([], dailyOperations);
                             if (dailyOperations.length > 0) {
                                 var jobsGetQC = [];
-                                for (var dailyOperation of dailyOperations) {
-                                    var prodOrder = {};
-                                    prodOrder = prodOrders.find(_prodOrder => dailyOperation.kanban.productionOrder.orderNo === _prodOrder.orderNo && dailyOperation.kanban.selectedProductionOrderDetail.code === _prodOrder.colorCode);
-                                    if (prodOrder) {
-                                        prodOrder.input = dailyOperation.input;
-                                        prodOrder.kanbanCode = dailyOperation.kanban.code;
-                                        jobsGetQC.push(this.fabricQualityControlCollection.find({ "productionOrderNo": prodOrder.orderNo, "kanbanCode": dailyOperation.kanban.code, "_deleted": false })
-                                            .limit(1)
-                                            .toArray());
-                                    }
-                                }
                                 for (var prodOrder of prodOrders) {
-                                    if (!prodOrder.hasOwnProperty("input")) {
+                                    var _dailyOperations = dailyOperations.filter(function (dailyOperation) {
+                                        return dailyOperation.orderNo === prodOrder.orderNo && dailyOperation.colorCode === prodOrder.colorCode;
+                                    })
+                                    var filters = ["orderNo", "colorCode", "kanbanCode"];
+                                    _dailyOperations = this.removeDuplicates(_dailyOperations, filters);
+
+                                    if (_dailyOperations.length > 0) {
+                                        var kanbanCodes = [];
+                                        _dailyOperations.some(function (dailyOperation, idx) {
+                                            kanbanCodes.push(dailyOperation.kanbanCode);
+                                        });
+                                        var sum = _dailyOperations
+                                            .map(dailyOperation => dailyOperation.input)
+                                            .reduce(function (prev, curr, index, arr) {
+                                                return prev + curr;
+                                            }, 0);
+
+                                        for (var dailyOperation of _dailyOperations) {
+                                            jobsGetQC.push(this.fabricQualityControlCollection.aggregate([
+                                                {
+                                                    $match: {
+                                                        "_deleted": false,
+                                                        "productionOrderNo": dailyOperation.orderNo,
+                                                        "kanbanCode": dailyOperation.kanbanCode
+                                                    }
+                                                }, {
+                                                    $project:
+                                                    {
+                                                        "productionOrderNo": 1,
+                                                        "kanbanCode": 1,
+                                                        "orderQuantity": 1
+                                                    }
+                                                }
+                                            ]).toArray());
+                                        }
+
+                                        prodOrder.input = sum;
+                                        prodOrder.kanbanCodes = kanbanCodes;
+                                        prodOrder.status = "Sudah dalam produksi";
+                                        prodOrder.orderQuantity = 0;
+                                        prodOrder.detail = `${prodOrder.input} on production\n${prodOrder.orderQuantity} on qc`;
+
+                                    }
+                                    else {
                                         prodOrder.status = "Belum masuk produksi";
                                         prodOrder.detail = `0 on production\n0 on qc`;
                                         prodOrder.input = 0;
+                                        prodOrder.kanbanCodes = [];
                                     }
                                 }
                                 Promise.all(jobsGetQC).then(qualityControls => {//Get QC
                                     qualityControls = [].concat.apply([], qualityControls);
                                     if (qualityControls.length > 0) {
-                                        for (var qualityControl of qualityControls) {
-                                            var prodOrder = prodOrders.find(_prodOrder => qualityControl.kanbanCode === _prodOrder.kanbanCode && qualityControl.productionOrderNo === _prodOrder.orderNo);
-                                            if (prodOrder) {
-                                                prodOrder.status = "sudah dalam qc";
-                                                prodOrder.orderQuantity = qualityControl.orderQuantity;
+
+                                        for (var prodOrder of prodOrders) {
+                                            var _qualityControls = qualityControls.filter(function (qualityControl) {
+                                                return qualityControl.productionOrderNo === prodOrder.orderNo && prodOrder.kanbanCodes.includes(qualityControl.kanbanCode);
+                                            })
+                                            filters = ["productionOrderNo", "kanbanCode"];
+                                            _qualityControls = this.removeDuplicates(_qualityControls, filters);
+
+                                            if (_qualityControls.length > 0) {
+                                                var _orderQuantity = _qualityControls
+                                                    .map(qualityControl => qualityControl.orderQuantity)
+                                                    .reduce(function (prev, curr, index, arr) {
+                                                        return prev + curr;
+                                                    }, 0);
+                                                prodOrder.orderQuantity = _orderQuantity;
+                                                prodOrder.status = "Sudah dalam qc";
                                                 prodOrder.detail = `${prodOrder.input} on production\n${prodOrder.orderQuantity} on qc`;
 
                                             }
-                                        }
-
-                                        for (var prodOrder of prodOrders) {
-                                            if (!prodOrder.hasOwnProperty("orderQuantity")) {
-                                                prodOrder.status = "sudah dalam produksi";
-                                                prodOrder.orderQuantity = 0;
-                                                prodOrder.detail = `${prodOrder.input} on production\n${prodOrder.orderQuantity} on qc`;
+                                            else {
+                                                if (prodOrder.kanbanCodes.length > 0) {
+                                                    prodOrder.orderQuantity = 0;
+                                                    prodOrder.status = "Sudah dalam produksi";
+                                                    prodOrder.detail = `${prodOrder.input} on production\n${prodOrder.orderQuantity} on qc`;
+                                                }
                                             }
                                         }
                                         resolve(prodOrders);
@@ -651,7 +710,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                     else {
                                         for (var prodOrder of prodOrders) {
                                             if (prodOrder.input > 0) {
-                                                prodOrder.status = "sudah dalam produksi";
+                                                prodOrder.status = "Sudah dalam produksi";
                                                 prodOrder.detail = `${prodOrder.input} on production\n0 on qc`;
                                             }
                                         }
@@ -674,5 +733,24 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }
                 })
         });
+    }
+    removeDuplicates(arr, filters) {
+        var new_arr = [];
+        var lookup = {};
+        for (var i in arr) {
+            var attr = "";
+            for (var n in filters) {
+                attr += arr[i][filters[n]];
+            }
+            if (!lookup[attr]) {
+                lookup[attr] = arr[i];
+            }
+        }
+
+        for (i in lookup) {
+            new_arr.push(lookup[i]);
+        }
+
+        return new_arr;
     }
 }
