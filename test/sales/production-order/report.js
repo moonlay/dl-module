@@ -1,5 +1,6 @@
 require("should");
 var dataUtil = require("../../data-util/sales/production-order-data-util");
+var salesContractDataUtil = require("../../data-util/sales/finishing-printing-sales-contract-data-util");
 var processTypeDataUtil = require("../../data-util/master/process-type-data-util");
 var buyerDataUtil = require("../../data-util/master/buyer-data-util");
 var accountDataUtil = require("../../data-util/auth/account-data-util");
@@ -11,10 +12,12 @@ var ProcessTypeManager = require("../../../src/managers/master/process-type-mana
 var BuyerManager = require("../../../src/managers/master/buyer-manager");
 var AccountManager = require("../../../src/managers/auth/account-manager");
 var ProductionOrderManager = require("../../../src/managers/sales/production-order-manager");
+var SalesContractManager = require("../../../src/managers/sales/finishing-printing-sales-contract-manager");
 var manager = null;
 var processTypeManager = null;
 var buyerManager = null;
 var accountManager = null;
+var salesContractManager = null;
 
 before('#00. connect db', function(done) {
     helper.getDb()
@@ -23,6 +26,7 @@ before('#00. connect db', function(done) {
             processTypeManager = new ProcessTypeManager(db, {username: 'dev' });
             buyerManager = new BuyerManager(db, {username: 'dev' });
             accountManager = new AccountManager(db, {username: 'dev' });
+            salesContractManager = new SalesContractManager(db, {username: 'dev' });
             done();
         })
         .catch(e => {
@@ -35,21 +39,23 @@ var dataProcessType1;
 var dataProcessType2;
 var dataAccount1;
 var dataAccount2;
+var dataSalesContract;
 
 it("#01. should success when create new support data (buyer, account, process type)", function(done) {
     var processType1 = processTypeDataUtil.getNewData();
     var buyer1 = buyerDataUtil.getNewData();
     var account1 = accountDataUtil.getNewData();
-    Promise.all([processType1, buyer1, account1])
+    var salesContract = salesContractDataUtil.getNewData();
+    Promise.all([processType1, buyer1, account1,salesContract])
             .then(data1 => {
                 var processType2 = processTypeDataUtil.getNewData();
                 var buyer2 = buyerDataUtil.getNewData();
                 var account2 = accountDataUtil.getNewData();
                 Promise.all([ processType2, buyer2, account2])
                         .then(data2 => {
-                            Promise.all([processTypeManager.create(data1[0]), processTypeManager.create(data2[0]), buyerManager.create(data1[1]), buyerManager.create(data2[1]), accountManager.create(data1[2]), accountManager.create(data2[2])])
+                            Promise.all([processTypeManager.create(data1[0]), processTypeManager.create(data2[0]), buyerManager.create(data1[1]), buyerManager.create(data2[1]), accountManager.create(data1[2]), accountManager.create(data2[2]), salesContractManager.create(data1[3])])
                                     .then(id => {
-                                        Promise.all([processTypeManager.getSingleById(id[0]), processTypeManager.getSingleById(id[1]), buyerManager.getSingleById(id[2]), buyerManager.getSingleById(id[3]), accountManager.getSingleById(id[4]), accountManager.getSingleById(id[5])])
+                                        Promise.all([processTypeManager.getSingleById(id[0]), processTypeManager.getSingleById(id[1]), buyerManager.getSingleById(id[2]), buyerManager.getSingleById(id[3]), accountManager.getSingleById(id[4]), accountManager.getSingleById(id[5]), salesContractManager.getSingleById(id[6])])
                                                 .then(results => {
                                                     validate.master.processType(results[0]);
                                                     dataProcessType1 = results[0];
@@ -63,6 +69,9 @@ it("#01. should success when create new support data (buyer, account, process ty
                                                     dataAccount1 = results[4];
                                                     validate.auth.account(results[5]);
                                                     dataAccount2 = results[5];
+                                                    validate.sales.finishingPrintingSalesContract(results[6]);
+                                                    dataSalesContract = results[6];
+
                                                     done();
                                                 })
                                                 .catch(e => {
@@ -296,11 +305,11 @@ it("#12. should success when destroy all data Production Order", function(done) 
 it("#13. should success when create new 10 data Production Order without salesContractNo", function(done) {
     var dataReport = [];
     for(var a = 0; a < 5; a++){
-        var data = dataUtil.getNewData2({buyer : dataBuyer1, process : dataProcessType1, account : dataAccount1});
+        var data = dataUtil.getNewData2({buyer : dataBuyer1, process : dataProcessType1, account : dataAccount1, salesContract : dataSalesContract});
         dataReport.push(data);
     }
     for(var a = 0; a < 5; a++){
-        var data = dataUtil.getNewData2({buyer : dataBuyer2, process : dataProcessType2, account : dataAccount2});
+        var data = dataUtil.getNewData1({buyer : dataBuyer1, process : dataProcessType1, account : dataAccount1});
         dataReport.push(data);
     }
     Promise.all(dataReport)
