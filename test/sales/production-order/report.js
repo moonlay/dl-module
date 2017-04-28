@@ -294,45 +294,17 @@ it("#12. should success when destroy all data Production Order", function (done)
         });
 });
 
-it("#13. should success when create new 5 data Production Order without salesContractNo", function (done) {
-    var dataReport = [];
-    for (var a = 0; a < 5; a++) {
-        var data = dataUtil.getNewData2({ buyer: dataBuyer1, process: dataProcessType1, account: dataAccount1 });
-        dataReport.push(data);
-    }
-    Promise.all(dataReport)
+it("#13. should success when create daily operation", function (done) {
+    var data = dailyOperationUtil.getNewData();
+    Promise.all([data])
         .then(dataResults => {
-            var createData = [];
-            var numberIndex = 0;
-            for (var a of dataResults) {
-                numberIndex++;
-                var code = codeGenerator();
-                a.salesContractNo = `${code}${numberIndex}`;
-                a.orderNo = `${code}${numberIndex}`;
-                var dataProdOrder = manager.create(a);
-                createData.push(dataProdOrder);
-                salesContractNo = a.salesContractNo;
-                orderNo = a.orderNo;
-            }
-            Promise.all(createData)
+            data = dailyOperationUtil.getNewData();
+            Promise.all([data])
                 .then(created => {
-                    var jobs = [];
-                    for (var id of created) {
-                        jobs.push(manager.getSingleById(id))
-                    }
-                    Promise.all(jobs)
+                    data = dailyOperationUtil.getNewData();
+                    Promise.all([data])
                         .then(results => {
-                            var getDailyOpt = [];
-                            for (var productionOrder of results) {
-                                getDailyOpt.push(dailyOperationUtil.getNewTestDataExistingProductionOrder(productionOrder))
-                            }
-                            Promise.all(getDailyOpt)
-                                .then(created => {
-                                    done();
-                                })
-                                .catch(e => {
-                                    done(e);
-                                });
+                            done();
                         })
                         .catch(e => {
                             done(e);

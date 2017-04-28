@@ -5,30 +5,30 @@ var instructionDataUtil = require('../../master/instruction-data-util');
 var productionOrderDataUtil = require('../../sales/production-order-data-util');
 var codeGenerator = require('../../../../src/utils/code-generator');
 
-class KanbanDataUtil {
+class KanbanDataUtil {    
     getNewData() {
         return Promise.all([instructionDataUtil.getTestData(), productionOrderDataUtil.getNewTestData(true)])
-            .then(result => {
-                var _instruction = result[0];
-                var _productionOrder = result[1];
-                var _selectedProductionOrderDetail = (_productionOrder.details && _productionOrder.details.length > 0) ? _productionOrder.details[0] : {};
+                    .then(result => {
+                        var _instruction = result[0];
+                        var _productionOrder = result[1];
+                        var _selectedProductionOrderDetail = (_productionOrder.details && _productionOrder.details.length > 0) ? _productionOrder.details[0] : {};
 
-                var data = {
-                    code: codeGenerator(),
-                    productionOrderId: _productionOrder._id,
-                    productionOrder: _productionOrder,
-                    selectedProductionOrderDetail: _selectedProductionOrderDetail,
-                    cart: { code: "cartUnitTestCode", cartNumber: "unitTestCartNumber", qty: 15, pcs: _selectedProductionOrderDetail.quantity / 2 },
-                    instructionId: _instruction._id,
-                    instruction: _instruction,
-                    grade: 'unitTestGrade',
-                    qtyCurrent: _productionOrder.orderQuantity,
-                };
+                        var data = {
+                            code : codeGenerator(),
+                            productionOrderId : _productionOrder._id,
+                            productionOrder : _productionOrder,
+                            selectedProductionOrderDetail: _selectedProductionOrderDetail,
+                            cart: { code : "cartUnitTestCode", cartNumber : "unitTestCartNumber", qty : 15, pcs : _selectedProductionOrderDetail.quantity/2},
+                            instructionId : _instruction._id,
+                            instruction : _instruction,
+                            grade : 'unitTestGrade',
+                            qtyCurrent : _productionOrder.orderQuantity,
+                        };
 
-                return data;
-            })
+                        return data;
+                    })
     }
-
+    
     getNewTestData() {
         return helper
             .getManager(KanbanManager)
@@ -37,43 +37,7 @@ class KanbanDataUtil {
                     return manager.create(data)
                         .then((id) => {
                             return manager.getSingleById(id)
-                        });
-                });
-            });
-    }
-
-    getNewDataExistingProductionOrder(productionOrder) {
-        return Promise.all([instructionDataUtil.getTestData()])
-            .then(result => {
-                var _instruction = result[0];
-                var _productionOrder = productionOrder;
-                var _selectedProductionOrderDetail = (_productionOrder.details && _productionOrder.details.length > 0) ? _productionOrder.details[0] : {};
-
-                var data = {
-                    code: codeGenerator(),
-                    productionOrderId: _productionOrder._id,
-                    productionOrder: _productionOrder,
-                    selectedProductionOrderDetail: _selectedProductionOrderDetail,
-                    cart: { code: "cartUnitTestCode", cartNumber: "unitTestCartNumber", qty: 15, pcs: _selectedProductionOrderDetail.quantity / 2 },
-                    instructionId: _instruction._id,
-                    instruction: _instruction,
-                    grade: 'unitTestGrade',
-                    qtyCurrent: _productionOrder.orderQuantity,
-                };
-
-                return data;
-            })
-    }
-
-    getNewTestDataExistingProductionOrder(productionOrder) {
-        return helper
-            .getManager(KanbanManager)
-            .then((manager) => {
-                return this.getNewDataExistingProductionOrder(productionOrder).then((data) => {
-                    return manager.create(data)
-                        .then((id) => {
-                            return manager.getSingleById(id)
-                        });
+                            });
                 });
             });
     }
