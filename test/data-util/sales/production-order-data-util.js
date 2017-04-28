@@ -14,7 +14,6 @@ var yarnMaterial = require('../master/yarn-material-data-util');
 var finishType = require('../master/finish-type-data-util');
 var materialConstruction = require('../master/material-construction-data-util');
 var account = require('../auth/account-data-util');
-var salesContract = require("./finishing-printing-sales-contract-data-util");
 
 class ProductionOrderDataUtil {
     getNewData(dataSupport) {
@@ -136,8 +135,7 @@ class ProductionOrderDataUtil {
         var buyerTestData = !dataSupport ? buyer.getTestData() : dataSupport.buyer ? Promise.resolve(null) : buyer.getTestData();
         var processTestData = !dataSupport ? processType.getTestData() : dataSupport.process ? Promise.resolve(null) : processType.getTestData();
         var accountTestData = !dataSupport ? account.getTestData() : dataSupport.account ? Promise.resolve(null) : account.getTestData();
-        var salesContractTestData = !dataSupport ? salesContract.getTestData() : dataSupport.salesContract ? Promise.resolve(null) : salesContract.getTestData();
-        return Promise.all([uom.getTestData(), buyerTestData, lampStandard.getTestData(), lampStandard.getTestData2(), processTestData, material.getTestData(), colorType.getTestData(), colorType.getTestData2(), standardTest.getTestData(), finishType.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), accountTestData,salesContractTestData])
+        return Promise.all([uom.getTestData(), buyerTestData, lampStandard.getTestData(), lampStandard.getTestData2(), processTestData, material.getTestData(), colorType.getTestData(), colorType.getTestData2(), standardTest.getTestData(), finishType.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), accountTestData])
             .then((results) => {
                 var _uom = results[0];
                 var _buyer = !dataSupport ? results[1] : dataSupport.buyer ? dataSupport.buyer : results[1];
@@ -152,7 +150,6 @@ class ProductionOrderDataUtil {
                 var _yarn=results[10];
                 var _construction=results[11];
                 var _account= !dataSupport ? results[12] : dataSupport.account ? dataSupport.account : results[12];
-                var _salesContract = results[13];
                 var detail = [{
                         code:`code1/${codeGenerator()}`,
                         colorTypeId:color1._id,
@@ -188,7 +185,7 @@ class ProductionOrderDataUtil {
                 }
 
                 var data = {
-                    salesContractNo: _salesContract.salesContractNo,
+                    salesContractNo: `salesContractNo/${codeGenerator()}`,
                     orderNo: `orderNo/${codeGenerator()}`,
                     uomId: _uom._id,
                     uom: _uom,
