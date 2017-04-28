@@ -295,18 +295,6 @@ it("#12. should success when destroy all data Production Order", function (done)
         });
 });
 
-it("#03. should success get all data Production Order (0 data) when searh report without parameter", function (done) {
-    manager.getReport({})
-        .then(data => {
-            data.should.be.instanceof(Array);
-            data.length.should.equal(0);
-            done();
-        })
-        .catch(e => {
-            done(e);
-        });
-});
-
 it("#13. should success when create daily operation", function (done) {
     var data = dailyOperationUtil.getNewTestData("input");
     var data2 = fabricQualityControlUtil.getNewTestData();
