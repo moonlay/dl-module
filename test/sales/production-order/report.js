@@ -41,7 +41,7 @@ var dataAccount1;
 var dataAccount2;
 var dataSalesContract;
 
-it("#01. should success when create new support data (buyer, account, process type, sales contract)", function(done) {
+it("#01. should success when create new support data (buyer, account, process type)", function(done) {
     var processType1 = processTypeDataUtil.getNewData();
     var buyer1 = buyerDataUtil.getNewData();
     var account1 = accountDataUtil.getNewData();
