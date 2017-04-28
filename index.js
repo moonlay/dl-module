@@ -156,6 +156,7 @@ module.exports = {
         factProductionOrder: require("./src/etl/fact-production-order-etl-manager"),
         factWeavingSalesContract: require("./src/etl/fact-weaving-sales-contract-etl-manager"),
         factFinishingPrintingSalesContract: require("./src/etl/fact-finishing-printing-sales-contract-etl-manager"),
-        factSpinningSalesContract: require("./src/etl/fact-spinning-sales-contract-etl-manager")
+        factSpinningSalesContract: require("./src/etl/fact-spinning-sales-contract-etl-manager"),
+        factDailyOperations: require("./src/etl/fact-daily-operations-etl-manager")
     }
 }
