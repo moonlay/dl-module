@@ -4,6 +4,7 @@ var processTypeDataUtil = require("../../data-util/master/process-type-data-util
 var buyerDataUtil = require("../../data-util/master/buyer-data-util");
 var accountDataUtil = require("../../data-util/auth/account-data-util");
 var dailyOperationUtil = require("../../data-util/production/finishing-printing/daily-operation-data-util");
+var fabricQualityControlUtil = require("../../data-util/production/finishing-printing/fabric-quality-control-data-util");
 var helper = require("../../helper");
 var validate = require("dl-models").validator;
 var codeGenerator = require('../../../src/utils/code-generator');
@@ -294,14 +295,27 @@ it("#12. should success when destroy all data Production Order", function (done)
         });
 });
 
+it("#03. should success get all data Production Order (0 data) when searh report without parameter", function (done) {
+    manager.getReport({})
+        .then(data => {
+            data.should.be.instanceof(Array);
+            data.length.should.equal(0);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
 it("#13. should success when create daily operation", function (done) {
-    var data = dailyOperationUtil.getNewData();
-    Promise.all([data])
+    var data = dailyOperationUtil.getNewTestData("input");
+    var data2 = fabricQualityControlUtil.getNewTestData();
+    Promise.all([data,data2])
         .then(dataResults => {
-            data = dailyOperationUtil.getNewData();
+            data = dailyOperationUtil.getNewTestData("input");
             Promise.all([data])
                 .then(created => {
-                    data = dailyOperationUtil.getNewData();
+                    data = dailyOperationUtil.getNewTestData("input");
                     Promise.all([data])
                         .then(results => {
                             done();
