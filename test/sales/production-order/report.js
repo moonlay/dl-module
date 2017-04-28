@@ -129,7 +129,7 @@ it("#03. should success get all data Production Order (0 data) when searh report
 var scId = [];
 var selesContractNo;
 var orderNo;
-
+/*
 it("#04. should success when create new 10 data Production Order with 2 detail color in each data production order", function(done) {
     var dataReport = [];
     for(var a = 0; a < 5; a++){
@@ -293,12 +293,13 @@ it("#12. should success when destroy all data Production Order", function(done) 
                 done(e);
             });
 });
-
-it("#13. should success when create new 1 data Production Order without salesContractNo", function(done) {
+*/
+it("#13. should success when create new 10 data Production Order without salesContractNo", function(done) {
     var dataReport = [];
+    for(var a = 0; a < 5; a++){
         var data = dataUtil.getNewDataReport();
         dataReport.push(data);
-
+    }
     Promise.all(dataReport)
             .then(dataResults => {
                 var createData = [];

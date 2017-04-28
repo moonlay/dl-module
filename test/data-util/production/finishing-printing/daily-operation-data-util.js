@@ -75,63 +75,59 @@ class DailyOperationDataUtil {
     }
 
     getNewDataUsingProductionOrder(type, productionOrder) {
-        return helper
-            .getManager(DailyOperationManager)
-            .then((manager) => {
-                var a = type ? type : "input";
-                return Promise.all([kanbanDataUtil.getNewDataUsingProductionOrder(productionOrder)])
-                    .then(kanban => {
-                        var _kanban = kanban[0];
-                        return Promise.all([machineDataUtil.getTestData()])
-                            .then((machine) => {
-                                var dailyType = type ? type : "input";
-                                var _machine = machine[0];
-                                var tempStep = {};
-                                for (var a of _machine.steps) {
-                                    tempStep = a.step;
-                                    break;
-                                }
-                                var code = codeGenerator();
-                                var dateNow = new Date();
-                                var dateNowString = '2017-01-01';
-                                var data = {};
-                                if (dailyType === "input") {
-                                    data = {
-                                        kanbanId: _kanban._id,
-                                        kanban: _kanban,
-                                        shift: `shift ${code}`,
-                                        machineId: _machine._id,
-                                        machine: _machine,
-                                        stepId: tempStep._id,
-                                        step: tempStep,
-                                        dateInput: dateNowString,
-                                        timeInput: 10000,
-                                        input: 20,
-                                        type: "input"
-                                    };
-                                } else {
-                                    data = {
-                                        kanbanId: _kanban._id,
-                                        kanban: _kanban,
-                                        shift: `shift ${code}`,
-                                        machineId: _machine._id,
-                                        machine: _machine,
-                                        stepId: tempStep._id,
-                                        step: tempStep,
-                                        dateOutput: dateNowString,
-                                        timeOutput: 12000,
-                                        goodOutput: 18,
-                                        badOutput: 2,
-                                        badOutputDescription: code,
-                                        type: "output"
-                                    };
-                                }
-                                return Promise.resolve(data);
-                            }).then((data) => {
-                                return manager.create(data)
-                                    .then((id) => {
-                                        return manager.getSingleById(id)
-                                    });
+        return Promise.all([kanbanDataUtil.getNewDataUsingProductionOrder(productionOrder)])
+            .then(kanban => {
+                var _kanban = kanban[0];
+                return Promise.all([machineDataUtil.getTestData()])
+                    .then((machine) => {
+                        var dailyType = type ? type : "input";
+                        var _machine = machine[0];
+                        var tempStep = {};
+                        for (var a of _machine.steps) {
+                            tempStep = a.step;
+                            break;
+                        }
+                        var code = codeGenerator();
+                        var dateNow = new Date();
+                        var dateNowString = '2017-01-01';
+                        var data = {};
+                        if (dailyType === "input") {
+                            data = {
+                                kanbanId: _kanban._id,
+                                kanban: _kanban,
+                                shift: `shift ${code}`,
+                                machineId: _machine._id,
+                                machine: _machine,
+                                stepId: tempStep._id,
+                                step: tempStep,
+                                dateInput: dateNowString,
+                                timeInput: 10000,
+                                input: 20,
+                                type: "input"
+                            };
+                        } else {
+                            data = {
+                                kanbanId: _kanban._id,
+                                kanban: _kanban,
+                                shift: `shift ${code}`,
+                                machineId: _machine._id,
+                                machine: _machine,
+                                stepId: tempStep._id,
+                                step: tempStep,
+                                dateOutput: dateNowString,
+                                timeOutput: 12000,
+                                goodOutput: 18,
+                                badOutput: 2,
+                                badOutputDescription: code,
+                                type: "output"
+                            };
+                        }
+                        return Promise.resolve(data);
+                    })
+                    .then((data) => {
+                        return manager.create(data)
+                            .then((id) => {
+                                return manager.getSingleById(id)
                             });
                     });
             });
