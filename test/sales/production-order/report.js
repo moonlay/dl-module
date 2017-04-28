@@ -330,15 +330,3 @@ it("#13. should success when create new 10 data Production Order without salesCo
                 done(e);
             });
 });
-
-it("#14. should success get all data Production Order when searh report without parameter", function(done) {
-    manager.getReport({})
-            .then(data => {
-                data.should.be.instanceof(Array);
-                data.length.should.equal(20);
-                done();
-            })
-            .catch(e => {
-                done(e);
-            });
-});
