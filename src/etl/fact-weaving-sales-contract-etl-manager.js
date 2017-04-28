@@ -62,7 +62,7 @@ module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(1970, 1, 1);
+        var timestamp = new Date(time[0].start);
         return this.weavingSalesContractManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
@@ -72,9 +72,9 @@ module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
 
     orderQuantityConvertion(uom, quantity) {
         if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity * 109361 / 100000;
-        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
             return quantity;
+        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
+            return quantity * 0.9144;
         } else {
             return quantity;
         }
@@ -164,7 +164,7 @@ module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
-                        
+
                         return Promise.all(command)
                             .then((results) => {
                                 request.execute("DL_UPSERT_FACT_Sales_Contract").then((execResult) => {
