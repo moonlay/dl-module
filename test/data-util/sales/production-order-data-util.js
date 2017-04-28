@@ -185,7 +185,7 @@ class ProductionOrderDataUtil {
                 }
 
                 var data = {
-                    salesContractNo: `salesContractNo/${codeGenerator()}`,
+                    salesContractNo: `UT/Prod/1KQ3VP12`,
                     orderNo: `orderNo/${codeGenerator()}`,
                     uomId: _uom._id,
                     uom: _uom,
