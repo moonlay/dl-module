@@ -69,6 +69,7 @@ it("#01. should success when create new support data (buyer, account, process ty
                                                     dataAccount1 = results[4];
                                                     validate.auth.account(results[5]);
                                                     dataAccount2 = results[5];
+                                                    validate.sales.finishingPrintingSalesContract(results[6]);
                                                     dataSalesContract = results[6];
 
                                                     done();
