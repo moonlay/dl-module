@@ -71,3 +71,46 @@ it('#03. should error when create new data with RUN but without RUNWidth', funct
             done(e);
         });
 });
+
+it('#04. it should error when create new data with different total quantity', function (done) {
+    dataUtil.getNewData()
+        .then(sc => {
+            sc.orderQuantity=100;
+            sc.detail = [{
+                        code:`code1/${codeGenerator()}`,
+                        colorTypeId:color1._id,
+                        colorType:color1,
+                        colorRequest:`reddish`,
+                        colorTemplate:`template1`,
+                        quantity:10,
+                        uomId: _uom._id,
+                        uom:_uom,
+                    }, {
+                        code:`code2/${codeGenerator()}`,
+                        colorTypeId:color2._id,
+                        colorType:color2,
+                        colorRequest:`gray`,
+                        colorTemplate:`template2`,
+                        quantity:5,
+                        uomId: _uom._id,
+                        uom:_uom,
+                    }];
+
+            manager.create(sc)
+                .then(id => {
+                    done("should error when create new data without detail");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('details');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
