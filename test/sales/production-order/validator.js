@@ -45,3 +45,29 @@ it('#02. should error when create new data with shippingQuantityTolerance more t
             done(e);
         });
 });
+
+it('#03. should error when create new data with RUN but without RUNWidth', function (done) {
+    dataUtil.getNewData()
+        .then(sc => {
+
+            sc.RUN = "1 RUN";
+            sc.RUNWidth[0]=0;
+
+            manager.create(sc)
+                .then(id => {
+                    done("should error when create new data with RUN but without RUNWidth");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('RUNWidth');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
