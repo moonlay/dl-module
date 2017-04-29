@@ -76,3 +76,30 @@ it('#02. it should error when create new data with different total quantity', fu
             done(e);
         });
 });
+
+it('#03. it should error when create new data with invalid LampStandard', function (done) {
+    dataUtil.getNewData()
+        .then(sc => {
+            sc.lampStandards= [{
+                        lampStandardId: {},
+                        lampStandard:{}
+            }];
+
+            manager.create(sc)
+                .then(id => {
+                    done("should error when create new data with invalid LampStandard");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('lampStandards');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
