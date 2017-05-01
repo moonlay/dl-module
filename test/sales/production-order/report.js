@@ -298,7 +298,7 @@ it("#12. should success when destroy all data Production Order", function (done)
 it("#13. should success when create daily operation", function (done) {
     var data = dailyOperationUtil.getNewTestData("input");
     var data2 = fabricQualityControlUtil.getNewTestData();
-    Promise.all([data,data2])
+    Promise.all([data])
         .then(dataResults => {
             data = dailyOperationUtil.getNewTestData("input");
             Promise.all([data])
