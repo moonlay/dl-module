@@ -297,29 +297,15 @@ it("#12. should success when destroy all data Production Order", function (done)
 
 it("#13. should success when create daily operation", function (done) {
     var data = dailyOperationUtil.getNewTestData("input");
-    var data2 = fabricQualityControlUtil.getNewTestData();
     Promise.all([data])
-        .then(dataResults => {
-            data = dailyOperationUtil.getNewTestData("input");
-            Promise.all([data])
-                .then(created => {
-                    data = dailyOperationUtil.getNewTestData("input");
-                    Promise.all([data])
-                        .then(results => {
-                            done();
-                        })
-                        .catch(e => {
-                            done(e);
-                        });
-                })
-                .catch(e => {
-                    done(e);
-                });
+        .then(results => {
+            done();
         })
         .catch(e => {
             done(e);
         });
 });
+
 it("#14. should success get all data Production Order when searh report without parameter", function (done) {
     manager.getReport({})
         .then(data => {
