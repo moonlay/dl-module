@@ -77,9 +77,9 @@ module.exports = class DailyOperationManager extends BaseManager {
         var errors = {};
         return new Promise((resolve, reject) => {
             var valid = dailyOperation;
-            var dateTamp = new Date();
-            var dateNow = new Date(dateTamp.setHours(dateTamp.getHours() + 7));
-            var dateNowString = moment(dateNow).format('YYYY-MM-DD');
+            // var dateTamp = new Date();
+            var dateNow = new Date();
+            //var dateNowString = moment(dateNow).format('YYYY-MM-DD');
             var timeInMillisNow = (function(){
                 var setupMoment = moment();
                 setupMoment.set('year', 1970);
@@ -226,7 +226,9 @@ module.exports = class DailyOperationManager extends BaseManager {
                         errors["machine"] = i18n.__("Data mesin tidak ditemukan", i18n.__("DailyOperation.machine._:Machine")); //"Machine tidak ditemukan";
                     }else if(valid.type === "input" && tempInput){
                         errors["machine"] = i18n.__("Data input tidak dapat disimpan karena ada data input yang belum dibuat output di mesin ini", i18n.__("DailyOperation.kanban._:Kanban"));
-                    }else if(valid.type === "output" && !tempInput)
+                    }else if(valid.type === "output" && !tempInput){
+                        errors["machine"] = i18n.__("Data output tidak dapat disimpan karena tidak ada data input dimesin ini yang sesuai dengan no kereta", i18n.__("DailyOperation.kanban._:Kanban")); //"kanban tidak ditemukan";
+                    }else if(valid.type === "output" && tempInput && tempInput.machineId.toString() !== _machine._id.toString())
                         errors["machine"] = i18n.__("Data output tidak dapat disimpan karena tidak ada data input dimesin ini yang sesuai dengan no kereta", i18n.__("DailyOperation.kanban._:Kanban")); //"kanban tidak ditemukan";
                     
                     if(!valid.stepId || valid.stepId.toString() === ""){
@@ -240,7 +242,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                         if (!valid.dateInput || valid.dateInput === '')
                             errors["dateInput"] = i18n.__("Harus diisi", i18n.__("DailyOperation.dateStart._:Date Input")); //"Tanggal Mulai tidak boleh kosong";
                         else if (dateInput > dateNow)
-                            errors["dateInput"] = i18n.__("Tanggal input tidak boleh lebih besar dari tanggal sekarang", i18n.__("DailyOperation.dateInput._:Date Input"));//"Tanggal Mulai tidak boleh lebih besar dari tanggal hari ini";
+                            errors["dateInput"] = i18n.__("Tanggal dan jam input tidak boleh lebih besar dari tanggal dan jam sekarang", i18n.__("DailyOperation.dateInput._:Date Input"));//"Tanggal Mulai tidak boleh lebih besar dari tanggal hari ini";
                         else if(tempOutput){
                             var dateTempOutput = new Date(tempOutput.dateOutput);
                             if(dateInput < dateTempOutput){
@@ -248,16 +250,16 @@ module.exports = class DailyOperationManager extends BaseManager {
                             }
                         }
                         
-                        if (!valid.timeInput || valid.timeInput === 0)
-                            errors["timeInput"] = i18n.__("Harus diisi", i18n.__("DailyOperation.timeInput._:Time Input")); //"Time Input tidak boleh kosong";
-                        else if (valid.dateInput === dateNowString && valid.timeInput > timeInMillisNow)
-                            errors["timeInput"] = i18n.__("Jam input tidak boleh lebih besar dari jam sekarang", i18n.__("DailyOperation.timeInput._:Time Input"));//"Time Mulai tidak boleh lebih besar dari time hari ini";
-                        else if(tempOutput){
-                            var dateTempOutput = new Date(tempOutput.dateOutput);
-                            var dateTempOutputString = moment(dateTempOutput).format('YYYY-MM-DD');
-                            if(dateTempOutputString === valid.dateInput && tempOutput.timeOutput > valid.timeInput)
-                                errors["timeInput"] = i18n.__("Jam input harus lebih besar dari jam output sebelumnya", i18n.__("DailyOperation.timeInput._:Time Input"));
-                        }
+                        // if (!valid.timeInput || valid.timeInput === 0)
+                        //     errors["timeInput"] = i18n.__("Harus diisi", i18n.__("DailyOperation.timeInput._:Time Input")); //"Time Input tidak boleh kosong";
+                        // else if (valid.dateInput === dateNowString && valid.timeInput > timeInMillisNow)
+                        //     errors["timeInput"] = i18n.__("Jam input tidak boleh lebih besar dari jam sekarang", i18n.__("DailyOperation.timeInput._:Time Input"));//"Time Mulai tidak boleh lebih besar dari time hari ini";
+                        // else if(tempOutput){
+                        //     var dateTempOutput = new Date(tempOutput.dateOutput);
+                        //     var dateTempOutputString = moment(dateTempOutput).format('YYYY-MM-DD');
+                        //     if(dateTempOutputString === valid.dateInput && tempOutput.timeOutput > valid.timeInput)
+                        //         errors["timeInput"] = i18n.__("Jam input harus lebih besar dari jam output sebelumnya", i18n.__("DailyOperation.timeInput._:Time Input"));
+                        // }
 
                         if(!valid.input || valid.input === '' || valid.input < 1){
                             errors["input"] = i18n.__("Input harus lebih besar dari 0", i18n.__("DailyOperation.input._:Input")); //"nilai input harus lebih besar dari 0";
@@ -269,11 +271,11 @@ module.exports = class DailyOperationManager extends BaseManager {
                             errors["dateOutput"] = i18n.__("Harus diisi", i18n.__("DailyOperation.dateOutput._:Date Output")); //"tanggal Output harus diisi";
                         else{
                             var dateOutput = new Date(valid.dateOutput);
-                            dateNow = new Date(dateNowString);
+                            // dateNow = new Date(dateNowString);
                             if (dateOutput > dateNow)
-                                errors["dateOutput"] = i18n.__("Tanggal output harus lebih besar dari tanggal sekarang", i18n.__("DailyOperation.dateOutput._:Date Output"));//"Tanggal Selesai tidak boleh lebih besar dari tanggal hari ini";
-                            else if (valid.dateOutput === dateNowString && valid.timeOutput > timeInMillisNow)
-                                errors["timeOutput"] = i18n.__("Jam output harus lebih besar dari jam sekarang", i18n.__("DailyOperation.timeOutput._:Time Output"));//"Time Selesai tidak boleh lebih besar dari time hari ini";
+                                errors["dateOutput"] = i18n.__("Tanggal dan jam output tidak boleh lebih besar dari tanggal dan jam sekarang", i18n.__("DailyOperation.dateOutput._:Date Output"));//"Tanggal Selesai tidak boleh lebih besar dari tanggal hari ini";
+                            // else if (valid.dateOutput === dateNowString && valid.timeOutput > timeInMillisNow)
+                            //     errors["timeOutput"] = i18n.__("Jam output harus lebih besar dari jam sekarang", i18n.__("DailyOperation.timeOutput._:Time Output"));//"Time Selesai tidak boleh lebih besar dari time hari ini";
                             else if(tempInput){
                                 var dateInput = new Date(tempInput.dateInput)
                                 if (dateInput > dateOutput){
@@ -283,18 +285,18 @@ module.exports = class DailyOperationManager extends BaseManager {
                             }
                         }
                         
-                        if (!valid.timeOutput || valid.timeOutput === 0)
-                            errors["timeOutput"] = i18n.__("Harus diisi", i18n.__("DailyOperation.timeOutput._:Time Output")); //"Time Output tidak boleh kosong";
-                        else if (tempInput){
-                            var dateInput = new Date(tempInput.dateInput);
-                            var dateOutput = new Date(valid.dateOutput);
-                            if (valid.dateOutput && valid.dateOutput !== '' && dateInput.toDateString() === dateOutput.toDateString()){
-                                if (tempInput.timeInput > valid.timeOutput){
-                                    var errorMessage = i18n.__("Jam output harus lebih besar dari jam input", i18n.__("DailyOperation.timeInput._:Time Input")); //"Time Mulai tidak boleh lebih besar dari Time Selesai";
-                                    errors["timeOutput"] = errorMessage;
-                                }
-                            }
-                        }
+                        // if (!valid.timeOutput || valid.timeOutput === 0)
+                        //     errors["timeOutput"] = i18n.__("Harus diisi", i18n.__("DailyOperation.timeOutput._:Time Output")); //"Time Output tidak boleh kosong";
+                        // else if (tempInput){
+                        //     var dateInput = new Date(tempInput.dateInput);
+                        //     var dateOutput = new Date(valid.dateOutput);
+                        //     if (valid.dateOutput && valid.dateOutput !== '' && dateInput.toDateString() === dateOutput.toDateString()){
+                        //         if (tempInput.timeInput > valid.timeOutput){
+                        //             var errorMessage = i18n.__("Jam output harus lebih besar dari jam input", i18n.__("DailyOperation.timeInput._:Time Input")); //"Time Mulai tidak boleh lebih besar dari Time Selesai";
+                        //             errors["timeOutput"] = errorMessage;
+                        //         }
+                        //     }
+                        // }
 
                         var badOutput = valid.badOutput && valid.badOutput !== '' ? valid.badOutput : 0;
                         var goodOutput = valid.goodOutput && valid.goodOutput !== '' ? valid.goodOutput : 0; 
@@ -332,6 +334,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                     if(valid.type == "input"){
                         valid.dateInput = new Date(valid.dateInput);
                         valid.code = !valid.code || valid.code === "" ? codeGenerator() : valid.code;
+                        valid.timeInput = valid.dateInput.getTime();
                         delete valid.dateOutput;
                         delete valid.timeOutput;
                         delete valid.goodOutput;
@@ -340,6 +343,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                     }
                     if(valid.type == "output"){
                         valid.dateOutput = new Date(valid.dateOutput);
+                        valid.timeOutput = valid.dateOutput.getTime();
                         delete valid.input;
                         delete valid.dateInput;
                         delete valid.timeInput;
