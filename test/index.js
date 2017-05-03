@@ -28,6 +28,10 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-FINISHING-PRINTING-SALES-CONTRACT', './etl/fact-finishing-printing-sales-contract');
     test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/fact-spinning-sales-contract');
     test('@ETL/FACT-DAILY-OPERATIONS', './etl/fact-daily-operations');
+    test('@ETL/DIM-DIVISION-AG', './etl/dim-division-ag');
+    test('@ETL/DIM-SUPPLIER-AG', './etl/dim-supplier-ag');
+    test('@ETL/FACT-PEMBELIAN-AG', './etl/fact-pembelian-ag');
+    test('@ETL/FACT-TOTAL-HUTANG-AG', './etl/fact-total-hutang-ag');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
@@ -84,6 +88,7 @@ describe('#dl-module', function (done) {
 
     //Production
     test('@PRODUCTION/FINISHING-PRINTING/KANBAN', './production/finishing-printing/kanban');
+    test('@PRODUCTION/FINISHING-PRINTING/FABRIC-QUALITY-CONTROL', './production/finishing-printing/fabric-quality-control');
     test('@PRODUCTION/DAILY OPERATION', './production/finishing-printing/daily-operation');
     test('@PRODUCTION/FINISHING-PRINTING/MONITORING-SPECIFICATION-MACHINE', './production/finishing-printing/monitoring-specification-machine');
     test('@PRODUCTION/FINISHING-PRINTING/MONITORING-EVENT', './production/finishing-printing/monitoring-event');
