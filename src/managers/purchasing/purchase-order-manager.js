@@ -373,7 +373,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         });
     }
 
-    getDataPOMonitoringPembelian(unitId, categoryId, PODLNo, PRNo, supplierId, dateFrom, dateTo, state, createdBy) {
+    getDataPOMonitoringPembelian(unitId, categoryId, PODLNo, PRNo, supplierId, dateFrom, dateTo, state, budgetId, staffName, createdBy) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -421,6 +421,16 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     if (createdBy !== undefined && createdBy !== "") {
                         Object.assign(query, {
                             _createdBy: createdBy
+                        });
+                    }
+                    if (staffName !== undefined && staffName !== "") {
+                        Object.assign(query, {
+                            _createdBy: staffName
+                        });
+                    }
+                    if (budgetId !== undefined && budgetId !== "undefined" && budgetId !== "") {
+                        Object.assign(query, {
+                            "purchaseRequest.budgetId": new ObjectId(budgetId)
                         });
                     }
                     query = Object.assign(query, { _deleted: false });
@@ -472,10 +482,10 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         }
                     }]
             )
-            .toArray(function (err, result) {
-                assert.equal(err, null);
-                resolve(result);
-            });
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
         });
     }
 
@@ -554,10 +564,10 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             }
                         }]
                 )
-                .toArray(function (err, result) {
-                    assert.equal(err, null);
-                    resolve(result);
-                });
+                    .toArray(function (err, result) {
+                        assert.equal(err, null);
+                        resolve(result);
+                    });
             }
         });
     }
@@ -599,10 +609,10 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         }
                     }]
             )
-            .toArray(function (err, result) {
-                assert.equal(err, null);
-                resolve(result);
-            });
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
         });
     }
 
@@ -641,11 +651,11 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         }
                     }]
             )
-            .sort({ "_id": 1 })
-            .toArray(function (err, result) {
-                assert.equal(err, null);
-                resolve(result);
-            });
+                .sort({ "_id": 1 })
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
         });
     }
 

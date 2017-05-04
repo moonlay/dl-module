@@ -19,6 +19,11 @@ module.exports = {
                 style: 'decimal',
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
+            },
+            currencySalesContract: {
+                style: 'decimal',
+                minimumFractionDigits: 3,
+                maximumFractionDigits: 3
             }
         }
     }
