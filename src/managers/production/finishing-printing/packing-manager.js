@@ -165,6 +165,113 @@ module.exports = class PackingManager extends BaseManager {
             })
     }
 
+    getPackingReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        }, NomorOrderFilter = {},
+            NomorPackingFilter = {},
+            dateFromFilter = {},
+            dateToFilter = {},
+            query = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var now = new Date();
+
+        if (info.code && info.code != '') {
+            var NomorPacking = ObjectId.isValid(info.code) ? new ObjectId(info.code) : {};
+            NomorPackingFilter = { '_id': NomorPacking };
+        }
+
+        if (info.productionOrderNo && info.productionOrderNo != '') {
+            var productionOrderNomor = ObjectId.isValid(info.productionOrderNo) ? new ObjectId(info.productionOrderNo) : {};
+            NomorOrderFilter = { 'productionOrderId': productionOrderNomor };
+        }
+
+        var filterDate = {
+            "date": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+        query = { '$and': [_defaultFilter, NomorOrderFilter, NomorPackingFilter, filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this.collection
+                    .where(query)
+                    .execute();
+            });
+    }
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
+
+        for (var packing of result.data) {
+
+            for (var packingItem of packing.items) {
+                var item = {};
+                index += 1;
+                item["No"] = index;
+                item["Nomor Packing"] = packing.code ? packing.code : '';
+                item["Nomor Order"] = packing.productionOrderNo ? packing.productionOrderNo : '';
+                item["Buyer"] = packing.buyer ? packing.buyer : '';
+                item["Konstruksi"] = packing.construction ? packing.construction : '';
+                item["Design/Motif"] = packing.motif ? packing.motif : '';
+                item["Warna yang diminta"] = packing.colorName ? packing.colorName : '';
+                item["Tanggal"] = packing.date ? moment(new Date(packing.date)).format(dateFormat) : '';
+
+
+                item["Lot"] = packingItem.lot ? packingItem.lot : '';
+                item["Grade"] = packingItem.grade ? packingItem.grade : '';
+                item["Berat"] = packingItem.weight ? packingItem.weight : '';
+                item["Panjang"] = packingItem.length ? packingItem.length : '';
+                item["Quantity"] = packingItem.quantity ? packingItem.quantity : '';
+                item["Keterangan"] = packingItem.remark ? packingItem.remark : '';
+                xls.options[packingItem.lot] = "string";
+                xls.options[packingItem.grade] = "string";
+                xls.options[packingItem.weight] = "number";
+                xls.options[packingItem.length] = "number";
+                xls.options[packingItem.quantity] = "number";
+                xls.options[packingItem.remark] = "string";
+
+                xls.data.push(item);
+            }
+
+        }
+
+        // xls.options["No"] = "number";
+        xls.options["Nomor Packing"] = "string";
+        xls.options["Nomor Order"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Konstruksi"] = "string";
+        xls.options["Design/Motif"] = "string";
+        xls.options["Warna yang diminta"] = "string";
+        xls.options["Tanggal"] = "string";
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Packing Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Packing Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Packing Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Packing Report.xlsx`;
+
+        return Promise.resolve(xls);
+    }
+
 
     pdf(packing, offset) {
         return new Promise((resolve, reject) => {

@@ -124,7 +124,7 @@ it("#05. should error when create new data without RUN,RUNWidth,designNumber,des
                 data.orderTypeId=createdDataOrderTypeId;
                 manager.create(data)
                 .then((id) => {
-                    done("Should not be able to create with empty data");
+                    done("Should not be able to create new data without RUN,RUNWidth,designNumber,designCode");
                 })
                 .catch((e) => {
                     try {
@@ -140,7 +140,65 @@ it("#05. should error when create new data without RUN,RUNWidth,designNumber,des
             });
     });
 
-    it("#06. should success when destroy data processType with id", function(done) {
+    it('#06. should error when create new data with RUN but with RUNWidth=0', function (done) {
+    dataUtil.getNewData()
+        .then(data => {
+
+            data.RUN = "1 RUN";
+            data.processType=createdDataProcessType;
+            data.processTypeId=createdDataProcessTypeId;
+            data.orderType=createdDataOrderType;
+            data.orderTypeId=createdDataOrderTypeId;
+            data.RUNWidth=[0];
+
+            manager.create(data)
+                .then(id => {
+                    done("should error when create new data with RUN but with RUNWidth=0");
+                })
+                .catch((e) => {
+                    try {
+                        e.name.should.equal("ValidationError");
+                        e.should.have.property("errors");
+                        e.errors.should.instanceof(Object);
+                        done();
+                    }
+                    catch (ex) {
+                        done(e);
+                    }
+                });
+            });
+});
+
+it('#07. should error when create new data with RUN but without RUNWidth', function (done) {
+    dataUtil.getNewData()
+        .then(data => {
+
+            data.RUN = "1 RUN";
+            data.processType=createdDataProcessType;
+            data.processTypeId=createdDataProcessTypeId;
+            data.orderType=createdDataOrderType;
+            data.orderTypeId=createdDataOrderTypeId;
+            data.RUNWidth=[];
+
+            manager.create(data)
+                .then(id => {
+                    done("should error when create new data with RUN but without RUNWidth");
+                })
+                .catch((e) => {
+                    try {
+                        e.name.should.equal("ValidationError");
+                        e.should.have.property("errors");
+                        e.errors.should.instanceof(Object);
+                        done();
+                    }
+                    catch (ex) {
+                        done(e);
+                    }
+                });
+            });
+});
+
+    it("#08. should success when destroy data processType with id", function(done) {
         managerProcessType.destroy(createdDataProcessTypeId)
             .then((result) => {
                 result.should.be.Boolean();
@@ -152,7 +210,7 @@ it("#05. should error when create new data without RUN,RUNWidth,designNumber,des
             });
     });
 
-    it("#07. should success when destroy data orderType with id", function(done) {
+    it("#09. should success when destroy data orderType with id", function(done) {
         managerOrderType.destroy(createdDataOrderTypeId)
             .then((result) => {
                 result.should.be.Boolean();
@@ -164,7 +222,7 @@ it("#05. should error when create new data without RUN,RUNWidth,designNumber,des
             });
     });
 
-    it("#08. should success when destroy data production Order with id", function(done) {
+    it("#10. should success when destroy data production Order with id", function(done) {
         manager.destroy(createdId)
             .then((result) => {
                 result.should.be.Boolean();
