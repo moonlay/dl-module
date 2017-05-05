@@ -181,18 +181,18 @@ module.exports = function (packing, offset) {
         text: " ",
         style: ['size08', 'center']
     }, {
-        text: "Total",
-        style: ['size08', 'center']
-    },{
-        text: totalJumlah,
-        style: ['size08', 'center']
-    } ,{
-        text: totalBerat,
-        style: ['size08', 'center']
-    } ,{
-        text: totalPanjang,
-        style: ['size08', 'center']
-    } , "",]];
+            text: "Total",
+            style: ['size08', 'center']
+        }, {
+            text: totalJumlah,
+            style: ['size08', 'center']
+        }, {
+            text: totalBerat,
+            style: ['size08', 'center']
+        }, {
+            text: totalPanjang,
+            style: ['size08', 'center']
+        }, "",]];
 
     tbody = tbody.length > 0 ? tbody : [
         [{
@@ -202,7 +202,7 @@ module.exports = function (packing, offset) {
         }, "", "", "", "", ""]
     ];
 
-    var table = [ {
+    var table = [{
         table: {
             widths: ['5%', '35%', '10%', '10%', '10%', '30%'],
             headerRows: 1,
@@ -213,16 +213,15 @@ module.exports = function (packing, offset) {
     var footer = [{
         stack: [{
             columns: [{
-                width: '40%',
                 columns: [{
-                    width: '25%',
+                    width: '10%',
                     stack: ['Buyer', 'Konstruksi', 'Design/Motif', 'Tujuan']
                 }, {
-                        width: '5%',
+                        width: '3%',
                         stack: [':', ':', ':', ':']
                     }, {
                         width: '*',
-                        stack: [packing.buyer, packing.construction, packing.motif, packing.buyerLocation]
+                        stack: [packing.buyer, packing.construction, packing.motif ? packing.motif : " ", packing.buyerLocation]
                     }]
             }]
         }
