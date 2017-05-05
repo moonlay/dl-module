@@ -138,14 +138,18 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                         var fabricGradeTestsError = {};
                         if (!item.pcsNo || item.pcsNo.trim() === "")
                             fabricGradeTestsError["pcsNo"] = i18n.__("FabricQualityControl.fabricGradeTests.pcsNo.isRequired:%s is required", i18n.__("FabricQualityControl.fabricGradeTests.pcsNo._:Pcs No"));
-                        else {
-                            var dup = valid.fabricGradeTests.find((test, idx) => item.pcsNo === test.pcsNo && index != idx);
-                            if (dup)
-                                fabricGradeTestsError["pcsNo"] = i18n.__("FabricQualityControl.fabricGradeTests.pcsNo.isDuplicate:%s is duplicate", i18n.__("FabricQualityControl.fabricGradeTests.pcsNo._:Pcs No"));
-                        }
 
                         if (item.initLength <= 0)
                             fabricGradeTestsError["initLength"] = i18n.__("FabricQualityControl.fabricGradeTests.initLength.isRequired:%s is required", i18n.__("FabricQualityControl.fabricGradeTests.pcsNo._:Initial Length"));
+
+                        if (item.avalLength > item.initLength) {
+                            fabricGradeTestsError["avalLength"] = i18n.__("FabricQualityControl.fabricGradeTests.avalLength.invalid:%s is not valid", i18n.__("FabricQualityControl.fabricGradeTests.pcsNo._:Aval Length"));
+                        } else if (item.sampleLength > item.initLength) {
+                            fabricGradeTestsError["sampleLength"] = i18n.__("FabricQualityControl.fabricGradeTests.sampleLength.invalid:%s is not valid", i18n.__("FabricQualityControl.fabricGradeTests.pcsNo._:Sample Length"));
+                        } else if (item.avalLength + item.sampleLength > item.initLength) {
+                            fabricGradeTestsError["avalLength"] = i18n.__("FabricQualityControl.fabricGradeTests.avalLength.invalid:%s is not valid", i18n.__("FabricQualityControl.fabricGradeTests.pcsNo._:Aval Length"));
+                            fabricGradeTestsError["sampleLength"] = i18n.__("FabricQualityControl.fabricGradeTests.sampleLength.invalid:%s is not valid", i18n.__("FabricQualityControl.fabricGradeTests.pcsNo._:Sample Length"));
+                        }
 
                         if (item.width <= 0)
                             fabricGradeTestsError["width"] = i18n.__("FabricQualityControl.fabricGradeTests.width.isRequired:%s is required", i18n.__("FabricQualityControl.fabricGradeTests.width._:Width"));
