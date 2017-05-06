@@ -14,6 +14,7 @@ var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
+var moment = require('moment');
 
 module.exports = class PurchaseOrderManager extends BaseManager {
     constructor(db, user) {
@@ -808,4 +809,146 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             })
             .then((result) => { return this.getSingleByIdOrDefault(purchaseOrder._id) });
     }
+
+    getDataDuration(query){
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                    _deleted: false
+                };
+            var postedQuery = {
+                    isPosted: true
+                };
+            var closedQuery = {
+                    isClosed: false
+                };
+            var date = {
+                "purchaseRequest.date" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                }
+            };
+            var durationQuery={};
+            if(query.duration==="8-14 hari"){
+                durationQuery={
+                    $cond: {
+                        if: { "$and": [ 
+                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$purchaseRequest.date"  ] }, 86400000 ]}, 8 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$purchaseRequest.date"  ] }, 86400000 ]}, 14] }
+                                ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if(query.duration==="15-30 hari"){
+                durationQuery={
+                    $cond: {
+                        if: { "$and": [ 
+                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$purchaseRequest.date"  ] }, 86400000 ]}, 15 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$purchaseRequest.date"  ] }, 86400000 ]}, 30] }
+                                ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if(query.duration==="> 30 hari"){
+                durationQuery={
+                    $cond: {
+                        if:  { $gt: [ {$divide: [ { $subtract: [ "$_createdDate","$purchaseRequest.date"  ] }, 86400000 ]}, 30] },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            
+            
+            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery]};
+            this.collection.aggregate([
+                {$unwind: "$items"}, 
+                {$match : Query},
+                {$redact:durationQuery},
+                {$project :{
+                        "purchaseRequest.date" : 1,
+                        "prDate" : "$purchaseRequest.date",
+                        "prNo" : "$purchaseRequest.no",
+                        "budget":"$purchaseRequest.budget.name",
+                        "category" : "$category.name",
+                        "productCode": "$items.product.code",
+                        "productName": "$items.product.name",
+                        "productQuantity" : "$items.defaultQuantity",
+                        "productUom" : "$items.defaultUom.unit",
+                        "poDate" : "$_createdDate",
+                        "staff" : "$_createdBy"
+                    }
+                },
+                    {$sort : {"purchaseRequest.date" : -1}}
+                ])
+                .toArray().then(report=>{
+                    resolve(report);
+                });
+        });
+    }
+
+    getXls(result,query){
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for(var report of result.info){
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).format(dateFormat);
+            item["No Purchase Request"] = report.prNo;
+            item["Budget"] = report.budget;
+            item["Kategori"] = report.category;
+            item["Kode Barang"] = report.productCode;
+            item["Nama Barang"] = report.productName;
+            item["Jumlah Barang"] = report.productQuantity;
+            item["Satuan Barang"] = report.productUom;
+            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).format(dateFormat);
+            item["Nama Staff Pembelian"] = report.staff;
+            
+
+            xls.data.push(item);
+        }
+
+        xls.options = {
+            "No" : "number",
+            "Tanggal Purchase Request" : "string",
+            "No Purchase Request" : "string",
+            "Budget" : "string",
+            "Kategori" : "string",
+            "Kode Barang":"string",
+            "Nama Barang" : "string",
+            "Jumlah Barang" : "number",
+            "Satuan Barang" : "string",
+            "Tanggal Terima PO Internal" : "string",
+            "Nama Staff Pembelian" : "string",
+            
+        };
+
+        if(query.dateFrom && query.dateTo){
+            xls.name = `LAPORAN DURASI PR - PO INTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(!query.dateFrom && query.dateTo){
+            xls.name = `LAPORAN DURASI PR - PO INTERNAL ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(query.dateFrom && !query.dateTo){
+            xls.name = `LAPORAN DURASI PR - PO INTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `LAPORAN DURASI PR - PO INTERNAL.xlsx`;
+
+        return Promise.resolve(xls);
+    }
+
+    
 };
