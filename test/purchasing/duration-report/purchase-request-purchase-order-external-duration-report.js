@@ -248,12 +248,31 @@ it('#08. should success when create new purchase-order-external with purchase-or
         });
 });
 
-it('#09. should success when get data with Start Date and Duration 8-14 days', function (done) {
+it('#09. should success when posting purchase-order-external', function(done) {
+    purchaseOrderExternalManager.post([purchaseOrderExternal])
+        .then(ids => {
+            purchaseOrderExternalManager.getSingleById(ids[0])
+                .then(poe => {
+                    purchaseOrderExternal = poe;
+                    purchaseOrderExternal.isPosted.should.equal(true);
+                    done();
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+
+it('#10. should success when get data with Start Date and Duration 8-14 days', function (done) {
     var query = {};
     query.dateFrom = createdDataPO.purchaseRequest.date;
     query.duration = "8-14 hari";
 
-    purchaseOrderManager.getDataDuration(query)
+    purchaseOrderExternalManager.getDurationPRtoPOEksternalData(query)
         .then(result => {
             var po = result;
             po.should.instanceof(Array);
@@ -264,13 +283,13 @@ it('#09. should success when get data with Start Date and Duration 8-14 days', f
         });
 });
 
-it('#10. should success when get data with Start Date, End Date and Duration 15-30 days', function (done) {
+it('#11. should success when get data with Start Date, End Date and Duration 15-30 days', function (done) {
     var query = {};
     query.dateFrom = createdDataPO2.purchaseRequest.date;
     query.dateTo = createdDataPO2._createdDate;
     query.duration = "15-30 hari";
 
-    purchaseOrderManager.getDataDuration(query)
+    purchaseOrderExternalManager.getDurationPRtoPOEksternalData(query)
         .then(result => {
             var po = result;
             po.should.instanceof(Array);
@@ -281,13 +300,13 @@ it('#10. should success when get data with Start Date, End Date and Duration 15-
         });
 });
 var resultForExcelTest = {};
-it('#11. should success when get data with Start Date, End Date and Duration >30 days', function (done) {
+it('#12. should success when get data with Start Date, End Date and Duration >30 days', function (done) {
     var query = {};
     query.dateFrom = createdDataPO3.purchaseRequest.date;
     query.dateTo = createdDataPO3._createdDate;
     query.duration = "> 30 hari";
 
-    purchaseOrderManager.getDataDuration(query)
+    purchaseOrderExternalManager.getDurationPRtoPOEksternalData(query)
         .then(result => {
             var po = result;
             resultForExcelTest.info = result;
@@ -299,11 +318,11 @@ it('#11. should success when get data with Start Date, End Date and Duration >30
         });
 });
 
-it('#12. should success when get data for Excel Report', function (done) {
+it('#13. should success when get data for Excel Report', function (done) {
     var query = {};
     query.duration = "8-14 hari";
 
-    purchaseOrderManager.getXls(resultForExcelTest, query)
+    purchaseOrderExternalManager.getXlsDurationPRtoPOEksternalData(resultForExcelTest, query)
         .then(xlsData => {             
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
@@ -314,12 +333,12 @@ it('#12. should success when get data for Excel Report', function (done) {
         });
 });
 
-it('#13. should success when get data for Excel Report using dateFrom only', function (done) {
+it('#14. should success when get data for Excel Report using dateFrom only', function (done) {
     var query = {};
     query.dateFrom = createdDataPO.purchaseRequest.date;
     query.duration = "8-14 hari";
 
-    purchaseOrderManager.getXls(resultForExcelTest, query)
+    purchaseOrderExternalManager.getXlsDurationPRtoPOEksternalData(resultForExcelTest, query)
         .then(xlsData => {             
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
@@ -330,12 +349,12 @@ it('#13. should success when get data for Excel Report using dateFrom only', fun
         });
 });
 
-it('#14. should success when get data for Excel Report using dateTo only', function (done) {
+it('#15. should success when get data for Excel Report using dateTo only', function (done) {
     var query = {};
     query.dateTo = new Date();
     query.duration = "> 30 hari";
 
-    purchaseOrderManager.getXls(resultForExcelTest, query)
+    purchaseOrderExternalManager.getXlsDurationPRtoPOEksternalData(resultForExcelTest, query)
         .then(xlsData => {             
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
@@ -346,13 +365,13 @@ it('#14. should success when get data for Excel Report using dateTo only', funct
         });
 });
 
-it('#15. should success when get data for Excel Report using both dateFrom and dateTo', function (done) {
+it('#16. should success when get data for Excel Report using both dateFrom and dateTo', function (done) {
     var query = {};
     query.dateFrom = createdDataPO2.purchaseRequest.date;
     query.dateTo = new Date();
     query.duration = "15-30 hari";
 
-    purchaseOrderManager.getXls(resultForExcelTest, query)
+    purchaseOrderExternalManager.getXlsDurationPRtoPOEksternalData(resultForExcelTest, query)
         .then(xlsData => {             
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');

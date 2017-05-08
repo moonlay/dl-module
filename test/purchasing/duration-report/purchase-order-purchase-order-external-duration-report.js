@@ -236,9 +236,11 @@ it("#07. should success when create new data PO 3", function(done) {
 });
 
 var purchaseOrderExternal;
-it('#08. should success when create new purchase-order-external with purchase-orders', function(done) {
+it('#08. should success when create new purchase-order-external 1 with purchase-orders', function(done) {
     purchaseOrderExternalDataUtil.getNew([purchaseOrder,purchaseOrder2,purchaseOrder3])
         .then(poe => {
+            var targetDate=new Date();
+            poe.date.setDate(targetDate.getDate() +10);
             purchaseOrderExternal = poe;
             validatePO(purchaseOrderExternal);
             done();
@@ -248,51 +250,56 @@ it('#08. should success when create new purchase-order-external with purchase-or
         });
 });
 
-it('#09. should success when get data with Start Date and Duration 8-14 days', function (done) {
+it('#09. should success when update purchase-order-external', function (done) {
+    purchaseOrderExternal.items.splice(0, 1);
+    var targetDate=new Date();
+    purchaseOrderExternal.date.setDate(targetDate.getDate() +10);
+    purchaseOrderExternalManager.update(purchaseOrderExternal)
+        .then((id) => {
+            return purchaseOrderExternalManager.getSingleById(id).then(po => {
+                    purchaseOrderExternal = po;
+                });
+        })
+        .then(po => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+
+
+it('#10. should success when posting purchase-order-external', function(done) {
+    purchaseOrderExternalManager.post([purchaseOrderExternal])
+        .then(ids => {
+            purchaseOrderExternalManager.getSingleById(ids[0])
+                .then(poe => {
+                    purchaseOrderExternal = poe;
+                    purchaseOrderExternal.isPosted.should.equal(true);
+                    done();
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+
+var resultForExcelTest = {};
+it('#11. should success when get data with Start Date and Duration 8-14 days', function (done) {
     var query = {};
-    query.dateFrom = createdDataPO.purchaseRequest.date;
+    query.dateFrom = purchaseOrder._createdDate;
     query.duration = "8-14 hari";
 
-    purchaseOrderManager.getDataDuration(query)
-        .then(result => {
-            var po = result;
-            po.should.instanceof(Array);
-            po.length.should.not.equal(0);
-            done();
-        }).catch(e => {
-            done(e);
-        });
-});
-
-it('#10. should success when get data with Start Date, End Date and Duration 15-30 days', function (done) {
-    var query = {};
-    query.dateFrom = createdDataPO2.purchaseRequest.date;
-    query.dateTo = createdDataPO2._createdDate;
-    query.duration = "15-30 hari";
-
-    purchaseOrderManager.getDataDuration(query)
-        .then(result => {
-            var po = result;
-            po.should.instanceof(Array);
-            po.length.should.not.equal(0);
-            done();
-        }).catch(e => {
-            done(e);
-        });
-});
-var resultForExcelTest = {};
-it('#11. should success when get data with Start Date, End Date and Duration >30 days', function (done) {
-    var query = {};
-    query.dateFrom = createdDataPO3.purchaseRequest.date;
-    query.dateTo = createdDataPO3._createdDate;
-    query.duration = "> 30 hari";
-
-    purchaseOrderManager.getDataDuration(query)
+    purchaseOrderExternalManager.getDurationPOData(query)
         .then(result => {
             var po = result;
             resultForExcelTest.info = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -303,7 +310,7 @@ it('#12. should success when get data for Excel Report', function (done) {
     var query = {};
     query.duration = "8-14 hari";
 
-    purchaseOrderManager.getXls(resultForExcelTest, query)
+    purchaseOrderExternalManager.getXlsDurationPOData(resultForExcelTest, query)
         .then(xlsData => {             
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
@@ -319,7 +326,7 @@ it('#13. should success when get data for Excel Report using dateFrom only', fun
     query.dateFrom = createdDataPO.purchaseRequest.date;
     query.duration = "8-14 hari";
 
-    purchaseOrderManager.getXls(resultForExcelTest, query)
+    purchaseOrderExternalManager.getXlsDurationPOData(resultForExcelTest, query)
         .then(xlsData => {             
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
@@ -335,7 +342,7 @@ it('#14. should success when get data for Excel Report using dateTo only', funct
     query.dateTo = new Date();
     query.duration = "> 30 hari";
 
-    purchaseOrderManager.getXls(resultForExcelTest, query)
+    purchaseOrderExternalManager.getXlsDurationPOData(resultForExcelTest, query)
         .then(xlsData => {             
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
@@ -352,11 +359,148 @@ it('#15. should success when get data for Excel Report using both dateFrom and d
     query.dateTo = new Date();
     query.duration = "15-30 hari";
 
-    purchaseOrderManager.getXls(resultForExcelTest, query)
+    purchaseOrderExternalManager.getXlsDurationPOData(resultForExcelTest, query)
         .then(xlsData => {             
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
             xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#16. should success when unposting purchase-order-external', function (done) {
+    purchaseOrderExternalManager.unpost(purchaseOrderExternal._id)
+        .then((poExId) => {
+            purchaseOrderExternalManager.getSingleById(poExId)
+                .then((poe) => {
+                    purchaseOrderExternal = poe;
+                    purchaseOrderExternal.isPosted.should.equal(false);
+                    done();
+                })
+        })
+        .catch(e => {
+            done(e);
+        });
+
+});
+
+it('#17. should success when update purchase-order-external', function (done) {
+    var targetDate=new Date();
+    purchaseOrderExternal.date.setDate(targetDate.getDate() +20);
+    purchaseOrderExternalManager.update(purchaseOrderExternal)
+        .then((id) => {
+            return purchaseOrderExternalManager.getSingleById(id).then(po => {
+                    purchaseOrderExternal = po;
+                });
+        })
+        .then(po => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+
+
+it('#18. should success when posting purchase-order-external', function(done) {
+    purchaseOrderExternalManager.post([purchaseOrderExternal])
+        .then(ids => {
+            purchaseOrderExternalManager.getSingleById(ids[0])
+                .then(poe => {
+                    purchaseOrderExternal = poe;
+                    purchaseOrderExternal.isPosted.should.equal(true);
+                    done();
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#19. should success when get data with Start Date, End Date and Duration 15-30 days', function (done) {
+    var query = {};
+    query.dateFrom = new Date( purchaseOrder._createdDate);
+    query.dateTo = new Date(purchaseOrderExternal.date);
+    query.duration = "15-30 hari";
+
+    purchaseOrderExternalManager.getDurationPOData(query)
+        .then(result => {
+            var po = result;
+            po.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#20. should success when unposting purchase-order-external', function (done) {
+    purchaseOrderExternalManager.unpost(purchaseOrderExternal._id)
+        .then((poExId) => {
+            purchaseOrderExternalManager.getSingleById(poExId)
+                .then((poe) => {
+                    purchaseOrderExternal = poe;
+                    purchaseOrderExternal.isPosted.should.equal(false);
+                    done();
+                })
+        })
+        .catch(e => {
+            done(e);
+        });
+
+});
+
+it('#21. should success when update purchase-order-external', function (done) {
+    var targetDate=new Date();
+    purchaseOrderExternal.date.setDate(targetDate.getDate() +35);
+    purchaseOrderExternalManager.update(purchaseOrderExternal)
+        .then((id) => {
+            return purchaseOrderExternalManager.getSingleById(id).then(po => {
+                    purchaseOrderExternal = po;
+                });
+        })
+        .then(po => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+
+
+it('#22. should success when posting purchase-order-external', function(done) {
+    purchaseOrderExternalManager.post([purchaseOrderExternal])
+        .then(ids => {
+            purchaseOrderExternalManager.getSingleById(ids[0])
+                .then(poe => {
+                    purchaseOrderExternal = poe;
+                    purchaseOrderExternal.isPosted.should.equal(true);
+                    done();
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+it('#23. should success when get data with Start Date, End Date and Duration >30 days', function (done) {
+    var query = {};
+    query.dateFrom = new Date( purchaseOrder._createdDate);
+    query.dateTo = new Date(purchaseOrderExternal.date);
+    query.duration = "> 30 hari";
+
+    purchaseOrderExternalManager.getDurationPOData(query)
+        .then(result => {
+            var po = result;
+            po.should.instanceof(Array);
             done();
         }).catch(e => {
             done(e);
