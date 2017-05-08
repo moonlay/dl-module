@@ -36,7 +36,8 @@ module.exports = {
             ComodityManager: require('./src/managers/master/comodity-manager'),
             QualityManager: require('./src/managers/master/quality-manager'),
             TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager'),
-            DesignMotiveManager: require('./src/managers/master/design-motive-manager')
+            DesignMotiveManager: require('./src/managers/master/design-motive-manager'),
+            StorageManager: require('./src/managers/master/storage-manager')
         },
         inventory : {
             finishingPrinting:{
