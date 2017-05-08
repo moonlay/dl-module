@@ -37,6 +37,7 @@ module.exports = function (salesContract) {
         uomLocal=salesContract.uom.unit;
     }
 
+    
     var appx="";
     var appxLocal="";
     var date=parseInt(salesContract.deliverySchedule.getDate());
@@ -57,8 +58,15 @@ module.exports = function (salesContract) {
     var newDetail=[];
     var detailprice="";
     var amount=salesContract.amount;
+    var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
 
-    if(amount % 1 !=0){
+    
+
+    if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
+        amount=salesContract.amount.toFixed(3);
+        amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
+    }
+    else if(amount % 1 !=0){
         amount=parseFloat(salesContract.amount.toFixed(2));
     }
 
@@ -80,8 +88,14 @@ module.exports = function (salesContract) {
         else{
             ppn='TANPA PPN';
         }
-        newDetail.push( i.color + " " + i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom1 + ' ');
-        detailprice+= i.currency.symbol + " " + `${parseFloat(i.price).toLocaleString(locale, locale.currency)}` + ' / ' + uomLocal + ' ' + ppn + ' ' + '( ' + i.color + ' )' + "\n";
+        var nominal=`${parseFloat(i.price).toLocaleString(locale, locale.currency)}`;
+
+        if(i.currency.code.toLowerCase()=="usd"){
+            nominal=`${parseFloat(i.price).toLocaleString(locale, locale.currencySalesContract)}`;
+        }
+
+        newDetail.push( i.color + " " + i.currency.symbol + " " + nominal + ' / ' + uom1 + ' ');
+        detailprice+= i.currency.symbol + " " + nominal + ' / ' + uomLocal + ' ' + ppn + ' ' + '( ' + i.color + ' )' + "\n";
        
     }
     detail=newDetail.toString();
@@ -92,6 +106,7 @@ module.exports = function (salesContract) {
     var code=salesContract.salesContractNo;
     var motive= salesContract.designMotive ? salesContract.designMotive.name : "";
     var pieceLength=salesContract.pieceLength ? salesContract.pieceLength : "";
+    var shipmentDesc=salesContract.shipmentDescription ? '\n' + salesContract.shipmentDescription : '';
 
     if(salesContract.buyer.type.toLowerCase()=="export"||salesContract.buyer.type.toLowerCase()=="ekspor"){
         moment.locale('en-EN');
@@ -233,7 +248,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:salesContract.accountBank.currency.symbol + " " +`${parseFloat(amount).toLocaleString(locale, locale.currency)}`+" ( "+`${numSpell(amount)}`+ salesContract.accountBank.currency.description.toUpperCase() + " ) (APPROXIMATELLY)",
+                        text:salesContract.accountBank.currency.symbol + " " + amountbyCurrency +" ( "+`${numSpell(amount)}`+ salesContract.accountBank.currency.description.toUpperCase() + " ) (APPROXIMATELLY)",
                         style: ['size10']
                     }]
         },{
@@ -249,7 +264,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appx + ' '+`${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
+                        text:appx + ' '+`${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}` + '\n' + shipmentDesc,
                         style: ['size10']
                     }]
         },{
@@ -485,7 +500,7 @@ module.exports = function (salesContract) {
                         style: ['size10'],
                         alignment: "left"
                     },{
-                        text:salesContract.buyer.name + '\n' + salesContract.buyer.address,
+                        text:salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.city ,
                         style: ['size10'],
                         alignment: "left"
                     }]

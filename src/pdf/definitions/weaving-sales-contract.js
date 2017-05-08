@@ -61,14 +61,26 @@ module.exports = function (salesContract, offset) {
         ppn = "Include PPn 10%";
     }
 
-    var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + uom1 + "\n";
-    detailprice += salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + uomLocal + ' ' + ppn;
+    var price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}`;
 
     amount = salesContract.price * salesContract.orderQuantity;
 
-    if(amount % 1 !=0){
+    var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
+
+    if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
+        price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currencySalesContract)}`;
+        amount=parseFloat(amount.toFixed(3));
+        amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
+    }
+    else if(amount % 1 !=0){
         amount=parseFloat(amount.toFixed(2));
     }
+
+
+    var detail = salesContract.accountBank.currency.symbol + " " + price + ' / ' + uom1 + "\n";
+    detailprice += salesContract.accountBank.currency.symbol + " " + price + ' / ' + uomLocal + ' ' + ppn;
+
+    
 
     var quantity= salesContract.orderQuantity;
     if(salesContract.orderQuantity % 1 !=0){
@@ -81,7 +93,6 @@ module.exports = function (salesContract, offset) {
     }
     var code = salesContract.salesContractNo;
     var shipmentDesc=salesContract.shipmentDescription ? '\n' + salesContract.shipmentDescription : '';
-
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
         moment.locale('en-EN');
@@ -223,7 +234,7 @@ module.exports = function (salesContract, offset) {
                     },
                     {
                         width: '*',
-                        text: salesContract.accountBank.currency.symbol + " " + `${parseFloat(amount).toLocaleString(locale, locale.currency)}` + " ( " + `${numSpell(amount)}` + salesContract.accountBank.currency.description.toUpperCase() + " ) (APPROXIMATELLY)",
+                        text: salesContract.accountBank.currency.symbol + " " + amountbyCurrency + " ( " + `${numSpell(amount)}` + salesContract.accountBank.currency.description.toUpperCase() + " ) (APPROXIMATELLY)",
                         style: ['size10']
                     }]
             }, {
@@ -458,7 +469,7 @@ module.exports = function (salesContract, offset) {
                         style: ['size10'],
                         alignment: "left"
                     }, {
-                        text: salesContract.buyer.name + '\n' + salesContract.buyer.address,
+                        text: salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.city,
                         style: ['size10'],
                         alignment: "left"
                     }]
