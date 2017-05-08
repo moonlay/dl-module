@@ -238,9 +238,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
     }
 
     _beforeInsert(unitPaymentOrder) {
-        var now = new Date();
-        var ticks = ((now.getTime() * 10000) + 621355968000000000);
-        unitPaymentOrder.no = generateCode(ticks.toString(16));
+        unitPaymentOrder.no = generateCode();
         return Promise.resolve(unitPaymentOrder)
     }
 
