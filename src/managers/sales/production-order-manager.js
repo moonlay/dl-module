@@ -655,7 +655,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                                     {
                                                         "productionOrderNo": 1,
                                                         "kanbanCode": 1,
-                                                        "orderQuantity": 1
+                                                        "orderQuantity": { $sum: "$fabricGradeTests.initLength" }
                                                     }
                                                 }
                                             ]).toArray());
