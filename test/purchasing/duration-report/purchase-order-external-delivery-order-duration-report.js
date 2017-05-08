@@ -131,7 +131,6 @@ it('#04. should success when get data with Start Date and Duration 0-30 days', f
         .then(result => {
             var po = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -148,7 +147,6 @@ it('#05. should success when get data with Start Date, End Date and Duration 31-
         .then(result => {
             var po = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -158,14 +156,13 @@ it('#05. should success when get data with Start Date, End Date and Duration 31-
 it('#05. should success when get data with Start Date, End Date and Duration 61-90 days', function (done) {
     var query = {};
     query.dateFrom = new Date();
-    query.dateTo = createdDO3.date;
+    query.dateTo = createdDO3.supplierDoDate;
     query.duration = "61-90 hari";
 
     purchaseOrderManager.getDurationPOEksDoData(query)
         .then(result => {
             var po = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -176,7 +173,7 @@ var resultForExcelTest = {};
 it('#06. should success when get data with Start Date, End Date and Duration >90 days', function (done) {
     var query = {};
     query.dateFrom = new Date();
-    query.dateTo = createdDO3.date;
+    query.dateTo = createdDO3.supplierDoDate;
     query.duration = "> 90 hari";
 
     purchaseOrderManager.getDurationPOEksDoData(query)
@@ -184,7 +181,6 @@ it('#06. should success when get data with Start Date, End Date and Duration >90
             var po = result;
             resultForExcelTest.info = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -241,7 +237,7 @@ it('#09. should success when get data for Excel Report using dateTo only', funct
 it('#10. should success when get data for Excel Report using both dateFrom and dateTo', function (done) {
     var query = {};
     query.dateFrom = new Date();
-    query.dateTo = createdDO3.date;
+    query.dateTo = createdDO3.supplierDoDate;
     query.duration = "> 90 hari";
 
     purchaseOrderManager.getXlsDurationPOEksDoData(resultForExcelTest, query)
