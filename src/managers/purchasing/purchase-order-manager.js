@@ -950,5 +950,183 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return Promise.resolve(xls);
     }
 
-    
+    getDurationPOEksDoData(query){
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                    _deleted: false
+                };
+            var postedQuery = {
+                    isPosted: true
+                };
+            var closedQuery = {
+                    isClosed: false
+                };
+            var date = {
+                "purchaseOrderExternal.date" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                }
+            };
+            var durationQuery={};
+            if(query.duration==="0-30 hari"){
+                durationQuery={
+                    $cond: {
+                        if: { "$and": [ 
+                                { $gte: [ {$divide: [ { $subtract: [ "$items.fulfillments.supplierDoDate","$purchaseOrderExternal.date"  ] }, 86400000 ]}, 0 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$items.fulfillments.supplierDoDate","$purchaseOrderExternal.date"  ] }, 86400000 ]}, 30] }
+                                ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if(query.duration==="31-60 hari"){
+                durationQuery={
+                    $cond: {
+                        if: { "$and": [ 
+                                { $gte: [ {$divide: [ { $subtract: [ "$items.fulfillments.supplierDoDate","$purchaseOrderExternal.date"  ] }, 86400000 ]}, 31 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$items.fulfillments.supplierDoDate","$purchaseOrderExternal.date"  ] }, 86400000 ]}, 60] }
+                                ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if(query.duration==="61-90 hari"){
+                durationQuery={
+                    $cond: {
+                        if: { "$and": [ 
+                                { $gte: [ {$divide: [ { $subtract: [ "$items.fulfillments.supplierDoDate","$purchaseOrderExternal.date"  ] }, 86400000 ]}, 61 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$items.fulfillments.supplierDoDate","$purchaseOrderExternal.date"  ] }, 86400000 ]}, 90] }
+                                ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if(query.duration==="> 90 hari"){
+                durationQuery={
+                    $cond: {
+                        if:  { $gt: [ {$divide: [ { $subtract: [ "$items.fulfillments.supplierDoDate","$purchaseOrderExternal.date"  ] }, 86400000 ]}, 90] },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            
+            var Query = {"$and" : [date, deletedQuery]};
+            this.collection.aggregate([
+                {$unwind: "$items"}, 
+                {$unwind: "$items.fulfillments"},
+                {$match : Query},
+                {$redact:durationQuery},
+                {$project :{
+                        "purchaseOrderExternal.date" : 1,
+                        "prDate" : "$purchaseRequest.date",
+                        "prNo" : "$purchaseRequest.no",
+                        "budget":"$purchaseRequest.budget.name",
+                        "category" : "$category.name",
+                        "productCode": "$items.product.code",
+                        "productName": "$items.product.name",
+                        "productQuantity" : "$items.fulfillments.deliveryOrderDeliveredQuantity",
+                        "productUom" : "$items.defaultUom.unit",
+                        "productPrice" : "$items.pricePerDealUnit",
+                        "supplierCode" : "$purchaseOrderExternal.supplier.code",
+                        "supplierName" : "$purchaseOrderExternal.supplier.name",
+                        "poDate" : "$_createdDate",
+                        "poEksDate" : "$purchaseOrderExternal.date",
+                        "expectedDate": "$purchaseOrderExternal.expectedDeliveryDate",
+                        "poEksNo" : "$purchaseOrderExternal.no",
+                        "doDate" : "$items.fulfillments.supplierDoDate",
+                        "arrivedDate" : "$items.fulfillments.deliveryOrderDate",
+                        "doNo" : "$items.fulfillments.deliveryOrderNo",
+                        "staff" : "$_createdBy"
+                    }
+                },
+                    {$sort : {"purchaseOrderExternal.date" : -1}}
+                ])
+                .toArray().then(report=>{
+                    resolve(report);
+                });
+        });
+    }
+
+    getXlsDurationPOEksDoData(result,query){
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for(var report of result.info){
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).format(dateFormat);
+            item["No Purchase Request"] = report.prNo;
+            item["Budget"] = report.budget;
+            item["Kategori"] = report.category;
+            item["Kode Barang"] = report.productCode;
+            item["Nama Barang"] = report.productName;
+            item["Jumlah Barang"] = report.productQuantity;
+            item["Satuan Barang"] = report.productUom;
+            item["Harga Barang"] = report.productUom;
+            item["Kode Supplier"] = report.productUom;
+            item["Nama Supplier"] = report.productUom;
+            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).format(dateFormat);
+            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate)).format(dateFormat);
+            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).format(dateFormat);
+            item["No PO Eksternal"] = report.poEksNo;
+            item["Tanggal Surat Jalan"] = moment(new Date(report.doDate)).format(dateFormat);
+            item["Tanggal Datang Barang"] = moment(new Date(report.arrivedDate)).format(dateFormat);
+            item["No Surat Jalan"] = report.doNo;
+            item["Nama Staff Pembelian"] = report.staff;
+            
+
+            xls.data.push(item);
+        }
+
+        xls.options = {
+            "No" : "number",
+            "Tanggal Purchase Request" : "string",
+            "No Purchase Request" : "string",
+            "Budget" : "string",
+            "Kategori" : "string",
+            "Kode Barang":"string",
+            "Nama Barang" : "string",
+            "Jumlah Barang" : "number",
+            "Satuan Barang" : "string",
+            "Harga Barang" : "number",
+            "Kode Supplier" : "string",
+            "Nama Supplier" : "string",
+            "Tanggal Terima PO Internal" : "string",
+            "Tanggal PO Eksternal" : "string",
+            "Tanggal Target Datang" : "string",
+            "No PO Eksternal" : "string",
+            "Tanggal Surat Jalan":"string",
+            "Tanggal Datang Barang":"string",
+            "No Surat Jalan":"string",
+            "Nama Staff Pembelian" : "string"
+            
+        };
+
+        if(query.dateFrom && query.dateTo){
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(!query.dateFrom && query.dateTo){
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(query.dateFrom && !query.dateTo){
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN.xlsx`;
+
+        return Promise.resolve(xls);
+    }
 };
