@@ -6,16 +6,17 @@ var ribuan = ["", "ribu", "juta", "milyar", "triliyun", "kuadrilyun", "kuintiliu
 function terbilang(d, f) {
     var strHasil = "";
     var isNegative = Number(d) < 0;
+    d = parseFloat(Math.round(d * 100) / 100).toFixed(2)
     if (isNegative) {
         d = d * -1;
     }
 
     if (d.toString().indexOf(".") !== -1) {
-        var a = Number(d.toFixed(4).toString().substr(d.toFixed(4).toString().indexOf(".") + 1));
+        var a = Number(d.toString().substr(d.toString().indexOf(".") + 1));
         if (a !== 0) {
             strHasil = terbilangKoma(d);
         }
-        d = Number(d.toFixed(4).toString().slice(0, d.toFixed(4).toString().indexOf(".")));
+        d = Number(d.toString().slice(0, d.toString().indexOf(".")));
     }
 
     var nDigit = 0;

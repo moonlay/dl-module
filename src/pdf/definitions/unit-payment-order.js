@@ -11,7 +11,7 @@ module.exports = function (unitPaymentOrder) {
                 unitReceiptNoteNo: unitPaymentOrderItem.unitReceiptNote.no,
                 quantity: receiptNoteItem.deliveredQuantity,
                 uom: receiptNoteItem.deliveredUom.unit,
-                price: receiptNoteItem.pricePerDealUnit
+                price: parseFloat(Math.round(receiptNoteItem.pricePerDealUnit * 100) / 100).toFixed(2)
             };
         });
     });
@@ -202,7 +202,7 @@ module.exports = function (unitPaymentOrder) {
                     text: `${currency}`
                 }, {
                         width: '*',
-                        text: parseFloat(item.price).toLocaleString(locale, locale.currencyNotaItern),
+                        text: item.price.toLocaleString(locale, locale.currency),
                         style: ['right']
                     }],
                 style: ['size08']
@@ -212,7 +212,7 @@ module.exports = function (unitPaymentOrder) {
                     text: `${currency}`
                 }, {
                         width: '*',
-                        text: parseFloat(item.price * item.quantity).toLocaleString(locale, locale.currencyNotaItern),
+                        text: parseFloat(Math.round(item.price * item.quantity* 100) / 100).toFixed(2).toLocaleString(locale, locale.currency),
                         style: ['right']
                     }],
                 style: ['size08']
@@ -262,7 +262,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.useVat ? parseFloat(vat).toLocaleString(locale, locale.currencyNotaItern) : "",
+                                    text: unitPaymentOrder.useVat ? parseFloat(Math.round(vat * 100) / 100).toFixed(2).toLocaleString(locale, locale.currency) : "",
                                     style: 'right'
                                 }]
                         }, {
@@ -280,7 +280,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.useVat ? parseFloat((sum + incomeTax) - vat).toLocaleString(locale, locale.currencyNotaItern) : "",
+                                    text: unitPaymentOrder.useVat ?parseFloat(Math.round(((sum + incomeTax) - vat) * 100) / 100).toFixed(2).toLocaleString(locale, locale.currency) : "",
                                     style: 'right'
                                 }]
                         }]
@@ -303,7 +303,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: parseFloat(sum).toLocaleString(locale, locale.currencyNotaItern),
+                                    text: parseFloat(Math.round(sum * 100) / 100).toFixed(2).toLocaleString(locale, locale.currency),
                                     style: 'right'
                                 }]
                         }, {
@@ -317,7 +317,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.useIncomeTax ? parseFloat(incomeTax).toLocaleString(locale, locale.currencyNotaItern) : '',
+                                    text: unitPaymentOrder.useIncomeTax ? parseFloat(Math.round(incomeTax * 100) / 100).toFixed(2).toLocaleString(locale, locale.currency) : '',
                                     style: 'right'
                                 }]
                         }, {
@@ -331,7 +331,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: parseFloat(sum + incomeTax).toLocaleString(locale, locale.currencyNotaItern),
+                                    text: parseFloat(Math.round((sum + incomeTax) * 100) / 100).toFixed(2).toLocaleString(locale, locale.currency),
                                     style: 'right'
                                 }]
                         }]
