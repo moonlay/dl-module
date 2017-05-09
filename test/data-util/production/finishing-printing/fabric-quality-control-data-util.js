@@ -25,6 +25,7 @@ class FabricQualityControlDataUtil {
                 var data = {
                     code: codeGenerator(),
                     pointSystem: 10,
+                    pointLimit: 0,
                     kanbanId: kanban._id,
                     dateIm: new Date(),
                     shiftIm: "UT Shift",
