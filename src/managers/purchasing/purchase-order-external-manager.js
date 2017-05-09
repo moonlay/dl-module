@@ -1043,6 +1043,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "poEksDate" : "$date",
                         "expectedDate": "$expectedDeliveryDate",
                         "poEksNo" : "$no",
+                        "dateDiff" : {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]},
                         "staff" : "$_createdBy"
                     }
                 },
@@ -1065,6 +1066,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
 
         for(var report of result.info){
             index++;
+            var dateDiff=Math.round(report.dateDiff);
             var item = {};
             item["No"] = index;
             item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).format(dateFormat);
@@ -1084,6 +1086,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate)).format(dateFormat);
             item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).format(dateFormat);
             item["No PO Eksternal"] = report.poEksNo;
+            item["Selisih Tanggal PR - PO Eksternal (hari)"] = dateDiff;
             item["Nama Staff Pembelian"] = report.staff;
             
 
@@ -1109,21 +1112,22 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             "Tanggal PO Eksternal" : "string",
             "Tanggal Target Datang" : "string",
             "No PO Eksternal" : "string",
+            "Selisih Tanggal PR - PO Eksternal (hari)":"number",
             "Nama Staff Pembelian" : "string"
             
         };
 
         if(query.dateFrom && query.dateTo){
-            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            xls.name = `LAPORAN DURASI PR - PO EKSTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
         else if(!query.dateFrom && query.dateTo){
-            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            xls.name = `LAPORAN DURASI PR - PO EKSTERNAL ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
         else if(query.dateFrom && !query.dateTo){
-            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+            xls.name = `LAPORAN DURASI PR - PO EKSTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
         }
         else
-            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL.xlsx`;
+            xls.name = `LAPORAN DURASI PR - PO EKSTERNAL.xlsx`;
 
         return Promise.resolve(xls);
     }
@@ -1208,6 +1212,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "poEksDate" : "$date",
                         "expectedDate": "$expectedDeliveryDate",
                         "poEksNo" : "$no",
+                        "dateDiff":{$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]},
                         "staff" : "$_createdBy"
                     }
                 },
@@ -1229,6 +1234,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         var dateFormat = "DD/MM/YYYY";
 
         for(var report of result.info){
+            var dateDiff=Math.round(report.dateDiff);
             index++;
             var item = {};
             item["No"] = index;
@@ -1249,6 +1255,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate)).format(dateFormat);
             item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).format(dateFormat);
             item["No PO Eksternal"] = report.poEksNo;
+            item["Selisih Tanggal PO Internal - PO Eksternal (hari)"] = dateDiff;
             item["Nama Staff Pembelian"] = report.staff;
             
 
@@ -1274,6 +1281,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             "Tanggal PO Eksternal" : "string",
             "Tanggal Target Datang" : "string",
             "No PO Eksternal" : "string",
+            "Selisih Tanggal PO Internal - PO Eksternal (hari)":"number",
             "Nama Staff Pembelian" : "string"
             
         };
