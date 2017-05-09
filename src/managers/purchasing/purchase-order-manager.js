@@ -874,6 +874,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         "purchaseRequest.date" : 1,
                         "prDate" : "$purchaseRequest.date",
                         "prNo" : "$purchaseRequest.no",
+                        "division": "$purchaseRequest.unit.division.name",
+                        "unit": "$purchaseRequest.unit.name",
                         "budget":"$purchaseRequest.budget.name",
                         "category" : "$category.name",
                         "productCode": "$items.product.code",
@@ -907,6 +909,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             item["No"] = index;
             item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).format(dateFormat);
             item["No Purchase Request"] = report.prNo;
+            item["Divisi"] = report.division;
+            item["Unit"] = report.unit;
             item["Budget"] = report.budget;
             item["Kategori"] = report.category;
             item["Kode Barang"] = report.productCode;
@@ -924,6 +928,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "No" : "number",
             "Tanggal Purchase Request" : "string",
             "No Purchase Request" : "string",
+            "Divisi" : "string",
+            "Unit" : "string",
             "Budget" : "string",
             "Kategori" : "string",
             "Kode Barang":"string",
@@ -1027,6 +1033,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         "purchaseOrderExternal.date" : 1,
                         "prDate" : "$purchaseRequest.date",
                         "prNo" : "$purchaseRequest.no",
+                        "division": "$purchaseRequest.unit.division.name",
+                        "unit": "$purchaseRequest.unit.name",
                         "budget":"$purchaseRequest.budget.name",
                         "category" : "$category.name",
                         "productCode": "$items.product.code",
@@ -1069,6 +1077,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             item["No"] = index;
             item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).format(dateFormat);
             item["No Purchase Request"] = report.prNo;
+            item["Divisi"] = report.division;
+            item["Unit"] = report.unit;
             item["Budget"] = report.budget;
             item["Kategori"] = report.category;
             item["Kode Barang"] = report.productCode;
@@ -1095,6 +1105,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "No" : "number",
             "Tanggal Purchase Request" : "string",
             "No Purchase Request" : "string",
+            "Divisi" : "string",
+            "Unit" : "string",
             "Budget" : "string",
             "Kategori" : "string",
             "Kode Barang":"string",
