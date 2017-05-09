@@ -50,9 +50,26 @@ module.exports = function (salesContract) {
         ppn="Include PPn 10%";
     }
 
-    var detail = salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / KG' + "\n";
-    detailprice += salesContract.accountBank.currency.symbol + " " + `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}` + ' / ' + salesContract.uom.unit + ' ' + ppn;
-    amount = salesContract.price * convertion;
+    var price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}`;
+
+    var amount = salesContract.price * convertion;
+
+    var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
+
+    
+
+    if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
+        price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currencySalesContract)}`;
+        amount=parseFloat(amount.toFixed(3));
+        amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
+    }
+    else if(amount % 1 !=0){
+        amount=parseFloat(amount.toFixed(2));
+    }
+
+    var detail = salesContract.accountBank.currency.symbol + " " + price + ' / KG' + "\n";
+    detailprice += salesContract.accountBank.currency.symbol + " " + price + ' / ' + salesContract.uom.unit + ' ' + ppn;
+    
 
     var comoDesc = "";
     if (salesContract.comodityDescription != "") {
@@ -60,9 +77,7 @@ module.exports = function (salesContract) {
     }
     var code = salesContract.salesContractNo;
 
-    if(amount % 1 !=0){
-        amount=parseFloat(amount.toFixed(2));
-    }
+    
 
     var quantity= salesContract.orderQuantity;
     if(salesContract.orderQuantity % 1 !=0){
@@ -196,7 +211,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.accountBank.currency.symbol + " " + `${parseFloat(amount).toLocaleString(locale, locale.currency)}`+" ( "+ `${numSpell(amount)}`+" "+ salesContract.accountBank.currency.description+" ) (APPROXIMATELLY)" ,
+                        text: salesContract.accountBank.currency.symbol + " " + amountbyCurrency+" ( "+ `${numSpell(amount)}`+" "+ salesContract.accountBank.currency.description+" ) (APPROXIMATELLY)" ,
                         style: ['size09']
                     }]
             }, {
@@ -433,7 +448,7 @@ module.exports = function (salesContract) {
                     style: ['size09'],
                     alignment: "left"
                 }, {
-                    text: salesContract.buyer.name + '\n' + salesContract.buyer.address,
+                    text: salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.city,
                     style: ['size09'],
                     alignment: "left"
                 }]
