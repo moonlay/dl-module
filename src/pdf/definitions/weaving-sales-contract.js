@@ -65,13 +65,7 @@ module.exports = function (salesContract, offset) {
 
     amount = salesContract.price * salesContract.orderQuantity;
 
-    if(amount % 1 !=0){
-        amount=parseFloat(amount.toFixed(2));
-    }
-
     var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
-
-    
 
     if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
         price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currencySalesContract)}`;
