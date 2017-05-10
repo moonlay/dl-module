@@ -126,7 +126,7 @@ it("#02. should success when create new data instruction with step 1, step 2, st
 });
 
 var machine;
-it("#03. should success when create new data mechine", function(done) {
+it("#03. should success when create new data mechine1", function(done) {
     machineDataUtil.getNewData()
         .then(data =>{
             data.steps = [
@@ -162,8 +162,45 @@ it("#03. should success when create new data mechine", function(done) {
         });
 });
 
+var machine1;
+it("#04. should success when create new data mechine2", function(done) {
+    machineDataUtil.getNewData()
+        .then(data =>{
+            data.steps = [
+                {
+                    stepId : step1._id,
+                    step : step1
+                },{
+                    stepId : step2._id,
+                    step : step2
+                },{
+                    stepId : step3._id,
+                    step : step3
+                }
+            ];
+            machineManager.create(data)
+                .then(id =>{
+                    machineManager.getSingleById(id)
+                        .then(dataMachine => {
+                            validate.master.machine(dataMachine);
+                            machine1 = dataMachine;
+                            done();
+                        })
+                        .catch((e) => {
+                            done(e);
+                        });
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 var kanban;
-it("#04. should success when create new data kanban", function(done) {
+it("#05. should success when create new data kanban", function(done) {
     kanbanDataUtil.getNewData()
         .then(data =>{
             data.instructionId = instruction._id;
@@ -191,7 +228,7 @@ it("#04. should success when create new data kanban", function(done) {
 
 var dataUtilInput;
 var dataUtilOutput;
-it("#05. should error when create new data Input with no document kanban, mechine, step on collection database", function(done) {
+it("#06. should error when create new data Input with no document kanban, mechine, step on collection database", function(done) {
     dataUtil.getNewData()
         .then(data => {
             dataUtilInput = data;
@@ -219,7 +256,7 @@ it("#05. should error when create new data Input with no document kanban, mechin
         });
 });
 
-it("#06. should error when create new data Output with no document kanban, mechine, step on collection database", function(done) {
+it("#07. should error when create new data Output with no document kanban, mechine, step on collection database", function(done) {
     dataUtil.getNewData("output")
         .then(data => {
             dataUtilOutput = data;
@@ -247,20 +284,20 @@ it("#06. should error when create new data Output with no document kanban, mechi
         });
 });
 
-it("#07. should error when create new data Input with no input value, date input, time input", function(done) {
+it("#08. should error when create new data Input with no input value, date input", function(done) {
     var data = dataUtilInput;
     delete data.input;
     delete data.dateInput;
     delete data.timeInput;
     dailyOperationManager.create(data)
         .then(daily => {
-            done("should error when create new data Input with no input value, date input, time input");
+            done("should error when create new data Input with no input value, date input");
         })
         .catch((e) => {
             try {
                 e.errors.should.have.property('input');
                 e.errors.should.have.property('dateInput');
-                e.errors.should.have.property('timeInput');
+                // e.errors.should.have.property('timeInput');
                 done();
             }
             catch (ex) {
@@ -269,7 +306,7 @@ it("#07. should error when create new data Input with no input value, date input
         });
 });
 
-it("#08. should error when create new data Input with 0 input value", function(done) {
+it("#09. should error when create new data Input with 0 input value", function(done) {
     var data = dataUtilInput;
     data.input = 0;
     dailyOperationManager.create(data)
@@ -287,7 +324,7 @@ it("#08. should error when create new data Input with 0 input value", function(d
         });
 });
 
-it("#09. should error when create new data with date Input greater than today", function(done) {
+it("#10. should error when create new data with date Input greater than today", function(done) {
     var data = dataUtilInput;
     var dateTomorrow = new Date().setDate(new Date().getDate() + 2);
     data.dateInput = moment(dateTomorrow).format('YYYY-MM-DD');
@@ -306,29 +343,29 @@ it("#09. should error when create new data with date Input greater than today", 
         });
 });
 
-it("#10. should error when create new data with time Input greater than today", function(done) {
-    var data = dataUtilInput;
-    var dateTamp = new Date();
-    var dateNow = new Date(dateTamp.setHours(dateTamp.getHours() + 7));
-    var timeInMillisNow = dateNow.getTime() % 86400000;
-    data.dateInput = moment(dateNow).format('YYYY-MM-DD');
-    data.timeInput = timeInMillisNow + 60000;
-    dailyOperationManager.create(data)
-        .then(daily => {
-            done("should error when create new data with time Input greater than today");
-        })
-        .catch((e) => {
-            try {
-                e.errors.should.have.property('timeInput');
-                done();
-            }
-            catch (ex) {
-                done(ex);
-            }
-        });
-});
+// it("#10. should error when create new data with time Input greater than today", function(done) {
+//     var data = dataUtilInput;
+//     var dateTamp = new Date();
+//     var dateNow = new Date(dateTamp.setHours(dateTamp.getHours() + 7));
+//     var timeInMillisNow = dateNow.getTime() % 86400000;
+//     data.dateInput = moment(dateNow).format('YYYY-MM-DD');
+//     data.timeInput = timeInMillisNow + 60000;
+//     dailyOperationManager.create(data)
+//         .then(daily => {
+//             done("should error when create new data with time Input greater than today");
+//         })
+//         .catch((e) => {
+//             try {
+//                 e.errors.should.have.property('timeInput');
+//                 done();
+//             }
+//             catch (ex) {
+//                 done(ex);
+//             }
+//         });
+// });
 
-it("#11. should error when create new data Output with no data input, output value, date output, time output", function(done) {
+it("#11. should error when create new data Output with no data input, output value, date output", function(done) {
     var data = dataUtilOutput;
     delete data.goodOutput;
     delete data.badOutput;
@@ -336,14 +373,14 @@ it("#11. should error when create new data Output with no data input, output val
     delete data.timeOutput;
     dailyOperationManager.create(data)
         .then(daily => {
-            done("should error when create new data Output with no data input, output value, date output, time output");
+            done("should error when create new data Output with no data input, output value, date output");
         })
         .catch((e) => {
             try {
                 e.errors.should.have.property('goodOutput');
                 e.errors.should.have.property('badOutput');
                 e.errors.should.have.property('dateOutput');
-                e.errors.should.have.property('timeOutput');
+                // e.errors.should.have.property('timeOutput');
                 e.errors.should.have.property('machine');
                 done();
             }
@@ -461,29 +498,29 @@ it("#15. on step 1 : should error when create new data with date Output greater 
         });
 });
 
-it("#16. on step 1 : should error when create new data with time Output greater than today", function(done) {
-    var data = dataUtilOutput;
-    var dateTamp = new Date();
-    var dateNow = new Date(dateTamp.setHours(dateTamp.getHours() + 7));
-    var timeInMillisNow = dateNow.getTime() % 86400000;
-    data.dateOutput = moment(dateNow).format('YYYY-MM-DD');
-    data.timeOutput = timeInMillisNow + 60000;
-    dailyOperationManager.create(data)
-        .then(daily => {
-            done("on step 1 : should error when create new data with time Output greater than today");
-        })
-        .catch((e) => {
-            try {
-                e.errors.should.have.property('timeOutput');
-                done();
-            }
-            catch (ex) {
-                done(ex);
-            }
-        });
-});
+// it("#16. on step 1 : should error when create new data with time Output greater than today", function(done) {
+//     var data = dataUtilOutput;
+//     var dateTamp = new Date();
+//     var dateNow = new Date(dateTamp.setHours(dateTamp.getHours() + 7));
+//     var timeInMillisNow = dateNow.getTime() % 86400000;
+//     data.dateOutput = moment(dateNow).format('YYYY-MM-DD');
+//     data.timeOutput = timeInMillisNow + 60000;
+//     dailyOperationManager.create(data)
+//         .then(daily => {
+//             done("on step 1 : should error when create new data with time Output greater than today");
+//         })
+//         .catch((e) => {
+//             try {
+//                 e.errors.should.have.property('timeOutput');
+//                 done();
+//             }
+//             catch (ex) {
+//                 done(ex);
+//             }
+//         });
+// });
 
-it("#17. on step 1 : should error when create new data with date input greater than date output", function(done) {
+it("#16. on step 1 : should error when create new data with date input greater than date output", function(done) {
     var data = dataUtilOutput;
     data.dateOutput = '2016-01-01';
     dailyOperationManager.create(data)
@@ -501,17 +538,17 @@ it("#17. on step 1 : should error when create new data with date input greater t
         });
 });
 
-it("#18. on step 1 : should error when create new data with time input greater than time output", function(done) {
+it("#17. on step 1 : should error when create new data output with different data machine", function(done) {
     var data = dataUtilOutput;
-    data.dateOutput = '2017-01-02';
-    data.timeOutput = 5000;
+    data.machineId = machine1._id;
+    data.machine = machine;
     dailyOperationManager.create(data)
         .then(daily => {
-            done("on step 1 : should error when create new data with date Output greater than date input");
+            done("on step 1 : should error when create new data output with different data machine");
         })
         .catch((e) => {
             try {
-                e.errors.should.have.property('timeOutput');
+                e.errors.should.have.property('machine');
                 done();
             }
             catch (ex) {
@@ -520,10 +557,31 @@ it("#18. on step 1 : should error when create new data with time input greater t
         });
 });
 
+// it("#18. on step 1 : should error when create new data with time input greater than time output", function(done) {
+//     var data = dataUtilOutput;
+//     data.dateOutput = '2017-01-02';
+//     data.timeOutput = 5000;
+//     dailyOperationManager.create(data)
+//         .then(daily => {
+//             done("on step 1 : should error when create new data with date Output greater than date input");
+//         })
+//         .catch((e) => {
+//             try {
+//                 e.errors.should.have.property('timeOutput');
+//                 done();
+//             }
+//             catch (ex) {
+//                 done(ex);
+//             }
+//         });
+// });
+
 var step1DailyOutputId1;
-it("#19. on step 1 : should success when create new data Output", function(done) {
+it("#18. on step 1 : should success when create new data Output", function(done) {
     dataUtilOutput.dateOutput = '2017-01-02';
     dataUtilOutput.timeOutput = 20000;
+    dataUtilOutput.machine = machine;
+    dataUtilOutput.machineId = machine._id;
     var data = dataUtilOutput;
     dailyOperationManager.create(data)
         .then(id => {
@@ -542,7 +600,7 @@ it("#19. on step 1 : should success when create new data Output", function(done)
         });
 });
 
-it("#20. on step 1 : should success when update data Output", function(done) {
+it("#19. on step 1 : should success when update data Output", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId1)
         .then(daily => {
             daily.goodOutput = 32;
@@ -575,7 +633,7 @@ it("#20. on step 1 : should success when update data Output", function(done) {
         });
 });
 
-it("#21. on step 1 : should error when create new data Output with no data input", function(done) {
+it("#20. on step 1 : should error when create new data Output with no data input", function(done) {
     dataUtilOutput.dateOutput = '2017-01-03';
     dataUtilOutput.timeOutput = 20000;
     delete dataUtilOutput.code;
@@ -595,7 +653,7 @@ it("#21. on step 1 : should error when create new data Output with no data input
         });
 });
 
-it("#22. on step 1 : should error when create new data Input with step 3 before create data with step 2", function(done) {
+it("#21. on step 1 : should error when create new data Input with step 3 before create data with step 2", function(done) {
     var data = dataUtilInput;
     data.step = step3;
     data.stepId = step3._id;
@@ -616,7 +674,7 @@ it("#22. on step 1 : should error when create new data Input with step 3 before 
         });
 });
 
-it("#23. on step 1 : should error when create new data Output with step 3 before create data with step 2", function(done) {
+it("#22. on step 1 : should error when create new data Output with step 3 before create data with step 2", function(done) {
     var data = dataUtilOutput;
     data.step = step3;
     data.stepId = step3._id;
@@ -637,7 +695,7 @@ it("#23. on step 1 : should error when create new data Output with step 3 before
         });
 });
 
-it("#24. on step 1 : should error when create new data Input with date input greather then last date output on same machine, step, kanban", function(done) {
+it("#23. on step 1 : should error when create new data Input with date input greather then last date output on same machine, step, kanban", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId1)
         .then(data => {
             delete data._id;
@@ -661,34 +719,34 @@ it("#24. on step 1 : should error when create new data Input with date input gre
         });
 });
 
-it("#25. on step 1 : should error when create new data Input with time input greather then last time output on same machine, step, kanban", function(done) {
-    dailyOperationManager.getSingleById(step1DailyInputId1)
-        .then(data => {
-            delete data._id;
-            delete data.code;
-            data.dateInput = '2017-01-03';
-            data.timeInput = 5000;
-            dailyOperationManager.create(data)
-                .then(id => {
-                    done("on step 1 : should error when create new data Input with date input greather then last date output on same machine, step, kanban");
-                })
-                .catch((e) => {
-                    try {
-                        e.errors.should.have.property('timeInput');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#25. on step 1 : should error when create new data Input with time input greather then last time output on same machine, step, kanban", function(done) {
+//     dailyOperationManager.getSingleById(step1DailyInputId1)
+//         .then(data => {
+//             delete data._id;
+//             delete data.code;
+//             data.dateInput = '2017-01-03';
+//             data.timeInput = 5000;
+//             dailyOperationManager.create(data)
+//                 .then(id => {
+//                     done("on step 1 : should error when create new data Input with date input greather then last date output on same machine, step, kanban");
+//                 })
+//                 .catch((e) => {
+//                     try {
+//                         e.errors.should.have.property('timeInput');
+//                         done();
+//                     }
+//                     catch (ex) {
+//                         done(ex);
+//                     }
+//                 });
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
 var step1DailyInputId2;
-it("#26. on step 1 : should success when create new data Input on same machine, step, kanban", function(done) {
+it("#24. on step 1 : should success when create new data Input on same machine, step, kanban", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId1)
         .then(data => {
             delete data._id;
@@ -716,7 +774,7 @@ it("#26. on step 1 : should success when create new data Input on same machine, 
         });
 });
 
-it("#27. on step 1 : should error when delete first data Input", function(done) {
+it("#25. on step 1 : should error when delete first data Input", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId1)
         .then(data => {
             dailyOperationManager.delete(data)
@@ -738,7 +796,7 @@ it("#27. on step 1 : should error when delete first data Input", function(done) 
         });
 });
 
-it("#28. on step 1 : should error when delete first data Output", function(done) {
+it("#26. on step 1 : should error when delete first data Output", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId1)
         .then(data => {
             dailyOperationManager.delete(data)
@@ -761,7 +819,7 @@ it("#28. on step 1 : should error when delete first data Output", function(done)
 });
 
 var step1DailyOutputId2;
-it("#29. on step 1 : should success when create new data Output on same machine, step, kanban", function(done) {
+it("#27. on step 1 : should success when create new data Output on same machine, step, kanban", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId1)
         .then(data => {
             delete data._id;
@@ -790,7 +848,7 @@ it("#29. on step 1 : should success when create new data Output on same machine,
 });
 
 var step2DailyInputId1;
-it("#30. on step 2 : should success when create new data Input", function(done) {
+it("#28. on step 2 : should success when create new data Input", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId1)
         .then(data => {
             data.dateInput = '2017-01-04';
@@ -821,7 +879,7 @@ it("#30. on step 2 : should success when create new data Input", function(done) 
 });
 
 var step2DailyOutputId1;
-it("#31. on step 2 : should success when create new data Output", function(done) {
+it("#29. on step 2 : should success when create new data Output", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId1)
         .then(data => {
             data.dateOutput = '2017-01-04';
@@ -862,7 +920,7 @@ it("#31. on step 2 : should success when create new data Output", function(done)
         });
 });
 
-it("#32. on step 2 : should error when update input with step 1", function(done) {
+it("#30. on step 2 : should error when update input with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId2)
         .then(daily => {
             daily.input = 30;
@@ -885,7 +943,7 @@ it("#32. on step 2 : should error when update input with step 1", function(done)
         });
 });
 
-it("#33. on step 2 : should error when delete input with step 1", function(done) {
+it("#31. on step 2 : should error when delete input with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId2)
         .then(daily => {
             dailyOperationManager.delete(daily)
@@ -907,7 +965,7 @@ it("#33. on step 2 : should error when delete input with step 1", function(done)
         });
 });
 
-it("#34. on step 2 : should error when update output with step 1", function(done) {
+it("#32. on step 2 : should error when update output with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId2)
         .then(daily => {
             daily.goodOutput = 30;
@@ -930,7 +988,7 @@ it("#34. on step 2 : should error when update output with step 1", function(done
         });
 });
 
-it("#35. on step 2 : should error when delete output with step 1", function(done) {
+it("#33. on step 2 : should error when delete output with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId2)
         .then(daily => {
             dailyOperationManager.delete(daily)
@@ -952,7 +1010,7 @@ it("#35. on step 2 : should error when delete output with step 1", function(done
         });
 });
 
-it("#36. on step 2 : should success when update input with step 2", function(done) {
+it("#34. on step 2 : should success when update input with step 2", function(done) {
     dailyOperationManager.getSingleById(step2DailyInputId1)
         .then(daily => {
             daily.input = 35;
@@ -976,7 +1034,7 @@ it("#36. on step 2 : should success when update input with step 2", function(don
         });
 });
 
-it("#37. on step 2 : should success when update input with step 2", function(done) {
+it("#35. on step 2 : should success when update input with step 2", function(done) {
     dailyOperationManager.getSingleById(step2DailyOutputId1)
         .then(daily => {
             daily.goodOutput = 33;
@@ -1009,7 +1067,7 @@ it("#37. on step 2 : should success when update input with step 2", function(don
         });
 });
 
-it("#38. on step 2 : should error when update input with step 1", function(done) {
+it("#36. on step 2 : should error when update input with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId2)
         .then(daily => {
             daily.input = 30;
@@ -1032,7 +1090,7 @@ it("#38. on step 2 : should error when update input with step 1", function(done)
         });
 });
 
-it("#39. on step 2 : should error when delete input with step 1", function(done) {
+it("#37. on step 2 : should error when delete input with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId2)
         .then(daily => {
             dailyOperationManager.delete(daily)
@@ -1054,7 +1112,7 @@ it("#39. on step 2 : should error when delete input with step 1", function(done)
         });
 });
 
-it("#40. on step 2 : should error when update output with step 1", function(done) {
+it("#38. on step 2 : should error when update output with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId2)
         .then(daily => {
             daily.input = 30;
@@ -1077,7 +1135,7 @@ it("#40. on step 2 : should error when update output with step 1", function(done
         });
 });
 
-it("#41. on step 2 : should error when delete output with step 1", function(done) {
+it("#39. on step 2 : should error when delete output with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId2)
         .then(daily => {
             dailyOperationManager.delete(daily)
@@ -1100,7 +1158,7 @@ it("#41. on step 2 : should error when delete output with step 1", function(done
 });
 
 var step3DailyInput;
-it("#42. on step 3 : should success when input data with step 3", function(done) {
+it("#40. on step 3 : should success when input data with step 3", function(done) {
     dailyOperationManager.getSingleById(step2DailyInputId1)
         .then(daily => {
             daily.step = step3;
@@ -1132,7 +1190,7 @@ it("#42. on step 3 : should success when input data with step 3", function(done)
 });
 
 var step3DailyOutput;
-it("#43. on step 3 : should success when output data with step 3", function(done) {
+it("#41. on step 3 : should success when output data with step 3", function(done) {
     dailyOperationManager.getSingleById(step2DailyOutputId1)
         .then(daily => {
             daily.step = step3;
@@ -1174,7 +1232,7 @@ it("#43. on step 3 : should success when output data with step 3", function(done
         });
 });
 
-it("#44. on step 3 : should success when delete output data with step 3", function(done) {
+it("#42. on step 3 : should success when delete output data with step 3", function(done) {
     dailyOperationManager.getSingleById(step3DailyOutput)
         .then(data => {
             dailyOperationManager.delete(data)

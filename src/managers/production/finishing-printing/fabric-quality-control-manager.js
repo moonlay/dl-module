@@ -112,7 +112,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 if (valid.pointSystem !== 10 && valid.pointSystem !== 4)
                     errors["pointSystem"] = i18n.__("FabricQualityControl.pointSystem.invalid:%s is not valid", i18n.__("FabricQualityControl.pointSystem._:Point System")); //"Grade harus diisi";   
                 else if (valid.pointSystem === 4) {
-                    if (valid.pointLimit === 0)
+                    if (valid.pointLimit == 0)
                         errors["pointLimit"] = i18n.__("FabricQualityControl.pointLimit.invalid:%s is not valid", i18n.__("FabricQualityControl.pointLimit._:Point Limit")); //"Jika 4 PointSystem, Limit harus diisi";
                 }
 
