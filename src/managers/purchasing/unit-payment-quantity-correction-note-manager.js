@@ -85,8 +85,8 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                     itemError["quantity"] = i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity.isRequired:%s is required", i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity._:Quantity"));
                                 else if (item.quantity > unitReceiptQty.deliveredQuantity)
                                     itemError["quantity"] = i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity.lessThan:%s must not be greater than quantity on unit payment order", i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity._:Quantity"));
-                                else if (item.quantity === unitReceiptQty.deliveredQuantity)
-                                    itemError["quantity"] = i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity.noChanges: no changes", i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity._:Quantity"));
+                                // else if (item.quantity === unitReceiptQty.deliveredQuantity)
+                                //     itemError["quantity"] = i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity.noChanges: no changes", i18n.__("UnitPaymentQuantityCorrectionNote.items.quantity._:Quantity"));
 
                                 itemErrors.push(itemError);
                             }
