@@ -60,13 +60,14 @@ module.exports = function (salesContract) {
     var amount=salesContract.amount;
     var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
 
-    if(amount % 1 !=0){
-        amount=parseFloat(salesContract.amount.toFixed(2));
-    }
+    
 
     if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
         amount=salesContract.amount.toFixed(3);
         amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
+    }
+    else if(amount % 1 !=0){
+        amount=parseFloat(salesContract.amount.toFixed(2));
     }
 
     var quantity= salesContract.orderQuantity;

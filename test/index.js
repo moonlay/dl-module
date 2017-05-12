@@ -64,6 +64,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/QUALITY', './master/quality');
     test('@MASTER/TERM OF PAYMENT', './master/term-of-payment');
     test('@MASTER/DESIGN-MOTIVE', './master/design-motive');
+    test('@MASTER/STORAGE', './master/storage');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
@@ -75,6 +76,7 @@ describe('#dl-module', function (done) {
     test('@PURCHASING/UNIT PAYMENT PRICE CORRECTION', './purchasing/unit-payment-price-correction-note');
     test('@PURCHASING/UNIT PAYMENT QUANTITY CORRECTION', './purchasing/unit-payment-quantity-correction-note');
     test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');
+    test('@purchasing/purchase-order/report', './purchasing/duration-report');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
@@ -95,4 +97,7 @@ describe('#dl-module', function (done) {
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
 
     test('@INVENTORY/FINISHING-PRINTING/PACKING-RECEIPT', './inventory/finishing-printing/packing-receipt');
+    test('@INVENTORY/INVENTORY-SUMMARY', './inventory/inventory-summary');
+    test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
+    test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
 });

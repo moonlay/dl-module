@@ -655,7 +655,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                                     {
                                                         "productionOrderNo": 1,
                                                         "kanbanCode": 1,
-                                                        "orderQuantity": 1
+                                                        "orderQuantity": { $sum: "$fabricGradeTests.initLength" }
                                                     }
                                                 }
                                             ]).toArray());
@@ -678,7 +678,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 Promise.all(jobsGetQC).then(qualityControls => {//Get QC
                                     qualityControls = [].concat.apply([], qualityControls);
                                     if (qualityControls.length > 0) {
-
                                         for (var prodOrder of prodOrders) {
                                             var _qualityControls = qualityControls.filter(function (qualityControl) {
                                                 return qualityControl.productionOrderNo === prodOrder.orderNo && prodOrder.kanbanCodes.includes(qualityControl.kanbanCode);
@@ -693,6 +692,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                                         return prev + curr;
                                                     }, 0);
                                                 prodOrder.orderQuantity = _orderQuantity;
+                                                prodOrder.input = prodOrder.input - prodOrder.orderQuantity;
                                                 prodOrder.status = "Sudah dalam qc";
                                                 prodOrder.detail = `${prodOrder.input} on production\n${prodOrder.orderQuantity} on qc`;
 

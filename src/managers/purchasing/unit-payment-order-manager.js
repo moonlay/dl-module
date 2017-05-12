@@ -313,19 +313,19 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                             }
                         }
                         var oldJobs = [];
-                        var newJobs=[];
-                        if(_oldRealizations.length > 0 ){
-                                oldJobs.push(this.updatePurchaseOrderDeleteUnitPaymentOrder(_oldRealizations));
-                                oldJobs.push(this.updateUnitReceiptNoteDeleteUnitPaymentOrder(_oldRealizations));
+                        var newJobs = [];
+                        if (_oldRealizations.length > 0) {
+                            oldJobs.push(this.updatePurchaseOrderDeleteUnitPaymentOrder(_oldRealizations));
+                            oldJobs.push(this.updateUnitReceiptNoteDeleteUnitPaymentOrder(_oldRealizations));
                         }
 
-                        if(_newRealizations.length > 0 ){
-                                newJobs.push(this.updatePurchaseOrder(_newRealizations));
-                                newJobs.push(this.updateUnitReceiptNote(_newRealizations));
+                        if (_newRealizations.length > 0) {
+                            newJobs.push(this.updatePurchaseOrder(_newRealizations));
+                            newJobs.push(this.updateUnitReceiptNote(_newRealizations));
                         }
                         return _oldRealizations.length > 0 ? Promise.all(oldJobs) : Promise.resolve(null)
                             .then((res) => {
-                                return _newRealizations.length > 0 ?  Promise.all(newJobs) : Promise.resolve(null)
+                                return _newRealizations.length > 0 ? Promise.all(newJobs) : Promise.resolve(null)
                             })
                             .then((res) => { return Promise.resolve(newUnitPaymentOrder) });
                     })
