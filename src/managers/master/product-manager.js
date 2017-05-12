@@ -200,7 +200,7 @@ module.exports = class ProductManager extends BaseManager {
                                         }
                                         var flagCurrency = false;
                                         for (var j = 0; j < currency.length; j++) {
-                                            if (currency[j]["code"] !== data[i]["currency"]) {
+                                            if (currency[j]["code"] === data[i]["currency"]) {
                                                 flagCurrency = true;
                                                 break;
                                             }

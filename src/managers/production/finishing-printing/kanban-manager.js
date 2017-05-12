@@ -292,7 +292,10 @@ module.exports = class KanbanManager extends BaseManager {
                         "cartNumber" : "$cart.cartNumber",
                         "length" : "$cart.qty",
                         "pcs" : "$cart.pcs",
-                        "uom" : "$productionOrder.uom.unit"
+                        "uom" : "$productionOrder.uom.unit",
+                        "isComplete" : 1,
+                        "currentStepIndex" : 1,
+                        "steps" : "$instruction.steps"
                     }},
                     {$sort : {"_createdDate" : -1}}
                 ])
