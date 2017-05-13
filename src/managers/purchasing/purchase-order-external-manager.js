@@ -975,7 +975,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     isClosed: false
                 };
             var date = {
-                "items.purchaseRequest.date" : {
+                "items.purchaseRequest._createdDate" : {
                     "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
                     "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
                 }
@@ -991,8 +991,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]}, 8 ]},
-                                { $lte: [ {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]}, 14] }
+                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 8 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 14] }
                                 ]
                         },
                         then: "$$KEEP",
@@ -1004,8 +1004,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]}, 15 ]},
-                                { $lte: [ {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]}, 30] }
+                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 15 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 30] }
                                 ]
                         },
                         then: "$$KEEP",
@@ -1016,7 +1016,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             else if(query.duration==="> 30 hari"){
                 durationQuery={
                     $cond: {
-                        if:  { $gt: [ {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]}, 30] },
+                        if:  { $gt: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 30] },
                         then: "$$KEEP",
                         else: "$$PRUNE"
                     }
@@ -1032,7 +1032,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 {$redact:durationQuery},
                 {$project :{
                         "items.purchaseRequest.date" : 1,
-                        "prDate" : "$items.purchaseRequest.date",
+                        "prDate" : "$items.purchaseRequest._createdDate",
                         "prNo" : "$items.purchaseRequest.no",
                         "division": "$items.purchaseRequest.unit.division.name",
                         "unit": "$items.purchaseRequest.unit.name",
@@ -1046,10 +1046,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "supplierCode" : "$supplier.code",
                         "supplierName" : "$supplier.name",
                         "poDate" : "$items._createdDate",
-                        "poEksDate" : "$date",
+                        "poEksDate" : "$_createdDate",
                         "expectedDate": "$expectedDeliveryDate",
                         "poEksNo" : "$no",
-                        "dateDiff" : {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]},
+                        "dateDiff" : {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]},
                         "staff" : "$_createdBy"
                     }
                 },
@@ -1207,7 +1207,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 {$redact:durationQuery},
                 {$project :{
                         "items._createdDate" : 1,
-                        "prDate" : "$items.purchaseRequest.date",
+                        "prDate" : "$items.purchaseRequest._createdDate",
                         "prNo" : "$items.purchaseRequest.no",
                         "division": "$items.purchaseRequest.unit.division.name",
                         "unit": "$items.purchaseRequest.unit.name",
@@ -1221,7 +1221,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "supplierCode" : "$supplier.code",
                         "supplierName" : "$supplier.name",
                         "poDate" : "$items._createdDate",
-                        "poEksDate" : "$date",
+                        "poEksDate" : "$_createdDate",
                         "expectedDate": "$expectedDeliveryDate",
                         "poEksNo" : "$no",
                         "dateDiff":{$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]},
