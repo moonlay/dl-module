@@ -250,3 +250,19 @@ it('#10. should success when get data for Excel Report using both dateFrom and d
             done(e);
         });
 });
+
+it('#11. should success when get data with unit and Duration >90 days', function (done) {
+    var query = {};
+    query.unitId=createdDO3.purchaseRequest.unit._id;
+    query.duration = "> 90 hari";
+
+    purchaseOrderManager.getDurationPOEksDoData(query)
+        .then(result => {
+            var po = result;
+            resultForExcelTest.info = result;
+            po.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});

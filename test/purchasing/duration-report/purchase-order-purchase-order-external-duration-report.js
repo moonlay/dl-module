@@ -506,3 +506,19 @@ it('#23. should success when get data with Start Date, End Date and Duration >30
             done(e);
         });
 });
+
+it('#24. should success when get data with unit and Duration 8-14 days', function (done) {
+    var query = {};
+    query.unitId= createdDataPO.purchaseRequest.unit._id;
+    query.duration = "8-14 hari";
+
+    purchaseOrderExternalManager.getDurationPOData(query)
+        .then(result => {
+            var po = result;
+            resultForExcelTest.info = result;
+            po.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
