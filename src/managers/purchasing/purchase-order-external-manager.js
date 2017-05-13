@@ -980,6 +980,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
                 }
             };
+            var unitQuery={};
+            if(query.unitId && query.unitId!=""){
+                unitQuery={
+                    "items.purchaseRequest.unit._id":new ObjectId(query.unitId)
+                }
+            }
             var durationQuery={};
             if(query.duration==="8-14 hari"){
                 durationQuery={
@@ -1018,7 +1024,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             }
             
             
-            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery]};
+            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$unwind: "$items.items"},
@@ -1149,6 +1155,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
                 }
             };
+            var unitQuery={};
+            if(query.unitId && query.unitId!=""){
+                unitQuery={
+                    "items.purchaseRequest.unit._id":new ObjectId(query.unitId)
+                }
+            }
             var durationQuery={};
             if(query.duration==="8-14 hari"){
                 durationQuery={
@@ -1187,7 +1199,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             }
             
             
-            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery]};
+            var Query = {"$and" : [filterDate, deletedQuery, postedQuery, closedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$unwind: "$items.items"},

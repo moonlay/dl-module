@@ -827,6 +827,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
                 }
             };
+            var unitQuery={};
+            if(query.unitId && query.unitId!=""){
+                unitQuery={
+                    "purchaseRequest.unit._id":new ObjectId(query.unitId)
+                }
+            }
             var durationQuery={};
             if(query.duration==="8-14 hari"){
                 durationQuery={
@@ -865,7 +871,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             }
             
             
-            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery]};
+            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$match : Query},
@@ -977,6 +983,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
                 }
             };
+            var unitQuery={};
+            if(query.unitId && query.unitId!=""){
+                unitQuery={
+                    "purchaseRequest.unit._id":new ObjectId(query.unitId)
+                }
+            }
             var durationQuery={};
             if(query.duration==="0-30 hari"){
                 durationQuery={
@@ -1027,7 +1039,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 }
             }
             
-            var Query = {"$and" : [date, deletedQuery]};
+            var Query = {"$and" : [date, deletedQuery,unitQuery,postedQuery, closedQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$unwind: "$items.fulfillments"},
