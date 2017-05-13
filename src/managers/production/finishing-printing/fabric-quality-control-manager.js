@@ -343,23 +343,22 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         var dateFormat = "DD/MM/YYYY";
 
         for (var result of results.data) {
-            var item = {};
-            item["No"] = index;
-            item["Nomor Kanban"] = result.kanbanCode ? result.kanbanCode : "";
-            item["Nomor Kereta"] = result.cartNo ? result.cartNo : "";
-            item["Jenis Order"] = result.productionOrderType ? result.productionOrderType : "";
-            item["Nomor Order"] = result.productionOrderNo ? result.productionOrderNo : "";
-            item["Tanggal IM"] = result.dateIm ? moment(result.dateIm).format(dateFormat) : "";
-            item["Shift"] = result.shiftIm ? result.shiftIm : "";
-            item["Operator IM"] = result.operatorIm ? result.operatorIm : "";
-            item["No Mesin IM"] = result.machineNoIm ? result.machineNoIm : "";
-            item["Konstruksi"] = result.construction ? result.construction : "";
-            item["Buyer"] = result.buyer ? result.buyer : "";
-            item["Warna"] = result.color ? result.color : "";
-            item["Jumlah Order (meter)"] = result.orderQuantity ? result.orderQuantity : 0;
-            item["Packing Instruction"] = result.packingInstruction ? result.packingInstruction : "";
-
             for (var fabricGradeTest of result.fabricGradeTests) {
+                var item = {};
+                item["No"] = index;
+                item["Nomor Kanban"] = result.kanbanCode ? result.kanbanCode : "";
+                item["Nomor Kereta"] = result.cartNo ? result.cartNo : "";
+                item["Jenis Order"] = result.productionOrderType ? result.productionOrderType : "";
+                item["Nomor Order"] = result.productionOrderNo ? result.productionOrderNo : "";
+                item["Tanggal IM"] = result.dateIm ? moment(result.dateIm).format(dateFormat) : "";
+                item["Shift"] = result.shiftIm ? result.shiftIm : "";
+                item["Operator IM"] = result.operatorIm ? result.operatorIm : "";
+                item["No Mesin IM"] = result.machineNoIm ? result.machineNoIm : "";
+                item["Konstruksi"] = result.construction ? result.construction : "";
+                item["Buyer"] = result.buyer ? result.buyer : "";
+                item["Warna"] = result.color ? result.color : "";
+                item["Jumlah Order (meter)"] = result.orderQuantity ? result.orderQuantity : 0;
+                item["Packing Instruction"] = result.packingInstruction ? result.packingInstruction : "";
                 item["Nomor PCS"] = fabricGradeTest.pcsNo ? fabricGradeTest.pcsNo : "";
                 item["Panjang PCS (meter)"] = fabricGradeTest.initLength;
                 item["Lebar PCS (meter)"] = fabricGradeTest.width;
@@ -368,6 +367,20 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 item["Aval (meter)"] = fabricGradeTest.avalLength;
                 item["Sampel (meter)"] = fabricGradeTest.sampleLength;
 
+                xls.options["No"] = "number";
+                xls.options["Nomor Kanban"] = "string";
+                xls.options["Nomor Kereta"] = "string";
+                xls.options["Jenis Order"] = "string";
+                xls.options["Nomor Order"] = "string";
+                xls.options["Tanggal IM"] = "string";
+                xls.options["Shift"] = "string";
+                xls.options["Operator IM"] = "string";
+                xls.options["No Mesin IM"] = "string";
+                xls.options["Konstruksi"] = "string";
+                xls.options["Buyer"] = "string";
+                xls.options["Warna"] = "string";
+                xls.options["Jumlah Order (meter)"] = "string";
+                xls.options["Packing Instruction"] = "string";
                 xls.options["Nomor PCS"] = "string";
                 xls.options["Panjang PCS (meter)"] = "number";
                 xls.options["Lebar PCS (meter)"] = "number";
@@ -376,27 +389,9 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 xls.options["Aval (meter)"] = "number";
                 xls.options["Sampel (meter)"] = "number";
                 index++;
-
+                xls.data.push(item);
             }
-
-            xls.data.push(item);
-
         }
-
-        xls.options["No"] = "number";
-        xls.options["Nomor Kanban"] = "string";
-        xls.options["Nomor Kereta"] = "string";
-        xls.options["Jenis Order"] = "string";
-        xls.options["Nomor Order"] = "string";
-        xls.options["Tanggal IM"] = "string";
-        xls.options["Shift"] = "string";
-        xls.options["Operator IM"] = "string";
-        xls.options["No Mesin IM"] = "string";
-        xls.options["Konstruksi"] = "string";
-        xls.options["Buyer"] = "string";
-        xls.options["Warna"] = "string";
-        xls.options["Jumlah Order (meter)"] = "string";
-        xls.options["Packing Instruction"] = "string";
 
         if (query.dateFrom && query.dateTo) {
             xls.name = `Laporan Pemeriksaan Kain ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;

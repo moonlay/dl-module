@@ -42,12 +42,12 @@ module.exports = class InventoryDocumentManager extends BaseManager {
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
             var productNameFilter = {
-                "productName": {
+                "items.productName": {
                     "$regex": regex
                 }
             };
             var productCodeFilter = {
-                "productCode": {
+                "items.productCode": {
                     "$regex": regex
                 }
             };
