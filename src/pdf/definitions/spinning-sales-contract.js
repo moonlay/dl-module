@@ -56,14 +56,15 @@ module.exports = function (salesContract) {
 
     var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
 
-    if(amount % 1 !=0){
-        amount=parseFloat(amount.toFixed(2));
-    }
+    
 
     if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
         price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currencySalesContract)}`;
         amount=parseFloat(amount.toFixed(3));
         amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
+    }
+    else if(amount % 1 !=0){
+        amount=parseFloat(amount.toFixed(2));
     }
 
     var detail = salesContract.accountBank.currency.symbol + " " + price + ' / KG' + "\n";
@@ -274,7 +275,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:'- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- '+ salesContract.shippingQuantityTolerance +'% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - CARTON BOX (NET WEIGHT : 1.8 / CONE, 1 BOX: 18 CONE) CONTAMINATION FREE. \n'+ salesContract.condition,
+                        text:'- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- '+ salesContract.shippingQuantityTolerance +'% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - CARTON BOX (NET WEIGHT : 1.89 / CONE, 1 BOX: 18 CONE) CONTAMINATION FREE. \n'+ salesContract.condition,
                         style: ['size09']
                     }]
             }];

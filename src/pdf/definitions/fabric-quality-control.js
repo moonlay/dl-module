@@ -22,7 +22,7 @@ module.exports = function (qualityControl) {
     var color = qualityControl.color ? qualityControl.color : "";
     var orderQuantity = qualityControl.orderQuantity ? qualityControl.orderQuantity : "";
     var packingInstruction = qualityControl.packingInstruction ? qualityControl.packingInstruction : "";
-    var uom = qualityControl.uom ? qualityControl.uom : "";
+    // var uom = qualityControl.uom ? qualityControl.uom : "";
 
     var header = [{
         columns: [{
@@ -223,7 +223,7 @@ module.exports = function (qualityControl) {
         },
         {
             width: "*",
-            text: `${orderQuantity} ${uom}`,
+            text: `${orderQuantity} MTR`,
             style: ["size09"]
         }]
     },
@@ -281,27 +281,27 @@ module.exports = function (qualityControl) {
             alignment: "left"
         },
         {
-            text: `${item.initLength} YDS`,
+            text: `${item.initLength} MTR`,
             style: ["size08"],
             alignment: "left"
         },
         {
-            text: `${item.width} YDS`,
+            text: `${item.width} MTR`,
             style: ["size08"],
             alignment: "left"
         },
         {
-            text: `${item.avalLength} YDS`,
+            text: `${item.avalLength} MTR`,
             style: ["size08"],
             alignment: "left"
         },
         {
-            text: `${item.sampleLength} YDS`,
+            text: `${item.sampleLength} MTR`,
             style: ["size08"],
             alignment: "left"
         },
         {
-            text: `${item.finalScore}`,
+            text: `${item.finalScore.toFixed(2)}`,
             style: ["size08"],
             alignment: "left"
         },

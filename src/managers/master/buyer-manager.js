@@ -148,7 +148,7 @@ module.exports = class BuyerManager extends BaseManager {
                         if (data[i]["country"] === "" || data[i]["country"] === undefined) {
                             errorMessage = errorMessage + "Negara tidak boleh kosong, ";
                         } else {
-                            if (countries.indexOf(data[i]["country"]) == -1) {
+                            if (countries.indexOf(data[i]["country"].toUpperCase()) == -1) {
                                 errorMessage = errorMessage + "Negara tidak terdaftar di list Negara,";
                             }
                         }
