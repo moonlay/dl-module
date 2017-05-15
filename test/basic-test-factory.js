@@ -25,7 +25,7 @@ function getBasicTest(opt) {
             });
     });
     it("#01. should success when delete all exist data", function (done) {
-        manager.read({ size: 100, keyword: "" })
+        manager.read({ size: 100, keyword: "a" })
             .then(results => {
                 if (results.data.length === 0) {
                     done();
