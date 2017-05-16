@@ -871,7 +871,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             }
             
             
-            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery,unitQuery]};
+            var Query = {"$and" : [date, deletedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$match : Query},
@@ -1039,7 +1039,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 }
             }
             
-            var Query = {"$and" : [date, deletedQuery,unitQuery,postedQuery, closedQuery]};
+            var Query = {"$and" : [date, deletedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$unwind: "$items.fulfillments"},
