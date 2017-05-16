@@ -128,6 +128,7 @@ module.exports = {
                     packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util")
                 },
                 inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),
+                inventorySummary: require('./test/data-util/inventory/inventory-summary-data-util')
             },
             production: {
                 dailyOperation: require('./test/data-util/production/finishing-printing/daily-operation-data-util'),

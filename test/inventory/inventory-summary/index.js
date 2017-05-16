@@ -4,3 +4,6 @@ describe("BASIC CRUD SCENARIOS", function() {
 describe("GETSERT SCENARIOS", function() {
     require("./getsert");
 });
+describe("GET REPORT SCENARIOS", function() {
+    require("./report");
+});
