@@ -154,7 +154,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
                 if(valid.type == "OUT") {
                     valid.quantity = valid.quantity * -1;
                 }
-                
+
                 valid.before = _dbInventorySummary.quantity;
                 valid.after = _dbInventorySummary.quantity + valid.quantity;
 
@@ -222,10 +222,16 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
         var data = this._createIndexes()
             .then((createIndexResults) => {
-                return this.collection
-                    .where(query)
-                    .order(order)
-                    .execute();
+                return info.xls ?
+                    this.collection
+                        .where(query)
+                        .order(order)
+                        .execute() :
+                    this.collection
+                        .where(query)
+                        .page(info.page, info.size)
+                        .order(order)
+                        .execute();
             });
                     
         return Promise.resolve(data);
