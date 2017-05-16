@@ -257,7 +257,6 @@ it('#09. should success when get data with Start Date and Duration 8-14 days', f
         .then(result => {
             var po = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -274,7 +273,6 @@ it('#10. should success when get data with Start Date, End Date and Duration 15-
         .then(result => {
             var po = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -292,7 +290,6 @@ it('#11. should success when get data with Start Date, End Date and Duration >30
             var po = result;
             resultForExcelTest.info = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
