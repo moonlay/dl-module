@@ -307,7 +307,26 @@ it('#12. should success when get data with Start Date, End Date and Duration >30
     purchaseOrderExternalManager.getDurationPRtoPOEksternalData(query)
         .then(result => {
             var po = result;
-            resultForExcelTest.info = result;
+            resultForExcelTest.info = [{
+            prDate : new Date(),
+            prNo:"A221",
+            division:"AAA",
+            unit:"BBB",
+            budget:"aaaa",
+            category:"ccc",
+            productCode:"AKSJ",
+            productName:"AAA",
+            productQuantity:100,
+            productUom:"MTR",
+            productPrice:2000,
+            supplierCode:"AAA",
+            supplierName:"CCC",
+            poDate:new Date(),
+            poEksDate:new Date(),
+            expectedDate:new Date(),
+            poEksNo:"ASAS",
+            dateDiff:522,
+            staff:"KKK"}];
             po.should.instanceof(Array);
             done();
         }).catch(e => {
