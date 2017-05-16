@@ -1,7 +1,7 @@
 require("should");
 var InventoryMovement = require("../../data-util/inventory/inventory-movement-data-util");
 var helper = require("../../helper");
-var validate = require("dl-models").validator.inventory.InventoryMovement;
+var validate = require("dl-models").validator.inventory.inventoryMovement;
 
 var InventoryMovementManager = require("../../../src/managers/inventory/inventory-movement-manager");
 var inventoryMovementManager = null;
