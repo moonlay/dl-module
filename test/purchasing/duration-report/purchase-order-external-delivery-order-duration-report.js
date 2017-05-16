@@ -196,6 +196,8 @@ it('#06. should success when get data with Start Date, End Date and Duration >90
             poDate:new Date(),
             poEksDate:new Date(),
             expectedDate:new Date(),
+            doDate:new Date(),
+            arrivedDate:new Date(),
             poEksNo:"ASAS",
             dateDiff:522,
             staff:"KKK"}];
