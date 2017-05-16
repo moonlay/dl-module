@@ -179,7 +179,28 @@ it('#06. should success when get data with Start Date, End Date and Duration >90
     purchaseOrderManager.getDurationPOEksDoData(query)
         .then(result => {
             var po = result;
-            resultForExcelTest.info = result;
+            resultForExcelTest.info = [{
+            prDate : new Date(),
+            prNo:"A221",
+            division:"AAA",
+            unit:"BBB",
+            budget:"aaaa",
+            category:"ccc",
+            productCode:"AKSJ",
+            productName:"AAA",
+            productQuantity:100,
+            productUom:"MTR",
+            productPrice:2000,
+            supplierCode:"AAA",
+            supplierName:"CCC",
+            poDate:new Date(),
+            poEksDate:new Date(),
+            expectedDate:new Date(),
+            doDate:new Date(),
+            arrivedDate:new Date(),
+            poEksNo:"ASAS",
+            dateDiff:522,
+            staff:"KKK"}];
             po.should.instanceof(Array);
             done();
         }).catch(e => {
@@ -245,6 +266,22 @@ it('#10. should success when get data for Excel Report using both dateFrom and d
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
             xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#11. should success when get data with unit and Duration >90 days', function (done) {
+    var query = {};
+    query.unitId=createdDO3.items[0].fulfillments[0].purchaseOrder.purchaseRequest.unit._id;
+    query.duration = "> 90 hari";
+
+    purchaseOrderManager.getDurationPOEksDoData(query)
+        .then(result => {
+            var po = result;
+            resultForExcelTest.info = result;
+            po.should.instanceof(Array);
             done();
         }).catch(e => {
             done(e);
