@@ -55,11 +55,13 @@ module.exports = function (salesContract) {
     var amount = salesContract.price * convertion;
 
     var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
-    var amountDec=amount.toString().split('.');
+    var amountDec1=parseFloat(amount.toFixed(3));
+    var amountDec=amountDec1.toString().split('.');
     var spellAmount=amountbyCurrency;
 
     if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
         amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
+        price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currencySalesContract)}`;
         if(!amountDec[1]){
             spellAmount=amount;
         }
@@ -86,7 +88,7 @@ module.exports = function (salesContract) {
     }
 
     var detail = salesContract.accountBank.currency.symbol + " " + price + ' / KG' + "\n";
-    detailprice += salesContract.accountBank.currency.symbol + " " + price + ' / ' + salesContract.uom.unit + ' ' + ppn;
+    detailprice = salesContract.accountBank.currency.symbol + " " + price + ' / ' + salesContract.uom.unit + ' ' + ppn;
     
 
     var comoDesc = "";
@@ -95,10 +97,9 @@ module.exports = function (salesContract) {
     }
     var code = salesContract.salesContractNo;
 
-    
-
     var quantity= salesContract.orderQuantity;
-    var quantityDec=salesContract.orderQuantity.toString().split('.');
+    var qtyDec=parseFloat(salesContract.orderQuantity.toFixed(2));
+    var quantityDec=qtyDec.toString().split('.');
     var spellQuantity=quantity;
     if(salesContract.orderQuantity % 1 !=0){
         quantity=parseFloat(salesContract.orderQuantity.toFixed(2));

@@ -122,20 +122,7 @@ it("#03. should success when create new data", function (done) {
         });
     });
 });
-it('#04. should success when get data with Start Date and Duration 0-30 days', function (done) {
-    var query = {};
-    query.dateFrom = new Date();
-    query.duration = "0-30 hari";
 
-    purchaseOrderManager.getDurationPOEksDoData(query)
-        .then(result => {
-            var po = result;
-            po.should.instanceof(Array);
-            done();
-        }).catch(e => {
-            done(e);
-        });
-});
 
 it('#05. should success when get data with Start Date, End Date and Duration 31-60 days', function (done) {
     var query = {};
@@ -210,7 +197,7 @@ it('#06. should success when get data with Start Date, End Date and Duration >90
 
 it('#07. should success when get data for Excel Report', function (done) {
     var query = {};
-    query.duration = "0-30 hari";
+    query.duration = "31-60 hari";
 
     purchaseOrderManager.getXls(resultForExcelTest, query)
         .then(xlsData => {             
@@ -226,7 +213,7 @@ it('#07. should success when get data for Excel Report', function (done) {
 it('#08. should success when get data for Excel Report using dateFrom only', function (done) {
     var query = {};
     query.dateFrom = new Date();
-    query.duration = "0-30 hari";
+    query.duration = "31-60 hari";
 
     purchaseOrderManager.getXlsDurationPOEksDoData(resultForExcelTest, query)
         .then(xlsData => {             
