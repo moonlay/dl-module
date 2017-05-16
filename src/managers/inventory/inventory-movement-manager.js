@@ -150,7 +150,11 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
                 valid.uomId = _uom._id;
                 valid.uom = _uom.unit;
-
+                
+                if(valid.type == "OUT") {
+                    valid.quantity = valid.quantity * -1;
+                }
+                
                 valid.before = _dbInventorySummary.quantity;
                 valid.after = _dbInventorySummary.quantity + valid.quantity;
 
