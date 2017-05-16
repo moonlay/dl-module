@@ -257,7 +257,6 @@ it('#09. should success when get data with Start Date and Duration 8-14 days', f
         .then(result => {
             var po = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -274,7 +273,6 @@ it('#10. should success when get data with Start Date, End Date and Duration 15-
         .then(result => {
             var po = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -290,9 +288,27 @@ it('#11. should success when get data with Start Date, End Date and Duration >30
     purchaseOrderManager.getDataDuration(query)
         .then(result => {
             var po = result;
-            resultForExcelTest.info = result;
+            resultForExcelTest.info = [{
+            prDate : new Date(),
+            prNo:"A221",
+            division:"AAA",
+            unit:"BBB",
+            budget:"aaaa",
+            category:"ccc",
+            productCode:"AKSJ",
+            productName:"AAA",
+            productQuantity:100,
+            productUom:"MTR",
+            productPrice:2000,
+            supplierCode:"AAA",
+            supplierName:"CCC",
+            poDate:new Date(),
+            poEksDate:new Date(),
+            expectedDate:new Date(),
+            poEksNo:"ASAS",
+            dateDiff:522,
+            staff:"KKK"}];
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -357,6 +373,22 @@ it('#15. should success when get data for Excel Report using both dateFrom and d
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
             xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#16. should success when get data with unit and Duration >30 days', function (done) {
+    var query = {};
+    query.unitId = createdDataPO3.purchaseRequest.unit._id;
+    query.duration = "> 30 hari";
+
+    purchaseOrderManager.getDataDuration(query)
+        .then(result => {
+            var po = result;
+            resultForExcelTest.info = result;
+            po.should.instanceof(Array);
             done();
         }).catch(e => {
             done(e);
