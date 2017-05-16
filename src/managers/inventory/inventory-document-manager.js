@@ -33,8 +33,8 @@ module.exports = class InventoryDocumentManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -42,16 +42,41 @@ module.exports = class InventoryDocumentManager extends BaseManager {
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
             var productNameFilter = {
-                "productName": {
+                "items.productName": {
                     "$regex": regex
                 }
             };
             var productCodeFilter = {
-                "productCode": {
+                "items.productCode": {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [productNameFilter, productCodeFilter];
+            var codeFilter = {
+                "code": {
+                    "$regex": regex
+                }
+            };
+            var referenceNoFilter = {
+                "referenceNo": {
+                    "$regex": regex
+                }
+            };
+            var referenceTypeFilter = {
+                "referenceType": {
+                    "$regex": regex
+                }
+            };
+            var typeFilter = {
+                "type": {
+                    "$regex": regex
+                }
+            };
+            var storageFilter = {
+                "storageName": {
+                    "$regex": regex
+                }
+            };
+            keywordFilter["$or"] = [productNameFilter, productCodeFilter, codeFilter, referenceNoFilter, referenceTypeFilter, typeFilter, storageFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -65,21 +90,28 @@ module.exports = class InventoryDocumentManager extends BaseManager {
     _afterInsert(id) {
         return this.getSingleById(id)
             .then((inventoryDocument) => {
-                var createMovements = inventoryDocument.items.map(item=>{
+                var createMovements = inventoryDocument.items.map(item => {
                     var movement = {
-                       referenceNo:inventoryDocument.referenceNo,
-                       referenceType:inventoryDocument.referenceType,
-                       storageId:inventoryDocument.storageId,
-                       productId:item.productId,
-                       uomId:item.uomId,
-                       quantity:item.quantity
-                   };
-                   return this.inventoryMovementManager.create(movement); 
+                        referenceNo: inventoryDocument.referenceNo,
+                        referenceType: inventoryDocument.referenceType,
+                        type: inventoryDocument.type,
+                        storageId: inventoryDocument.storageId,
+                        productId: item.productId,
+                        uomId: item.uomId,
+                        quantity: item.quantity
+                    };
+                    return this.inventoryMovementManager.create(movement);
                 })
-                
-                return Promise.all(createMovements); 
+
+                return Promise.all(createMovements);
             })
-            .then(results=> id);
+            .then(results => id);
+    }
+
+    createIn(inventoryDocument)
+    {
+        inventoryDocument.type = "IN";
+        return this.create(inventoryDocument);
     }
 
     _validate(inventoryDocument) {

@@ -59,20 +59,54 @@ module.exports = function (salesContract) {
     var detailprice="";
     var amount=salesContract.amount;
     var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
-
-    
+    var amountDec1=parseFloat(salesContract.amount.toFixed(3));
+    var amountDec=amountDec1.toString().split('.');
+    var spellAmount=amountbyCurrency;
 
     if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
         amount=salesContract.amount.toFixed(3);
         amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
+        if(!amountDec[1]){
+            spellAmount=salesContract.amount;
+        }
+        else if(amountDec[1].length===1){
+            spellAmount=salesContract.amount.toFixed(1);
+        }
+        else if(amountDec[1].length===2){
+            spellAmount=salesContract.amount.toFixed(2);
+        }
+        else if(amountDec[1].length>=3 ){
+            spellAmount=salesContract.amount.toFixed(3);
+        }
     }
     else if(amount % 1 !=0){
         amount=parseFloat(salesContract.amount.toFixed(2));
+        if(!amountDec[1]){
+            spellAmount=salesContract.amount;
+        }
+        else if(amountDec[1].length===1){
+            spellAmount=salesContract.amount.toFixed(1);
+        }
+        else if(amountDec[1].length>=2){
+            spellAmount=salesContract.amount.toFixed(2);
+        }
     }
 
     var quantity= salesContract.orderQuantity;
+    var qtyDec=parseFloat(salesContract.orderQuantity.toFixed(2));
+    var quantityDec=qtyDec.toString().split('.');
+    var spellQuantity=quantity;
     if(salesContract.orderQuantity % 1 !=0){
         quantity=parseFloat(salesContract.orderQuantity.toFixed(2));
+        if(!quantityDec[1]){
+            spellQuantity=parseFloat(salesContract.orderQuantity);
+        }
+        else if(quantityDec[1].length===1){
+            spellQuantity=parseFloat(salesContract.orderQuantity.toFixed(1));
+        }
+        else if(quantityDec[1].length>=2){
+            spellQuantity=parseFloat(salesContract.orderQuantity.toFixed(2));
+        }
     }
 
     for(var i of details){
@@ -125,7 +159,7 @@ module.exports = function (salesContract) {
                         columns: [{
                             width: '40%',
                             stack: [{
-                                text:'MESSRS,\n'+ salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country + '\n' + salesContract.buyer.contact,
+                                text:'MESSRS,\n'+ salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country.toUpperCase() + '\n' + salesContract.buyer.contact,
                                 style: ['size10'],
                                 alignment: "left"
                             }]
@@ -200,7 +234,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(quantity)}` +') '+ uom,
+                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(spellQuantity)}` +') '+ uom,
                         style: ['size10']
                     }]
             },{
@@ -248,7 +282,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:salesContract.accountBank.currency.symbol + " " + amountbyCurrency +" ( "+`${numSpell(amount)}`+ salesContract.accountBank.currency.description.toUpperCase() + " ) (APPROXIMATELLY)",
+                        text:salesContract.accountBank.currency.symbol + " " + amountbyCurrency +" ( "+`${numSpell(spellAmount)}`+ salesContract.accountBank.currency.description.toUpperCase() + " ) (APPROXIMATELLY)",
                         style: ['size10']
                     }]
         },{
@@ -390,7 +424,7 @@ module.exports = function (salesContract) {
                         style: ['size10'],
                         alignment: "right"
                     },{
-                        text:'MESSRS,\n'+ salesContract.agent.name + '\n' + salesContract.agent.address + '\n' + salesContract.agent.country + '\n' + salesContract.agent.contact,
+                        text:'MESSRS,\n'+ salesContract.agent.name + '\n' + salesContract.agent.address + '\n' + salesContract.agent.country.toUpperCase() + '\n' + salesContract.agent.contact,
                         style: ['size10'],
                         alignment: "left"
                     },'\n', {
@@ -402,7 +436,7 @@ module.exports = function (salesContract) {
             
             var subheader2=[{
                         stack: ['\n',{
-                            text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(quantity)}` +' ) '+uom +' of' +'\n' +  salesContract.comodity.name + comoDesc+ '\n' + 'CONSTRUCTION : '+ salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth,
+                            text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) +' ( '+`${numSpell(spellQuantity)}` +' ) '+uom +' of' +'\n' +  salesContract.comodity.name + comoDesc+ '\n' + 'CONSTRUCTION : '+ salesContract.material.name + ' ' + salesContract.materialConstruction.name + ' / ' + salesContract.yarnMaterial.name + ' WIDTH: ' + salesContract.materialWidth,
                             style: ['size10'],
                             alignment: "justify"
                         },'\n',{
@@ -583,7 +617,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${say(quantity," )")}` +" "+uomLocal,
+                        text:parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${say(spellQuantity," )")}` +" "+uomLocal,
                         style: ['size10']
                     }]
         },{

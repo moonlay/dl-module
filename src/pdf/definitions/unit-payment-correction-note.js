@@ -15,7 +15,7 @@ module.exports = function (unitPaymentCorrection) {
     });
 
     items = [].concat.apply([], items);
-    var iso = "FM-PB-00-06-015";
+    var iso = "FM-PB-00-06-015/R1";
     var currency = unitPaymentCorrection.items.find(r => true).currency.code;
     var urDates = unitPaymentCorrection.unitPaymentOrder.items.map(unitPaymentOrderItem => {
         return new Date(unitPaymentOrderItem.unitReceiptNote.date)

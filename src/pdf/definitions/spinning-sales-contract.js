@@ -55,20 +55,40 @@ module.exports = function (salesContract) {
     var amount = salesContract.price * convertion;
 
     var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
-
-    
+    var amountDec1=parseFloat(amount.toFixed(3));
+    var amountDec=amountDec1.toString().split('.');
+    var spellAmount=amountbyCurrency;
 
     if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
-        price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currencySalesContract)}`;
-        amount=parseFloat(amount.toFixed(3));
         amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
+        price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currencySalesContract)}`;
+        if(!amountDec[1]){
+            spellAmount=amount;
+        }
+        else if(amountDec[1].length===1){
+            spellAmount=amount.toFixed(1);
+        }
+        else if(amountDec[1].length===2){
+            spellAmount=amount.toFixed(2);
+        }
+        else if(amountDec[1].length>=3 ){
+            spellAmount=amount.toFixed(3);
+        }
     }
     else if(amount % 1 !=0){
-        amount=parseFloat(amount.toFixed(2));
+        if(!amountDec[1]){
+            spellAmount=amount;
+        }
+        else if(amountDec[1].length===1){
+            spellAmount=amount.toFixed(1);
+        }
+        else if(amountDec[1].length>=2){
+            spellAmount=amount.toFixed(2);
+        }
     }
 
     var detail = salesContract.accountBank.currency.symbol + " " + price + ' / KG' + "\n";
-    detailprice += salesContract.accountBank.currency.symbol + " " + price + ' / ' + salesContract.uom.unit + ' ' + ppn;
+    detailprice = salesContract.accountBank.currency.symbol + " " + price + ' / ' + salesContract.uom.unit + ' ' + ppn;
     
 
     var comoDesc = "";
@@ -77,11 +97,21 @@ module.exports = function (salesContract) {
     }
     var code = salesContract.salesContractNo;
 
-    
-
     var quantity= salesContract.orderQuantity;
+    var qtyDec=parseFloat(salesContract.orderQuantity.toFixed(2));
+    var quantityDec=qtyDec.toString().split('.');
+    var spellQuantity=quantity;
     if(salesContract.orderQuantity % 1 !=0){
         quantity=parseFloat(salesContract.orderQuantity.toFixed(2));
+        if(!quantityDec[1]){
+            spellQuantity=parseFloat(salesContract.orderQuantity);
+        }
+        else if(quantityDec[1].length===1){
+            spellQuantity=parseFloat(salesContract.orderQuantity.toFixed(1));
+        }
+        else if(quantityDec[1].length>=2){
+            spellQuantity=parseFloat(salesContract.orderQuantity.toFixed(2));
+        }
     }
 
     var shipmentDesc=salesContract.shipmentDescription ? '\n' + salesContract.shipmentDescription : '';
@@ -104,7 +134,7 @@ module.exports = function (salesContract) {
                         columns: [{
                             width: '40%',
                             stack: [{
-                                text:'MESSRS,\n'+ salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country + '\n' + salesContract.buyer.contact,
+                                text:'MESSRS,\n'+ salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country.toUpperCase() + '\n' + salesContract.buyer.contact,
                                 style: ['size10'],
                                 alignment: "left"
                             }]
@@ -211,7 +241,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.accountBank.currency.symbol + " " + amountbyCurrency+" ( "+ `${numSpell(amount)}`+" "+ salesContract.accountBank.currency.description+" ) (APPROXIMATELLY)" ,
+                        text: salesContract.accountBank.currency.symbol + " " + amountbyCurrency+" ( "+ `${numSpell(spellAmount)}`+" "+ salesContract.accountBank.currency.description+" ) (APPROXIMATELLY)" ,
                         style: ['size09']
                     }]
             }, {
@@ -337,7 +367,7 @@ module.exports = function (salesContract) {
                     style: ['size09'],
                     alignment: "right"
                 }, {
-                    text: 'MESSRS,\n' + salesContract.agent.name + '\n' + salesContract.agent.address + '\n' + salesContract.agent.country + '\n' + salesContract.agent.contact,
+                    text: 'MESSRS,\n' + salesContract.agent.name + '\n' + salesContract.agent.address + '\n' + salesContract.agent.country.toUpperCase() + '\n' + salesContract.agent.contact,
                     style: ['size09'],
                     alignment: "left"
                 }, '\n', {
@@ -349,7 +379,7 @@ module.exports = function (salesContract) {
 
             var subheader2 = [{
                 stack: ['\n', {
-                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${numSpell(quantity)}` +")" + ' ' + uom + ' ( ABOUT: '+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+ ' KG ) of' + '\n' + salesContract.comodity.name + comoDesc,
+                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${numSpell(spellQuantity)}` +")" + ' ' + uom + ' ( ABOUT: '+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+ ' KG ) of' + '\n' + salesContract.comodity.name + comoDesc,
                     style: ['size09'],
                     alignment: "justify"
                 }, '\n', {
@@ -515,7 +545,7 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " +`${say(quantity," )")}` +" "+ salesContract.uom.unit,
+                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " +`${say(spellQuantity," )")}` +" "+ salesContract.uom.unit,
                     style: ['size09']
                 }]
         }, {
