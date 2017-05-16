@@ -37,6 +37,11 @@ module.exports = class InventorySummaryManager extends BaseManager {
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
+            var storageNameFilter = {
+                "storageName": {
+                    "$regex": regex
+                }
+            };
             var productNameFilter = {
                 "productName": {
                     "$regex": regex
@@ -47,7 +52,7 @@ module.exports = class InventorySummaryManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [productNameFilter, productCodeFilter];
+            keywordFilter["$or"] = [productNameFilter, productCodeFilter, storageNameFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -177,5 +182,36 @@ module.exports = class InventorySummaryManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, keyIndex]);
+    }
+
+    getXls(result) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+
+        for (var summary of result.data) {
+            index++;
+
+            var item = {};
+            item["No"] = index;
+            item["Storage"] = summary.storageName ? summary.storageName : '';
+            item["Nama Barang"] = summary.productName ? summary.productName : '';
+            item["Kuantiti"] = summary.quantity ? summary.quantity : 0;
+            item["UOM"] = summary.uom ? summary.uom : '';
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Storage"] = "string";
+        xls.options["Nama Barang"] = "string";
+        xls.options["Kuantiti"] = "number";
+        xls.options["UOM"] = "string";
+        
+        xls.name = `Inventory Summaries.xlsx`;
+
+        return Promise.resolve(xls);
     }
 }
