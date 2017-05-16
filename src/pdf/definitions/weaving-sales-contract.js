@@ -109,13 +109,13 @@ module.exports = function (salesContract, offset) {
     if(salesContract.orderQuantity % 1 !=0){
         quantity=parseFloat(salesContract.orderQuantity.toFixed(2));
         if(!quantityDec[1]){
-            spellQuantity=salesContract.orderQuantity;
+            spellQuantity=parseFloat(salesContract.orderQuantity);
         }
         else if(quantityDec[1].length===1){
-            spellQuantity=salesContract.orderQuantity.toFixed(1);
+            spellQuantity=parseFloat(salesContract.orderQuantity.toFixed(1));
         }
         else if(quantityDec[1].length>=2){
-            spellQuantity=salesContract.orderQuantity.toFixed(2);
+            spellQuantity=parseFloat(salesContract.orderQuantity.toFixed(2));
         }
     }
 
