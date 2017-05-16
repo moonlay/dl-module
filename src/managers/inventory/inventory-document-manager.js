@@ -94,6 +94,7 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                     var movement = {
                         referenceNo: inventoryDocument.referenceNo,
                         referenceType: inventoryDocument.referenceType,
+                        type: inventoryDocument.type,
                         storageId: inventoryDocument.storageId,
                         productId: item.productId,
                         uomId: item.uomId,
@@ -105,6 +106,12 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                 return Promise.all(createMovements);
             })
             .then(results => id);
+    }
+
+    createIn(inventoryDocument)
+    {
+        inventoryDocument.type = "IN";
+        return this.create(inventoryDocument);
     }
 
     _validate(inventoryDocument) {
