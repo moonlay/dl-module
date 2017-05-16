@@ -1199,7 +1199,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             }
             
             
-            var Query = {"$and" : [filterDate, deletedQuery, postedQuery, closedQuery,unitQuery]};
+            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$unwind: "$items.items"},

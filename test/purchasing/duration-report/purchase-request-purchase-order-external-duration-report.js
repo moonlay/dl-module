@@ -392,7 +392,6 @@ it('#17. should success when get data with unit and Duration >30 days', function
             var po = result;
             resultForExcelTest.info = result;
             po.should.instanceof(Array);
-            po.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
