@@ -47,7 +47,33 @@ it("#01. should success when create data", function(done) {
             });
 });
 
-it("#02. should success when get report without parameter", function(done) {
+it("#02. should success when get read data", function(done) {
+    dailyOperationManager.read({})
+        .then((item) => {
+            var daily = item.data;
+            daily.should.instanceof(Array);
+            daily.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#03. should success when get read data with keyword", function(done) {
+    dailyOperationManager.read({"keyword" : dataDaily.step.process})
+        .then((item) => {
+            var daily = item.data;
+            daily.should.instanceof(Array);
+            daily.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#04. should success when get report without parameter", function(done) {
     dailyOperationManager.getDailyOperationReport({})
         .then((item) => {
             var daily = item.data;
@@ -60,7 +86,7 @@ it("#02. should success when get report without parameter", function(done) {
         });
 });
 
-it("#03. should success when get report with machine parameter", function(done) {
+it("#05. should success when get report with machine parameter", function(done) {
     dailyOperationManager.getDailyOperationReport({"machine" : dataDaily.machineId})
         .then((item) => {
             var daily = item.data;
@@ -73,7 +99,7 @@ it("#03. should success when get report with machine parameter", function(done) 
         });
 });
 
-it("#04. should success when get report with kanban parameter", function(done) {
+it("#06. should success when get report with kanban parameter", function(done) {
     dailyOperationManager.getDailyOperationReport({"kanban" : dataDaily.kanbanId})
         .then((item) => {
             var daily = item.data;
@@ -87,7 +113,7 @@ it("#04. should success when get report with kanban parameter", function(done) {
 });
 
 var dataReport;
-it("#05. should success when get report with date parameter", function(done) {
+it("#07. should success when get report with date parameter", function(done) {
     dailyOperationManager.getDailyOperationReport({"dateForm" : "2017-02-01", "dateTo" : "2017-02-01"})
         .then((item) => {
             dataReport = item;
@@ -100,7 +126,7 @@ it("#05. should success when get report with date parameter", function(done) {
         });
 });
 
-it("#06. should success when get data for Excel", function(done) {
+it("#08. should success when get data for Excel", function(done) {
     dailyOperationManager.getXls(dataReport, {"dateForm" : "2017-02-01", "dateTo" : "2017-02-01"})
         .then((item) => {
             item.should.have.property('data');
@@ -113,7 +139,7 @@ it("#06. should success when get data for Excel", function(done) {
         });
 });
 
-it("#07. should success when destroy all unit test data", function(done) {
+it("#09. should success when destroy all unit test data", function(done) {
     dailyOperationManager.destroy(dataDaily._id)
         .then((result) => {
             result.should.be.Boolean();
