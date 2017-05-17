@@ -88,11 +88,13 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                     errors["declined"] = i18n.__("PackingReceipt.declined.isRequired:%s is required", i18n.__("PackingReceipt.declined._:Declined")); //"Grade harus diisi";   
                 }
 
-                for (var i = 0; i < _packing.items.length; i++) {
-                    for (var j = 0; j < valid.items.length; j++) {
-                        if (i === j) {
-                            if (valid.items[j].quantity !== _packing.items[i].quantity && (!valid.items[j].notes || valid.items[j].notes === "")) {
-                                errors["notes"] = i18n.__("PackingReceipt.items.notes.isRequired:%s is required", i18n.__("PackingReceipt.items.notes._:Notes")); //"Note harus diisi"; 
+                if (valid.items) {
+                    for (var i = 0; i < _packing.items.length; i++) {
+                        for (var j = 0; j < valid.items.length; j++) {
+                            if (i === j) {
+                                if (valid.items[j].quantity !== _packing.items[i].quantity && (!valid.items[j].notes || valid.items[j].notes === "")) {
+                                    errors["notes"] = i18n.__("PackingReceipt.items.notes.isRequired:%s is required", i18n.__("PackingReceipt.items.notes._:Notes")); //"Note harus diisi"; 
+                                }
                             }
                         }
                     }
@@ -149,9 +151,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                     .then((packing) => {
                         packing.accepted = true;
                         return this.packingManager.update(packing)
-                            .then((updatedPacking) => {
-                                Promise.resolve(id)
-                            })
+                            .then((updatedPacking) => Promise.resolve(id))
                     })
             })
     }
