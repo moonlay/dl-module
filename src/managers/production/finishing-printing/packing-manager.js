@@ -149,6 +149,8 @@ module.exports = class PackingManager extends BaseManager {
                 valid.colorName = targetColor.colorRequest;
                 valid.construction = `${_productionOrder.material.name} / ${_productionOrder.materialConstruction.name} / ${_productionOrder.materialWidth}`;
 
+                valid.salesContractNo = _productionOrder.salesContractNo;
+
                 // valid.items.forEach(test => {
                 //     test.pointSystem = valid.pointSystem;
                 //     this.calculateGrade(test);

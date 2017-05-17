@@ -24,8 +24,8 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -86,7 +86,17 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 if (!valid.accepted && !valid.declined) {
                     errors["accepted"] = i18n.__("PackingReceipt.accepted.isRequired:%s is required", i18n.__("PackingReceipt.accepted._:Accepted")); //"Grade harus diisi";   
                     errors["declined"] = i18n.__("PackingReceipt.declined.isRequired:%s is required", i18n.__("PackingReceipt.declined._:Declined")); //"Grade harus diisi";   
-                } 
+                }
+
+                for (var i = 0; i < _packing.items.length; i++) {
+                    for (var j = 0; j < valid.items.length; j++) {
+                        if (i === j) {
+                            if (valid.items[j].quantity !== _packing.items[i].quantity && (!valid.items[j].notes || valid.items[j].notes === "")) {
+                                errors["notes"] = i18n.__("PackingReceipt.items.notes.isRequired:%s is required", i18n.__("PackingReceipt.items.notes._:Notes")); //"Note harus diisi"; 
+                            }
+                        }
+                    }
+                }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
@@ -94,14 +104,15 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 }
 
 
-                valid.packingId = _packing._id; 
-                valid.packingCode = _packing.code; 
+                valid.packingId = _packing._id;
+                valid.packingCode = _packing.code;
 
                 valid.buyer = _packing.buyer;
                 valid.productionOrderNo = _packing.productionOrderNo;
                 valid.colorName = _packing.colorName;
                 valid.construction = _packing.construction;
-                  
+                valid.packingUom = _packing.packingUom
+
                 if (!valid.stamp) {
                     valid = new PackingReceiptModel(valid);
                 }
@@ -129,5 +140,19 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
+    }
+
+    _afterInsert(id) {
+        return this.getSingleById(id)
+            .then((packingReceipt) => {
+                return this.packingManager.getSingleById(packingReceipt.packingId)
+                    .then((packing) => {
+                        packing.accepted = true;
+                        return this.packingManager.update(packing)
+                            .then((updatedPacking) => {
+                                Promise.resolve(id)
+                            })
+                    })
+            })
     }
 };
