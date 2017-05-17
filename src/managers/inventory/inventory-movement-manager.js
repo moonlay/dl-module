@@ -150,6 +150,10 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
                 valid.uomId = _uom._id;
                 valid.uom = _uom.unit;
+                
+                if(valid.type == "OUT") {
+                    valid.quantity = valid.quantity * -1;
+                }
 
                 valid.before = _dbInventorySummary.quantity;
                 valid.after = _dbInventorySummary.quantity + valid.quantity;
@@ -192,5 +196,85 @@ module.exports = class InventoryMovementManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, productIndex, storageIndex, uomIndex]);
+    }
+
+    getMovementReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        }, dateFromFilter = {},
+            dateToFilter = {},
+            query = {},
+            order = info.order || {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+
+        var filterMovement = {
+            "date": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            },
+            "storageId": info.storageId ? new ObjectId(info.storageId) : "",
+            "type": info.type
+        };
+
+        query = { '$and': [_defaultFilter, filterMovement] };
+
+        var data = this._createIndexes()
+            .then((createIndexResults) => {
+                return info.xls ?
+                    this.collection
+                        .where(query)
+                        .order(order)
+                        .execute() :
+                    this.collection
+                        .where(query)
+                        .page(info.page, info.size)
+                        .order(order)
+                        .execute();
+            });
+                    
+        return Promise.resolve(data);
+    }
+
+    getXls(result) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var summary of result.data) {
+            index++;
+
+            var item = {};
+            item["No"] = index;
+            item["Storage"] = summary.storageName ? summary.storageName : '';
+            item["Tanggal"] = summary.date ? moment(summary.date).format(dateFormat) : '';
+            item["Nama Barang"] = summary.productName ? summary.productName : '';
+            item["UOM"] = summary.uom ? summary.uom : '';
+            item["Before"] = summary.before ? summary.before : 0;
+            item["Kuantiti"] = summary.quantity ? summary.quantity : 0;
+            item["After"] = summary.after ? summary.after : 0;
+            item["Type"] = summary.type ? summary.type : '';
+            
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Storage"] = "string";
+        xls.options["Tanggal"] = "string";
+        xls.options["Nama Barang"] = "string";
+        xls.options["UOM"] = "string";
+        xls.options["Before"] = "number";
+        xls.options["Kuantiti"] = "number";
+        xls.options["After"] = "number";        
+        xls.options["Type"] = "string";       
+        
+        xls.name = `Inventory Movement.xlsx`;
+
+        return Promise.resolve(xls);
     }
 }

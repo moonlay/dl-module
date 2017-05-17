@@ -871,7 +871,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             }
             
             
-            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery,unitQuery]};
+            var Query = {"$and" : [date, deletedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$match : Query},
@@ -990,20 +990,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 }
             }
             var durationQuery={};
-            if(query.duration==="0-30 hari"){
-                durationQuery={
-                    $cond: {
-                        if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$items.fulfillments.supplierDoDate","$purchaseOrderExternal._createdDate"  ] }, 86400000 ]}, 0 ]},
-                                { $lte: [ {$divide: [ { $subtract: [ "$items.fulfillments.supplierDoDate","$purchaseOrderExternal._createdDate"  ] }, 86400000 ]}, 30] }
-                                ]
-                        },
-                        then: "$$KEEP",
-                        else: "$$PRUNE"
-                    }
-                }
-            }
-            else if(query.duration==="31-60 hari"){
+            if(query.duration==="31-60 hari"){
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
@@ -1039,7 +1026,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 }
             }
             
-            var Query = {"$and" : [date, deletedQuery,unitQuery,postedQuery, closedQuery]};
+            var Query = {"$and" : [date, deletedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$unwind: "$items.fulfillments"},

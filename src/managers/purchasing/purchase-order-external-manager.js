@@ -1024,7 +1024,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             }
             
             
-            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery,unitQuery]};
+            var Query = {"$and" : [date, deletedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$unwind: "$items.items"},
@@ -1166,8 +1166,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]}, 8 ]},
-                                { $lte: [ {$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]}, 14] }
+                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 8 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 14] }
                                 ]
                         },
                         then: "$$KEEP",
@@ -1179,8 +1179,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]}, 15 ]},
-                                { $lte: [ {$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]}, 30] }
+                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 15 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 30] }
                                 ]
                         },
                         then: "$$KEEP",
@@ -1191,7 +1191,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             else if(query.duration==="> 30 hari"){
                 durationQuery={
                     $cond: {
-                        if:  { $gt: [ {$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]}, 30] },
+                        if:  { $gt: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 30] },
                         then: "$$KEEP",
                         else: "$$PRUNE"
                     }
@@ -1199,7 +1199,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             }
             
             
-            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery,unitQuery]};
+            var Query = {"$and" : [date, deletedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$unwind: "$items.items"},

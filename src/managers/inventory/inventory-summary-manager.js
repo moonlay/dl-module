@@ -184,6 +184,24 @@ module.exports = class InventorySummaryManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, keyIndex]);
     }
 
+    readXlsData(paging) {
+        var _paging = Object.assign({
+            order: {},
+            filter: {},
+            select: []
+        }, paging);
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                var query = this._getQuery(_paging);
+                return this.collection
+                    .where(query)
+                    .select(_paging.select)
+                    .order(_paging.order)
+                    .execute();
+            });
+    }
+
     getXls(result) {
         var xls = {};
         xls.data = [];
