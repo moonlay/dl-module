@@ -991,7 +991,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 8 ]},
+                                { $gt: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 7 ]},
                                 { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 14] }
                                 ]
                         },
@@ -1004,7 +1004,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 15 ]},
+                                { $gt: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 14 ]},
                                 { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 30] }
                                 ]
                         },
@@ -1072,7 +1072,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
 
         for(var report of result.info){
             index++;
-            var dateDiff=Math.round(report.dateDiff);
+            var dateDiff=Math.ceil(report.dateDiff);
             var item = {};
             item["No"] = index;
             item["Tanggal Purchase Request"] = moment(new Date(report.prDate.setHours(report.prDate.getHours() + 7))).format(dateFormat);
@@ -1166,7 +1166,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 8 ]},
+                                { $gt: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 7 ]},
                                 { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 14] }
                                 ]
                         },
@@ -1179,7 +1179,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 15 ]},
+                                { $gt: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 14 ]},
                                 { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 30] }
                                 ]
                         },
@@ -1246,7 +1246,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         var dateFormat = "DD/MM/YYYY";
 
         for(var report of result.info){
-            var dateDiff=Math.round(report.dateDiff);
+            var dateDiff=Math.ceil(report.dateDiff);
             index++;
             var item = {};
             item["No"] = index;

@@ -109,6 +109,16 @@ module.exports = function (salesContract) {
         }
     }
 
+    var sayQty= say(spellQuantity,")");
+    var lastIndex = sayQty.lastIndexOf(" ");
+    var lastword=sayQty.substr(0,lastIndex);
+    var lastIndex1=lastword.lastIndexOf(" ");
+    var words=lastword.substr(lastIndex1,lastword.length);
+    var Qtystr = say(spellQuantity,")");
+    if(words===" nol"){
+        Qtystr = lastword.substr(0, lastIndex1) + " )";
+    }
+
     for(var i of details){
         var ppn="";
         if(salesContract.useIncomeTax){
@@ -298,7 +308,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appx + ' '+`${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}` + '\n' + shipmentDesc,
+                        text:appx + ' '+`${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`  + shipmentDesc,
                         style: ['size10']
                     }]
         },{
@@ -617,7 +627,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${say(spellQuantity," )")}` +" "+uomLocal,
+                        text:parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+Qtystr +" "+uomLocal,
                         style: ['size10']
                     }]
         },{
