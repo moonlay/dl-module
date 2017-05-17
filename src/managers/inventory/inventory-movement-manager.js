@@ -57,6 +57,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
     _beforeInsert(data) {
         data.code = generateCode();
+        
         return Promise.resolve(data);
     }
 
@@ -150,7 +151,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
                 valid.uomId = _uom._id;
                 valid.uom = _uom.unit;
-                
+
                 if(valid.type == "OUT") {
                     valid.quantity = valid.quantity * -1;
                 }
@@ -201,22 +202,27 @@ module.exports = class InventoryMovementManager extends BaseManager {
     getMovementReport(info) {
         var _defaultFilter = {
             _deleted: false
-        }, dateFromFilter = {},
-            dateToFilter = {},
+        }, 
             query = {},
             order = info.order || {};
 
-        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : undefined;
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : undefined;
 
-        var filterMovement = {
-            "date": {
+        var filterMovement = {};
+
+        if(info.storageId)
+            filterMovement.storageId = new ObjectId(info.storageId);
+
+        if(info.type && info.type != "")
+            filterMovement.type = info.type;
+
+        if(dateFrom && dateTo){
+            filterMovement.date = {
                 $gte: new Date(dateFrom),
                 $lte: new Date(dateTo)
-            },
-            "storageId": info.storageId ? new ObjectId(info.storageId) : "",
-            "type": info.type
-        };
+            }
+        }
 
         query = { '$and': [_defaultFilter, filterMovement] };
 
@@ -237,7 +243,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
         return Promise.resolve(data);
     }
 
-    getXls(result) {
+    getXls(result, filter) {
         var xls = {};
         xls.data = [];
         xls.options = [];
@@ -246,19 +252,19 @@ module.exports = class InventoryMovementManager extends BaseManager {
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
 
-        for (var summary of result.data) {
+        for (var movement of result.data) {
             index++;
 
             var item = {};
             item["No"] = index;
-            item["Storage"] = summary.storageName ? summary.storageName : '';
-            item["Tanggal"] = summary.date ? moment(summary.date).format(dateFormat) : '';
-            item["Nama Barang"] = summary.productName ? summary.productName : '';
-            item["UOM"] = summary.uom ? summary.uom : '';
-            item["Before"] = summary.before ? summary.before : 0;
-            item["Kuantiti"] = summary.quantity ? summary.quantity : 0;
-            item["After"] = summary.after ? summary.after : 0;
-            item["Type"] = summary.type ? summary.type : '';
+            item["Storage"] = movement.storageName ? movement.storageName : '';
+            item["Tanggal"] = movement.date ? moment(movement.date).format(dateFormat) : '';
+            item["Nama Barang"] = movement.productName ? movement.productName : '';
+            item["UOM"] = movement.uom ? movement.uom : '';
+            item["Before"] = movement.before ? movement.before : 0;
+            item["Kuantiti"] = movement.quantity ? movement.quantity : 0;
+            item["After"] = movement.after ? movement.after : 0;
+            item["Tipe"] = movement.type ? movement.type : '';
             
             xls.data.push(item);
         }
@@ -271,9 +277,14 @@ module.exports = class InventoryMovementManager extends BaseManager {
         xls.options["Before"] = "number";
         xls.options["Kuantiti"] = "number";
         xls.options["After"] = "number";        
-        xls.options["Type"] = "string";       
-        
-        xls.name = `Inventory Movement.xlsx`;
+        xls.options["Tipe"] = "string";       
+
+        if (filter.dateFrom && filter.dateTo) {
+            xls.name = `Inventory Movement ${moment(new Date(filter.dateFrom)).format(dateFormat)} - ${moment(new Date(filter.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else {
+            xls.name = `Inventory Movement.xlsx`;
+        }
 
         return Promise.resolve(xls);
     }
