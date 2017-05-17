@@ -73,8 +73,9 @@ it("#03. should success when read data", function (done) {
         });
 });
 
+var filter = {};
 it('#04. should success when get data for Excel Report', function (done) {
-    inventoryMovementManager.getXls(resultForExcelTest)
+    inventoryMovementManager.getXls(resultForExcelTest, filter)
         .then(xlsData => {
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
