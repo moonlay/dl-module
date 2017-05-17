@@ -106,19 +106,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                     var now = new Date();
                     var tempInput;
                     var tempOutput;
-                    var thisStep = '';
-                    var nextStep = '';
-                    var currentStepIndex = 0;
-                    var idxStep = 0;
-                    if(_kanban){
-                        var stepArr = _kanban.instruction.steps.map(function (item) { return item.process.toString() });
-                        idxStep = (stepArr.indexOf(_step.process) + 1);
-                        currentStepIndex = _kanban.currentStepIndex;
-                        if(idxStep < currentStepIndex)
-                            thisStep = _kanban.instruction.steps[currentStepIndex].process;
-                        if(idxStep > (currentStepIndex + 1))
-                            nextStep = _kanban.instruction.steps[(currentStepIndex + 1)].process;
-                    }
+                    var runStep = 0;
                     if(_dailyData){
                         if(_dailyData.length > 0){
                             //var data = _dailyData.data;
@@ -169,6 +157,12 @@ module.exports = class DailyOperationManager extends BaseManager {
                                             tempOutput = _dailyData[a];
                                     }
                                 }
+                                if(_step){
+                                    for(var a of _dailyData){
+                                        if(a.type === "input" && a.stepId.toString() === _step._id.toString())
+                                            runStep++;
+                                    }
+                                }
                             }else if(valid.type === "output"){
                                 if(valid.code && _daily){
                                     for(var a of _dailyData){
@@ -190,6 +184,76 @@ module.exports = class DailyOperationManager extends BaseManager {
                                         }
                                     }
                                 }
+                                if(_step){
+                                    for(var a of _dailyData){
+                                        if(a.type === "output" && a.stepId.toString() === _step._id.toString())
+                                            runStep++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    var currentStepIndex = 0;
+                    var idxStep = 0;
+                    var thisStep = '';
+                    var nextStep = '';
+                    var moreStep = '';
+                    if(_kanban){
+                        // var stepArr = _kanban.instruction.steps.map(function (item) { return item.process.toString() });
+                        // idxStep = (stepArr.indexOf(_step.process) + 1);
+                        // currentStepIndex = _kanban.currentStepIndex;
+                        var tempStep = 0;
+                        currentStepIndex = _kanban.currentStepIndex;
+                        if(_step){
+                            for(var a of _kanban.instruction.steps){
+                                if(a._id.toString() === _step._id.toString())
+                                    tempStep++;
+                            }
+                            if(!valid.code && runStep >= tempStep){
+                                moreStep = _step.process;
+                            }else{
+                                tempStep = 0;
+                                var idx = 0;
+                                if(!valid.code){
+                                    for(var a of _kanban.instruction.steps){
+                                        idx++;
+                                        if(a._id.toString() === _step._id.toString() && tempStep <= runStep){
+                                            tempStep++;
+                                            idxStep = idx;
+                                        }
+                                    }
+                                }else{
+                                    runStep = 0;
+                                    if(valid.type === "input"){
+                                        for(var a = _dailyData.length ; a > 0; a--){
+                                            if(_dailyData[a - 1].type === "input" && _dailyData[a - 1].stepId.toString() === _step._id.toString()){
+                                                runStep++;
+                                                if(_dailyData[a - 1].code === valid.code)
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    if(valid.type === "output"){
+                                        for(var a = _dailyData.length ; a > 0; a--){
+                                            if(_dailyData[a - 1].type === "output" && _dailyData[a - 1].stepId.toString() === _step._id.toString()){
+                                                runStep++;
+                                                if(_dailyData[a - 1].code === valid.code)
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    for(var a of _kanban.instruction.steps){
+                                        idx++;
+                                        if(a._id.toString() === _step._id.toString() && tempStep < runStep){
+                                            tempStep++;
+                                            idxStep = idx;
+                                        }
+                                    }
+                                }
+                                if(idxStep < currentStepIndex)
+                                    thisStep = _kanban.instruction.steps[currentStepIndex - 1].process;
+                                if(idxStep > (currentStepIndex + 1))
+                                    nextStep = _kanban.instruction.steps[(currentStepIndex)].process;
                             }
                         }
                     }
@@ -198,10 +262,14 @@ module.exports = class DailyOperationManager extends BaseManager {
                         errors["kanban"] = i18n.__("Harus diisi", i18n.__("DailyOperation.kanban._:Kanban")); //"kanban tidak ditemukan";
                     else if(!_kanban)
                         errors["kanban"] = i18n.__("Data Kereta tidak ditemukan", i18n.__("DailyOperation.kanban._:Kanban")); //"kanban tidak ditemukan";
+                    else if(valid.type === "input" && moreStep !== "")
+                        errors["kanban"] = i18n.__("Input tidak dapat disimpan, Kereta sudah melewati step ini", i18n.__("DailyOperation.kanban._:Kanban"));
                     else if(valid.type === "input" && thisStep !== "")
                         errors["kanban"] = i18n.__(`Input tidak dapat diubah / hapus karena Kereta sudah sampai step ${thisStep}`, i18n.__("DailyOperation.kanban._:Kanban"));
                     else if(valid.type === "input" && nextStep !== "")
                         errors["kanban"] = i18n.__(`Input tidak dapat disimpan, Kereta harus melewati step ${nextStep} terlebih dahulu`, i18n.__("DailyOperation.kanban._:Kanban"));
+                    else if(valid.type === "output" && moreStep !== "")
+                        errors["kanban"] = i18n.__("Output tidak dapat disimpan, Kereta sudah melewati step ini", i18n.__("DailyOperation.kanban._:Kanban"));
                     else if(valid.type === "output" && thisStep !== "")
                         errors["kanban"] = i18n.__(`Output tidak dapat diubah / hapus karena Kereta sudah sampai step ${thisStep}`, i18n.__("DailyOperation.kanban._:Kanban"));
                     else if(valid.type === "output" && nextStep !== "")
@@ -369,10 +437,8 @@ module.exports = class DailyOperationManager extends BaseManager {
                         .then(kanban => {
                             if(daily.type === "output"){
                                 var tempKanban = kanban;
-                                var steps = tempKanban.instruction.steps.map(function (item) { return item.process.toString() });
-                                var idx = steps.indexOf(daily.step.process);
                                 tempKanban.currentQty = daily.goodOutput;
-                                tempKanban.currentStepIndex = (idx + 1);
+                                tempKanban.currentStepIndex+=1;
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
                                 this.kanbanManager.update(tempKanban)
@@ -407,7 +473,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var steps = tempKanban.instruction.steps.map(function (item) { return item.process });
                                 var idx = steps.indexOf(daily.step.process);
                                 tempKanban.currentQty = daily.goodOutput;
-                                tempKanban.currentStepIndex = (idx + 1);
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
                                 this.kanbanManager.update(tempKanban)
@@ -468,7 +533,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                                         }
                                                     }
                                                     kanban.currentQty = dataOutput.goodOutput;
-                                                    kanban.currentStepIndex = (steps.indexOf(dataOutput.step.process) + 1);
+                                                    kanban.currentStepIndex-=1;
                                                     kanban.goodOutput=dataOutput.goodOutput;
                                                     kanban.badOutput=dataOutput.badOutput;
                                                     

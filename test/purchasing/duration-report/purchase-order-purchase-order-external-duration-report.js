@@ -298,7 +298,26 @@ it('#11. should success when get data with Start Date and Duration 8-14 days', f
     purchaseOrderExternalManager.getDurationPOData(query)
         .then(result => {
             var po = result;
-            resultForExcelTest.info = result;
+            resultForExcelTest.info = [{
+            prDate : new Date(),
+            prNo:"A221",
+            division:"AAA",
+            unit:"BBB",
+            budget:"aaaa",
+            category:"ccc",
+            productCode:"AKSJ",
+            productName:"AAA",
+            productQuantity:100,
+            productUom:"MTR",
+            productPrice:2000,
+            supplierCode:"AAA",
+            supplierName:"CCC",
+            poDate:new Date(),
+            poEksDate:new Date(),
+            expectedDate:new Date(),
+            poEksNo:"ASAS",
+            dateDiff:522,
+            staff:"KKK"}];
             po.should.instanceof(Array);
             done();
         }).catch(e => {
@@ -500,6 +519,22 @@ it('#23. should success when get data with Start Date, End Date and Duration >30
     purchaseOrderExternalManager.getDurationPOData(query)
         .then(result => {
             var po = result;
+            po.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#24. should success when get data with unit and Duration 8-14 days', function (done) {
+    var query = {};
+    query.unitId= createdDataPO.purchaseRequest.unit._id;
+    query.duration = "8-14 hari";
+
+    purchaseOrderExternalManager.getDurationPOData(query)
+        .then(result => {
+            var po = result;
+            resultForExcelTest.info = result;
             po.should.instanceof(Array);
             done();
         }).catch(e => {

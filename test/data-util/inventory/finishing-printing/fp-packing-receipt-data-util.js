@@ -21,7 +21,18 @@ class PackingReceiptDataUtil {
                     packingCode: packing.code,
                     date: new Date(),
                     accepted: true,
-                    remark: "UT packing receipt"
+                    remark: "UT packing receipt",
+                    items: [{
+                        product: "product-test-1",
+                        quantity: 6,
+                        remark: "6 PCS @20 Meters",
+                        notes: "6 PCS @20 Meters"
+                    }, {
+                        product: "product-test-2",
+                        quantity: 4,
+                        remark: "6 PCS @20 Meters",
+                        notes: "6 PCS @20 Meters"
+                    }]
                 };
 
                 return data;

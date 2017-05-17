@@ -122,20 +122,7 @@ it("#03. should success when create new data", function (done) {
         });
     });
 });
-it('#04. should success when get data with Start Date and Duration 0-30 days', function (done) {
-    var query = {};
-    query.dateFrom = new Date();
-    query.duration = "0-30 hari";
 
-    purchaseOrderManager.getDurationPOEksDoData(query)
-        .then(result => {
-            var po = result;
-            po.should.instanceof(Array);
-            done();
-        }).catch(e => {
-            done(e);
-        });
-});
 
 it('#05. should success when get data with Start Date, End Date and Duration 31-60 days', function (done) {
     var query = {};
@@ -179,7 +166,28 @@ it('#06. should success when get data with Start Date, End Date and Duration >90
     purchaseOrderManager.getDurationPOEksDoData(query)
         .then(result => {
             var po = result;
-            resultForExcelTest.info = result;
+            resultForExcelTest.info = [{
+            prDate : new Date(),
+            prNo:"A221",
+            division:"AAA",
+            unit:"BBB",
+            budget:"aaaa",
+            category:"ccc",
+            productCode:"AKSJ",
+            productName:"AAA",
+            productQuantity:100,
+            productUom:"MTR",
+            productPrice:2000,
+            supplierCode:"AAA",
+            supplierName:"CCC",
+            poDate:new Date(),
+            poEksDate:new Date(),
+            expectedDate:new Date(),
+            doDate:new Date(),
+            arrivedDate:new Date(),
+            poEksNo:"ASAS",
+            dateDiff:522,
+            staff:"KKK"}];
             po.should.instanceof(Array);
             done();
         }).catch(e => {
@@ -189,7 +197,7 @@ it('#06. should success when get data with Start Date, End Date and Duration >90
 
 it('#07. should success when get data for Excel Report', function (done) {
     var query = {};
-    query.duration = "0-30 hari";
+    query.duration = "31-60 hari";
 
     purchaseOrderManager.getXls(resultForExcelTest, query)
         .then(xlsData => {             
@@ -205,7 +213,7 @@ it('#07. should success when get data for Excel Report', function (done) {
 it('#08. should success when get data for Excel Report using dateFrom only', function (done) {
     var query = {};
     query.dateFrom = new Date();
-    query.duration = "0-30 hari";
+    query.duration = "31-60 hari";
 
     purchaseOrderManager.getXlsDurationPOEksDoData(resultForExcelTest, query)
         .then(xlsData => {             
@@ -245,6 +253,22 @@ it('#10. should success when get data for Excel Report using both dateFrom and d
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
             xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#11. should success when get data with unit and Duration >90 days', function (done) {
+    var query = {};
+    query.unitId=createdDO3.items[0].fulfillments[0].purchaseOrder.purchaseRequest.unit._id;
+    query.duration = "> 90 hari";
+
+    purchaseOrderManager.getDurationPOEksDoData(query)
+        .then(result => {
+            var po = result;
+            resultForExcelTest.info = result;
+            po.should.instanceof(Array);
             done();
         }).catch(e => {
             done(e);

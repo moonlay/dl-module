@@ -975,18 +975,24 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     isClosed: false
                 };
             var date = {
-                "items.purchaseRequest.date" : {
+                "items.purchaseRequest._createdDate" : {
                     "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
                     "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
                 }
             };
+            var unitQuery={};
+            if(query.unitId && query.unitId!=""){
+                unitQuery={
+                    "items.purchaseRequest.unit._id":new ObjectId(query.unitId)
+                }
+            }
             var durationQuery={};
             if(query.duration==="8-14 hari"){
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]}, 8 ]},
-                                { $lte: [ {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]}, 14] }
+                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 8 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 14] }
                                 ]
                         },
                         then: "$$KEEP",
@@ -998,8 +1004,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]}, 15 ]},
-                                { $lte: [ {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]}, 30] }
+                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 15 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 30] }
                                 ]
                         },
                         then: "$$KEEP",
@@ -1010,7 +1016,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             else if(query.duration==="> 30 hari"){
                 durationQuery={
                     $cond: {
-                        if:  { $gt: [ {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]}, 30] },
+                        if:  { $gt: [ {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]}, 30] },
                         then: "$$KEEP",
                         else: "$$PRUNE"
                     }
@@ -1018,7 +1024,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             }
             
             
-            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery]};
+            var Query = {"$and" : [date, deletedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$unwind: "$items.items"},
@@ -1026,7 +1032,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 {$redact:durationQuery},
                 {$project :{
                         "items.purchaseRequest.date" : 1,
-                        "prDate" : "$items.purchaseRequest.date",
+                        "prDate" : "$items.purchaseRequest._createdDate",
                         "prNo" : "$items.purchaseRequest.no",
                         "division": "$items.purchaseRequest.unit.division.name",
                         "unit": "$items.purchaseRequest.unit.name",
@@ -1040,10 +1046,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "supplierCode" : "$supplier.code",
                         "supplierName" : "$supplier.name",
                         "poDate" : "$items._createdDate",
-                        "poEksDate" : "$date",
+                        "poEksDate" : "$_createdDate",
                         "expectedDate": "$expectedDeliveryDate",
                         "poEksNo" : "$no",
-                        "dateDiff" : {$divide: [ { $subtract: [ "$date","$items.purchaseRequest.date"  ] }, 86400000 ]},
+                        "dateDiff" : {$divide: [ { $subtract: [ "$_createdDate","$items.purchaseRequest._createdDate"  ] }, 86400000 ]},
                         "staff" : "$_createdBy"
                     }
                 },
@@ -1069,7 +1075,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             var dateDiff=Math.round(report.dateDiff);
             var item = {};
             item["No"] = index;
-            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).format(dateFormat);
+            item["Tanggal Purchase Request"] = moment(new Date(report.prDate.setHours(report.prDate.getHours() + 7))).format(dateFormat);
             item["No Purchase Request"] = report.prNo;
             item["Divisi"] = report.division;
             item["Unit"] = report.unit;
@@ -1079,12 +1085,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             item["Nama Barang"] = report.productName;
             item["Jumlah Barang"] = report.productQuantity;
             item["Satuan Barang"] = report.productUom;
-            item["Harga Barang"] = report.productUom;
-            item["Kode Supplier"] = report.productUom;
-            item["Nama Supplier"] = report.productUom;
-            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).format(dateFormat);
-            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate)).format(dateFormat);
-            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).format(dateFormat);
+            item["Harga Barang"] = report.productPrice;
+            item["Kode Supplier"] = report.supplierCode;
+            item["Nama Supplier"] = report.supplierName;
+            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate.setHours(report.poDate.getHours() + 7))).format(dateFormat);
+            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate.setHours(report.poEksDate.getHours() + 7))).format(dateFormat);
+            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate.setHours(report.expectedDate.getHours() + 7))).format(dateFormat);
             item["No PO Eksternal"] = report.poEksNo;
             item["Selisih Tanggal PR - PO Eksternal (hari)"] = dateDiff;
             item["Nama Staff Pembelian"] = report.staff;
@@ -1149,13 +1155,19 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
                 }
             };
+            var unitQuery={};
+            if(query.unitId && query.unitId!=""){
+                unitQuery={
+                    "items.purchaseRequest.unit._id":new ObjectId(query.unitId)
+                }
+            }
             var durationQuery={};
             if(query.duration==="8-14 hari"){
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]}, 8 ]},
-                                { $lte: [ {$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]}, 14] }
+                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 8 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 14] }
                                 ]
                         },
                         then: "$$KEEP",
@@ -1167,8 +1179,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 durationQuery={
                     $cond: {
                         if: { "$and": [ 
-                                { $gte: [ {$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]}, 15 ]},
-                                { $lte: [ {$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]}, 30] }
+                                { $gte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 15 ]},
+                                { $lte: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 30] }
                                 ]
                         },
                         then: "$$KEEP",
@@ -1179,7 +1191,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             else if(query.duration==="> 30 hari"){
                 durationQuery={
                     $cond: {
-                        if:  { $gt: [ {$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]}, 30] },
+                        if:  { $gt: [ {$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]}, 30] },
                         then: "$$KEEP",
                         else: "$$PRUNE"
                     }
@@ -1187,7 +1199,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             }
             
             
-            var Query = {"$and" : [date, deletedQuery, postedQuery, closedQuery]};
+            var Query = {"$and" : [date, deletedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
                 {$unwind: "$items.items"},
@@ -1195,7 +1207,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 {$redact:durationQuery},
                 {$project :{
                         "items._createdDate" : 1,
-                        "prDate" : "$items.purchaseRequest.date",
+                        "prDate" : "$items.purchaseRequest._createdDate",
                         "prNo" : "$items.purchaseRequest.no",
                         "division": "$items.purchaseRequest.unit.division.name",
                         "unit": "$items.purchaseRequest.unit.name",
@@ -1209,7 +1221,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "supplierCode" : "$supplier.code",
                         "supplierName" : "$supplier.name",
                         "poDate" : "$items._createdDate",
-                        "poEksDate" : "$date",
+                        "poEksDate" : "$_createdDate",
                         "expectedDate": "$expectedDeliveryDate",
                         "poEksNo" : "$no",
                         "dateDiff":{$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]},
@@ -1238,7 +1250,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             index++;
             var item = {};
             item["No"] = index;
-            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).format(dateFormat);
+            item["Tanggal Purchase Request"] = moment(new Date(report.prDate.setHours(report.prDate.getHours() + 7))).format(dateFormat);
             item["No Purchase Request"] = report.prNo;
             item["Divisi"] = report.division;
             item["Unit"] = report.unit;
@@ -1248,12 +1260,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             item["Nama Barang"] = report.productName;
             item["Jumlah Barang"] = report.productQuantity;
             item["Satuan Barang"] = report.productUom;
-            item["Harga Barang"] = report.productUom;
-            item["Kode Supplier"] = report.productUom;
-            item["Nama Supplier"] = report.productUom;
-            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).format(dateFormat);
-            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate)).format(dateFormat);
-            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).format(dateFormat);
+            item["Harga Barang"] = report.productPrice;
+            item["Kode Supplier"] = report.supplierCode;
+            item["Nama Supplier"] = report.supplierName;
+            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate.setHours(report.poDate.getHours() + 7))).format(dateFormat);
+            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate.setHours(report.poEksDate.getHours() + 7))).format(dateFormat);
+            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate.setHours(report.expectedDate.getHours() + 7))).format(dateFormat);
             item["No PO Eksternal"] = report.poEksNo;
             item["Selisih Tanggal PO Internal - PO Eksternal (hari)"] = dateDiff;
             item["Nama Staff Pembelian"] = report.staff;

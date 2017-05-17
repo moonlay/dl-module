@@ -11,7 +11,7 @@ module.exports = function (unitPaymentOrder) {
                 unitReceiptNoteNo: unitPaymentOrderItem.unitReceiptNote.no,
                 quantity: receiptNoteItem.deliveredQuantity,
                 uom: receiptNoteItem.deliveredUom.unit,
-                price: parseFloat(Math.round(receiptNoteItem.pricePerDealUnit * 100) / 100).toFixed(2)
+                price: receiptNoteItem.pricePerDealUnit
             };
         });
     });
@@ -202,7 +202,7 @@ module.exports = function (unitPaymentOrder) {
                     text: `${currency}`
                 }, {
                         width: '*',
-                        text: item.price.toLocaleString(locale, locale.currency),
+                        text: item.price.toLocaleString(locale, locale.currencyNotaItern),
                         style: ['right']
                     }],
                 style: ['size08']
@@ -212,7 +212,7 @@ module.exports = function (unitPaymentOrder) {
                     text: `${currency}`
                 }, {
                         width: '*',
-                        text: parseFloat(Math.round(item.price * item.quantity* 100) / 100).toFixed(2).toLocaleString(locale, locale.currency),
+                        text: parseFloat(item.price * item.quantity).toLocaleString(locale, locale.currencyNotaItern),
                         style: ['right']
                     }],
                 style: ['size08']
