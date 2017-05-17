@@ -175,16 +175,16 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
                         this.sql.multiple = true;
 
-                        var fs = require("fs");
-                        var path = "C:\\Users\\Itta And Leslie\\Desktop\\daily.txt";
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\Itta And Leslie\\Desktop\\daily.txt";
 
-                        fs.writeFile(path, sqlQuery, function (error) {
-                            if (error) {
-                                console.log("write error:  " + error.message);
-                            } else {
-                                console.log("Successful Write to " + path);
-                            }
-                        });
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
 
                         return Promise.all(command)
                             .then((results) => {
