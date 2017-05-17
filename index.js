@@ -36,13 +36,14 @@ module.exports = {
             ComodityManager: require('./src/managers/master/comodity-manager'),
             QualityManager: require('./src/managers/master/quality-manager'),
             TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager'),
-            DesignMotiveManager: require('./src/managers/master/design-motive-manager')
+            DesignMotiveManager: require('./src/managers/master/design-motive-manager'),
+            StorageManager: require('./src/managers/master/storage-manager')
         },
-        inventory : {
-            finishingPrinting:{
-                FPPackingReceiptManager:require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager")
+        inventory: {
+            finishingPrinting: {
+                FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager")
             },
-            InventoryDocumentManager:require("./src/managers/inventory/inventory-document-manager")
+            InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager")
         },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
@@ -125,7 +126,8 @@ module.exports = {
             inventory: {
                 finishingPrinting: {
                     packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util")
-                }
+                },
+                inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),
             },
             production: {
                 dailyOperation: require('./test/data-util/production/finishing-printing/daily-operation-data-util'),
