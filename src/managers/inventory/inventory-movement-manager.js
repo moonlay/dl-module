@@ -228,7 +228,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
         var data = this._createIndexes()
             .then((createIndexResults) => {
-                return info.xls ?
+                return !info.xls ?
                     this.collection
                         .where(query)
                         .order(order)
@@ -264,7 +264,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
             item["Before"] = movement.before ? movement.before : 0;
             item["Kuantiti"] = movement.quantity ? movement.quantity : 0;
             item["After"] = movement.after ? movement.after : 0;
-            item["Tipe"] = movement.type ? movement.type : '';
+            item["Status"] = movement.type ? movement.type : '';
             
             xls.data.push(item);
         }
@@ -277,7 +277,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
         xls.options["Before"] = "number";
         xls.options["Kuantiti"] = "number";
         xls.options["After"] = "number";        
-        xls.options["Tipe"] = "string";       
+        xls.options["Status"] = "string";       
 
         if (filter.dateFrom && filter.dateTo) {
             xls.name = `Inventory Movement ${moment(new Date(filter.dateFrom)).format(dateFormat)} - ${moment(new Date(filter.dateTo)).format(dateFormat)}.xlsx`;

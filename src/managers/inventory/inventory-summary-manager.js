@@ -184,22 +184,39 @@ module.exports = class InventorySummaryManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, keyIndex]);
     }
 
-    readXlsData(paging) {
-        var _paging = Object.assign({
-            order: {},
-            filter: {},
-            select: []
-        }, paging);
+    getSummaryReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        }, 
+            query = {},
+            order = info.order || {};
 
-        return this._createIndexes()
+        var filterSummary = {};
+
+        if(info.storageId)
+            filterSummary.storageId = new ObjectId(info.storageId);
+
+        if(info.productId)
+            filterSummary.productId = new ObjectId(info.productId);
+
+
+        query = { '$and': [_defaultFilter, filterSummary] };
+
+        var data = this._createIndexes()
             .then((createIndexResults) => {
-                var query = this._getQuery(_paging);
-                return this.collection
-                    .where(query)
-                    .select(_paging.select)
-                    .order(_paging.order)
-                    .execute();
+                return !info.xls ?
+                    this.collection
+                        .where(query)
+                        .order(order)
+                        .execute() :
+                    this.collection
+                        .where(query)
+                        .page(info.page, info.size)
+                        .order(order)
+                        .execute();
             });
+                    
+        return Promise.resolve(data);
     }
 
     getXls(result) {
