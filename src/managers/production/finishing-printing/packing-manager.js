@@ -64,13 +64,13 @@ module.exports = class PackingManager extends BaseManager {
 
         return this.getSingleById(id)
             .then((packing) => {
-                return this.productionOrderManager.getSingleByIdOrDefault(packing.productionOrderId)
+                return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
                     .then((salesContractNo) => {
                         var query = {
                             _deleted: false,
                             unit: packing.packingUom
                         };
-                        return this.uomManager.getSingleByQuery(query)
+                        return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packing.items.map(item => {
                                     var productName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
@@ -78,36 +78,40 @@ module.exports = class PackingManager extends BaseManager {
                                         _deleted: false,
                                         name: productName
                                     };
-                                    return this.productManager.getSingleByQuery(query)
+                                    return this.productManager.getSingleByQueryOrDefault(query);
+
                                 });
                                 return Promise.all(getProduct)
                                     .then((products) => {
-                                        var createPackingProduct = packing.items.map(item => {
-                                            var pName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
-                                            var product = products.find((product) => product.name === pName);
+                                        for (var product of products) {
                                             if (product) {
-                                                return Promise.resolve(null)
+                                                var dataPackingProduct = products
+                                                return Promise.all(dataPackingProduct)
                                             } else {
-                                                var packingProduct = {
-                                                    code: generateCode(),
-                                                    currency: {},
-                                                    description: "",
-                                                    name: `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`,
-                                                    price: 0,
-                                                    properties: {},
-                                                    tags: `sales contract #${salesContractNo.salesContractNo}`,
-                                                    uom: uom,
-                                                    uomId: uom._id
 
-                                                };
-                                                return this.productManager.create(packingProduct);
+
+                                                var createPackingProduct = packing.items.map(item => {
+                                                    var pName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
+                                                    var packingProduct = {
+                                                        code: generateCode(),
+                                                        currency: {},
+                                                        description: "",
+                                                        name: pName,
+                                                        price: 0,
+                                                        properties: {},
+                                                        tags: `sales contract #${salesContractNo.salesContractNo}`,
+                                                        uom: uom,
+                                                        uomId: uom._id
+
+                                                    };
+                                                    return this.productManager.create(packingProduct);
+                                                })
+                                                return Promise.all(createPackingProduct)
                                             }
-                                        })
-                                        return Promise.all(createPackingProduct)
-                                            .then(results => id);
+                                        }
                                     })
 
-
+                                    .then(results => id);
                             })
                     })
             })
@@ -119,13 +123,13 @@ module.exports = class PackingManager extends BaseManager {
 
         return this.getSingleById(id)
             .then((packing) => {
-                return this.productionOrderManager.getSingleByIdOrDefault(packing.productionOrderId)
+                return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
                     .then((salesContractNo) => {
                         var query = {
                             _deleted: false,
                             unit: packing.packingUom
                         };
-                        return this.uomManager.getSingleByQuery(query)
+                        return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packing.items.map(item => {
                                     var productName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
@@ -133,40 +137,43 @@ module.exports = class PackingManager extends BaseManager {
                                         _deleted: false,
                                         name: productName
                                     };
-                                    return this.productManager.getSingleByQuery(query)
+                                    return this.productManager.getSingleByQueryOrDefault(query);
+
                                 });
                                 return Promise.all(getProduct)
                                     .then((products) => {
-                                        var createPackingProduct = packing.items.map(item => {
-                                            var pName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
-                                            var product = products.find((product) => product.name === pName);
+                                        for (var product of products) {
                                             if (product) {
-                                                return Promise.resolve(null)
+                                                var dataPackingProduct = products
+                                                return Promise.all(dataPackingProduct)
                                             } else {
-                                                var packingProduct = {
-                                                    code: generateCode(),
-                                                    currency: {},
-                                                    description: "",
-                                                    name: `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`,
-                                                    price: 0,
-                                                    properties: {},
-                                                    tags: `sales contract #${salesContractNo.salesContractNo}`,
-                                                    uom: uom,
-                                                    uomId: uom._id
 
-                                                };
-                                                return this.productManager.create(packingProduct);
+
+                                                var createPackingProduct = packing.items.map(item => {
+                                                    var pName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
+                                                    var packingProduct = {
+                                                        code: generateCode(),
+                                                        currency: {},
+                                                        description: "",
+                                                        name: pName,
+                                                        price: 0,
+                                                        properties: {},
+                                                        tags: `sales contract #${salesContractNo.salesContractNo}`,
+                                                        uom: uom,
+                                                        uomId: uom._id
+
+                                                    };
+                                                    return this.productManager.create(packingProduct);
+                                                })
+                                                return Promise.all(createPackingProduct)
                                             }
-                                        })
-                                        return Promise.all(createPackingProduct)
-                                            .then(results => id);
+                                        }
                                     })
 
-
+                                    .then(results => id);
                             })
                     })
             })
-
 
     }
 
