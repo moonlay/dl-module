@@ -121,6 +121,16 @@ module.exports = function (salesContract, offset) {
         }
     }
 
+    var sayQty= say(spellQuantity,")");
+    var lastIndex = sayQty.lastIndexOf(" ");
+    var lastword=sayQty.substr(0,lastIndex);
+    var lastIndex1=lastword.lastIndexOf(" ");
+    var words=lastword.substr(lastIndex1,lastword.length);
+    var Qtystr = say(spellQuantity,")");
+    if(words===" nol"){
+        Qtystr = lastword.substr(0, lastIndex1) + " )";
+    }
+
     var comoDesc = "";
     if (salesContract.comodityDescription != "") {
         comoDesc = '\n' + salesContract.comodityDescription;
@@ -586,7 +596,7 @@ module.exports = function (salesContract, offset) {
                     },
                     {
                         width: '*',
-                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " + `${say(spellQuantity, " )")}` + " " + uomLocal,
+                        text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " + Qtystr + " " + uomLocal,
                         style: ['size10']
                     }]
             }, {
