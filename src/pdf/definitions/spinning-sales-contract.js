@@ -114,6 +114,16 @@ module.exports = function (salesContract) {
         }
     }
 
+    var sayQty= say(spellQuantity,")");
+    var lastIndex = sayQty.lastIndexOf(" ");
+    var lastword=sayQty.substr(0,lastIndex);
+    var lastIndex1=lastword.lastIndexOf(" ");
+    var words=lastword.substr(lastIndex1,lastword.length);
+    var Qtystr = say(spellQuantity,")");
+    if(words===" nol"){
+        Qtystr = lastword.substr(0, lastIndex1) + " )";
+    }
+
     var shipmentDesc=salesContract.shipmentDescription ? '\n' + salesContract.shipmentDescription : '';
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
@@ -545,7 +555,7 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " +`${say(spellQuantity," )")}` +" "+ salesContract.uom.unit,
+                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " +Qtystr +" "+ salesContract.uom.unit,
                     style: ['size09']
                 }]
         }, {
