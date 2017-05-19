@@ -521,219 +521,382 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     getReport(query) {
         return new Promise((resolve, reject) => {
+            if(!query.size){
+                query.size=20;
+            }
+            if(!query.page){
+                query.page=1;
+            }
+            var _page = parseInt(query.page);
+            var _size = parseInt(query.size);
             var qry = Object.assign({});
+            var filter = query.filter || {};
 
-            if (query.salesContractNo != '') {
+            if (filter.salesContractNo) {
                 Object.assign(qry, {
                     "salesContractNo": {
-                        "$regex": (new RegExp(query.salesContractNo, "i"))
+                        "$regex": (new RegExp(filter.salesContractNo, "i"))
                     }
                 });
             }
-            if (query.orderNo != '') {
+            if (filter.orderNo) {
                 Object.assign(qry, {
                     "orderNo": {
-                        "$regex": (new RegExp(query.orderNo, "i"))
+                        "$regex": (new RegExp(filter.orderNo, "i"))
                     }
                 });
             }
-            if (query.orderTypeId) {
+            if (filter.orderTypeId) {
                 Object.assign(qry, {
-                    "orderTypeId": (new ObjectId(query.orderTypeId))
+                    "orderTypeId": (new ObjectId(filter.orderTypeId))
                 });
             }
-            if (query.processTypeId) {
+            if (filter.processTypeId) {
                 Object.assign(qry, {
-                    "processTypeId": (new ObjectId(query.processTypeId))
+                    "processTypeId": (new ObjectId(filter.processTypeId))
                 });
             }
-            if (query.buyerId) {
+            if (filter.buyerId) {
                 Object.assign(qry, {
-                    "buyerId": (new ObjectId(query.buyerId))
+                    "buyerId": (new ObjectId(filter.buyerId))
                 });
             }
-            if (query.accountId) {
+            if (filter.accountId) {
                 Object.assign(qry, {
-                    "accountId": (new ObjectId(query.accountId))
+                    "accountId": (new ObjectId(filter.accountId))
                 });
             }
-            if (query.sdate && query.edate) {
+            if (filter.sdate && filter.edate) {
                 Object.assign(qry, {
                     "_createdDate": {
-                        "$gte": new Date(`${query.sdate} 00:00:00`),
-                        "$lte": new Date(`${query.edate} 23:59:59`)
+                        "$gte": new Date(`${filter.sdate} 00:00:00`),
+                        "$lte": new Date(`${filter.edate} 23:59:59`)
                     }
                 });
             }
 
             qry = Object.assign(qry, { _deleted: false });
-            // var Query = { "$and": [date, salesQuery, orderQuery, orderTypeQuery, processTypeQuery, buyerQuery, accountQuery, deletedQuery] };
+            var getPrdOrder = [];
+            getPrdOrder.push(this.collection
+                .aggregate([
+                    { $unwind: "$details" },
+                    { $match: qry },
+                    { $group: { _id: null, count: { $sum: 1 } } }
+                ])
+                .toArray());
+            if ((query.accept || '').toString().indexOf("application/xls") < 0) {
+                getPrdOrder.push(this.collection
+                    .aggregate([
+                        { $unwind: "$details" },
+                        { $match: qry },
+                        {
+                            $project: {
+                                "salesContractNo": 1,
+                                "_createdDate": 1,
+                                "orderNo": 1,
+                                "orderType": "$orderType.name",
+                                "processType": "$processType.name",
+                                "buyer": "$buyer.name",
+                                "buyerType": "$buyer.type",
+                                "orderQuantity": "$orderQuantity",
+                                "uom": "$uom.unit",
+                                "colorCode": "$details.code",
+                                "colorTemplate": "$details.colorTemplate",
+                                "colorRequest": "$details.colorRequest",
+                                "colorType": "$details.colorType.name",
+                                "quantity": "$details.quantity",
+                                "uomDetail": "$details.uom.unit",
+                                "deliveryDate": "$deliveryDate",
+                                "firstname": "$account.profile.firstname",
+                                "lastname": "$account.profile.lastname"
+                            }
+                        },
+                        { $sort: { "_createdDate": -1 } },
+                        { $skip: ((_page - 1) * _size) },
+                        { $limit: (_size) }
+                    ])
+                    .toArray());
+            } else {
+                getPrdOrder.push(this.collection
+                    .aggregate([
+                        { $unwind: "$details" },
+                        { $match: qry },
+                        {
+                            $project: {
+                                "salesContractNo": 1,
+                                "_createdDate": 1,
+                                "orderNo": 1,
+                                "orderType": "$orderType.name",
+                                "processType": "$processType.name",
+                                "buyer": "$buyer.name",
+                                "buyerType": "$buyer.type",
+                                "orderQuantity": "$orderQuantity",
+                                "uom": "$uom.unit",
+                                "colorCode": "$details.code",
+                                "colorTemplate": "$details.colorTemplate",
+                                "colorRequest": "$details.colorRequest",
+                                "colorType": "$details.colorType.name",
+                                "quantity": "$details.quantity",
+                                "uomDetail": "$details.uom.unit",
+                                "deliveryDate": "$deliveryDate",
+                                "firstname": "$account.profile.firstname",
+                                "lastname": "$account.profile.lastname"
+                            }
+                        },
+                        { $sort: { "_createdDate": -1 } }
+                    ])
+                    .toArray());
+            }
+            Promise.all(getPrdOrder).then(result => {
+                var resCount = result[0];
+                var count = resCount.length > 0 ? resCount[0].count : 0;
+                var prodOrders = result[1];
+                prodOrders = [].concat.apply([], prodOrders);
+
+                var jobsGetDailyOperation = [];
+                for (var prodOrder of prodOrders) {
+                    jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
+                        {
+                            $match: {
+                                "type": "input",
+                                "_deleted": false,
+                                "kanban.selectedProductionOrderDetail.code": prodOrder.colorCode,
+                                "kanban.productionOrder.orderNo": prodOrder.orderNo
+                            }
+                        }, {
+                            $project:
+                            {
+                                "orderNo": "$kanban.productionOrder.orderNo",
+                                "kanbanCode": "$kanban.code",
+                                "colorCode": "$kanban.selectedProductionOrderDetail.code",
+                                "input": 1
+                            }
+                        }
+                    ]).toArray());
+                }
+                if (jobsGetDailyOperation.length == 0) {
+                    jobsGetDailyOperation.push(Promise.resolve(null))
+                }
+                Promise.all(jobsGetDailyOperation).then(dailyOperations => {//Get DailyOperation
+                    dailyOperations = [].concat.apply([], dailyOperations);
+                    dailyOperations = this.cleanUp(dailyOperations);
+                    var jobsGetQC = [];
+                    for (var prodOrder of prodOrders) {
+                        var _dailyOperations = dailyOperations.filter(function (dailyOperation) {
+                            return dailyOperation.orderNo === prodOrder.orderNo && dailyOperation.colorCode === prodOrder.colorCode;
+                        })
+                        var filters = ["orderNo", "colorCode", "kanbanCode"];
+                        _dailyOperations = this.removeDuplicates(_dailyOperations, filters);
+
+                        if (_dailyOperations.length > 0) {
+                            var kanbanCodes = [];
+                            _dailyOperations.some(function (dailyOperation, idx) {
+                                kanbanCodes.push(dailyOperation.kanbanCode);
+                            });
+                            var sum = _dailyOperations
+                                .map(dailyOperation => dailyOperation.input)
+                                .reduce(function (prev, curr, index, arr) {
+                                    return prev + curr;
+                                }, 0);
+
+                            for (var dailyOperation of _dailyOperations) {
+                                jobsGetQC.push(this.fabricQualityControlCollection.aggregate([
+                                    {
+                                        $match: {
+                                            "_deleted": false,
+                                            "productionOrderNo": dailyOperation.orderNo,
+                                            "kanbanCode": dailyOperation.kanbanCode
+                                        }
+                                    }, {
+                                        $project:
+                                        {
+                                            "productionOrderNo": 1,
+                                            "kanbanCode": 1,
+                                            "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
+                                        }
+                                    }
+                                ]).toArray());
+                            }
+                            prodOrder.input = sum;
+                            prodOrder.kanbanCodes = kanbanCodes;
+                        }
+                        else {
+                            prodOrder.input = 0;
+                            prodOrder.kanbanCodes = [];
+                        }
+                    }
+                    if (jobsGetQC.length == 0) {
+                        jobsGetQC.push(Promise.resolve(null))
+                    }
+                    Promise.all(jobsGetQC).then(qualityControls => {//Get QC
+                        qualityControls = [].concat.apply([], qualityControls);
+                        qualityControls = this.cleanUp(qualityControls);
+                        for (var prodOrder of prodOrders) {
+                            var _qualityControls = qualityControls.filter(function (qualityControl) {
+                                return qualityControl.productionOrderNo === prodOrder.orderNo && prodOrder.kanbanCodes.includes(qualityControl.kanbanCode);
+                            })
+                            // filters = ["productionOrderNo", "kanbanCode"];
+                            // _qualityControls = this.removeDuplicates(_qualityControls, filters);
+                            var _orderQuantityQC = 0
+                            if (_qualityControls.length > 0) {
+                                _orderQuantityQC = _qualityControls
+                                    .map(qualityControl => qualityControl.orderQuantityQC)
+                                    .reduce(function (prev, curr, index, arr) {
+                                        return prev + curr;
+                                    }, 0);
+                            }
+                            prodOrder.orderQuantityQC = _orderQuantityQC;
+
+                            if (prodOrder.orderQuantityQC > 0) {
+                                prodOrder.status = "Sudah dalam pemeriksaan kain";
+                            } else if (prodOrder.input > 0) {
+                                prodOrder.status = "Sudah dalam produksi";
+                            } else if (prodOrder.input == 0) {
+                                prodOrder.status = "Belum dalam produksi";
+                            }
+                            prodOrder.detail = `${prodOrder.quantity} di spp\n${prodOrder.input} di produksi\n${prodOrder.orderQuantityQC} di pemeriksaan`;
+
+                        }
+                        var results = {
+                            data: prodOrders,
+                            count: prodOrders.length,
+                            size: 20,
+                            total: count,
+                            page: (_page * _size) / _size
+                        };
+                        resolve(results);
+                    })
+                })
+            })
+        });
+    }
+
+    getDetailReport(salesContractNo) {
+        return new Promise((resolve, reject) => {
+            var qry = Object.assign({});
+            var data = {}
+            if (salesContractNo) {
+                Object.assign(qry, {
+                    "salesContractNo": {
+                        "$regex": (new RegExp(salesContractNo, "i"))
+                    }
+                });
+            }
+            qry = Object.assign(qry, { _deleted: false });
+
             this.collection
                 .aggregate([
                     { $unwind: "$details" },
                     { $match: qry },
                     {
-                        $project: {
-                            "salesContractNo": 1,
-                            "_createdDate": 1,
-                            "orderNo": 1,
-                            "orderType": "$orderType.name",
-                            "processType": "$processType.name",
-                            "buyer": "$buyer.name",
-                            "buyerType": "$buyer.type",
-                            "orderQuantity": "$orderQuantity",
-                            "uom": "$uom.unit",
-                            "colorCode": "$details.code",
-                            "colorTemplate": "$details.colorTemplate",
-                            "colorRequest": "$details.colorRequest",
-                            "colorType": "$details.colorType.name",
-                            "quantity": "$details.quantity",
-                            "uomDetail": "$details.uom.unit",
-                            "deliveryDate": "$deliveryDate",
-                            "firstname": "$account.profile.firstname",
-                            "lastname": "$account.profile.lastname"
+                        $group: {
+                            "_id": "$orderNo",
+                            "salesContractNo": { "$first": "$salesContractNo" },
+                            "orderQuantity": { "$first": "$orderQuantity" },
+                            "uom": { "$first": "$uom.unit" },
+                            "details": {
+                                "$push": {
+                                    "colorTemplate": "$details.colorTemplate",
+                                    "colorCode": "$details.code",
+                                    "colorRequest": "$details.colorRequest",
+                                    "colorType": "$details.colorType.name",
+                                    "quantity": "$details.quantity",
+                                    "uomDetail": "$details.uom.unit",
+                                }
+                            }
                         }
                     },
                     { $sort: { "_createdDate": -1 } }
                 ])
-                .toArray()
-                .then(prodOrders => {
-                    if (prodOrders.length > 0) {
-                        var jobsGetDailyOperation = [];
-                        for (var prodOrder of prodOrders) {
-                            jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
+                .toArray().then(prodOrders => {
+                    prodOrders = [].concat.apply([], prodOrders);
+                    Object.assign(data, { productionOrders: prodOrders });
+                    var _prodOrders = prodOrders.map((prodOrder) => {
+                        return prodOrder.details.map((detail) => {
+                            return {
+                                salesContractNo: prodOrder.salesContractNo,
+                                orderNo: prodOrder._id,
+                                colorCode: detail.colorCode
+                            }
+                        })
+                    })
+                    _prodOrders = [].concat.apply([], _prodOrders);
+
+                    var filters = ["orderNo"];
+                    _prodOrders = this.removeDuplicates(_prodOrders, filters);
+                    var jobsGetDailyOperation = [];
+                    for (var prodOrder of _prodOrders) {
+                        jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
+                             {
+                                $unwind: "$kanban.instruction.steps"
+                            },
+                            {
+                                $match: {
+                                    "type": "input",
+                                    "_deleted": false,
+                                    // "kanban.selectedProductionOrderDetail.code": prodOrder.colorCode,
+                                    "kanban.productionOrder.orderNo": prodOrder.orderNo
+                                }
+                            }, {
+                                $project:
+                                {
+                                    "orderNo": "$kanban.productionOrder.orderNo",
+                                    "kanbanCode": "$kanban.code",
+                                    "machine": "$machine.name",
+                                    "step": "$kanban.instruction.steps.process",
+                                    "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
+                                    "qty": "$input"
+                                }
+                            },
+                            {
+                                $match: { "cmp": true }
+                            }
+                        ]).toArray());
+                    }
+                    if (jobsGetDailyOperation.length == 0) {
+                        jobsGetDailyOperation.push(Promise.resolve(null))
+                    }
+                    Promise.all(jobsGetDailyOperation).then(dailyOperations => {
+                        dailyOperations = [].concat.apply([], dailyOperations);
+                        dailyOperations = this.cleanUp(dailyOperations);
+                        Object.assign(data, { dailyOperations: dailyOperations });
+                        var jobsGetQC = []
+                        var filters = ["orderNo", "colorCode", "kanbanCode"];
+                        var _dailyOperations = this.removeDuplicates(dailyOperations, filters);
+                        for (var dailyOperation of _dailyOperations) {
+                            jobsGetQC.push(this.fabricQualityControlCollection.aggregate([
+                                { $unwind: "$fabricGradeTests" },
                                 {
                                     $match: {
-                                        "type": "input",
                                         "_deleted": false,
-                                        "kanban.selectedProductionOrderDetail.code": prodOrder.colorCode,
-                                        "kanban.productionOrder.orderNo": prodOrder.orderNo
+                                        "productionOrderNo": dailyOperation.orderNo
                                     }
                                 }, {
-                                    $project:
+                                    $group:
                                     {
-                                        "orderNo": "$kanban.productionOrder.orderNo",
-                                        "kanbanCode": "$kanban.code",
-                                        "colorCode": "$kanban.selectedProductionOrderDetail.code",
-                                        "input": 1
+                                        "_id": "$fabricGradeTests.grade",
+                                        "productionOrderNo": { "$first": "$productionOrderNo" },
+                                        "qty": { "$sum": "$fabricGradeTests.initLength" },
                                     }
+                                }, {
+                                    $sort: { "_id": 1 }
                                 }
                             ]).toArray());
                         }
-                        Promise.all(jobsGetDailyOperation).then(dailyOperations => {//Get DailyOperation
-                            dailyOperations = [].concat.apply([], dailyOperations);
-                            if (dailyOperations.length > 0) {
-                                var jobsGetQC = [];
-                                for (var prodOrder of prodOrders) {
-                                    var _dailyOperations = dailyOperations.filter(function (dailyOperation) {
-                                        return dailyOperation.orderNo === prodOrder.orderNo && dailyOperation.colorCode === prodOrder.colorCode;
-                                    })
-                                    var filters = ["orderNo", "colorCode", "kanbanCode"];
-                                    _dailyOperations = this.removeDuplicates(_dailyOperations, filters);
-
-                                    if (_dailyOperations.length > 0) {
-                                        var kanbanCodes = [];
-                                        _dailyOperations.some(function (dailyOperation, idx) {
-                                            kanbanCodes.push(dailyOperation.kanbanCode);
-                                        });
-                                        var sum = _dailyOperations
-                                            .map(dailyOperation => dailyOperation.input)
-                                            .reduce(function (prev, curr, index, arr) {
-                                                return prev + curr;
-                                            }, 0);
-
-                                        for (var dailyOperation of _dailyOperations) {
-                                            jobsGetQC.push(this.fabricQualityControlCollection.aggregate([
-                                                {
-                                                    $match: {
-                                                        "_deleted": false,
-                                                        "productionOrderNo": dailyOperation.orderNo,
-                                                        "kanbanCode": dailyOperation.kanbanCode
-                                                    }
-                                                }, {
-                                                    $project:
-                                                    {
-                                                        "productionOrderNo": 1,
-                                                        "kanbanCode": 1,
-                                                        "orderQuantity": { $sum: "$fabricGradeTests.initLength" }
-                                                    }
-                                                }
-                                            ]).toArray());
-                                        }
-
-                                        prodOrder.input = sum;
-                                        prodOrder.kanbanCodes = kanbanCodes;
-                                        prodOrder.status = "Sudah dalam produksi";
-                                        prodOrder.orderQuantity = 0;
-                                        prodOrder.detail = `${prodOrder.input} on production\n${prodOrder.orderQuantity} on qc`;
-
-                                    }
-                                    else {
-                                        prodOrder.status = "Belum masuk produksi";
-                                        prodOrder.detail = `0 on production\n0 on qc`;
-                                        prodOrder.input = 0;
-                                        prodOrder.kanbanCodes = [];
-                                    }
-                                }
-                                Promise.all(jobsGetQC).then(qualityControls => {//Get QC
-                                    qualityControls = [].concat.apply([], qualityControls);
-                                    if (qualityControls.length > 0) {
-                                        for (var prodOrder of prodOrders) {
-                                            var _qualityControls = qualityControls.filter(function (qualityControl) {
-                                                return qualityControl.productionOrderNo === prodOrder.orderNo && prodOrder.kanbanCodes.includes(qualityControl.kanbanCode);
-                                            })
-                                            filters = ["productionOrderNo", "kanbanCode"];
-                                            _qualityControls = this.removeDuplicates(_qualityControls, filters);
-
-                                            if (_qualityControls.length > 0) {
-                                                var _orderQuantity = _qualityControls
-                                                    .map(qualityControl => qualityControl.orderQuantity)
-                                                    .reduce(function (prev, curr, index, arr) {
-                                                        return prev + curr;
-                                                    }, 0);
-                                                prodOrder.orderQuantity = _orderQuantity;
-                                                prodOrder.input = prodOrder.input - prodOrder.orderQuantity;
-                                                prodOrder.status = "Sudah dalam qc";
-                                                prodOrder.detail = `${prodOrder.input} on production\n${prodOrder.orderQuantity} on qc`;
-
-                                            }
-                                            else {
-                                                if (prodOrder.kanbanCodes.length > 0) {
-                                                    prodOrder.orderQuantity = 0;
-                                                    prodOrder.status = "Sudah dalam produksi";
-                                                    prodOrder.detail = `${prodOrder.input} on production\n${prodOrder.orderQuantity} on qc`;
-                                                }
-                                            }
-                                        }
-                                        resolve(prodOrders);
-                                    }
-                                    else {
-                                        for (var prodOrder of prodOrders) {
-                                            if (prodOrder.input > 0) {
-                                                prodOrder.status = "Sudah dalam produksi";
-                                                prodOrder.detail = `${prodOrder.input} on production\n0 on qc`;
-                                            }
-                                        }
-                                        resolve(prodOrders);
-                                    }
-
-                                })
-                            }
-                            else {
-                                for (var prodOrder of prodOrders) {
-                                    prodOrder.status = "Belum masuk produksi";
-                                    prodOrder.detail = `0 on production\n0 on qc`;
-                                }
-                                resolve(prodOrders);
-                            }
+                        if (jobsGetQC.length == 0) {
+                            jobsGetQC.push(Promise.resolve(null))
+                        }
+                        Promise.all(jobsGetQC).then(qualityControls => {
+                            qualityControls = [].concat.apply([], qualityControls);
+                            qualityControls = this.cleanUp(qualityControls);
+                            Object.assign(data, { qualityControls: qualityControls });
+                            resolve(data);
                         })
-                    }
-                    else {
-                        resolve(prodOrders);
-                    }
+                    })
                 })
         });
     }
+
     removeDuplicates(arr, filters) {
         var new_arr = [];
         var lookup = {};
@@ -752,5 +915,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
         }
 
         return new_arr;
+    }
+
+    cleanUp(input) {
+        var newArr = [];
+        for (var i = 0; i < input.length; i++) {
+            if (input[i]) {
+                newArr.push(input[i]);
+            }
+        }
+        return newArr;
     }
 }
