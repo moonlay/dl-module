@@ -91,7 +91,7 @@ module.exports = class PackingManager extends BaseManager {
 
 
                                                 var createPackingProduct = packing.items.map(item => {
-                                                    var pName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
+                                                    var pName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade}`;
                                                     var packingProduct = {
                                                         code: generateCode(),
                                                         currency: {},
@@ -104,9 +104,20 @@ module.exports = class PackingManager extends BaseManager {
                                                         uomId: uom._id
 
                                                     };
-                                                    return this.productManager.create(packingProduct);
+                                                    return this.productManager.create(packingProduct)
                                                 })
                                                 return Promise.all(createPackingProduct)
+                                                    .then((packingProducts) => {
+
+                                                        for (var packingProductId of packingProducts) {                                                       
+                                                            var index= packingProducts.indexOf(packingProductId)
+                                                                packing.items[index].productId = new ObjectId(packingProductId.toString())
+     
+                                                        }
+                                                        var newPacking = packing;
+                                                        return this.collection.update(newPacking);
+                                                    })
+
                                             }
                                         }
                                     })
@@ -132,7 +143,7 @@ module.exports = class PackingManager extends BaseManager {
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packing.items.map(item => {
-                                    var productName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
+                                    var productName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
