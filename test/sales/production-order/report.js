@@ -368,6 +368,7 @@ it("#13. should success when create daily operation", function (done) {
 it("#14. should success get all data Production Order when search report without parameter", function (done) {
     var query = {
         page: 1,
+        size: 20,
         header: "application/json",
         filter: {}
     };
@@ -385,6 +386,7 @@ it("#14. should success get all data Production Order when search report without
 it("#15. should success get all data Production Order when search report without parameter (header : application/xls)", function (done) {
     var query = {
         page: 1,
+        size: 20,
         header: "application/xls",
         filter: {}
     };

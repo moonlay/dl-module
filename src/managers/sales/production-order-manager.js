@@ -521,6 +521,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     getReport(query) {
         return new Promise((resolve, reject) => {
+            if(!query.size){
+                query.size=20;
+            }
+            if(!query.page){
+                query.page=1;
+            }
             var _page = parseInt(query.page);
             var _size = parseInt(query.size);
             var qry = Object.assign({});
@@ -748,10 +754,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             } else if (prodOrder.input == 0) {
                                 prodOrder.status = "Belum dalam produksi";
                             }
-                            prodOrder._orderQuantity = prodOrder.quantity;
-                            prodOrder._orderQuantity = prodOrder._orderQuantity - prodOrder.input;
-                            prodOrder.input = prodOrder.input - prodOrder.orderQuantityQC;
-                            prodOrder.detail = `${prodOrder._orderQuantity} di spp\n${prodOrder.input} di produksi\n${prodOrder.orderQuantityQC} di pemeriksaan`;
+                            prodOrder.detail = `${prodOrder.quantity} di spp\n${prodOrder.input} di produksi\n${prodOrder.orderQuantityQC} di pemeriksaan`;
 
                         }
                         var results = {
@@ -824,8 +827,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     var jobsGetDailyOperation = [];
                     for (var prodOrder of _prodOrders) {
                         jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
-                            {
-                                $unwind: "$machine.steps"
+                             {
+                                $unwind: "$kanban.instruction.steps"
                             },
                             {
                                 $match: {
@@ -840,8 +843,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                     "orderNo": "$kanban.productionOrder.orderNo",
                                     "kanbanCode": "$kanban.code",
                                     "machine": "$machine.name",
-                                    "step": "$machine.steps.step.process",
-                                    "cmp": { "$eq": ["$stepId", "$machine.steps.stepId"] },
+                                    "step": "$kanban.instruction.steps.process",
+                                    "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
                                     "qty": "$input"
                                 }
                             },
