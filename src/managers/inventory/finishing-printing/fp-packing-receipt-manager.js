@@ -37,7 +37,37 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [packingCodeFilter];
+            var dateFilter = {
+                "date": {
+                    "$regex": regex
+                }
+            };
+            var buyerFilter = {
+                "buyer": {
+                    "$regex": regex
+                }
+            };
+            var productionOrderNoFilter = {
+                "productionOrderNo": {
+                    "$regex": regex
+                }
+            };
+            var colorNameFilter = {
+                "colorName": {
+                    "$regex": regex
+                }
+            };
+            var constructionFilter = {
+                "construction": {
+                    "$regex": regex
+                }
+            };
+            var createdByFilter = {
+                "_createdBy": {
+                    "$regex": regex
+                }
+            };
+            keywordFilter["$or"] = [packingCodeFilter, dateFilter, buyerFilter, productionOrderNoFilter, colorNameFilter, constructionFilter, createdByFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -89,13 +119,23 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 }
 
                 if (valid.items) {
+                    var itemErrors = [];
                     for (var i = 0; i < _packing.items.length; i++) {
                         for (var j = 0; j < valid.items.length; j++) {
+                            var itemError = {};
                             if (i === j) {
                                 if (valid.items[j].quantity !== _packing.items[i].quantity && (!valid.items[j].notes || valid.items[j].notes === "")) {
-                                    errors["notes"] = i18n.__("PackingReceipt.items.notes.isRequired:%s is required", i18n.__("PackingReceipt.items.notes._:Notes")); //"Note harus diisi"; 
+                                    itemError["notes"] = i18n.__("PackingReceipt.items.notes.isRequired:%s is required", i18n.__("PackingReceipt.items.notes._:Notes")); //"Note harus diisi"; 
                                 }
                             }
+                        }
+                        itemErrors.push(itemError);
+                    }
+
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            errors.items = itemErrors;
+                            break;
                         }
                     }
                 }
