@@ -119,6 +119,7 @@ it("#02. should success when delete all exist data production order", function (
 it("#03. should success get all data Production Order (0 data) when searh report without parameter", function (done) {
     var query = {
         page: 1,
+        size: 20,
         header: "application/json",
         filter: {}
     };
@@ -178,6 +179,7 @@ it("#04. should success when create new 10 data Production Order with 2 detail c
 it("#05. should success get all data Production Order when searh report without parameter", function (done) {
     var query = {
         page: 1,
+        size: 20,
         header: "application/json",
         filter: {}
     };
@@ -196,6 +198,7 @@ it("#05. should success get all data Production Order when searh report without 
 it("#06. should success get all data Production Order (2 data) when searh report with Sales Contract No parameter", function (done) {
     var query = {
         page: 1,
+        size: 20,
         header: "application/json",
         filter: { salesContractNo: salesContractNo }
     };
@@ -214,6 +217,7 @@ it("#06. should success get all data Production Order (2 data) when searh report
 it("#07. should success get all data Production Order (2 data) when searh report with Order No parameter", function (done) {
     var query = {
         page: 1,
+        size: 20,
         header: "application/json",
         filter: { orderNo: orderNo }
     };
@@ -232,6 +236,7 @@ it("#07. should success get all data Production Order (2 data) when searh report
 it("#08. should success get all data Production Order (20 data) when searh report with Order Type parameter", function (done) {
     var query = {
         page: 1,
+        size: 20,
         header: "application/json",
         filter: { orderTypeId: dataProcessType1.orderTypeId }
     };
@@ -250,6 +255,7 @@ it("#08. should success get all data Production Order (20 data) when searh repor
 it("#09. should success get all data Production Order (10 data) when searh report with Process Type parameter", function (done) {
     var query = {
         page: 1,
+        size: 20,
         header: "application/json",
         filter: { processTypeId: dataProcessType1._id }
     };
@@ -277,6 +283,7 @@ it("#09. should success get all data Production Order (10 data) when searh repor
 it("#10. should success get all data Production Order (10 data) when searh report with buyer parameter", function (done) {
     var query = {
         page: 1,
+        size: 20,
         header: "application/json",
         filter: { buyerId: dataBuyer1._id }
     };
@@ -304,6 +311,7 @@ it("#10. should success get all data Production Order (10 data) when searh repor
 it("#11. should success get all data Production Order (10 data) when searh report with account parameter", function (done) {
     var query = {
         page: 1,
+        size: 20,
         header: "application/json",
         filter: { accountId: dataAccount1._id }
     };
