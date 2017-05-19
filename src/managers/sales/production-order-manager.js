@@ -521,11 +521,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     getReport(query) {
         return new Promise((resolve, reject) => {
-            if(!query.size){
-                query.size=20;
+            if (!query.size) {
+                query.size = 20;
             }
-            if(!query.page){
-                query.page=1;
+            if (!query.page) {
+                query.page = 1;
             }
             var _page = parseInt(query.page);
             var _size = parseInt(query.size);
@@ -827,7 +827,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     var jobsGetDailyOperation = [];
                     for (var prodOrder of _prodOrders) {
                         jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
-                             {
+                            {
                                 $unwind: "$kanban.instruction.steps"
                             },
                             {
@@ -843,6 +843,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                     "orderNo": "$kanban.productionOrder.orderNo",
                                     "kanbanCode": "$kanban.code",
                                     "machine": "$machine.name",
+                                    "color": "$kanban.selectedProductionOrderDetail.colorRequest",
                                     "step": "$kanban.instruction.steps.process",
                                     "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
                                     "qty": "$input"
@@ -850,6 +851,21 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             },
                             {
                                 $match: { "cmp": true }
+                            }, {
+                                $group:
+                                {
+                                    "_id": {
+                                        "orderNo": "$orderNo",
+                                        "machine": "$machine",
+                                        "step": "$step",
+                                        "color": "$color"
+                                    },
+                                    "kanbanCode": { $first: "$kanbanCode" },
+                                    "qty": { "$sum": "$qty" }
+                                }
+                            },
+                            {
+                                $sort:{"_createdDate":1}
                             }
                         ]).toArray());
                     }
@@ -858,6 +874,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }
                     Promise.all(jobsGetDailyOperation).then(dailyOperations => {
                         dailyOperations = [].concat.apply([], dailyOperations);
+                        if (dailyOperations.length > 0) {
+                            for (var dailyOperation of dailyOperations) {
+                                var _do = dailyOperation._id;
+                                Object.assign(dailyOperation, _do);
+                            }
+                        }
                         dailyOperations = this.cleanUp(dailyOperations);
                         Object.assign(data, { dailyOperations: dailyOperations });
                         var jobsGetQC = []
@@ -869,7 +891,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 {
                                     $match: {
                                         "_deleted": false,
-                                        "productionOrderNo": dailyOperation.orderNo
+                                        "productionOrderNo": dailyOperation.orderNo,
+                                        // "kanbanCode": dailyOperation.kanbanCode
                                     }
                                 }, {
                                     $group:
