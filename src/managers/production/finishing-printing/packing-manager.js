@@ -73,7 +73,7 @@ module.exports = class PackingManager extends BaseManager {
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packing.items.map(item => {
-                                    var productName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
+                                    var productName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -128,74 +128,74 @@ module.exports = class PackingManager extends BaseManager {
 
     }
 
-    _afterUpdate(id) {
+    // _afterUpdate(id) {
 
 
-        return this.getSingleById(id)
-            .then((packing) => {
-                return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
-                    .then((salesContractNo) => {
-                        var query = {
-                            _deleted: false,
-                            unit: packing.packingUom
-                        };
-                        return this.uomManager.getSingleByQueryOrDefault(query)
-                            .then((uom) => {
-                                var getProduct = packing.items.map(item => {
-                                    var productName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
-                                    query = {
-                                        _deleted: false,
-                                        name: productName
-                                    };
-                                    return this.productManager.getSingleByQueryOrDefault(query);
+    //     return this.getSingleById(id)
+    //         .then((packing) => {
+    //             return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
+    //                 .then((salesContractNo) => {
+    //                     var query = {
+    //                         _deleted: false,
+    //                         unit: packing.packingUom
+    //                     };
+    //                     return this.uomManager.getSingleByQueryOrDefault(query)
+    //                         .then((uom) => {
+    //                             var getProduct = packing.items.map(item => {
+    //                                 var productName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade}`;
+    //                                 query = {
+    //                                     _deleted: false,
+    //                                     name: productName
+    //                                 };
+    //                                 return this.productManager.getSingleByQueryOrDefault(query);
 
-                                });
-                                return Promise.all(getProduct)
-                                    .then((products) => {
-                                        for (var product of products) {
-                                            if (!product) {
-                                                var dataPackingProduct = products
-                                                return Promise.all(dataPackingProduct)
-                                            } else {
-
-
-                                                var createPackingProduct = packing.items.map(item => {
-                                                    var pName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade}`;
-                                                    var packingProduct = {
-                                                        code: generateCode(),
-                                                        currency: {},
-                                                        description: "",
-                                                        name: pName,
-                                                        price: 0,
-                                                        properties: {},
-                                                        tags: `sales contract #${salesContractNo.salesContractNo}`,
-                                                        uom: uom,
-                                                        uomId: uom._id
-
-                                                    };
-                                                    return this.productManager.update(packingProduct)
-                                                })
-                                                return Promise.all(createPackingProduct)
-                                                    .then((packingProducts) => {
-
-                                                        for (var packingProductId of packingProducts) {
-                                                            var index = packingProducts.indexOf(packingProductId)
-                                                            packing.items[index].productId = new ObjectId(packingProductId.toString())
-
-                                                        }
-                                                        var newPacking = packing;
-                                                        return this.collection.update(newPacking);
-                                                    }).then(results => id);
-
-                                            }
-                                        }
-                                    }).then(results => id);
-                            })
-                    })
-            })
+    //                             });
+    //                             return Promise.all(getProduct)
+    //                                 .then((products) => {
+    //                                     for (var product of products) {
+    //                                         if (!product) {
+    //                                             var dataPackingProduct = products
+    //                                             return Promise.all(dataPackingProduct)
+    //                                         } else {
 
 
-    }
+    //                                             var createPackingProduct = packing.items.map(item => {
+    //                                                 var pName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade}`;
+    //                                                 var packingProduct = {
+    //                                                     code: generateCode(),
+    //                                                     currency: {},
+    //                                                     description: "",
+    //                                                     name: pName,
+    //                                                     price: 0,
+    //                                                     properties: {},
+    //                                                     tags: `sales contract #${salesContractNo.salesContractNo}`,
+    //                                                     uom: uom,
+    //                                                     uomId: uom._id
+
+    //                                                 };
+    //                                                 return this.productManager.update(packingProduct)
+    //                                             })
+    //                                             return Promise.all(createPackingProduct)
+    //                                                 .then((packingProducts) => {
+
+    //                                                     for (var packingProductId of packingProducts) {
+    //                                                         var index = packingProducts.indexOf(packingProductId)
+    //                                                         packing.items[index].productId = new ObjectId(packingProductId.toString())
+
+    //                                                     }
+    //                                                     var newPacking = packing;
+    //                                                     return this.collection.update(newPacking);
+    //                                                 }).then(results => id);
+
+    //                                         }
+    //                                     }
+    //                                 }).then(results => id);
+    //                         })
+    //                 })
+    //         })
+
+
+    // }
 
 
 
