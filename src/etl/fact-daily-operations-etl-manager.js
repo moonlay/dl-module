@@ -103,8 +103,8 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                 kanbanGrade: item.kanban ? `'${item.kanban.grade}'` : null,
                 kanbanCartCartNumber: item.kanban.cart ? `'${item.kanban.cart.cartNumber}'` : null,
                 kanbanCartCode: item.kanban.cart ? `'${item.kanban.cart.code}'` : null,
-                kanbanCartPcs: item.kanban.cart ? `'${item.kanban.cart.pcs}'` : null,
-                kanbanCartQty: item.kanban.cart ? `'${item.kanban.cart.qty}'` : null,
+                kanbanCartPcs: item.kanban.cart ? `${item.kanban.cart.pcs}` : null,
+                kanbanCartQty: item.kanban.cart ? `${item.kanban.cart.qty}` : null,
                 kanbanInstructionCode: item.kanban.instruction ? `'${item.kanban.instruction.code}'` : null,
                 kanbanInstructionName: item.kanban.instruction ? `'${item.kanban.instruction.name}'` : null,
                 orderType: item.kanban.productionOrder && item.kanban.productionOrder.orderType ? `'${item.kanban.productionOrder.orderType.name}'` : null,
@@ -114,7 +114,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                 machineCode: item.machine && item.machine.code ? `'${item.machine.code}'` : null,
                 machineCondition: item.machine && item.machine.condition ? `'${item.machine.condition}'` : null,
                 machineManufacture: item.machine && item.machine.manufacture ? `'${item.machine.manufacture}'` : null,
-                machineMonthlyCapacity: item.machine && item.machine.monthlyCapacity  ? `${item.machine.monthlyCapacity}` : null,
+                machineMonthlyCapacity: item.machine && item.machine.monthlyCapacity ? `${item.machine.monthlyCapacity}` : null,
                 machineName: item.machine && item.machine.name ? `'${item.machine.name}'` : null,
                 machineProcess: item.machine && item.machine.process ? `'${item.machine.process}'` : null,
                 machineYear: item.machine && item.machine.year ? `'${item.machine.year}'` : null,
@@ -174,6 +174,17 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
+
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\Itta And Leslie\\Desktop\\daily.txt";
+
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
 
                         return Promise.all(command)
                             .then((results) => {
