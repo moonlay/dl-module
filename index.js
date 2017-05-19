@@ -43,7 +43,9 @@ module.exports = {
             finishingPrinting: {
                 FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager")
             },
-            InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager")
+            InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager"),
+            InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
+            InventoryMovementManager: require("./src/managers/inventory/inventory-movement-manager")
         },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
@@ -128,6 +130,7 @@ module.exports = {
                     packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util")
                 },
                 inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),
+                inventoryMovement: require('./test/data-util/inventory/inventory-movement-data-util'),
                 inventorySummary: require('./test/data-util/inventory/inventory-summary-data-util')
             },
             production: {
@@ -161,6 +164,8 @@ module.exports = {
         factWeavingSalesContract: require("./src/etl/fact-weaving-sales-contract-etl-manager"),
         factFinishingPrintingSalesContract: require("./src/etl/fact-finishing-printing-sales-contract-etl-manager"),
         factSpinningSalesContract: require("./src/etl/fact-spinning-sales-contract-etl-manager"),
-        factDailyOperations: require("./src/etl/fact-daily-operations-etl-manager")
+        factDailyOperations: require("./src/etl/fact-daily-operations-etl-manager"),
+        factFabricQualityControl: require("./src/etl/fact-fabric-quality-control-etl-manager"),
+        factProductionOrderStatus: require("./src/etl/fact-production-order-status-etl-manager")
     }
 }

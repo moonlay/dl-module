@@ -24,10 +24,12 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');
     test('@ETL/FACT-MONITORING-EVENT', './etl/fact-monitoring-event');
     test('@ETL/FACT-PRODUCTION-ORDER', './etl/fact-production-order');
+    test('@ETL/FACT-PRODUCTION-ORDER-STATUS', './etl/fact-production-order-status');
     test('@ETL/FACT-WEAVING-SALES-CONTRACT', './etl/fact-weaving-sales-contract');
     test('@ETL/FACT-FINISHING-PRINTING-SALES-CONTRACT', './etl/fact-finishing-printing-sales-contract');
     test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/fact-spinning-sales-contract');
     test('@ETL/FACT-DAILY-OPERATIONS', './etl/fact-daily-operations');
+    test('@ETL/FACT-QUALITY-CONTROL', './etl/fact-fabric-quality-control');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
