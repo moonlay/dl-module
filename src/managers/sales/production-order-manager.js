@@ -524,7 +524,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             var _page = parseInt(query.page);
             var _size = parseInt(query.size);
             var qry = Object.assign({});
-            var filter = query.filter;
+            var filter = query.filter || {};
 
             if (filter.salesContractNo) {
                 Object.assign(qry, {
