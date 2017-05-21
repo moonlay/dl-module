@@ -99,7 +99,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
         });
         var getPacking = valid.packingId && ObjectId.isValid(valid.packingId) ? this.packingManager.getSingleByIdOrDefault(valid.packingId) : Promise.resolve(null);
 
-        var getStorage = this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray();
+        var getStorage = valid.items ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
 
         valid.items = valid.items instanceof Array ? valid.items : [];
         var products = valid.items.map((item) => item.product ? item.product : null);
@@ -132,7 +132,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                     errors["declined"] = i18n.__("PackingReceipt.declined.isRequired:%s is required", i18n.__("PackingReceipt.declined._:Declined")); //"Grade harus diisi";   
                 }
 
-                if (valid.items) {
+                if (valid.items.length > 0) {
                     var itemErrors = [];
                     for (var i = 0; i < _packing.items.length; i++) {
                         var itemError = {};
@@ -160,7 +160,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 valid.packingCode = _packing.code;
 
                 //Inventory Document Validation
-                valid.storageId = new ObjectId(_storages[0]._id);
+                valid.storageId = _storages.length > 0 ? new ObjectId(_storages[0]._id) : null;
                 valid.referenceType = "Penerimaan Packing Gudang Jadi";
                 valid.type = "IN";
 
@@ -207,6 +207,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
     _afterInsert(id) {
         return this.getSingleById(id)
             .then((packingReceipt) => {
+                var packingReceiptId = id;
                 var packingReceipt = packingReceipt;
                 return this.packingManager.getSingleById(packingReceipt.packingId)
                     .then((packing) => {
@@ -215,7 +216,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                             .then((id) => {
                                 packingReceipt.referenceNo = `RFNO-${packingReceipt.code}`;
                                 return this.inventoryDocumentManager.create(packingReceipt)
-                                    .then((inventoryDocument) => Promise.resolve(id))
+                                    .then((inventoryDocument) => Promise.resolve(packingReceiptId))
                             })
                     })
             })

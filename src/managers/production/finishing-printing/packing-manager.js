@@ -73,7 +73,7 @@ module.exports = class PackingManager extends BaseManager {
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packing.items.map(item => {
-                                    var productName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
+                                    var productName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -91,7 +91,7 @@ module.exports = class PackingManager extends BaseManager {
 
 
                                                 var createPackingProduct = packing.items.map(item => {
-                                                    var pName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
+                                                    var pName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
                                                     var packingProduct = {
                                                         code: generateCode(),
                                                         currency: {},
@@ -132,7 +132,7 @@ module.exports = class PackingManager extends BaseManager {
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packing.items.map(item => {
-                                    var productName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
+                                    var productName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -150,7 +150,7 @@ module.exports = class PackingManager extends BaseManager {
 
 
                                                 var createPackingProduct = packing.items.map(item => {
-                                                    var pName = `${salesContractNo.salesContractNo} /${packing.colorName} / ${packing.construction} / ${item.lot} / ${item.grade} / ${item.length}`;
+                                                    var pName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
                                                     var packingProduct = {
                                                         code: generateCode(),
                                                         currency: {},
