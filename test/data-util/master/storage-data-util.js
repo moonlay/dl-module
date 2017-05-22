@@ -40,5 +40,14 @@ class StorageDataUtil {
         };
         return this.getSert(data);
     }
+
+    getPackingTestData() {
+        var data = {
+            code: 'UT/GudangJadi',
+            name: 'Gudang Jadi Finishing Printing',
+            description: ''
+        };
+        return this.getSert(data);
+    }
 }
 module.exports = new StorageDataUtil();
