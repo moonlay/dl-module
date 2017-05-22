@@ -851,22 +851,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             },
                             {
                                 $match: { "cmp": true }
-                            }, {
-                                $group:
-                                {
-                                    "_id": {
-                                        "orderNo": "$orderNo",
-                                        "machine": "$machine",
-                                        "step": "$step",
-                                        "color": "$color"
-                                    },
-                                    "kanbanCode": { $first: "$kanbanCode" },
-                                    "qty": { "$sum": "$qty" }
-                                }
                             },
-                            {
-                                $sort:{"_createdDate":1}
-                            }
+                            { $sort: { "kanbanCode": -1, "_createdDate": 1 } }
                         ]).toArray());
                     }
                     if (jobsGetDailyOperation.length == 0) {
@@ -874,14 +860,26 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }
                     Promise.all(jobsGetDailyOperation).then(dailyOperations => {
                         dailyOperations = [].concat.apply([], dailyOperations);
+                        var _dailyOperations = []
                         if (dailyOperations.length > 0) {
-                            for (var dailyOperation of dailyOperations) {
-                                var _do = dailyOperation._id;
-                                Object.assign(dailyOperation, _do);
-                            }
+                            dailyOperations.reduce(function (res, value) {
+                                if (!res[`${value.step}${value.machine}${value.color}`]) {
+                                    res[`${value.step}${value.machine}${value.color}`] = {
+                                        qty: 0,
+                                        orderNo: value.orderNo,
+                                        color: value.color,
+                                        step: value.step,
+                                        machine: value.machine,
+                                        kanbanCode: value.kanbanCode
+                                    };
+                                    _dailyOperations.push(res[`${value.step}${value.machine}${value.color}`])
+                                }
+                                res[`${value.step}${value.machine}${value.color}`].qty += value.qty
+                                return res;
+                            }, {});
                         }
-                        dailyOperations = this.cleanUp(dailyOperations);
-                        Object.assign(data, { dailyOperations: dailyOperations });
+                        _dailyOperations = this.cleanUp(_dailyOperations);
+                        Object.assign(data, { dailyOperations: _dailyOperations });
                         var jobsGetQC = []
                         var filters = ["orderNo", "colorCode", "kanbanCode"];
                         var _dailyOperations = this.removeDuplicates(dailyOperations, filters);
@@ -892,7 +890,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                     $match: {
                                         "_deleted": false,
                                         "productionOrderNo": dailyOperation.orderNo,
-                                        // "kanbanCode": dailyOperation.kanbanCode
+                                        "kanbanCode": dailyOperation.kanbanCode
                                     }
                                 }, {
                                     $group:
