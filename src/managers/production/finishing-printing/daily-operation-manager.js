@@ -288,6 +288,9 @@ module.exports = class DailyOperationManager extends BaseManager {
                             errors["kanban"] = i18n.__(`Output tidak dapat diedit, karena sudah ada data Input proses selanjutnya`, i18n.__("DailyOperation.kanban._:Kanban"));
                     }
 
+                    if(!valid.shift || valid.shift === "")
+                        errors["shift"] = i18n.__("Harus diisi", i18n.__("DailyOperation.shift._:Shift"));
+
                     if(!valid.machineId || valid.machineId.toString() === ""){
                         errors["machine"] = i18n.__("Harus diisi", i18n.__("DailyOperation.machine._:Machine")); //"Machine tidak ditemukan";
                     }else if(!_machine){
