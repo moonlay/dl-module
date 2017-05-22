@@ -879,6 +879,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }, {});
                         }
                         _dailyOperations = this.cleanUp(_dailyOperations);
+                        dailyOperations = this.cleanUp(dailyOperations);
                         Object.assign(data, { dailyOperations: _dailyOperations });
                         var jobsGetQC = []
                         var filters = ["orderNo", "colorCode", "kanbanCode"];
