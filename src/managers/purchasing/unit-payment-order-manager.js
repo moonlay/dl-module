@@ -14,11 +14,41 @@ var generateCode = require('../../utils/code-generator');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 
 module.exports = class UnitPaymentOrderManager extends BaseManager {
+
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.purchasing.collection.UnitPaymentOrder);
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
+        this.unitReceiptNoteFields = ["no",
+            "date",
+            "items.product._id",
+            "items.product.code",
+            "items.product.name",
+            "items.deliveredQuantity",
+            "items.deliveredUom._id",
+            "items.deliveredUom.unit",
+            "items.pricePerDealUnit",
+            "items.currency._id",
+            "items.currency.code",
+            "items.currency.symbol",
+            "items.currency.rate",
+            "items.currencyRate",
+            "items.correction",
+            "items.purchaseOrderId",
+            "items.purchaseOrder._id",
+            "items.purchaseOrder.purchaseOrderExternal.no",
+            "items.purchaseOrder.purchaseOrderExternal._id",
+            "items.purchaseOrder.currency._id",
+            "items.purchaseOrder.currency.symbol",
+            "items.purchaseOrder.currency.code",
+            "items.purchaseOrder.currency.rate",
+            "items.purchaseOrder.purchaseRequest.no",
+            "items.purchaseOrder.purchaseRequest._id",
+            "items.purchaseOrder.items.useIncomeTax",
+            "items.purchaseOrder.items.product._id",
+            "items.purchaseOrder.items.product.code",
+            "items.purchaseOrder.items.product.name"];
     }
 
     _validate(unitPaymentOrder) {
@@ -28,7 +58,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             var getUnitReceiptNote = [];
             if (Object.getOwnPropertyNames(valid).length > 0) {
                 for (var item of valid.items) {
-                    getUnitReceiptNote.push(ObjectId.isValid(item.unitReceiptNoteId) ? this.unitReceiptNoteManager.getSingleByIdOrDefault(item.unitReceiptNoteId) : Promise.resolve(null));
+                    getUnitReceiptNote.push(ObjectId.isValid(item.unitReceiptNoteId) ? this.unitReceiptNoteManager.getSingleByIdOrDefault(item.unitReceiptNoteId, this.unitReceiptNoteFields) : Promise.resolve(null));
                 }
             }
             var getUnitPaymentOrderPromise = this.collection.singleOrDefault({
@@ -679,7 +709,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         return this.getSingleByQuery(query)
             .then((unitPaymentOrder) => {
                 var getUnitReceiptNotes = unitPaymentOrder.items.map((unitPaymentOrderItem) => {
-                    return this.unitReceiptNoteManager.getSingleById(unitPaymentOrderItem.unitReceiptNoteId)
+                    return this.unitReceiptNoteManager.getSingleById(unitPaymentOrderItem.unitReceiptNoteId, this.unitReceiptNoteFields)
                 })
                 return Promise.all(getUnitReceiptNotes)
                     .then((unitReceiptNotes) => {
