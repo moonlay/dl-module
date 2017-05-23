@@ -1224,7 +1224,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "poEksDate" : "$_createdDate",
                         "expectedDate": "$expectedDeliveryDate",
                         "poEksNo" : "$no",
-                        "dateDiff":{$divide: [ { $subtract: [ "$date","$items._createdDate"  ] }, 86400000 ]},
+                        "dateDiff":{$divide: [ { $subtract: [ "$_createdDate","$items._createdDate"  ] }, 86400000 ]},
                         "staff" : "$_createdBy"
                     }
                 },
