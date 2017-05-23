@@ -49,7 +49,27 @@ module.exports = class PackingManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [codeFilter, productionOrderNoFilter];
+            var buyerFilter = {
+                "buyer": {
+                    "$regex": regex
+                }
+            };
+            var colorNameFilter = {
+                "colorName": {
+                    "$regex": regex
+                }
+            };
+            var constructionFilter = {
+                "construction": {
+                    "$regex": regex
+                }
+            };
+            var motifFilter = {
+                "motif": {
+                    "$regex": regex
+                }
+            };
+            keywordFilter["$or"] = [codeFilter, productionOrderNoFilter, buyerFilter, colorNameFilter, constructionFilter, motifFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
