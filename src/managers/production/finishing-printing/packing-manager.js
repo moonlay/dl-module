@@ -7,6 +7,8 @@ var assert = require('assert');
 var generateCode = require("../../../utils/code-generator");
 
 var ProductionOrderManager = require('../../sales/production-order-manager');
+var ProductManager = require('../../master/product-manager');
+var UomManager = require('../../master/uom-manager');
 
 var Models = require("dl-models");
 var Map = Models.map;
@@ -22,6 +24,9 @@ module.exports = class PackingManager extends BaseManager {
         super(db, user);
         this.collection = this.db.use(Map.production.finishingPrinting.qualityControl.collection.Packing);
         this.productionOrderManager = new ProductionOrderManager(db, user);
+        this.productManager = new ProductManager(db, user);
+        this.uomManager = new UomManager(db, user);
+
     }
 
     _getQuery(paging) {
@@ -54,6 +59,125 @@ module.exports = class PackingManager extends BaseManager {
         data.code = generateCode();
         return Promise.resolve(data);
     }
+
+    _afterInsert(id) {
+
+        return this.getSingleById(id)
+            .then((packing) => {
+                return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
+                    .then((salesContractNo) => {
+                        var query = {
+                            _deleted: false,
+                            unit: packing.packingUom
+                        };
+                        return this.uomManager.getSingleByQueryOrDefault(query)
+                            .then((uom) => {
+                                var getProduct = packing.items.map(item => {
+                                    var productName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
+                                    query = {
+                                        _deleted: false,
+                                        name: productName
+                                    };
+                                    return this.productManager.getSingleByQueryOrDefault(query);
+
+                                });
+                                return Promise.all(getProduct)
+                                    .then((products) => {
+                                        for (var product of products) {
+                                            if (product) {
+                                                var dataPackingProduct = products
+                                                return Promise.all(dataPackingProduct)
+                                            } else {
+
+
+                                                var createPackingProduct = packing.items.map(item => {
+                                                    var pName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
+                                                    var packingProduct = {
+                                                        code: generateCode(),
+                                                        currency: {},
+                                                        description: "",
+                                                        name: pName,
+                                                        price: 0,
+                                                        properties: {},
+                                                        tags: `sales contract #${salesContractNo.salesContractNo}`,
+                                                        uom: uom,
+                                                        uomId: uom._id
+
+                                                    };
+                                                    return this.productManager.create(packingProduct);
+                                                })
+                                                return Promise.all(createPackingProduct)
+                                            }
+                                        }
+                                    })
+
+                                    .then(results => id);
+                            })
+                    })
+            })
+
+
+    }
+
+    _afterUpdate(id) {
+
+        return this.getSingleById(id)
+            .then((packing) => {
+                return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
+                    .then((salesContractNo) => {
+                        var query = {
+                            _deleted: false,
+                            unit: packing.packingUom
+                        };
+                        return this.uomManager.getSingleByQueryOrDefault(query)
+                            .then((uom) => {
+                                var getProduct = packing.items.map(item => {
+                                    var productName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
+                                    query = {
+                                        _deleted: false,
+                                        name: productName
+                                    };
+                                    return this.productManager.getSingleByQueryOrDefault(query);
+
+                                });
+                                return Promise.all(getProduct)
+                                    .then((products) => {
+                                        for (var product of products) {
+                                            if (product) {
+                                                var dataPackingProduct = products
+                                                return Promise.all(dataPackingProduct)
+                                            } else {
+
+
+                                                var createPackingProduct = packing.items.map(item => {
+                                                    var pName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
+                                                    var packingProduct = {
+                                                        code: generateCode(),
+                                                        currency: {},
+                                                        description: "",
+                                                        name: pName,
+                                                        price: 0,
+                                                        properties: {},
+                                                        tags: `sales contract #${salesContractNo.salesContractNo}`,
+                                                        uom: uom,
+                                                        uomId: uom._id
+
+                                                    };
+                                                    return this.productManager.create(packingProduct);
+                                                })
+                                                return Promise.all(createPackingProduct)
+                                            }
+                                        }
+                                    })
+
+                                    .then(results => id);
+                            })
+                    })
+            })
+
+    }
+
+
 
     _validate(fabricQualityControl) {
         var errors = {};
@@ -148,6 +272,8 @@ module.exports = class PackingManager extends BaseManager {
                 valid.buyerLocation = _productionOrder.buyer.type;
                 valid.colorName = targetColor.colorRequest;
                 valid.construction = `${_productionOrder.material.name} / ${_productionOrder.materialConstruction.name} / ${_productionOrder.materialWidth}`;
+
+                valid.salesContractNo = _productionOrder.salesContractNo;
 
                 // valid.items.forEach(test => {
                 //     test.pointSystem = valid.pointSystem;

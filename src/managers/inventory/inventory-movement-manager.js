@@ -57,6 +57,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
     _beforeInsert(data) {
         data.code = generateCode();
+        
         return Promise.resolve(data);
     }
 
@@ -151,6 +152,10 @@ module.exports = class InventoryMovementManager extends BaseManager {
                 valid.uomId = _uom._id;
                 valid.uom = _uom.unit;
 
+                if(valid.type == "OUT") {
+                    valid.quantity = valid.quantity * -1;
+                }
+
                 valid.before = _dbInventorySummary.quantity;
                 valid.after = _dbInventorySummary.quantity + valid.quantity;
 
@@ -192,5 +197,95 @@ module.exports = class InventoryMovementManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, productIndex, storageIndex, uomIndex]);
+    }
+
+    getMovementReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        }, 
+            query = {},
+            order = info.order || {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : undefined;
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : undefined;
+
+        var filterMovement = {};
+
+        if(info.storageId)
+            filterMovement.storageId = new ObjectId(info.storageId);
+
+        if(info.type && info.type != "")
+            filterMovement.type = info.type;
+
+        if(dateFrom && dateTo){
+            filterMovement.date = {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        }
+
+        query = { '$and': [_defaultFilter, filterMovement] };
+
+        var data = this._createIndexes()
+            .then((createIndexResults) => {
+                return !info.xls ?
+                    this.collection
+                        .where(query)
+                        .order(order)
+                        .execute() :
+                    this.collection
+                        .where(query)
+                        .page(info.page, info.size)
+                        .order(order)
+                        .execute();
+            });
+                    
+        return Promise.resolve(data);
+    }
+
+    getXls(result, filter) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var movement of result.data) {
+            index++;
+
+            var item = {};
+            item["No"] = index;
+            item["Storage"] = movement.storageName ? movement.storageName : '';
+            item["Tanggal"] = movement.date ? moment(movement.date).format(dateFormat) : '';
+            item["Nama Barang"] = movement.productName ? movement.productName : '';
+            item["UOM"] = movement.uom ? movement.uom : '';
+            item["Before"] = movement.before ? movement.before : 0;
+            item["Kuantiti"] = movement.quantity ? movement.quantity : 0;
+            item["After"] = movement.after ? movement.after : 0;
+            item["Status"] = movement.type ? movement.type : '';
+            
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Storage"] = "string";
+        xls.options["Tanggal"] = "string";
+        xls.options["Nama Barang"] = "string";
+        xls.options["UOM"] = "string";
+        xls.options["Before"] = "number";
+        xls.options["Kuantiti"] = "number";
+        xls.options["After"] = "number";        
+        xls.options["Status"] = "string";       
+
+        if (filter.dateFrom && filter.dateTo) {
+            xls.name = `Inventory Movement ${moment(new Date(filter.dateFrom)).format(dateFormat)} - ${moment(new Date(filter.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else {
+            xls.name = `Inventory Movement.xlsx`;
+        }
+
+        return Promise.resolve(xls);
     }
 }
