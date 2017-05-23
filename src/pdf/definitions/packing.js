@@ -264,25 +264,25 @@ module.exports = function (packing, offset) {
 
         styles: {
             size06: {
-                fontSize: 6
-            },
-            size07: {
-                fontSize: 7
-            },
-            size08: {
                 fontSize: 8
             },
-            size09: {
+            size07: {
                 fontSize: 9
             },
-            size10: {
+            size08: {
                 fontSize: 10
             },
+            size09: {
+                fontSize: 11
+            },
+            size10: {
+                fontSize: 12
+            },
             size15: {
-                fontSize: 15
+                fontSize: 17
             },
             size30: {
-                fontSize: 30
+                fontSize: 32
             },
             bold: {
                 bold: true
@@ -301,7 +301,7 @@ module.exports = function (packing, offset) {
             },
             tableHeader: {
                 bold: true,
-                fontSize: 8,
+                fontSize: 10,
                 color: 'black',
                 alignment: 'center'
             }
