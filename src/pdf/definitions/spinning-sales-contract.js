@@ -57,7 +57,7 @@ module.exports = function (salesContract) {
     var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
     var amountDec1=parseFloat(amount.toFixed(3));
     var amountDec=amountDec1.toString().split('.');
-    var spellAmount=amountbyCurrency;
+    var spellAmount=amount;
 
     if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
         amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
