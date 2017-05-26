@@ -80,6 +80,8 @@ module.exports = function (salesContract) {
         }
     }
     else if(amount % 1 !=0){
+        amountDec1=parseFloat(salesContract.amount.toFixed(2));
+        amountDec=amountDec1.toString().split('.');
         amount=parseFloat(salesContract.amount.toFixed(2));
         if(!amountDec[1]){
             spellAmount=salesContract.amount;
