@@ -74,7 +74,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
         return this.finishingPrintingSalesContractManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
-            }
+            },
         }, {
                 _deleted: 1,
                 _createdDate: 1,
@@ -201,7 +201,6 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
             var getFabricQualityControls = item.kanban ? this.fabricQualityControlManager.collection.find({
                 _deleted: false,
                 kanbanCode: item.kanban.code,
-                cartNo: item.kanban.cart.cartNumber
             }, {
                     dateIm: 1,
                     uom: 1,
@@ -247,11 +246,13 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
             var productionOrder = item.productionOrder;
             var kanban = item.kanban;
             var fabricQC = item.fabricQualityControl;
-            var dailyOperation = item.dailyOperation
+            var dailyOperation = item.dailyOperation;
+            var index = 0;
 
             if (fabricQC) {
                 var results = fabricQC.fabricGradeTests.map((fabricGradeTest) => {
                     var quantity = fabricGradeTest.initLength;
+                    index++;
 
                     return {
                         salesContractDate: finishingPrintingSC._createdDate ? `'${moment(finishingPrintingSC._createdDate).format("L")}'` : null,
@@ -273,7 +274,8 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                         fabricQualityControlQuantity: quantity ? `${quantity}` : null,
                         fabricQualityControlCode: fabricQC.code ? `'${fabricQC.code}'` : null,
                         orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
-                        deleted: `'${finishingPrintingSC._deleted}'`
+                        deleted: `'${finishingPrintingSC._deleted}'`,
+                        fabricqualitycontroltestindex: fabricQC.code ? `${index}` : null
                     }
                 });
                 return [].concat.apply([], results);
@@ -298,7 +300,8 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     fabricQualityControlQuantity: null,
                     fabricQualityControlCode: null,
                     orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
-                    deleted: `'${finishingPrintingSC._deleted}'`
+                    deleted: `'${finishingPrintingSC._deleted}'`,
+                    fabricqualitycontroltestindex: null
                 }
             }
         });
@@ -336,7 +339,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [dbo].[DL_Fact_Production_Order_Status_Temp]([salesContractDate], [salesContractNo], [salesContractQuantity], [productionOrderDate], [productionSalesContractNo], [productionOrderNo], [productionOrderQuantity], [kanbanDate], [kanbanSalesContractNo], [kanbanQuantity], [fabricQualityControlDate], [fabricQualityControlQuantity], [orderType], [deleted], [kanbanCode], [dailyOperationQuantity], [dailyOperationSalesContractNo], [dailyOperationCode], [fabricQualityControlCode], [cartNumber]) VALUES(${item.salesContractDate}, ${item.salesContractNo}, ${item.salesContractQuantity}, ${item.productionOrderDate}, ${item.productionSalesContractNo}, ${item.productionOrderNo}, ${item.productionOrderQuantity}, ${item.kanbanDate}, ${item.kanbanSalesContractNo}, ${item.kanbanQuantity}, ${item.fabricQualityControlDate}, ${item.fabricQualityControlQuantity}, ${item.orderType}, ${item.deleted}, ${item.kanbanCode}, ${item.dailyOperationQuantity}, ${item.dailyOperationSalesContractNo}, ${item.dailyOperationCode}, ${item.fabricQualityControlCode}, ${item.cartNumber});\n`;
+                                var queryString = `INSERT INTO [dbo].[DL_Fact_Production_Order_Status_Temp]([salesContractDate], [salesContractNo], [salesContractQuantity], [productionOrderDate], [productionSalesContractNo], [productionOrderNo], [productionOrderQuantity], [kanbanDate], [kanbanSalesContractNo], [kanbanQuantity], [fabricQualityControlDate], [fabricQualityControlQuantity], [orderType], [deleted], [kanbanCode], [dailyOperationQuantity], [dailyOperationSalesContractNo], [dailyOperationCode], [fabricQualityControlCode], [cartNumber], [fabricqualitycontroltestindex]) VALUES(${item.salesContractDate}, ${item.salesContractNo}, ${item.salesContractQuantity}, ${item.productionOrderDate}, ${item.productionSalesContractNo}, ${item.productionOrderNo}, ${item.productionOrderQuantity}, ${item.kanbanDate}, ${item.kanbanSalesContractNo}, ${item.kanbanQuantity}, ${item.fabricQualityControlDate}, ${item.fabricQualityControlQuantity}, ${item.orderType}, ${item.deleted}, ${item.kanbanCode}, ${item.dailyOperationQuantity}, ${item.dailyOperationSalesContractNo}, ${item.dailyOperationCode}, ${item.fabricQualityControlCode}, ${item.cartNumber}, ${item.fabricqualitycontroltestindex});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -353,7 +356,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                         this.sql.multiple = true;
 
                         // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\orderstatus.txt";
+                        // var path = "C:\\Users\\IttaAndLeslie\\Desktop\\orderstatus.txt";
 
                         // fs.writeFile(path, sqlQuery, function (error) {
                         //     if (error) {
