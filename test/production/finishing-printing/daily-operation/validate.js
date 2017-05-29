@@ -215,18 +215,20 @@ it("#05. should success when create new data kanban", function(done) {
         });
 });
 
-it("#06. should error when create new data Input with no document kanban, mechine, step on collection database", function(done) {
+it("#06. should error when create new data Input with no shift and no document kanban, mechine, step on collection database", function(done) {
     dataUtil.getNewData()
         .then(data => {
+            delete data.shift;
             data.kanbanId = "kanbanId";
             data.machineId = "machineId";
             data.stepId = "stepId";
             dailyOperationManager.create(data)
                 .then(daily => {
-                    done("should error when create new Input with no document kanban, mechine, step on collection database");
+                    done("should error when create new data Input with no shift and no document kanban, mechine, step on collection database");
                 })
                 .catch((e) => {
                     try {
+                        e.errors.should.have.property('shift');
                         e.errors.should.have.property('kanban');
                         e.errors.should.have.property('machine');
                         e.errors.should.have.property('step');
@@ -242,18 +244,20 @@ it("#06. should error when create new data Input with no document kanban, mechin
         });
 });
 
-it("#07. should error when create new data Output with no document kanban, mechine, step on collection database", function(done) {
+it("#07. should error when create new data Output with no shift and no document kanban, mechine, step on collection database", function(done) {
     dataUtil.getNewData("output")
         .then(data => {
+            delete data.shift;
             data.kanbanId = "kanbanId";
             data.machineId = "machineId";
             data.stepId = "stepId";
             dailyOperationManager.create(data)
                 .then(daily => {
-                    done("should error when create new data Output with no document kanban, mechine, step on collection database");
+                    done("should error when create new data Output with no shift and no document kanban, mechine, step on collection database");
                 })
                 .catch((e) => {
                     try {
+                        e.errors.should.have.property('shift');
                         e.errors.should.have.property('kanban');
                         e.errors.should.have.property('machine');
                         e.errors.should.have.property('step');

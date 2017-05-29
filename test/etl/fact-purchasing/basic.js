@@ -220,20 +220,20 @@ it("#05. should success when remove duplicate data", function (done) {
         });
 });
 
-it("#06. should error when load empty data", function (done) {
-    instanceManager.load({})
-        .then(id => {
-            done("should error when create with empty data");
-        })
-        .catch((e) => {
-            try {
-                done();
-            }
-            catch (ex) {
-                done(ex);
-            }
-        });
-});
+// it("#06. should error when load empty data", function (done) {
+//     instanceManager.load({})
+//         .then(id => {
+//             done("should error when create with empty data");
+//         })
+//         .catch((e) => {
+//             try {
+//                 done();
+//             }
+//             catch (ex) {
+//                 done(ex);
+//             }
+//         });
+// });
 
 it("#07. should error when insert empty data", function (done) {
     instanceManager.insertQuery(this.sql, "")

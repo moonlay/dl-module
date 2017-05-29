@@ -64,7 +64,7 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(1970, 1, 1);
+        var timestamp = new Date(time[0].start);
         return this.productionOrderManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
@@ -115,6 +115,8 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
             return quantity;
         } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
             return quantity * 0.9144;
+        } else {
+            return quantity;
         }
     }
 
@@ -165,7 +167,7 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
 
     insertQuery(sql, query) {
         return new Promise((resolve, reject) => {
-            sql.query(query, function(err, result) {
+            sql.query(query, function (err, result) {
                 if (err) {
                     reject(err);
                 } else {
@@ -209,6 +211,17 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
+
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\Itta And Leslie\\Desktop\\order.txt";
+
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
 
                         return Promise.all(command)
                             .then((results) => {

@@ -10,6 +10,10 @@ describe("REPORT SCENARIOS", function() {
     require("./report");
 });
 
+describe("DETAIL REPORT SCENARIOS", function() {
+    require("./detail-report");
+});
+
 describe("VALIDATION SCENARIOS", function() {
     require("./validator");
 });
