@@ -22,6 +22,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
         this.unitReceiptNoteFields = ["no",
             "date",
+            "deliveryOrder.no",
             "items.product._id",
             "items.product.code",
             "items.product.name",
