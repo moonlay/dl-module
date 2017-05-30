@@ -43,8 +43,6 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             "items.purchaseOrder.currency.symbol",
             "items.purchaseOrder.currency.code",
             "items.purchaseOrder.currency.rate",
-            "items.purchaseOrder.categoryId",
-            "items.purchaseOrder.category._id",
             "items.purchaseOrder.purchaseRequest.no",
             "items.purchaseOrder.purchaseRequest._id",
             "items.purchaseOrder.items.useIncomeTax",
@@ -636,28 +634,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                     unitReceiptNote.items[index].purchaseOrder = purchaseOrder;
                                 }
                             }
-                            var isPaid = false;
-                            for (var urnItem of unitReceiptNote.items) {
-                                var poItem = urnItem.purchaseOrder.find(item => item.product._id.toString() === urnItem.product._id.toString());
-                                if (poItem) {
-                                    var fulfillment = poItem.fulfillments.find(fulfillment => fulfillment.unitReceiptNoteNo === unitReceiptNote.no);
-                                    if (fulfillment) {
-                                        if (fulfillment.invoceNo) {
-                                            isPaid = true;
-                                        } else {
-                                            isPaid = false;
-                                            break;
-                                        }
-                                    } else {
-                                        isPaid = false;
-                                        break;
-                                    }
-                                } else {
-                                    isPaid = false;
-                                    break;
-                                }
-                            }
-                            unitReceiptNote.isPaid = isPaid;
+                            unitReceiptNote.isPaid = true;
                             return this.unitReceiptNoteManager.updateCollectionUnitReceiptNote(unitReceiptNote);
                         })
                 })
@@ -739,13 +716,6 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         for (var unitPaymentOrderItem of unitPaymentOrder.items) {
                             var item = unitReceiptNotes.find(unitReceiptNote => unitPaymentOrderItem.unitReceiptNoteId.toString() === unitReceiptNote._id.toString())
                             if (item) {
-                                var items = [];
-                                for (var item of item.items) {
-                                    if (item.categoryId.toString() === unitPaymentOrder.categoryId) {
-                                        items.push(item);
-                                    }
-                                }
-                                Object.assign(item.items, items);
                                 unitPaymentOrderItem.unitReceiptNote = item;
                             }
                         }
