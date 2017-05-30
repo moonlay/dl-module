@@ -61,7 +61,7 @@ module.exports = function (salesContract) {
     var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
     var amountDec1=parseFloat(salesContract.amount.toFixed(3));
     var amountDec=amountDec1.toString().split('.');
-    var spellAmount=amountbyCurrency;
+    var spellAmount=amount;
 
     if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
         amount=salesContract.amount.toFixed(3);
@@ -80,6 +80,8 @@ module.exports = function (salesContract) {
         }
     }
     else if(amount % 1 !=0){
+        amountDec1=parseFloat(salesContract.amount.toFixed(2));
+        amountDec=amountDec1.toString().split('.');
         amount=parseFloat(salesContract.amount.toFixed(2));
         if(!amountDec[1]){
             spellAmount=salesContract.amount;
