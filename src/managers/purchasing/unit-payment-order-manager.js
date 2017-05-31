@@ -44,6 +44,8 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             "items.purchaseOrder.currency.symbol",
             "items.purchaseOrder.currency.code",
             "items.purchaseOrder.currency.rate",
+            "items.purchaseOrder.categoryId",
+            "items.purchaseOrder.category._id",
             "items.purchaseOrder.purchaseRequest.no",
             "items.purchaseOrder.purchaseRequest._id",
             "items.purchaseOrder.items.useIncomeTax",
@@ -322,45 +324,49 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
     }
 
     mergeUnitPaymentOrder(newUnitPaymentOrder, oldUnitPaymentOrder) {
-        return this.getRealization(newUnitPaymentOrder)
-            .then((newRealizations) => {
-                return this.getRealization(oldUnitPaymentOrder)
-                    .then((oldRealizations) => {
-                        var _newRealizations = [];
-                        var _oldRealizations = [];
-                        for (var oldRealization of oldRealizations) {
-                            var realization = newRealizations.find(item => item.unitReceiptNoteId.toString() === oldRealization.unitReceiptNoteId.toString());
+        if (newUnitPaymentOrder.items.length !== oldUnitPaymentOrder.items.length) {
+            return this.getRealization(newUnitPaymentOrder)
+                .then((newRealizations) => {
+                    return this.getRealization(oldUnitPaymentOrder)
+                        .then((oldRealizations) => {
+                            var _newRealizations = [];
+                            var _oldRealizations = [];
+                            for (var oldRealization of oldRealizations) {
+                                var realization = newRealizations.find(item => item.unitReceiptNoteId.toString() === oldRealization.unitReceiptNoteId.toString());
 
-                            if (!realization) {
-                                _oldRealizations.push(oldRealization);
+                                if (!realization) {
+                                    _oldRealizations.push(oldRealization);
+                                }
                             }
-                        }
 
-                        for (var newRealization of newRealizations) {
-                            var realization = oldRealizations.find(item => item.unitReceiptNoteId.toString() === newRealization.unitReceiptNoteId.toString());
+                            for (var newRealization of newRealizations) {
+                                var realization = oldRealizations.find(item => item.unitReceiptNoteId.toString() === newRealization.unitReceiptNoteId.toString());
 
-                            if (!realization) {
-                                _newRealizations.push(newRealization);
+                                if (!realization) {
+                                    _newRealizations.push(newRealization);
+                                }
                             }
-                        }
-                        var oldJobs = [];
-                        var newJobs = [];
-                        if (_oldRealizations.length > 0) {
-                            oldJobs.push(this.updatePurchaseOrderDeleteUnitPaymentOrder(_oldRealizations));
-                            oldJobs.push(this.updateUnitReceiptNoteDeleteUnitPaymentOrder(_oldRealizations));
-                        }
+                            var oldJobs = [];
+                            var newJobs = [];
+                            if (_oldRealizations.length > 0) {
+                                oldJobs.push(this.updatePurchaseOrderDeleteUnitPaymentOrder(_oldRealizations));
+                                oldJobs.push(this.updateUnitReceiptNoteDeleteUnitPaymentOrder(_oldRealizations));
+                            }
 
-                        if (_newRealizations.length > 0) {
-                            newJobs.push(this.updatePurchaseOrder(_newRealizations));
-                            newJobs.push(this.updateUnitReceiptNote(_newRealizations));
-                        }
-                        return _oldRealizations.length > 0 ? Promise.all(oldJobs) : Promise.resolve(null)
-                            .then((res) => {
-                                return _newRealizations.length > 0 ? Promise.all(newJobs) : Promise.resolve(null)
-                            })
-                            .then((res) => { return Promise.resolve(newUnitPaymentOrder) });
-                    })
-            });
+                            if (_newRealizations.length > 0) {
+                                newJobs.push(this.updatePurchaseOrder(_newRealizations));
+                                newJobs.push(this.updateUnitReceiptNote(_newRealizations));
+                            }
+                            return _oldRealizations.length > 0 ? Promise.all(oldJobs) : Promise.resolve(null)
+                                .then((res) => {
+                                    return _newRealizations.length > 0 ? Promise.all(newJobs) : Promise.resolve(null)
+                                })
+                                .then((res) => { return Promise.resolve(newUnitPaymentOrder) });
+                        })
+                });
+        }
+        else
+        { return Promise.resolve(newUnitPaymentOrder) }
     }
 
     updatePurchaseOrder(realizations) {
@@ -624,18 +630,52 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         map.forEach((purchaseOrderIds, unitReceiptNoteId) => {
             var job = this.unitReceiptNoteManager.getSingleById(unitReceiptNoteId)
                 .then((unitReceiptNote) => {
-                    return Promise.all(purchaseOrderIds.map((purchaseOrderId) => {
-                        return this.purchaseOrderManager.getSingleById(purchaseOrderId)
+                    var listPO = unitReceiptNote.items.filter(function (elem, index, self) {
+                        return self.findIndex((t) => { return t.purchaseOrder.no === elem.purchaseOrder.no }) === index
+                    })
+                    return Promise.all(listPO.map((item) => {
+                        return this.purchaseOrderManager.getSingleById(item.purchaseOrderId)
                     }))
                         .then((purchaseOrders) => {
-                            for (var purchaseOrder of purchaseOrders) {
-                                var item = unitReceiptNote.items.find(item => item.purchaseOrderId.toString() === purchaseOrder._id.toString());
-                                var index = unitReceiptNote.items.indexOf(item);
-                                if (index !== -1) {
-                                    unitReceiptNote.items[index].purchaseOrder = purchaseOrder;
+                            // for (var purchaseOrder of purchaseOrders) {
+                            //     var item = unitReceiptNote.items.find(item => item.purchaseOrderId.toString() === purchaseOrder._id.toString());
+                            //     var index = unitReceiptNote.items.indexOf(item);
+                            //     if (index !== -1) {
+                            //         unitReceiptNote.items[index].purchaseOrder = purchaseOrder;
+                            //     }
+                            // }
+
+                            for (var item of unitReceiptNote.items) {
+                                var purchaseOrder = purchaseOrders.find(purchaseOrder => item.purchaseOrderId.toString() === purchaseOrder._id.toString());
+                                // var index = unitReceiptNote.items.indexOf(item);
+                                if (purchaseOrder) {
+                                    item.purchaseOrder = purchaseOrder;
                                 }
                             }
-                            unitReceiptNote.isPaid = true;
+                            var isPaid = false;
+                            // var listPO = unitReceiptNote.items.filter(function (elem, index, self) {
+                            //     return self.findIndex((t) => { return t.purchaseOrder.no === elem.purchaseOrder.no }) === index
+                            // })
+                            for (var poInternal of purchaseOrders) {
+                                for (var poItem of poInternal.items) {
+                                    var fulfillment = poItem.fulfillments.find(fulfillment => fulfillment.unitReceiptNoteNo === unitReceiptNote.no);
+                                    if (fulfillment) {
+                                        if (fulfillment.invoiceNo) {
+                                            isPaid = true;
+                                        } else {
+                                            isPaid = false;
+                                            break;
+                                        }
+                                    } else {
+                                        isPaid = false;
+                                        break;
+                                    }
+                                }
+                                if(!isPaid){
+                                    break;
+                                }
+                            }
+                            unitReceiptNote.isPaid = isPaid;
                             return this.unitReceiptNoteManager.updateCollectionUnitReceiptNote(unitReceiptNote);
                         })
                 })
@@ -717,6 +757,13 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         for (var unitPaymentOrderItem of unitPaymentOrder.items) {
                             var item = unitReceiptNotes.find(unitReceiptNote => unitPaymentOrderItem.unitReceiptNoteId.toString() === unitReceiptNote._id.toString())
                             if (item) {
+                                var items = [];
+                                for (var _item of item.items) {
+                                    if (_item.purchaseOrder.categoryId.toString() === unitPaymentOrder.categoryId.toString()) {
+                                        items.push(_item);
+                                    }
+                                }
+                                item.items = items;
                                 unitPaymentOrderItem.unitReceiptNote = item;
                             }
                         }
