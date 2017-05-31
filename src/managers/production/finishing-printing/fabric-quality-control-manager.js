@@ -288,8 +288,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         var _defaultFilter = {
             _deleted: false
         };
-        var productionOrderNoFilter = {};
-        var cartNoFilter = {};
+        var kanbanCodeFilter = {};
         var productionOrderTypeFilter = {};
         var shiftImFilter = {};
         var dateFromFilter = {};
@@ -297,15 +296,11 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         var query = {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
         var now = new Date();
 
-        if (info.productionOrderNo && info.productionOrderNo != '') {
-            productionOrderNoFilter = { 'productionOrderNo': info.productionOrderNo };
-        }
-
-        if (info.cartNo && info.cartNo != '') {
-            cartNoFilter = { 'cartNo': info.cartNo };
+        if (info.kanbanCode && info.kanbanCode != '') {
+            kanbanCodeFilter = { 'kanbanCode': info.kanbanCode };
         }
 
         if (info.productionOrderType && info.productionOrderType != '') {
@@ -318,12 +313,12 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
         var filterDate = {
             "dateIm": {
-                $gte: new Date(dateFrom),
-                $lte: new Date(dateTo)
+                $gte: dateFrom,
+                $lte: dateTo
             }
         };
 
-        query = { '$and': [_defaultFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter, shiftImFilter, filterDate] };
+        query = { '$and': [_defaultFilter, kanbanCodeFilter, productionOrderTypeFilter, shiftImFilter, filterDate] };
 
         return this._createIndexes()
             .then((createIndexResults) => {
