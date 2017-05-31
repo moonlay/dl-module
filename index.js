@@ -159,6 +159,8 @@ module.exports = {
         dimSupplier: require("./src/etl/dim-supplier-etl-manager"),
         dimUnit: require("./src/etl/dim-unit-etl-manager"),
         dimMachine: require("./src/etl/dim-machine-etl-manager"),
+        dimStorage: require("./src/etl/dim-storage-etl-manager"),
+        dimProduct: require("./src/etl/dim-product-etl-manager"),
         factMonitoringEvent: require("./src/etl/fact-monitoring-event-etl-manager"),
         factProductionOrder: require("./src/etl/fact-production-order-etl-manager"),
         factWeavingSalesContract: require("./src/etl/fact-weaving-sales-contract-etl-manager"),
@@ -166,6 +168,8 @@ module.exports = {
         factSpinningSalesContract: require("./src/etl/fact-spinning-sales-contract-etl-manager"),
         factDailyOperations: require("./src/etl/fact-daily-operations-etl-manager"),
         factFabricQualityControl: require("./src/etl/fact-fabric-quality-control-etl-manager"),
-        factProductionOrderStatus: require("./src/etl/fact-production-order-status-etl-manager")
+        factProductionOrderStatus: require("./src/etl/fact-production-order-status-etl-manager"),
+        factInventoryMovement: require("./src/etl/fact-inventory-movement-etl-manager"),
+        factInventorySummary: require("./src/etl/fact-inventory-summary-etl-manager")
     }
 }
