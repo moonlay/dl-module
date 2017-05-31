@@ -14,11 +14,44 @@ var generateCode = require('../../utils/code-generator');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 
 module.exports = class UnitPaymentOrderManager extends BaseManager {
+
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.purchasing.collection.UnitPaymentOrder);
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
+        this.unitReceiptNoteFields = ["no",
+            "date",
+            "deliveryOrder.no",
+            "items.product._id",
+            "items.product.code",
+            "items.product.name",
+            "items.deliveredQuantity",
+            "items.deliveredUom._id",
+            "items.deliveredUom.unit",
+            "items.pricePerDealUnit",
+            "items.currency._id",
+            "items.currency.code",
+            "items.currency.symbol",
+            "items.currency.rate",
+            "items.currencyRate",
+            "items.correction",
+            "items.purchaseOrderId",
+            "items.purchaseOrder._id",
+            "items.purchaseOrder.purchaseOrderExternal.no",
+            "items.purchaseOrder.purchaseOrderExternal._id",
+            "items.purchaseOrder.currency._id",
+            "items.purchaseOrder.currency.symbol",
+            "items.purchaseOrder.currency.code",
+            "items.purchaseOrder.currency.rate",
+            "items.purchaseOrder.categoryId",
+            "items.purchaseOrder.category._id",
+            "items.purchaseOrder.purchaseRequest.no",
+            "items.purchaseOrder.purchaseRequest._id",
+            "items.purchaseOrder.items.useIncomeTax",
+            "items.purchaseOrder.items.product._id",
+            "items.purchaseOrder.items.product.code",
+            "items.purchaseOrder.items.product.name"];
     }
 
     _validate(unitPaymentOrder) {
@@ -28,7 +61,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             var getUnitReceiptNote = [];
             if (Object.getOwnPropertyNames(valid).length > 0) {
                 for (var item of valid.items) {
-                    getUnitReceiptNote.push(ObjectId.isValid(item.unitReceiptNoteId) ? this.unitReceiptNoteManager.getSingleByIdOrDefault(item.unitReceiptNoteId) : Promise.resolve(null));
+                    getUnitReceiptNote.push(ObjectId.isValid(item.unitReceiptNoteId) ? this.unitReceiptNoteManager.getSingleByIdOrDefault(item.unitReceiptNoteId, this.unitReceiptNoteFields) : Promise.resolve(null));
                 }
             }
             var getUnitPaymentOrderPromise = this.collection.singleOrDefault({
@@ -291,45 +324,49 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
     }
 
     mergeUnitPaymentOrder(newUnitPaymentOrder, oldUnitPaymentOrder) {
-        return this.getRealization(newUnitPaymentOrder)
-            .then((newRealizations) => {
-                return this.getRealization(oldUnitPaymentOrder)
-                    .then((oldRealizations) => {
-                        var _newRealizations = [];
-                        var _oldRealizations = [];
-                        for (var oldRealization of oldRealizations) {
-                            var realization = newRealizations.find(item => item.unitReceiptNoteId.toString() === oldRealization.unitReceiptNoteId.toString());
+        if (newUnitPaymentOrder.items.length !== oldUnitPaymentOrder.items.length) {
+            return this.getRealization(newUnitPaymentOrder)
+                .then((newRealizations) => {
+                    return this.getRealization(oldUnitPaymentOrder)
+                        .then((oldRealizations) => {
+                            var _newRealizations = [];
+                            var _oldRealizations = [];
+                            for (var oldRealization of oldRealizations) {
+                                var realization = newRealizations.find(item => item.unitReceiptNoteId.toString() === oldRealization.unitReceiptNoteId.toString());
 
-                            if (!realization) {
-                                _oldRealizations.push(oldRealization);
+                                if (!realization) {
+                                    _oldRealizations.push(oldRealization);
+                                }
                             }
-                        }
 
-                        for (var newRealization of newRealizations) {
-                            var realization = oldRealizations.find(item => item.unitReceiptNoteId.toString() === newRealization.unitReceiptNoteId.toString());
+                            for (var newRealization of newRealizations) {
+                                var realization = oldRealizations.find(item => item.unitReceiptNoteId.toString() === newRealization.unitReceiptNoteId.toString());
 
-                            if (!realization) {
-                                _newRealizations.push(newRealization);
+                                if (!realization) {
+                                    _newRealizations.push(newRealization);
+                                }
                             }
-                        }
-                        var oldJobs = [];
-                        var newJobs = [];
-                        if (_oldRealizations.length > 0) {
-                            oldJobs.push(this.updatePurchaseOrderDeleteUnitPaymentOrder(_oldRealizations));
-                            oldJobs.push(this.updateUnitReceiptNoteDeleteUnitPaymentOrder(_oldRealizations));
-                        }
+                            var oldJobs = [];
+                            var newJobs = [];
+                            if (_oldRealizations.length > 0) {
+                                oldJobs.push(this.updatePurchaseOrderDeleteUnitPaymentOrder(_oldRealizations));
+                                oldJobs.push(this.updateUnitReceiptNoteDeleteUnitPaymentOrder(_oldRealizations));
+                            }
 
-                        if (_newRealizations.length > 0) {
-                            newJobs.push(this.updatePurchaseOrder(_newRealizations));
-                            newJobs.push(this.updateUnitReceiptNote(_newRealizations));
-                        }
-                        return _oldRealizations.length > 0 ? Promise.all(oldJobs) : Promise.resolve(null)
-                            .then((res) => {
-                                return _newRealizations.length > 0 ? Promise.all(newJobs) : Promise.resolve(null)
-                            })
-                            .then((res) => { return Promise.resolve(newUnitPaymentOrder) });
-                    })
-            });
+                            if (_newRealizations.length > 0) {
+                                newJobs.push(this.updatePurchaseOrder(_newRealizations));
+                                newJobs.push(this.updateUnitReceiptNote(_newRealizations));
+                            }
+                            return _oldRealizations.length > 0 ? Promise.all(oldJobs) : Promise.resolve(null)
+                                .then((res) => {
+                                    return _newRealizations.length > 0 ? Promise.all(newJobs) : Promise.resolve(null)
+                                })
+                                .then((res) => { return Promise.resolve(newUnitPaymentOrder) });
+                        })
+                });
+        }
+        else
+        { return Promise.resolve(newUnitPaymentOrder) }
     }
 
     updatePurchaseOrder(realizations) {
@@ -593,18 +630,52 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         map.forEach((purchaseOrderIds, unitReceiptNoteId) => {
             var job = this.unitReceiptNoteManager.getSingleById(unitReceiptNoteId)
                 .then((unitReceiptNote) => {
-                    return Promise.all(purchaseOrderIds.map((purchaseOrderId) => {
-                        return this.purchaseOrderManager.getSingleById(purchaseOrderId)
+                    var listPO = unitReceiptNote.items.filter(function (elem, index, self) {
+                        return self.findIndex((t) => { return t.purchaseOrder.no === elem.purchaseOrder.no }) === index
+                    })
+                    return Promise.all(listPO.map((item) => {
+                        return this.purchaseOrderManager.getSingleById(item.purchaseOrderId)
                     }))
                         .then((purchaseOrders) => {
-                            for (var purchaseOrder of purchaseOrders) {
-                                var item = unitReceiptNote.items.find(item => item.purchaseOrderId.toString() === purchaseOrder._id.toString());
-                                var index = unitReceiptNote.items.indexOf(item);
-                                if (index !== -1) {
-                                    unitReceiptNote.items[index].purchaseOrder = purchaseOrder;
+                            // for (var purchaseOrder of purchaseOrders) {
+                            //     var item = unitReceiptNote.items.find(item => item.purchaseOrderId.toString() === purchaseOrder._id.toString());
+                            //     var index = unitReceiptNote.items.indexOf(item);
+                            //     if (index !== -1) {
+                            //         unitReceiptNote.items[index].purchaseOrder = purchaseOrder;
+                            //     }
+                            // }
+
+                            for (var item of unitReceiptNote.items) {
+                                var purchaseOrder = purchaseOrders.find(purchaseOrder => item.purchaseOrderId.toString() === purchaseOrder._id.toString());
+                                // var index = unitReceiptNote.items.indexOf(item);
+                                if (purchaseOrder) {
+                                    item.purchaseOrder = purchaseOrder;
                                 }
                             }
-                            unitReceiptNote.isPaid = true;
+                            var isPaid = false;
+                            // var listPO = unitReceiptNote.items.filter(function (elem, index, self) {
+                            //     return self.findIndex((t) => { return t.purchaseOrder.no === elem.purchaseOrder.no }) === index
+                            // })
+                            for (var poInternal of purchaseOrders) {
+                                for (var poItem of poInternal.items) {
+                                    var fulfillment = poItem.fulfillments.find(fulfillment => fulfillment.unitReceiptNoteNo === unitReceiptNote.no);
+                                    if (fulfillment) {
+                                        if (fulfillment.invoiceNo) {
+                                            isPaid = true;
+                                        } else {
+                                            isPaid = false;
+                                            break;
+                                        }
+                                    } else {
+                                        isPaid = false;
+                                        break;
+                                    }
+                                }
+                                if(!isPaid){
+                                    break;
+                                }
+                            }
+                            unitReceiptNote.isPaid = isPaid;
                             return this.unitReceiptNoteManager.updateCollectionUnitReceiptNote(unitReceiptNote);
                         })
                 })
@@ -679,13 +750,20 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         return this.getSingleByQuery(query)
             .then((unitPaymentOrder) => {
                 var getUnitReceiptNotes = unitPaymentOrder.items.map((unitPaymentOrderItem) => {
-                    return this.unitReceiptNoteManager.getSingleById(unitPaymentOrderItem.unitReceiptNoteId)
+                    return this.unitReceiptNoteManager.getSingleById(unitPaymentOrderItem.unitReceiptNoteId, this.unitReceiptNoteFields)
                 })
                 return Promise.all(getUnitReceiptNotes)
                     .then((unitReceiptNotes) => {
                         for (var unitPaymentOrderItem of unitPaymentOrder.items) {
                             var item = unitReceiptNotes.find(unitReceiptNote => unitPaymentOrderItem.unitReceiptNoteId.toString() === unitReceiptNote._id.toString())
                             if (item) {
+                                var items = [];
+                                for (var _item of item.items) {
+                                    if (_item.purchaseOrder.categoryId.toString() === unitPaymentOrder.categoryId.toString()) {
+                                        items.push(_item);
+                                    }
+                                }
+                                item.items = items;
                                 unitPaymentOrderItem.unitReceiptNote = item;
                             }
                         }
