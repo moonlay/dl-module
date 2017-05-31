@@ -20,6 +20,8 @@ describe('#dl-module', function (done) {
     test('@ETL/DIM-SUPPLIER', './etl/dim-supplier');
     test('@ETL/DIM-MACHINE', './etl/dim-machine');
     test('@ETL/DIM-UNIT', './etl/dim-unit');
+    test('@ETL/DIM-PROCESS-TYPE', './etl/dim-process-type');
+    test('@ETL/DIM-ORDER-TYPE', './etl/dim-order-type');
     test('@ETL/DIM-PRODUCT', './etl/dim-product');
     test('@ETL/DIM-STORAGE', './etl/dim-storage');
     test('@ETL/FACT-TOTAL-HUTANG', './etl/fact-total-hutang');

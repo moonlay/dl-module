@@ -156,6 +156,8 @@ module.exports = {
         dimCategory: require("./src/etl/dim-category-etl-manager"),
         dimDivision: require("./src/etl/dim-division-etl-manager"),
         dimBuyer: require("./src/etl/dim-buyer-etl-manager"),
+        dimOrderType: require("./src/etl/dim-order-type-etl-manager"),
+        dimProcessType: require("./src/etl/dim-process-type-etl-manager"),
         dimSupplier: require("./src/etl/dim-supplier-etl-manager"),
         dimUnit: require("./src/etl/dim-unit-etl-manager"),
         dimMachine: require("./src/etl/dim-machine-etl-manager"),
