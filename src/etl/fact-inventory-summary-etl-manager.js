@@ -62,9 +62,9 @@ module.exports = class FactInventorySummaryManager extends BaseManager {
         }).sort({ finish: -1 }).limit(1).toArray()
     }
 
-    extract(time) {
-        var timestamp = new Date(time[0].start);
-        // var timestamp = new Date(1970, 1, 1);
+    extract(times) {
+        var time = times.length > 0 ? times[0].start : "1970-01-01";
+        var timestamp = new Date(time);
         return this.inventorySummaryManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
@@ -122,7 +122,7 @@ module.exports = class FactInventorySummaryManager extends BaseManager {
                             if (item) {
                                 var values = `${item.storageCode}, ${item.uom}, ${item.productCode}, ${item.qty}, ${item.deleted}, ${item.code}, ${item.storageName}, ${item.productName}`;
                                 var queryString = sqlQuery === "" ? `INSERT INTO [DL_Fact_Inventory_Summary_Temp]([Storage Code], [UOM], [Product Code], [Quantity], [Deleted], [Code], [Storage Name], [Product Name]) VALUES(${values})` : `,(${values})`;
-                                
+
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -151,23 +151,14 @@ module.exports = class FactInventorySummaryManager extends BaseManager {
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_Upsert_Fact_Inventory_Summary").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
-                                        transaction.commit((err) => {
-                                            if (err)
-                                                reject(err);
-                                            else
-                                                resolve(results);
-                                        });
-                                    }).catch((error) => {
-                                        transaction.rollback((err) => {
-                                            console.log("rollback")
-                                            if (err)
-                                                reject(err)
-                                            else
-                                                reject(error);
-                                        });
-                                    })
+                                request.execute("DL_UPSERT_FACT_INVENTORY_SUMMARY").then((execResult) => {
+                                    transaction.commit((err) => {
+                                        if (err)
+                                            reject(err);
+                                        else
+                                            resolve(results);
+                                    });
+
                                 }).catch((error) => {
                                     transaction.rollback((err) => {
                                         console.log("rollback")
