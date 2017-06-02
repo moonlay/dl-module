@@ -8,20 +8,21 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var FinishingPrintingSalesContractManager = require("../managers/sales/finishing-printing-sales-contract-manager");
+var InventoryMovementManager = require("../managers/inventory/inventory-movement-manager");
+const MIGRATION_LOG_DESCRIPTION = "Fact Inventory Movement from MongoDB to Azure DWH"
 
-module.exports = class FactFinishingPrintingSalesContractManager extends BaseManager {
+module.exports = class FactInventoryMovementManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.finishingPrintingSalesContractManager = new FinishingPrintingSalesContractManager(db, user);
+        this.inventoryMovementManager = new InventoryMovementManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
 
     run() {
         var startedDate = new Date()
         this.migrationLog.insert({
-            description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
+            description: MIGRATION_LOG_DESCRIPTION,
             start: startedDate,
         })
         return this.timestamp()
@@ -32,7 +33,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
+                    description: MIGRATION_LOG_DESCRIPTION,
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -44,7 +45,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
+                    description: MIGRATION_LOG_DESCRIPTION,
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -56,7 +57,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
     timestamp() {
         return this.migrationLog.find({
-            description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
+            description: MIGRATION_LOG_DESCRIPTION,
             status: "Successful"
         }).sort({ finish: -1 }).limit(1).toArray()
     }
@@ -64,56 +65,33 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
     extract(times) {
         var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
-        return this.finishingPrintingSalesContractManager.collection.find({
+        return this.inventoryMovementManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
             }
         }).toArray();
     }
 
-    orderQuantityConvertion(uom, quantity) {
-        if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity;
-        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
-            return quantity * 0.9144;
-        } else {
-            return quantity;
-        }
-    }
-
-    joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth) {
-        if (material !== null && materialConstruction !== null && yarnMaterialNo !== null && materialWidth !== null) {
-            return `'${material.replace(/'/g, '"') + " " + materialConstruction.replace(/'/g, '"') + " " + yarnMaterialNo.replace(/'/g, '"') + " " + materialWidth.replace(/'/g, '"')}'`;
-        } else {
-            return null;
-        }
-    }
-
     transform(data) {
         var result = data.map((item) => {
-            var orderUom = item.uom ? item.uom.unit : null;
-            var orderQuantity = item.orderQuantity ? item.orderQuantity : null;
-            var material = item.material ? item.material.name.replace(/'/g, '"') : null;
-            var materialConstruction = item.materialConstruction ? item.materialConstruction.name.replace(/'/g, '"') : null;
-            var yarnMaterialNo = item.yarnMaterial ? item.yarnMaterial.name.replace(/'/g, '"') : null;
-            var materialWidth = item.materialWidth ? item.materialWidth : null;
+            var date = moment(item.date).format("YYYY-MM-DD");
 
             return {
-                salesContractNo: item.salesContractNo ? `'${item.salesContractNo}'` : null,
-                salesContractDate: item._createdDate ? `'${moment(item._createdDate).format("L")}'` : null,
-                buyer: item.buyer ? `'${item.buyer.name.replace(/'/g, '"')}'` : null,
-                buyerType: item.buyer ? `'${item.buyer.type.replace(/'/g, '"')}'` : null,
-                orderType: item.orderType ? `'${item.orderType.name}'` : null,
-                orderQuantity: item.orderQuantity ? `${item.orderQuantity}` : null,
-                orderUom: item.uom ? `'${item.uom.unit.replace(/'/g, '"')}'` : null,
-                totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
-                buyerCode: item.buyer ? `'${item.buyer.code}'` : null,
-                productionType: `'${"Finishing Printing"}'`,
-                construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
-                materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
-                materialWidth: item.materialWidth ? `'${item.materialWidth.replace(/'/g, '"')}'` : null,
-                material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null,
-                deleted: `'${item._deleted}'`
+                storageCode: item.storageCode ? `'${item.storageCode.replace(/'/g, '"')}'` : null,
+                storageName: item.storageName ? `'${item.storageName.replace(/'/g, '"')}'` : null,
+                date: `'${date}'`,
+                qty: item.quantity,
+                status: item.type ? `'${item.type}'` : null,
+                productCode: item.productCode ? `'${item.productCode.replace(/'/g, '"')}'` : null,
+                productName: item.productName ? `'${item.productName.replace(/'/g, '"')}'` : null,
+                uom: item.uom ? `'${item.uom.replace(/'/g, '"')}'` : null,
+                deleted: `'${item._deleted}'`,
+                code: item.code ? `'${item.code.replace(/'/g, '"')}'` : null,
+                referenceNo: item.referenceNo ? `'${item.referenceNo.replace(/'/g, '"')}'` : null,
+                referenceType: item.referenceType ? `'${item.referenceType.replace(/'/g, '"')}'` : null,
+                before: item.before,
+                after: item.after,
+                remark: item.remark ? `'${item.remark.replace(/'/g, '"')}'` : null,
             }
         });
         return Promise.resolve([].concat.apply([], result));
@@ -150,7 +128,8 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material], [_deleted]) VALUES(${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material}, ${item.deleted});\n`;
+                                var values = `${item.storageCode}, ${item.date}, ${item.qty}, ${item.status}, ${item.productCode}, ${item.uom}, ${item.deleted}, ${item.code}, ${item.referenceNo}, ${item.referenceType}, ${item.before}, ${item.after}, ${item.remark}, ${item.storageName}, ${item.productName}`
+                                var queryString = sqlQuery === "" ? `INSERT INTO [DL_Fact_Inventory_Movement_Temp]([Storage Code], [Date], [Quantity], [Status], [Product Code], [UOM], [Deleted], [Code], [ReferenceNo], [ReferenceType], [Before], [After], [Remark], [Storage Name], [Product Name]) VALUES(${values})` : `,(${values})`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -166,9 +145,20 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
                         this.sql.multiple = true;
 
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\jacky.rusly\\Desktop\\Log.txt";
+
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
+
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_UPSERT_FACT_SALES_CONTRACT").then((execResult) => {
+                                request.execute("DL_UPSERT_FACT_INVENTORY_MOVEMENT").then((execResult) => {
                                     transaction.commit((err) => {
                                         if (err)
                                             reject(err);

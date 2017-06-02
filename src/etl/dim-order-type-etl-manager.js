@@ -1,28 +1,28 @@
 'use strict'
 
 // external deps 
-var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require('module-toolkit').BaseManager;
 var moment = require("moment");
+
 
 // internal deps 
 require('mongodb-toolkit');
 
-var DivisionManager = require('../managers/master/division-manager');
+var OrderTypeManager = require('../managers/master/order-type-manager');
 
-module.exports = class DimDivisionEtlManager extends BaseManager {
+module.exports = class OrderTypeEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.divisionManager = new DivisionManager(db, user);
+        this.orderTypeManager = new OrderTypeManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
 
     run() {
         var startedDate = new Date();
         this.migrationLog.insert({
-            description: "Dim Divisi from MongoDB to Azure DWH",
-            start: startedDate,
+            description: "Dim Order Type from MongoDB to Azure DWH",
+            start: startedDate
         })
         return this.getTimeStamp()
             .then((time) => this.extract(time))
@@ -32,7 +32,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Dim Divisi from MongoDB to Azure DWH",
+                    description: "Dim Order Type from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -44,7 +44,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Dim Divisi from MongoDB to Azure DWH",
+                    description: "Dim Order Type from MongoDB to Azure DWH",
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -56,7 +56,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
     getTimeStamp() {
         return this.migrationLog.find({
-            description: "Dim Divisi from MongoDB to Azure DWH",
+            description: "Dim Order Type from MongoDB to Azure DWH",
             status: "Successful"
         }).sort({
             finish: -1
@@ -66,20 +66,22 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
     extract(times) {
         var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
-        return this.divisionManager.collection.find({
+        return this.orderTypeManager.collection.find({
             _updatedDate: {
                 "$gt": timestamp
             },
             _deleted: false
-        }).toArray();
+        }, {
+                code: 1,
+                name: 1
+            }).toArray();
     }
 
     transform(data) {
         var result = data.map((item) => {
-
             return {
-                divisionCode: item.code,
-                divisionName: item.name
+                code: item.code ? `'${item.code}'` : null,
+                name: item.name ? `'${item.name}'` : null
             };
         });
         return Promise.resolve([].concat.apply([], result));
@@ -116,9 +118,9 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `insert into DL_Dim_Divisi_Temp(ID_Dim_Divisi, Kode_Divisi, Nama_Divisi) values(${count}, '${item.divisionCode}','${item.divisionName}');\n`;
+                                var queryString = `INSERT INTO [DL_Dim_Order_Type_Temp](code, [name]) VALUES(${item.code}, ${item.name});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 1000 == 0) {
+                                if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "";
                                 }
@@ -136,7 +138,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_UPSERT_DIM_DIVISI").then((execResult) => {
+                                request.execute("[DL_Upsert_Dim_Order_Type]").then((execResult) => {
                                     transaction.commit((err) => {
                                         if (err)
                                             reject(err);

@@ -20,6 +20,10 @@ describe('#dl-module', function (done) {
     test('@ETL/DIM-SUPPLIER', './etl/dim-supplier');
     test('@ETL/DIM-MACHINE', './etl/dim-machine');
     test('@ETL/DIM-UNIT', './etl/dim-unit');
+    test('@ETL/DIM-PROCESS-TYPE', './etl/dim-process-type');
+    test('@ETL/DIM-ORDER-TYPE', './etl/dim-order-type');
+    test('@ETL/DIM-PRODUCT', './etl/dim-product');
+    test('@ETL/DIM-STORAGE', './etl/dim-storage');
     test('@ETL/FACT-TOTAL-HUTANG', './etl/fact-total-hutang');
     test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');
     test('@ETL/FACT-MONITORING-EVENT', './etl/fact-monitoring-event');
@@ -30,6 +34,8 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/fact-spinning-sales-contract');
     test('@ETL/FACT-DAILY-OPERATIONS', './etl/fact-daily-operations');
     test('@ETL/FACT-QUALITY-CONTROL', './etl/fact-fabric-quality-control');
+    test('@ETL/FACT-INVENTORY-MOVEMENT', './etl/fact-inventory-movement');
+    test('@ETL/FACT-INVENTORY-SUMMARY', './etl/fact-inventory-summary');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
