@@ -66,7 +66,7 @@ module.exports = class DimProductEtlManager extends BaseManager {
     }
 
     extract(times) {
-        var time = times.length > 0 ? time[0].start : "1970-01-01";
+        var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
         return this.productManager.collection.find({
             _updatedDate: {

@@ -61,8 +61,9 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
         }).sort({ finish: -1 }).limit(1).toArray()
     }
 
-    extract(time) {
-        var timestamp = new Date(time[0].start);
+    extract(times) {
+        var time = times.length > 0 ? times[0].start : "1970-01-01";
+        var timestamp = new Date(time);
         return this.finishingPrintingSalesContractManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
