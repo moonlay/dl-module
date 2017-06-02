@@ -151,26 +151,17 @@ module.exports = class DimProductEtlManager extends BaseManager {
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("[DL_Upsert_Dim_Product]").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
-                                        transaction.commit((err) => {
-                                            if (err)
-                                                reject(err);
-                                            else
-                                                resolve(results);
-                                        });
-                                    }).catch((error) => {
-                                        transaction.rollback((err) => {
-                                            console.log("rollback" + err)
-                                            if (err)
-                                                reject(err)
-                                            else
-                                                reject(error);
-                                        });
-                                    })
+                                request.execute("DL_UPSERT_DIM_PRODUCT").then((execResult) => {
+                                    transaction.commit((err) => {
+                                        if (err)
+                                            reject(err);
+                                        else
+                                            resolve(results);
+                                    });
+
                                 }).catch((error) => {
                                     transaction.rollback((err) => {
-                                        console.log("rollback" + err)
+                                        console.log("rollback")
                                         if (err)
                                             reject(err)
                                         else
@@ -180,7 +171,7 @@ module.exports = class DimProductEtlManager extends BaseManager {
                             })
                             .catch((error) => {
                                 transaction.rollback((err) => {
-                                    console.log("rollback" + err);
+                                    console.log("rollback");
                                     if (err)
                                         reject(err)
                                     else

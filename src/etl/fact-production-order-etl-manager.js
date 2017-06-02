@@ -225,23 +225,14 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_UPSERT_FACT_Production_order").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
-                                        transaction.commit((err) => {
-                                            if (err)
-                                                reject(err);
-                                            else
-                                                resolve(results);
-                                        });
-                                    }).catch((error) => {
-                                        transaction.rollback((err) => {
-                                            console.log("rollback")
-                                            if (err)
-                                                reject(err)
-                                            else
-                                                reject(error);
-                                        });
-                                    })
+                                request.execute("DL_UPSERT_FACT_PRODUCTION_ORDER").then((execResult) => {
+                                    transaction.commit((err) => {
+                                        if (err)
+                                            reject(err);
+                                        else
+                                            resolve(results);
+                                    });
+
                                 }).catch((error) => {
                                     transaction.rollback((err) => {
                                         console.log("rollback")

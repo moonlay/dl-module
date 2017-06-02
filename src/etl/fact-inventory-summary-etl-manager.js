@@ -151,23 +151,14 @@ module.exports = class FactInventorySummaryManager extends BaseManager {
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_Upsert_Fact_Inventory_Summary").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
-                                        transaction.commit((err) => {
-                                            if (err)
-                                                reject(err);
-                                            else
-                                                resolve(results);
-                                        });
-                                    }).catch((error) => {
-                                        transaction.rollback((err) => {
-                                            console.log("rollback")
-                                            if (err)
-                                                reject(err)
-                                            else
-                                                reject(error);
-                                        });
-                                    })
+                                request.execute("DL_UPSERT_FACT_INVENTORY_SUMMARY").then((execResult) => {
+                                    transaction.commit((err) => {
+                                        if (err)
+                                            reject(err);
+                                        else
+                                            resolve(results);
+                                    });
+
                                 }).catch((error) => {
                                     transaction.rollback((err) => {
                                         console.log("rollback")

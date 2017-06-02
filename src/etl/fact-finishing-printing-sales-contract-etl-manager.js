@@ -167,23 +167,14 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_UPSERT_FACT_Sales_Contract").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
-                                        transaction.commit((err) => {
-                                            if (err)
-                                                reject(err);
-                                            else
-                                                resolve(results);
-                                        });
-                                    }).catch((error) => {
-                                        transaction.rollback((err) => {
-                                            console.log("rollback")
-                                            if (err)
-                                                reject(err)
-                                            else
-                                                reject(error);
-                                        });
-                                    })
+                                request.execute("DL_UPSERT_FACT_SALES_CONTRACT").then((execResult) => {
+                                    transaction.commit((err) => {
+                                        if (err)
+                                            reject(err);
+                                        else
+                                            resolve(results);
+                                    });
+
                                 }).catch((error) => {
                                     transaction.rollback((err) => {
                                         console.log("rollback")

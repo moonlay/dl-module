@@ -135,23 +135,14 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_Upsert_Dim_Divisi").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
-                                        transaction.commit((err) => {
-                                            if (err)
-                                                reject(err);
-                                            else
-                                                resolve(results);
-                                        });
-                                    }).catch((error) => {
-                                        transaction.rollback((err) => {
-                                            console.log("rollback")
-                                            if (err)
-                                                reject(err)
-                                            else
-                                                reject(error);
-                                        });
-                                    })
+                                request.execute("DL_UPSERT_DIM_DIVISI").then((execResult) => {
+                                    transaction.commit((err) => {
+                                        if (err)
+                                            reject(err);
+                                        else
+                                            resolve(results);
+                                    });
+
                                 }).catch((error) => {
                                     transaction.rollback((err) => {
                                         console.log("rollback")
