@@ -59,12 +59,13 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
             description: "Dim Divisi from MongoDB to Azure DWH",
             status: "Successful"
         }).sort({
-            finishedDate: -1
+            finish: -1
         }).limit(1).toArray()
     }
 
-    extract(time) {
-        var timestamp = new Date(time[0].start);
+    extract(times) {
+        var time = times.length > 0 ? time[0].start : "1970-01-01";
+        var timestamp = new Date(time);
         return this.divisionManager.collection.find({
             _updatedDate: {
                 "$gt": timestamp

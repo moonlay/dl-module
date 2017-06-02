@@ -59,7 +59,7 @@ module.exports = class ProcessTypeEtlManager extends BaseManager {
             description: "Dim Process Type from MongoDB to Azure DWH",
             status: "Successful"
         }).sort({
-            finishedDate: -1
+            finish: -1
         }).limit(1).toArray()
     }
 

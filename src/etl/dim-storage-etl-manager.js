@@ -59,13 +59,13 @@ module.exports = class DimStorageEtlManager extends BaseManager {
             description: "Dim Storage from MongoDB to Azure DWH",
             status: "Successful"
         }).sort({
-            finishedDate: -1
+            finish: -1
         }).limit(1).toArray()
     }
 
-    extract(time) {
-        var timestamp = new Date(time[0].start);
-        // var timestamp = new Date(1970, 1, 1);
+    extract(times) {
+        var time = times.length > 0 ? time[0].start : "1970-01-01";
+        var timestamp = new Date(time);
         return this.storageManager.collection.find({
             _updatedDate: {
                 "$gt": timestamp

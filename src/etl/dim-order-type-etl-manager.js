@@ -59,7 +59,7 @@ module.exports = class OrderTypeEtlManager extends BaseManager {
             description: "Dim Order Type from MongoDB to Azure DWH",
             status: "Successful"
         }).sort({
-            finishedDate: -1
+            finish: -1
         }).limit(1).toArray()
     }
 
