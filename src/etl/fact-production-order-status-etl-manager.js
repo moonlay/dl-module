@@ -70,7 +70,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
     }
 
     extract(times) {
-        var time = times.length > 0 ? times[0].start : "1970-01-01";
+        var time = "1970-01-01";
         var timestamp = new Date(time);
         return this.finishingPrintingSalesContractManager.collection.find({
             _updatedDate: {
@@ -83,7 +83,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                 orderQuantity: 1,
                 "uom.unit": 1,
                 "orderType.name": 1
-            }).toArray()
+            }).sort({ _createdDate: -1 }).limit(100).toArray()
             .then((finishingPrintingSalesContracts) => this.joinProductionOrder(finishingPrintingSalesContracts))
             .then((results) => this.joinKanban(results))
             .then((results) => this.joinDailyOperations(results))
@@ -170,6 +170,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     "$ne": null
                 }
             }, {
+                    _createdDate: 1,
                     code: 1,
                     input: 1,
                     "kanban.productionOrder.salesContractNo": 1
@@ -276,7 +277,8 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                         fabricQualityControlCode: fabricQC.code ? `'${fabricQC.code}'` : null,
                         orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
                         deleted: `'${finishingPrintingSC._deleted}'`,
-                        fabricqualitycontroltestindex: fabricQC.code ? `${index}` : null
+                        fabricqualitycontroltestindex: fabricQC.code ? `${index}` : null,
+                        dailyOperationDate: dailyOperation._createdDate ? `${moment(dailyOperation._createdDate).format("L")}` : null
                     }
                 });
                 return [].concat.apply([], results);
@@ -302,7 +304,8 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     fabricQualityControlCode: null,
                     orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
                     deleted: `'${finishingPrintingSC._deleted}'`,
-                    fabricqualitycontroltestindex: null
+                    fabricqualitycontroltestindex: null,
+                    dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).format("L")}'` : null
                 }
             }
         });
@@ -340,7 +343,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [dbo].[DL_Fact_Production_Order_Status_Temp]([salesContractDate], [salesContractNo], [salesContractQuantity], [productionOrderDate], [productionSalesContractNo], [productionOrderNo], [productionOrderQuantity], [kanbanDate], [kanbanSalesContractNo], [kanbanQuantity], [fabricQualityControlDate], [fabricQualityControlQuantity], [orderType], [deleted], [kanbanCode], [dailyOperationQuantity], [dailyOperationSalesContractNo], [dailyOperationCode], [fabricQualityControlCode], [cartNumber], [fabricqualitycontroltestindex]) VALUES(${item.salesContractDate}, ${item.salesContractNo}, ${item.salesContractQuantity}, ${item.productionOrderDate}, ${item.productionSalesContractNo}, ${item.productionOrderNo}, ${item.productionOrderQuantity}, ${item.kanbanDate}, ${item.kanbanSalesContractNo}, ${item.kanbanQuantity}, ${item.fabricQualityControlDate}, ${item.fabricQualityControlQuantity}, ${item.orderType}, ${item.deleted}, ${item.kanbanCode}, ${item.dailyOperationQuantity}, ${item.dailyOperationSalesContractNo}, ${item.dailyOperationCode}, ${item.fabricQualityControlCode}, ${item.cartNumber}, ${item.fabricqualitycontroltestindex});\n`;
+                                var queryString = `INSERT INTO [dbo].[DL_Fact_Production_Order_Status_Temp]([salesContractDate], [salesContractNo], [salesContractQuantity], [productionOrderDate], [productionSalesContractNo], [productionOrderNo], [productionOrderQuantity], [kanbanDate], [kanbanSalesContractNo], [kanbanQuantity], [fabricQualityControlDate], [fabricQualityControlQuantity], [orderType], [deleted], [kanbanCode], [dailyOperationQuantity], [dailyOperationSalesContractNo], [dailyOperationCode], [fabricQualityControlCode], [cartNumber], [fabricqualitycontroltestindex], [dailyOperationDate]) VALUES(${item.salesContractDate}, ${item.salesContractNo}, ${item.salesContractQuantity}, ${item.productionOrderDate}, ${item.productionSalesContractNo}, ${item.productionOrderNo}, ${item.productionOrderQuantity}, ${item.kanbanDate}, ${item.kanbanSalesContractNo}, ${item.kanbanQuantity}, ${item.fabricQualityControlDate}, ${item.fabricQualityControlQuantity}, ${item.orderType}, ${item.deleted}, ${item.kanbanCode}, ${item.dailyOperationQuantity}, ${item.dailyOperationSalesContractNo}, ${item.dailyOperationCode}, ${item.fabricQualityControlCode}, ${item.cartNumber}, ${item.fabricqualitycontroltestindex}, ${item.dailyOperationDate});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
