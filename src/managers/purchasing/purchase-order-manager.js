@@ -950,6 +950,18 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     {$sort : {"purchaseRequest._createdDate" : -1}}
                 ])
                 .toArray().then(report=>{
+                    var index=0;
+                    for(var x of report){
+                        index++;
+                        x.index=index;
+                    }
+                    report.data=report.slice(parseInt(query.size)*(parseInt(query.page)-1),parseInt(query.size)+(parseInt(query.size)*(parseInt(query.page)-1)));
+                    report.info={
+                        total:report.length,
+                        size:query.size,
+                        count:query.size,
+                        page:query.page
+                    }
                     resolve(report);
                 });
         });
@@ -970,8 +982,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             var dateDiff=Math.ceil(report.dateDiff);
             var item = {};
             item["No"] = index;
-            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).add(offset,'h').format(dateFormat);
-            item["Tanggal Buat Purchase Request"] = moment(new Date(report.prCreatedDate)).add(offset,'h').format(dateFormat);
+            item["Tanggal Purchase Request"] = moment(report.prDate).format(dateFormat);
+            item["Tanggal Buat Purchase Request"] = moment(report.prCreatedDate).format(dateFormat);
             item["No Purchase Request"] = report.prNo;
             item["Divisi"] = report.division;
             item["Unit"] = report.unit;
@@ -981,7 +993,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             item["Nama Barang"] = report.productName;
             item["Jumlah Barang"] = report.productQuantity;
             item["Satuan Barang"] = report.productUom;
-            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).add(offset,'h').format(dateFormat);
+            item["Tanggal Terima PO Internal"] = moment(report.poDate).format(dateFormat);
             item["Selisih Tanggal PR - PO Internal (hari)"] = dateDiff;
             item["Nama Staff Pembelian"] = report.staff;
             
@@ -1134,7 +1146,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     }
                 }
             }
-            
             var Query = {"$and" : [date, deletedQuery,unitQuery]};
             this.collection.aggregate([
                 {$unwind: "$items"}, 
@@ -1169,9 +1180,21 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         "staff" : "$_createdBy"
                     }
                 },
-                    {$sort : {"purchaseOrderExternal._createdDate" : -1}}
+                {$sort : {"purchaseOrderExternal._createdDate" : -1}}
                 ])
                 .toArray().then(report=>{
+                    var index=0;
+                    for(var x of report){
+                        index++;
+                        x.index=index;
+                    }
+                    report.data=report.slice(parseInt(query.size)*(parseInt(query.page)-1),parseInt(query.size)+(parseInt(query.size)*(parseInt(query.page)-1)));
+                    report.info={
+                        total:report.length,
+                        size:query.size,
+                        count:query.size,
+                        page:query.page
+                    }
                     resolve(report);
                 });
         });
@@ -1192,8 +1215,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             var dateDiff=Math.ceil(report.dateDiff);
             var item = {};
             item["No"] = index;
-            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).add(offset,'h').format(dateFormat);
-            item["Tanggal Buat Purchase Request"] = moment(new Date(report.prCreatedDate)).add(offset,'h').format(dateFormat);
+            item["Tanggal Purchase Request"] = moment(report.prDate).format(dateFormat);
+            item["Tanggal Buat Purchase Request"] = moment(report.prCreatedDate).format(dateFormat);
             item["No Purchase Request"] = report.prNo;
             item["Divisi"] = report.division;
             item["Unit"] = report.unit;
@@ -1206,13 +1229,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             item["Harga Barang"] = report.productPrice;
             item["Kode Supplier"] = report.supplierCode;
             item["Nama Supplier"] = report.supplierName;
-            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).add(offset,'h').format(dateFormat);
-            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate)).add(offset,'h').format(dateFormat);
-            item["Tanggal Buat PO Eksternal"] = moment(new Date(report.poEksCreatedDate)).add(offset,'h').format(dateFormat);
-            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).add(offset,'h').format(dateFormat);
+            item["Tanggal Terima PO Internal"] = moment(report.poDate).format(dateFormat);
+            item["Tanggal PO Eksternal"] = moment(report.poEksDate).format(dateFormat);
+            item["Tanggal Buat PO Eksternal"] = moment(report.poEksCreatedDate).format(dateFormat);
+            item["Tanggal Target Datang"] = moment(report.expectedDate).format(dateFormat);
             item["No PO Eksternal"] = report.poEksNo;
-            item["Tanggal Surat Jalan"] = moment(new Date(report.doDate)).add(offset,'h').format(dateFormat);
-            item["Tanggal Datang Barang"] = moment(new Date(report.arrivedDate)).add(offset,'h').format(dateFormat);
+            item["Tanggal Surat Jalan"] = moment(report.doDate).format(dateFormat);
+            item["Tanggal Datang Barang"] = moment(report.arrivedDate).format(dateFormat);
             item["No Surat Jalan"] = report.doNo;
             item["Selisih Tanggal PO Eksternal - Surat Jalan (hari)"] = dateDiff;
             item["Nama Staff Pembelian"] = report.staff;
