@@ -83,7 +83,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                 orderQuantity: 1,
                 "uom.unit": 1,
                 "orderType.name": 1
-            }).sort({ _createdDate: -1 }).limit(100).toArray()
+            }).toArray()
             .then((finishingPrintingSalesContracts) => this.joinProductionOrder(finishingPrintingSalesContracts))
             .then((results) => this.joinKanban(results))
             .then((results) => this.joinDailyOperations(results))
@@ -174,7 +174,10 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     code: 1,
                     input: 1,
                     "kanban.productionOrder.salesContractNo": 1
-                }).toArray() : Promise.resolve([]);
+                }).sort({
+                    dateInput: 1,
+                    timeInput: 1
+                }).limit(1).toArray() : Promise.resolve([]);
 
             return getDailyOperations.then((dailyOperations) => {
                 var arr = dailyOperations.map((dailyOperation) => {
@@ -274,11 +277,11 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                         cartNumber: kanban && kanban.cart.cartNumber ? `'${kanban.cart.cartNumber}'` : null,
                         fabricQualityControlDate: fabricQC.dateIm ? `'${moment(fabricQC.dateIm).format("L")}'` : null,
                         fabricQualityControlQuantity: quantity ? `${quantity}` : null,
-                        fabricQualityControlCode: fabricQC.code ? `'${fabricQC.code}'` : null,
+                        fabricQualityControlCode: fabricQC && fabricQC.code ? `'${fabricQC.code}'` : null,
                         orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
                         deleted: `'${finishingPrintingSC._deleted}'`,
                         fabricqualitycontroltestindex: fabricQC.code ? `${index}` : null,
-                        dailyOperationDate: dailyOperation._createdDate ? `${moment(dailyOperation._createdDate).format("L")}` : null
+                        dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).format("L")}'` : null
                     }
                 });
                 return [].concat.apply([], results);
@@ -360,7 +363,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                         this.sql.multiple = true;
 
                         // var fs = require("fs");
-                        // var path = "C:\\Users\\IttaAndLeslie\\Desktop\\orderstatus.txt";
+                        // var path = "C:\\Users\\leslie.aula\\Desktop\\orderstatus.txt";
 
                         // fs.writeFile(path, sqlQuery, function (error) {
                         //     if (error) {
