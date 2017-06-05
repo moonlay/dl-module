@@ -198,7 +198,7 @@ module.exports = function (unitPaymentOrder) {
                 style: ['size08', 'right']
             }, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: `${currency}`
                 }, {
                         width: '*',
@@ -208,7 +208,7 @@ module.exports = function (unitPaymentOrder) {
                 style: ['size08']
             }, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: `${currency}`
                 }, {
                         width: '*',
