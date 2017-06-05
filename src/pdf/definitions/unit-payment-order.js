@@ -202,7 +202,7 @@ module.exports = function (unitPaymentOrder) {
                     text: `${currency}`
                 }, {
                         width: '*',
-                        text: item.price.toLocaleString(locale, locale.currencyNotaItern),
+                        text: item.price.toLocaleString(locale, locale.currencyNotaItern2),
                         style: ['right']
                     }],
                 style: ['size08']
@@ -262,7 +262,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.useVat ? parseFloat(Math.round(vat * 100) / 100).toFixed(2).toLocaleString(locale, locale.currency) : "",
+                                    text: unitPaymentOrder.useVat ? parseFloat(Math.round(vat * 100) / 100).toLocaleString(locale, locale.currencyNotaItern) : "",
                                     style: 'right'
                                 }]
                         }, {
@@ -280,7 +280,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.useVat ?parseFloat(Math.round(((sum + incomeTax) - vat) * 100) / 100).toFixed(2).toLocaleString(locale, locale.currency) : "",
+                                    text: unitPaymentOrder.useVat ?parseFloat(Math.round(((sum + incomeTax) - vat) * 100) / 100).toLocaleString(locale, locale.currencyNotaItern) : "",
                                     style: 'right'
                                 }]
                         }]
@@ -303,7 +303,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: parseFloat(Math.round(sum * 100) / 100).toFixed(2).toLocaleString(locale, locale.currency),
+                                    text: parseFloat(Math.round(sum * 100) / 100).toLocaleString(locale, locale.currencyNotaItern),
                                     style: 'right'
                                 }]
                         }, {
@@ -317,7 +317,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.useIncomeTax ? parseFloat(Math.round(incomeTax * 100) / 100).toFixed(2).toLocaleString(locale, locale.currency) : '',
+                                    text: unitPaymentOrder.useIncomeTax ? parseFloat(Math.round(incomeTax * 100) / 100).toLocaleString(locale, locale.currencyNotaItern) : '',
                                     style: 'right'
                                 }]
                         }, {
@@ -331,7 +331,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: parseFloat(Math.round((sum + incomeTax) * 100) / 100).toFixed(2).toLocaleString(locale, locale.currency),
+                                    text: parseFloat(Math.round((sum + incomeTax) * 100) / 100).toLocaleString(locale, locale.currencyNotaItern),
                                     style: 'right'
                                 }]
                         }]
