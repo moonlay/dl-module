@@ -235,7 +235,7 @@ module.exports = function (unitPaymentOrder) {
 
     var table = [{
         table: {
-            widths: ['5%', '25%', '10%', '15%', '17%', '15%', '13%'],
+            widths: ['4%', '25%', '10%', '17%', '20%', '12%', '12%'],
             headerRows: 1,
             body: [].concat([thead], tbody)
         }
