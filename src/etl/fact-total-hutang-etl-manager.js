@@ -64,8 +64,9 @@ module.exports = class FactTotalHutang extends BaseManager {
         }).sort({ finish: -1 }).limit(1).toArray()
     }
 
-    extract(time) {
-        var timestamp = new Date(time[0].finish);
+    extract(times) {
+        var time = times.length > 0 ? times[0].start : "1970-01-01";
+        var timestamp = new Date(time);
         return this.unitReceiptNoteManager.collection.find({
             _deleted: false,
             _createdBy: {
@@ -74,7 +75,15 @@ module.exports = class FactTotalHutang extends BaseManager {
             _updatedDate: {
                 "$gt": timestamp,
             }
-        }).toArray()
+        }, {
+                no: 1,
+                "unit.name": 1,
+                "items.pricePerDealUnit": 1,
+                "items.deliveredQuantity": 1,
+                "items.currencyRate": 1,
+                "items.product.name": 1,
+                "items.product.code": 1
+            }).toArray()
             .then((unitReceiptNotes) => {
                 return this.joinUnitPaymentOrder(unitReceiptNotes);
             })
@@ -88,7 +97,15 @@ module.exports = class FactTotalHutang extends BaseManager {
                         unitReceiptNoteId: unitReceiptNote._id
                     }
                 }
-            }).toArray()
+            }, {
+                    no: 1,
+                    _createdDate: 1,
+                    date: 1,
+                    dueDate: 1,
+                    "supplier.name": 1,
+                    "category.name": 1,
+                    "division.name": 1
+                }).toArray()
                 .then((unitPaymentOrders) => {
                     var arr = unitPaymentOrders.map((unitPaymentOrder) => {
                         return {
@@ -121,26 +138,26 @@ module.exports = class FactTotalHutang extends BaseManager {
 
             if (unitReceiptNote)
 
-            var results = unitReceiptNote.items.map((unitReceiptNoteItem) => {
+                var results = unitReceiptNote.items.map((unitReceiptNoteItem) => {
 
-                return {
-                    unitPaymentOrderNo: `'${unitPaymentOrder.no}'`,
-                    unitPaymentOrderDate: `'${moment(unitPaymentOrder.date).format('L')}'`,
-                    unitPaymentOrderDueDate: `'${moment(unitPaymentOrder.dueDate).format('L')}'`,
-                    supplierName: `'${unitPaymentOrder.supplier.name.replace(/'/g, '"')}'`,
-                    categoryName: `'${unitPaymentOrder.category.name}'`,
-                    categoryType: `'${unitPaymentOrder.category.name.toLowerCase() === "bahan baku" ? "BAHAN BAKU" : "NON BAHAN BAKU"}'`,
-                    divisionName: `'${unitPaymentOrder.division.name}'`,
-                    unitName: `'${unitReceiptNote.unit.name}'`,
-                    invoicePrice: `${unitReceiptNoteItem.pricePerDealUnit}`,
-                    unitReceiptNoteQuantity: `${unitReceiptNoteItem.deliveredQuantity}`,
-                    purchaseOrderExternalCurrencyRate: `${unitReceiptNoteItem.currencyRate}`,
-                    total: `${unitReceiptNoteItem.pricePerDealUnit * unitReceiptNoteItem.deliveredQuantity * unitReceiptNoteItem.currencyRate}`,
-                    unitReceiptNoteNo: `'${unitReceiptNote.no}'`,
-                    productName: `'${unitReceiptNoteItem.product.name.replace(/'/g, '"')}'`,
-                    productCode: `'${unitReceiptNoteItem.product.code}'`
-                };
-            });
+                    return {
+                        unitPaymentOrderNo: `'${unitPaymentOrder.no}'`,
+                        unitPaymentOrderDate: `'${moment(unitPaymentOrder.date).format('L')}'`,
+                        unitPaymentOrderDueDate: `'${moment(unitPaymentOrder.dueDate).format('L')}'`,
+                        supplierName: `'${unitPaymentOrder.supplier.name.replace(/'/g, '"')}'`,
+                        categoryName: `'${unitPaymentOrder.category.name}'`,
+                        categoryType: `'${unitPaymentOrder.category.name.toLowerCase() === "bahan baku" ? "BAHAN BAKU" : "NON BAHAN BAKU"}'`,
+                        divisionName: `'${unitPaymentOrder.division.name}'`,
+                        unitName: `'${unitReceiptNote.unit.name}'`,
+                        invoicePrice: `${unitReceiptNoteItem.pricePerDealUnit}`,
+                        unitReceiptNoteQuantity: `${unitReceiptNoteItem.deliveredQuantity}`,
+                        purchaseOrderExternalCurrencyRate: `${unitReceiptNoteItem.currencyRate}`,
+                        total: `${unitReceiptNoteItem.pricePerDealUnit * unitReceiptNoteItem.deliveredQuantity * unitReceiptNoteItem.currencyRate}`,
+                        unitReceiptNoteNo: `'${unitReceiptNote.no}'`,
+                        productName: `'${unitReceiptNoteItem.product.name.replace(/'/g, '"')}'`,
+                        productCode: `'${unitReceiptNoteItem.product.code}'`
+                    };
+                });
 
             return [].concat.apply([], results);
         });
@@ -195,7 +212,7 @@ module.exports = class FactTotalHutang extends BaseManager {
                         this.sql.multiple = true;
 
                         // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\tttt.txt";
+                        // var path = "C:\\Users\\IttaAndLeslie\\Desktop\\tttt.txt";
 
                         // fs.writeFile(path, sqlQuery, function (error) {
                         //     if (error) {
@@ -208,22 +225,13 @@ module.exports = class FactTotalHutang extends BaseManager {
                         return Promise.all(command)
                             .then((results) => {
                                 request.execute("DL_UPSERT_FACT_TOTAL_HUTANG").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
-                                        transaction.commit((err) => {
-                                            if (err)
-                                                reject(err);
-                                            else
-                                                resolve(results);
-                                        });
-                                    }).catch((error) => {
-                                        transaction.rollback((err) => {
-                                            console.log("rollback")
-                                            if (err)
-                                                reject(err)
-                                            else
-                                                reject(error);
-                                        });
-                                    })
+                                    transaction.commit((err) => {
+                                        if (err)
+                                            reject(err);
+                                        else
+                                            resolve(results);
+                                    });
+
                                 }).catch((error) => {
                                     transaction.rollback((err) => {
                                         console.log("rollback")
