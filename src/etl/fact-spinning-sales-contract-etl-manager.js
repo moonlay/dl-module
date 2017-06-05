@@ -62,9 +62,8 @@ module.exports = class FactSpinningSalesContractEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(1970, 1, 1);
+        var timestamp = new Date(time[0].start);
         return this.spinningSalesContractManager.collection.find({
-            _deleted: false,
             _updatedDate: {
                 $gt: timestamp
             }
@@ -73,8 +72,10 @@ module.exports = class FactSpinningSalesContractEtlManager extends BaseManager {
 
     orderQuantityConvertion(uom, quantity) {
         if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity * 109361 / 100000;
+            return quantity;
         } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
+            return quantity * 0.9144;
+        } else {
             return quantity;
         }
     }
@@ -110,7 +111,8 @@ module.exports = class FactSpinningSalesContractEtlManager extends BaseManager {
                 construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
                 materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
                 materialWidth: item.materialWidth ? `'${item.materialWidth}'` : null,
-                material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null
+                material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null,
+                deleted: `'${item._deleted}'`
             }
         });
         return Promise.resolve([].concat.apply([], result));
@@ -147,7 +149,7 @@ module.exports = class FactSpinningSalesContractEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material]) VALUES(${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material});\n`;
+                                var queryString = `INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material], [_deleted]) VALUES(${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material}, ${item.deleted});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -162,6 +164,17 @@ module.exports = class FactSpinningSalesContractEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
+
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\Itta And Leslie\\Desktop\\spinning.txt";
+
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
 
                         return Promise.all(command)
                             .then((results) => {

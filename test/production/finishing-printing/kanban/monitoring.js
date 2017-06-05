@@ -14,15 +14,14 @@ before('#00. connect db', function(done) {
             kanbanManager = new KanbanManager(db, {
                 username: 'dev'
             });
-
-    done();
-                       
+            done();         
         })
         .catch(e => {
             done(e);
         });
 });
 
+var code;
 it('#01. should success when create 20 kanban data', function (done) {
    
     var data = []; 
@@ -32,10 +31,9 @@ it('#01. should success when create 20 kanban data', function (done) {
                 data.push(kan); 
             }
         )
-        
     } 
     Promise.all(data) 
-        .then((result) => { 
+        .then((result) => {
             done(); 
         }).catch(e => {
             done(e);
@@ -52,7 +50,22 @@ it('#01. should success when create 20 kanban data', function (done) {
     query.orderTypeId='';
     kanbanManager.getDataReport(query)
     .then(kanban => {
+        for(var a of kanban){
+            code = a.orderNo;
+        } 
         kanban.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+ it('#03. should success when get data Kanban', function (done) {
+    var query={"keyword" : code};
+    kanbanManager.read(query)
+    .then(kanban => {
+        kanban.data.should.instanceof(Array);
         done();
     }).catch(e => {
             done(e);

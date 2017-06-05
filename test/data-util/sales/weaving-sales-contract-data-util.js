@@ -54,6 +54,8 @@ class WeavingSalesContractDataUtil {
                     materialWidth:'Width',
                     incomeTax:'Exclude PPn',
                     price:8000,
+                    agentId:_buyer._id,
+                    agent:_buyer,
 
                     // paymentMethod:`Telegraphic Transfer (TT)`,
                     paymentRequirement:`Payment Requirement`,
@@ -61,15 +63,16 @@ class WeavingSalesContractDataUtil {
                     termOfShipment:"test",
                     packing:`pack`,
                     deliverySchedule:new Date(),
-                    remark:`desc`,
+                    // remark:`desc`,
                     useIncomeTax:false,
                     transportFee:'Fee',
                     deliveredTo:'DeliveredTo',
-                    agent:'Agent',
+                    // agent:'Agent',
                     comission:200,
                     condition:'Condition',
                     attachment:'attachment',
-                    remark:'Remark Test'
+                    remark:'Remark Test',
+                    pieceLength:'pieceLength',
                 };
                 return Promise.resolve(data);
             });

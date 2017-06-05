@@ -21,6 +21,7 @@ var generateCode = require('../../utils/code-generator');
 var i18n = require('dl-i18n');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
+var moment = require('moment');
 
 module.exports = class PurchaseOrderExternalManager extends BaseManager {
     constructor(db, user) {
@@ -520,10 +521,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                         for (var _purchaseOrderItem of _po.items) {
                                             if (_purchaseOrderItem.product._id.toString() === _poItem.product._id.toString()) {
                                                 _purchaseOrderItem.product = _poItem.product;
-                                                _purchaseOrderItem.dealQuantity = _poItem.dealQuantity;
+                                                _purchaseOrderItem.dealQuantity =  Number(_poItem.dealQuantity);
                                                 _purchaseOrderItem.dealUom = _poItem.dealUom;
                                                 _purchaseOrderItem.useIncomeTax = _poItem.useIncomeTax;
-                                                _purchaseOrderItem.priceBeforeTax = _poItem.priceBeforeTax;
+                                                _purchaseOrderItem.priceBeforeTax =  Number(_poItem.priceBeforeTax);
                                                 _purchaseOrderItem.pricePerDealUnit = _poItem.useIncomeTax ? (100 * _poItem.priceBeforeTax) / 110 : _poItem.priceBeforeTax;
                                                 _purchaseOrderItem.conversion = _poItem.conversion;
                                                 break;
@@ -602,13 +603,13 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                     var _purchaseOrder = purchaseOrderExternal.items.find((_purchaseOrder) => _purchaseOrder._id.toString() === purchaseOrder._id.toString());
                                                     var itemExternal = _purchaseOrder.items.find((_item) => _item.product._id.toString() === poItem.product._id.toString());
                                                     if (itemExternal) {
-                                                        poItem.dealQuantity = itemExternal.dealQuantity;
+                                                        poItem.dealQuantity = Number(itemExternal.dealQuantity);
                                                         poItem.dealUom = itemExternal.dealUom;
-                                                        poItem.priceBeforeTax = itemExternal.priceBeforeTax;
+                                                        poItem.priceBeforeTax = Number(itemExternal.priceBeforeTax);
                                                         poItem.pricePerDealUnit = itemExternal.useIncomeTax ? (100 * itemExternal.priceBeforeTax) / 110 : itemExternal.priceBeforeTax;
-                                                        poItem.conversion = itemExternal.conversion;
+                                                        poItem.conversion = Number(itemExternal.conversion);
                                                         poItem.currency = purchaseOrderExternal.currency;
-                                                        poItem.currencyRate = purchaseOrderExternal.currencyRate;
+                                                        poItem.currencyRate =  Number(purchaseOrderExternal.currencyRate);
                                                     }
                                                 }
                                                 return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder)
@@ -960,5 +961,457 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         });
                 });
             });
+    }
+
+    getDurationPRtoPOEksternalData(query){
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                    _deleted: false
+                };
+            var postedQuery = {
+                    isPosted: true
+                };
+            var closedQuery = {
+                    isClosed: false
+                };
+            var date = {
+                "items.purchaseRequest._createdDate" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                }
+            };
+            var unitQuery={};
+            if(query.unitId && query.unitId!=""){
+                unitQuery={
+                    "items.purchaseRequest.unit._id":new ObjectId(query.unitId)
+                }
+            }
+            var dates={
+                $divide: [ { $subtract: [ {$subtract : [      
+                     "$_createdDate",      
+                     {      
+                          "$add" : [      
+                               {"$millisecond" : "$_createdDate"},      
+                               {      
+                                    "$multiply" : [      
+                                         {"$second" : "$_createdDate"},      
+                                         1000      
+                                    ]      
+                               },      
+                               {      
+                                    "$multiply" : [      
+                                         {"$minute" : "$_createdDate"},      
+                                         60, 1000      
+                                    ]      
+                               },      
+                               {      
+                                    "$multiply" : [      
+                                         {"$hour" : "$_createdDate"},      
+                                         60, 60, 1000      
+                                    ]      
+                               }      
+                          ]      
+                     }      
+                ]}      ,{$subtract : [      
+                     "$items.purchaseRequest._createdDate",      
+                     {      
+                          "$add" : [      
+                               {"$millisecond" : "$items.purchaseRequest._createdDate"},      
+                               {      
+                                    "$multiply" : [      
+                                         {"$second" : "$items.purchaseRequest._createdDate"},      
+                                         1000      
+                                    ]      
+                               },      
+                               {      
+                                    "$multiply" : [      
+                                         {"$minute" : "$items.purchaseRequest._createdDate"},      
+                                         60,  1000      
+                                    ]      
+                               },      
+                               {      
+                                    "$multiply" : [      
+                                         {"$hour" : "$items.purchaseRequest._createdDate"},      
+                                         60,  60,   1000      
+                                    ]      
+                               }      
+                          ]      
+                }]} ] }, 86400000 ]};
+            var durationQuery={};
+            if(query.duration==="8-14 hari"){
+                durationQuery={
+                    $cond: {
+                        if: { "$and": [ 
+                                { $gt: [ dates, 7 ]},
+                                { $lte: [ dates, 14] }
+                                ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if(query.duration==="15-30 hari"){
+                durationQuery={
+                    $cond: {
+                        if: { "$and": [ 
+                                { $gt: [ dates, 14 ]},
+                                { $lte: [ dates, 30] }
+                                ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if(query.duration==="> 30 hari"){
+                durationQuery={
+                    $cond: {
+                        if:  { $gt: [ dates, 30] },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            
+            
+            var Query = {"$and" : [date, deletedQuery,unitQuery]};
+            this.collection.aggregate([
+                {$unwind: "$items"}, 
+                {$unwind: "$items.items"},
+                {$match : Query},
+                {$redact:durationQuery},
+                {$project :{
+                        "items.purchaseRequest.date" : 1,
+                        "prDate" : "$items.purchaseRequest._createdDate",
+                        "prNo" : "$items.purchaseRequest.no",
+                        "division": "$items.purchaseRequest.unit.division.name",
+                        "unit": "$items.purchaseRequest.unit.name",
+                        "budget":"$items.purchaseRequest.budget.name",
+                        "category" : "$items.category.name",
+                        "productCode": "$items.items.product.code",
+                        "productName": "$items.items.product.name",
+                        "productQuantity" : "$items.items.dealQuantity",
+                        "productUom" : "$items.items.dealUom.unit",
+                        "productPrice" : "$items.items.pricePerDealUnit",
+                        "supplierCode" : "$supplier.code",
+                        "supplierName" : "$supplier.name",
+                        "poDate" : "$items._createdDate",
+                        "poEksDate" : "$_createdDate",
+                        "expectedDate": "$expectedDeliveryDate",
+                        "poEksNo" : "$no",
+                        "dateDiff" : dates,
+                        "staff" : "$_createdBy"
+                    }
+                },
+                    {$sort : {"items.purchaseRequest.date" : -1}}
+                ])
+                .toArray().then(report=>{
+                    resolve(report);
+                });
+        });
+    }
+
+    getXlsDurationPRtoPOEksternalData(result,query){
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for(var report of result.info){
+            index++;
+            var dateDiff=Math.ceil(report.dateDiff);
+            var item = {};
+            item["No"] = index;
+            item["Tanggal Purchase Request"] = moment(new Date(report.prDate.setHours(report.prDate.getHours() + 7))).format(dateFormat);
+            item["No Purchase Request"] = report.prNo;
+            item["Divisi"] = report.division;
+            item["Unit"] = report.unit;
+            item["Budget"] = report.budget;
+            item["Kategori"] = report.category;
+            item["Kode Barang"] = report.productCode;
+            item["Nama Barang"] = report.productName;
+            item["Jumlah Barang"] = report.productQuantity;
+            item["Satuan Barang"] = report.productUom;
+            item["Harga Barang"] = report.productPrice;
+            item["Kode Supplier"] = report.supplierCode;
+            item["Nama Supplier"] = report.supplierName;
+            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate.setHours(report.poDate.getHours() + 7))).format(dateFormat);
+            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate.setHours(report.poEksDate.getHours() + 7))).format(dateFormat);
+            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate.setHours(report.expectedDate.getHours() + 7))).format(dateFormat);
+            item["No PO Eksternal"] = report.poEksNo;
+            item["Selisih Tanggal PR - PO Eksternal (hari)"] = dateDiff;
+            item["Nama Staff Pembelian"] = report.staff;
+            
+
+            xls.data.push(item);
+        }
+
+        xls.options = {
+            "No" : "number",
+            "Tanggal Purchase Request" : "string",
+            "No Purchase Request" : "string",
+            "Divisi" : "string",
+            "Unit" : "string",
+            "Budget" : "string",
+            "Kategori" : "string",
+            "Kode Barang":"string",
+            "Nama Barang" : "string",
+            "Jumlah Barang" : "number",
+            "Satuan Barang" : "string",
+            "Harga Barang" : "number",
+            "Kode Supplier" : "string",
+            "Nama Supplier" : "string",
+            "Tanggal Terima PO Internal" : "string",
+            "Tanggal PO Eksternal" : "string",
+            "Tanggal Target Datang" : "string",
+            "No PO Eksternal" : "string",
+            "Selisih Tanggal PR - PO Eksternal (hari)":"number",
+            "Nama Staff Pembelian" : "string"
+            
+        };
+
+        if(query.dateFrom && query.dateTo){
+            xls.name = `LAPORAN DURASI PR - PO EKSTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(!query.dateFrom && query.dateTo){
+            xls.name = `LAPORAN DURASI PR - PO EKSTERNAL ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(query.dateFrom && !query.dateTo){
+            xls.name = `LAPORAN DURASI PR - PO EKSTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `LAPORAN DURASI PR - PO EKSTERNAL.xlsx`;
+
+        return Promise.resolve(xls);
+    }
+
+    getDurationPOData(query){
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                    _deleted: false
+                };
+            var postedQuery = {
+                    isPosted: true
+                };
+            var closedQuery = {
+                    isClosed: false
+                };
+            var date = {
+                "items._createdDate" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                }
+            };
+            var unitQuery={};
+            if(query.unitId && query.unitId!=""){
+                unitQuery={
+                    "items.purchaseRequest.unit._id":new ObjectId(query.unitId)
+                }
+            }
+            var dates={
+                $divide: [ { $subtract: [ {$subtract : [      
+                     "$_createdDate",      
+                     {      
+                          "$add" : [      
+                               {"$millisecond" : "$_createdDate"},      
+                               {      
+                                    "$multiply" : [      
+                                         {"$second" : "$_createdDate"},      
+                                         1000      
+                                    ]      
+                               },      
+                               {      
+                                    "$multiply" : [      
+                                         {"$minute" : "$_createdDate"},      
+                                         60, 1000      
+                                    ]      
+                               },      
+                               {      
+                                    "$multiply" : [      
+                                         {"$hour" : "$_createdDate"},      
+                                         60, 60, 1000      
+                                    ]      
+                               }      
+                          ]      
+                     }      
+                ]}      ,{$subtract : [      
+                     "$items._createdDate",      
+                     {      
+                          "$add" : [      
+                               {"$millisecond" : "$items._createdDate"},      
+                               {      
+                                    "$multiply" : [      
+                                         {"$second" : "$items._createdDate"},      
+                                         1000      
+                                    ]      
+                               },      
+                               {      
+                                    "$multiply" : [      
+                                         {"$minute" : "$items._createdDate"},      
+                                         60,  1000      
+                                    ]      
+                               },      
+                               {      
+                                    "$multiply" : [      
+                                         {"$hour" : "$items._createdDate"},      
+                                         60,  60,   1000      
+                                    ]      
+                               }      
+                          ]      
+                }]} ] }, 86400000 ]};
+            var durationQuery={};
+            if(query.duration==="8-14 hari"){
+                durationQuery={
+                    $cond: {
+                        if: { "$and": [ 
+                                { $gte: [ dates, 8 ]},
+                                { $lte: [ dates, 14] }
+                                ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if(query.duration==="15-30 hari"){
+                durationQuery={
+                    $cond: {
+                        if: { "$and": [ 
+                                { $gt: [ dates, 14 ]},
+                                { $lte: [ dates, 30] }
+                                ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if(query.duration==="> 30 hari"){
+                durationQuery={
+                    $cond: {
+                        if:  { $gt: [ dates, 30] },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            
+            
+            var Query = {"$and" : [date, deletedQuery,unitQuery]};
+            this.collection.aggregate([
+                {$unwind: "$items"}, 
+                {$unwind: "$items.items"},
+                {$match : Query},
+                {$redact:durationQuery},
+                {$project :{
+                        "items._createdDate" : 1,
+                        "prDate" : "$items.purchaseRequest._createdDate",
+                        "prNo" : "$items.purchaseRequest.no",
+                        "division": "$items.purchaseRequest.unit.division.name",
+                        "unit": "$items.purchaseRequest.unit.name",
+                        "budget":"$items.purchaseRequest.budget.name",
+                        "category" : "$items.category.name",
+                        "productCode": "$items.items.product.code",
+                        "productName": "$items.items.product.name",
+                        "productQuantity" : "$items.items.dealQuantity",
+                        "productUom" : "$items.items.dealUom.unit",
+                        "productPrice" : "$items.items.pricePerDealUnit",
+                        "supplierCode" : "$supplier.code",
+                        "supplierName" : "$supplier.name",
+                        "poDate" : "$items._createdDate",
+                        "poEksDate" : "$_createdDate",
+                        "expectedDate": "$expectedDeliveryDate",
+                        "poEksNo" : "$no",
+                        "dateDiff":dates,
+                        "staff" : "$_createdBy"
+                    }
+                },
+                    {$sort : {"items._createdDate" : -1}}
+                ])
+                .toArray().then(report=>{
+                    resolve(report);
+                });
+        });
+    }
+
+    getXlsDurationPOData(result,query){
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for(var report of result.info){
+            var dateDiff=Math.ceil(report.dateDiff);
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["Tanggal Purchase Request"] = moment(new Date(report.prDate.setHours(report.prDate.getHours() + 7))).format(dateFormat);
+            item["No Purchase Request"] = report.prNo;
+            item["Divisi"] = report.division;
+            item["Unit"] = report.unit;
+            item["Budget"] = report.budget;
+            item["Kategori"] = report.category;
+            item["Kode Barang"] = report.productCode;
+            item["Nama Barang"] = report.productName;
+            item["Jumlah Barang"] = report.productQuantity;
+            item["Satuan Barang"] = report.productUom;
+            item["Harga Barang"] = report.productPrice;
+            item["Kode Supplier"] = report.supplierCode;
+            item["Nama Supplier"] = report.supplierName;
+            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate.setHours(report.poDate.getHours() + 7))).format(dateFormat);
+            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate.setHours(report.poEksDate.getHours() + 7))).format(dateFormat);
+            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate.setHours(report.expectedDate.getHours() + 7))).format(dateFormat);
+            item["No PO Eksternal"] = report.poEksNo;
+            item["Selisih Tanggal PO Internal - PO Eksternal (hari)"] = dateDiff;
+            item["Nama Staff Pembelian"] = report.staff;
+            
+
+            xls.data.push(item);
+        }
+
+        xls.options = {
+            "No" : "number",
+            "Tanggal Purchase Request" : "string",
+            "No Purchase Request" : "string",
+            "Divisi" : "string",
+            "Unit" : "string",
+            "Budget" : "string",
+            "Kategori" : "string",
+            "Kode Barang":"string",
+            "Nama Barang" : "string",
+            "Jumlah Barang" : "number",
+            "Satuan Barang" : "string",
+            "Harga Barang" : "number",
+            "Kode Supplier" : "string",
+            "Nama Supplier" : "string",
+            "Tanggal Terima PO Internal" : "string",
+            "Tanggal PO Eksternal" : "string",
+            "Tanggal Target Datang" : "string",
+            "No PO Eksternal" : "string",
+            "Selisih Tanggal PO Internal - PO Eksternal (hari)":"number",
+            "Nama Staff Pembelian" : "string"
+            
+        };
+
+        if(query.dateFrom && query.dateTo){
+            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(!query.dateFrom && query.dateTo){
+            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(query.dateFrom && !query.dateTo){
+            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL.xlsx`;
+
+        return Promise.resolve(xls);
     }
 };

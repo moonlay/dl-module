@@ -34,7 +34,13 @@ it("#01. should success when create etl fact-monitoring-event", function (done) 
 });
 
 it("#02. should success when transforming data", function (done) {
-    var data = [{}, {}];
+    var data = [
+        {
+            timeInMillisStart: 13980000,
+            timeInMillisEnd: 13980000,
+            dateStart: "2017-02-05T07:00:00+07:00",
+            dateEnd: "2017-02-05T07:00:00+07:00"
+        }, {}];
     instanceManager.transform(data)
         .then(() => {
             done();
@@ -44,20 +50,20 @@ it("#02. should success when transforming data", function (done) {
         });
 });
 
-it("#03. should error when load empty data", function (done) {
-    instanceManager.load({})
-        .then(id => {
-            done("should error when create with empty data");
-        })
-        .catch(e => {
-            try {                
-                done();
-            }
-            catch (ex) {
-                done(ex);
-            }
-        });
-});
+// it("#03. should error when load empty data", function (done) {
+//     instanceManager.load({})
+//         .then(id => {
+//             done("should error when create with empty data");
+//         })
+//         .catch(e => {
+//             try {                
+//                 done();
+//             }
+//             catch (ex) {
+//                 done(ex);
+//             }
+//         });
+// });
 
 it("#04. should error when insert empty data", function (done) {
     instanceManager.insertQuery(this.sql, "")

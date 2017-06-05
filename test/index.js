@@ -24,10 +24,12 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');
     test('@ETL/FACT-MONITORING-EVENT', './etl/fact-monitoring-event');
     test('@ETL/FACT-PRODUCTION-ORDER', './etl/fact-production-order');
+    test('@ETL/FACT-PRODUCTION-ORDER-STATUS', './etl/fact-production-order-status');
     test('@ETL/FACT-WEAVING-SALES-CONTRACT', './etl/fact-weaving-sales-contract');
     test('@ETL/FACT-FINISHING-PRINTING-SALES-CONTRACT', './etl/fact-finishing-printing-sales-contract');
     test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/fact-spinning-sales-contract');
     test('@ETL/FACT-DAILY-OPERATIONS', './etl/fact-daily-operations');
+    test('@ETL/FACT-QUALITY-CONTROL', './etl/fact-fabric-quality-control');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
@@ -63,6 +65,8 @@ describe('#dl-module', function (done) {
     test('@MASTER/COMODITY', './master/comodity');
     test('@MASTER/QUALITY', './master/quality');
     test('@MASTER/TERM OF PAYMENT', './master/term-of-payment');
+    test('@MASTER/DESIGN-MOTIVE', './master/design-motive');
+    test('@MASTER/STORAGE', './master/storage');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
@@ -74,6 +78,7 @@ describe('#dl-module', function (done) {
     test('@PURCHASING/UNIT PAYMENT PRICE CORRECTION', './purchasing/unit-payment-price-correction-note');
     test('@PURCHASING/UNIT PAYMENT QUANTITY CORRECTION', './purchasing/unit-payment-quantity-correction-note');
     test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');
+    test('@purchasing/purchase-order/report', './purchasing/duration-report');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
@@ -83,11 +88,18 @@ describe('#dl-module', function (done) {
 
     //Production
     test('@PRODUCTION/FINISHING-PRINTING/KANBAN', './production/finishing-printing/kanban');
+    test('@PRODUCTION/FINISHING-PRINTING/FABRIC-QUALITY-CONTROL', './production/finishing-printing/fabric-quality-control');
+    test('@PRODUCTION/FINISHING-PRINTING/PACKING', './production/finishing-printing/packing');
     test('@PRODUCTION/DAILY OPERATION', './production/finishing-printing/daily-operation');
     test('@PRODUCTION/FINISHING-PRINTING/MONITORING-SPECIFICATION-MACHINE', './production/finishing-printing/monitoring-specification-machine');
     test('@PRODUCTION/FINISHING-PRINTING/MONITORING-EVENT', './production/finishing-printing/monitoring-event');
+    test('@PRODUCTION/INSPECTION LOT COLOR', './production/finishing-printing/inspection-lot-color');
 
     // test('@production/winding-quality-sampling-manager', './production/spinning/winding/winding-quality-sampling-manager-test');
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
 
+    test('@INVENTORY/FINISHING-PRINTING/PACKING-RECEIPT', './inventory/finishing-printing/packing-receipt');
+    test('@INVENTORY/INVENTORY-SUMMARY', './inventory/inventory-summary');
+    test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
+    test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
 });

@@ -62,9 +62,8 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
     }
 
     extract(time) {
-        var timestamp = new Date(1970, 1, 1);
+        var timestamp = new Date(time[0].start);
         return this.finishingPrintingSalesContractManager.collection.find({
-            _deleted: false,
             _updatedDate: {
                 $gt: timestamp
             }
@@ -73,15 +72,17 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
     orderQuantityConvertion(uom, quantity) {
         if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity * 109361 / 100000;
+            return quantity;
         } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
+            return quantity * 0.9144;
+        } else {
             return quantity;
         }
     }
 
     joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth) {
         if (material !== null && materialConstruction !== null && yarnMaterialNo !== null && materialWidth !== null) {
-            return `'${material + " " + materialConstruction + " " + yarnMaterialNo + " " + materialWidth}'`;
+            return `'${material.replace(/'/g, '"') + " " + materialConstruction.replace(/'/g, '"') + " " + yarnMaterialNo.replace(/'/g, '"') + " " + materialWidth.replace(/'/g, '"')}'`;
         } else {
             return null;
         }
@@ -109,8 +110,9 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
                 productionType: `'${"Finishing Printing"}'`,
                 construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
                 materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
-                materialWidth: item.materialWidth ? `'${item.materialWidth}'` : null,
-                material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null
+                materialWidth: item.materialWidth ? `'${item.materialWidth.replace(/'/g, '"')}'` : null,
+                material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null,
+                deleted: `'${item._deleted}'`
             }
         });
         return Promise.resolve([].concat.apply([], result));
@@ -147,7 +149,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material]) VALUES(${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material});\n`;
+                                var queryString = `INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material], [_deleted]) VALUES(${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material}, ${item.deleted});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));

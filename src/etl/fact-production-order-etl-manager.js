@@ -9,12 +9,14 @@ var moment = require("moment");
 require("mongodb-toolkit");
 
 var ProductionOrderManager = require("../managers/sales/production-order-manager");
+var KanbanManager = require("../managers/production/finishing-printing/kanban-manager")
 
 module.exports = class FactProductionOrderEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
         this.productionOrderManager = new ProductionOrderManager(db, user);
+        this.kanbanManager = new KanbanManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
 
@@ -62,40 +64,81 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(time[0].finish);
+        var timestamp = new Date(time[0].start);
         return this.productionOrderManager.collection.find({
-            _deleted: false,
             _updatedDate: {
                 $gt: timestamp
             }
-        }).toArray();
+        }).toArray()
+            .then((productionOrder) => {
+                return this.joinKanban(productionOrder);
+            })
+    }
+
+    joinKanban(productionOrders) {
+        var joinKanbans = productionOrders.map((productionOrder) => {
+            return this.kanbanManager.collection.find({
+                productionOrderId: productionOrder._id
+            }).toArray()
+                .then((kanbans) => {
+                    var arr = kanbans.map((kanban) => {
+                        return {
+                            productionOrder: productionOrder,
+                            kanban: kanban
+                        };
+                    });
+
+                    if (arr.length === 0)
+                        arr.push({
+                            productionOrder: productionOrder,
+                            kanban: null
+                        });
+
+                    return Promise.resolve(arr);
+                })
+                .catch((e) => {
+                    console.log(e);
+                    reject(e);
+                });
+        });
+        return Promise.all(joinKanbans)
+            .then((joinKanban) => {
+                return Promise.resolve([].concat.apply([], joinKanban));
+            }).catch((e) => {
+                console.log(e);
+                reject(e);
+            });
     }
 
     orderQuantityConvertion(uom, quantity) {
         if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity * 109361 / 100000;
+            return quantity;
         } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
+            return quantity * 0.9144;
+        } else {
             return quantity;
         }
     }
 
     joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth) {
         if (material !== null && materialConstruction !== null && yarnMaterialNo !== null && materialWidth !== null) {
-            return `'${material + " " + materialConstruction + " " + yarnMaterialNo + " " + materialWidth}'`;
+            return `'${material.replace(/'/g, '"') + " " + materialConstruction.replace(/'/g, '"') + " " + yarnMaterialNo.replace(/'/g, '"') + " " + materialWidth.replace(/'/g, '"')}'`;
         } else {
             return null;
         }
     }
 
     transform(data) {
-        var result = data.map((item) => {
+        var result = data.map((items) => {
+            var item = items.productionOrder;
+            var kanban = items.kanban;
             var orderUom = item.uom ? item.uom.unit : null;
             var orderQuantity = item.orderQuantity ? item.orderQuantity : null;
             var material = item.material ? item.material.name.replace(/'/g, '"') : null;
             var materialConstruction = item.materialConstruction ? item.materialConstruction.name.replace(/'/g, '"') : null;
             var yarnMaterialNo = item.yarnMaterial ? item.yarnMaterial.name.replace(/'/g, '"') : null;
             var materialWidth = item.materialWidth ? item.materialWidth : null;
-            
+
             return {
                 salesContractNo: item.salesContractNo ? `'${item.salesContractNo}'` : null,
                 productionOrderNo: item.orderNo ? `'${item.orderNo}'` : null,
@@ -112,8 +155,11 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
                 deliveryDate: item.deliveryDate ? `'${moment(item.deliveryDate).format("L")}'` : null,
                 createdDate: item._createdDate ? `'${moment(item._createdDate).format("L")}'` : null,
                 totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
-                construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
-                buyerCode: item.buyer ? `'${item.buyer.code}'` : null
+                construction: this.joinConstructionString(material.replace(/'/g, '"'), materialConstruction.replace(/'/g, '"'), yarnMaterialNo.replace(/'/g, '"'), materialWidth),
+                buyerCode: item.buyer ? `'${item.buyer.code}'` : null,
+                cartQuantity: kanban && kanban.cart && kanban.cart.qty ? `${kanban.cart.qty}` : null,
+                kanbanCode: kanban && kanban.code ? `'${kanban.code}'` : null,
+                deleted: `'${item._deleted}'`
             }
         });
         return Promise.resolve([].concat.apply([], result));
@@ -150,7 +196,7 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO DL_Fact_Production_Order_Temp([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi], [Konstruksi], [Kode Buyer]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion}, ${item.construction}, ${item.buyerCode});\n`;
+                                var queryString = `INSERT INTO DL_Fact_Production_Order_Temp([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi], [Konstruksi], [Kode Buyer], [Jumlah Order(Kanban)], [Kode Kanban], [deleted]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion}, ${item.construction}, ${item.buyerCode}, ${item.cartQuantity}, ${item.kanbanCode}, ${item.deleted});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -165,6 +211,17 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
+
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\Itta And Leslie\\Desktop\\order.txt";
+
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
 
                         return Promise.all(command)
                             .then((results) => {

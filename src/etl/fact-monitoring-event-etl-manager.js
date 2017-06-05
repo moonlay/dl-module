@@ -63,9 +63,8 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
     }
 
     extract(time) {
-        var timestamp = new Date(time[0].finish);
+        var timestamp = new Date(time[0].start);
         return this.monitoringEventManager.collection.find({
-            _deleted: false,
             _createdBy: {
                 "$nin": ["dev", "unit-test"]
             },
@@ -105,8 +104,8 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
                 machineManufacture: monitoringEvent.machine ? `'${monitoringEvent.machine.manufacture}'` : null,
                 machineName: monitoringEvent.machine ? `'${monitoringEvent.machine.name.replace(/'/g, '"')}'` : null,
                 machineProcess: monitoringEvent.machine ? `'${monitoringEvent.machine.process.replace(/'/g, '"')}'` : null,
-                machineStepProcess: monitoringEvent.machine ? `'${monitoringEvent.machine.step.process}'` : null,
-                unitCode: monitoringEvent.machine ? `'${monitoringEvent.machine.unit.code}'` : null,
+                machineStepProcess: monitoringEvent.machine && monitoringEvent.machine.step && monitoringEvent.machine.step.process ? `'${monitoringEvent.machine.step.stepId}'` : null,
+                unitCode: monitoringEvent.machine && monitoringEvent.machine.unit && monitoringEvent.machine.unit.code ? `'${monitoringEvent.machine.unit.code}'` : null,
                 divisionCode: monitoringEvent.machine ? `'${monitoringEvent.machine.unit.division.code}'` : null,
                 divisionName: monitoringEvent.machine ? `'${monitoringEvent.machine.unit.division.name}'` : null,
                 unitName: monitoringEvent.machine ? `'${monitoringEvent.machine.unit.name}'` : null,
@@ -117,44 +116,46 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
                 productionOrderBuyerCountry: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.buyer.country}'` : null,
                 productionOrderBuyerName: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.buyer.name.replace(/'/g, '"')}'` : null,
                 productionOrderBuyerTempo: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.buyer.tempo}'` : null,
-                productionOrderConstruction: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.construction}'` : null,
+                productionOrderConstruction: monitoringEvent.productionOrder && monitoringEvent.productionOrder.construction ? `'${monitoringEvent.productionOrder.construction}'` : null,
                 productionOrderDeliveryDate: monitoringEvent.productionOrder ? `'${moment(monitoringEvent.productionOrder.deliveryDate).format("L")}'` : null,
-                productionOrderProductionOrderDesign: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.design}'` : null,
+                productionOrderProductionOrderDesign: monitoringEvent.productionOrder && monitoringEvent.productionOrder.design ? `'${monitoringEvent.productionOrder.design}'` : null,
                 productionOrderFinishWidth: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.finishWidth}'` : null,
                 productionOrderHandlingStandard: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.handlingStandard}'` : null,
-                // lampStandardCode: monitoringEvent.productionOrder.lampStandards ? `'${monitoringEvent.productionOrder.lampStandards.code}'` : null,
-                // lampStandardDescription: monitoringEvent.productionOrder.lampStandards ? `'${monitoringEvent.productionOrder.lampStandards.description}'` : null,
-                // lampStandardName: monitoringEvent.productionOrder.lampStandards ? `'${monitoringEvent.productionOrder.lampStandards.name}'` : null,
+                // // lampStandardCode: monitoringEvent.productionOrder.lampStandards ? `'${monitoringEvent.productionOrder.lampStandards.code}'` : null,
+                // // lampStandardDescription: monitoringEvent.productionOrder.lampStandards ? `'${monitoringEvent.productionOrder.lampStandards.description}'` : null,
+                // // lampStandardName: monitoringEvent.productionOrder.lampStandards ? `'${monitoringEvent.productionOrder.lampStandards.name}'` : null,
                 productionOrderMaterial: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.material.name}'` : null,
                 productionOrderOrderNo: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.orderNo}'` : null,
                 productionOrderOrderQuantity: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.orderQuantity}'` : null,
                 productionOrderOrderType: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.orderType.name}'` : null,
-                productionOrderOriginGreigeFabric: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.originGreigeFabric}'` : null,
+                productionOrderOriginGreigeFabric: monitoringEvent.productionOrder && monitoringEvent.productionOrder.originGreigeFabric ? `'${monitoringEvent.productionOrder.originGreigeFabric}'` : null,
                 productionOrderProcessType: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.processType.name}'` : null,
                 productionOrderRemark: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.remark}'` : null,
-                productionOrderRollLength: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.rollLength}'` : null,
+                productionOrderRollLength: monitoringEvent.productionOrder && monitoringEvent.productionOrder.rollLength ? `'${monitoringEvent.productionOrder.rollLength}'` : null,
                 productionOrderRun: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.RUN}'` : null,
                 productionOrderSalesContractNo: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.salesContractNo}'` : null,
                 productionOrderSample: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.sample}'` : null,
                 productionOrderShrinkageStandard: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.shrinkageStandard}'` : null,
-                productionOrderSpelling: monitoringEvent.productionOrder ? `${monitoringEvent.productionOrder.spelling}` : null,
+                productionOrderSpelling: monitoringEvent.productionOrder && monitoringEvent.productionOrder.spelling ? `${monitoringEvent.productionOrder.spelling}` : null,
                 productionOrderUom: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.uom.unit}'` : null,
                 monitoringEventRemark: monitoringEvent.remark ? `'${monitoringEvent.remark.replace(/'/g, '"')}'` : null,
-                selectedProductionOrderDetailCode: monitoringEvent.selectedProductionOrderDetail ? `'${monitoringEvent.selectedProductionOrderDetail.code}'` : null,
-                selectedProductionOrderDetailColorRequest: monitoringEvent.selectedProductionOrderDetail ? `'${monitoringEvent.selectedProductionOrderDetail.colorRequest.replace(/'/g, '"')}'` : null,
-                selectedProductionOrderDetailColorTemplate: monitoringEvent.selectedProductionOrderDetail ? `'${monitoringEvent.selectedProductionOrderDetail.colorTemplate.replace(/'/g, '"')}'` : null,
-                selectedProductionOrderDetailColorTypeCode: (monitoringEvent.selectedProductionOrderDetail && monitoringEvent.selectedProductionOrderDetail.colorType !== null) ? `'${monitoringEvent.selectedProductionOrderDetail.colorType.code}'` : null,
-                selectedProductionOrderDetailColorTypeName: (monitoringEvent.selectedProductionOrderDetail && monitoringEvent.selectedProductionOrderDetail.colorType !== null) ? `'${monitoringEvent.selectedProductionOrderDetail.colorType.name}'` : null,
-                selectedProductionOrderDetailColorTypeRemark: (monitoringEvent.selectedProductionOrderDetail && monitoringEvent.selectedProductionOrderDetail.colorType !== null) ? `'${monitoringEvent.selectedProductionOrderDetail.colorType.remark}'` : null,
-                selectedProductionOrderDetailQuantity: monitoringEvent.selectedProductionOrderDetail ? `'${monitoringEvent.selectedProductionOrderDetail.quantity}'` : null,
-                selectedProductionOrderDetailUom: monitoringEvent.selectedProductionOrderDetail ? `'${monitoringEvent.selectedProductionOrderDetail.uom.unit}'` : null,
-                machineEventName: (monitoringEvent.machineEvent && monitoringEvent.machineEvent.name) ? `'${monitoringEvent.machineEvent.name.replace(/'/g, '"')}'` : null,
+                selectedProductionOrderDetailCode: null,
+                selectedProductionOrderDetailColorRequest: null,
+                selectedProductionOrderDetailColorTemplate: null,
+                selectedProductionOrderDetailColorTypeCode: null,
+                selectedProductionOrderDetailColorTypeName: null,
+                selectedProductionOrderDetailColorTypeRemark: null,
+                selectedProductionOrderDetailQuantity: null,
+                selectedProductionOrderDetailUom: null,
+                machineEventName: (monitoringEvent && monitoringEvent.machineEvent && monitoringEvent.machineEvent.name) ? `'${monitoringEvent.machineEvent.name.replace(/'/g, '"')}'` : null,
                 eventRange: monitoringEvent.dateEnd ? `'${this.getOperationRange(operationRange)}'` : null,
-                machineEventNo: (monitoringEvent.machineEvent && monitoringEvent.machineEvent.no) ? `'${monitoringEvent.machineEvent.no.replace(/'/g, '"')}'` : null,
-                createdBy: monitoringEvent ? `'${monitoringEvent._createdBy}'` : null
+                machineEventNo: (monitoringEvent.machineEvent && monitoringEvent.machineEvent.no) ? `'${monitoringEvent.machineEvent.no.toString().replace(/'/g, '"')}'` : null,
+                createdBy: monitoringEvent ? `'${monitoringEvent._createdBy}'` : null,
+                deleted: `'${monitoringEvent._deleted}'`,
+                eventCategory: (monitoringEvent.machineEvent && monitoringEvent.machineEvent.category && monitoringEvent.machineEvent.category !== "") ? `'${monitoringEvent.machineEvent.category}'` : null
             }
         });
-        return Promise.resolve([].concat.apply([], result));
+        return Promise.resolve([].concat.apply([], result))
     };
 
     insertQuery(sql, query) {
@@ -188,7 +189,7 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [dbo].[DL_Fact_Monitoring_Event_Temp]([cartNumber], [monitoringEventCode], [monitoringEventStartedDate], [eventStartedTime], [monitoringEventEndDate], [eventEndTime], [machineCode], [machineName], [machineProcess], [machineStepProcess], [unitCode], [divisionCode], [divisionName], [unitName], [productionOrderBuyerName], [productionOrderConstruction], [productionOrderDetailCode], [productionOrderDetailColorRequest], [productionOrderDetailColorTemplate], [productionOrderDetailColorTypeName], [productionOrderOrderType], [productionOrderProcessType], [productionOrderSalesContractNo], [monitoringEventRemark], [selectedProductionOrderDetailCode], [selectedProductionOrderDetailColorRequest], [selectedProductionOrderDetailColorTemplate], [selectedProductionOrderDetailColorTypeName], [machineEventName], [eventRange], [productionOrderOrderNo], [machineEventNo], [createdBy]) VALUES(${item.cartNumber}, ${item.monitoringEventCode}, ${item.monitoringEventStartedDate}, ${item.eventStartedTime}, ${item.monitoringEventEndDate}, ${item.eventEndTime}, ${item.machineCode}, ${item.machineName}, ${item.machineProcess}, ${item.machineStepProcess}, ${item.unitCode}, ${item.divisionCode}, ${item.divisionName}, ${item.unitName}, ${item.productionOrderBuyerName}, ${item.productionOrderConstruction}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.selectedProductionOrderDetailColorTypeName}, ${item.productionOrderOrderType}, ${item.productionOrderProcessType}, ${item.productionOrderSalesContractNo}, ${item.monitoringEventRemark}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.selectedProductionOrderDetailColorTypeName}, ${item.machineEventName}, ${item.eventRange}, ${item.productionOrderOrderNo}, ${item.machineEventNo}, ${item.createdBy});\n`;
+                                var queryString = `INSERT INTO [dbo].[DL_Fact_Monitoring_Event_Temp]([cartNumber], [monitoringEventCode], [monitoringEventStartedDate], [eventStartedTime], [monitoringEventEndDate], [eventEndTime], [machineCode], [machineName], [machineProcess], [machineStepProcess], [unitCode], [divisionCode], [divisionName], [unitName], [productionOrderBuyerName], [productionOrderConstruction], [productionOrderDetailCode], [productionOrderDetailColorRequest], [productionOrderDetailColorTemplate], [productionOrderDetailColorTypeName], [productionOrderOrderType], [productionOrderProcessType], [productionOrderSalesContractNo], [monitoringEventRemark], [selectedProductionOrderDetailCode], [selectedProductionOrderDetailColorRequest], [selectedProductionOrderDetailColorTemplate], [selectedProductionOrderDetailColorTypeName], [machineEventName], [eventRange], [productionOrderOrderNo], [machineEventNo], [createdBy], [deleted], [eventCategory]) VALUES(${item.cartNumber}, ${item.monitoringEventCode}, ${item.monitoringEventStartedDate}, ${item.eventStartedTime}, ${item.monitoringEventEndDate}, ${item.eventEndTime}, ${item.machineCode}, ${item.machineName}, ${item.machineProcess}, ${item.machineStepProcess}, ${item.unitCode}, ${item.divisionCode}, ${item.divisionName}, ${item.unitName}, ${item.productionOrderBuyerName}, ${item.productionOrderConstruction}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.selectedProductionOrderDetailColorTypeName}, ${item.productionOrderOrderType}, ${item.productionOrderProcessType}, ${item.productionOrderSalesContractNo}, ${item.monitoringEventRemark}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.selectedProductionOrderDetailColorTypeName}, ${item.machineEventName}, ${item.eventRange}, ${item.productionOrderOrderNo}, ${item.machineEventNo}, ${item.createdBy}, ${item.deleted}, ${item.eventCategory});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     command.push(this.insertQuery(request, sqlQuery));

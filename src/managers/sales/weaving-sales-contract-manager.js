@@ -20,6 +20,8 @@ var i18n = require('dl-i18n');
 var generateCode = require("../../utils/code-generator");
 var assert = require('assert');
 
+var moment = require('moment');
+
 module.exports = class WeavingSalesContractManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
@@ -64,7 +66,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
             };
 
             keywordFilter = {
-                '$or': [filterSalesContract, filterBuyerName, filterBuyerType, filterType]
+                '$or': [filterSalesContract, filterBuyerName, filterBuyerType]
             };
         }
         query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
@@ -98,9 +100,9 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
         var getQuality = valid.quality && ObjectId.isValid(valid.quality._id) ? this.QualityManager.getSingleByIdOrDefault(valid.quality._id) : Promise.resolve(null);
         var getBankAccount = valid.accountBank && ObjectId.isValid(valid.accountBank._id) ? this.AccountBankManager.getSingleByIdOrDefault(valid.accountBank._id) : Promise.resolve(null);
         var getTermOfPayment = valid.termOfPayment && ObjectId.isValid(valid.termOfPayment._id) ? this.TermOfPaymentManager.getSingleByIdOrDefault(valid.termOfPayment._id) : Promise.resolve(null);
+        var getAgent = valid.agent && ObjectId.isValid(valid.agent._id) ? this.buyerManager.getSingleByIdOrDefault(valid.agent._id) : Promise.resolve(null);
 
-
-        return Promise.all([getSalesContractPromise, getBuyer, getUom, getProduct, getYarnMaterial, getMaterialConstruction, getComodity, getQuality, getBankAccount, getTermOfPayment])
+        return Promise.all([getSalesContractPromise, getBuyer, getUom, getProduct, getYarnMaterial, getMaterialConstruction, getComodity, getQuality, getBankAccount, getTermOfPayment, getAgent])
             .then(results => {
                 var _salesContract = results[0];
                 var _buyer = results[1];
@@ -112,6 +114,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 var _quality = results[7];
                 var _bank = results[8];
                 var _payment = results[9];
+                var _agent = results[10];
 
                 if (valid.uom) {
                     if (!valid.uom.unit || valid.uom.unit == '')
@@ -152,13 +155,13 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 if (!_comodity)
                     errors["comodity"] = i18n.__("WeavingSalesContract.comodity.isRequired:%s is not exists", i18n.__("WeavingSalesContract.comodity._:Comodity")); //"comodity tidak boleh kosong";
 
-                if (!valid.condition || valid.condition === '') {
-                    errors["condition"] = i18n.__("WeavingSalesContract.condition.isRequired:%s is required", i18n.__("WeavingSalesContract.condition._:Condition")); //"condition tidak boleh kosong";
-                }
+                // if (!valid.condition || valid.condition === '') {
+                //     errors["condition"] = i18n.__("WeavingSalesContract.condition.isRequired:%s is required", i18n.__("WeavingSalesContract.condition._:Condition")); //"condition tidak boleh kosong";
+                // }
 
-                if (!valid.packing || valid.packing === '') {
-                    errors["packing"] = i18n.__("WeavingSalesContract.packing.isRequired:%s is required", i18n.__("WeavingSalesContract.packing._:Packing")); //"packing tidak boleh kosong";
-                }
+                // if (!valid.packing || valid.packing === '') {
+                //     errors["packing"] = i18n.__("WeavingSalesContract.packing.isRequired:%s is required", i18n.__("WeavingSalesContract.packing._:Packing")); //"packing tidak boleh kosong";
+                // }
 
                 if (!_buyer)
                     errors["buyer"] = i18n.__("WeavingSalesContract.buyer.isRequired:%s is not exists", i18n.__("WeavingSalesContract.buyer._:Buyer")); //"Buyer tidak boleh kosong";
@@ -166,9 +169,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 if (!_bank)
                     errors["accountBank"] = i18n.__("WeavingSalesContract.accountBank.isRequired:%s is not exists", i18n.__("WeavingSalesContract.accountBank._:accountBank")); //"accountBank tidak boleh kosong";
 
-                if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
-                    errors["shippingQuantityTolerance"] = i18n.__("WeavingSalesContract.shippingQuantityTolerance.isRequired:%s is required", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
-                if (valid.shippingQuantityTolerance > 100) {
+                if (valid.shippingQuantityTolerance > 100 || valid.shippingQuantityTolerance < 0) {
                     errors["shippingQuantityTolerance"] = i18n.__("WeavingSalesContract.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("WeavingSalesContract.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
 
@@ -181,30 +182,49 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
 
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                     errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kosong";
-                }
+                } 
+                //else {
+
+                //     valid.deliverySchedule = new Date(valid.deliverySchedule);
+                //     var today = new Date();
+                //     today.setHours(0, 0, 0, 0);
+                //     if (today > valid.deliverySchedule) {
+                //         errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
+                //     }
+
+                // }
+
                 if (!valid.incomeTax || valid.incomeTax === '') {
                     errors["incomeTax"] = i18n.__("WeavingSalesContract.incomeTax.isRequired:%s is required", i18n.__("WeavingSalesContract.incomeTax._:IncomeTax")); //"incomeTax tidak boleh kosong";
                 }
-                else {
-                    valid.deliverySchedule = new Date(valid.deliverySchedule);
-                    var today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    if (today > valid.deliverySchedule) {
-                        errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.shouldNot:%s should not be less than today's date", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kurang dari tanggal hari ini";
-                    }
+
+
+                if (!valid.orderQuantity || valid.orderQuantity === '' || valid.orderQuantity === 0) {
+                    errors["orderQuantity"] = i18n.__("WeavingSalesContract.orderQuantity.isRequired:%s should greater than 0", i18n.__("WeavingSalesContract.orderQuantity._:orderQuantity")); //"orderQuantity tidak boleh kosong";
                 }
 
-
+                if (_agent) {
+                    valid.agentId = new ObjectId(_agent._id);
+                    valid.agent = _agent;
+                }
 
                 if (_buyer) {
                     valid.buyerId = new ObjectId(_buyer._id);
                     valid.buyer = _buyer;
                     if (valid.buyer.type.trim().toLowerCase() == "ekspor") {
                         if (!valid.termOfShipment || valid.termOfShipment == "") {
-                            errors["termOfShipment"] = i18n.__("WeavingSalesContract.termOfShipment.isRequired:%s is required", i18n.__("WeavingSalesContract.termOfShipment._:termOfShipment")); //"termOfShipment tidak boleh kosong";
+                            errors["termOfShipment"] = i18n.__("WeavingSalesContract.termOfShipment.isRequired:%s is required", i18n.__("WeavingSalesContract.termOfShipment._:termOfShipment")); //"termOfShipment tidak boleh kosong jika buyer type ekspor";
                         }
+
+                        if (_agent) {
+                            if (!valid.comission) {
+                                errors["comission"] = i18n.__("WeavingSalesContract.comission.isRequired:%s is required", i18n.__("WeavingSalesContract.comission._:comission")); //"comission tidak boleh kosong jika agent valid";
+                            }
+                        }
+
                     }
                 }
+
                 if (_quality) {
                     valid.qualityId = new ObjectId(_quality._id);
                     valid.quality = _quality;
@@ -234,6 +254,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                     valid.materialConstructionId = new ObjectId(_construction._id);
                     valid.materialConstruction = _construction;
                 }
+
                 valid.deliverySchedule = new Date(valid.deliverySchedule);
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -249,6 +270,147 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
 
                 return Promise.resolve(valid);
             });
+    }
+
+    pdf(id, offset) {
+        return new Promise((resolve, reject) => {
+
+            this.getSingleById(id)
+                .then(salesContract => {
+
+                    var getDefinition = require("../../pdf/definitions/weaving-sales-contract");
+                    var definition = getDefinition(salesContract, offset);
+
+                    var generatePdf = require("../../pdf/pdf-generator");
+                    generatePdf(definition, offset)
+                        .then(binary => {
+                            resolve(binary);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    getWeavingSalesContractReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        }, buyerFilter = {}, comodityFilter = {},
+            salesContractNoFilter = {},
+            dateFromFilter = {},
+            dateToFilter = {},
+            query = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var now = new Date();
+
+        if (info.buyerId && info.buyerId != '') {
+            var buyerId = ObjectId.isValid(info.buyerId) ? new ObjectId(info.buyerId) : {};
+            buyerFilter = { 'buyer._id': buyerId };
+        }
+
+        if (info.comodityId && info.comodityId != '') {
+            var comodityId = ObjectId.isValid(info.comodityId) ? new ObjectId(info.comodityId) : {};
+            comodityFilter = { 'comodity._id': comodityId };
+        }
+
+        if (info.salesContractNo && info.salesContractNo != '') {
+            var salesContractNo = ObjectId.isValid(info.salesContractNo) ? new ObjectId(info.salesContractNo) : {};
+            salesContractNoFilter = { '_id': salesContractNo };
+        }
+
+        var filterDate = {
+            "_createdDate": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+        query = { '$and': [_defaultFilter, buyerFilter, salesContractNoFilter, comodityFilter, filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this.collection
+                    .where(query)
+                    .execute();
+            });
+    }
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
+
+        for (var weavingSalesContract of result.data) {
+            index++;
+
+            var item = {};
+            item["No"] = index;
+            item["Nomor Sales Contract"] = weavingSalesContract ? weavingSalesContract.salesContractNo : '';
+            item["Tanggal Sales Contract"] = weavingSalesContract._createdDate ? moment(new Date(weavingSalesContract._createdDate)).format(dateFormat) : '';
+            item["Buyer"] = weavingSalesContract.buyer ? weavingSalesContract.buyer.name : '';
+            item["Jenis Buyer"] = weavingSalesContract.buyer ? weavingSalesContract.buyer.type : '';
+            item["Nomor Disposisi"] = weavingSalesContract ? weavingSalesContract.dispositionNumber : '';
+            item["Komoditas"] = weavingSalesContract.comodity ? weavingSalesContract.comodity.name : '';
+            item["Jumlah Order"] = weavingSalesContract ? weavingSalesContract.orderQuantity : '';
+            item["Satuan"] = weavingSalesContract.uom ? weavingSalesContract.uom.unit : '';
+            item["Toleransi (%)"] = weavingSalesContract ? weavingSalesContract.shippingQuantityTolerance : '';
+            item["Kualitas"] = weavingSalesContract.quality ? weavingSalesContract.quality.name : '';
+            item["Harga"] = weavingSalesContract ? weavingSalesContract.price : '';
+            item["Satuan"] = weavingSalesContract.uom ? weavingSalesContract.uom.unit : '';
+            item["Mata Uang"] = weavingSalesContract.accountBank.currency ? weavingSalesContract.accountBank.currency.code : '';
+            item["Syarat Pembayaran"] = weavingSalesContract.termOfPayment ? weavingSalesContract.termOfPayment.termOfPayment : '';
+            item["Pembayaran ke Rekening"] = weavingSalesContract.accountBank ? weavingSalesContract.accountBank.accountName + "-" + weavingSalesContract.accountBank.bankName + "-" + weavingSalesContract.accountBank.accountNumber + "-" + weavingSalesContract.accountBank.currency.code : '';
+            item["Jadwal Pengiriman"] = weavingSalesContract ? moment(new Date(weavingSalesContract.deliverySchedule)).format(dateFormat) : '';
+            item["Agen"] = weavingSalesContract.agent ? weavingSalesContract.agent.name : '';
+            item["Komisi"] = weavingSalesContract ? weavingSalesContract.comission : '';
+
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Nomor Sales Contract"] = "string";
+        xls.options["Tanggal Sales Contract"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Jenis Buyer"] = "string";
+        xls.options["Nomor Disposisi"] = "number";
+        xls.options["Komoditas"] = "string";
+        xls.options["Jumlah Order"] = "number";
+        xls.options["Satuan"] = "string";
+        xls.options["Toleransi (%)"] = "number";
+        xls.options["Kualitas"] = "string";
+        xls.options["Harga"] = "number";
+        xls.options["Mata Uang"] = "string";
+        xls.options["Syarat Pembayaran"] = "string";
+        xls.options["Pembayaran ke Rekening"] = "string";
+        xls.options["Jadwal Pengiriman"] = "string";
+        xls.options["Agen"] = "string";
+        xls.options["Komisi"] = "string";
+
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Sales Contract - Weaving  Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Sales Contract - Weaving Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Sales Contract - Weaving Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Sales Contract - Weaving Report.xlsx`;
+
+        return Promise.resolve(xls);
     }
 
     _createIndexes() {
@@ -270,27 +432,4 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
 
-    pdf(id) {
-        return new Promise((resolve, reject) => {
-
-            this.getSingleById(id)
-                .then(salesContract => {
-
-                    var getDefinition = require("../../pdf/definitions/weaving-sales-contract");
-                    var definition = getDefinition(salesContract);
-
-                    var generatePdf = require("../../pdf/pdf-generator");
-                    generatePdf(definition)
-                        .then(binary => {
-                            resolve(binary);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
 }

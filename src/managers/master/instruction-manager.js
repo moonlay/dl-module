@@ -20,8 +20,8 @@ module.exports = class InstructionManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -54,25 +54,34 @@ module.exports = class InstructionManager extends BaseManager {
         var errors = {};
         var valid = instruction;
         // 1. begin: Declare promises.
-        var getInstructionPromise =  this.collection.singleOrDefault({
-                        _id: {
-                            "$ne": new ObjectId(valid._id)
-                        },
-                        _deleted : false,
-                        name: valid.name,
-                    });
+        var getInstructionPromise = this.collection.singleOrDefault({
+            _id: {
+                "$ne": new ObjectId(valid._id)
+            },
+            _deleted: false,
+            name: valid.name,
+        });
         return Promise.all([getInstructionPromise])
             .then(results => {
                 var _instruction = results[0];
 
                 if (!valid.name || valid.name == "")
                     errors["name"] = i18n.__("Instruction.name.isRequired:%s is required", i18n.__("Instruction.name._:Name")); // "Nama harus diisi";
-                else if (_instruction) 
-                    errors["name"] = i18n.__("Instruction.name.isExists:%s with same order type, construction and material is already exists", i18n.__("Instruction.name._:Name")); //"Nama sudah ada";
-
-                if(!valid.steps || valid.steps.length < 1)
+                else if (_instruction)
+                    errors["name"] = i18n.__("Instruction.name.isExisted:%s is existed", i18n.__("Instruction.name._:Name")); //"Nama sudah ada";
+                if (!valid.steps || valid.steps.length < 1) {
                     errors["steps"] = i18n.__("Instruction.steps.isRequired:%s is required", i18n.__("Instruction.steps._:Steps")); //"minimal harus ada 1 Step";
-                
+                }
+                else {
+
+                    for (var step of valid.steps) {
+
+                        if (step.process == "" || !step.process) {
+                            errors["steps"] = i18n.__("Instruction.steps.steps.isRequired:%s is required", i18n.__("Instruction.steps.steps._:Steps")); //"minimal harus ada 1 Step";
+                        }
+                    }
+                }
+
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));

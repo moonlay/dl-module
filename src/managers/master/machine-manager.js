@@ -177,15 +177,86 @@ module.exports = class MachineManager extends BaseManager {
 
                 if (!valid.machineType)
                     errors["machineType"] = i18n.__("Machine.machineType.isRequired:%s is required", i18n.__("Machine.machineType._:Machine Type")); //"Machine Type Tidak Boleh Kosong";
+                else if(!_machineType)
+                    errors["machineType"] = i18n.__("Machine.machineType.isExists:%s is not exists", i18n.__("Machine.machineType._:Machine Type")); //"MachineType tidak ada";
 
                 if (valid.unit && !_unit)
                     errors["unit"] = i18n.__("Machine.unit.isExists:%s is not exists", i18n.__("Machine.unit._:Unit")); //"Unit tidak ada";
 
+                if(valid.machineEvents && valid.machineEvents.length > 0){
+                    var machineEventErrors = [];
+                    for(var dataEvent of valid.machineEvents){
+                        var itemError = {};
+                        var _index = valid.machineEvents.indexOf(dataEvent);
+                        if(!dataEvent || !dataEvent.name || tempStep.name === "")
+                            itemError["name"] = i18n.__("Machine.machineEvents.name.isRequired:%s is required", i18n.__("Machine.machineEvents.name._:Name"));
+                        else{
+                            var itemDuplicateErrors = [];
+                            var valueArr = valid.machineEvents.map(function (item) { return item.name });
+                            var isDuplicate = valueArr.some(function (item, idx) {
+                                var itemError = {};
+                                if (valueArr.indexOf(item) != idx) {
+                                    itemError["name"] = i18n.__("Machine.machineEvents.name.isDuplicate:%s is duplicate", i18n.__("Machine.machineEvents.name._:Name")); //"Nama Event tidak boleh sama";
+                                }
+                                if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                    itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                                    itemDuplicateErrors[idx] = itemError;
+                                } else {
+                                    itemDuplicateErrors[idx] = itemError;
+                                }
+                                return valueArr.indexOf(item) != idx
+                            });
+                            if(isDuplicate){
+                                if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                                    Object.assign(itemError, itemDuplicateErrors[_index]);
+                                }
+                            }
+                        }
+                        if(!dataEvent || !dataEvent.category || tempStep.category === "")
+                            itemError["category"] = i18n.__("Machine.machineEvents.category.isRequired:%s is required", i18n.__("Machine.machineEvents.category._:Category"));
+                        
+                        if(!dataEvent || !dataEvent.no || tempStep.no === '')
+                            itemError["no"] = i18n.__("Machine.machineEvents.no.isRequired:%s is required", i18n.__("Machine.machineEvents.no._:No"));
+                        else{
+                            var itemDuplicateErrors = [];
+                            var valueArr = valid.machineEvents.map(function (item) { return item.no.toString() });
+                            var isDuplicate = valueArr.some(function (item, idx) {
+                                var itemError = {};
+                                if (valueArr.indexOf(item) != idx) {
+                                    itemError["no"] = i18n.__("Machine.machineEvents.no.isDuplicate:%s is duplicate", i18n.__("Machine.machineEvents.no._:No")); //"No Event tidak boleh sama";
+                                }
+                                if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                    itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                                    itemDuplicateErrors[idx] = itemError;
+                                } else {
+                                    itemDuplicateErrors[idx] = itemError;
+                                }
+                                return valueArr.indexOf(item) != idx
+                            });
+                            if(isDuplicate){
+                                if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                                    Object.assign(itemError, itemDuplicateErrors[_index]);
+                                }
+                            }
+                        }
+                        machineEventErrors.push(itemError);
+                    }
+
+                    for (var Error of machineEventErrors) {
+                        if (Object.getOwnPropertyNames(Error).length > 0) {
+                            errors["machineEvents"] = machineEventErrors;
+                            break;
+                        }
+                    }
+                }
+                // else
+                //     errors["machineEvents"] = i18n.__("Machine.machineEvents.isRequired:%s is required", i18n.__("Machine.machineEvents._:Machine Event")); //"Steps harus diisi minimal satu";
+
                 // if (valid.step && !_step)
                 //     errors["step"] = i18n.__("Machine.step.isExists:%s is not exists", i18n.__("Machine.step._:Step")); //"Step tidak ada";
 
-                if (valid.machineType && !_machineType)
-                    errors["machineType"] = i18n.__("Machine.machineType.isExists:%s is not exists", i18n.__("Machine.machineType._:Machine Type")); //"MachineType tidak ada";
+                // if (valid.machineType && !_machineType)
+                //     errors["machineType"] = i18n.__("Machine.machineType.isExists:%s is not exists", i18n.__("Machine.machineType._:Machine Type")); //"MachineType tidak ada";
 
                 if(valid.monthlyCapacity && valid.monthlyCapacity !== '')
                 {
@@ -213,7 +284,6 @@ module.exports = class MachineManager extends BaseManager {
                     var stepTemp = new ArrayStep();
                     stepTemp.stepId = new ObjectId(a._id);
                     stepTemp.step = a;
-                    stepTemp.stamp(this.user.username, 'manager')
                     steps.push(stepTemp);
                 }
                 if(steps.length > 0)
@@ -222,7 +292,18 @@ module.exports = class MachineManager extends BaseManager {
                     valid.machineType = _machineType;
                     valid.machineTypeId = new ObjectId(_machineType._id);
                 }
-
+                var tempMachineEvent = [];
+                for(var a of valid.machineEvents){
+                    var newMachineEvent = {};
+                    if(!a.stamp || a.stamp.toString() === '')
+                    	newMachineEvent = new MachineEvent(a);
+                    else
+                        newMachineEvent = a;
+                    newMachineEvent.stamp(this.user.username, 'manager');
+                    tempMachineEvent.push(newMachineEvent);
+                }
+                valid.machineEvents = tempMachineEvent;
+                
                 if (!valid.stamp)
                     valid = new Machine(valid);
                 valid.stamp(this.user.username, 'manager');

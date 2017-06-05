@@ -4,7 +4,8 @@ module.exports = function (kanban) {
 
     var steps = [].concat.apply([], kanban.instruction.steps);
 
-    var iso = "FM-F-PR-09-01-016B/R2";
+    //var iso = "FM-F-PR-09-01-016B/R2";
+    var iso= "FM-FP-00-PC-19-020";
     var number = kanban.no;
 
     var locale = global.config.locale; 
@@ -15,12 +16,13 @@ module.exports = function (kanban) {
     var orderNo = kanban.productionOrder.orderNo;
     var buyer = kanban.productionOrder.buyer.name;
     var color = kanban.selectedProductionOrderDetail.colorType ? kanban.selectedProductionOrderDetail.colorRequest + " - " + kanban.selectedProductionOrderDetail.colorType.name : kanban.selectedProductionOrderDetail.colorRequest; 
+    color =  kanban.productionOrder.designCode && kanban.productionOrder.designCode !== "" ? color + " - " + kanban.productionOrder.designCode : color;
     var standardHandfeel = kanban.productionOrder.handlingStandard;
     var finishWidth = kanban.productionOrder.finishWidth;
-    var material = kanban.productionOrder.material.name;
+    var material = kanban.productionOrder.material.name + " " + kanban.productionOrder.materialConstruction.name + " - " + kanban.productionOrder.materialWidth;
     var yarnNumber = kanban.productionOrder.yarnMaterial.name;
     var grade = kanban.grade;
-    var cartQty = kanban.cart.qty;
+    var cartQty = kanban.cart.qty <= 0 ? " " : kanban.cart.qty;
     var cartNumber = kanban.cart.cartNumber;
 
     var header = [{
@@ -223,7 +225,8 @@ module.exports = function (kanban) {
         header.push('');
 
         for (i=0;i<steps.length;i++){
-            var name = steps[i].process;
+            // var name = steps[i].process;
+            var name = steps[i].alias ? steps[i].alias : '';
             header.push({text: '\n' + name, style: 'tableHeader', rowSpan:2, alignment: 'center'});
         }
 
@@ -281,7 +284,7 @@ module.exports = function (kanban) {
         
     tbody2.push(theader2);
     tbody2.push(theader3);
-    for (index = 1; index <= 20; index++) { 
+    for (index = 1; index <= 30; index++) { 
         tbody2.push(getIndexedRow(index))
     }
     tbody2.push(tfooter2);

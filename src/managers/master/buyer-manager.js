@@ -113,15 +113,15 @@ module.exports = class BuyerManager extends BaseManager {
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
                             data.push({
-                                "code": dataFile[i][0],
-                                "name": dataFile[i][1],
-                                "address": dataFile[i][2],
-                                "city": dataFile[i][3],
-                                "country": dataFile[i][4],
-                                "NPWP": dataFile[i][5],
-                                "type": dataFile[i][6],
-                                "contact": dataFile[i][7],
-                                "tempo": dataFile[i][8]
+                                "code": dataFile[i][0].trim(),
+                                "name": dataFile[i][1].trim(),
+                                "address": dataFile[i][2].trim(),
+                                "city": dataFile[i][3].trim(),
+                                "country": dataFile[i][4].trim(),
+                                "NPWP": dataFile[i][5].trim(),
+                                "type": dataFile[i][6].trim(),
+                                "contact": dataFile[i][7].trim(),
+                                "tempo": dataFile[i][8].trim()
                             });
                         }
                     }
@@ -148,7 +148,7 @@ module.exports = class BuyerManager extends BaseManager {
                         if (data[i]["country"] === "" || data[i]["country"] === undefined) {
                             errorMessage = errorMessage + "Negara tidak boleh kosong, ";
                         } else {
-                            if (countries.indexOf(data[i]["country"]) == -1) {
+                            if (countries.indexOf(data[i]["country"].toUpperCase()) == -1) {
                                 errorMessage = errorMessage + "Negara tidak terdaftar di list Negara,";
                             }
                         }
