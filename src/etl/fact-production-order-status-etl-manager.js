@@ -82,8 +82,9 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                 salesContractNo: 1,
                 orderQuantity: 1,
                 "uom.unit": 1,
-                "orderType.name": 1
-            }).sort({ _createdDate: -1 }).limit(100).toArray()
+                "orderType.name": 1,
+                deliverySchedule: 1
+            }).toArray()
             .then((finishingPrintingSalesContracts) => this.joinProductionOrder(finishingPrintingSalesContracts))
             .then((results) => this.joinKanban(results))
             .then((results) => this.joinDailyOperations(results))
@@ -100,7 +101,8 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     orderNo: 1,
                     salesContractNo: 1,
                     orderQuantity: 1,
-                    "uom.unit": 1
+                    "uom.unit": 1,
+                    deliveryDate: 1
                 }).toArray()
                 .then((productionOrders) => {
                     var arr = productionOrders.map((productionOrder) => {
@@ -174,7 +176,10 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     code: 1,
                     input: 1,
                     "kanban.productionOrder.salesContractNo": 1
-                }).toArray() : Promise.resolve([]);
+                }).sort({
+                    dateInput: 1,
+                    timeInput: 1
+                }).limit(1).toArray() : Promise.resolve([]);
 
             return getDailyOperations.then((dailyOperations) => {
                 var arr = dailyOperations.map((dailyOperation) => {
@@ -274,11 +279,13 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                         cartNumber: kanban && kanban.cart.cartNumber ? `'${kanban.cart.cartNumber}'` : null,
                         fabricQualityControlDate: fabricQC.dateIm ? `'${moment(fabricQC.dateIm).format("L")}'` : null,
                         fabricQualityControlQuantity: quantity ? `${quantity}` : null,
-                        fabricQualityControlCode: fabricQC.code ? `'${fabricQC.code}'` : null,
+                        fabricQualityControlCode: fabricQC && fabricQC.code ? `'${fabricQC.code}'` : null,
                         orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
                         deleted: `'${finishingPrintingSC._deleted}'`,
                         fabricqualitycontroltestindex: fabricQC.code ? `${index}` : null,
-                        dailyOperationDate: dailyOperation._createdDate ? `${moment(dailyOperation._createdDate).format("L")}` : null
+                        dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).format("L")}'` : null,
+                        salesContractDeliveryDate: finishingPrintingSC ? `'${moment(finishingPrintingSC.deliverySchedule).format("L")}'` : null,
+                        productionOrderDeliveryDate: productionOrder ? `'${moment(productionOrder.deliveryDate).format("L")}'` : null
                     }
                 });
                 return [].concat.apply([], results);
@@ -305,7 +312,9 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
                     deleted: `'${finishingPrintingSC._deleted}'`,
                     fabricqualitycontroltestindex: null,
-                    dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).format("L")}'` : null
+                    dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).format("L")}'` : null,
+                    salesContractDeliveryDate: finishingPrintingSC ? `'${moment(finishingPrintingSC.deliverySchedule).format("L")}'` : null,
+                    productionOrderDeliveryDate: productionOrder ? `'${moment(productionOrder.deliveryDate).format("L")}'` : null
                 }
             }
         });
@@ -343,7 +352,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [dbo].[DL_Fact_Production_Order_Status_Temp]([salesContractDate], [salesContractNo], [salesContractQuantity], [productionOrderDate], [productionSalesContractNo], [productionOrderNo], [productionOrderQuantity], [kanbanDate], [kanbanSalesContractNo], [kanbanQuantity], [fabricQualityControlDate], [fabricQualityControlQuantity], [orderType], [deleted], [kanbanCode], [dailyOperationQuantity], [dailyOperationSalesContractNo], [dailyOperationCode], [fabricQualityControlCode], [cartNumber], [fabricqualitycontroltestindex], [dailyOperationDate]) VALUES(${item.salesContractDate}, ${item.salesContractNo}, ${item.salesContractQuantity}, ${item.productionOrderDate}, ${item.productionSalesContractNo}, ${item.productionOrderNo}, ${item.productionOrderQuantity}, ${item.kanbanDate}, ${item.kanbanSalesContractNo}, ${item.kanbanQuantity}, ${item.fabricQualityControlDate}, ${item.fabricQualityControlQuantity}, ${item.orderType}, ${item.deleted}, ${item.kanbanCode}, ${item.dailyOperationQuantity}, ${item.dailyOperationSalesContractNo}, ${item.dailyOperationCode}, ${item.fabricQualityControlCode}, ${item.cartNumber}, ${item.fabricqualitycontroltestindex}, ${item.dailyOperationDate});\n`;
+                                var queryString = `INSERT INTO [dbo].[DL_Fact_Production_Order_Status_Temp]([salesContractDate], [salesContractNo], [salesContractQuantity], [productionOrderDate], [productionSalesContractNo], [productionOrderNo], [productionOrderQuantity], [kanbanDate], [kanbanSalesContractNo], [kanbanQuantity], [fabricQualityControlDate], [fabricQualityControlQuantity], [orderType], [deleted], [kanbanCode], [dailyOperationQuantity], [dailyOperationSalesContractNo], [dailyOperationCode], [fabricQualityControlCode], [cartNumber], [fabricqualitycontroltestindex], [dailyOperationDate], [salesContractDeliveryDate], [productionOrderDeliveryDate]) VALUES(${item.salesContractDate}, ${item.salesContractNo}, ${item.salesContractQuantity}, ${item.productionOrderDate}, ${item.productionSalesContractNo}, ${item.productionOrderNo}, ${item.productionOrderQuantity}, ${item.kanbanDate}, ${item.kanbanSalesContractNo}, ${item.kanbanQuantity}, ${item.fabricQualityControlDate}, ${item.fabricQualityControlQuantity}, ${item.orderType}, ${item.deleted}, ${item.kanbanCode}, ${item.dailyOperationQuantity}, ${item.dailyOperationSalesContractNo}, ${item.dailyOperationCode}, ${item.fabricQualityControlCode}, ${item.cartNumber}, ${item.fabricqualitycontroltestindex}, ${item.dailyOperationDate}, ${item.salesContractDeliveryDate}, ${item.productionOrderDeliveryDate});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -359,16 +368,16 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
 
                         this.sql.multiple = true;
 
-                        // var fs = require("fs");
-                        // var path = "C:\\Users\\IttaAndLeslie\\Desktop\\orderstatus.txt";
+                        var fs = require("fs");
+                        var path = "C:\\Users\\leslie.aula\\Desktop\\orderstatus.txt";
 
-                        // fs.writeFile(path, sqlQuery, function (error) {
-                        //     if (error) {
-                        //         console.log("write error:  " + error.message);
-                        //     } else {
-                        //         console.log("Successful Write to " + path);
-                        //     }
-                        // });
+                        fs.writeFile(path, sqlQuery, function (error) {
+                            if (error) {
+                                console.log("write error:  " + error.message);
+                            } else {
+                                console.log("Successful Write to " + path);
+                            }
+                        });
 
                         return Promise.all(command)
                             .then((results) => {

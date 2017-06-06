@@ -198,7 +198,7 @@ module.exports = function (unitPaymentOrder) {
                 style: ['size08', 'right']
             }, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: `${currency}`
                 }, {
                         width: '*',
@@ -208,7 +208,7 @@ module.exports = function (unitPaymentOrder) {
                 style: ['size08']
             }, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: `${currency}`
                 }, {
                         width: '*',
@@ -235,7 +235,7 @@ module.exports = function (unitPaymentOrder) {
 
     var table = [{
         table: {
-            widths: ['5%', '25%', '10%', '15%', '17%', '15%', '13%'],
+            widths: ['4%', '25%', '10%', '17%', '20%', '12%', '12%'],
             headerRows: 1,
             body: [].concat([thead], tbody)
         }
