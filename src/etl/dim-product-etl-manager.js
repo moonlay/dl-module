@@ -5,24 +5,26 @@ var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require('module-toolkit').BaseManager;
 var moment = require("moment");
 
+
 // internal deps 
 require('mongodb-toolkit');
 
-var DivisionManager = require('../managers/master/division-manager');
+var ProductManager = require('../managers/master/product-manager');
+const MIGRATION_LOG_DESCRIPTION = 'Dim Product from MongoDB to Azure DWH';
 
-module.exports = class DimDivisionEtlManager extends BaseManager {
+module.exports = class DimProductEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.divisionManager = new DivisionManager(db, user);
+        this.productManager = new ProductManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
 
     run() {
         var startedDate = new Date();
         this.migrationLog.insert({
-            description: "Dim Divisi from MongoDB to Azure DWH",
-            start: startedDate,
+            description: MIGRATION_LOG_DESCRIPTION,
+            start: startedDate
         })
         return this.getTimeStamp()
             .then((time) => this.extract(time))
@@ -32,7 +34,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Dim Divisi from MongoDB to Azure DWH",
+                    description: MIGRATION_LOG_DESCRIPTION,
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -44,7 +46,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Dim Divisi from MongoDB to Azure DWH",
+                    description: MIGRATION_LOG_DESCRIPTION,
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -56,7 +58,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
     getTimeStamp() {
         return this.migrationLog.find({
-            description: "Dim Divisi from MongoDB to Azure DWH",
+            description: MIGRATION_LOG_DESCRIPTION,
             status: "Successful"
         }).sort({
             finish: -1
@@ -66,20 +68,22 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
     extract(times) {
         var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
-        return this.divisionManager.collection.find({
+        return this.productManager.collection.find({
             _updatedDate: {
-                "$gt": timestamp
+                "$gt": timestamp                
             },
-            _deleted: false
         }).toArray();
     }
 
     transform(data) {
         var result = data.map((item) => {
-
             return {
-                divisionCode: item.code,
-                divisionName: item.name
+                code: item.code ? `'${item.code.replace(/'/g, '"')}'` : null,
+                name: item.name ? `'${item.name.replace(/'/g, '"')}'` : null,
+                price: item.price,
+                deleted: `'${item._deleted}'`,
+                description: item.description ? `'${item.description.replace(/'/g, '"')}'` : null,
+                tags: item.tags ? `'${item.tags.replace(/'/g, '"')}'` : null
             };
         });
         return Promise.resolve([].concat.apply([], result));
@@ -87,7 +91,7 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
     insertQuery(sql, query) {
         return new Promise((resolve, reject) => {
-            sql.query(query, function (err, result) {
+            sql.query(query, function(err, result) {
                 if (err) {
                     reject(err);
                 } else {
@@ -113,12 +117,13 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
                         var sqlQuery = '';
 
                         var count = 1;
-
                         for (var item of data) {
                             if (item) {
-                                var queryString = `insert into DL_Dim_Divisi_Temp(ID_Dim_Divisi, Kode_Divisi, Nama_Divisi) values(${count}, '${item.divisionCode}','${item.divisionName}');\n`;
+                                var values = `${item.code}, ${item.name}, ${item.price}, ${item.deleted}, ${item.description}, ${item.tags}`;
+                                var queryString = sqlQuery === "" ? `INSERT INTO [DL_Dim_Product_Temp](Code, Name, Price, Deleted, [Description], Tags) VALUES(${values})` : `,(${values})`;
+                                
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 1000 == 0) {
+                                if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "";
                                 }
@@ -129,14 +134,24 @@ module.exports = class DimDivisionEtlManager extends BaseManager {
 
 
                         if (sqlQuery !== "")
-
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
 
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\jacky.rusly\\Desktop\\Log.txt";
+
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
+
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_UPSERT_DIM_DIVISI").then((execResult) => {
+                                request.execute("DL_UPSERT_DIM_PRODUCT").then((execResult) => {
                                     transaction.commit((err) => {
                                         if (err)
                                             reject(err);
