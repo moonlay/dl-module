@@ -11,6 +11,7 @@ module.exports = function (qualityControl) {
     var moment = require("moment");
     moment.locale(locale.name);
 
+    var code = qualityControl.code ? qualityControl.code : "";
     var shiftIm = qualityControl.shiftIm ? qualityControl.shiftIm : "";
     var operatorIm = qualityControl.operatorIm ? qualityControl.operatorIm : "";
     var machineNoIm = qualityControl.machineNoIm ? qualityControl.machineNoIm : "";
@@ -40,210 +41,228 @@ module.exports = function (qualityControl) {
         }]
     }, "\n"];
 
-    var body = [{
-        columns: [{
-            width: "25%",
-            text: "Tanggal IM",
-            style: ["size09"]
+    var body = [
+        {
+            columns: [{
+                width: "25%",
+                text: "Nomor Pemeriksaan Kain",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${code}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Tanggal IM",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${moment(qualityControl.dateIm).format("DD MMMM YYYY")}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "*",
-            text: `${moment(qualityControl.dateIm).format("DD MMMM YYYY")}`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Shift",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Shift",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${shiftIm}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Operator IM",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${operatorIm}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "*",
-            text: `${shiftIm}`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Operator IM",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Nomor Mesin IM",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${machineNoIm}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Nomor Kereta",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${cartNo}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "*",
-            text: `${operatorIm}`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Nomor Mesin IM",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Nomor Order",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${productionOrderNo}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Jenis Order",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${productionOrderType}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "*",
-            text: `${machineNoIm}`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Nomor Kereta",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Konstruksi",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${construction}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Buyer",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${buyer}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "*",
-            text: `${cartNo}`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Nomor Order",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Warna",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${color}`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
+            columns: [{
+                width: "25%",
+                text: "Jumlah Order",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${orderQuantity} MTR`,
+                style: ["size09"]
+            }]
         },
         {
-            width: "*",
-            text: `${productionOrderNo}`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Jenis Order",
-            style: ["size09"]
-        },
-        {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
-        },
-        {
-            width: "*",
-            text: `${productionOrderType}`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Konstruksi",
-            style: ["size09"]
-        },
-        {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
-        },
-        {
-            width: "*",
-            text: `${construction}`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Buyer",
-            style: ["size09"]
-        },
-        {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
-        },
-        {
-            width: "*",
-            text: `${buyer}`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Warna",
-            style: ["size09"]
-        },
-        {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
-        },
-        {
-            width: "*",
-            text: `${color}`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Jumlah Order",
-            style: ["size09"]
-        },
-        {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
-        },
-        {
-            width: "*",
-            text: `${orderQuantity} MTR`,
-            style: ["size09"]
-        }]
-    },
-    {
-        columns: [{
-            width: "25%",
-            text: "Packing Instruction",
-            style: ["size09"]
-        },
-        {
-            width: "3%",
-            text: ":",
-            style: ["size09"]
-        },
-        {
-            width: "*",
-            text: `${packingInstruction}`,
-            style: ["size09"]
-        }]
-    }];
+            columns: [{
+                width: "25%",
+                text: "Packing Instruction",
+                style: ["size09"]
+            },
+            {
+                width: "3%",
+                text: ":",
+                style: ["size09"]
+            },
+            {
+                width: "*",
+                text: `${packingInstruction}`,
+                style: ["size09"]
+            }]
+        }];
 
     var thead = [{
         text: "No Pcs",

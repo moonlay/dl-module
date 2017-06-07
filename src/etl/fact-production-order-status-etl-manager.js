@@ -70,7 +70,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
     }
 
     extract(times) {
-        var time = "1970-01-01";
+        var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
         return this.finishingPrintingSalesContractManager.collection.find({
             _updatedDate: {
@@ -354,7 +354,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                             if (item) {
                                 var queryString = `INSERT INTO [dbo].[DL_Fact_Production_Order_Status_Temp]([salesContractDate], [salesContractNo], [salesContractQuantity], [productionOrderDate], [productionSalesContractNo], [productionOrderNo], [productionOrderQuantity], [kanbanDate], [kanbanSalesContractNo], [kanbanQuantity], [fabricQualityControlDate], [fabricQualityControlQuantity], [orderType], [deleted], [kanbanCode], [dailyOperationQuantity], [dailyOperationSalesContractNo], [dailyOperationCode], [fabricQualityControlCode], [cartNumber], [fabricqualitycontroltestindex], [dailyOperationDate], [salesContractDeliveryDate], [productionOrderDeliveryDate]) VALUES(${item.salesContractDate}, ${item.salesContractNo}, ${item.salesContractQuantity}, ${item.productionOrderDate}, ${item.productionSalesContractNo}, ${item.productionOrderNo}, ${item.productionOrderQuantity}, ${item.kanbanDate}, ${item.kanbanSalesContractNo}, ${item.kanbanQuantity}, ${item.fabricQualityControlDate}, ${item.fabricQualityControlQuantity}, ${item.orderType}, ${item.deleted}, ${item.kanbanCode}, ${item.dailyOperationQuantity}, ${item.dailyOperationSalesContractNo}, ${item.dailyOperationCode}, ${item.fabricQualityControlCode}, ${item.cartNumber}, ${item.fabricqualitycontroltestindex}, ${item.dailyOperationDate}, ${item.salesContractDeliveryDate}, ${item.productionOrderDeliveryDate});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 1000 === 0) {
+                                if (count % 10000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "";
                                 }
@@ -368,16 +368,16 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
 
                         this.sql.multiple = true;
 
-                        var fs = require("fs");
-                        var path = "C:\\Users\\leslie.aula\\Desktop\\orderstatus.txt";
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\leslie.aula\\Desktop\\orderstatus.txt";
 
-                        fs.writeFile(path, sqlQuery, function (error) {
-                            if (error) {
-                                console.log("write error:  " + error.message);
-                            } else {
-                                console.log("Successful Write to " + path);
-                            }
-                        });
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
 
                         return Promise.all(command)
                             .then((results) => {
