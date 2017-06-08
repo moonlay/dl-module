@@ -20,7 +20,7 @@ class StepDataUtil {
                 var code = generateCode();
 
                 data.process = code;
-                data.alias="a";
+                data.alias="";
                 // var item1 = `data 1 ${code}`;
                 // var item2 = `data 2 ${code}`;
                 // data.itemMonitoring.push(item1);
