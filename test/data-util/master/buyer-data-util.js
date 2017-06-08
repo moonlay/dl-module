@@ -36,8 +36,10 @@ class BuyerDataUtil {
             name: "Buyer 01",
             address: "152 La Sierra Street Land O Lakes, FL 34639",
             country: "US",
+            city: "test",
             contact: "Mr. John Doe.",
-            tempo: "30"
+            tempo: "30",
+            type: "Export",
         };
         return this.getSert(data);
     }
