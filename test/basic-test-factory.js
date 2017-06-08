@@ -24,37 +24,37 @@ function getBasicTest(opt) {
                 done(e);
             });
     });
-    it("#01. should success when delete all exist data", function (done) {
-        manager.read({ size: 100, keyword: "a" })
-            .then(results => {
-                if (results.data.length === 0) {
-                    done();
-                } else {
-                    var destroyData = [];
-                    for (var data of results.data) {
-                        var des = manager.destroy(data._id);
-                        destroyData.push(des);
-                    }
-                    if (destroyData.length === 0) {
-                        done();
-                    } else {
-                        Promise.all(destroyData)
-                            .then(data => {
-                                data.should.be.instanceof(Array);
-                                for (var a of data)
-                                    a.should.equal(true);
-                                done();
-                            })
-                            .catch(e => {
-                                done(e);
-                            });
-                    }
-                }
-            })
-            .catch(e => {
-                done(e);
-            });
-    });
+    // it("#01. should success when delete all exist data", function (done) {
+    //     manager.read({ size: 100, keyword: "a" })
+    //         .then(results => {
+    //             if (results.data.length === 0) {
+    //                 done();
+    //             } else {
+    //                 var destroyData = [];
+    //                 for (var data of results.data) {
+    //                     var des = manager.destroy(data._id);
+    //                     destroyData.push(des);
+    //                 }
+    //                 if (destroyData.length === 0) {
+    //                     done();
+    //                 } else {
+    //                     Promise.all(destroyData)
+    //                         .then(data => {
+    //                             data.should.be.instanceof(Array);
+    //                             for (var a of data)
+    //                                 a.should.equal(true);
+    //                             done();
+    //                         })
+    //                         .catch(e => {
+    //                             done(e);
+    //                         });
+    //                 }
+    //             }
+    //         })
+    //         .catch(e => {
+    //             done(e);
+    //         });
+    // });
 
     it("#02. should error when create with empty data", function (done) {
         manager.create({})
