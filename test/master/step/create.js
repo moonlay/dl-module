@@ -1,15 +1,15 @@
 require("should");
-var MachineType = require('../../data-util/master/machine-type-data-util');
+var Step = require('../../data-util/master/step-data-util');
 var helper = require("../../helper");
-var validate = require("dl-models").validator.master.machineType;
+var validate = require("dl-models").validator.master.step;
 
-var MachineTypeManager = require("../../../src/managers/master/machine-type-manager");
-var machineTypeManager = null;
+var StepManager = require("../../../src/managers/master/step-manager");
+var stepManager = null;
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            machineTypeManager = new MachineTypeManager(db, {
+            stepManager = new StepManager(db, {
                 username: 'dev'
             });
             done();
@@ -20,9 +20,11 @@ before('#00. connect db', function (done) {
 });
 
 it("#01. should error when create items with empty data", function (done) {
-    MachineType.getNewDataIndicators()
-        .then((data) => machineTypeManager.create(data))
-        .then((id) => {
+    Step.getNewData()
+        .then((data) => {
+            data.stepIndicators = [];
+            return stepManager.create(data)
+        }).then((id) => {
             done("Should not be able to create with empty data");
         })
         .catch((e) => {
@@ -39,24 +41,29 @@ it("#01. should error when create items with empty data", function (done) {
 });
 
 it("#02. should error when create items with duplicate data", function (done) {
-    MachineType.getNewData()
+    Step.getNewData()
         .then((data) => {
-
-            data.indicators = [
-                {
-                    indicator: `range`,
-                    dataType: "input skala angka",
-                    defaultValue: "1-10",
-                    uom: "a",
-                },
-                {
-                    indicator: `range`,
-                    dataType: "input pilihan",
-                    defaultValue: "a,b",
-                    uom: "a",
-                }];
-            
-            return machineTypeManager.create(data)
+            var arrProcess = []
+            var process1 = {
+                name: `data `,
+                value: `value `,
+                uom: `uom `
+            }
+            var process2 = {
+                name: `data `,
+                value: `value `,
+                uom: `uom `
+            }
+            var process3 = {
+                name: "",
+                value: `value `,
+                uom: `uom `
+            }
+            arrProcess.push(process1);
+            arrProcess.push(process2);
+            arrProcess.push(process3);
+            data.stepIndicators = arrProcess;
+            return stepManager.create(data)
         }).then((id) => {
             done("Should not be able to create with empty data");
         })
@@ -72,4 +79,11 @@ it("#02. should error when create items with duplicate data", function (done) {
             }
         });
 });
+
+
+
+
+
+
+
 

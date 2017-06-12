@@ -162,9 +162,9 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                             purchaseOrderExternalItemHasErrors = true;
                                             purchaseOrderExternalError["purchaseOrderExternal"] = i18n.__("DeliveryOrder.items.purchaseOrderExternal.isPosted:%s is need to be posted", i18n.__("DeliveryOrder.items.purchaseOrderExternal._:PurchaseOrderExternal"));
                                         }
-                                        else if (_poExternal.isUsed) {
+                                        else if (_poExternal.isClosed) {
                                             purchaseOrderExternalItemHasErrors = true;
-                                            purchaseOrderExternalError["purchaseOrderExternal"] = i18n.__("DeliveryOrder.items.purchaseOrderExternal.isUsed:%s is already closed", i18n.__("DeliveryOrder.items.purchaseOrderExternal._:PurchaseOrderExternal"));
+                                            purchaseOrderExternalError["purchaseOrderExternal"] = i18n.__("DeliveryOrder.items.purchaseOrderExternal.isClosed:%s is already closed", i18n.__("DeliveryOrder.items.purchaseOrderExternal._:PurchaseOrderExternal"));
                                         }
                                         break;
                                     }
