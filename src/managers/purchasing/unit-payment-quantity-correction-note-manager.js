@@ -368,7 +368,6 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                 }
                             }
                             purchaseOrderExternal.isClosed = false;
-                            purchaseOrderExternal.isPosted = false;
                             return this.purchaseOrderExternalManager.update(purchaseOrderExternal);
                         })
                 })
