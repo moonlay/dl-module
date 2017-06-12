@@ -61,26 +61,47 @@ module.exports = class StepManager extends BaseManager {
                     errors["alias"] = i18n.__("Step.alias.isRequired:%s is required", i18n.__("Step.alias._:Alias")); // "Process harus diisi";
 
                 if (!valid.stepIndicators || valid.stepIndicators.length < 1) {
-                    errors["stepIndicators"] = i18n.__("Step.stepIndicators.isRequired:%s is required", i18n.__("Step.stepIndicators._:StepIndicators")); //"minimal harus ada 1 detail";
+                    errors["stepIndicatorsArr"] = i18n.__("Step.stepIndicators.isRequired:%s is required", i18n.__("Step.stepIndicators._:StepIndicators")); //"minimal harus ada 1 detail";
                 }
-                if (valid.stepIndicators) {
-                    for (var stepIndicator of valid.stepIndicators) {
 
-                        if (stepIndicator.name == "" || !stepIndicator.name) {
-                            errors["stepIndicators"] = i18n.__("stepIndicators.isRequired:%s is required", i18n.__("stepIndicators._:StepIndicators")); //"minimal harus ada 1 Step";
+                else {
+
+                    var itemErrors = [];
+                    var valueArr = valid.stepIndicators.map(function (stepIndicator) { return stepIndicator.name });
+
+                    var itemDuplicateErrors = new Array(valueArr.length);
+                    valueArr.some(function (item, idx) {
+                        var itemError = {};
+                        if (valueArr.indexOf(item) != idx) {
+                            itemError["name"] = i18n.__("stepIndicators.name.isDuplicate:%s is duplicate", i18n.__("stepIndicators.name._:name")); //"Nama indicator tidak boleh sama";
                         }
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                            itemDuplicateErrors[idx] = itemError;
+                        } else {
+                            itemDuplicateErrors[idx] = itemError;
+                        }
+                    });
+                    for (var stepIndicator of valid.stepIndicators) {
+                        var itemError = {};
+                        var _index = valid.stepIndicators.indexOf(stepIndicator);
+                        if (!stepIndicator.name) {
+                            itemError["name"] = i18n.__("Step.stepIndicators.name.isRequired:%s is required", i18n.__("stepIndicators.name._:name")); //"indicator tidak boleh kosong";
+                        } else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                            Object.assign(itemError, itemDuplicateErrors[_index]);
+                        }
+
+                        itemErrors.push(itemError);
                     }
 
-                    var valueArr = valid.stepIndicators.map(function (indicators) { return indicators.name });
-                    var isDuplicate = valueArr.some(function (item, idx) {
-
-                        if (valueArr.indexOf(item) != idx) {
-                            errors["stepIndicators"] = i18n.__("stepIndicators.isDuplicate:%s is duplicate", i18n.__("stepIndicators._:indicator")); //"Nama indicator tidak boleh sama";
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            errors.stepIndicators = itemErrors;
+                            break;
                         }
-
-                        return valueArr.indexOf(item) != idx
-                    });
+                    }
                 }
+
 
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
