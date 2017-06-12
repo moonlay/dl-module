@@ -93,24 +93,31 @@ module.exports = class MachineTypeManager extends BaseManager {
                 }
 
 
-                if (valid.indicators) {
+                else {
+
                     var itemErrors = [];
-                    var valueArr = valid.indicators.map(function (indicators) { return indicators.indicator });
+                    var valueArr = valid.indicators.map(function (indicator) { return indicator.indicator });
+
+                    var itemDuplicateErrors = new Array(valueArr.length);
                     valueArr.some(function (item, idx) {
                         var itemError = {};
                         if (valueArr.indexOf(item) != idx) {
                             itemError["indicator"] = i18n.__("MachineType.indicators.indicator.isDuplicate:%s is duplicate", i18n.__("MachineType.indicators.indicator._:indicator")); //"Nama indicator tidak boleh kosong";
                         }
                         if (Object.getOwnPropertyNames(itemError).length > 0) {
-                            itemErrors[valueArr.indexOf(item)] = itemError;
-                            itemErrors[idx] = itemError;
+                            itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                            itemDuplicateErrors[idx] = itemError;
+                        } else {
+                            itemDuplicateErrors[idx] = itemError;
                         }
-                        return valueArr.indexOf(item) != idx
                     });
                     for (var indicator of valid.indicators) {
                         var itemError = {};
+                        var _index = valid.indicators.indexOf(indicator);
                         if (!indicator.indicator) {
                             itemError["indicator"] = i18n.__("MachineType.indicators.indicator.isRequired:%s is required", i18n.__("MachineType.indicators.indicator._:indicator")); //"indicator tidak boleh kosong";
+                        } else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                            Object.assign(itemError, itemDuplicateErrors[_index]);
                         }
 
                         if (indicator.dataType) {
@@ -138,9 +145,7 @@ module.exports = class MachineTypeManager extends BaseManager {
 
                             }
                         }
-
                         itemErrors.push(itemError);
-
                     }
 
                     for (var itemError of itemErrors) {
