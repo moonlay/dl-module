@@ -195,11 +195,11 @@ module.exports = function (unitPaymentCorrection) {
     var summary = _jumlah;
 
     if (unitPaymentCorrection.correctionType === "Jumlah") {
-        if (unitPaymentCorrection.unitPaymentOrder.useIncomeTax) {
+        if (unitPaymentCorrection.useIncomeTax) {
             _subTotal = _subTotal + useIncomeTax;
             summary = _subTotal;
         }
-        if (unitPaymentCorrection.unitPaymentOrder.useVat) {
+        if (unitPaymentCorrection.useVat) {
             summary = summary - useVAT;
         }
     } else {
@@ -235,11 +235,11 @@ module.exports = function (unitPaymentCorrection) {
             style: ['size08']
         }, {
                 width: '20%',
-                text: unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? currency : " ",
+                text: unitPaymentCorrection.useIncomeTax ? currency : " ",
                 style: ['size08']
             }, {
                 width: '60%',
-                text: unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? parseFloat(useIncomeTax).toLocaleString(locale, locale.currency) : "-",
+                text: unitPaymentCorrection.useIncomeTax ? parseFloat(useIncomeTax).toLocaleString(locale, locale.currency) : "-",
                 style: ['size08', 'right']
             }]
     };
