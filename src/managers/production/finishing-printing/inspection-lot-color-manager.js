@@ -72,14 +72,11 @@ module.exports = class InspectionLotColorManager extends BaseManager {
             var dateNow = new Date();
             var dateNowString = moment(dateNow).format('YYYY-MM-DD');
 
-            var getKanban = valid.kanbanId && ObjectId.isValid(valid.kanbanId) ? this.kanbanManager.getSingleByIdOrDefault(new ObjectId(valid.kanbanId)) : Promise.resolve(null);
-
             var getFabricQc = valid.fabricQualityControlId && ObjectId.isValid(valid.fabricQualityControlId) ? this.fabricQualityControlManager.getSingleByIdOrDefault(new ObjectId(valid.fabricQualityControlId)) : Promise.resolve(null);
 
-            Promise.all([getKanban, getFabricQc])
+            Promise.all([getFabricQc])
                 .then(results => {
-                    var _kanban = results[0];
-                    var _fabricQc = results[1];
+                    var _fabricQc = results[0];
 
                     if (!valid.fabricQualityControlId || valid.fabricQualityControlId.toString() === "")
                         errors["fabricQualityControlId"] = i18n.__("Harus diisi", i18n.__("InspectionLotColor.fabricQualityControlId._:FabricQualityControlId")); //"kanban tidak ditemukan";
@@ -122,11 +119,6 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                     if (Object.getOwnPropertyNames(errors).length > 0) {
                         var ValidationError = require('module-toolkit').ValidationError;
                         return Promise.reject(new ValidationError('data does not pass validation', errors));
-                    }
-
-                    if (_kanban) {
-                        valid.kanban = _kanban;
-                        valid.kanbanId = _kanban._id;
                     }
 
                     if (_fabricQc) {
@@ -252,11 +244,11 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                 index++;
                 var item = {};
                 item["No"] = index;
-                item["No Order"] = lotColor.kanban.productionOrder ? lotColor.kanban.productionOrder.orderNo : '';
-                item["Konstruksi"] = lotColor.kanban.productionOrder ? `${lotColor.kanban.productionOrder.material.name} / ${lotColor.kanban.productionOrder.materialConstruction.name} / ${lotColor.kanban.productionOrder.yarnMaterial.name} / ${lotColor.kanban.productionOrder.materialWidth}` : '';
-                item["Warna"] = lotColor.kanban.selectedProductionOrderDetail ? lotColor.kanban.selectedProductionOrderDetail.colorType ? `${lotColor.kanban.selectedProductionOrderDetail.colorType.name} ${lotColor.kanban.selectedProductionOrderDetail.colorRequest}` : lotColor.kanban.selectedProductionOrderDetail.colorRequest : '';
-                item["No Kereta"] = lotColor.kanban ? lotColor.kanban.cart.cartNumber : '';;
-                item["Jenis Order"] = lotColor.kanban.productionOrder ? lotColor.kanban.productionOrder.orderType.name : '';;
+                item["No Order"] = lotColor.productionOrderNo ? lotColor.productionOrderNo : '';
+                item["Konstruksi"] = lotColor.construction ? `${lotColor.construction}` : '';
+                item["Warna"] = lotColor.color ? lotColor.color : '';
+                item["No Kereta"] = lotColor.cartNo ? lotColor.cartNo : '';;
+                item["Jenis Order"] = lotColor.productionOrderType ? lotColor.productionOrderType : '';;
                 item["Tgl Pemeriksaan"] = dateString;
                 item["No Pcs"] = detail.pcsNo ? detail.pcsNo : '';
                 item["Lot"] = detail.lot ? detail.lot : '';
