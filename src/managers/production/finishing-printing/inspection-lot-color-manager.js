@@ -104,7 +104,7 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                             if (!item.pcsNo || item.pcsNo === "")
                                 itemError["pcsNo"] = i18n.__("Harus diisi", i18n.__("InspectionLotColor.items.pcsNo._:Pcs No"));
                             if (!item.grade || item.grade === "")
-                                itemError["pcsNo"] = i18n.__("Harus diisi", i18n.__("InspectionLotColor.items.pcsNo._:Pcs No"));
+                                itemError["grade"] = i18n.__("Harus diisi", i18n.__("InspectionLotColor.items.grade._:Grade"));
                             if (!item.lot || item.lot === "")
                                 itemError["lot"] = i18n.__("Harus diisi", i18n.__("InspectionLotColor.items.lot._:Lot"));
                             if (!item.lot || item.status === "")
@@ -148,6 +148,49 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                     reject(e);
                 });
         });
+    }
+
+    _afterInsert(id) {
+        return this.getSingleById(id)
+            .then((lotInspection) => {
+                return this.fabricQualityControlManager.getSingleById(lotInspection.fabricQualityControlId)
+                    .then((fabricQc) => {
+                        fabricQc.isUsed = true;
+                        return this.fabricQualityControlManager.update(fabricQc)
+                            .then((fabricQc) => Promise.resolve(id))
+                    })
+            })
+    }
+
+    _afterUpdate(id) {
+        return this.getSingleById(id)
+            .then((lotInspection) => {
+                return this.fabricQualityControlManager.getSingleById(lotInspection.fabricQualityControlId)
+                    .then((fabricQc) => {
+
+                        if (lotInspection._deleted) {
+                            fabricQc.isUsed = false;
+                        }
+
+                        return this.fabricQualityControlManager.update(fabricQc)
+                            .then((fabricQc) => Promise.resolve(id))
+                    })
+            })
+    }
+
+    delete(data) {
+        data._deleted = true;
+
+        return this.fabricQualityControlManager.getSingleById(data.fabricQualityControlId)
+            .then((fabricQc) => {
+                fabricQc.isUsed = false;
+
+                return this.fabricQualityControlManager.update(fabricQc)
+                    .then((fabricQc) => {
+                        return this.collection.update(data);
+
+                    })
+            })
     }
 
     getReport(query) {
