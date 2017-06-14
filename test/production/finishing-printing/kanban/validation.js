@@ -141,6 +141,32 @@ it('#04. should error when create new data with non existent productionOrder, in
         });
 });
 
+it('#05. should error when create new data with empty step', function (done) {
+    KanbanDataUtil.getNewData()
+        .then(kanban => {
+            kanban.instruction.steps.push({ process: "" });
+
+            kanbanManager.create(kanban)
+                .then(id => {
+                    done("should error when create new data with empty step");
+                })
+                .catch(e => {
+                    try {
+                        e.name.should.equal("ValidationError");
+                        e.should.have.property('errors');
+                        e.errors.should.instanceof(Object);
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
 // it('#05. should error when create new data with overlimit qty and uom non "MTR"', function (done) {
 //     KanbanDataUtil.getNewData()
 //         .then(kanban => {
