@@ -73,6 +73,9 @@ module.exports = class BuyerManager extends BaseManager {
                 if (!valid.type || valid.type == "")
                     errors["type"] = i18n.__("Buyer.type.isRequired:%s is required", i18n.__("Buyer.type._:Type")); // "Jenis pembeli tidak boleh kosong";
 
+                if (!valid.type || valid.type == "")
+                    errors["type"] = i18n.__("Buyer.type.isRequired:%s is required", i18n.__("Buyer.type._:Type")); // "buyer type tidak boleh kosong";
+
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
