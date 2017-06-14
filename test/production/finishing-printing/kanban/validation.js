@@ -196,33 +196,34 @@ it('#04. should error when create new data with non existent productionOrder, in
 //         });
 // });
 
-it('#05. should error when set isComplete true with incomplete steps', function (done) {
-    KanbanDataUtil.getNewData()
-        .then(kanban => {
-            kanbanManager.create(kanban)
-                .then(id => {
-                    kanbanManager.getSingleById(id)
-                        .then(toBeCompletedKanban =>{
-                            toBeCompletedKanban.isComplete = true;
-                            toBeCompletedKanban.currentStepIndex = toBeCompletedKanban.instruction.steps.length - 1;
-                            kanbanManager.update(toBeCompletedKanban)
-                                .then(completeKanbanId => {
-                                    done("should error when set isComplete true with incomplete steps");
-                                })
-                                .catch(e =>{
-                                    e.errors.should.have.property('isComplete');
-                                    done();
-                                });
-                        })
-                        .catch(e => {
-                            done(e);
-                        });
-                })
-                .catch(e => {
-                    done(e);
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+/* Lepas validasi ini karena tambah flow reprocess */
+// it('#05. should error when set isComplete true with incomplete steps', function (done) {
+//     KanbanDataUtil.getNewData()
+//         .then(kanban => {
+//             kanbanManager.create(kanban)
+//                 .then(id => {
+//                     kanbanManager.getSingleById(id)
+//                         .then(toBeCompletedKanban =>{
+//                             toBeCompletedKanban.isComplete = true;
+//                             toBeCompletedKanban.currentStepIndex = toBeCompletedKanban.instruction.steps.length - 1;
+//                             kanbanManager.update(toBeCompletedKanban)
+//                                 .then(completeKanbanId => {
+//                                     done("should error when set isComplete true with incomplete steps");
+//                                 })
+//                                 .catch(e =>{
+//                                     e.errors.should.have.property('isComplete');
+//                                     done();
+//                                 });
+//                         })
+//                         .catch(e => {
+//                             done(e);
+//                         });
+//                 })
+//                 .catch(e => {
+//                     done(e);
+//                 });
+//         })
+//         .catch(e => {
+//             done(e);
+//         });
+// });
