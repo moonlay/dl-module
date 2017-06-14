@@ -30,27 +30,32 @@ module.exports = class InspectionLotColorManager extends BaseManager {
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
+            var fabricQcCodeFilter = {
+                "fabricQualityControlCode": {
+                    "$regex": regex
+                }
+            };
             var orderNoFilter = {
-                "kanban.productionOrder.orderNo": {
+                "productionOrderNo": {
                     "$regex": regex
                 }
             };
             var colorFilter = {
-                "kanban.selectedProductionOrderDetail.colorRequest": {
+                "color": {
                     "$regex": regex
                 }
             };
             var cartFilter = {
-                "kanban.cart.cartNumber": {
+                "cartNo": {
                     "$regex": regex
                 }
             };
             var orderTypeFilter = {
-                "kanban.productionOrder.orderType.name": {
+                "productionOrderType": {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [orderNoFilter, colorFilter, cartFilter, orderTypeFilter];
+            keywordFilter["$or"] = [fabricQcCodeFilter, orderNoFilter, colorFilter, cartFilter, orderTypeFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -199,19 +204,19 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                 "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
             }
         };
-        var kanbanQuery = {};
-        if (query.kanban) {
-            kanbanQuery = {
-                "kanbanId": new ObjectId(query.kanban)
+        var fabricQcQuery = {};
+        if (query.fabricQc) {
+            fabricQcQuery = {
+                "fabricQualityControlId": new ObjectId(query.fabricQc)
             };
         }
         var productionOrderQuery = {};
         if (query.productionOrder) {
             productionOrderQuery = {
-                "kanban.productionOrderId": new ObjectId(query.productionOrder)
+                "productionOrderNo": query.productionOrder
             }
         }
-        var Query = { "$and": [dateQuery, deletedQuery, kanbanQuery, productionOrderQuery] };
+        var Query = { "$and": [dateQuery, deletedQuery, fabricQcQuery, productionOrderQuery] };
         var order = {
             "date": -1
         };
@@ -244,6 +249,7 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                 index++;
                 var item = {};
                 item["No"] = index;
+                item["Nomor Pemeriksaan Kain"] = lotColor.fabricQualityControlCode ? lotColor.fabricQualityControlCode : '';
                 item["No Order"] = lotColor.productionOrderNo ? lotColor.productionOrderNo : '';
                 item["Konstruksi"] = lotColor.construction ? `${lotColor.construction}` : '';
                 item["Warna"] = lotColor.color ? lotColor.color : '';
@@ -251,6 +257,7 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                 item["Jenis Order"] = lotColor.productionOrderType ? lotColor.productionOrderType : '';;
                 item["Tgl Pemeriksaan"] = dateString;
                 item["No Pcs"] = detail.pcsNo ? detail.pcsNo : '';
+                item["Grade"] = detail.grade ? detail.grade : '';
                 item["Lot"] = detail.lot ? detail.lot : '';
                 item["Status"] = detail.status ? detail.status : '';
 
@@ -259,6 +266,7 @@ module.exports = class InspectionLotColorManager extends BaseManager {
         }
 
         xls.options["No"] = "number";
+        xls.options["Nomor Pemeriksaan Kain"] = "string";
         xls.options["No Order"] = "string";
         xls.options["Konstruksi"] = "string";
         xls.options["Warna"] = "string";
@@ -266,6 +274,7 @@ module.exports = class InspectionLotColorManager extends BaseManager {
         xls.options["Jenis Order"] = "string";
         xls.options["Tgl Pemeriksaan"] = "string";
         xls.options["No Pcs"] = "string";
+        xls.options["Grade"] = "string";
         xls.options["Lot"] = "string";
         xls.options["Status"] = "string";
 
