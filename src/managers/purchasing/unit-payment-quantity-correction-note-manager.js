@@ -316,12 +316,13 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                     fulfillment.correction = [];
                                 }
                                 var correctionQty = 0;
-                                if (fulfillment.correction.length > 0) {
-                                    var lastQty = fulfillment.correction[fulfillment.correction.length - 1].correctionQuantity;
-                                    correctionQty = realization.quantity - lastQty;
-                                } else {
-                                    correctionQty = fulfillment.unitReceiptNoteDeliveredQuantity - realization.quantity;
-                                }
+                                // if (fulfillment.correction.length > 0) {
+                                //     var lastQty = fulfillment.correction[fulfillment.correction.length - 1].correctionQuantity;
+                                //     correctionQty = realization.quantity - lastQty;
+                                // } else {
+                                //     correctionQty = fulfillment.unitReceiptNoteDeliveredQuantity - realization.quantity;
+                                // }
+                                correctionQty = realization.quantity * -1;
 
                                 _correction.correctionDate = unitPaymentPriceCorrectionNote.date;
                                 _correction.correctionNo = unitPaymentPriceCorrectionNote.no;
