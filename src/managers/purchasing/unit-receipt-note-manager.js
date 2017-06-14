@@ -25,8 +25,10 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         this.deliveryOrderFields = [
             "no",
             "refNo",
+            "date",
             "supplierDoDate",
             "supplierId",
+            "supplier._id",
             "supplier.code",
             "supplier.name",
             "isPosted",
