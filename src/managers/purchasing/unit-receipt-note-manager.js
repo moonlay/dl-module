@@ -42,6 +42,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             "items.fulfillments.purchaseOrderUom.unit",
             "items.fulfillments.deliveredQuantity",
             "items.fulfillments.realizationQuantity",
+            "items.fulfillments.productId",
             "items.fulfillments.product._id",
             "items.fulfillments.product.code",
             "items.fulfillments.product.name",
