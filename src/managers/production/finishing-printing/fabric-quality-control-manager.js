@@ -41,6 +41,11 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
+            var codeFilter = {
+                "code": {
+                    "$regex": regex
+                }
+            }
             var operatorFilter = {
                 "operatorIm": {
                     "$regex": regex
@@ -66,7 +71,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [operatorFilter, machineFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter];
+            keywordFilter["$or"] = [codeFilter, operatorFilter, machineFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
