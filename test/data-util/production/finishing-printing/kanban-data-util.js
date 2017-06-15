@@ -15,7 +15,7 @@ class KanbanDataUtil {
                         var _machine = result[2];
                         var _selectedProductionOrderDetail = (_productionOrder.details && _productionOrder.details.length > 0) ? _productionOrder.details[0] : {};
                         
-                        var instruction = _instruction.steps.map((step) => {
+                        _instruction.steps.map((step) => {
                             step.machine = _machine;
                             step.deadline = new Date();
                             return step;
