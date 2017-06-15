@@ -41,6 +41,11 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
+            var codeFilter = {
+                "code": {
+                    "$regex": regex
+                }
+            }
             var operatorFilter = {
                 "operatorIm": {
                     "$regex": regex
@@ -66,7 +71,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [operatorFilter, machineFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter];
+            keywordFilter["$or"] = [codeFilter, operatorFilter, machineFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -341,6 +346,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             for (var fabricGradeTest of result.fabricGradeTests) {
                 var item = {};
                 item["No"] = index;
+                item["Nomor Pemeriksaan Kain"] = result.code ? result.code : "";
                 item["Nomor Kanban"] = result.kanbanCode ? result.kanbanCode : "";
                 item["Nomor Kereta"] = result.cartNo ? result.cartNo : "";
                 item["Jenis Order"] = result.productionOrderType ? result.productionOrderType : "";
@@ -363,6 +369,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 item["Sampel (meter)"] = fabricGradeTest.sampleLength;
 
                 xls.options["No"] = "number";
+                xls.options["Nomor Pemeriksaan Kain"] = "string";
                 xls.options["Nomor Kanban"] = "string";
                 xls.options["Nomor Kereta"] = "string";
                 xls.options["Jenis Order"] = "string";
