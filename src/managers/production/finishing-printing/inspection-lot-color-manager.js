@@ -210,13 +210,13 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                 "fabricQualityControlId": new ObjectId(query.fabricQc)
             };
         }
-        var productionOrderQuery = {};
-        if (query.productionOrder) {
-            productionOrderQuery = {
-                "productionOrderNo": query.productionOrder
+        var kanbanCodeQuery = {};
+        if (query.kanban) {
+            kanbanCodeQuery = {
+                "kanbanCode": query.kanban
             }
         }
-        var Query = { "$and": [dateQuery, deletedQuery, fabricQcQuery, productionOrderQuery] };
+        var Query = { "$and": [dateQuery, deletedQuery, fabricQcQuery, kanbanCodeQuery] };
         var order = {
             "date": -1
         };
