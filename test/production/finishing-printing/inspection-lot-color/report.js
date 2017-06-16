@@ -91,7 +91,7 @@ it("#04. should success when get report with date parameter", function(done) {
 });
 
 it("#05. should success when get report with kanban parameter", function(done) {
-    inspectionLotColorManager.getReport({kanban : inspection.kanbanId})
+    inspectionLotColorManager.getReport({kanbanId : inspection.kanbanId})
         .then((item) => {
             var lotColor = item.data;
             lotColor.should.instanceof(Array);
