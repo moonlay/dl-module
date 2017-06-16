@@ -34,16 +34,25 @@ module.exports = function (pox) {
             .reduce((prev, curr, index) => {
                 return prev + curr;
             }, 0);
-        poeItem.prNo = `\n${_items
+        var prNos = [];
+        _items
             .map(function (_item) {
-                return _item.prNo;
-            }).join("\n")}`;
+                if (_item.prNo != "") {
+                    prNos.push(_item.prNo);
+                }
+            })
+        poeItem.prNo = prNos.join("\n");
         poeItem.uom = _items[0].uom;
         poeItem.price = _items[0].price;
-        poeItem.remark = `\n${_items
+
+        var remaks = [];
+        _items
             .map(function (_item) {
-                return _item.remark;
-            }).join("\n")}`;
+                if (_item.remark != "") {
+                    remaks.push(_item.remark);
+                }
+            })
+        poeItem.remark = remaks.join("\n");
         items.push(poeItem);
     });
 
