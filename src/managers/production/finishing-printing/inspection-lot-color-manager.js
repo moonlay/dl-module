@@ -249,12 +249,12 @@ module.exports = class InspectionLotColorManager extends BaseManager {
                 index++;
                 var item = {};
                 item["No"] = index;
-                item["Nomor Pemeriksaan Kain"] = lotColor.fabricQualityControlCode ? lotColor.fabricQualityControlCode : '';
                 item["No Order"] = lotColor.productionOrderNo ? lotColor.productionOrderNo : '';
+                item["No Kereta"] = lotColor.cartNo ? lotColor.cartNo : '';
+                item["Nomor Pemeriksaan Kain"] = lotColor.fabricQualityControlCode ? lotColor.fabricQualityControlCode : '';
                 item["Konstruksi"] = lotColor.construction ? `${lotColor.construction}` : '';
                 item["Warna"] = lotColor.color ? lotColor.color : '';
-                item["No Kereta"] = lotColor.cartNo ? lotColor.cartNo : '';;
-                item["Jenis Order"] = lotColor.productionOrderType ? lotColor.productionOrderType : '';;
+                item["Jenis Order"] = lotColor.productionOrderType ? lotColor.productionOrderType : '';
                 item["Tgl Pemeriksaan Lot Warna"] = dateString;
                 item["No Pcs"] = detail.pcsNo ? detail.pcsNo : '';
                 item["Grade"] = detail.grade ? detail.grade : '';
@@ -266,11 +266,11 @@ module.exports = class InspectionLotColorManager extends BaseManager {
         }
 
         xls.options["No"] = "number";
-        xls.options["Nomor Pemeriksaan Kain"] = "string";
         xls.options["No Order"] = "string";
+        xls.options["No Kereta"] = "string";
+        xls.options["Nomor Pemeriksaan Kain"] = "string";
         xls.options["Konstruksi"] = "string";
         xls.options["Warna"] = "string";
-        xls.options["No Kereta"] = "string";
         xls.options["Jenis Order"] = "string";
         xls.options["Tgl Pemeriksaan Lot Warna"] = "string";
         xls.options["No Pcs"] = "string";
