@@ -21,6 +21,30 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
     }
+    getMonitoringKoreksi(query){
+        return new Promise((resolve, reject) => {
+           
+              var date = {
+                "date" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                },
+                "_deleted" : false,
+                "correctionType":"Jumlah"
+            };
+           
+        this.collection.aggregate([ 
+                {"$match" : date},{"$unwind" :"$items"}
+               
+             ])
+    
+            .toArray()
+            .then(result => {
+                resolve(result);
+            });
+        });
+    }
+
 
     _validate(unitPaymentQuantityCorrectionNote) {
         var errors = {};
