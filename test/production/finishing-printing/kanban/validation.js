@@ -145,7 +145,7 @@ it('#05. should error when create new data with empty step', function (done) {
     KanbanDataUtil.getNewData()
         .then(kanban => {
             kanban.instruction.steps.push({ process: "" });
-            kanban.oldKanbanId = {};
+            kanban.oldKanbanId = kanban._id;
 
             kanbanManager.create(kanban)
                 .then(id => {
