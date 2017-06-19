@@ -141,6 +141,32 @@ it('#04. should error when create new data with non existent productionOrder, in
         });
 });
 
+it('#05. should error when create new data with empty step', function (done) {
+    KanbanDataUtil.getNewData()
+        .then(kanban => {
+            kanban.instruction.steps.push({ process: "" });
+
+            kanbanManager.create(kanban)
+                .then(id => {
+                    done("should error when create new data with empty step");
+                })
+                .catch(e => {
+                    try {
+                        e.name.should.equal("ValidationError");
+                        e.should.have.property('errors');
+                        e.errors.should.instanceof(Object);
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
 // it('#05. should error when create new data with overlimit qty and uom non "MTR"', function (done) {
 //     KanbanDataUtil.getNewData()
 //         .then(kanban => {
@@ -196,33 +222,34 @@ it('#04. should error when create new data with non existent productionOrder, in
 //         });
 // });
 
-it('#05. should error when set isComplete true with incomplete steps', function (done) {
-    KanbanDataUtil.getNewData()
-        .then(kanban => {
-            kanbanManager.create(kanban)
-                .then(id => {
-                    kanbanManager.getSingleById(id)
-                        .then(toBeCompletedKanban =>{
-                            toBeCompletedKanban.isComplete = true;
-                            toBeCompletedKanban.currentStepIndex = toBeCompletedKanban.instruction.steps.length - 1;
-                            kanbanManager.update(toBeCompletedKanban)
-                                .then(completeKanbanId => {
-                                    done("should error when set isComplete true with incomplete steps");
-                                })
-                                .catch(e =>{
-                                    e.errors.should.have.property('isComplete');
-                                    done();
-                                });
-                        })
-                        .catch(e => {
-                            done(e);
-                        });
-                })
-                .catch(e => {
-                    done(e);
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+/* Lepas validasi ini karena tambah flow reprocess */
+// it('#05. should error when set isComplete true with incomplete steps', function (done) {
+//     KanbanDataUtil.getNewData()
+//         .then(kanban => {
+//             kanbanManager.create(kanban)
+//                 .then(id => {
+//                     kanbanManager.getSingleById(id)
+//                         .then(toBeCompletedKanban =>{
+//                             toBeCompletedKanban.isComplete = true;
+//                             toBeCompletedKanban.currentStepIndex = toBeCompletedKanban.instruction.steps.length - 1;
+//                             kanbanManager.update(toBeCompletedKanban)
+//                                 .then(completeKanbanId => {
+//                                     done("should error when set isComplete true with incomplete steps");
+//                                 })
+//                                 .catch(e =>{
+//                                     e.errors.should.have.property('isComplete');
+//                                     done();
+//                                 });
+//                         })
+//                         .catch(e => {
+//                             done(e);
+//                         });
+//                 })
+//                 .catch(e => {
+//                     done(e);
+//                 });
+//         })
+//         .catch(e => {
+//             done(e);
+//         });
+// });

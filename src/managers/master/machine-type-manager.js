@@ -81,7 +81,7 @@ module.exports = class MachineTypeManager extends BaseManager {
 
 
                 if (valid.indicators && valid.indicators.length <= 0) {
-                    errors["indicators"] = i18n.__("MachineType.indicators.isRequired:%s is required", i18n.__("MachineType.indicators._:Indicators")); //"Harus ada minimal 1 indicator";
+                    errors["indicatorsArr"] = i18n.__("MachineType.indicators.isRequired:%s is required", i18n.__("MachineType.indicators._:Indicators")); //"Harus ada minimal 1 indicator";
 
                     for (var indicator of valid.indicators) {
                         if (indicator.dataType == "number") {
@@ -93,69 +93,71 @@ module.exports = class MachineTypeManager extends BaseManager {
                 }
 
 
-
                 else {
+
                     var itemErrors = [];
-                    var valueArr = valid.indicators.map(function (indicators) { return indicators.indicator });
-                    var isDuplicate = valueArr.some(function (item, idx) {
+                    var valueArr = valid.indicators.map(function (indicator) { return indicator.indicator });
+
+                    var itemDuplicateErrors = new Array(valueArr.length);
+                    valueArr.some(function (item, idx) {
                         var itemError = {};
                         if (valueArr.indexOf(item) != idx) {
                             itemError["indicator"] = i18n.__("MachineType.indicators.indicator.isDuplicate:%s is duplicate", i18n.__("MachineType.indicators.indicator._:indicator")); //"Nama indicator tidak boleh kosong";
                         }
                         if (Object.getOwnPropertyNames(itemError).length > 0) {
-                            itemErrors[valueArr.indexOf(item)] = itemError;
-                            itemErrors[idx] = itemError;
+                            itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                            itemDuplicateErrors[idx] = itemError;
+                        } else {
+                            itemDuplicateErrors[idx] = itemError;
                         }
-                        return valueArr.indexOf(item) != idx
                     });
-                    if (!isDuplicate) {
-                        for (var indicator of valid.indicators) {
-                            var itemError = {};
-                            if (!indicator.indicator) {
-                                itemError["indicator"] = i18n.__("MachineType.indicators.indicator.isRequired:%s is required", i18n.__("MachineType.indicators.indicator._:indicator")); //"indicator tidak boleh kosong";
-                            }
+                    for (var indicator of valid.indicators) {
+                        var itemError = {};
+                        var _index = valid.indicators.indexOf(indicator);
+                        if (!indicator.indicator) {
+                            itemError["indicator"] = i18n.__("MachineType.indicators.indicator.isRequired:%s is required", i18n.__("MachineType.indicators.indicator._:indicator")); //"indicator tidak boleh kosong";
+                        } else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                            Object.assign(itemError, itemDuplicateErrors[_index]);
+                        }
 
-                            if (indicator.dataType) {
-                                if (indicator.dataType == "input pilihan") {
-                                    if (indicator.defaultValue) {
-                                        var optionValue = indicator.defaultValue.split(",");
-                                        if (optionValue.length <= 1 || (optionValue.find((o) => o.trim().length == 0)) == "") {
-                                            itemError["defaultValue"] = i18n.__("MachineType.indicators.defaultValue.isIncorrect:%s option is incorrect ", i18n.__("MachineType.indicators.defaultValue._:defaultValue")); //"defaultValue inCorrect";
-                                        }
+                        if (indicator.dataType) {
+                            if (indicator.dataType == "input pilihan") {
+                                if (indicator.defaultValue) {
+                                    var optionValue = indicator.defaultValue.split(",");
+                                    if (optionValue.length <= 1 || (optionValue.find((o) => o.trim().length == 0)) == "") {
+                                        itemError["defaultValue"] = i18n.__("MachineType.indicators.defaultValue.isIncorrect:%s option is incorrect ", i18n.__("MachineType.indicators.defaultValue._:defaultValue")); //"defaultValue inCorrect";
                                     }
-
-                                } else if (indicator.dataType == "input skala angka") {
-                                    if (indicator.defaultValue) {
-                                        var rangeValue = indicator.defaultValue.split("-");
-                                        if (rangeValue.length <= 1 || rangeValue.length > 2 || !parseInt(rangeValue[0]) || !parseInt(rangeValue[1])) {
-                                            itemError["defaultValue"] = i18n.__("MachineType.indicators.defaultValue.isIncorrect:%s range is incorrect ", i18n.__("MachineType.indicators.defaultValue._:defaultValue")); //"defaultValue inCorrect";
-                                        }
-                                        else if (parseInt(rangeValue[0]) >= parseInt(rangeValue[1]) || parseInt(rangeValue[1]) <= parseInt(rangeValue[0])) {
-                                            itemError["defaultValue"] = i18n.__("MachineType.indicators.defaultValue.isIncorrect:%s range is incorrect ", i18n.__("MachineType.indicators.defaultValue._:defaultValue")); //"defaultValue inCorrect";
-                                        }
-                                        else if ((rangeValue.find((o) => o.trim().length == 0)) == "") {
-                                            itemError["defaultValue"] = i18n.__("MachineType.indicators.defaultValue.isIncorrect:%s range is incorrect ", i18n.__("MachineType.indicators.defaultValue._:defaultValue")); //"defaultValue inCorrect";
-                                        }
-                                    }
-
                                 }
+
+                            } else if (indicator.dataType == "input skala angka") {
+                                if (indicator.defaultValue) {
+                                    var rangeValue = indicator.defaultValue.split("-");
+                                    if (rangeValue.length <= 1 || rangeValue.length > 2 || !parseInt(rangeValue[0]) || !parseInt(rangeValue[1])) {
+                                        itemError["defaultValue"] = i18n.__("MachineType.indicators.defaultValue.isIncorrect:%s range is incorrect ", i18n.__("MachineType.indicators.defaultValue._:defaultValue")); //"defaultValue inCorrect";
+                                    }
+                                    else if (parseInt(rangeValue[0]) >= parseInt(rangeValue[1]) || parseInt(rangeValue[1]) <= parseInt(rangeValue[0])) {
+                                        itemError["defaultValue"] = i18n.__("MachineType.indicators.defaultValue.isIncorrect:%s range is incorrect ", i18n.__("MachineType.indicators.defaultValue._:defaultValue")); //"defaultValue inCorrect";
+                                    }
+                                    else if ((rangeValue.find((o) => o.trim().length == 0)) == "") {
+                                        itemError["defaultValue"] = i18n.__("MachineType.indicators.defaultValue.isIncorrect:%s range is incorrect ", i18n.__("MachineType.indicators.defaultValue._:defaultValue")); //"defaultValue inCorrect";
+                                    }
+                                }
+
                             }
-
-                            itemErrors.push(itemError);
-
                         }
-
-                        for (var itemError of itemErrors) {
-                            if (Object.getOwnPropertyNames(itemError).length > 0) {
-                                errors.indicators = itemErrors;
-                                break;
-                            }
-                        }
+                        itemErrors.push(itemError);
                     }
 
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            errors.indicators = itemErrors;
+                            break;
+                        }
+                    }
                 }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
+
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
                 }

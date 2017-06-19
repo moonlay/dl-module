@@ -194,6 +194,13 @@ it("#05. should success when create new data kanban", function(done) {
         .then(data =>{
             data.instructionId = instruction._id;
             data.instruction = instruction;
+            
+            data.instruction.steps.map((step) => {
+                step.machine = machine;
+                step.deadline = new Date();
+                return step;
+            });
+
             kanbanManager.create(data)
                 .then(id =>{
                     kanbanManager.getSingleById(id)

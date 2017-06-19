@@ -180,7 +180,7 @@ module.exports = function (pox) {
                 style: ['size08', 'center']
             }, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: `${currency}`
                 }, {
                         width: '*',
@@ -190,7 +190,7 @@ module.exports = function (pox) {
                 style: ['size08']
             }, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: `${currency}`
                 }, {
                         width: '*',
@@ -228,7 +228,7 @@ module.exports = function (pox) {
             colSpan: 3
         }, "", "", {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: currency
                 }, {
                         width: '*',
@@ -243,7 +243,7 @@ module.exports = function (pox) {
             colSpan: 3
         }, null, null, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: currency
                 }, {
                         width: '*',
@@ -258,7 +258,7 @@ module.exports = function (pox) {
             colSpan: 3
         }, null, null, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: currency
                 }, {
                         width: '*',
