@@ -168,6 +168,27 @@ it('#05. should error when create new data with empty step', function (done) {
         });
 });
 
+it('#06. success create new data with old kanban id', function (done) {
+    var kanban;
+    KanbanDataUtil.getNewData()
+            .then((data) => {
+                kanban = data;
+                kanbanManager.create(data)
+                    .then((id) => {
+                        kanban.oldKanbanId = id;
+
+                        kanbanManager.create(kanban)
+                            .then((id) => {
+                                id.should.be.Object();
+                                done();
+                            })
+                    })
+            })
+            .catch((e) => {
+                done(e);
+            });
+});
+
 // it('#05. should error when create new data with overlimit qty and uom non "MTR"', function (done) {
 //     KanbanDataUtil.getNewData()
 //         .then(kanban => {
