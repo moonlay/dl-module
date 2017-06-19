@@ -147,40 +147,40 @@ module.exports = class KanbanManager extends BaseManager {
                             errors["instruction"] = i18n.__("Kanban.instruction.isRequired:%s is required", i18n.__("Kanban.instruction._:Instruction")); //"Instruction harus diisi";
                         else if (!_instruction)
                             errors["instruction"] = i18n.__("Kanban.instruction.notFound:%s not found", i18n.__("Kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
-                        // else {
-                        //     var stepsError = [];
-                        //     var hasError = false;
+                        else {
+                            var stepsError = [];
+                            var hasError = false;
 
-                        //     for (var step of valid.instruction.steps) {
-                        //         var stepErrors = {};
+                            for (var step of valid.instruction.steps) {
+                                var stepErrors = {};
                                 
-                        //         if(!step.process || step.process == "") {
-                        //             stepErrors["process"] = i18n.__("Kanban.instruction.steps.process.isRequired:%s is required", i18n.__("Kanban.instruction.steps.process._:Process")); //"Proses harus diisi";
-                        //         }
+                                if(!step.process || step.process == "") {
+                                    stepErrors["process"] = i18n.__("Kanban.instruction.steps.process.isRequired:%s is required", i18n.__("Kanban.instruction.steps.process._:Process")); //"Proses harus diisi";
+                                }
 
-                        //         if(!step.machine || Object.getOwnPropertyNames(step.machine).length == 0) {
-                        //             stepErrors["machine"] = i18n.__("Kanban.instruction.steps.machine.isRequired:%s is required", i18n.__("Kanban.instruction.steps.machine._:Machine")); //"Mesin harus diisi";
-                        //         }
+                                // if(!step.machine || Object.getOwnPropertyNames(step.machine).length == 0) {
+                                //     stepErrors["machine"] = i18n.__("Kanban.instruction.steps.machine.isRequired:%s is required", i18n.__("Kanban.instruction.steps.machine._:Machine")); //"Mesin harus diisi";
+                                // }
 
-                        //         if(!step.deadline) {
-                        //             stepErrors["deadline"] = i18n.__("Kanban.instruction.steps.deadline.isRequired:%s is required", i18n.__("Kanban.instruction.steps.deadline._:Deadline")); //"Target Selesai harus diisi";
-                        //         }
+                                // if(!step.deadline) {
+                                //     stepErrors["deadline"] = i18n.__("Kanban.instruction.steps.deadline.isRequired:%s is required", i18n.__("Kanban.instruction.steps.deadline._:Deadline")); //"Target Selesai harus diisi";
+                                // }
                                 
-                        //         stepsError.push(stepErrors);
-                        //     }
+                                stepsError.push(stepErrors);
+                            }
                             
-                        //     for(var stepError of stepsError)
-                        //     {
-                        //         if(Object.getOwnPropertyNames(stepError).length > 0)
-                        //         {
-                        //             hasError = true;
-                        //             break;
-                        //         }
-                        //     }
+                            for(var stepError of stepsError)
+                            {
+                                if(Object.getOwnPropertyNames(stepError).length > 0)
+                                {
+                                    hasError = true;
+                                    break;
+                                }
+                            }
 
-                        //     if(hasError)
-                        //         errors["steps"] = stepsError;
-                        // }
+                            if(hasError)
+                                errors["steps"] = stepsError;
+                        }
 
                         if (Object.getOwnPropertyNames(errors).length > 0) {
                             var ValidationError = require('module-toolkit').ValidationError;
