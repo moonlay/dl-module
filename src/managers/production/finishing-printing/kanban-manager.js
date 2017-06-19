@@ -205,7 +205,7 @@ module.exports = class KanbanManager extends BaseManager {
                             valid.cart.uom = _uom;
                         }
 
-                        if(valid.oldKanbanId && ObjectId.isValid(valid.oldKanbanId)) {
+                        if(valid.oldKanbanId) {
                             valid.oldKanbanId = new ObjectId(valid.oldKanbanId);
                         }
 
