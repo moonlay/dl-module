@@ -1,6 +1,6 @@
 var global = require('../../global');
 
-module.exports = function (pox) {
+module.exports = function (pox, offset) {
 
     var _items = pox.items.map(po => {
         return po.items.map(poItem => {
@@ -119,7 +119,7 @@ module.exports = function (pox) {
             }, {
                 width: '35%',
                 stack: [
-                    `Sukoharjo, ${moment(pox.date).format(locale.date.format)} `, {
+                    `Sukoharjo, ${moment(pox.date).add(offset,'h').add(offset,'h').format(locale.date.format)} `, {
                         text: [
                             'Mohon', {
                                 text: ' di-fax kembali',
@@ -314,7 +314,7 @@ module.exports = function (pox) {
                             }, {
                                 width: '*',
                                 stack: [{
-                                    text: `${moment(pox.expectedDeliveryDate).format(locale.date.format)}`,
+                                    text: `${moment(pox.expectedDeliveryDate).add(offset,'h').format(locale.date.format)}`,
                                     style: ['bold']
                                 }, `${pox.remark}`]
                             }]
