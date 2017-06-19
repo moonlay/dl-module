@@ -6,6 +6,7 @@ var assert = require('assert');
 var map = DLModels.map;
 var i18n = require('dl-i18n');
 var PurchaseOrderManager = require('./purchase-order-manager');
+var PurchaseOrderExternalManager = require('./purchase-order-external-manager');
 var UnitPaymentCorrectionNote = DLModels.purchasing.UnitPaymentCorrectionNote;
 var UnitPaymentOrder = DLModels.purchasing.UnitPaymentOrder;
 var UnitPaymentOrderManager = require('./unit-payment-order-manager');
@@ -19,6 +20,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         this.collection = this.db.use(map.purchasing.collection.UnitPaymentCorrectionNote);
         this.unitPaymentOrderManager = new UnitPaymentOrderManager(db, user);
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
+        this.purchaseOrderExternalManager = new PurchaseOrderExternalManager(db, user);
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
     }
     getMonitoringKoreksi(query){
@@ -290,6 +292,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
     _afterInsert(id) {
         return this.getSingleById(id)
             .then((unitPaymentPriceCorrectionNote) => this.updatePurchaseOrder(unitPaymentPriceCorrectionNote))
+            .then((unitPaymentPriceCorrectionNote) => this.updatePurchaseOrderExternal(unitPaymentPriceCorrectionNote))
             .then((unitPaymentPriceCorrectionNote) => this.updateUnitReceiptNote(unitPaymentPriceCorrectionNote))
             .then((unitPaymentPriceCorrectionNote) => this.updateUnitPaymentOrder(unitPaymentPriceCorrectionNote))
             .then(() => {
@@ -337,12 +340,13 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                     fulfillment.correction = [];
                                 }
                                 var correctionQty = 0;
-                                if (fulfillment.correction.length > 0) {
-                                    var lastQty = fulfillment.correction[fulfillment.correction.length - 1].correctionQuantity;
-                                    correctionQty = realization.quantity - lastQty;
-                                } else {
-                                    correctionQty = fulfillment.unitReceiptNoteDeliveredQuantity - realization.quantity;
-                                }
+                                // if (fulfillment.correction.length > 0) {
+                                //     var lastQty = fulfillment.correction[fulfillment.correction.length - 1].correctionQuantity;
+                                //     correctionQty = realization.quantity - lastQty;
+                                // } else {
+                                //     correctionQty = fulfillment.unitReceiptNoteDeliveredQuantity - realization.quantity;
+                                // }
+                                correctionQty = realization.quantity * -1;
 
                                 _correction.correctionDate = unitPaymentPriceCorrectionNote.date;
                                 _correction.correctionNo = unitPaymentPriceCorrectionNote.no;
@@ -359,6 +363,41 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
             jobs.push(job);
         })
 
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(unitPaymentPriceCorrectionNote);
+        })
+    }
+
+    updatePurchaseOrderExternal(unitPaymentPriceCorrectionNote) {
+        var listPurchaseOrderExternalId = unitPaymentPriceCorrectionNote.items.map((item) => {
+            return item.purchaseOrder.purchaseOrderExternal._id
+        })
+        listPurchaseOrderExternalId = [].concat.apply([], listPurchaseOrderExternalId);
+        listPurchaseOrderExternalId = listPurchaseOrderExternalId.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+
+        var jobs = [];
+        for (var purchaseOrderExternalId of listPurchaseOrderExternalId) {
+            var job = this.purchaseOrderExternalManager.getSingleById(purchaseOrderExternalId)
+                .then((purchaseOrderExternal) => {
+                    return Promise.all(purchaseOrderExternal.items.map((purchaseOrder) => {
+                        return this.purchaseOrderManager.getSingleById(purchaseOrder._id)
+                    }))
+                        .then((purchaseOrders) => {
+                            for (var purchaseOrder of purchaseOrders) {
+                                var item = purchaseOrderExternal.items.find(item => item._id.toString() === purchaseOrder._id.toString());
+                                var index = purchaseOrderExternal.items.indexOf(item);
+                                if (index !== -1) {
+                                    purchaseOrderExternal.items.splice(index, 1, purchaseOrder);
+                                }
+                            }
+                            purchaseOrderExternal.isClosed = false;
+                            return this.purchaseOrderExternalManager.update(purchaseOrderExternal);
+                        })
+                })
+            jobs.push(job);
+        }
         return Promise.all(jobs).then((results) => {
             return Promise.resolve(unitPaymentPriceCorrectionNote);
         })

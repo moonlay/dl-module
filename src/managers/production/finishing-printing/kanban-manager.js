@@ -95,10 +95,11 @@ module.exports = class KanbanManager extends BaseManager {
 
                         if (_kanbanDuplicate)
                             errors["code"] = i18n.__("Kanban.code.isExists:%s is exists", i18n.__("Kanban.code._:Code"));
-
-                        if (_kanban && !_kanban.isComplete && valid.isComplete && _kanban.currentStepIndex < _kanban.instruction.steps.length){
-                            errors["isComplete"] = i18n.__("Kanban.isComplete.incompleteSteps:%s steps are incomplete", i18n.__("Kanban.code._:Kanban"));
-                        }
+                        
+                        /* Lepas validasi ini karena tambah flow reprocess */
+                        // if (_kanban && !_kanban.isComplete && valid.isComplete && _kanban.currentStepIndex < _kanban.instruction.steps.length){
+                        //     errors["isComplete"] = i18n.__("Kanban.isComplete.incompleteSteps:%s steps are incomplete", i18n.__("Kanban.code._:Kanban"));
+                        // }
 
                         if (!valid.productionOrder)
                             errors["productionOrder"] = i18n.__("Kanban.productionOrder.isRequired:%s is required", i18n.__("Kanban.productionOrder._:ProductionOrder")); //"Production Order harus diisi";
@@ -146,6 +147,40 @@ module.exports = class KanbanManager extends BaseManager {
                             errors["instruction"] = i18n.__("Kanban.instruction.isRequired:%s is required", i18n.__("Kanban.instruction._:Instruction")); //"Instruction harus diisi";
                         else if (!_instruction)
                             errors["instruction"] = i18n.__("Kanban.instruction.notFound:%s not found", i18n.__("Kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
+                        else {
+                            var stepsError = [];
+                            var hasError = false;
+
+                            for (var step of valid.instruction.steps) {
+                                var stepErrors = {};
+                                
+                                if(!step.process || step.process == "") {
+                                    stepErrors["process"] = i18n.__("Kanban.instruction.steps.process.isRequired:%s is required", i18n.__("Kanban.instruction.steps.process._:Process")); //"Proses harus diisi";
+                                }
+
+                                if(!step.machine || Object.getOwnPropertyNames(step.machine).length == 0) {
+                                    stepErrors["machine"] = i18n.__("Kanban.instruction.steps.machine.isRequired:%s is required", i18n.__("Kanban.instruction.steps.machine._:Machine")); //"Mesin harus diisi";
+                                }
+
+                                if(!step.deadline) {
+                                    stepErrors["deadline"] = i18n.__("Kanban.instruction.steps.deadline.isRequired:%s is required", i18n.__("Kanban.instruction.steps.deadline._:Deadline")); //"Target Selesai harus diisi";
+                                }
+                                
+                                stepsError.push(stepErrors);
+                            }
+                            
+                            for(var stepError of stepsError)
+                            {
+                                if(Object.getOwnPropertyNames(stepError).length > 0)
+                                {
+                                    hasError = true;
+                                    break;
+                                }
+                            }
+
+                            if(hasError)
+                                errors["steps"] = stepsError;
+                        }
 
                         if (Object.getOwnPropertyNames(errors).length > 0) {
                             var ValidationError = require('module-toolkit').ValidationError;
@@ -168,6 +203,10 @@ module.exports = class KanbanManager extends BaseManager {
                         if(_uom){
                             valid.cart.uomId = _uom._id;
                             valid.cart.uom = _uom;
+                        }
+
+                        if(valid.oldKanbanId && ObjectId.isValid(valid.oldKanbanId)) {
+                            valid.oldKanbanId = new ObjectId(valid.oldKanbanId);
                         }
 
                         if (!valid.stamp) {

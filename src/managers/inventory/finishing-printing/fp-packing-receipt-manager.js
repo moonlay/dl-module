@@ -170,6 +170,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 }
 
                 valid.buyer = _packing.buyer;
+                valid.date = new Date(valid.date);
                 valid.productionOrderNo = _packing.productionOrderNo;
                 valid.colorName = _packing.colorName;
                 valid.construction = _packing.construction;
@@ -220,5 +221,112 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                             })
                     })
             })
+    }
+
+    getReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        };
+        var query = {};
+
+        var packingCodeFilter = {};
+        var buyerFilter = {};
+        var productionOrderNoFilter = {};
+        var _createdByFilter = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+
+        if (info.packingCode && info.packingCode !== "") {
+            packingCodeFilter = { "packingCode": info.packingCode };
+        }
+
+        if (info.buyer && info.buyer !== "") {
+            buyerFilter = { "buyer": info.buyer };
+        }
+
+        if (info.productionOrderNo && info.productionOrderNo !== "") {
+            productionOrderNoFilter = { "productionOrderNo": info.productionOrderNo };
+        }
+
+        if (info._createdBy && info._createdBy !== "") {
+            _createdByFilter = { "_createdBy": info._createdBy };
+        }
+
+        var dateFilter = {
+            "date": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+        query = { "$and": [_defaultFilter, packingCodeFilter, buyerFilter, productionOrderNoFilter, _createdByFilter, dateFilter] }
+
+        return this._createIndexes()
+            .then((createdIndexResults) => {
+                return this.collection
+                    .where(query)
+                    .execute();
+            })
+    }
+
+    getXls(results, query) {
+        var xls = [];
+        xls.data = [];
+        xls.options = [];
+        xls.name = "";
+
+        var index = 1;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var result of results.data) {
+            if (result.items) {
+                for (var item of result.items) {
+                    var detail = {};
+                    detail["No"] = index;
+                    detail["Kode Paking"] = result.packingCode ? result.packingCode : "";
+                    detail["Tanggal"] = result.date ? moment(result.date).format(dateFormat) : "";
+                    detail["Buyer"] = result.buyer ? result.buyer : "";
+                    detail["Nomor Order"] = result.productionOrderNo ? result.productionOrderNo : "";
+                    detail["Warna"] = result.colorName ? result.colorName : "";
+                    detail["Konstruksi"] = result.construction ? result.construction : "";
+                    detail["Diterima Oleh"] = result._createdBy ? result._createdBy : "";
+                    detail["UOM"] = result.packingUom ? result.packingUom : "";
+                    detail["Nama Barang"] = item.product ? item.product : "";
+                    detail["Kuantiti Diterima"] = item.quantity ? item.quantity : 0;
+                    detail["Remark"] = item.remark ? item.remark : "";
+                    detail["Catatan"] = item.notes ? item.notes : "";
+
+                    xls.options["No"] = "number";
+                    xls.options["Kode Paking"] = "string";
+                    xls.options["Tanggal"] = "string";
+                    xls.options["Buyer"] = "string";
+                    xls.options["Nomor Order"] = "string";
+                    xls.options["Warna"] = "string";
+                    xls.options["Konstruksi"] = "string";
+                    xls.options["Diterima Oleh"] = "string";
+                    xls.options["UOM"] = "string";
+                    xls.options["Nama Barang"] = "string";
+                    xls.options["Kuantiti Diterima"] = "number";
+                    xls.options["Remark"] = "string";
+                    xls.options["Catatan"] = "string";
+
+                    index++;
+                    xls.data.push(detail);
+                }
+            }
+        }
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Laporan Penerimaan Packing ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`
+        } else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Laporan Penerimaan Packing ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`
+        } else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Laporan Penerimaan Packing ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`
+        } else {
+            xls.name = `Laporan Penerimaan Packing.xlsx`;
+        }
+
+        return Promise.resolve(xls);
     }
 };
