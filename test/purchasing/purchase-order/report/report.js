@@ -191,30 +191,3 @@ it('#09. should success when get data report Per Supplier', function (done) {
         });
 
 });
-
-var dataReport;
-it("#10. should success when get report with date parameter", function(done) {
-    purchaseOrderManager.getDataPOSupplier({"dateForm" : "2017-01-02", "dateTo" : "2017-01-02"})
-        .then((item) => {
-            dataReport = item;
-            dataReport.data.should.instanceof(Array);
-            dataReport.data.length.should.not.equal(0);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-
-it("#11. should success when get data for Excel", function(done) {
-    purchaseOrderManager.getXls(dataReport, {"dateForm" : "2017-01-02", "dateTo" : "2017-01-02"})
-        .then((item) => {
-            item.should.have.property('data');
-            item.should.have.property('options');
-            item.should.have.property('name');
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
