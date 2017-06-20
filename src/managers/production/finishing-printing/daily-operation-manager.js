@@ -707,7 +707,37 @@ module.exports = class DailyOperationManager extends BaseManager {
                     .toArray();
             });
     }
+getDailyOperationBadReport(query){
+        return new Promise((resolve, reject) => {
+           
+            var date = {
+                "dateOutput" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                },
+                "_deleted" : false
+            };
+         
+        this.collection.aggregate([ 
+                {"$match" : date},       
+           
+                             {
+                    "$group" : {
+                  
+                        "_id" : {"machine" : "$machine.name", "orderNo" : "$kanban.productionOrder.orderNo"},
+                        "badOutput" : {"$sum" : { $ifNull: [ "$badOutput", 0 ] }},
+                        "goodOutput" : {"$sum" : { $ifNull: [ "$goodOutput", 0 ] }},
+                        "input" : {"$sum" : { $ifNull: [ "$input", 0 ] }}
+                    }
+                }
+             ])
 
+            .toArray()
+            .then(result => {
+                resolve(result);
+            });
+        });
+    }
     getXls(result, query){
         var xls = {};
         xls.data = [];
