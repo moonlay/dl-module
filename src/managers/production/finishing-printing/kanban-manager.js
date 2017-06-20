@@ -158,13 +158,13 @@ module.exports = class KanbanManager extends BaseManager {
                                     stepErrors["process"] = i18n.__("Kanban.instruction.steps.process.isRequired:%s is required", i18n.__("Kanban.instruction.steps.process._:Process")); //"Proses harus diisi";
                                 }
 
-                                if(!step.machine || Object.getOwnPropertyNames(step.machine).length == 0) {
-                                    stepErrors["machine"] = i18n.__("Kanban.instruction.steps.machine.isRequired:%s is required", i18n.__("Kanban.instruction.steps.machine._:Machine")); //"Mesin harus diisi";
-                                }
+                                // if(!step.machine || Object.getOwnPropertyNames(step.machine).length == 0) {
+                                //     stepErrors["machine"] = i18n.__("Kanban.instruction.steps.machine.isRequired:%s is required", i18n.__("Kanban.instruction.steps.machine._:Machine")); //"Mesin harus diisi";
+                                // }
 
-                                if(!step.deadline) {
-                                    stepErrors["deadline"] = i18n.__("Kanban.instruction.steps.deadline.isRequired:%s is required", i18n.__("Kanban.instruction.steps.deadline._:Deadline")); //"Target Selesai harus diisi";
-                                }
+                                // if(!step.deadline) {
+                                //     stepErrors["deadline"] = i18n.__("Kanban.instruction.steps.deadline.isRequired:%s is required", i18n.__("Kanban.instruction.steps.deadline._:Deadline")); //"Target Selesai harus diisi";
+                                // }
                                 
                                 stepsError.push(stepErrors);
                             }
