@@ -17,6 +17,7 @@ module.exports = class DailyOperationManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.production.finishingPrinting.collection.DailyOperation);
+        this.kanbanCollection = this.db.use(map.production.finishingPrinting.collection.Kanban);
         this.stepManager = new StepManager(db, user);
         this.machineManager = new MachineManager(db, user);
         this.kanbanManager = new KanbanManager(db, user);
@@ -444,7 +445,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 tempKanban.currentStepIndex+=1;
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
-                                this.kanbanManager.update(tempKanban)
+                                this.kanbanCollection.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
                                     })
@@ -478,7 +479,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 tempKanban.currentQty = daily.goodOutput;
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
-                                this.kanbanManager.update(tempKanban)
+                                this.kanbanCollection.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
                                     })
@@ -546,7 +547,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                                     kanban.goodOutput=0;
                                                     kanban.badOutput=0;
                                                 }
-                                                this.kanbanManager.update(kanban)
+                                                this.kanbanCollection.update(kanban)
                                                     .then(kanbanId =>{
                                                         resolve(id);
                                                     })

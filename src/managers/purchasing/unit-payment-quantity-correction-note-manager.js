@@ -115,6 +115,8 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                     valid.unitPaymentOrder = _unitPaymentOrder;
                     valid.correctionType = "Jumlah";
                     valid.date = new Date(valid.date);
+                    valid.useVat = _unitPaymentOrder.useVat;
+                    valid.useIncomeTax = _unitPaymentOrder.useIncomeTax;
 
                     if (valid.invoiceCorrectionDate) {
                         valid.invoiceCorrectionDate = new Date(valid.invoiceCorrectionDate);

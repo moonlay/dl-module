@@ -70,6 +70,52 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             "items.fulfillments.purchaseOrder.items.product.name",
             "items.fulfillments.purchaseOrder.items.pricePerDealUnit"
         ];
+        this.purchaseOrderFields=[
+            "_id",
+            "no",
+            "refNo",
+            "purchaseRequestId",
+            "purchaseRequest._id",
+            "purchaseRequest.no",
+            "purchaseOrderExternalId",
+            "purchaseOrderExternal._id",
+            "purchaseOrderExternal.no",
+            "supplierId",
+            "supplier.code",
+            "supplier.name",
+            "supplier.address",
+            "supplier.contact",
+            "supplier.PIC",
+            "supplier.import",
+            "supplier.NPWP",
+            "supplier.serialNumber",
+            "unitId",
+            "unit.code",
+            "unit.divisionId",
+            "unit.division",
+            "unit.name",
+            "categoryId",
+            "category.code",
+            "category.name",
+            "freightCostBy",
+            "currency.code",
+            "currency.symbol",
+            "currency.rate",
+            "currencyRate",
+            "paymentMethod",
+            "paymentDueDays",
+            "vat",
+            "useVat",
+            "vatRate",
+            "useIncomeTax",
+            "date",
+            "expectedDeliveryDate",
+            "actualDeliveryDate",
+            "isPosted",
+            "isClosed",
+            "remark",
+            "items"
+        ];
     }
 
     _validate(unitReceiptNote) {
@@ -689,7 +735,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return this.getSingleByQuery(query)
             .then((unitReceiptNote) => {
                 var getPoInternals = unitReceiptNote.items.map((item) => {
-                    return this.purchaseOrderManager.getSingleById(item.purchaseOrderId)
+                    return this.purchaseOrderManager.getSingleById(item.purchaseOrderId,this.purchaseOrderFields)
                 })
                 return this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId,this.deliveryOrderFields)
                     .then((deliveryOrder) => {
