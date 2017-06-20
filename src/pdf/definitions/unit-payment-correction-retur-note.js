@@ -190,7 +190,7 @@ module.exports = function (unitPaymentCorrection) {
             style: ['size08', 'right']
         }, {
             columns: [{
-                width: '5%',
+                width: '15%',
                 text: currency,
                 style: ['size08']
             }, {
@@ -200,7 +200,7 @@ module.exports = function (unitPaymentCorrection) {
             }]
         }, {
             columns: [{
-                width: '5%',
+                width: '15%',
                 text: currency,
                 style: ['size08']
             }, {
@@ -297,7 +297,7 @@ module.exports = function (unitPaymentCorrection) {
 
     var table = [{
         table: {
-            widths: ['5%', '40%', '15%', '20%', '20%'],
+            widths: ['5%', '30%', '15%', '25%', '25%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot)
         }
