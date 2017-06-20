@@ -710,7 +710,7 @@ module.exports = class DailyOperationManager extends BaseManager {
 getDailyOperationBadReport(query){
         return new Promise((resolve, reject) => {
            
-            var date = {
+            var datebad = {
                 "dateOutput" : {
                     "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
                     "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
@@ -719,7 +719,7 @@ getDailyOperationBadReport(query){
             };
          
         this.collection.aggregate([ 
-                {"$match" : date},       
+                {"$match" : datebad},       
            
                              {
                     "$group" : {
