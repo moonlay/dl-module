@@ -26,6 +26,95 @@ module.exports = class DeliveryOrderManager extends BaseManager {
         this.purchaseOrderExternalManager = new PurchaseOrderExternalManager(db, user);
         this.purchaseRequestManager = new PurchaseRequestManager(db, user);
         this.supplierManager = new SupplierManager(db, user);
+        this.purchaseOrderExternalFields = [
+            "_id",
+            "no",
+            "items._id",
+            "items.no",
+            "items.unitId",
+            "items.unit._id",
+            "items.unit.code",
+            "items.unit.name",
+            "items.unit.divisionId",
+            "items.unit.division",
+            "items.currency._id",
+            "items.currency.symbol",
+            "items.currency.code",
+            "items.currency.rate",
+            "items.currencyRate",
+            "items.categoryId",
+            "items.category._id",
+            "items.category.code",
+            "items.category.name",
+            "items.purchaseRequest.no",
+            "items.purchaseRequest._id",
+            "items.items.product._id",
+            "items.items.product.code",
+            "items.items.product.name",
+            "items.items.defaultQuantity",
+            "items.items.defaultUom.unit",
+            "items.items.dealQuantity",
+            "items.items.dealUom.unit",
+            "items.items.realizationQuantity",
+            "items.items.pricePerDealUnit",
+            "items.items.priceBeforeTax",
+            "items.items.currency._id",
+            "items.items.currency.symbol",
+            "items.items.currency.code",
+            "items.items.currency.rate",
+            "items.items.conversion",
+            "items.items.isClosed",
+            "items.items.useIncomeTax",
+            "items.items.remark",
+            "items.items.fulfillments"
+        ]
+
+        this.purchaseOrderFields = [
+            "_id",
+            "no",
+            "refNo",
+            "purchaseRequestId",
+            "purchaseRequest._id",
+            "purchaseRequest.no",
+            "purchaseOrderExternalId",
+            "purchaseOrderExternal._id",
+            "purchaseOrderExternal.no",
+            "supplierId",
+            "supplier.code",
+            "supplier.name",
+            "supplier.address",
+            "supplier.contact",
+            "supplier.PIC",
+            "supplier.import",
+            "supplier.NPWP",
+            "supplier.serialNumber",
+            "unitId",
+            "unit.code",
+            "unit.divisionId",
+            "unit.division",
+            "unit.name",
+            "categoryId",
+            "category.code",
+            "category.name",
+            "freightCostBy",
+            "currency.code",
+            "currency.symbol",
+            "currency.rate",
+            "currencyRate",
+            "paymentMethod",
+            "paymentDueDays",
+            "vat",
+            "useVat",
+            "vatRate",
+            "useIncomeTax",
+            "date",
+            "expectedDeliveryDate",
+            "actualDeliveryDate",
+            "isPosted",
+            "isClosed",
+            "remark",
+            "items"
+        ];
     }
 
     _getQuery(paging) {
@@ -162,7 +251,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                             purchaseOrderExternalItemHasErrors = true;
                                             purchaseOrderExternalError["purchaseOrderExternal"] = i18n.__("DeliveryOrder.items.purchaseOrderExternal.isPosted:%s is need to be posted", i18n.__("DeliveryOrder.items.purchaseOrderExternal._:PurchaseOrderExternal"));
                                         }
-                                        else if (_poExternal.isClosed) {
+                                        else if (_poExternal.isClosed && !ObjectId.isValid(valid._id)) {
                                             purchaseOrderExternalItemHasErrors = true;
                                             purchaseOrderExternalError["purchaseOrderExternal"] = i18n.__("DeliveryOrder.items.purchaseOrderExternal.isClosed:%s is already closed", i18n.__("DeliveryOrder.items.purchaseOrderExternal._:PurchaseOrderExternal"));
                                         }
@@ -487,13 +576,13 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     return doItem.fulfillments.map((fulfillment) => {
                         if (poInternalId.indexOf(fulfillment.purchaseOrderId) == -1) {
                             poInternalId.push(fulfillment.purchaseOrderId);
-                            getPOInternals.push(this.purchaseOrderManager.getSingleById(fulfillment.purchaseOrderId));
+                            getPOInternals.push(this.purchaseOrderManager.getSingleById(fulfillment.purchaseOrderId, this.purchaseOrderFields));
                         }
 
                     })
                 })
                 var getPoExternals = deliveryOrder.items.map((item) => {
-                    return this.purchaseOrderExternalManager.getSingleById(item.purchaseOrderExternalId)
+                    return this.purchaseOrderExternalManager.getSingleById(item.purchaseOrderExternalId, this.purchaseOrderExternalFields)
                 })
                 return Promise.all(getPoExternals)
                     .then((purchaseOrderExternals) => {
