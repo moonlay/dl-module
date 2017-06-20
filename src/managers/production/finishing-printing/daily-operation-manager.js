@@ -712,36 +712,36 @@ module.exports = class DailyOperationManager extends BaseManager {
 getDailyOperationBadReport(query){
         return new Promise((resolve, reject) => {
            
-            var datebad = {
+            var date= {
                 "dateOutput" : {
                     "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
                     "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
                 },
                 "_deleted" : false
             };
-            // var kanbanQuery = {};
-            // if(query.kanban)
-            // {
-            //     kanbanQuery = {
-            //         "kanbanId" : new ObjectId(query.kanban)
-            //     };
-            // }
-            // var machineQuery = {};
-            // if(query.machine)
-            // {
-            //     machineQuery = {
-            //         "machineId" : new ObjectId(query.machine)
-            //     };
-            // }
+            var kanbanQuery = {};
+            if(query.kanban)
+            {
+                kanbanQuery = {
+                    "kanbanId" : new ObjectId(query.kanban)
+                };
+            }
+            var machineQuery = {};
+            if(query.machine)
+            {
+                machineQuery = {
+                    "machineId" : new ObjectId(query.machine)
+                };
+            }
            
 
-            //  var order = {
-            //     "kanban.productionOrder.orderNo" : 1
-            // };
-            // var QueryOutput = {"$and" : [date, machineQuery]};
+             var order = {
+                "kanban.productionOrder.orderNo" : 1
+            };
+            var QueryOutput = {"$and" : [date, machineQuery]};
             
         this.collection.aggregate([ 
-                {"$match" : datebad},       
+                {"$match" : date},       
            
                              {
                     "$group" : {
@@ -760,7 +760,7 @@ getDailyOperationBadReport(query){
             });
         });
     }
-    
+
     getXls(result, query){
         var xls = {};
         xls.data = [];
