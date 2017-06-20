@@ -17,7 +17,7 @@ module.exports = class DailyOperationManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.production.finishingPrinting.collection.DailyOperation);
-        this.kanbanCollection = this.db.use(map.production.finishingPrinting.collection.Kanban)
+        this.kanbanCollection = this.db.use(map.production.finishingPrinting.collection.Kanban);
         this.stepManager = new StepManager(db, user);
         this.machineManager = new MachineManager(db, user);
         this.kanbanManager = new KanbanManager(db, user);
