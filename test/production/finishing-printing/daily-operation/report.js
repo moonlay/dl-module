@@ -139,6 +139,7 @@ it("#08. should success when get data for Excel", function(done) {
         });
 });
 
+
 it("#09. should success when destroy all unit test data", function(done) {
     dailyOperationManager.destroy(dataDaily._id)
         .then((result) => {
