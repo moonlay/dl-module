@@ -809,34 +809,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    getUnitReceiptWithoutSpb(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, createdBy) {
+    getUnitReceiptWithoutSpb(_dateFrom, _dateTo) {
         return new Promise((resolve, reject) => {
             var query = Object.assign({});                      
             var deleted = { _deleted: false };
             var user = {_createdBy: {$ne : "dev2"}};
-          
-            if (_no !== "undefined" && _no !== "") {
-                var no = { no: _no };
-                Object.assign(query, no);
-            }
-            if (_unitId !== "undefined" && _unitId !== "") {
-                var unitId = { unitId: new ObjectId(_unitId) };
-                Object.assign(query, unitId);
-            }
-            if (_categoryId !== "undefined" && _categoryId !== "") {
-                var categoryId = {
-                    "items": {
-                        $elemMatch: {
-                            "purchaseOrder.categoryId": new ObjectId(_categoryId)
-                        }
-                    }
-                };
-                Object.assign(query, categoryId);
-            }
-            if (_supplierId !== "undefined" && _supplierId !== "") {
-                var supplierId = { supplierId: new ObjectId(_supplierId) };
-                Object.assign(query, supplierId);
-            }
+                
+                      
             if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
                 var date = {
                     date: {
