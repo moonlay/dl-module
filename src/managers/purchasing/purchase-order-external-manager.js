@@ -640,13 +640,13 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             });
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
 
             this.getSingleByIdOrDefault(id)
                 .then(pox => {
                     var getDefinition = require('../../pdf/definitions/purchase-order-external');
-                    var definition = getDefinition(pox);
+                    var definition = getDefinition(pox, offset);
 
                     var generatePdf = require('../../pdf/pdf-generator');
                     generatePdf(definition)
