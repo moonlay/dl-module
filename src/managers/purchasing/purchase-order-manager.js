@@ -25,6 +25,40 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         this.purchaseRequestManager = new PurchaseRequestManager(db, user);
     }
 
+    getPrice(dateFrom, dateTo, productName) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+
+
+                    if (productName !== "undefined" && productName !== "") {
+                        Object.assign(query, {
+                            "items.product.name" : productName}
+                        );
+                    }
+
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        Object.assign(query, {
+                            date: {
+                                $gte: new Date(dateFrom),
+                                $lte: new Date(dateTo)
+                            }
+                        });
+                    }
+ 
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.aggregate([{"$unwind" : "$items"},{"$match" : query},{ $sort : { date : 1} }]).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
     _validate(purchaseOrder) {
         var errors = {};
         var valid = purchaseOrder;
