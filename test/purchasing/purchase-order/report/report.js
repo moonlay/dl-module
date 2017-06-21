@@ -191,3 +191,25 @@ it('#09. should success when get data report Per Supplier', function (done) {
         });
 
 });
+
+it('#10. should success when get data report History Price', function (done) {
+    purchaseOrderManager.getPrice()
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#11. should success when get data report History Price with date and product', function (done) {
+    purchaseOrderManager.getPrice(dateFrom, dateTo, productName)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
