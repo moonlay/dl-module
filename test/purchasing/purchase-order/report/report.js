@@ -204,6 +204,9 @@ it('#10. should success when get data report History Price', function (done) {
 });
 
 it('#11. should success when get data report History Price with date and product', function (done) {
+   var dateFrom= null;
+   var dateTo = null;
+   var productName ="SUSU";
     purchaseOrderManager.getPrice(dateFrom, dateTo, productName)
     .then(po => {
         po.should.instanceof(Array);
