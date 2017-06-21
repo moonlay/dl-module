@@ -237,7 +237,7 @@ module.exports = function (unitPaymentCorrection) {
             colSpan: 4
         }, null, null, null, {
             columns: [{
-                width: '10%',
+                width: '20%',
                 text: currency
             }, {
                 width: '*',
@@ -252,7 +252,7 @@ module.exports = function (unitPaymentCorrection) {
             colSpan: 4
         }, null, null, null, {
             columns: [{
-                width: '10%',
+                width: '20%',
                 text: currency
             }, {
                 width: '*',
