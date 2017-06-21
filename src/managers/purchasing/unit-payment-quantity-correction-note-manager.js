@@ -23,6 +23,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         this.purchaseOrderExternalManager = new PurchaseOrderExternalManager(db, user);
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
     }
+    
     getMonitoringKoreksi(query){
         return new Promise((resolve, reject) => {
            
@@ -46,7 +47,6 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
             });
         });
     }
-
 
     _validate(unitPaymentQuantityCorrectionNote) {
         var errors = {};
