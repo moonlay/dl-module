@@ -139,7 +139,21 @@ it("#08. should success when get data for Excel", function(done) {
         });
 });
 
-it("#09. should success when destroy all unit test data", function(done) {
+
+it("#09. should success when get report with date parameter", function(done) {
+    dailyOperationManager.getDailyOperationBadReport({"dateFrom" : "2017-02-01", "dateTo" : "2017-02-01"})
+        .then((item) => {
+            dataReport = item;
+            dataReport.data.should.instanceof(Array);
+            dataReport.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#10. should success when destroy all unit test data", function(done) {
     dailyOperationManager.destroy(dataDaily._id)
         .then((result) => {
             result.should.be.Boolean();
