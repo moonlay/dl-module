@@ -140,15 +140,18 @@ it("#08. should success when get data for Excel", function(done) {
 });
 
 
-it('#09. should success when get data report Per Supplier with date', function (done) {
-    dailyOperationManager.getDailyOperationBadReport(dateFrom,dateTo)
-    .then(result => {
-        result.should.instanceof(Array);
-        done();
-    }).catch(e => {
+var dataReportt;
+it("#09. should success when get report with date parameter", function(done) {
+    dailyOperationManager.getDailyOperationBadReport({"dateForm" : "2017-02-01", "dateTo" : "2017-02-01"})
+        .then((result) => {
+            dataReportt = result;
+            dataReportt.data.should.instanceof(Array);
+            dataReportt.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
             done(e);
         });
-
 });
 
 
