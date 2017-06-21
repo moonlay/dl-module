@@ -46,7 +46,7 @@ module.exports = class UomManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            unit: valid.unit
+            unit: {"$regex": valid.unit, "$options": "i"}
         }) : Promise.resolve(null);
 
 
@@ -66,7 +66,7 @@ module.exports = class UomManager extends BaseManager {
                     return Promise.reject(new ValidationError('data does not pass validation', errors));
                 }
 
-                valid = new Uom(uom);
+                valid = new Uom(valid);
                 valid.stamp(this.user.username, 'manager');
                 return Promise.resolve(valid);
             });

@@ -22,6 +22,100 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
         this.unitManager = new UnitManager(db, user);
         this.supplierManager = new SupplierManager(db, user);
+        this.deliveryOrderFields = [
+            "no",
+            "refNo",
+            "date",
+            "supplierDoDate",
+            "supplierId",
+            "supplier._id",
+            "supplier.code",
+            "supplier.name",
+            "isPosted",
+            "isClosed",
+            "items.isClosed",
+            "items.purchaseOrderExternalId",
+            "items.purchaseOrderExternal.no",
+            "items.purchaseOrderExternal._id",
+            "items.fulfillments.purchaseOrderQuantity",
+            "items.fulfillments.purchaseOrderUom._id",
+            "items.fulfillments.purchaseOrderUom.unit",
+            "items.fulfillments.deliveredQuantity",
+            "items.fulfillments.realizationQuantity",
+            "items.fulfillments.productId",
+            "items.fulfillments.product._id",
+            "items.fulfillments.product.code",
+            "items.fulfillments.product.name",
+            "items.fulfillments.purchaseOrderId",
+            "items.fulfillments.purchaseOrder._id",
+            "items.fulfillments.purchaseOrder.purchaseOrderExternal.no",
+            "items.fulfillments.purchaseOrder.purchaseOrderExternal._id",
+            "items.fulfillments.purchaseOrder.unitId",
+            "items.fulfillments.purchaseOrder.unit._id",
+            "items.fulfillments.purchaseOrder.unit.code",
+            "items.fulfillments.purchaseOrder.unit.name",
+            "items.fulfillments.purchaseOrder.unit.divisionId",
+            "items.fulfillments.purchaseOrder.currency._id",
+            "items.fulfillments.purchaseOrder.currency.symbol",
+            "items.fulfillments.purchaseOrder.currency.code",
+            "items.fulfillments.purchaseOrder.currency.rate",
+            "items.fulfillments.purchaseOrder.currencyRate",
+            "items.fulfillments.purchaseOrder.categoryId",
+            "items.fulfillments.purchaseOrder.category._id",
+            "items.fulfillments.purchaseOrder.purchaseRequest.no",
+            "items.fulfillments.purchaseOrder.purchaseRequest._id",
+            "items.fulfillments.purchaseOrder.items.useIncomeTax",
+            "items.fulfillments.purchaseOrder.items.product._id",
+            "items.fulfillments.purchaseOrder.items.product.code",
+            "items.fulfillments.purchaseOrder.items.product.name",
+            "items.fulfillments.purchaseOrder.items.pricePerDealUnit"
+        ];
+        this.purchaseOrderFields=[
+            "_id",
+            "no",
+            "refNo",
+            "purchaseRequestId",
+            "purchaseRequest._id",
+            "purchaseRequest.no",
+            "purchaseOrderExternalId",
+            "purchaseOrderExternal._id",
+            "purchaseOrderExternal.no",
+            "supplierId",
+            "supplier.code",
+            "supplier.name",
+            "supplier.address",
+            "supplier.contact",
+            "supplier.PIC",
+            "supplier.import",
+            "supplier.NPWP",
+            "supplier.serialNumber",
+            "unitId",
+            "unit.code",
+            "unit.divisionId",
+            "unit.division",
+            "unit.name",
+            "categoryId",
+            "category.code",
+            "category.name",
+            "freightCostBy",
+            "currency.code",
+            "currency.symbol",
+            "currency.rate",
+            "currencyRate",
+            "paymentMethod",
+            "paymentDueDays",
+            "vat",
+            "useVat",
+            "vatRate",
+            "useIncomeTax",
+            "date",
+            "expectedDeliveryDate",
+            "actualDeliveryDate",
+            "isPosted",
+            "isClosed",
+            "remark",
+            "items"
+        ];
     }
 
     _validate(unitReceiptNote) {
@@ -40,7 +134,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         _deleted: false
                     }]
             });
-            var getDeliveryOrder = valid.deliveryOrder && ObjectId.isValid(valid.deliveryOrder._id) ? this.deliveryOrderManager.getSingleByIdOrDefault(valid.deliveryOrder._id) : Promise.resolve(null);
+            var getDeliveryOrder = valid.deliveryOrder && ObjectId.isValid(valid.deliveryOrder._id) ? this.deliveryOrderManager.getSingleByIdOrDefault(valid.deliveryOrder._id,this.deliveryOrderFields) : Promise.resolve(null);
             var getUnit = valid.unit && ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(valid.unit._id) : Promise.resolve(null);
             var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
             var getPurchaseOrder = [];
@@ -641,9 +735,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return this.getSingleByQuery(query)
             .then((unitReceiptNote) => {
                 var getPoInternals = unitReceiptNote.items.map((item) => {
-                    return this.purchaseOrderManager.getSingleById(item.purchaseOrderId)
+                    return this.purchaseOrderManager.getSingleById(item.purchaseOrderId,this.purchaseOrderFields)
                 })
-                return this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId)
+                return this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId,this.deliveryOrderFields)
                     .then((deliveryOrder) => {
                         return Promise.all(getPoInternals)
                             .then((purchaseOrderInternals) => {

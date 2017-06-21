@@ -206,8 +206,8 @@ module.exports = class InventoryMovementManager extends BaseManager {
             query = {},
             order = info.order || {};
 
-        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : undefined;
-        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : undefined;
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
 
         var filterMovement = {};
 
@@ -217,11 +217,12 @@ module.exports = class InventoryMovementManager extends BaseManager {
         if(info.type && info.type != "")
             filterMovement.type = info.type;
 
-        if(dateFrom && dateTo){
-            filterMovement.date = {
-                $gte: new Date(dateFrom),
-                $lte: new Date(dateTo)
-            }
+        if(info.productId)
+            filterMovement.productId = new ObjectId(info.productId);
+
+        filterMovement.date = {
+            $gte: dateFrom,
+            $lte: dateTo
         }
 
         query = { '$and': [_defaultFilter, filterMovement] };

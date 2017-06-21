@@ -34,7 +34,7 @@ it('#01. should error when create with empty data ', function(done) {
 });
 
 it('#02. should success when create new unit-payment-quantity-correction-note', function (done) {
-    unitPaymentQuantityCorrectionNoteDataUtil.getNewTestData()
+    unitPaymentQuantityCorrectionNoteDataUtil.getNewTestDataInsertTwice()
         .then((data) => {
             data._id.should.be.Object();
             createdId = data._id;

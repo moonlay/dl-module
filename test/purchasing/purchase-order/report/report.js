@@ -169,3 +169,25 @@ it('#07. should success when get data report Per Category with date', function (
         });
 
 });
+
+it('#08. should success when get data report Per Supplier with date', function (done) {
+    purchaseOrderManager.getDataPOSupplier(startDate,endDate)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#09. should success when get data report Per Supplier', function (done) {
+    purchaseOrderManager.getDataPOSupplier()
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});

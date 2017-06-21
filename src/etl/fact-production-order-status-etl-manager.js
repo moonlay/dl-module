@@ -69,19 +69,21 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
         }).sort({ finish: -1 }).limit(1).toArray()
     }
 
-    extract(time) {
-        var timestamp = new Date(time[0].start);
+    extract(times) {
+        var time = times.length > 0 ? times[0].start : "1970-01-01";
+        var timestamp = new Date(time);
         return this.finishingPrintingSalesContractManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
-            }
+            },
         }, {
                 _deleted: 1,
                 _createdDate: 1,
                 salesContractNo: 1,
                 orderQuantity: 1,
                 "uom.unit": 1,
-                "orderType.name": 1
+                "orderType.name": 1,
+                deliverySchedule: 1
             }).toArray()
             .then((finishingPrintingSalesContracts) => this.joinProductionOrder(finishingPrintingSalesContracts))
             .then((results) => this.joinKanban(results))
@@ -99,7 +101,8 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     orderNo: 1,
                     salesContractNo: 1,
                     orderQuantity: 1,
-                    "uom.unit": 1
+                    "uom.unit": 1,
+                    deliveryDate: 1
                 }).toArray()
                 .then((productionOrders) => {
                     var arr = productionOrders.map((productionOrder) => {
@@ -169,10 +172,14 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     "$ne": null
                 }
             }, {
+                    _createdDate: 1,
                     code: 1,
                     input: 1,
                     "kanban.productionOrder.salesContractNo": 1
-                }).toArray() : Promise.resolve([]);
+                }).sort({
+                    dateInput: 1,
+                    timeInput: 1
+                }).limit(1).toArray() : Promise.resolve([]);
 
             return getDailyOperations.then((dailyOperations) => {
                 var arr = dailyOperations.map((dailyOperation) => {
@@ -201,7 +208,6 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
             var getFabricQualityControls = item.kanban ? this.fabricQualityControlManager.collection.find({
                 _deleted: false,
                 kanbanCode: item.kanban.code,
-                cartNo: item.kanban.cart.cartNumber
             }, {
                     dateIm: 1,
                     uom: 1,
@@ -247,11 +253,13 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
             var productionOrder = item.productionOrder;
             var kanban = item.kanban;
             var fabricQC = item.fabricQualityControl;
-            var dailyOperation = item.dailyOperation
+            var dailyOperation = item.dailyOperation;
+            var index = 0;
 
             if (fabricQC) {
                 var results = fabricQC.fabricGradeTests.map((fabricGradeTest) => {
                     var quantity = fabricGradeTest.initLength;
+                    index++;
 
                     return {
                         salesContractDate: finishingPrintingSC._createdDate ? `'${moment(finishingPrintingSC._createdDate).format("L")}'` : null,
@@ -271,9 +279,13 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                         cartNumber: kanban && kanban.cart.cartNumber ? `'${kanban.cart.cartNumber}'` : null,
                         fabricQualityControlDate: fabricQC.dateIm ? `'${moment(fabricQC.dateIm).format("L")}'` : null,
                         fabricQualityControlQuantity: quantity ? `${quantity}` : null,
-                        fabricQualityControlCode: fabricQC.code ? `'${fabricQC.code}'` : null,
+                        fabricQualityControlCode: fabricQC && fabricQC.code ? `'${fabricQC.code}'` : null,
                         orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
-                        deleted: `'${finishingPrintingSC._deleted}'`
+                        deleted: `'${finishingPrintingSC._deleted}'`,
+                        fabricqualitycontroltestindex: fabricQC.code ? `${index}` : null,
+                        dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).format("L")}'` : null,
+                        salesContractDeliveryDate: finishingPrintingSC ? `'${moment(finishingPrintingSC.deliverySchedule).format("L")}'` : null,
+                        productionOrderDeliveryDate: productionOrder ? `'${moment(productionOrder.deliveryDate).format("L")}'` : null
                     }
                 });
                 return [].concat.apply([], results);
@@ -298,7 +310,11 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     fabricQualityControlQuantity: null,
                     fabricQualityControlCode: null,
                     orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
-                    deleted: `'${finishingPrintingSC._deleted}'`
+                    deleted: `'${finishingPrintingSC._deleted}'`,
+                    fabricqualitycontroltestindex: null,
+                    dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).format("L")}'` : null,
+                    salesContractDeliveryDate: finishingPrintingSC ? `'${moment(finishingPrintingSC.deliverySchedule).format("L")}'` : null,
+                    productionOrderDeliveryDate: productionOrder ? `'${moment(productionOrder.deliveryDate).format("L")}'` : null
                 }
             }
         });
@@ -336,9 +352,9 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [dbo].[DL_Fact_Production_Order_Status_Temp]([salesContractDate], [salesContractNo], [salesContractQuantity], [productionOrderDate], [productionSalesContractNo], [productionOrderNo], [productionOrderQuantity], [kanbanDate], [kanbanSalesContractNo], [kanbanQuantity], [fabricQualityControlDate], [fabricQualityControlQuantity], [orderType], [deleted], [kanbanCode], [dailyOperationQuantity], [dailyOperationSalesContractNo], [dailyOperationCode], [fabricQualityControlCode], [cartNumber]) VALUES(${item.salesContractDate}, ${item.salesContractNo}, ${item.salesContractQuantity}, ${item.productionOrderDate}, ${item.productionSalesContractNo}, ${item.productionOrderNo}, ${item.productionOrderQuantity}, ${item.kanbanDate}, ${item.kanbanSalesContractNo}, ${item.kanbanQuantity}, ${item.fabricQualityControlDate}, ${item.fabricQualityControlQuantity}, ${item.orderType}, ${item.deleted}, ${item.kanbanCode}, ${item.dailyOperationQuantity}, ${item.dailyOperationSalesContractNo}, ${item.dailyOperationCode}, ${item.fabricQualityControlCode}, ${item.cartNumber});\n`;
+                                var queryString = `INSERT INTO [dbo].[DL_Fact_Production_Order_Status_Temp]([salesContractDate], [salesContractNo], [salesContractQuantity], [productionOrderDate], [productionSalesContractNo], [productionOrderNo], [productionOrderQuantity], [kanbanDate], [kanbanSalesContractNo], [kanbanQuantity], [fabricQualityControlDate], [fabricQualityControlQuantity], [orderType], [deleted], [kanbanCode], [dailyOperationQuantity], [dailyOperationSalesContractNo], [dailyOperationCode], [fabricQualityControlCode], [cartNumber], [fabricqualitycontroltestindex], [dailyOperationDate], [salesContractDeliveryDate], [productionOrderDeliveryDate]) VALUES(${item.salesContractDate}, ${item.salesContractNo}, ${item.salesContractQuantity}, ${item.productionOrderDate}, ${item.productionSalesContractNo}, ${item.productionOrderNo}, ${item.productionOrderQuantity}, ${item.kanbanDate}, ${item.kanbanSalesContractNo}, ${item.kanbanQuantity}, ${item.fabricQualityControlDate}, ${item.fabricQualityControlQuantity}, ${item.orderType}, ${item.deleted}, ${item.kanbanCode}, ${item.dailyOperationQuantity}, ${item.dailyOperationSalesContractNo}, ${item.dailyOperationCode}, ${item.fabricQualityControlCode}, ${item.cartNumber}, ${item.fabricqualitycontroltestindex}, ${item.dailyOperationDate}, ${item.salesContractDeliveryDate}, ${item.productionOrderDeliveryDate});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 1000 === 0) {
+                                if (count % 10000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "";
                                 }
@@ -365,23 +381,14 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("[DL_Upsert_Fact_Production_Order_Status]").then((execResult) => {
-                                    request.execute("DL_INSERT_DIMTIME").then((execResult) => {
-                                        transaction.commit((err) => {
-                                            if (err)
-                                                reject(err);
-                                            else
-                                                resolve(results);
-                                        });
-                                    }).catch((error) => {
-                                        transaction.rollback((err) => {
-                                            console.log("rollback")
-                                            if (err)
-                                                reject(err)
-                                            else
-                                                reject(error);
-                                        });
-                                    })
+                                request.execute("DL_UPSERT_FACT_PRODUCTION_ORDER_STATUS").then((execResult) => {
+                                    transaction.commit((err) => {
+                                        if (err)
+                                            reject(err);
+                                        else
+                                            resolve(results);
+                                    });
+
                                 }).catch((error) => {
                                     transaction.rollback((err) => {
                                         console.log("rollback")

@@ -1,6 +1,6 @@
 var global = require('../../global');
 
-module.exports = function (pox) {
+module.exports = function (pox, offset) {
 
     var _items = pox.items.map(po => {
         return po.items.map(poItem => {
@@ -34,16 +34,25 @@ module.exports = function (pox) {
             .reduce((prev, curr, index) => {
                 return prev + curr;
             }, 0);
-        poeItem.prNo = `\n${_items
+        var prNos = [];
+        _items
             .map(function (_item) {
-                return _item.prNo;
-            }).join("\n")}`;
+                if (_item.prNo != "") {
+                    prNos.push(_item.prNo);
+                }
+            })
+        poeItem.prNo = prNos.join("\n");
         poeItem.uom = _items[0].uom;
         poeItem.price = _items[0].price;
-        poeItem.remark = `\n${_items
+
+        var remaks = [];
+        _items
             .map(function (_item) {
-                return _item.remark;
-            }).join("\n")}`;
+                if (_item.remark != "") {
+                    remaks.push(_item.remark);
+                }
+            })
+        poeItem.remark = remaks.join("\n");
         items.push(poeItem);
     });
 
@@ -110,7 +119,7 @@ module.exports = function (pox) {
             }, {
                 width: '35%',
                 stack: [
-                    `Sukoharjo, ${moment(pox.date).format(locale.date.format)} `, {
+                    `Sukoharjo, ${moment(pox.date).add(offset,'h').add(offset,'h').format(locale.date.format)} `, {
                         text: [
                             'Mohon', {
                                 text: ' di-fax kembali',
@@ -180,7 +189,7 @@ module.exports = function (pox) {
                 style: ['size08', 'center']
             }, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: `${currency}`
                 }, {
                         width: '*',
@@ -190,7 +199,7 @@ module.exports = function (pox) {
                 style: ['size08']
             }, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: `${currency}`
                 }, {
                         width: '*',
@@ -228,7 +237,7 @@ module.exports = function (pox) {
             colSpan: 3
         }, "", "", {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: currency
                 }, {
                         width: '*',
@@ -243,7 +252,7 @@ module.exports = function (pox) {
             colSpan: 3
         }, null, null, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: currency
                 }, {
                         width: '*',
@@ -258,7 +267,7 @@ module.exports = function (pox) {
             colSpan: 3
         }, null, null, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: currency
                 }, {
                         width: '*',
@@ -305,7 +314,7 @@ module.exports = function (pox) {
                             }, {
                                 width: '*',
                                 stack: [{
-                                    text: `${moment(pox.expectedDeliveryDate).format(locale.date.format)}`,
+                                    text: `${moment(pox.expectedDeliveryDate).add(offset,'h').format(locale.date.format)}`,
                                     style: ['bold']
                                 }, `${pox.remark}`]
                             }]

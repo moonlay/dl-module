@@ -41,6 +41,11 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
+            var codeFilter = {
+                "code": {
+                    "$regex": regex
+                }
+            }
             var operatorFilter = {
                 "operatorIm": {
                     "$regex": regex
@@ -66,7 +71,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [operatorFilter, machineFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter];
+            keywordFilter["$or"] = [codeFilter, operatorFilter, machineFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -288,8 +293,8 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         var _defaultFilter = {
             _deleted: false
         };
-        var productionOrderNoFilter = {};
-        var cartNoFilter = {};
+        var codeFilter = {};
+        var kanbanCodeFilter = {};
         var productionOrderTypeFilter = {};
         var shiftImFilter = {};
         var dateFromFilter = {};
@@ -300,12 +305,12 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
         var now = new Date();
 
-        if (info.productionOrderNo && info.productionOrderNo != '') {
-            productionOrderNoFilter = { 'productionOrderNo': info.productionOrderNo };
+        if (info.code && info.code != '') {
+            codeFilter = { 'code': info.code };
         }
 
-        if (info.cartNo && info.cartNo != '') {
-            cartNoFilter = { 'cartNo': info.cartNo };
+        if (info.kanbanCode && info.kanbanCode != '') {
+            kanbanCodeFilter = { 'kanbanCode': info.kanbanCode };
         }
 
         if (info.productionOrderType && info.productionOrderType != '') {
@@ -323,7 +328,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             }
         };
 
-        query = { '$and': [_defaultFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter, shiftImFilter, filterDate] };
+        query = { '$and': [_defaultFilter, codeFilter, kanbanCodeFilter, productionOrderTypeFilter, shiftImFilter, filterDate] };
 
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -346,6 +351,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             for (var fabricGradeTest of result.fabricGradeTests) {
                 var item = {};
                 item["No"] = index;
+                item["Nomor Pemeriksaan Kain"] = result.code ? result.code : "";
                 item["Nomor Kanban"] = result.kanbanCode ? result.kanbanCode : "";
                 item["Nomor Kereta"] = result.cartNo ? result.cartNo : "";
                 item["Jenis Order"] = result.productionOrderType ? result.productionOrderType : "";
@@ -368,6 +374,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                 item["Sampel (meter)"] = fabricGradeTest.sampleLength;
 
                 xls.options["No"] = "number";
+                xls.options["Nomor Pemeriksaan Kain"] = "string";
                 xls.options["Nomor Kanban"] = "string";
                 xls.options["Nomor Kereta"] = "string";
                 xls.options["Jenis Order"] = "string";

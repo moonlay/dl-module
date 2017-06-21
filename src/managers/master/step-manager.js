@@ -16,8 +16,8 @@ module.exports = class StepManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -57,22 +57,65 @@ module.exports = class StepManager extends BaseManager {
                 // if(!valid.itemMonitoring || valid.itemMonitoring.length < 1)
                 //     errors["itemMonitoring"] = i18n.__("Step.itemMonitoring.isRequired:%s is required", i18n.__("Step.itemMonitoring._:ItemMonitoring")); //"minimal harus ada 1 detail";
 
-                if(!valid.stepIndicators || valid.stepIndicators.length < 1)
-                    errors["stepIndicators"] = i18n.__("Step.stepIndicators.isRequired:%s is required", i18n.__("Step.stepIndicators._:StepIndicators")); //"minimal harus ada 1 detail";
+                if (!valid.alias || valid.alias == "")
+                    errors["alias"] = i18n.__("Step.alias.isRequired:%s is required", i18n.__("Step.alias._:Alias")); // "Process harus diisi";
+
+                if (!valid.stepIndicators || valid.stepIndicators.length < 1) {
+                    errors["stepIndicatorsArr"] = i18n.__("Step.stepIndicators.isRequired:%s is required", i18n.__("Step.stepIndicators._:StepIndicators")); //"minimal harus ada 1 detail";
+                }
+
+                else {
+
+                    var itemErrors = [];
+                    var valueArr = valid.stepIndicators.map(function (stepIndicator) { return stepIndicator.name });
+
+                    var itemDuplicateErrors = new Array(valueArr.length);
+                    valueArr.some(function (item, idx) {
+                        var itemError = {};
+                        if (valueArr.indexOf(item) != idx) {
+                            itemError["name"] = i18n.__("stepIndicators.name.isDuplicate:%s is duplicate", i18n.__("stepIndicators.name._:name")); //"Nama indicator tidak boleh sama";
+                        }
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                            itemDuplicateErrors[idx] = itemError;
+                        } else {
+                            itemDuplicateErrors[idx] = itemError;
+                        }
+                    });
+                    for (var stepIndicator of valid.stepIndicators) {
+                        var itemError = {};
+                        var _index = valid.stepIndicators.indexOf(stepIndicator);
+                        if (!stepIndicator.name) {
+                            itemError["name"] = i18n.__("Step.stepIndicators.name.isRequired:%s is required", i18n.__("stepIndicators.name._:name")); //"indicator tidak boleh kosong";
+                        } else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                            Object.assign(itemError, itemDuplicateErrors[_index]);
+                        }
+
+                        itemErrors.push(itemError);
+                    }
+
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            errors.stepIndicators = itemErrors;
+                            break;
+                        }
+                    }
+                }
+
 
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
                 }
-                if (!valid.stamp){
+                if (!valid.stamp) {
                     valid = new Step(valid);
                 }
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
             });
     }
-    
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.collection.Step}__updatedDate`,
