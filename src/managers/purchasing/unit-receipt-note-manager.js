@@ -855,6 +855,37 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
+    getUnitReceiptWithoutSpb(_dateFrom, _dateTo) {
+        return new Promise((resolve, reject) => {
+            var query = Object.assign({});                      
+            var deleted = { _deleted: false };
+            var user = {_createdBy: {$ne : "dev2"}};
+          
+            if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
+                var date = {
+                    date: {
+                        $gte: new Date(_dateFrom),
+                        $lte: new Date(_dateTo)
+                    }
+                };
+                Object.assign(query, date);
+            }
+            
+            Object.assign(query, deleted);
+            Object.assign(query, user);
+          
+            this.collection
+                .where(query)
+                .execute()
+                .then(result => {
+                    resolve(result.data);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.purchasing.collection.UnitReceiptNote}_date`,
