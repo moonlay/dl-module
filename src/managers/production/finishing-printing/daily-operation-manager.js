@@ -706,37 +706,18 @@ getDailyOperationBadReport(query){
                 },
                 "_deleted" : false
             };
-            var kanbanQuery = {};
-            if(query.kanban)
-            {
-                kanbanQuery = {
-                    "kanbanId" : new ObjectId(query.kanban)
-                };
-            }
-            var machineQuery = {};
-            if(query.machine)
-            {
-                machineQuery = {
-                    "machineId" : new ObjectId(query.machine)
-                };
-            }
-           
-
-             var order = {
-                "kanban.productionOrder.orderNo" : 1
-            };
-            var QueryOutput = {"$and" : [date, machineQuery]};
+     
             
         this.collection.aggregate([ 
                 {"$match" : date},       
            
                              {
                     "$group" : {
-                        //"_id" : {"orderNo" : "$kanban.productionOrder.orderNo"},
+                        
                         "_id" : {"machine" : "$machine.name", "orderNo" : "$kanban.productionOrder.orderNo"},
                         "badOutput" : {"$sum" : { $ifNull: [ "$badOutput", 0 ] }},
-                        "goodOutput" : {"$sum" : { $ifNull: [ "$goodOutput", 0 ] }},
-                        "input" : {"$sum" : { $ifNull: [ "$input", 0 ] }}
+                        "goodOutput" : {"$sum" : { $ifNull: [ "$goodOutput", 0 ] }}
+                     
                     }
                 }
              ])
@@ -747,8 +728,6 @@ getDailyOperationBadReport(query){
             });
         });
     }
-    
-
     getDataDaily(query){
         return this._createIndexes()
             .then((createIndexResults) => {
