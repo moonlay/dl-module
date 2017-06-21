@@ -1326,6 +1326,41 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         });
     }
 
+    getPrice(dateFrom, dateTo, productName) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+
+
+                    if (productName !== "undefined" && productName !== "") {
+                        Object.assign(query, {
+                            "items.product.name" : productName}
+                        );
+                    }
+
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        Object.assign(query, {
+                            date: {
+                                $gte: new Date(dateFrom),
+                                $lte: new Date(dateTo)
+                            }
+                        });
+                    }
+ 
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.aggregate([{"$unwind" : "$items"},{"$match" : query},{ $sort : { date : 1} }]).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
+
     getXlsDurationPOEksDoData(result,query){
         var xls = {};
         xls.data = [];
