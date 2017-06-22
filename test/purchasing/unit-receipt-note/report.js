@@ -4,6 +4,7 @@ var validatorPurchasing = require('dl-models').validator.purchasing;
 var UnitReceiptNoteManager = require("../../../src/managers/purchasing/unit-receipt-note-manager");
 var unitReceiptNoteManager = null;
 //var unitReceiptNote = require("../../data-util/purchasing/unit-receipt-note-data-util");
+
 require("should");
 
 before('#00. connect db', function (done) {
@@ -16,10 +17,10 @@ before('#00. connect db', function (done) {
         })
         .catch(e => {
             done(e);
-        })
+        });
 });
 
-;
+
 it('#01. should success get data when parameter null', function (done) {
     unitReceiptNoteManager.getUnitReceiptWithoutSpb()
       .then(data => {
@@ -29,7 +30,6 @@ it('#01. should success get data when parameter null', function (done) {
             done(e);
         });
 });
-
 
 it('#02. should success get data when parameter dateFrom and dateTo', function (done) {
     var dateTo=new Date();
@@ -44,3 +44,4 @@ it('#02. should success get data when parameter dateFrom and dateTo', function (
             done(e);
         });
 });
+
