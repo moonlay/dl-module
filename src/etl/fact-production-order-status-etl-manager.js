@@ -70,11 +70,13 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
     }
 
     extract(times) {
-        var time = times.length > 0 ? times[0].start : "1970-01-01";
+        var time = "2017-02-01";
         var timestamp = new Date(time);
+        var timestamps = new Date("2017-02-28");
         return this.finishingPrintingSalesContractManager.collection.find({
-            _updatedDate: {
-                $gt: timestamp
+            _createdDate: {
+                $gte: timestamp,
+                $lte: timestamps
             },
         }, {
                 _deleted: 1,
@@ -138,7 +140,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     "productionOrder.orderNo": 1,
                     "cart.cartNumber": 1,
                     "cart.qty": 1,
-                    "uom.unit": 1
+                    "productionOrder.uom.unit": 1
                 }).toArray() : Promise.resolve([]);
 
             return getKanbans.then((kanbans) => {
@@ -272,7 +274,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                         kanbanDate: kanban._createdDate ? `'${moment(kanban._createdDate).format("L")}'` : null,
                         kanbanCode: kanban.code ? `'${kanban.code}'` : null,
                         kanbanSalesContractNo: kanban.productionOrder && kanban.productionOrder.salesContractNo ? `'${kanban.productionOrder.salesContractNo}'` : null,
-                        kanbanQuantity: kanban && kanban.cart.qty && kanban.uom && kanban.uom.unit ? `${this.orderQuantityConvertion(kanban.uom.unit, kanban.cart.qty)}` : null,
+                        kanbanQuantity: kanban && kanban.cart.qty && kanban.productionOrder && kanban.productionOrder.uom && kanban.productionOrder.uom.unit ? `${this.orderQuantityConvertion(kanban.productionOrder.uom.unit, kanban.cart.qty)}` : null,
                         dailyOperationQuantity: dailyOperation ? `${dailyOperation.input}` : null,
                         dailyOperationSalesContractNo: dailyOperation ? `'${dailyOperation.kanban.productionOrder.salesContractNo}'` : null,
                         dailyOperationCode: dailyOperation ? `'${dailyOperation.code}'` : null,
@@ -304,7 +306,7 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     dailyOperationQuantity: dailyOperation ? `${dailyOperation.input}` : null,
                     dailyOperationSalesContractNo: dailyOperation ? `'${dailyOperation.kanban.productionOrder.salesContractNo}'` : null,
                     dailyOperationCode: dailyOperation ? `'${dailyOperation.code}'` : null,
-                    kanbanQuantity: kanban && kanban.cart.qty && kanban.uom && kanban.uom.unit ? `${this.orderQuantityConvertion(kanban.uom.unit, kanban.cart.qty)}` : null,
+                    kanbanQuantity: kanban && kanban.cart.qty && kanban.productionOrder && kanban.productionOrder.uom && kanban.productionOrder.uom.unit ? `${this.orderQuantityConvertion(kanban.productionOrder.uom.unit, kanban.cart.qty)}` : null,
                     cartNumber: kanban && kanban.cart.cartNumber ? `'${kanban.cart.cartNumber}'` : null,
                     fabricQualityControlDate: null,
                     fabricQualityControlQuantity: null,

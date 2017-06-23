@@ -33,6 +33,7 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-FINISHING-PRINTING-SALES-CONTRACT', './etl/fact-finishing-printing-sales-contract');
     test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/fact-spinning-sales-contract');
     test('@ETL/FACT-DAILY-OPERATIONS', './etl/fact-daily-operations');
+    test('@ETL/FACT-KANBAN', './etl/fact-kanban');
     test('@ETL/FACT-QUALITY-CONTROL', './etl/fact-fabric-quality-control');
     test('@ETL/FACT-INVENTORY-MOVEMENT', './etl/fact-inventory-movement');
     test('@ETL/FACT-INVENTORY-SUMMARY', './etl/fact-inventory-summary');
