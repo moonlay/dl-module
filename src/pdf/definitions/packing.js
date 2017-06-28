@@ -215,13 +215,13 @@ module.exports = function (packing, offset) {
             columns: [{
                 columns: [{
                     width: '10%',
-                    stack: ['Buyer', 'Konstruksi', 'Design/Motif', 'Tujuan']
+                    stack: ['Buyer', "Jenis Order", "Jenis Warna", 'Konstruksi', 'Design/Motif', 'Tujuan']
                 }, {
                         width: '3%',
-                        stack: [':', ':', ':', ':']
+                        stack: [':', ":", ":", ':', ':', ':']
                     }, {
                         width: '*',
-                        stack: [packing.buyer, packing.construction, packing.motif ? packing.motif : " ", packing.buyerLocation]
+                        stack: [packing.buyer, packing.orderType, packing.colorType, packing.construction, packing.designNumber ? packing.designNumber : " ", packing.buyerLocation]
                     }]
             }]
         }
