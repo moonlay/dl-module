@@ -214,7 +214,7 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
                         this.sql.multiple = true;
 
                         // var fs = require("fs");
-                        // var path = "C:\\Users\\Itta And Leslie\\Desktop\\order.txt";
+                        // var path = "C:\\Users\\IttaAndLeslie\\Desktop\\order.txt";
 
                         // fs.writeFile(path, sqlQuery, function (error) {
                         //     if (error) {
