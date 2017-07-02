@@ -62,10 +62,8 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
     }
 
     extract(times) {
-        // var time = times.length > 0 ? times[0].start : "1970-01-01";
-        var time =  "2017-04-20";
+        var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
-        var timestamp = new Date("2017-04-22");
         return this.dailyOperationManager.collection.find({
             _updatedDate: {
                 $gte: timestamp
