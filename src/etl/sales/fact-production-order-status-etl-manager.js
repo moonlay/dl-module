@@ -70,13 +70,11 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
     }
 
     extract(times) {
-        var time = "2017-02-01";
+        var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
-        var timestamps = new Date("2017-02-28");
         return this.finishingPrintingSalesContractManager.collection.find({
             _createdDate: {
-                $gte: timestamp,
-                $lte: timestamps
+                $gte: timestamp
             },
         }, {
                 _deleted: 1,
