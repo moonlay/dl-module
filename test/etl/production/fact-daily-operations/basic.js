@@ -1,8 +1,8 @@
-var helper = require("../../helper");
+var helper = require("../../../helper");
 var Manager = require("../../../../src/etl/production/fact-daily-operations-etl-manager");
 var instanceManager = null;
 var should = require("should");
-var sqlHelper = require("../../sql-helper");
+var sqlHelper = require("../../../sql-helper");
 
 before("#00. connect db", function (done) {
     Promise.all([helper, sqlHelper])
