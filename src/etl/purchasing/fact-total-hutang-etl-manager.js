@@ -8,8 +8,8 @@ var moment = require("moment");
 // internal deps 
 require('mongodb-toolkit');
 
-var UnitReceiptNoteManager = require('../managers/purchasing/unit-receipt-note-manager');
-var UnitPaymentOrderManager = require('../managers/purchasing/unit-payment-order-manager');
+var UnitReceiptNoteManager = require('../../managers/purchasing/unit-receipt-note-manager');
+var UnitPaymentOrderManager = require('../../managers/purchasing/unit-payment-order-manager');
 
 module.exports = class FactTotalHutang extends BaseManager {
     constructor(db, user, sql) {

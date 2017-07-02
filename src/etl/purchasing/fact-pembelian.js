@@ -8,8 +8,8 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var PurchaseRequestManager = require("../managers/purchasing/purchase-request-manager");
-var PurchaseOrderManager = require('../managers/purchasing/purchase-order-manager');
+var PurchaseRequestManager = require("../../managers/purchasing/purchase-request-manager");
+var PurchaseOrderManager = require('../../managers/purchasing/purchase-order-manager');
 
 module.exports = class FactPurchasingEtlManager extends BaseManager {
     constructor(db, user, sql) {

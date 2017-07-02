@@ -9,7 +9,7 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var MonitoringEventManager = require("../managers/production/finishing-printing/monitoring-event-manager");
+var MonitoringEventManager = require("../../managers/production/finishing-printing/monitoring-event-manager");
 
 module.exports = class FactMonitoringEventEtlManager extends BaseManager {
     constructor(db, user, sql) {

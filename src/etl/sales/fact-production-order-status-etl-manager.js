@@ -8,11 +8,11 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var FinishingPrintingSalesContractManager = require("../managers/sales/finishing-printing-sales-contract-manager");
-var ProductionOrderManager = require("../managers/sales/production-order-manager");
-var KanbanManager = require("../managers/production/finishing-printing/kanban-manager");
-var DailyOperationsManager = require("../managers/production/finishing-printing/daily-operation-manager");
-var FabricQualityControlManager = require("../managers/production/finishing-printing/fabric-quality-control-manager");
+var FinishingPrintingSalesContractManager = require("../../managers/sales/finishing-printing-sales-contract-manager");
+var ProductionOrderManager = require("../../managers/sales/production-order-manager");
+var KanbanManager = require("../../managers/production/finishing-printing/kanban-manager");
+var DailyOperationsManager = require("../../managers/production/finishing-printing/daily-operation-manager");
+var FabricQualityControlManager = require("../../managers/production/finishing-printing/fabric-quality-control-manager");
 
 module.exports = class FactProductionOrderStatusManager extends BaseManager {
     constructor(db, user, sql) {

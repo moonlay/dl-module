@@ -9,7 +9,7 @@ var moment = require("moment");
 // internal deps 
 require('mongodb-toolkit');
 
-var ProductManager = require('../managers/master/product-manager');
+var ProductManager = require('../../managers/master/product-manager');
 const MIGRATION_LOG_DESCRIPTION = 'Dim Product from MongoDB to Azure DWH';
 
 module.exports = class DimProductEtlManager extends BaseManager {

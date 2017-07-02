@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require('mongodb-toolkit');
 
-var ProcessTypeManager = require('../managers/master/process-type-manager');
+var ProcessTypeManager = require('../../managers/master/process-type-manager');
 
 module.exports = class ProcessTypeEtlManager extends BaseManager {
     constructor(db, user, sql) {

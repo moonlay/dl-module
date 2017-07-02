@@ -8,8 +8,8 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var ProductionOrderManager = require("../managers/sales/production-order-manager");
-var KanbanManager = require("../managers/production/finishing-printing/kanban-manager")
+var ProductionOrderManager = require("../../managers/sales/production-order-manager");
+var KanbanManager = require("../../managers/production/finishing-printing/kanban-manager")
 
 module.exports = class FactProductionOrderEtlManager extends BaseManager {
     constructor(db, user, sql) {

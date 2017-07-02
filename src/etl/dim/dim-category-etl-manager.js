@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require('mongodb-toolkit');
 
-var CategoryManager = require('../managers/master/category-manager');
+var CategoryManager = require('../../managers/master/category-manager');
 
 module.exports = class DimCategoryEtlManager extends BaseManager {
     constructor(db, user, sql) {

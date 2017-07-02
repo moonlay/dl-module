@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var InventorySummaryManager = require("../managers/inventory/inventory-summary-manager");
+var InventorySummaryManager = require("../../managers/inventory/inventory-summary-manager");
 const MIGRATION_LOG_DESCRIPTION = "Fact Inventory Summary from MongoDB to Azure DWH"
 
 module.exports = class FactInventorySummaryManager extends BaseManager {

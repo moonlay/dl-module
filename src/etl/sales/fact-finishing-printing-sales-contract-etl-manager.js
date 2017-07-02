@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var FinishingPrintingSalesContractManager = require("../managers/sales/finishing-printing-sales-contract-manager");
+var FinishingPrintingSalesContractManager = require("../../managers/sales/finishing-printing-sales-contract-manager");
 
 module.exports = class FactFinishingPrintingSalesContractManager extends BaseManager {
     constructor(db, user, sql) {

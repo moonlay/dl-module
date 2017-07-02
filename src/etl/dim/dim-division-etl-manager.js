@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require('mongodb-toolkit');
 
-var DivisionManager = require('../managers/master/division-manager');
+var DivisionManager = require('../../managers/master/division-manager');
 
 module.exports = class DimDivisionEtlManager extends BaseManager {
     constructor(db, user, sql) {

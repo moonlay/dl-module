@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require('mongodb-toolkit');
 
-var StorageManager = require('../managers/master/storage-manager');
+var StorageManager = require('../../managers/master/storage-manager');
 
 module.exports = class DimStorageEtlManager extends BaseManager {
     constructor(db, user, sql) {

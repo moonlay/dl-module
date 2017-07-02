@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require('mongodb-toolkit');
 
-var SupplierManager = require('../managers/master/supplier-manager');
+var SupplierManager = require('../../managers/master/supplier-manager');
 
 module.exports = class DimSupplierEtlManager extends BaseManager {
     constructor(db, user, sql) {

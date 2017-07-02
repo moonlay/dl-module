@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require('mongodb-toolkit');
 
-var FabricQualityControlManager = require('../managers/production/finishing-printing/fabric-quality-control-manager');
+var FabricQualityControlManager = require('../../managers/production/finishing-printing/fabric-quality-control-manager');
 
 module.exports = class FabricQualityControlEtlManager extends BaseManager {
     constructor(db, user, sql) {

@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require('mongodb-toolkit');
 
-var OrderTypeManager = require('../managers/master/order-type-manager');
+var OrderTypeManager = require('../../managers/master/order-type-manager');
 
 module.exports = class OrderTypeEtlManager extends BaseManager {
     constructor(db, user, sql) {

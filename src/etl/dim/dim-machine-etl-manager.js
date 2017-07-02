@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var MachineManager = require("../managers/master/machine-manager");
+var MachineManager = require("../../managers/master/machine-manager");
 
 module.exports = class DimMachineEtlManager extends BaseManager {
     constructor(db, user, sql) {

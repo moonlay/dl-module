@@ -9,7 +9,7 @@ var moment = require("moment");
 // internal deps 
 require('mongodb-toolkit');
 
-var UnitManager = require('../managers/master/unit-manager');
+var UnitManager = require('../../managers/master/unit-manager');
 
 module.exports = class DimUnitEtlManager extends BaseManager {
     constructor(db, user, sql) {

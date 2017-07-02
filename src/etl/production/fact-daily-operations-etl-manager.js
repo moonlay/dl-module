@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var DailyOperationManager = require("../managers/production/finishing-printing/daily-operation-manager");
+var DailyOperationManager = require("../../managers/production/finishing-printing/daily-operation-manager");
 
 module.exports = class FactDailyOperationEtlManager extends BaseManager {
     constructor(db, user, sql) {

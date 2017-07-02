@@ -8,7 +8,7 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var WeavingSalesContractManager = require("../managers/sales/weaving-sales-contract-manager");
+var WeavingSalesContractManager = require("../../managers/sales/weaving-sales-contract-manager");
 
 module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
     constructor(db, user, sql) {
