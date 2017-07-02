@@ -1,6 +1,6 @@
 var helper = require("../../helper");
 // var Manager = require("../../../src/etl/fact-purchasing-etl-manager");
-var Manager = require("../../../src/etl/fact-pembelian");
+var Manager = require("../../../../src/etl/purchasing/fact-pembelian");
 var instanceManager = null;
 var should = require("should");
 var sqlHelper = require("../../sql-helper");

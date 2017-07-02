@@ -1,5 +1,5 @@
 var helper = require("../../helper");
-var Manager = require("../../../src/etl/fact-finishing-printing-sales-contract-etl-manager");
+var Manager = require("../../../../src/etl/sales/fact-finishing-printing-sales-contract-etl-manager");
 var instanceManager = null;
 var should = require("should");
 var sqlHelper = require("../../sql-helper");
