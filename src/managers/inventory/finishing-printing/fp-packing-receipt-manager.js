@@ -176,6 +176,11 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 valid.construction = _packing.construction;
                 valid.packingUom = _packing.packingUom;
 
+                valid.orderType = _packing.orderType;
+                valid.colorType = _packing.colorType;
+                valid.designCode = _packing.designCode;
+                valid.designNumber = _packing.designNumber;
+
                 if (!valid.stamp) {
                     valid = new PackingReceiptModel(valid);
                 }
