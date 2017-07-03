@@ -69,6 +69,9 @@ module.exports = class BuyerManager extends BaseManager {
 
                 if (!valid.country || valid.country == "")
                     errors["country"] = i18n.__("Buyer.country.isRequired:%s is required", i18n.__("Buyer.country._:Country")); // "Silakan pilih salah satu negara";
+                
+                if (!valid.type || valid.type == "")
+                    errors["type"] = i18n.__("Buyer.type.isRequired:%s is required", i18n.__("Buyer.type._:Type")); // "Jenis pembeli tidak boleh kosong";
 
                 if (!valid.type || valid.type == "")
                     errors["type"] = i18n.__("Buyer.type.isRequired:%s is required", i18n.__("Buyer.type._:Type")); // "buyer type tidak boleh kosong";

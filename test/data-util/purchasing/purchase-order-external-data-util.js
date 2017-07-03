@@ -95,6 +95,21 @@ class PurchaseOrderExternalDataUtil {
                     });
             });
     }
+
+    getClosed() {
+        return this.getNew()
+            .then(poe => {
+                return helper
+                    .getManager(PoExternalManager)
+                    .then(manager => {
+                        poe.isClosed=true;
+                        return manager.update(poe)
+                            .then(id => {
+                                return manager.getSingleById(id);
+                            });
+                    });
+            });
+    }
 }
 
 module.exports = new PurchaseOrderExternalDataUtil();

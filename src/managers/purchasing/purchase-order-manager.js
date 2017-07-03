@@ -23,6 +23,87 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         this.year = (new Date()).getFullYear().toString().substring(2, 4);
         this.collection = this.db.use(map.purchasing.collection.PurchaseOrder);
         this.purchaseRequestManager = new PurchaseRequestManager(db, user);
+        this.purchaseOrderFields = [
+            "_id",
+            "no",
+            "refNo",
+            "purchaseRequestId",
+            "purchaseRequest._id",
+            "purchaseRequest.no",
+            "purchaseOrderExternalId",
+            "purchaseOrderExternal._id",
+            "purchaseOrderExternal.no",
+            "supplierId",
+            "supplier.code",
+            "supplier.name",
+            "supplier.address",
+            "supplier.contact",
+            "supplier.PIC",
+            "supplier.import",
+            "supplier.NPWP",
+            "supplier.serialNumber",
+            "unitId",
+            "unit.code",
+            "unit.divisionId",
+            "unit.division",
+            "unit.name",
+            "categoryId",
+            "category.code",
+            "category.name",
+            "freightCostBy",
+            "currency.code",
+            "currency.symbol",
+            "currency.rate",
+            "currencyRate",
+            "paymentMethod",
+            "paymentDueDays",
+            "vat",
+            "useVat",
+            "vatRate",
+            "useIncomeTax",
+            "date",
+            "expectedDeliveryDate",
+            "actualDeliveryDate",
+            "isPosted",
+            "isClosed",
+            "remark",
+            "status",
+            "items"
+        ];
+    }
+
+    getPrice(dateFrom, dateTo, productName) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+
+
+                    if (productName !== "undefined" && productName !== "") {
+                        Object.assign(query, {
+                            "items.product.name" : productName}
+                        );
+                    }
+
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        Object.assign(query, {
+                            date: {
+                                $gte: new Date(dateFrom),
+                                $lte: new Date(dateTo)
+                            }
+                        });
+                    }
+ 
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.aggregate([{"$unwind" : "$items"},{"$match" : query},{ $sort : { date : 1} }]).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
     }
 
     _validate(purchaseOrder) {
@@ -573,6 +654,98 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         });
     }
 
+    getDataPOSupplier(startdate, enddate) {
+        var validStartDate = startdate && startdate !== "" && startdate != "undefined" ? new Date(startdate) : new Date(null);
+        var validEndDate = enddate && enddate !== "" && enddate != "undefined" ? new Date(enddate) : new Date();
+
+        return new Promise((resolve, reject) => {
+            this.collection.aggregate(
+                [{
+                    $match: {
+                        $and: [{
+                            $and: [{
+                                "date": {
+                                    $gte: validStartDate,
+                                    $lte: validEndDate
+                                }
+                            }, {
+                                    "_deleted": false
+                                }
+
+                            ]
+                        }, {
+                                "purchaseOrderExternal.isPosted": true
+                            }]
+
+                    }
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: "$supplier",
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                }
+                            }
+                        }
+                    }]
+            )
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }
+
+    getDataPOSplDetil(startdate, enddate,supplierId) {
+        var validStartDate = startdate && startdate !== "" && startdate != "undefined" ? new Date(startdate) : new Date(null);
+        var validEndDate = enddate && enddate !== "" && enddate != "undefined" ? new Date(enddate) : new Date();
+
+        return new Promise((resolve, reject) => {
+            {
+                this.collection.aggregate(
+                    [{
+                        $match: {
+                            $and: [{
+                                $and: [{
+                                    $and: [{
+                                        "date": {
+                                           $gte: validStartDate,
+                                           $lte: validEndDate
+
+                                        }
+                                    }, {
+                                            "_deleted": false
+                                        }]
+                                }, {
+                                        "purchaseOrderExternal.isPosted": true
+                                    }]
+                            }, {
+                                    "supplier._id": new ObjectId(supplierId)
+                                }]
+                        }
+                    }, {
+                            $unwind: "$items"
+                        }, {
+                            $group: {
+                                _id: "$purchaseOrderExternal.no",
+                                "pricetotal": {
+                                    $sum: {
+                                        $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                    }
+                                }
+                            }
+                        }]
+                )
+                    .toArray(function (err, result) {
+                        assert.equal(err, null);
+                        resolve(result);
+                    });
+            }
+        });
+    }
+
     getDataPOCategory(startdate, enddate) {
         var validStartDate = startdate && startdate !== "" && startdate != "undefined" ? new Date(startdate) : new Date(null);
         var validEndDate = enddate && enddate !== "" && enddate != "undefined" ? new Date(enddate) : new Date();
@@ -807,167 +980,177 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             }, {
                 $set: purchaseOrder
             })
-            .then((result) => { return this.getSingleByIdOrDefault(purchaseOrder._id) });
+            .then((result) => { return this.getSingleByIdOrDefault(purchaseOrder._id, this.purchaseOrderFields) });
     }
 
-    getDataDuration(query){
+    getDataDuration(query) {
         return new Promise((resolve, reject) => {
             var deletedQuery = {
-                    _deleted: false
-                };
+                _deleted: false
+            };
             var postedQuery = {
-                    isPosted: true
-                };
+                isPosted: true
+            };
             var closedQuery = {
-                    isClosed: false
-                };
+                isClosed: false
+            };
             var date = {
-                "purchaseRequest._createdDate" : {
-                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
-                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                "purchaseRequest._createdDate": {
+                    "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
                 }
             };
-            
-            var offset=query.offset;
-            var unitQuery={};
-            if(query.unitId && query.unitId!=""){
-                unitQuery={
-                    "purchaseRequest.unit._id":new ObjectId(query.unitId)
+
+            var offset = query.offset;
+            var unitQuery = {};
+            if (query.unitId && query.unitId != "") {
+                unitQuery = {
+                    "purchaseRequest.unit._id": new ObjectId(query.unitId)
                 }
             }
-            var dates={
-                $divide: [ { $subtract: [ {$subtract : [      
-                     {"$add" : ["$_createdDate", 60* 60* 1000* offset ]},      
-                     {      
-                          "$add" : [      
-                               {"$millisecond" : "$_createdDate"},      
-                               {      
-                                    "$multiply" : [      
-                                         {"$second" : "$_createdDate"},      
-                                         1000      
-                                    ]      
-                               },      
-                               {      
-                                    "$multiply" : [      
-                                         {"$minute" : "$_createdDate"},      
-                                         60, 1000      
-                                    ]      
-                               },      
-                               {      
-                                    "$multiply" : [      
-                                         {"$hour" : {"$add" : ["$_createdDate", 60* 60* 1000* offset ]}},      
-                                         60, 60, 1000      
-                                    ]      
-                               }      
-                          ]      
-                     }      
-                ]}      ,{$subtract : [      
-                     {"$add" : ["$purchaseRequest._createdDate", 60* 60* 1000* offset ]},      
-                     {      
-                          "$add" : [      
-                               {"$millisecond" : "$purchaseRequest._createdDate"},      
-                               {      
-                                    "$multiply" : [      
-                                         {"$second" : "$purchaseRequest._createdDate"},      
-                                         1000      
-                                    ]      
-                               },      
-                               {      
-                                    "$multiply" : [      
-                                         {"$minute" : "$purchaseRequest._createdDate"},      
-                                         60,  1000      
-                                    ]      
-                               },      
-                               {      
-                                    "$multiply" : [      
-                                         {"$hour" : {"$add" : ["$purchaseRequest._createdDate", 60* 60* 1000* offset ]}},      
-                                         60,  60,   1000      
-                                    ]      
-                               }      
-                          ]      
-                }]} ] }, 86400000 ]};
-            var durationQuery={};
-            if(query.duration==="8-14 hari"){
-                durationQuery={
-                    $cond: {
-                        if: { "$and": [ 
-                                { $gt: [ dates, 7 ]},
-                                { $lte: [ dates, 14] }
+            var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$_createdDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$_createdDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$_createdDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$_createdDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$_createdDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
                                 ]
+                            }
+                        ]
+                    }, {
+                        $subtract: [
+                            { "$add": ["$purchaseRequest._createdDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$purchaseRequest._createdDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$purchaseRequest._createdDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$purchaseRequest._createdDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$purchaseRequest._createdDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                        }]
+                }, 86400000]
+            };
+            var durationQuery = {};
+            if (query.duration === "8-14 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: {
+                            "$and": [
+                                { $gt: [dates, 7] },
+                                { $lte: [dates, 14] }
+                            ]
                         },
                         then: "$$KEEP",
                         else: "$$PRUNE"
                     }
                 }
             }
-            else if(query.duration==="15-30 hari"){
-                durationQuery={
+            else if (query.duration === "15-30 hari") {
+                durationQuery = {
                     $cond: {
-                        if: { "$and": [ 
-                                { $gt: [ dates, 14 ]},
-                                { $lte: [ dates, 30] }
-                                ]
+                        if: {
+                            "$and": [
+                                { $gt: [dates, 14] },
+                                { $lte: [dates, 30] }
+                            ]
                         },
                         then: "$$KEEP",
                         else: "$$PRUNE"
                     }
                 }
             }
-            else if(query.duration==="> 30 hari"){
-                durationQuery={
+            else if (query.duration === "> 30 hari") {
+                durationQuery = {
                     $cond: {
-                        if:  { $gt: [ dates, 30] },
+                        if: { $gt: [dates, 30] },
                         then: "$$KEEP",
                         else: "$$PRUNE"
                     }
                 }
             }
-            
-            
-            var Query = {"$and" : [date, deletedQuery,unitQuery]};
+
+
+            var Query = { "$and": [date, deletedQuery, unitQuery] };
             this.collection.aggregate([
-                {$unwind: "$items"}, 
-                {$match : Query},
-                {$redact:durationQuery},
-                {$project :{
-                        "purchaseRequest._createdDate" : 1,
-                        "prDate" : "$purchaseRequest.date",
-                        "prCreatedDate" : "$purchaseRequest._createdDate",
-                        "prNo" : "$purchaseRequest.no",
+                { $unwind: "$items" },
+                { $match: Query },
+                { $redact: durationQuery },
+                {
+                    $project: {
+                        "purchaseRequest._createdDate": 1,
+                        "prDate": "$purchaseRequest.date",
+                        "prCreatedDate": "$purchaseRequest._createdDate",
+                        "prNo": "$purchaseRequest.no",
                         "division": "$purchaseRequest.unit.division.name",
                         "unit": "$purchaseRequest.unit.name",
-                        "budget":"$purchaseRequest.budget.name",
-                        "category" : "$category.name",
+                        "budget": "$purchaseRequest.budget.name",
+                        "category": "$category.name",
                         "productCode": "$items.product.code",
                         "productName": "$items.product.name",
-                        "productQuantity" : "$items.defaultQuantity",
-                        "productUom" : "$items.defaultUom.unit",
-                        "poDate" : "$_createdDate",
-                        "dateDiff" : dates,
-                        "staff" : "$_createdBy"
+                        "productQuantity": "$items.defaultQuantity",
+                        "productUom": "$items.defaultUom.unit",
+                        "poDate": "$_createdDate",
+                        "dateDiff": dates,
+                        "staff": "$_createdBy"
                     }
                 },
-                    {$sort : {"purchaseRequest._createdDate" : -1}}
-                ])
-                .toArray().then(report=>{
-                    var index=0;
-                    for(var x of report){
+                { $sort: { "purchaseRequest._createdDate": -1 } }
+            ])
+                .toArray().then(report => {
+                    var index = 0;
+                    for (var x of report) {
                         index++;
-                        x.index=index;
+                        x.index = index;
                     }
-                    report.data=report.slice(parseInt(query.size)*(parseInt(query.page)-1),parseInt(query.size)+(parseInt(query.size)*(parseInt(query.page)-1)));
-                    report.info={
-                        total:report.length,
-                        size:query.size,
-                        count:query.size,
-                        page:query.page
+                    report.data = report.slice(parseInt(query.size) * (parseInt(query.page) - 1), parseInt(query.size) + (parseInt(query.size) * (parseInt(query.page) - 1)));
+                    report.info = {
+                        total: report.length,
+                        size: query.size,
+                        count: query.size,
+                        page: query.page
                     }
                     resolve(report);
                 });
         });
     }
 
-    getXls(result,query){
+    getXls(result, query) {
         var xls = {};
         xls.data = [];
         xls.options = [];
@@ -975,15 +1158,15 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
-        var offset= query.offset;
+        var offset = query.offset;
 
-        for(var report of result.info){
+        for (var report of result.info) {
             index++;
-            var dateDiff=Math.ceil(report.dateDiff);
+            var dateDiff = Math.ceil(report.dateDiff);
             var item = {};
             item["No"] = index;
-            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).add(7,'h').format(dateFormat);
-            item["Tanggal Buat Purchase Request"] = moment(new Date(report.prCreatedDate)).add(7,'h').format(dateFormat);
+            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Buat Purchase Request"] = moment(new Date(report.prCreatedDate)).add(7, 'h').format(dateFormat);
             item["No Purchase Request"] = report.prNo;
             item["Divisi"] = report.division;
             item["Unit"] = report.unit;
@@ -993,39 +1176,39 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             item["Nama Barang"] = report.productName;
             item["Jumlah Barang"] = report.productQuantity;
             item["Satuan Barang"] = report.productUom;
-            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).add(7,'h').format(dateFormat);
+            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).add(7, 'h').format(dateFormat);
             item["Selisih Tanggal PR - PO Internal (hari)"] = dateDiff;
             item["Nama Staff Pembelian"] = report.staff;
-            
+
 
             xls.data.push(item);
         }
 
         xls.options = {
-            "No" : "number",
-            "Tanggal Purchase Request" : "string",
-            "No Purchase Request" : "string",
-            "Divisi" : "string",
-            "Unit" : "string",
-            "Budget" : "string",
-            "Kategori" : "string",
-            "Kode Barang":"string",
-            "Nama Barang" : "string",
-            "Jumlah Barang" : "number",
-            "Satuan Barang" : "string",
-            "Tanggal Terima PO Internal" : "string",
-            "Selisih Tanggal PR - PO Internal (hari)" : "number",
-            "Nama Staff Pembelian" : "string",
-            
+            "No": "number",
+            "Tanggal Purchase Request": "string",
+            "No Purchase Request": "string",
+            "Divisi": "string",
+            "Unit": "string",
+            "Budget": "string",
+            "Kategori": "string",
+            "Kode Barang": "string",
+            "Nama Barang": "string",
+            "Jumlah Barang": "number",
+            "Satuan Barang": "string",
+            "Tanggal Terima PO Internal": "string",
+            "Selisih Tanggal PR - PO Internal (hari)": "number",
+            "Nama Staff Pembelian": "string",
+
         };
 
-        if(query.dateFrom && query.dateTo){
+        if (query.dateFrom && query.dateTo) {
             xls.name = `LAPORAN DURASI PR - PO INTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        else if(!query.dateFrom && query.dateTo){
+        else if (!query.dateFrom && query.dateTo) {
             xls.name = `LAPORAN DURASI PR - PO INTERNAL ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        else if(query.dateFrom && !query.dateTo){
+        else if (query.dateFrom && !query.dateTo) {
             xls.name = `LAPORAN DURASI PR - PO INTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
         }
         else
@@ -1034,173 +1217,220 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return Promise.resolve(xls);
     }
 
-    getDurationPOEksDoData(query){
+    getDurationPOEksDoData(query) {
         return new Promise((resolve, reject) => {
             var deletedQuery = {
-                    "purchaseOrderExternal._deleted": false
-                };
+                "purchaseOrderExternal._deleted": false
+            };
             var postedQuery = {
-                    "purchaseOrderExternal.isPosted": true
-                };
+                "purchaseOrderExternal.isPosted": true
+            };
             var closedQuery = {
-                    "purchaseOrderExternal.isClosed": false
-                };
+                "purchaseOrderExternal.isClosed": false
+            };
             var date = {
-                "purchaseOrderExternal._createdDate" : {
-                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
-                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                "purchaseOrderExternal._createdDate": {
+                    "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
                 }
             };
-            
-            var offset=query.offset;
-            var unitQuery={};
-            if(query.unitId && query.unitId!=""){
-                unitQuery={
-                    "purchaseRequest.unit._id":new ObjectId(query.unitId)
+
+            var offset = query.offset;
+            var unitQuery = {};
+            if (query.unitId && query.unitId != "") {
+                unitQuery = {
+                    "purchaseRequest.unit._id": new ObjectId(query.unitId)
                 }
             }
-            var dates={
-                $divide: [ { $subtract: [ {$subtract : [      
-                     {"$add" : ["$items.fulfillments.supplierDoDate", 60* 60* 1000* offset ]},      
-                     {      
-                          "$add" : [      
-                               {"$millisecond" : "$items.fulfillments.supplierDoDate"},      
-                               {      
-                                    "$multiply" : [      
-                                         {"$second" : "$items.fulfillments.supplierDoDate"},      
-                                         1000      
-                                    ]      
-                               },      
-                               {      
-                                    "$multiply" : [      
-                                         {"$minute" : "$items.fulfillments.supplierDoDate"},      
-                                         60, 1000      
-                                    ]      
-                               },      
-                               {      
-                                    "$multiply" : [      
-                                         {"$hour" : {"$add" : ["$items.fulfillments.supplierDoDate", 60* 60* 1000* offset ]}},      
-                                         60, 60, 1000      
-                                    ]      
-                               }      
-                          ]      
-                     }      
-                ]}      ,{$subtract : [      
-                     {"$add" : ["$purchaseOrderExternal._createdDate", 60* 60* 1000* offset ]},      
-                     {      
-                          "$add" : [      
-                               {"$millisecond" : "$purchaseOrderExternal._createdDate"},      
-                               {      
-                                    "$multiply" : [      
-                                         {"$second" : "$purchaseOrderExternal._createdDate"},      
-                                         1000      
-                                    ]      
-                               },      
-                               {      
-                                    "$multiply" : [      
-                                         {"$minute" : "$purchaseOrderExternal._createdDate"},      
-                                         60,  1000      
-                                    ]      
-                               },      
-                               {      
-                                    "$multiply" : [      
-                                         {"$hour" : {"$add" : ["$purchaseOrderExternal._createdDate", 60* 60* 1000* offset ]}},      
-                                         60,  60,   1000      
-                                    ]      
-                               }      
-                          ]      
-                }]} ] }, 86400000 ]};
-            var durationQuery={};
-            if(query.duration==="31-60 hari"){
-                durationQuery={
-                    $cond: {
-                        if: { "$and": [ 
-                                { $gt: [ dates, 30 ]},
-                                { $lte: [ dates, 60] }
+            var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$items.fulfillments.supplierDoDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$items.fulfillments.supplierDoDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$items.fulfillments.supplierDoDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$items.fulfillments.supplierDoDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$items.fulfillments.supplierDoDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
                                 ]
+                            }
+                        ]
+                    }, {
+                        $subtract: [
+                            { "$add": ["$purchaseOrderExternal._createdDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$purchaseOrderExternal._createdDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$purchaseOrderExternal._createdDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$purchaseOrderExternal._createdDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$purchaseOrderExternal._createdDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                        }]
+                }, 86400000]
+            };
+            var durationQuery = {};
+            if (query.duration === "31-60 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: {
+                            "$and": [
+                                { $gt: [dates, 30] },
+                                { $lte: [dates, 60] }
+                            ]
                         },
                         then: "$$KEEP",
                         else: "$$PRUNE"
                     }
                 }
             }
-            else if(query.duration==="61-90 hari"){
-                durationQuery={
+            else if (query.duration === "61-90 hari") {
+                durationQuery = {
                     $cond: {
-                        if: { "$and": [ 
-                                { $gt: [ dates, 60 ]},
-                                { $lte: [ dates, 90] }
-                                ]
+                        if: {
+                            "$and": [
+                                { $gt: [dates, 60] },
+                                { $lte: [dates, 90] }
+                            ]
                         },
                         then: "$$KEEP",
                         else: "$$PRUNE"
                     }
                 }
             }
-            else if(query.duration==="> 90 hari"){
-                durationQuery={
+            else if (query.duration === "> 90 hari") {
+                durationQuery = {
                     $cond: {
-                        if:  { $gt: [ dates, 90] },
+                        if: { $gt: [dates, 90] },
                         then: "$$KEEP",
                         else: "$$PRUNE"
                     }
                 }
             }
-            var Query = {"$and" : [date, deletedQuery,unitQuery]};
+            var Query = { "$and": [date, deletedQuery, unitQuery] };
             this.collection.aggregate([
-                {$unwind: "$items"}, 
-                {$unwind: "$items.fulfillments"},
-                {$match : Query},
-                {$redact:durationQuery},
-                {$project :{
-                        "purchaseOrderExternal._createdDate" : 1,
-                        "prDate" : "$items.purchaseRequest.date",
-                        "prCreatedDate" : "$items.purchaseRequest._createdDate",
-                        "prNo" : "$purchaseRequest.no",
+                { $unwind: "$items" },
+                { $unwind: "$items.fulfillments" },
+                { $match: Query },
+                { $redact: durationQuery },
+                {
+                    $project: {
+                        "purchaseOrderExternal._createdDate": 1,
+                        "prDate": "$items.purchaseRequest.date",
+                        "prCreatedDate": "$items.purchaseRequest._createdDate",
+                        "prNo": "$purchaseRequest.no",
                         "division": "$purchaseRequest.unit.division.name",
                         "unit": "$purchaseRequest.unit.name",
-                        "budget":"$purchaseRequest.budget.name",
-                        "category" : "$category.name",
+                        "budget": "$purchaseRequest.budget.name",
+                        "category": "$category.name",
                         "productCode": "$items.product.code",
                         "productName": "$items.product.name",
-                        "productQuantity" : "$items.fulfillments.deliveryOrderDeliveredQuantity",
-                        "productUom" : "$items.defaultUom.unit",
-                        "productPrice" : "$items.pricePerDealUnit",
-                        "supplierCode" : "$purchaseOrderExternal.supplier.code",
-                        "supplierName" : "$purchaseOrderExternal.supplier.name",
-                        "poDate" : "$_createdDate",
-                        "poEksDate" : "$purchaseOrderExternal.date",
-                        "poEksCreatedDate" : "$purchaseOrderExternal._createdDate",
+                        "productQuantity": "$items.fulfillments.deliveryOrderDeliveredQuantity",
+                        "productUom": "$items.defaultUom.unit",
+                        "productPrice": "$items.pricePerDealUnit",
+                        "supplierCode": "$purchaseOrderExternal.supplier.code",
+                        "supplierName": "$purchaseOrderExternal.supplier.name",
+                        "poDate": "$_createdDate",
+                        "poEksDate": "$purchaseOrderExternal.date",
+                        "poEksCreatedDate": "$purchaseOrderExternal._createdDate",
                         "expectedDate": "$purchaseOrderExternal.expectedDeliveryDate",
-                        "poEksNo" : "$purchaseOrderExternal.no",
-                        "doDate" : "$items.fulfillments.supplierDoDate",
-                        "arrivedDate" : "$items.fulfillments.deliveryOrderDate",
-                        "doNo" : "$items.fulfillments.deliveryOrderNo",
-                        "dateDiff" : dates,
-                        "staff" : "$_createdBy"
+                        "poEksNo": "$purchaseOrderExternal.no",
+                        "doDate": "$items.fulfillments.supplierDoDate",
+                        "arrivedDate": "$items.fulfillments.deliveryOrderDate",
+                        "doNo": "$items.fulfillments.deliveryOrderNo",
+                        "dateDiff": dates,
+                        "staff": "$_createdBy"
                     }
                 },
-                {$sort : {"purchaseOrderExternal._createdDate" : -1}}
-                ])
-                .toArray().then(report=>{
-                    var index=0;
-                    for(var x of report){
+                { $sort: { "purchaseOrderExternal._createdDate": -1 } }
+            ])
+                .toArray().then(report => {
+                    var index = 0;
+                    for (var x of report) {
                         index++;
-                        x.index=index;
+                        x.index = index;
                     }
-                    report.data=report.slice(parseInt(query.size)*(parseInt(query.page)-1),parseInt(query.size)+(parseInt(query.size)*(parseInt(query.page)-1)));
-                    report.info={
-                        total:report.length,
-                        size:query.size,
-                        count:query.size,
-                        page:query.page
+                    report.data = report.slice(parseInt(query.size) * (parseInt(query.page) - 1), parseInt(query.size) + (parseInt(query.size) * (parseInt(query.page) - 1)));
+                    report.info = {
+                        total: report.length,
+                        size: query.size,
+                        count: query.size,
+                        page: query.page
                     }
                     resolve(report);
                 });
         });
     }
 
-    getXlsDurationPOEksDoData(result,query){
+    getPrice(dateFrom, dateTo, productName) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+
+
+                    if (productName !== "undefined" && productName !== "") {
+                        Object.assign(query, {
+                            "items.product.name" : productName}
+                        );
+                    }
+
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        Object.assign(query, {
+                            date: {
+                                $gte: new Date(dateFrom),
+                                $lte: new Date(dateTo)
+                            }
+                        });
+                    }
+ 
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.aggregate([{"$unwind" : "$items"},{"$match" : query},{ $sort : { date : 1} }]).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
+
+ 
+    getXlsDurationPOEksDoData(result, query) {
+
         var xls = {};
         xls.data = [];
         xls.options = [];
@@ -1208,15 +1438,15 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
-        var offset= query.offset;
-        
-        for(var report of result.info){
+        var offset = query.offset;
+
+        for (var report of result.info) {
             index++;
-            var dateDiff=Math.ceil(report.dateDiff);
+            var dateDiff = Math.ceil(report.dateDiff);
             var item = {};
             item["No"] = index;
-            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).add(7,'h').format(dateFormat);
-            item["Tanggal Buat Purchase Request"] = moment(new Date(report.prCreatedDate)).add(7,'h').format(dateFormat);
+            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Buat Purchase Request"] = moment(new Date(report.prCreatedDate)).add(7, 'h').format(dateFormat);
             item["No Purchase Request"] = report.prNo;
             item["Divisi"] = report.division;
             item["Unit"] = report.unit;
@@ -1229,55 +1459,55 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             item["Harga Barang"] = report.productPrice;
             item["Kode Supplier"] = report.supplierCode;
             item["Nama Supplier"] = report.supplierName;
-            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).add(7,'h').format(dateFormat);
-            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate)).add(7,'h').format(dateFormat);
-            item["Tanggal Buat PO Eksternal"] = moment(new Date(report.poEksCreatedDate)).add(7,'h').format(dateFormat);
-            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).add(7,'h').format(dateFormat);
+            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Buat PO Eksternal"] = moment(new Date(report.poEksCreatedDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).add(7, 'h').format(dateFormat);
             item["No PO Eksternal"] = report.poEksNo;
-            item["Tanggal Surat Jalan"] = moment(new Date(report.doDate)).add(7,'h').format(dateFormat);
-            item["Tanggal Datang Barang"] = moment(new Date(report.arrivedDate)).add(7,'h').format(dateFormat);
+            item["Tanggal Surat Jalan"] = moment(new Date(report.doDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Datang Barang"] = moment(new Date(report.arrivedDate)).add(7, 'h').format(dateFormat);
             item["No Surat Jalan"] = report.doNo;
             item["Selisih Tanggal PO Eksternal - Surat Jalan (hari)"] = dateDiff;
             item["Nama Staff Pembelian"] = report.staff;
-            
+
 
             xls.data.push(item);
         }
 
         xls.options = {
-            "No" : "number",
-            "Tanggal Purchase Request" : "string",
-            "No Purchase Request" : "string",
-            "Divisi" : "string",
-            "Unit" : "string",
-            "Budget" : "string",
-            "Kategori" : "string",
-            "Kode Barang":"string",
-            "Nama Barang" : "string",
-            "Jumlah Barang" : "number",
-            "Satuan Barang" : "string",
-            "Harga Barang" : "number",
-            "Kode Supplier" : "string",
-            "Nama Supplier" : "string",
-            "Tanggal Terima PO Internal" : "string",
-            "Tanggal PO Eksternal" : "string",
-            "Tanggal Target Datang" : "string",
-            "No PO Eksternal" : "string",
-            "Tanggal Surat Jalan":"string",
-            "Tanggal Datang Barang":"string",
-            "No Surat Jalan":"string",
-            "Selisih Tanggal PO Eksternal - Surat Jalan (hari)":"number",
-            "Nama Staff Pembelian" : "string"
-            
+            "No": "number",
+            "Tanggal Purchase Request": "string",
+            "No Purchase Request": "string",
+            "Divisi": "string",
+            "Unit": "string",
+            "Budget": "string",
+            "Kategori": "string",
+            "Kode Barang": "string",
+            "Nama Barang": "string",
+            "Jumlah Barang": "number",
+            "Satuan Barang": "string",
+            "Harga Barang": "number",
+            "Kode Supplier": "string",
+            "Nama Supplier": "string",
+            "Tanggal Terima PO Internal": "string",
+            "Tanggal PO Eksternal": "string",
+            "Tanggal Target Datang": "string",
+            "No PO Eksternal": "string",
+            "Tanggal Surat Jalan": "string",
+            "Tanggal Datang Barang": "string",
+            "No Surat Jalan": "string",
+            "Selisih Tanggal PO Eksternal - Surat Jalan (hari)": "number",
+            "Nama Staff Pembelian": "string"
+
         };
 
-        if(query.dateFrom && query.dateTo){
+        if (query.dateFrom && query.dateTo) {
             xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        else if(!query.dateFrom && query.dateTo){
+        else if (!query.dateFrom && query.dateTo) {
             xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        else if(query.dateFrom && !query.dateTo){
+        else if (query.dateFrom && !query.dateTo) {
             xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
         }
         else

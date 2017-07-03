@@ -189,17 +189,17 @@ module.exports = function (unitPaymentCorrection) {
             return prev + curr;
         }, 0);
 
-    var useIncomeTax = unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? _jumlah * 0.1 : 0;
-    var useVAT = unitPaymentCorrection.unitPaymentOrder.useVat ? _jumlah * (unitPaymentCorrection.unitPaymentOrder.vatRate / 100) : 0;
+    var useIncomeTax = unitPaymentCorrection.useIncomeTax ? _jumlah * 0.1 : 0;
+    var useVAT = unitPaymentCorrection.useVat ? _jumlah * (unitPaymentCorrection.unitPaymentOrder.vatRate / 100) : 0;
     var _subTotal = _jumlah;
     var summary = _jumlah;
 
     if (unitPaymentCorrection.correctionType === "Jumlah") {
-        if (unitPaymentCorrection.unitPaymentOrder.useIncomeTax) {
+        if (unitPaymentCorrection.useIncomeTax) {
             _subTotal = _subTotal + useIncomeTax;
             summary = _subTotal;
         }
-        if (unitPaymentCorrection.unitPaymentOrder.useVat) {
+        if (unitPaymentCorrection.useVat) {
             summary = summary - useVAT;
         }
     } else {
@@ -235,11 +235,11 @@ module.exports = function (unitPaymentCorrection) {
             style: ['size08']
         }, {
                 width: '20%',
-                text: unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? currency : " ",
+                text: unitPaymentCorrection.useIncomeTax ? currency : " ",
                 style: ['size08']
             }, {
                 width: '60%',
-                text: unitPaymentCorrection.unitPaymentOrder.useIncomeTax ? parseFloat(useIncomeTax).toLocaleString(locale, locale.currency) : "-",
+                text: unitPaymentCorrection.useIncomeTax ? parseFloat(useIncomeTax).toLocaleString(locale, locale.currency) : "-",
                 style: ['size08', 'right']
             }]
     };
@@ -299,7 +299,7 @@ module.exports = function (unitPaymentCorrection) {
             columns: [
                 {
                     width: '40%',
-                    stack: ['\n', unitPaymentCorrection.unitPaymentOrder.useVat ? vatTotal : '', unitPaymentCorrection.unitPaymentOrder.useVat ? vatBayar : '\n']
+                    stack: ['\n', unitPaymentCorrection.useVat ? vatTotal : '', unitPaymentCorrection.useVat ? vatBayar : '\n']
                 },
                 {
                     width: '20%',
@@ -318,7 +318,7 @@ module.exports = function (unitPaymentCorrection) {
             columns: [
                 {
                     width: '40%',
-                    stack: ['\n', unitPaymentCorrection.useVat ? vatTotal : '', unitPaymentCorrection.unitPaymentOrder.useVat ? vatBayar : '']
+                    stack: ['\n', unitPaymentCorrection.useVat ? vatTotal : '', unitPaymentCorrection.useVat ? vatBayar : '']
                 },
                 {
                     width: '20%',

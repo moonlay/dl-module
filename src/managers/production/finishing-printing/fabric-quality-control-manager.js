@@ -41,6 +41,11 @@ module.exports = class FabricQualityControlManager extends BaseManager {
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
+            var codeFilter = {
+                "code": {
+                    "$regex": regex
+                }
+            }
             var operatorFilter = {
                 "operatorIm": {
                     "$regex": regex
@@ -66,7 +71,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [operatorFilter, machineFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter];
+            keywordFilter["$or"] = [codeFilter, operatorFilter, machineFilter, productionOrderNoFilter, cartNoFilter, productionOrderTypeFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -288,6 +293,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         var _defaultFilter = {
             _deleted: false
         };
+        var codeFilter = {};
         var kanbanCodeFilter = {};
         var productionOrderTypeFilter = {};
         var shiftImFilter = {};
@@ -298,6 +304,10 @@ module.exports = class FabricQualityControlManager extends BaseManager {
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
         var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
         var now = new Date();
+
+        if (info.code && info.code != '') {
+            codeFilter = { 'code': info.code };
+        }
 
         if (info.kanbanCode && info.kanbanCode != '') {
             kanbanCodeFilter = { 'kanbanCode': info.kanbanCode };
@@ -318,7 +328,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             }
         };
 
-        query = { '$and': [_defaultFilter, kanbanCodeFilter, productionOrderTypeFilter, shiftImFilter, filterDate] };
+        query = { '$and': [_defaultFilter, codeFilter, kanbanCodeFilter, productionOrderTypeFilter, shiftImFilter, filterDate] };
 
         return this._createIndexes()
             .then((createIndexResults) => {
