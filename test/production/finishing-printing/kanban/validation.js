@@ -167,8 +167,8 @@ it('#05. should error when create new data with empty step', function (done) {
         });
 });
 
-it('#06. success create new data with old kanban id', function (done) {
-    var kanban;
+var kanbanId;
+it('#06. should success when create new data with old kanban id', function (done) {   
     KanbanDataUtil.getNewData()
             .then((data) => {
                 kanban = data;
@@ -178,6 +178,7 @@ it('#06. success create new data with old kanban id', function (done) {
 
                         kanbanManager.create(kanban)
                             .then((id) => {
+                                kanbanId = id;
                                 id.should.be.Object();
                                 done();
                             })
@@ -186,6 +187,20 @@ it('#06. success create new data with old kanban id', function (done) {
             .catch((e) => {
                 done(e);
             });
+});
+
+it('#07. should success when update IsComplete to true', function (done) {
+    kanbanManager.updateIsComplete(kanbanId.toString())
+        .then((id) => {
+            kanbanManager.getSingleById(kanbanId.toString())
+                .then((data) => {
+                    data.isComplete.should.equal(true);
+                    done();
+                })
+        })
+        .catch((e) => {
+            done(e);
+        });
 });
 
 // it('#05. should error when create new data with overlimit qty and uom non "MTR"', function (done) {
