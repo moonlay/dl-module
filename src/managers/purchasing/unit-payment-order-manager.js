@@ -262,8 +262,28 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                 }
             };
 
+            var filterItem1 = {
+                items: {
+                    $elemMatch: {
+                        'unitReceiptNote.no': {
+                            '$regex': regex
+                        }
+                    }
+                }
+            };
+
+            var filterItem2 = {
+                items: {
+                    $elemMatch: {
+                        'unitReceiptNote.deliveryOrder.no': {
+                            '$regex': regex
+                        }
+                    }
+                }
+            };
+
             keywordFilter = {
-                '$or': [filterNo, filterSupplierName, filterUnitDivision, filterUnitSubDivision]
+                '$or': [filterNo, filterSupplierName, filterUnitDivision, filterUnitSubDivision, filterItem1, filterItem2]
             };
         }
         query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
@@ -671,7 +691,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                         break;
                                     }
                                 }
-                                if(!isPaid){
+                                if (!isPaid) {
                                     break;
                                 }
                             }
