@@ -291,9 +291,9 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                 errors["items"] = deliveryOrderItemErrors;
                         }
                     }
-                    else
-                        errors["items"] = i18n.__("DeliveryOrder.items.isRequired:%s is required", i18n.__("DeliveryOrder.items.name._:Items")); //"Harus ada minimal 1 nomor po eksternal";
-
+                    else {
+                        errors["items"] = [{ "purchaseOrderExternal": i18n.__("DeliveryOrder.items.isRequired:%s is required", i18n.__("DeliveryOrder.items.name._:Items")) }] //"Harus ada minimal 1 nomor po eksternal";
+                    }
 
                     // 2c. begin: check if data has any error, reject if it has.
                     if (Object.getOwnPropertyNames(errors).length > 0) {
