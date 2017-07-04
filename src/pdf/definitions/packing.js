@@ -8,10 +8,29 @@ module.exports = function (packing, offset) {
     // var number = packing.code;
     // var colorName = packing.colorName;
 
+    var orderType = (packing.orderType || "").toString().toLowerCase() === "printing" ? "Printing" : "Finishing";
+
     var locale = global.config.locale;
 
     var moment = require('moment');
     moment.locale(locale.name);
+
+    var footerStack = [];
+    var footerStackValue = [];
+    var footerStackDivide = [];    
+    if ((packing.orderType || "").toString().toLowerCase() === "solid") {
+        footerStack = ['Buyer', "Jenis Order", "Jenis Warna", 'Konstruksi', 'Tujuan'];
+        footerStackValue = [packing.buyer, packing.orderType, packing.colorType, packing.construction, packing.buyerLocation];
+        footerStackDivide = [':', ":", ":", ':', ':'];
+    } else if ((packing.orderType || "").toString().toLowerCase() === "printing") {
+        footerStack = ['Buyer', "Jenis Order", 'Konstruksi', 'Design/Motif', 'Tujuan'];
+        footerStackValue = [packing.buyer, packing.orderType, packing.construction, packing.designNumber ? `${packing.designNumber} - ${packing.designCode}` : "", packing.buyerLocation];
+        footerStackDivide = [':', ":", ":", ':', ':'];
+    } else {
+        footerStack = ['Buyer', "Jenis Order", 'Konstruksi', 'Tujuan'];
+        footerStackValue = [packing.buyer, packing.orderType, packing.construction, packing.buyerLocation];
+        footerStackDivide = [':', ":", ":", ':'];
+    }
 
     var header = [{
         columns: [{
@@ -71,7 +90,7 @@ module.exports = function (packing, offset) {
             width: '60%',
             columns: [{
                 width: '*',
-                stack: ['Kepada Yth. Bagian Penjualan ', 'Bersama ini kami kirimkan hasil produksi : Inspeksi Printing   '],
+                stack: ['Kepada Yth. Bagian Penjualan ', `Bersama ini kami kirimkan hasil produksi: Inspeksi ${orderType}`],
             }],
             style: ['size08']
         }
@@ -100,7 +119,7 @@ module.exports = function (packing, offset) {
             }
 
         ]
-    }];
+    }, "\n"];
 
     var thead = [{
         text: 'NO',
@@ -210,18 +229,18 @@ module.exports = function (packing, offset) {
         }
     }];
 
-    var footer = [{
+    var footer = ["\n", {
         stack: [{
             columns: [{
                 columns: [{
-                    width: '10%',
-                    stack: ['Buyer', 'Konstruksi', 'Design/Motif', 'Tujuan']
+                    width: '15%',
+                    stack: footerStack
                 }, {
-                        width: '3%',
-                        stack: [':', ':', ':', ':']
+                        width: '2%',
+                        stack: footerStackDivide
                     }, {
                         width: '*',
-                        stack: [packing.buyer, packing.construction, packing.motif ? packing.motif : " ", packing.buyerLocation]
+                        stack: footerStackValue
                     }]
             }]
         }

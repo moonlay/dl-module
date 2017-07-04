@@ -72,6 +72,40 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         ];
     }
 
+    getPrice(dateFrom, dateTo, productName) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+
+
+                    if (productName !== "undefined" && productName !== "") {
+                        Object.assign(query, {
+                            "items.product.name" : productName}
+                        );
+                    }
+
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        Object.assign(query, {
+                            date: {
+                                $gte: new Date(dateFrom),
+                                $lte: new Date(dateTo)
+                            }
+                        });
+                    }
+ 
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.aggregate([{"$unwind" : "$items"},{"$match" : query},{ $sort : { date : 1} }]).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
     _validate(purchaseOrder) {
         var errors = {};
         var valid = purchaseOrder;
@@ -604,6 +638,98 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         }, {
                             $group: {
                                 _id: "$unit.name",
+                                "pricetotal": {
+                                    $sum: {
+                                        $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                    }
+                                }
+                            }
+                        }]
+                )
+                    .toArray(function (err, result) {
+                        assert.equal(err, null);
+                        resolve(result);
+                    });
+            }
+        });
+    }
+
+    getDataPOSupplier(startdate, enddate) {
+        var validStartDate = startdate && startdate !== "" && startdate != "undefined" ? new Date(startdate) : new Date(null);
+        var validEndDate = enddate && enddate !== "" && enddate != "undefined" ? new Date(enddate) : new Date();
+
+        return new Promise((resolve, reject) => {
+            this.collection.aggregate(
+                [{
+                    $match: {
+                        $and: [{
+                            $and: [{
+                                "date": {
+                                    $gte: validStartDate,
+                                    $lte: validEndDate
+                                }
+                            }, {
+                                    "_deleted": false
+                                }
+
+                            ]
+                        }, {
+                                "purchaseOrderExternal.isPosted": true
+                            }]
+
+                    }
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: "$supplier",
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                }
+                            }
+                        }
+                    }]
+            )
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }
+
+    getDataPOSplDetil(startdate, enddate,supplierId) {
+        var validStartDate = startdate && startdate !== "" && startdate != "undefined" ? new Date(startdate) : new Date(null);
+        var validEndDate = enddate && enddate !== "" && enddate != "undefined" ? new Date(enddate) : new Date();
+
+        return new Promise((resolve, reject) => {
+            {
+                this.collection.aggregate(
+                    [{
+                        $match: {
+                            $and: [{
+                                $and: [{
+                                    $and: [{
+                                        "date": {
+                                           $gte: validStartDate,
+                                           $lte: validEndDate
+
+                                        }
+                                    }, {
+                                            "_deleted": false
+                                        }]
+                                }, {
+                                        "purchaseOrderExternal.isPosted": true
+                                    }]
+                            }, {
+                                    "supplier._id": new ObjectId(supplierId)
+                                }]
+                        }
+                    }, {
+                            $unwind: "$items"
+                        }, {
+                            $group: {
+                                _id: "$purchaseOrderExternal.no",
                                 "pricetotal": {
                                     $sum: {
                                         $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
@@ -1267,7 +1393,44 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         });
     }
 
+    getPrice(dateFrom, dateTo, productName) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+
+
+                    if (productName !== "undefined" && productName !== "") {
+                        Object.assign(query, {
+                            "items.product.name" : productName}
+                        );
+                    }
+
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        Object.assign(query, {
+                            date: {
+                                $gte: new Date(dateFrom),
+                                $lte: new Date(dateTo)
+                            }
+                        });
+                    }
+ 
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.aggregate([{"$unwind" : "$items"},{"$match" : query},{ $sort : { date : 1} }]).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
+
+ 
     getXlsDurationPOEksDoData(result, query) {
+
         var xls = {};
         xls.data = [];
         xls.options = [];

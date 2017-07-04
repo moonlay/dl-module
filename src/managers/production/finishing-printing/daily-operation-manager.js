@@ -17,6 +17,7 @@ module.exports = class DailyOperationManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.production.finishingPrinting.collection.DailyOperation);
+        this.kanbanCollection = this.db.use(map.production.finishingPrinting.collection.Kanban);
         this.stepManager = new StepManager(db, user);
         this.machineManager = new MachineManager(db, user);
         this.kanbanManager = new KanbanManager(db, user);
@@ -444,7 +445,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 tempKanban.currentStepIndex+=1;
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
-                                this.kanbanManager.update(tempKanban)
+                                this.kanbanCollection.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
                                     })
@@ -478,7 +479,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 tempKanban.currentQty = daily.goodOutput;
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
-                                this.kanbanManager.update(tempKanban)
+                                this.kanbanCollection.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
                                     })
@@ -546,7 +547,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                                     kanban.goodOutput=0;
                                                     kanban.badOutput=0;
                                                 }
-                                                this.kanbanManager.update(kanban)
+                                                this.kanbanCollection.update(kanban)
                                                     .then(kanbanId =>{
                                                         resolve(id);
                                                     })
@@ -693,6 +694,61 @@ module.exports = class DailyOperationManager extends BaseManager {
                 });
         });
     }
+
+
+
+getDailyOperationBadReport(query){
+        return new Promise((resolve, reject) => {
+           
+            var date = {
+                "dateOutput" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                },
+                "_deleted" : false
+            };
+            // var kanbanQuery = {};
+            // if(query.kanban)
+            // {
+            //     kanbanQuery = {
+            //         "kanbanId" : new ObjectId(query.kanban)
+            //     };
+            // }
+            // var machineQuery = {};
+            // if(query.machine)
+            // {
+            //     machineQuery = {
+            //         "machineId" : new ObjectId(query.machine)
+            //     };
+            // }
+           
+
+            //  var order = {
+            //     "kanban.productionOrder.orderNo" : 1
+            // };
+            // var QueryOutput = {"$and" : [date, machineQuery]};
+            
+        this.collection.aggregate([ 
+                {"$match" : date},       
+           
+                             {
+                    "$group" : {
+                        //"_id" : {"orderNo" : "$kanban.productionOrder.orderNo"},
+                        "_id" : {"machine" : "$machine.name", "orderNo" : "$kanban.productionOrder.orderNo"},
+                        "badOutput" : {"$sum" : { $ifNull: [ "$badOutput", 0 ] }},
+                        "goodOutput" : {"$sum" : { $ifNull: [ "$goodOutput", 0 ] }}
+                     
+                    }
+                }
+             ])
+
+            .toArray()
+            .then(result => {
+                resolve(result);
+            });
+        });
+    }
+
 
     getDataDaily(query){
         return this._createIndexes()

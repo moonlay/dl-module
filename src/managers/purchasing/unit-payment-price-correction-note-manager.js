@@ -22,6 +22,33 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
     }
 
+getDataKoreksiHarga(query){
+        return new Promise((resolve, reject) => {
+           
+            var date = {
+                "date" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                },
+                "_deleted" : false,
+                // "correctionType" :"Harga Satuan"
+                // "correctionType":"Harga Total"
+  
+                "correctionType":{$ne:"Jumlah"}
+               
+            };
+           
+        this.collection.aggregate([ 
+                {"$match" : date},{"$unwind" :"$items"}
+               
+             ])
+    
+            .toArray()
+            .then(result => {
+                resolve(result);
+            });
+        });
+    }
     _validate(unitPaymentQuantityCorrectionNote) {
         var errors = {};
         return new Promise((resolve, reject) => {
