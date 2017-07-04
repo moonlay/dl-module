@@ -317,7 +317,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    getDataPRMonitoring(unitId, categoryId, budgetId, PRNo, dateFrom, dateTo, state, createdBy) {
+    getDataPRMonitoring(unitId, categoryId, budgetId, PRNo, dateFrom, dateTo, state, offset, createdBy) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -350,10 +350,14 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         });
                     }
                     if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        var _dateFrom = new Date(dateFrom);
+                        var _dateTo = new Date(dateTo);
+                        _dateFrom.setHours(_dateFrom.getHours() - offset);
+                        _dateTo.setHours(_dateTo.getHours() - offset);
                         Object.assign(query, {
                             date: {
-                                $gte: new Date(dateFrom),
-                                $lte: new Date(dateTo)
+                                $gte: _dateFrom,
+                                $lte: _dateTo
                             }
                         });
                     }
@@ -378,7 +382,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    getDataPRMonitoringAllUser(unitId, categoryId, budgetId, PRNo, dateFrom, dateTo, state) {
+    getDataPRMonitoringAllUser(unitId, categoryId, budgetId, PRNo, dateFrom, dateTo, state, offset) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -411,10 +415,14 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         });
                     }
                     if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        var _dateFrom = new Date(dateFrom);
+                        var _dateTo = new Date(dateTo);
+                        _dateFrom.setHours(_dateFrom.getHours() - offset);
+                        _dateTo.setHours(_dateTo.getHours() - offset);
                         Object.assign(query, {
                             date: {
-                                $gte: new Date(dateFrom),
-                                $lte: new Date(dateTo)
+                                $gte: _dateFrom,
+                                $lte: _dateTo
                             }
                         });
                     }
