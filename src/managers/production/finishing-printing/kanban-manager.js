@@ -344,4 +344,19 @@ module.exports = class KanbanManager extends BaseManager {
                 })
         });
     }
+
+    updateIsComplete(id) {
+        var now = new Date();
+        var ticks = ((now.getTime() * 10000) + 621355968000000000);
+
+        var data = {
+            'isComplete': true,
+            '_stamp': ticks.toString(16),
+            '_updatedBy': this.user.username,
+            '_updatedDate': now,
+            '_updateAgent': 'manager'
+        };
+        
+        return this.collection.findOneAndUpdate({_id: new ObjectId(id)}, {$set: data});
+    }
 };
