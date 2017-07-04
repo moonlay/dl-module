@@ -291,9 +291,9 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                 errors["items"] = deliveryOrderItemErrors;
                         }
                     }
-                    else {
-                        errors["items"] = [{ "purchaseOrderExternal": i18n.__("DeliveryOrder.items.isRequired:%s is required", i18n.__("DeliveryOrder.items.name._:Items")) }] //"Harus ada minimal 1 nomor po eksternal";
-                    }
+                    else
+                        errors["items"] = i18n.__("DeliveryOrder.items.isRequired:%s is required", i18n.__("DeliveryOrder.items.name._:Items")); //"Harus ada minimal 1 nomor po eksternal";
+
 
                     // 2c. begin: check if data has any error, reject if it has.
                     if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -937,7 +937,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             });
     }
 
-    getDataDeliveryOrder(no, supplierId, dateFrom, dateTo, createdBy) {
+    getDataDeliveryOrder(no, supplierId, dateFrom, dateTo, offset, createdBy) {
         return new Promise((resolve, reject) => {
             var query = Object.assign({});
 
@@ -956,10 +956,15 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 Object.assign(query, _supplierId);
             }
             if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                var _dateFrom = new Date(dateFrom);
+                var _dateTo = new Date(dateTo);
+                _dateFrom.setHours(_dateFrom.getHours() - offset);
+                _dateTo.setHours(_dateTo.getHours() - offset);
+
                 var supplierDoDate = {
                     supplierDoDate: {
-                        $gte: new Date(dateFrom),
-                        $lte: new Date(dateTo)
+                        $gte: _dateFrom,
+                        $lte: _dateTo
                     }
                 };
                 Object.assign(query, supplierDoDate);
