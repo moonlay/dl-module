@@ -579,16 +579,16 @@ module.exports = class ProductionOrderManager extends BaseManager {
             var getPrdOrder = [];
             getPrdOrder.push(this.collection
                 .aggregate([
-                    { $unwind: "$details" },
                     { $match: qry },
+                    { $unwind: "$details" },
                     { $group: { _id: null, count: { $sum: 1 } } }
                 ])
                 .toArray());
             if ((query.accept || '').toString().indexOf("application/xls") < 0) {
                 getPrdOrder.push(this.collection
                     .aggregate([
-                        { $unwind: "$details" },
                         { $match: qry },
+                        { $unwind: "$details" },
                         {
                             $project: {
                                 "salesContractNo": 1,
@@ -619,8 +619,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
             } else {
                 getPrdOrder.push(this.collection
                     .aggregate([
-                        { $unwind: "$details" },
                         { $match: qry },
+                        { $unwind: "$details" },
                         {
                             $project: {
                                 "salesContractNo": 1,
