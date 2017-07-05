@@ -323,33 +323,33 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 return new Promise((resolve, reject) => {
                     var query = Object.assign({});
 
-                    if (state !== -1) {
+                    if (state !== -1 && state !== undefined) {
                         Object.assign(query, {
                             "status.value": state
                         });
                     }
 
-                    if (unitId !== "undefined" && unitId !== "") {
+                    if (unitId !== "undefined" && unitId !== "" && unitId !== undefined) {
                         Object.assign(query, {
                             unitId: new ObjectId(unitId)
                         });
                     }
-                    if (categoryId !== "undefined" && categoryId !== "") {
+                    if (categoryId !== "undefined" && categoryId !== "" && categoryId !== undefined) {
                         Object.assign(query, {
                             categoryId: new ObjectId(categoryId)
                         });
                     }
-                    if (budgetId !== "undefined" && budgetId !== "") {
+                    if (budgetId !== "undefined" && budgetId !== "" && budgetId !== undefined) {
                         Object.assign(query, {
                             budgetId: new ObjectId(budgetId)
                         });
                     }
-                    if (PRNo !== "undefined" && PRNo !== "") {
+                    if (PRNo !== "undefined" && PRNo !== "" && PRNo !== undefined) {
                         Object.assign(query, {
                             "no": PRNo
                         });
                     }
-                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateFrom !== undefined && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null" && dateTo !== undefined) {
                         var _dateFrom = new Date(dateFrom);
                         var _dateTo = new Date(dateTo);
                         _dateFrom.setHours(_dateFrom.getHours() - offset);
