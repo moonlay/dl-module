@@ -799,7 +799,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    getUnitReceiptNotes(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, createdBy) {
+    getUnitReceiptNotes(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, offset,  createdBy) {
         return new Promise((resolve, reject) => {
             var query = Object.assign({});
 
@@ -828,10 +828,15 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 Object.assign(query, supplierId);
             }
             if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
+                var dateFrom = new Date(_dateFrom);
+                var dateTo = new Date(_dateTo);
+                dateFrom.setHours(dateFrom.getHours() - offset);
+                dateTo.setHours(dateTo.getHours() - offset);
+
                 var date = {
                     date: {
-                        $gte: new Date(_dateFrom),
-                        $lte: new Date(_dateTo)
+                        $gte: dateFrom,
+                        $lte: dateTo
                     }
                 };
                 Object.assign(query, date);
@@ -855,16 +860,21 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    getUnitReceiptWithoutSpb(_dateFrom, _dateTo) {
+    getUnitReceiptWithoutSpb(_dateFrom, _dateTo, offset) {
         return new Promise((resolve, reject) => {
             var query = Object.assign({});                      
             var deleted = { _deleted: false };
                      
             if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
+                var dateFrom = new Date(_dateFrom);
+                var dateTo = new Date(_dateTo);
+                dateFrom.setHours(dateFrom.getHours() - offset);
+                dateTo.setHours(dateTo.getHours() - offset);
+
                 var date = {
                     date: {
-                        $gte: new Date(_dateFrom),
-                        $lte: new Date(_dateTo)
+                        $gte: dateFrom,
+                        $lte: dateTo
                     }
                 };
                 Object.assign(query, date);
