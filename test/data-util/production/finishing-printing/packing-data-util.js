@@ -33,14 +33,15 @@ class PackingDataUtil {
                         length: 120,
                         quantity: 6,
                         remark: "6 PCS @20 Meters"
-                    }, {
-                        lot: "LOT01",
-                        grade: "B",
-                        weight: 0,
-                        length: 120,
-                        quantity: 4,
-                        remark: "4 PCS @30 Meters"
-                    }]
+                     },// {
+                    //     lot: "LOT01",
+                    //     grade: "B",
+                    //     weight: 0,
+                    //     length: 120,
+                    //     quantity: 4,
+                    //     remark: "4 PCS @30 Meters"
+                    // }
+                    ]
                 };
 
                 return data;
@@ -70,14 +71,16 @@ class PackingDataUtil {
                         length: 0,
                         quantity: 0,
                         remark: ""
-                    }, {
-                        lot: "a",
-                        grade: "",
-                        weight: 0,
-                        length: 0,
-                        quantity: 0,
-                        remark: ""
-                    }]
+                    },
+                    // {
+                    //     lot: "a",
+                    //     grade: "",
+                    //     weight: 0,
+                    //     length: 0,
+                    //     quantity: 0,
+                    //     remark: ""
+                    // }
+                    ]
                 };
 
                 return data;
