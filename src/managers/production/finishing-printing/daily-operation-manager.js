@@ -832,8 +832,15 @@ getDailyOperationBadReport(query){
             key: {
                 _updatedDate: -1
             }
-        }
+        };
+        
+        var deletedIndex = {
+            name: `ix_${map.production.finishingPrinting.collection.DailyOperation}__deleted`,
+            key: {
+                _deleted: 1
+            }
+        };
 
-        return this.collection.createIndexes([dateIndex]);
+        return this.collection.createIndexes([dateIndex, deletedIndex]);
     }
 };
