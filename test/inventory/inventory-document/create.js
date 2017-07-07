@@ -23,7 +23,7 @@ it("#01. should success when create new data using status OUT", function (done) 
     inventoryDocumentDataUtil.getNewData()
         .then((data) => {
             data.type = "OUT";
-            inventoryDocumentManager.create(data)})
+           return inventoryDocumentManager.create(data)})
         .then((id) => {
             id.should.be.Object();
             done();
@@ -37,7 +37,7 @@ it("#02. should success when create new data using status ADJ", function (done) 
     inventoryDocumentDataUtil.getNewData()
         .then((data) => {
             data.type = "ADJ";
-            inventoryDocumentManager.create(data)})
+            return inventoryDocumentManager.create(data)})
         .then((id) => {
             id.should.be.Object();
             done();
