@@ -25,10 +25,6 @@ it('#01. should success when create 5 new data', function (done) {
             purchaseRequest = pr;
             PurchaseRequest.getPostedData()
         })
-        .then(pr => PurchaseRequest.getPostedData())
-        .then(pr => PurchaseRequest.getPostedData())
-        .then(pr => PurchaseRequest.getPostedData())
-        .then(pr => PurchaseRequest.getPostedData())
         .then(pr => {
             done()
         })
