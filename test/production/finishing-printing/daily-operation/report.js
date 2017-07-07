@@ -186,20 +186,7 @@ it("#10. should success when get report with date parameter", function(done) {
 });
 
 
-it("#11. should success when get report with machine parameter", function(done) {
-    dailyOperationManager.getDailyOperationBadReport({"machine" : dataDaily.machineId})
-        .then((item) => {
-            var daily = item.data;
-            daily.should.instanceof(Array);
-            daily.length.should.not.equal(0);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-
-it("#12. should success when destroy all unit test data", function(done) {
+it("#11. should success when destroy all unit test data", function(done) {
     dailyOperationManager.destroy(dailyOutput._id)
         .then((result) => {
             dailyOperationManager.destroy(dataDaily._id)
