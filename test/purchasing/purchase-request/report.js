@@ -25,10 +25,6 @@ it('#01. should success when create 5 new data', function (done) {
             purchaseRequest = pr;
             PurchaseRequest.getPostedData()
         })
-        .then(pr => PurchaseRequest.getPostedData())
-        .then(pr => PurchaseRequest.getPostedData())
-        .then(pr => PurchaseRequest.getPostedData())
-        .then(pr => PurchaseRequest.getPostedData())
         .then(pr => {
             done()
         })
@@ -48,7 +44,7 @@ it('#02. should success when get data report PR Without Parameter', function (do
 
 });
 
-it('#02. should success when get data report PR using Parameter', function (done) {
+it('#03. should success when get data report PR using Parameter', function (done) {
     purchaseRequestManager.getDataPRMonitoring(purchaseRequest.unitId, purchaseRequest.categoryId, purchaseRequest.budgetId, purchaseRequest.no, new Date(), new Date(), 2, 7, "dev")
     .then(pr => {
         pr.should.instanceof(Array);

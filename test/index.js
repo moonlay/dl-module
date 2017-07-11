@@ -49,6 +49,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/LOT-MACHINE', './master/lot-machine');
     test('@MASTER/MACHINE', './master/machine');
     test('@MASTER/PRODUCT', './master/product');
+    test('@MASTER/GARMENT-PRODUCT', './master/garment-product');
     test('@MASTER/SUPPLIER', './master/supplier');
     test('@MASTER/THREAD-SPECIFICATION', './master/thread-specification');
     test('@MASTER/UNIT', './master/unit');
