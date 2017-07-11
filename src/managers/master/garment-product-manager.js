@@ -136,7 +136,7 @@ module.exports = class GarmentProductManager extends BaseManager {
 
     insert(dataFile) {
         return new Promise((resolve, reject) => {
-            var product, uom, currency;
+            var product, uoms, currencies;
             this.getProduct()
                 .then(results => {
                     this.uomManager.getUOM()
@@ -198,68 +198,45 @@ module.exports = class GarmentProductManager extends BaseManager {
                                         }
                                         // var flagUom = false;
                                         var _uom = uoms.find(uom => uom.unit === data[i]["uom"])
-                                        if (_uom) {
-                                            data[i]["uom"] = _uom;
-                                        } else {
+                                        if (!_uom) {
                                             errorMessage = errorMessage + "Satuan tidak terdaftar di Master Satuan, ";
                                         }
-                                        // for (var j = 0; j < uom.length; j++) {
-                                        //     if (uom[j]["unit"] === data[i]["uom"]) {
-                                        //         flagUom = true;
-                                        //         break;
-                                        //     }
-                                        // }
 
-                                        // if (flagUom === false) {
-                                        //     errorMessage = errorMessage + "Satuan tidak terdaftar di Master Satuan, ";
-                                        // }
-
-                                        // var flagCurrency = false;
-                                        // for (var j = 0; j < currency.length; j++) {
-                                        //     if (currency[j]["code"] === data[i]["currency"]) {
-                                        //         flagCurrency = true;
-                                        //         break;
-                                        //     }
-                                        // }
-                                        // if (flagCurrency === false) {
-                                        //     errorMessage = errorMessage + "Mata Uang tidak terdaftar di Master Mata Uang";
-                                        // }
-
-                                        var _currency = currencies.find(currency => currency.unit === data[i]["currency"])
-                                        if (_currency) {
-                                            data[i]["currency"] = _currency;
-                                        } else {
+                                        var _currency = currencies.find(currency => currency.code === data[i]["currency"])
+                                        if (!_currency) {
                                             errorMessage = errorMessage + "Mata Uang tidak terdaftar di Master Mata Uang";
                                         }
 
                                         if (errorMessage !== "") {
                                             dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "Error": errorMessage });
+                                        } else {
+                                            data[i]["currency"] = _currency;
+                                            data[i]["uom"] = _uom;
                                         }
                                     }
                                     if (dataError.length === 0) {
                                         var newProduct = [];
                                         for (var i = 0; i < data.length; i++) {
                                             var valid = new Product(data[i]);
-                                            if (data[i]["uom"] == uom[j]["unit"] && data[i]["currency"] == currency[c]["code"]) {
-                                                valid.currency.rate = Number(valid.currency.rate);
-                                                valid.price = Number(valid.price);
-                                                valid.uomId = new ObjectId(valid.uom._id);
-                                                valid.stamp(this.user.username, 'manager');
-                                                this.collection.insert(valid)
-                                                    .then(id => {
-                                                        this.getSingleById(id)
-                                                            .then(resultItem => {
-                                                                newProduct.push(resultItem)
-                                                                resolve(newProduct);
-                                                            })
-                                                            .catch(e => {
-                                                                reject(e);
-                                                            });
-                                                    })
-                                                    .catch(e => {
-                                                        reject(e);
-                                                    });
-                                            }
+                                            valid.currency.rate = Number(valid.currency.rate);
+                                            valid.price = Number(valid.price);
+                                            valid.uomId = new ObjectId(valid.uom._id);
+                                            valid.stamp(this.user.username, 'manager');
+                                            this.collection.insert(valid)
+                                                .then(id => {
+                                                    this.getSingleById(id)
+                                                        .then(resultItem => {
+                                                            newProduct.push(resultItem)
+                                                            resolve(newProduct);
+                                                        })
+                                                        .catch(e => {
+                                                            reject(e);
+                                                        });
+                                                })
+                                                .catch(e => {
+                                                    reject(e);
+                                                });
+
                                         }
                                     } else {
                                         resolve(dataError);

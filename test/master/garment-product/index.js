@@ -10,3 +10,6 @@ describe("READ SCENARIOS", function() {
     require("./read-by-id");
 });
 
+describe("UPLOAD SCENARIOS", function() {
+    require("./upload");
+});
