@@ -163,11 +163,25 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
 
                     if (valid.items) {
                         if (valid.items.length <= 0) {
-                            errors["items"] = i18n.__("UnitPaymentOrder.items.isRequired:%s is required", i18n.__("UnitPaymentOrder.items._:Item")); //"Harus ada minimal 1 barang";
+                            errors["items"] = [{ "unitReceiptNote": i18n.__("UnitPaymentOrder.unitReceiptNote.isRequired:%s is required", i18n.__("UnitPaymentOrder.unitReceiptNote._:Unit Receipt Note")) }]
+                        } else {
+                            var errItems = []
+                            var isEror = false;
+                            for (var item of valid.items) {
+                                if (!item.unitReceiptNote._id) {
+                                    isEror = true;
+                                    errItems.push({ "unitReceiptNote": i18n.__("UnitPaymentOrder.unitReceiptNote.isRequired:%s is required", i18n.__("UnitPaymentOrder.unitReceiptNote._:Unit Receipt Note")) })
+                                } else {
+                                    errItems.push({})
+                                }
+                            }
+                            if (errItems.length > 0 && isEror) {
+                                errors["items"] = errItems
+                            }
                         }
                     }
                     else {
-                        errors["items"] = i18n.__("UnitPaymentOrder.items.isRequired:%s is required", i18n.__("UnitPaymentOrder.items._:Item")); //"Harus ada minimal 1 barang";
+                        errors["items"] = [{ "unitReceiptNote": i18n.__("UnitPaymentOrder.unitReceiptNote.isRequired:%s is required", i18n.__("UnitPaymentOrder.unitReceiptNote._:Unit Receipt Note")) }]
                     }
 
                     if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -671,7 +685,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                         break;
                                     }
                                 }
-                                if(!isPaid){
+                                if (!isPaid) {
                                     break;
                                 }
                             }
