@@ -21,7 +21,7 @@ class PurchaseRequestDataUtil {
                 var uom = results[5];
 
                 var data = {
-                    no: `UT/PR/${codeGenerator()}`,
+                    no: `UT/PR//GARMENT${codeGenerator()}`,
                     refNo: "UT/PR/GARMENT",
                     roNo: "UT/RO/PR/GARMENT",
                     buyer: "UT/BUYER1",
