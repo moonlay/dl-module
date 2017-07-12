@@ -1,7 +1,7 @@
 var say = require('../../utils/say');
 var global = require('../../global');
 
-module.exports = function (unitPaymentOrder) {
+module.exports = function (unitPaymentOrder, offset) {
 
     var items = unitPaymentOrder.items.map(unitPaymentOrderItem => {
         return unitPaymentOrderItem.unitReceiptNote.items.map(receiptNoteItem => {
@@ -78,7 +78,7 @@ module.exports = function (unitPaymentOrder) {
                         style: ['size08']
                     }, {
                             alignment: "left",
-                            text: 'SUKOHARJO, ' + `${moment(unitPaymentOrder.date).format(locale.date.format)}`,
+                            text: 'SUKOHARJO, ' + `${moment(unitPaymentOrder.date).add(offset,'h').format(locale.date.format)}`,
                             style: ['size08']
                         }, {
                             alignment: "left",
@@ -360,7 +360,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: moment(unitPaymentOrder.dueDate).format(locale.date.format)
+                                    text: moment(unitPaymentOrder.dueDate).add(offset,'h').format(locale.date.format)
                                 }]
                         }, {
                             columns: [{
@@ -373,7 +373,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.invoceNo + ', ' + moment(unitPaymentOrder.invoceDate).format(locale.date.format) || '-'
+                                    text: unitPaymentOrder.invoceNo + ', ' + moment(unitPaymentOrder.invoceDate).add(offset,'h').format(locale.date.format) || '-'
                                 }]
                         }, {
                             columns: [{
@@ -408,7 +408,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: moment(maxReceiptNoteDate).format(locale.date.format)
+                                    text: moment(maxReceiptNoteDate).add(offset,'h').format(locale.date.format)
                                 }]
                         }, {
                             columns: [{
