@@ -579,16 +579,16 @@ module.exports = class ProductionOrderManager extends BaseManager {
             var getPrdOrder = [];
             getPrdOrder.push(this.collection
                 .aggregate([
-                    { $unwind: "$details" },
                     { $match: qry },
+                    { $unwind: "$details" },
                     { $group: { _id: null, count: { $sum: 1 } } }
                 ])
                 .toArray());
             if ((query.accept || '').toString().indexOf("application/xls") < 0) {
                 getPrdOrder.push(this.collection
                     .aggregate([
-                        { $unwind: "$details" },
                         { $match: qry },
+                        { $unwind: "$details" },
                         {
                             $project: {
                                 "salesContractNo": 1,
@@ -619,8 +619,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
             } else {
                 getPrdOrder.push(this.collection
                     .aggregate([
-                        { $unwind: "$details" },
                         { $match: qry },
+                        { $unwind: "$details" },
                         {
                             $project: {
                                 "salesContractNo": 1,
@@ -786,8 +786,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
             this.collection
                 .aggregate([
-                    { $unwind: "$details" },
                     { $match: qry },
+                    { $unwind: "$details" },
                     {
                         $group: {
                             "_id": "$orderNo",
@@ -828,16 +828,17 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     for (var prodOrder of _prodOrders) {
                         jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
                             {
-                                $unwind: "$kanban.instruction.steps"
-                            },
-                            {
                                 $match: {
                                     "type": "input",
                                     "_deleted": false,
                                     // "kanban.selectedProductionOrderDetail.code": prodOrder.colorCode,
                                     "kanban.productionOrder.orderNo": prodOrder.orderNo
                                 }
-                            }, {
+                            },
+                            {
+                                $unwind: "$kanban.instruction.steps"
+                            },
+                            {
                                 $project:
                                 {
                                     "orderNo": "$kanban.productionOrder.orderNo",
@@ -886,14 +887,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         var _dailyOperations = this.removeDuplicates(dailyOperations, filters);
                         for (var dailyOperation of _dailyOperations) {
                             jobsGetQC.push(this.fabricQualityControlCollection.aggregate([
-                                { $unwind: "$fabricGradeTests" },
                                 {
                                     $match: {
                                         "_deleted": false,
                                         "productionOrderNo": dailyOperation.orderNo,
                                         "kanbanCode": dailyOperation.kanbanCode
                                     }
-                                }, {
+                                },
+                                { $unwind: "$fabricGradeTests" },
+                                {
                                     $group:
                                     {
                                         "_id": "$fabricGradeTests.grade",

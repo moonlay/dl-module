@@ -14,28 +14,29 @@ describe('#dl-module', function (done) {
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
     //Etl
-    test('@ETL/DIM-BUYER', './etl/dim-buyer');
-    test('@ETL/DIM-CATEGORY', './etl/dim-category');
-    test('@ETL/DIM-DIVISION', './etl/dim-division');
-    test('@ETL/DIM-SUPPLIER', './etl/dim-supplier');
-    test('@ETL/DIM-MACHINE', './etl/dim-machine');
-    test('@ETL/DIM-UNIT', './etl/dim-unit');
-    test('@ETL/DIM-PROCESS-TYPE', './etl/dim-process-type');
-    test('@ETL/DIM-ORDER-TYPE', './etl/dim-order-type');
-    test('@ETL/DIM-PRODUCT', './etl/dim-product');
-    test('@ETL/DIM-STORAGE', './etl/dim-storage');
-    test('@ETL/FACT-TOTAL-HUTANG', './etl/fact-total-hutang');
-    test('@ETL/FACT-PURCHASING', './etl/fact-purchasing');
-    test('@ETL/FACT-MONITORING-EVENT', './etl/fact-monitoring-event');
-    test('@ETL/FACT-PRODUCTION-ORDER', './etl/fact-production-order');
-    test('@ETL/FACT-PRODUCTION-ORDER-STATUS', './etl/fact-production-order-status');
-    test('@ETL/FACT-WEAVING-SALES-CONTRACT', './etl/fact-weaving-sales-contract');
-    test('@ETL/FACT-FINISHING-PRINTING-SALES-CONTRACT', './etl/fact-finishing-printing-sales-contract');
-    test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/fact-spinning-sales-contract');
-    test('@ETL/FACT-DAILY-OPERATIONS', './etl/fact-daily-operations');
-    test('@ETL/FACT-QUALITY-CONTROL', './etl/fact-fabric-quality-control');
-    test('@ETL/FACT-INVENTORY-MOVEMENT', './etl/fact-inventory-movement');
-    test('@ETL/FACT-INVENTORY-SUMMARY', './etl/fact-inventory-summary');
+    test('@ETL/DIM-BUYER', './etl/dim/dim-buyer');
+    test('@ETL/DIM-CATEGORY', './etl/dim/dim-category');
+    test('@ETL/DIM-DIVISION', './etl/dim/dim-division');
+    test('@ETL/DIM-SUPPLIER', './etl/dim/dim-supplier');
+    test('@ETL/DIM-MACHINE', './etl/dim/dim-machine');
+    test('@ETL/DIM-UNIT', './etl/dim/dim-unit');
+    test('@ETL/DIM-PROCESS-TYPE', './etl/dim/dim-process-type');
+    test('@ETL/DIM-ORDER-TYPE', './etl/dim/dim-order-type');
+    test('@ETL/DIM-PRODUCT', './etl/dim/dim-product');
+    test('@ETL/DIM-STORAGE', './etl/dim/dim-storage');
+    test('@ETL/FACT-TOTAL-HUTANG', './etl/purchasing/fact-total-hutang');
+    test('@ETL/FACT-PURCHASING', './etl/purchasing/fact-purchasing');
+    test('@ETL/FACT-MONITORING-EVENT', './etl/production/fact-monitoring-event');
+    test('@ETL/FACT-PRODUCTION-ORDER', './etl/production/fact-production-order');
+    test('@ETL/FACT-PRODUCTION-ORDER-STATUS', './etl/sales/fact-production-order-status');
+    test('@ETL/FACT-WEAVING-SALES-CONTRACT', './etl/sales/fact-weaving-sales-contract');
+    test('@ETL/FACT-FINISHING-PRINTING-SALES-CONTRACT', './etl/sales/fact-finishing-printing-sales-contract');
+    test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/sales/fact-spinning-sales-contract');
+    test('@ETL/FACT-DAILY-OPERATIONS', './etl/production/fact-daily-operations');
+    test('@ETL/FACT-KANBAN', './etl/production/fact-kanban');
+    test('@ETL/FACT-QUALITY-CONTROL', './etl/production/fact-fabric-quality-control');
+    test('@ETL/FACT-INVENTORY-MOVEMENT', './etl/inventory/fact-inventory-movement');
+    test('@ETL/FACT-INVENTORY-SUMMARY', './etl/inventory/fact-inventory-summary');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
@@ -48,6 +49,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/LOT-MACHINE', './master/lot-machine');
     test('@MASTER/MACHINE', './master/machine');
     test('@MASTER/PRODUCT', './master/product');
+    test('@MASTER/GARMENT-PRODUCT', './master/garment-product');
     test('@MASTER/SUPPLIER', './master/supplier');
     test('@MASTER/THREAD-SPECIFICATION', './master/thread-specification');
     test('@MASTER/UNIT', './master/unit');
@@ -73,6 +75,8 @@ describe('#dl-module', function (done) {
     test('@MASTER/TERM OF PAYMENT', './master/term-of-payment');
     test('@MASTER/DESIGN-MOTIVE', './master/design-motive');
     test('@MASTER/STORAGE', './master/storage');
+    test('@MASTER/COMPANY', './master/company');
+    test('@MASTER/CONTACT', './master/contact');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');

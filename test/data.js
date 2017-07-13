@@ -20,8 +20,9 @@ module.exports = {
         machineEvent: require('./data-util/master/machine-event-data-util'),
         comodity: require('./data-util/master/comodity-data-util'),
         quality: require('./data-util/master/quality-data-util'),
-        termOfPayment: require('./data-util/master/term-of-payment-data-util')
-
+        termOfPayment: require('./data-util/master/term-of-payment-data-util'),
+        company: require('./data-util/master/company-data-util'),
+        contact: require('./data-util/master/contact-data-util')
     },
     purchasing:{
         purchaseRequest: require('./data-util/purchasing/purchase-request-data-util'),
