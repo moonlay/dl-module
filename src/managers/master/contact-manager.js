@@ -73,10 +73,10 @@ module.exports = class ContactManager extends BaseManager {
                 }
 
                 if (!valid.firstName || valid.firstName == '')
-                    errors["firstName"] = i18n.__("Contact.firstName.isRequired:%s is required", i18n.__("Contact.firstName._:Name")); //"Nama Depan Harus diisi";
+                    errors["firstName"] = i18n.__("Contact.firstName.isRequired:%s is required", i18n.__("Contact.firstName._:First name")); //"Nama Depan harus diisi";
                 
                 if (!_company)
-                    errors["company"] = i18n.__("Contact.company.notFound:%s not found", i18n.__("Contact.company._:Instruction")); //"Perusahaan tidak ditemukan";
+                    errors["company"] = i18n.__("Contact.company.notFound:%s not found", i18n.__("Contact.company._:Company")); //"Perusahaan tidak ditemukan";
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
