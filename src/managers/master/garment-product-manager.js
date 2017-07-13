@@ -149,6 +149,10 @@ module.exports = class GarmentProductManager extends BaseManager {
                                     var data = [];
                                     if (dataFile != "") {
                                         for (var i = 1; i < dataFile.length; i++) {
+                                            var properties = [];
+                                            properties.push(dataFile[i][7].trim())
+                                            properties.push(dataFile[i][8].trim())
+                                            properties.push(dataFile[i][9].trim())
                                             data.push({
                                                 "code": dataFile[i][0].trim(),
                                                 "name": dataFile[i][1].trim(),
@@ -156,7 +160,8 @@ module.exports = class GarmentProductManager extends BaseManager {
                                                 "currency": dataFile[i][3].trim(),
                                                 "price": dataFile[i][4],
                                                 "tags": dataFile[i][5].trim(),
-                                                "description": dataFile[i][6].trim()
+                                                "description": dataFile[i][6].trim(),
+                                                "properties": properties
                                             });
                                         }
                                     }
