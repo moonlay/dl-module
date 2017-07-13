@@ -87,8 +87,11 @@ describe('#dl-module', function (done) {
     test('@PURCHASING/UNIT PAYMENT ORDER', './purchasing/unit-payment-order');
     test('@PURCHASING/UNIT PAYMENT PRICE CORRECTION', './purchasing/unit-payment-price-correction-note');
     test('@PURCHASING/UNIT PAYMENT QUANTITY CORRECTION', './purchasing/unit-payment-quantity-correction-note');
-     test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');
+    test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');
     test('@purchasing/purchase-order/report', './purchasing/duration-report');
+
+    //Garmet Purchasing 
+    test('@GARMENT PURCHASING/PURCHASE REQUEST', './garment-purchasing/purchase-request');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');

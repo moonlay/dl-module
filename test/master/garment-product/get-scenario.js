@@ -4,7 +4,7 @@ var should = require('should');
 var helper = require("../../helper");
 var ProductManager = require("../../../src/managers/master/garment-product-manager");
 var productManager = null;
-var dataUtil = require("../../data-util/master/product-data-util");
+var dataUtil = require("../../data-util/master/garment-product-data-util");
 var validate = require("dl-models").validator.master.product;
 
 before('#00. connect db', function (done) {

@@ -3,7 +3,7 @@ var should = require('should');
 var helper = require("../../helper");
 var ProductManager = require("../../../src/managers/master/garment-product-manager");
 var productManager = null;
-var dataUtil = require("../../data-util/master/product-data-util");
+var dataUtil = require("../../data-util/master/garment-product-data-util");
 var validate = require("dl-models").validator.master.product;
 var ObjectId = require("mongodb").ObjectId;
 
@@ -30,6 +30,9 @@ it(`#01. should success when insert data upload`, function (done) {
     data.push("Harga");
     data.push("Tags");
     data.push("Keterangan");
+    data.push("Const");
+    data.push("Yarn");
+    data.push("Width");
     dataAll.push(data);
     data = [];
 
@@ -40,6 +43,9 @@ it(`#01. should success when insert data upload`, function (done) {
     data.push("3757.5");
     data.push("");
     data.push("");
+    data.push("78X48");
+    data.push("75DX100D");
+    data.push("48");
     dataAll.push(data);
     data = [];
 
@@ -50,6 +56,9 @@ it(`#01. should success when insert data upload`, function (done) {
     data.push("32445");
     data.push("");
     data.push("");
+    data.push("78X48");
+    data.push("75DX100D");
+    data.push("48");
     dataAll.push(data);
     data = [];
 
@@ -73,6 +82,9 @@ it(`#02. should error when insert duplicate data upload`, function (done) {
     data.push("Harga");
     data.push("Tags");
     data.push("Keterangan");
+    data.push("Const");
+    data.push("Yarn");
+    data.push("Width");
     dataAll.push(data);
     data = [];
 
@@ -83,6 +95,9 @@ it(`#02. should error when insert duplicate data upload`, function (done) {
     data.push("3757.5");
     data.push("");
     data.push("");
+    data.push("78X48");
+    data.push("75DX100D");
+    data.push("48");
     dataAll.push(data);
     dataAll.push(data);
     data = [];
@@ -107,6 +122,9 @@ it(`#02. should error when insert data upload using unregister uom and currency`
     data.push("Harga");
     data.push("Tags");
     data.push("Keterangan");
+    data.push("Const");
+    data.push("Yarn");
+    data.push("Width");
     dataAll.push(data);
     data = [];
 
@@ -117,6 +135,9 @@ it(`#02. should error when insert data upload using unregister uom and currency`
     data.push("3757.5");
     data.push("");
     data.push("");
+    data.push("78X48");
+    data.push("75DX100D");
+    data.push("48");
     dataAll.push(data);
     dataAll.push(data);
     data = [];
