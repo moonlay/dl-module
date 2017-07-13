@@ -352,7 +352,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 return new Promise((resolve, reject) => {
                     var query = Object.assign({});
 
-                    if (state !== -1 && state !== undefined) {
+                    if (state !== -1 && state !== "undefined" && state !== undefined) {
                         Object.assign(query, {
                             "status.value": state
                         });
