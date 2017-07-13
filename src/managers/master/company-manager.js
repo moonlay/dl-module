@@ -43,29 +43,16 @@ module.exports = class CompanyManager extends BaseManager {
 
     _beforeInsert(data) {
         data.code = generateCode();
-    
+
         return Promise.resolve(data);
     }
 
     _validate(company) {
         var errors = {};
         var valid = company;
-        // 1. begin: Declare promises.
-        var getCompanyPromise = this.collection.singleOrDefault({
-            _id: {
-                "$ne": new ObjectId(valid._id)
-            },
-            code: valid.code
-        });
-        // 2. begin: Validation.
-        return Promise.all([getCompanyPromise])
+       
+        return Promise.all([])
             .then(results => {
-                var _duplicateCompany = results[0];
-
-                if (_duplicateCompany) {
-                    errors["code"] = i18n.__("Company.code.isExists:%s is already exists", i18n.__("Company.code._:Code")); //"Kode sudah ada";
-                }
-
                 if (!valid.name || valid.name == '')
                     errors["name"] = i18n.__("Company.name.isRequired:%s is required", i18n.__("Company.name._:Name")); //"Nama Harus diisi";
 
@@ -73,14 +60,14 @@ module.exports = class CompanyManager extends BaseManager {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
                 }
-                
+
                 if (!valid.stamp) {
                     valid = new Company(valid);
                 }
-               
+
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
-            });
+        });
     }
 
     _createIndexes() {

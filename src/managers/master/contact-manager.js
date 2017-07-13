@@ -52,31 +52,20 @@ module.exports = class ContactManager extends BaseManager {
     _validate(contact) {
         var errors = {};
         var valid = contact;
-        // 1. begin: Declare promises.
-        var getContactPromise = this.collection.singleOrDefault({
-            _id: {
-                "$ne": new ObjectId(valid._id)
-            },
-            code: valid.code
-        });
 
         var getCompany = valid.company && ObjectId.isValid(valid.company._id) ? this.companyManager.getSingleByIdOrDefault(valid.company._id) : Promise.resolve(null);
 
-        // 2. begin: Validation.
-        return Promise.all([getContactPromise, getCompany])
+        return Promise.all([getCompany])
             .then(results => {
-                var _duplicateContact = results[0];
-                var _company = results[1];
-
-                if (_duplicateContact) {
-                    errors["code"] = i18n.__("Contact.code.isExists:%s is already exists", i18n.__("Contact.code._:Code")); //"Kode sudah ada";
-                }
+                var _company = results[0];
 
                 if (!valid.firstName || valid.firstName == '')
-                    errors["firstName"] = i18n.__("Contact.firstName.isRequired:%s is required", i18n.__("Contact.firstName._:Name")); //"Nama Depan Harus diisi";
+                    errors["firstName"] = i18n.__("Contact.firstName.isRequired:%s is required", i18n.__("Contact.firstName._:First name")); //"Nama depan harus diisi";
                 
-                if (!_company)
-                    errors["company"] = i18n.__("Contact.company.notFound:%s not found", i18n.__("Contact.company._:Instruction")); //"Perusahaan tidak ditemukan";
+                if (!valid.company || valid.company == '')
+                    errors["company"] = i18n.__("Contact.company.isRequired:%s is required", i18n.__("Contact.company._:Company")); //"Perusahaan harus diisi";
+                else if (!_company)
+                    errors["company"] = i18n.__("Contact.company.notFound:%s not found", i18n.__("Contact.company._:Company")); //"Perusahaan tidak ditemukan";
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
