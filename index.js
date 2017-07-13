@@ -155,27 +155,37 @@ module.exports = {
         }
     },
     etl: {
-        factPembelian: require("./src/etl/fact-pembelian"),
-        factTotalHutang: require("./src/etl/fact-total-hutang-etl-manager"),
-        dimCategory: require("./src/etl/dim-category-etl-manager"),
-        dimDivision: require("./src/etl/dim-division-etl-manager"),
-        dimBuyer: require("./src/etl/dim-buyer-etl-manager"),
-        dimOrderType: require("./src/etl/dim-order-type-etl-manager"),
-        dimProcessType: require("./src/etl/dim-process-type-etl-manager"),
-        dimSupplier: require("./src/etl/dim-supplier-etl-manager"),
-        dimUnit: require("./src/etl/dim-unit-etl-manager"),
-        dimMachine: require("./src/etl/dim-machine-etl-manager"),
-        dimStorage: require("./src/etl/dim-storage-etl-manager"),
-        dimProduct: require("./src/etl/dim-product-etl-manager"),
-        factMonitoringEvent: require("./src/etl/fact-monitoring-event-etl-manager"),
-        factProductionOrder: require("./src/etl/fact-production-order-etl-manager"),
-        factWeavingSalesContract: require("./src/etl/fact-weaving-sales-contract-etl-manager"),
-        factFinishingPrintingSalesContract: require("./src/etl/fact-finishing-printing-sales-contract-etl-manager"),
-        factSpinningSalesContract: require("./src/etl/fact-spinning-sales-contract-etl-manager"),
-        factDailyOperations: require("./src/etl/fact-daily-operations-etl-manager"),
-        factFabricQualityControl: require("./src/etl/fact-fabric-quality-control-etl-manager"),
-        factProductionOrderStatus: require("./src/etl/fact-production-order-status-etl-manager"),
-        factInventoryMovement: require("./src/etl/fact-inventory-movement-etl-manager"),
-        factInventorySummary: require("./src/etl/fact-inventory-summary-etl-manager")
+        dim: {
+            dimCategory: require("./src/etl/dim/dim-category-etl-manager"),
+            dimDivision: require("./src/etl/dim/dim-division-etl-manager"),
+            dimBuyer: require("./src/etl/dim/dim-buyer-etl-manager"),
+            dimOrderType: require("./src/etl/dim/dim-order-type-etl-manager"),
+            dimProcessType: require("./src/etl/dim/dim-process-type-etl-manager"),
+            dimSupplier: require("./src/etl/dim/dim-supplier-etl-manager"),
+            dimUnit: require("./src/etl/dim/dim-unit-etl-manager"),
+            dimMachine: require("./src/etl/dim/dim-machine-etl-manager"),
+            dimStorage: require("./src/etl/dim/dim-storage-etl-manager"),
+            dimProduct: require("./src/etl/dim/dim-product-etl-manager")
+        },
+        inventory: {
+            factInventoryMovement: require("./src/etl/inventory/fact-inventory-movement-etl-manager"),
+            factInventorySummary: require("./src/etl/inventory/fact-inventory-summary-etl-manager")
+        },
+        production: {
+            factMonitoringEvent: require("./src/etl/production/fact-monitoring-event-etl-manager"),
+            factProductionOrder: require("./src/etl/production/fact-production-order-etl-manager"),
+            factDailyOperations: require("./src/etl/production/fact-daily-operations-etl-manager"),
+            factFabricQualityControl: require("./src/etl/production/fact-fabric-quality-control-etl-manager")
+        },
+        purchasing: {
+            factPembelian: require("./src/etl/purchasing/fact-pembelian"),
+            factTotalHutang: require("./src/etl/purchasing/fact-total-hutang-etl-manager")
+        },
+        sales: {
+            factWeavingSalesContract: require("./src/etl/sales/fact-weaving-sales-contract-etl-manager"),
+            factFinishingPrintingSalesContract: require("./src/etl/sales/fact-finishing-printing-sales-contract-etl-manager"),
+            factSpinningSalesContract: require("./src/etl/sales/fact-spinning-sales-contract-etl-manager"),
+            factProductionOrderStatus: require("./src/etl/sales/fact-production-order-status-etl-manager")
+        }
     }
 }

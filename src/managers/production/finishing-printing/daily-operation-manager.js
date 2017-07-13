@@ -715,31 +715,32 @@ getDailyOperationBadReport(query){
             //     };
             // }
             // var machineQuery = {};
-            // if(query.machine)
-            // {
-            //     machineQuery = {
-            //         "machineId" : new ObjectId(query.machine)
-            //     };
-            // }
+            //  if(query.machine)
+            //  {
+            //      machineQuery = {
+            //          "machineId" : new ObjectId(query.machine)
+            //      };
+            //  }
            
 
             //  var order = {
             //     "kanban.productionOrder.orderNo" : 1
             // };
             // var QueryOutput = {"$and" : [date, machineQuery]};
-            
+    //var Qmatch = {"$and" : [date, machineQuery]};
         this.collection.aggregate([ 
-                {"$match" : date},       
-           
+                {"$match" : date },       
                              {
                     "$group" : {
                         //"_id" : {"orderNo" : "$kanban.productionOrder.orderNo"},
-                        "_id" : {"machine" : "$machine.name", "orderNo" : "$kanban.productionOrder.orderNo"},
+                        //"_id" : {"machine" : "$machine.name", "orderNo" : "$kanban.productionOrder.orderNo"},
+                        "_id" : {"machine" : "$machine.name"},
                         "badOutput" : {"$sum" : { $ifNull: [ "$badOutput", 0 ] }},
                         "goodOutput" : {"$sum" : { $ifNull: [ "$goodOutput", 0 ] }}
                      
                     }
-                }
+                },
+                { $sort : { "_id.machine": 1} }
              ])
 
             .toArray()
