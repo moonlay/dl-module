@@ -150,9 +150,15 @@ module.exports = class GarmentProductManager extends BaseManager {
                                     if (dataFile != "") {
                                         for (var i = 1; i < dataFile.length; i++) {
                                             var properties = [];
-                                            properties.push(dataFile[i][7].trim())
-                                            properties.push(dataFile[i][8].trim())
-                                            properties.push(dataFile[i][9].trim())
+                                            if (dataFile[i].length >= 8) {
+                                                properties.push(dataFile[i][7].trim())
+                                                if (dataFile[i].length >= 9) {
+                                                    properties.push(dataFile[i][8].trim())
+                                                    if (dataFile[i].length >= 10) {
+                                                        properties.push(dataFile[i][9].trim())
+                                                    }
+                                                }
+                                            }
                                             data.push({
                                                 "code": dataFile[i][0].trim(),
                                                 "name": dataFile[i][1].trim(),
@@ -213,7 +219,7 @@ module.exports = class GarmentProductManager extends BaseManager {
                                         }
 
                                         if (errorMessage !== "") {
-                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "Error": errorMessage });
+                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage });
                                         } else {
                                             data[i]["currency"] = _currency;
                                             data[i]["uom"] = _uom;
