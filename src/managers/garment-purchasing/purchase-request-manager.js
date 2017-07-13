@@ -8,7 +8,7 @@ var PurchaseRequest = DLModels.garmentPurchasing.GarmentPurchaseRequest;
 var BaseManager = require("module-toolkit").BaseManager;
 var UnitManager = require("../master/unit-manager");
 var CategoryManager = require("../master/category-manager");
-var ProductManager = require("../master/product-manager");
+var ProductManager = require("../master/garment-product-manager");
 var i18n = require("dl-i18n");
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
 
@@ -22,6 +22,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         this.categoryManager = new CategoryManager(db, user);
         this.productManager = new ProductManager(db, user);
     }
+    
     _validate(purchaseRequest) {
         var errors = {};
         var valid = purchaseRequest;

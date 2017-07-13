@@ -5,7 +5,7 @@ var codeGenerator = require("../../../src/utils/code-generator");
 
 var unit = require("../master/unit-data-util");
 var category = require("../master/category-data-util");
-var product = require("../master/product-data-util");
+var product = require("../master/garment-product-data-util");
 var budget = require("../master/budget-data-util");
 var uom = require("../master/uom-data-util");
 
@@ -33,6 +33,7 @@ class PurchaseRequestDataUtil {
                     unit: unit,
                     categoryId: category._id,
                     category: category,
+                    isPosted:true,
 
                     remark: "Unit Test",
                     items: [{
