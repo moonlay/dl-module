@@ -1,7 +1,7 @@
 require("should");
 var helper = require("../../helper");
 var validate = require("dl-models").validator.garmentPurchasing.garmentPurchaseRequest;
-var PurchaseRequestManager = require("../../../src/managers/garment-purchasing/garment-purchase-request-manager");
+var PurchaseRequestManager = require("../../../src/managers/garment-purchasing/purchase-request-manager");
 var purchaseRequestManager = null;
 var PurchaseRequest = require('../../data-util/garment-purchasing/purchase-request-data-util');
 

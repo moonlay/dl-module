@@ -59,7 +59,7 @@ module.exports = {
             UnitPaymentQuantityCorrectionNoteManager: require('./src/managers/purchasing/unit-payment-quantity-correction-note-manager')
         },
         garmentPurchasing: {
-            PurchaseRequestManager: require('./src/managers/garment-purchasing/garment-purchase-request-manager'),
+            PurchaseRequestManager: require('./src/managers/garment-purchasing/purchase-request-manager'),
         },
         production: {
             spinning: {
