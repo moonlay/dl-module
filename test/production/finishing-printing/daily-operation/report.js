@@ -185,6 +185,7 @@ it("#10. should success when get report with date parameter", function(done) {
         });
 });
 
+
 it("#11. should success when destroy all unit test data", function(done) {
     dailyOperationManager.destroy(dailyOutput._id)
         .then((result) => {
