@@ -51,7 +51,7 @@ class ProductDataUtil {
             .then((data) => {
                 data.code = "PRD-UT-01";
                 data.name = "Product Unit Test 01";
-                data.price = 1250; W
+                data.price = 1250; 
                 data.description = "Product untuk unit test";
                 data.tags = "#unit-test, #product";
 
