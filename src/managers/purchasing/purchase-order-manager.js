@@ -532,6 +532,82 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             });
     }
 
+    getDataPOIntMonitoring(unitId, categoryId, PODLNo, PRNo, supplierId, dateFrom, dateTo, state, budgetId, staffName, offset, createdBy) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+
+                    if (state !== -1) {
+                        Object.assign(query, {
+                            "status.value": state
+                        });
+                    }
+
+                    if (unitId !== "undefined" && unitId !== "") {
+                        Object.assign(query, {
+                            unitId: new ObjectId(unitId)
+                        });
+                    }
+                    if (categoryId !== "undefined" && categoryId !== "") {
+                        Object.assign(query, {
+                            categoryId: new ObjectId(categoryId)
+                        });
+                    }
+                    if (PODLNo !== "undefined" && PODLNo !== "") {
+                        Object.assign(query, {
+                            "purchaseOrderExternal.no": PODLNo
+                        });
+                    }
+                    if (PRNo !== "undefined" && PRNo !== "") {
+                        Object.assign(query, {
+                            "purchaseRequest.no": PRNo
+                        });
+                    }
+                    if (supplierId !== "undefined" && supplierId !== "") {
+                        Object.assign(query, {
+                            supplierId: new ObjectId(supplierId)
+                        });
+                    }
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        var _dateFrom = new Date(dateFrom);
+                        var _dateTo = new Date(dateTo);
+                        _dateFrom.setHours(_dateFrom.getHours() - offset);
+                        _dateTo.setHours(_dateTo.getHours() - offset);
+                        Object.assign(query, {
+                            date: {
+                                $gte: _dateFrom,
+                                $lte: _dateTo
+                            }
+                        });
+                    }
+                    /*if (createdBy !== undefined && createdBy !== "") {
+                        Object.assign(query, {
+                            _createdBy: createdBy
+                        });
+                    }
+                    if (staffName !== undefined && staffName !== "") {
+                        Object.assign(query, {
+                            _createdBy: staffName
+                        });
+                    }*/
+                    if (budgetId !== undefined && budgetId !== "undefined" && budgetId !== "") {
+                        Object.assign(query, {
+                            "purchaseRequest.budgetId": new ObjectId(budgetId)
+                        });
+                    }
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.find(query).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
     getDataPOUnit(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
