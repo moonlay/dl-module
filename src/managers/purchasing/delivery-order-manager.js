@@ -842,7 +842,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                             return prev + curr;
                                         }, 0);
                                     if (purchaseOrder.purchaseRequest.status.value !== 9) {
-                                        poItem.isClosed = poItem.realizationQuantity >= poItem.dealQuantity;
+                                        poItem.isClosed = false;
                                     }
                                 }
                             }

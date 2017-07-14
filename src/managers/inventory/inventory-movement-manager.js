@@ -31,8 +31,8 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -57,7 +57,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
     _beforeInsert(data) {
         data.code = generateCode();
-        
+
         return Promise.resolve(data);
     }
 
@@ -68,16 +68,16 @@ module.exports = class InventoryMovementManager extends BaseManager {
                     '$match': {
                         storageId: inventoryMovement.storageId,
                         productId: inventoryMovement.productId,
-                        uomId: inventoryMovement.uomId 
+                        uomId: inventoryMovement.uomId
                     }
                 }, {
-                    "$group": {
-                        _id: null,
-                        quantity: {
-                            '$sum': '$quantity'
+                        "$group": {
+                            _id: null,
+                            quantity: {
+                                '$sum': '$quantity'
+                            }
                         }
-                    }
-                }]).toArray().then(results => results[0]);
+                    }]).toArray().then(results => results[0]);
 
                 var getSummary = this.inventorySummaryManager.getSert(inventoryMovement.productId, inventoryMovement.storageId, inventoryMovement.uomId);
 
@@ -152,13 +152,18 @@ module.exports = class InventoryMovementManager extends BaseManager {
                 valid.uomId = _uom._id;
                 valid.uom = _uom.unit;
 
-                if(valid.type == "OUT") {
+                if (valid.type == "OUT") {
                     valid.quantity = valid.quantity * -1;
                 }
 
                 valid.before = _dbInventorySummary.quantity;
-                valid.after = _dbInventorySummary.quantity + valid.quantity;
 
+                if (valid.type == "ADJ") {
+                    valid.after = valid.quantity;
+                } else {
+                    valid.after = _dbInventorySummary.quantity + valid.quantity;
+                }
+                
                 if (!valid.stamp) {
                     valid = new InventoryMovementModel(valid);
                 }
@@ -202,7 +207,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
     getMovementReport(info) {
         var _defaultFilter = {
             _deleted: false
-        }, 
+        },
             query = {},
             order = info.order || {};
 
@@ -211,13 +216,13 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
         var filterMovement = {};
 
-        if(info.storageId)
+        if (info.storageId)
             filterMovement.storageId = new ObjectId(info.storageId);
 
-        if(info.type && info.type != "")
+        if (info.type && info.type != "")
             filterMovement.type = info.type;
 
-        if(info.productId)
+        if (info.productId)
             filterMovement.productId = new ObjectId(info.productId);
 
         filterMovement.date = {
@@ -240,7 +245,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
                         .order(order)
                         .execute();
             });
-                    
+
         return Promise.resolve(data);
     }
 
@@ -266,7 +271,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
             item["Kuantiti"] = movement.quantity ? movement.quantity : 0;
             item["After"] = movement.after ? movement.after : 0;
             item["Status"] = movement.type ? movement.type : '';
-            
+
             xls.data.push(item);
         }
 
@@ -277,8 +282,8 @@ module.exports = class InventoryMovementManager extends BaseManager {
         xls.options["UOM"] = "string";
         xls.options["Before"] = "number";
         xls.options["Kuantiti"] = "number";
-        xls.options["After"] = "number";        
-        xls.options["Status"] = "string";       
+        xls.options["After"] = "number";
+        xls.options["Status"] = "string";
 
         if (filter.dateFrom && filter.dateTo) {
             xls.name = `Inventory Movement ${moment(new Date(filter.dateFrom)).format(dateFormat)} - ${moment(new Date(filter.dateTo)).format(dateFormat)}.xlsx`;

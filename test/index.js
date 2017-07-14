@@ -49,6 +49,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/LOT-MACHINE', './master/lot-machine');
     test('@MASTER/MACHINE', './master/machine');
     test('@MASTER/PRODUCT', './master/product');
+    test('@MASTER/GARMENT-PRODUCT', './master/garment-product');
     test('@MASTER/SUPPLIER', './master/supplier');
     test('@MASTER/THREAD-SPECIFICATION', './master/thread-specification');
     test('@MASTER/UNIT', './master/unit');
@@ -74,6 +75,8 @@ describe('#dl-module', function (done) {
     test('@MASTER/TERM OF PAYMENT', './master/term-of-payment');
     test('@MASTER/DESIGN-MOTIVE', './master/design-motive');
     test('@MASTER/STORAGE', './master/storage');
+    test('@MASTER/COMPANY', './master/company');
+    test('@MASTER/CONTACT', './master/contact');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
