@@ -9,6 +9,7 @@ module.exports = {
             BuyerManager: require("./src/managers/master/buyer-manager"),
             SupplierManager: require("./src/managers/master/supplier-manager"),
             ProductManager: require("./src/managers/master/product-manager"),
+            GarmentProductManager: require("./src/managers/master/garment-product-manager"),
             CategoryManager: require('./src/managers/master/category-manager'),
             DivisionManager: require('./src/managers/master/division-manager'),
             UnitManager: require('./src/managers/master/unit-manager'),
@@ -37,7 +38,9 @@ module.exports = {
             QualityManager: require('./src/managers/master/quality-manager'),
             TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager'),
             DesignMotiveManager: require('./src/managers/master/design-motive-manager'),
-            StorageManager: require('./src/managers/master/storage-manager')
+            StorageManager: require('./src/managers/master/storage-manager'),
+            CompanyManager: require('./src/managers/master/company-manager'),
+            ContactManager: require('./src/managers/master/contact-manager')
         },
         inventory: {
             finishingPrinting: {
@@ -56,6 +59,9 @@ module.exports = {
             UnitPaymentPriceCorrectionNoteManager: require('./src/managers/purchasing/unit-payment-price-correction-note-manager'),
             UnitPaymentOrderManager: require('./src/managers/purchasing/unit-payment-order-manager'),
             UnitPaymentQuantityCorrectionNoteManager: require('./src/managers/purchasing/unit-payment-quantity-correction-note-manager')
+        },
+        garmentPurchasing: {
+            PurchaseRequestManager: require('./src/managers/garment-purchasing/purchase-request-manager'),
         },
         production: {
             spinning: {
@@ -120,7 +126,9 @@ module.exports = {
                 comodity: require('./test/data-util/master/comodity-data-util'),
                 quality: require('./test/data-util/master/quality-data-util'),
                 termOfPayment: require('./test/data-util/master/term-of-payment-data-util'),
-                designMotive: require('./test/data-util/master/design-motive-data-util')
+                designMotive: require('./test/data-util/master/design-motive-data-util'),
+                company: require('./test/data-util/master/company-data-util'),
+                contact: require('./test/data-util/master/contact-data-util')                
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util")

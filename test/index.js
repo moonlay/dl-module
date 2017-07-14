@@ -49,6 +49,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/LOT-MACHINE', './master/lot-machine');
     test('@MASTER/MACHINE', './master/machine');
     test('@MASTER/PRODUCT', './master/product');
+    test('@MASTER/GARMENT-PRODUCT', './master/garment-product');
     test('@MASTER/SUPPLIER', './master/supplier');
     test('@MASTER/THREAD-SPECIFICATION', './master/thread-specification');
     test('@MASTER/UNIT', './master/unit');
@@ -74,6 +75,8 @@ describe('#dl-module', function (done) {
     test('@MASTER/TERM OF PAYMENT', './master/term-of-payment');
     test('@MASTER/DESIGN-MOTIVE', './master/design-motive');
     test('@MASTER/STORAGE', './master/storage');
+    test('@MASTER/COMPANY', './master/company');
+    test('@MASTER/CONTACT', './master/contact');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
@@ -84,8 +87,11 @@ describe('#dl-module', function (done) {
     test('@PURCHASING/UNIT PAYMENT ORDER', './purchasing/unit-payment-order');
     test('@PURCHASING/UNIT PAYMENT PRICE CORRECTION', './purchasing/unit-payment-price-correction-note');
     test('@PURCHASING/UNIT PAYMENT QUANTITY CORRECTION', './purchasing/unit-payment-quantity-correction-note');
-     test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');
+    test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');
     test('@purchasing/purchase-order/report', './purchasing/duration-report');
+
+    //Garmet Purchasing 
+    test('@GARMENT PURCHASING/PURCHASE REQUEST', './garment-purchasing/purchase-request');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
