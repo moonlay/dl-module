@@ -9,6 +9,7 @@ var generateCode = require("../../../utils/code-generator");
 var ProductionOrderManager = require('../../sales/production-order-manager');
 var ProductManager = require('../../master/product-manager');
 var UomManager = require('../../master/uom-manager');
+var BuyerManager = require('../../master/buyer-manager');
 
 var Models = require("dl-models");
 var Map = Models.map;
@@ -26,6 +27,7 @@ module.exports = class PackingManager extends BaseManager {
         this.productionOrderManager = new ProductionOrderManager(db, user);
         this.productManager = new ProductManager(db, user);
         this.uomManager = new UomManager(db, user);
+        this.buyerManager = new BuyerManager(db, user);
 
     }
 
@@ -213,12 +215,14 @@ module.exports = class PackingManager extends BaseManager {
             code: valid.code
         });
         var getProductionOrder = valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(valid.productionOrderId) : Promise.resolve(null);
+        var getBuyer = valid.buyerId && ObjectId.isValid(valid.buyerId) ? this.buyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
 
-        return Promise.all([getDbPacking, getDuplicatePacking, getProductionOrder])
+        return Promise.all([getDbPacking, getDuplicatePacking, getProductionOrder, getBuyer])
             .then(results => {
                 var _dbPacking = results[0];
                 var _duplicatePacking = results[1];
                 var _productionOrder = results[2];
+                var _buyer = results[3];
 
                 if (_dbPacking)
                     valid.code = _dbPacking.code; // prevent code changes.
