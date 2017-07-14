@@ -38,12 +38,17 @@ module.exports = class ContactManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            var nameFilter = {
-                "name": {
+            var firstNameFilter = {
+                "firstName": {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [codeFilter, nameFilter];
+            var lastNameFilter = {
+                "lastName": {
+                    "$regex": regex
+                }
+            };
+            keywordFilter["$or"] = [codeFilter, firstNameFilter, lastNameFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
