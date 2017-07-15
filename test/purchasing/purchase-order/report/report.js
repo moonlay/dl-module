@@ -216,3 +216,17 @@ it('#11. should success when get data report History Price with date and product
         });
 
 });
+
+it('#12. should success when get data report PO Per Unit,Kategori with date', function (done) {
+   var dateFrom = null;
+   var dateTo   = null;
+   var unitId   = null;
+   var categoryId   = null;
+    purchaseOrderManager.getDataPOIntMonitoring(dateFrom, dateTo, unitId, categoryId)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+});
