@@ -792,13 +792,13 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             })
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
 
             this.getSingleById(id)
                 .then(unitPaymentOrder => {
                     var getDefinition = require('../../pdf/definitions/unit-payment-order');
-                    var definition = getDefinition(unitPaymentOrder);
+                    var definition = getDefinition(unitPaymentOrder, offset);
 
                     var generatePdf = require('../../pdf/pdf-generator');
                     generatePdf(definition)
