@@ -12,6 +12,11 @@ module.exports = function (packing, offset) {
 
     var locale = global.config.locale;
 
+    var buyerName = packing.buyerName ? packing.buyerName : "";
+    var colorType = packing.colorType ? packing.colorType : "";
+    var construction = packing.construction ? packing.construction : "";
+    var buyerAddress = packing.buyerAddress ? packing.buyerAddress : "";
+
     var moment = require('moment');
     moment.locale(locale.name);
 
@@ -20,15 +25,15 @@ module.exports = function (packing, offset) {
     var footerStackDivide = [];
     if ((packing.orderType || "").toString().toLowerCase() === "solid") {
         footerStack = ['Buyer', "Jenis Order", "Jenis Warna", 'Konstruksi', 'Tujuan'];
-        footerStackValue = [packing.buyerName, packing.orderType, packing.colorType, packing.construction, packing.buyerAddress];
+        footerStackValue = [buyerName, orderType, colorType, construction, buyerAddress];
         footerStackDivide = [':', ":", ":", ':', ':'];
     } else if ((packing.orderType || "").toString().toLowerCase() === "printing") {
         footerStack = ['Buyer', "Jenis Order", 'Konstruksi', 'Design/Motif', 'Tujuan'];
-        footerStackValue = [packing.buyerName, packing.orderType, packing.construction, packing.designNumber ? `${packing.designNumber} - ${packing.designCode}` : "", packing.buyerAddress];
+        footerStackValue = [buyerName, orderType, construction, packing.designNumber && packing.designCode ? `${packing.designNumber} - ${packing.designCode}` : "", buyerAddress];
         footerStackDivide = [':', ":", ":", ':', ':'];
     } else {
         footerStack = ['Buyer', "Jenis Order", 'Konstruksi', 'Tujuan'];
-        footerStackValue = [packing.buyerName, packing.orderType, packing.construction, packing.buyerAddress];
+        footerStackValue = [buyerName, orderType, construction, buyerAddress];
         footerStackDivide = [':', ":", ":", ':'];
     }
 
