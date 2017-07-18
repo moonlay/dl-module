@@ -169,7 +169,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                     valid.items[i].productId = _products[i]._id;
                 }
 
-                valid.buyer = _packing.buyer;
+                valid.buyer = _packing.buyerName;
                 valid.date = new Date(valid.date);
                 valid.productionOrderNo = _packing.productionOrderNo;
                 valid.colorName = _packing.colorName;
