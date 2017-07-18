@@ -46,7 +46,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             return ObjectId.isValid(item.productId) ? this.categoryManager.getSingleByIdOrDefault(new ObjectId(item.categoryId)) : Promise.resolve(null);
         });
 
-        return Promise.all([getCategories])
+        return Promise.all(getCategories)
             .then(_categories => {
                 return Promise.all([getPurchaseRequestPromise, getUnit].concat(getProducts))
                     .then(results => {
