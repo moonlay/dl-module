@@ -60,6 +60,9 @@ module.exports = {
             UnitPaymentOrderManager: require('./src/managers/purchasing/unit-payment-order-manager'),
             UnitPaymentQuantityCorrectionNoteManager: require('./src/managers/purchasing/unit-payment-quantity-correction-note-manager')
         },
+        garmentPurchasing: {
+            PurchaseRequestManager: require('./src/managers/garment-purchasing/purchase-request-manager'),
+        },
         production: {
             spinning: {
                 winding: {
