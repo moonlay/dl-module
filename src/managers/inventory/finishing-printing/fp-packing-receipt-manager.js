@@ -175,6 +175,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 valid.colorName = _packing.colorName;
                 valid.construction = _packing.construction;
                 valid.packingUom = _packing.packingUom;
+                valid.finishWidth = _packing.materialWidthFinish;
 
                 valid.orderType = _packing.orderType;
                 valid.colorType = _packing.colorType;
