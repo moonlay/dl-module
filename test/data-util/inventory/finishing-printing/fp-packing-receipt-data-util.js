@@ -18,7 +18,7 @@ class PackingReceiptDataUtil {
 
                 var packingItems = packing.items.map((packingItem) => {
                     return {
-                        product: `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`,
+                        product: `${packing.productionOrderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`,
                         quantity: packingItem.quantity,
                         remark: packingItem.remark,
                         notes: "TEST"
