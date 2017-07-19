@@ -26,8 +26,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     }
 
     run(table1, table2) {
-        //   run() {
-
         var startedDate = new Date()
 
         this.migrationLog.insert({
@@ -37,7 +35,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         })
 
         return new Promise((resolve, reject) => {
-            // this.extract()
             this.extract(table1, table2)
                 .then((data) => this.transform(data))
                 .then((data) => this.load(data))
@@ -72,7 +69,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     };
 
     extract(table1, table2) {
-        // extract() {
         return new Promise((resolve, reject) => {
             this.sql.startConnection()
                 .then(() => {
@@ -137,7 +133,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     transform(datas) {
         return new Promise((resolve, reject) => {
 
-            // if (datas) {
             var getUnit = this.getDataUnit();
             var getCategory = this.getDataCategory();
             var getProduct = this.getDataProduct();
