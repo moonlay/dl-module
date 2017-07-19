@@ -864,6 +864,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return new Promise((resolve, reject) => {
             var query = Object.assign({});                      
             var deleted = { _deleted: false };
+            
                      
             if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
                 var dateFrom = new Date(_dateFrom);
@@ -879,6 +880,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             }
             
             Object.assign(query, deleted);
+            
                      
             this.collection
                 .where(query)
