@@ -573,35 +573,78 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         });
     }
 
-    getDataPOSupplier(startdate, enddate) {
-        var validStartDate = startdate && startdate !== "" && startdate != "undefined" ? new Date(startdate) : new Date(null);
-        var validEndDate = enddate && enddate !== "" && enddate != "undefined" ? new Date(enddate) : new Date();
-
+    getDataPOSupplier(unit, category, supplier, startdate, enddate) {
         return new Promise((resolve, reject) => {
+            var now = new Date();
+            var deleted = {
+                _deleted: false
+            };
+            var isPosted = {
+                "purchaseOrderExternal.isPosted": true
+            };
+            var filterDate = {
+                "date": {
+                    $gte: new Date(startdate),
+                    $lte: new Date(enddate)
+                }
+            };
+
+            var filterDateFrom = {
+                "date": {
+                    $gte: new Date(startdate),
+                    $lte: now
+                }
+            };
+
+            var filterDateTo = {
+                "date": {
+                    $gte: now,
+                    $lte: new Date(enddate)
+                }
+            };
+
+            var filterUnit = {
+                "unit._id": new ObjectId(unit)
+            };
+
+            var filterCategory = {
+                "category._id": new ObjectId(category)
+            };
+
+            var filterSupplier = {
+                "supplier._id": new ObjectId(supplier)
+            };
+
+            var query = [deleted, isPosted];
+            if (unit) {
+                query.push(filterUnit);
+            }
+            if (category) {
+                query.push(filterCategory);
+            }
+            if (supplier) {
+                query.push(filterSupplier);
+            }
+            if (startdate && enddate) {
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                query.push(filterDateFrom);
+            }
+
+            var match = { '$and': query };
             this.collection.aggregate(
                 [{
-                    $match: {
-                        $and: [{
-                            $and: [{
-                                "date": {
-                                    $gte: validStartDate,
-                                    $lte: validEndDate
-                                }
-                            }, {
-                                    "_deleted": false
-                                }
+                    $match: match
 
-                            ]
-                        }, {
-                                "purchaseOrderExternal.isPosted": true
-                            }]
-
-                    }
                 }, {
                         $unwind: "$items"
                     }, {
                         $group: {
-                            _id: "$supplier",
+                            _id: { supplier: "$supplier.name", unit: "$unit.name", category: "$category.name" },
                             "pricetotal": {
                                 $sum: {
                                     $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
@@ -609,9 +652,10 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             }
                         }
                     }]
-            )
+            ).sort({ "_id": 1 })
                 .toArray(function (err, result) {
                     assert.equal(err, null);
+                    console.log(result);
                     resolve(result);
                 });
         });
