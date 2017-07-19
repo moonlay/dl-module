@@ -124,6 +124,8 @@ module.exports = class PackingManager extends BaseManager {
                                                         properties: {
                                                             productionOrderId: productionOrder._id,
                                                             productionOrderNo: productionOrder.orderNo,
+                                                            designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                            designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
                                                             orderType: productionOrder.orderType,
                                                             buyerId: packing.buyerId,
                                                             buyerName: packing.buyerName,
@@ -197,6 +199,8 @@ module.exports = class PackingManager extends BaseManager {
                                                             productionOrderId: productionOrder._id,
                                                             productionOrderNo: productionOrder.orderNo,
                                                             orderType: productionOrder.orderType,
+                                                            designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                            designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
                                                             buyerId: packing.buyerId,
                                                             buyerName: packing.buyerName,
                                                             buyerAddress: packing.buyerAddress,
