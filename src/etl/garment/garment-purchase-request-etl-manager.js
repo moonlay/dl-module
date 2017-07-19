@@ -26,6 +26,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     }
 
     run(table1, table2) {
+        //   run() {
 
         var startedDate = new Date()
 
@@ -36,6 +37,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         })
 
         return new Promise((resolve, reject) => {
+            // this.extract()
             this.extract(table1, table2)
                 .then((data) => this.transform(data))
                 .then((data) => this.load(data))
@@ -70,6 +72,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     };
 
     extract(table1, table2) {
+        // extract() {
         return new Promise((resolve, reject) => {
             this.sql.startConnection()
                 .then(() => {
@@ -79,7 +82,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
 
-                        var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from " + table1 + " as Budget inner join " + table2 + " as POrder On Budget.Po = POrder.Nopo";
+                        var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from " + table1.trim() + " as Budget inner join " + table2.trim() + " as POrder On Budget.Po = POrder.Nopo";
+                        // var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from Budget1 as Budget inner join POrder1 as POrder On Budget.Po = POrder.Nopo";
 
                         request.query(sqlQuery, function (err, result) {
                             resolve(result);
@@ -192,69 +196,67 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                     var items = [];
                     for (var data of datas) {
-                        if (uniq.Ro == "161001S" && data.Ro == "161001S") {
-                            if (uniq.Ro == data.Ro) {
+                        if (uniq.Ro == data.Ro) {
 
-                                for (var uom of _uom) {
+                            for (var uom of _uom) {
 
-                                    for (var product of _product) {
+                                for (var product of _product) {
 
-                                        for (var category of _category) {
+                                    for (var category of _category) {
 
-                                            if (data.Cat.trim() == category.code.trim() && data.Kodeb.trim() == product.code.trim() && data.Satb.trim() == uom.unit.trim()) {
+                                        if (data.Cat.trim() == category.code.trim() && data.Kodeb.trim() == product.code.trim() && data.Satb.trim() == uom.unit.trim()) {
 
-                                                var remark = (data.Ketr.trim() ? data.Ketr.trim() : "" + " " + data.Kett.trim() ? data.Kett.trim() : "") + " " + (data.Kett2.trim() ? data.Kett2.trim() : "") + " " + (data.Kett3.trim() ? data.Kett3.trim() : "") + " " + (data.Kett4.trim() ? data.Kett4.trim() : "") + " " + (data.Kett5.trim() ? data.Kett5.trim() : "");
+                                            var remark = (data.Ketr.trim() ? data.Ketr.trim() : "" + " " + data.Kett.trim() ? data.Kett.trim() : "") + " " + (data.Kett2.trim() ? data.Kett2.trim() : "") + " " + (data.Kett3.trim() ? data.Kett3.trim() : "") + " " + (data.Kett4.trim() ? data.Kett4.trim() : "") + " " + (data.Kett5.trim() ? data.Kett5.trim() : "");
 
-                                                var item = {
-                                                    _stamp: "",
-                                                    _type: "purchase-request-item",
-                                                    _version: "",
-                                                    _active: true,
-                                                    _deleted: false,
-                                                    _createdBy: "",
-                                                    _createdDate: "",
-                                                    createdAgent: "",
-                                                    updatedBy: "",
-                                                    _updatedDate: "",
-                                                    updatedAgent: "",
+                                            var item = {
+                                                _stamp: "",
+                                                _type: "purchase-request-item",
+                                                _version: "",
+                                                _active: true,
+                                                _deleted: false,
+                                                _createdBy: "",
+                                                _createdDate: "",
+                                                createdAgent: "",
+                                                updatedBy: "",
+                                                _updatedDate: "",
+                                                updatedAgent: "",
 
-                                                    productId: product._id,
-                                                    product: {
-                                                        _id: product._id,
-                                                        code: product.code,
-                                                        name: product.name,
-                                                        price: product.price,
-                                                        currency: product.currency,
-                                                        description: product.description,
-                                                        uomId: product.uomId,
-                                                        uom: product.uom,
-                                                        tags: product.tags,
-                                                        properties: product.properties,
-                                                    },
+                                                productId: product._id,
+                                                product: {
+                                                    _id: product._id,
+                                                    code: product.code,
+                                                    name: product.name,
+                                                    price: product.price,
+                                                    currency: product.currency,
+                                                    description: product.description,
+                                                    uomId: product.uomId,
+                                                    uom: product.uom,
+                                                    tags: product.tags,
+                                                    properties: product.properties,
+                                                },
 
-                                                    budgetPrice: data.Harga,
-                                                    quantity: data.Qty,
-                                                    deliveryOrderNos: [],
-                                                    remark: remark,
+                                                budgetPrice: data.Harga,
+                                                quantity: data.Qty,
+                                                deliveryOrderNos: [],
+                                                remark: remark,
 
-                                                    refNo: data.Nopo,
+                                                refNo: data.Nopo,
 
 
-                                                    uomId: uom._id,
-                                                    uom: {
-                                                        _id: uom._id,
-                                                        unit: uom.unit,
-                                                    },
+                                                uomId: uom._id,
+                                                uom: {
+                                                    _id: uom._id,
+                                                    unit: uom.unit,
+                                                },
 
-                                                    categoryId: category._id,
-                                                    category: {
-                                                        _id: category._id,
-                                                        code: category.code.trim(),
-                                                        name: category.name.trim(),
-                                                    },
-                                                }
-                                                items.push(item);
+                                                categoryId: category._id,
+                                                category: {
+                                                    _id: category._id,
+                                                    code: category.code.trim(),
+                                                    name: category.name.trim(),
+                                                },
                                             }
+                                            items.push(item);
                                         }
                                     }
                                 }
