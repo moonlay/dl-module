@@ -16,7 +16,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.GarmentPurchaseRequest = this.db.collection("garment-purchase-request");
+        this.GarmentPurchaseRequest = this.db.collection("garment-purchase-requests");
         this.migrationLog = this.db.collection("migration-log");
         this.unitManager = new UnitManager(db, user);
         this.uomManager = new UomManager(db, user);
@@ -25,7 +25,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         this.buyerManager = this.db.collection("garment-buyers");
     }
 
-    run() {
+    run(table1, table2) {
 
         var startedDate = new Date()
 
@@ -36,7 +36,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         })
 
         return new Promise((resolve, reject) => {
-            this.extract()
+            this.extract(table1, table2)
                 .then((data) => this.transform(data))
                 .then((data) => this.load(data))
                 .then((results) => {
@@ -50,26 +50,26 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         executionTime: spentTime + " minutes",
                         status: "Successful"
                     };
-                    this.migrationLog.updateOne({ start: startedDate }, updateLog);
-                    resolve(results);
+                    var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
+                    resolve(migrate);
                 })
-                .catch((err) => {
-                    var finishedDate = new Date();
-                    var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
-                    var updateLog = {
-                        code: "sql-gpr",
-                        description: "Sql to MongoDB: Garment-Purchase-Request",
-                        start: startedDate,
-                        finish: finishedDate,
-                        executionTime: spentTime + " minutes",
-                        status: err
-                    };
-                    this.migrationLog.updateOne({ start: startedDate }, updateLog);
-                });
+            // .catch((err) => {
+            //     var finishedDate = new Date();
+            //     var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+            //     var updateLog = {
+            //         code: "sql-gpr",
+            //         description: "Sql to MongoDB: Garment-Purchase-Request",
+            //         start: startedDate,
+            //         finish: finishedDate,
+            //         executionTime: spentTime + " minutes",
+            //         status: err
+            //     };
+            //     this.migrationLog.updateOne({ start: startedDate }, updateLog);
+            // });
         });
     };
 
-    extract() {
+    extract(table1, table2) {
         return new Promise((resolve, reject) => {
             this.sql.startConnection()
                 .then(() => {
@@ -79,7 +79,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
 
-                        var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,POrder.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from Budget1 as Budget inner join POrder1 as POrder On Budget.Po = POrder.Nopo";
+                        var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from " + table1 + " as Budget inner join " + table2 + " as POrder On Budget.Po = POrder.Nopo";
 
                         request.query(sqlQuery, function (err, result) {
                             resolve(result);
@@ -87,11 +87,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                     })
                 })
-                .catch((err) => {
-                    reject(err);
-                })
-        }).catch((err) => {
-            reject(err);
         })
     }
 
@@ -135,9 +130,10 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         });
     }
 
-
     transform(datas) {
         return new Promise((resolve, reject) => {
+
+            // if (datas) {
             var getUnit = this.getDataUnit();
             var getCategory = this.getDataCategory();
             var getProduct = this.getDataProduct();
@@ -150,8 +146,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 var _product = result[2];
                 var _buyer = result[3];
                 var _uom = result[4].data;
-
-                var transformData = [];
+                var transformData = []
 
                 //distinct extracted data
                 var distinctData = [];
@@ -166,7 +161,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         distinctData.push(unique);
                     }
                 }
-
 
                 //begin transform
                 for (var uniq of distinctData) {
@@ -196,144 +190,169 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var _updatedDatedate = uniq.Tgled.toString();
                     var _updatedDate = _updatedDatedate + ":" + _updatedDatehours + ":" + "" + _updatedDateminutes;
 
-                    //begin embed _unit
-                    for (var buyer of _buyer) {
+                    var items = [];
+                    for (var data of datas) {
+                        if (uniq.Ro == "161001S" && data.Ro == "161001S") {
+                            if (uniq.Ro == data.Ro) {
 
-                        for (var unit of _unit) {
+                                for (var uom of _uom) {
 
-                            if (unitCode == unit.code.trim() && uniq.Buyer.trim() == buyer.code.trim()) {
+                                    for (var product of _product) {
 
-                                var items = [];
-                                for (var data of datas) {
-                                    if (uniq.Ro == data.Ro) {
+                                        for (var category of _category) {
 
-                                        //begin embed _category,_product,_uom
-                                        for (var uom of _uom) {
+                                            if (data.Cat.trim() == category.code.trim() && data.Kodeb.trim() == product.code.trim() && data.Satb.trim() == uom.unit.trim()) {
 
-                                            for (var product of _product) {
+                                                var remark = (data.Ketr.trim() ? data.Ketr.trim() : "" + " " + data.Kett.trim() ? data.Kett.trim() : "") + " " + (data.Kett2.trim() ? data.Kett2.trim() : "") + " " + (data.Kett3.trim() ? data.Kett3.trim() : "") + " " + (data.Kett4.trim() ? data.Kett4.trim() : "") + " " + (data.Kett5.trim() ? data.Kett5.trim() : "");
 
-                                                for (var category of _category) {
+                                                var item = {
+                                                    _stamp: "",
+                                                    _type: "purchase-request-item",
+                                                    _version: "",
+                                                    _active: true,
+                                                    _deleted: false,
+                                                    _createdBy: "",
+                                                    _createdDate: "",
+                                                    createdAgent: "",
+                                                    updatedBy: "",
+                                                    _updatedDate: "",
+                                                    updatedAgent: "",
 
-                                                    if (data.Cat.trim() == category.code.trim() && data.Kodeb.trim() == product.code.trim() && data.Satb.trim() == uom.unit.trim()) {
+                                                    productId: product._id,
+                                                    product: {
+                                                        _id: product._id,
+                                                        code: product.code,
+                                                        name: product.name,
+                                                        price: product.price,
+                                                        currency: product.currency,
+                                                        description: product.description,
+                                                        uomId: product.uomId,
+                                                        uom: product.uom,
+                                                        tags: product.tags,
+                                                        properties: product.properties,
+                                                    },
 
-                                                        var remark = (data.Kett.trim() ? data.Kett.trim() : "") + " " + (data.Kett2.trim() ? data.Kett2.trim() : "") + " " + (data.Kett3.trim() ? data.Kett3.trim() : "") + " " + (data.Kett4.trim() ? data.Kett4.trim() : "") + " " + (data.Kett5.trim() ? data.Kett5.trim() : "");
+                                                    budgetPrice: data.Harga,
+                                                    quantity: data.Qty,
+                                                    deliveryOrderNos: [],
+                                                    remark: remark,
 
-                                                        var item = {
-                                                            _stamp: "",
-                                                            _type: "purchase-request-item",
-                                                            _version: "",
-                                                            _active: true,
-                                                            _deleted: false,
-                                                            _createdBy: "",
-                                                            _createdDate: "",
-                                                            createdAgent: "",
-                                                            updatedBy: "",
-                                                            _updatedDate: "",
-                                                            updatedAgent: "",
+                                                    refNo: data.Nopo,
 
-                                                            productId: product._id,
-                                                            product: product,
 
-                                                            budgetPrice: data.Harga,
-                                                            deliveryOrderNos: [],
-                                                            remark: remark,
+                                                    uomId: uom._id,
+                                                    uom: {
+                                                        _id: uom._id,
+                                                        unit: uom.unit,
+                                                    },
 
-                                                            uomId: uom._id,
-                                                            uom: {
-                                                                _id: uom._id,
-                                                                unit: uom.unit,
-                                                            },
-
-                                                            categoryId: category._id,
-                                                            category: {
-                                                                _id: category._id,
-                                                                code: category.code.trim(),
-                                                                name: category.name.trim(),
-                                                            },
-                                                        }
-
-                                                        item.product.name = product.name.trim() + " " + data.Ketr.trim(),
-
-                                                            items.push(item);
-
-                                                    }
+                                                    categoryId: category._id,
+                                                    category: {
+                                                        _id: category._id,
+                                                        code: category.code.trim(),
+                                                        name: category.name.trim(),
+                                                    },
                                                 }
-
+                                                items.push(item);
                                             }
                                         }
-
-                                        var map = {
-                                            _stamp: _stamp,
-                                            _type: "purchase request",
-                                            _version: "1.0.0",
-                                            _active: true,
-                                            _deleted: false,
-                                            _createdBy: uniq.Userin,
-                                            _createdDate: new Date(_createdDate),
-                                            _createAgent: "manager",
-                                            _updatedBy: uniq.Usered,
-                                            _updatedDate: new Date(_updatedDate),
-                                            _updateAgent: "manager",
-                                            no: code,
-                                            refNo: uniq.Nopo,
-                                            nomorRO: uniq.Ro,
-                                            artikel: uniq.Art,
-                                            shipmentDate: uniq.Shipment,
-                                            date: new Date(uniq.TgValid),
-                                            expectedDeliveryDate: "",
-
-                                            unitId: unit._id,
-                                            unit: unit,
-
-                                            buyerId: buyer._id,
-                                            buyer: buyer,
-
-                                            isPosted: true,
-                                            isUsed: false,
-                                            remark: "",
-                                            status: {
-                                                name: "POSTED",
-                                                value: 2,
-                                                label: "Belum diterima Pembelian",
-                                            },
-                                            purchaseOrderIds: [],
-
-                                        }
-
-                                        map.items = items;
-                                        transformData.push(map);
                                     }
                                 }
                             }
                         }
                     }
 
+                    for (var buyer of _buyer) {
 
+                        for (var unit of _unit) {
+
+                            if (unitCode == unit.code.trim() && uniq.Buyer.trim() == buyer.code.trim()) {
+
+                                var map = {
+                                    _stamp: _stamp,
+                                    _type: "purchase request",
+                                    _version: "1.0.0",
+                                    _active: true,
+                                    _deleted: false,
+                                    _createdBy: uniq.Userin,
+                                    _createdDate: new Date(_createdDate),
+                                    _createAgent: "manager",
+                                    _updatedBy: uniq.Usered,
+                                    _updatedDate: new Date(_updatedDate),
+                                    _updateAgent: "manager",
+                                    no: code,
+                                    nomorRO: uniq.Ro,
+                                    artikel: uniq.Art,
+                                    shipmentDate: uniq.Shipment,
+                                    date: new Date(uniq.TgValid),
+                                    expectedDeliveryDate: uniq.expectedDeliveryDate ? uniq.expectedDeliveryDate : "",
+
+                                    unitId: unit._id,
+                                    unit: {
+                                        _id: unit._id,
+                                        code: unit.code,
+                                        name: unit.name,
+                                        description: unit.description,
+                                        divisionId: unit.divisionId,
+                                        division: unit.division,
+
+
+                                    },
+
+                                    buyerId: buyer._id,
+                                    buyer: {
+                                        "_id": buyer._id,
+                                        "code": buyer.code,
+                                        "name": buyer.name,
+                                        "address": buyer.address,
+                                        "city": buyer.city,
+                                        "country": buyer.country,
+                                        "contact": buyer.contact,
+                                        "tempo": buyer.tempo,
+                                        "type": buyer.type,
+                                        "NPWP": buyer.NPWP,
+                                    },
+
+                                    isPosted: true,
+                                    isUsed: false,
+                                    remark: "",
+                                    status: {
+                                        name: "POSTED",
+                                        value: 2,
+                                        label: "Belum diterima Pembelian",
+                                    },
+                                    purchaseOrderIds: [],
+
+                                }
+
+                                map.items = items;
+                                transformData.push(map);
+
+                            }
+
+                        }
+                    }
 
                 }
-                resolve(transformData);
-
-            }).catch((err) => {
-                reject(err);
-            });
+                resolve(transformData)
+            })
 
         })
+
     }
 
     load(dataArr) {
         return new Promise((resolve, reject) => {
             var processed = [];
+
             for (var map of dataArr) {
-                var incidentId = this.GarmentPurchaseRequest.updateOne({ "nomorRO": map.nomorRO }, { $set: map }, { upsert: true });
-                processed.push(incidentId);
+                var process = this.GarmentPurchaseRequest.updateOne({ "nomorRO": map.nomorRO }, { $set: map }, { upsert: true });
+                processed.push(process);
             }
 
             Promise.all(processed).then((result) => {
                 resolve(result);
-            }).catch((err) => {
-                reject(err);
-            });
-
+            })
 
         });
     }
