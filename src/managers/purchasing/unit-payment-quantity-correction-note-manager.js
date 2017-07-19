@@ -23,6 +23,30 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         this.purchaseOrderExternalManager = new PurchaseOrderExternalManager(db, user);
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
     }
+    
+    getMonitoringKoreksi(query){
+        return new Promise((resolve, reject) => {
+           
+              var date = {
+                "date" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                },
+                "_deleted" : false,
+                "correctionType":"Jumlah"
+            };
+           
+        this.collection.aggregate([ 
+                {"$match" : date},{"$unwind" :"$items"}
+               
+             ])
+    
+            .toArray()
+            .then(result => {
+                resolve(result);
+            });
+        });
+    }
 
     _validate(unitPaymentQuantityCorrectionNote) {
         var errors = {};
@@ -115,6 +139,8 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                     valid.unitPaymentOrder = _unitPaymentOrder;
                     valid.correctionType = "Jumlah";
                     valid.date = new Date(valid.date);
+                    valid.useVat = _unitPaymentOrder.useVat;
+                    valid.useIncomeTax = _unitPaymentOrder.useIncomeTax;
 
                     if (valid.invoiceCorrectionDate) {
                         valid.invoiceCorrectionDate = new Date(valid.invoiceCorrectionDate);
@@ -316,12 +342,12 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                     fulfillment.correction = [];
                                 }
                                 var correctionQty = 0;
-                                // if (fulfillment.correction.length > 0) {
-                                //     var lastQty = fulfillment.correction[fulfillment.correction.length - 1].correctionQuantity;
-                                //     correctionQty = realization.quantity - lastQty;
-                                // } else {
-                                //     correctionQty = fulfillment.unitReceiptNoteDeliveredQuantity - realization.quantity;
-                                // }
+                                if (fulfillment.correction.length > 0) {
+                                    var lastQty = fulfillment.correction[fulfillment.correction.length - 1].correctionQuantity;
+                                    correctionQty = realization.quantity - lastQty;
+                                } else {
+                                    correctionQty = fulfillment.unitReceiptNoteDeliveredQuantity - realization.quantity;
+                                }
                                 correctionQty = realization.quantity * -1;
 
                                 _correction.correctionDate = unitPaymentPriceCorrectionNote.date;

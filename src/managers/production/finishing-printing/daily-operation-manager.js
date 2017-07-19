@@ -17,6 +17,7 @@ module.exports = class DailyOperationManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.production.finishingPrinting.collection.DailyOperation);
+        this.kanbanCollection = this.db.use(map.production.finishingPrinting.collection.Kanban);
         this.stepManager = new StepManager(db, user);
         this.machineManager = new MachineManager(db, user);
         this.kanbanManager = new KanbanManager(db, user);
@@ -440,11 +441,20 @@ module.exports = class DailyOperationManager extends BaseManager {
                         .then(kanban => {
                             if(daily.type === "output"){
                                 var tempKanban = kanban;
+
+                                var now = new Date();
+                                var ticks = ((now.getTime() * 10000) + 621355968000000000);
+                                
+                                tempKanban._stamp = ticks.toString(16);
+                                tempKanban._updatedBy = this.user.username;
+                                tempKanban._updatedDate = now;
+                                tempKanban._updateAgent = 'manager';
+
                                 tempKanban.currentQty = daily.goodOutput;
                                 tempKanban.currentStepIndex+=1;
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
-                                this.kanbanManager.update(tempKanban)
+                                this.kanbanCollection.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
                                     })
@@ -475,10 +485,19 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var tempKanban = kanban;
                                 var steps = tempKanban.instruction.steps.map(function (item) { return item.process });
                                 var idx = steps.indexOf(daily.step.process);
+
+                                var now = new Date();
+                                var ticks = ((now.getTime() * 10000) + 621355968000000000);
+                                
+                                tempKanban._stamp = ticks.toString(16);
+                                tempKanban._updatedBy = this.user.username;
+                                tempKanban._updatedDate = now;
+                                tempKanban._updateAgent = 'manager';
+
                                 tempKanban.currentQty = daily.goodOutput;
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
-                                this.kanbanManager.update(tempKanban)
+                                this.kanbanCollection.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
                                     })
@@ -546,7 +565,16 @@ module.exports = class DailyOperationManager extends BaseManager {
                                                     kanban.goodOutput=0;
                                                     kanban.badOutput=0;
                                                 }
-                                                this.kanbanManager.update(kanban)
+
+                                                var now = new Date();
+                                                var ticks = ((now.getTime() * 10000) + 621355968000000000);
+                                                
+                                                kanban._stamp = ticks.toString(16);
+                                                kanban._updatedBy = this.user.username;
+                                                kanban._updatedDate = now;
+                                                kanban._updateAgent = 'manager';
+                                                
+                                                this.kanbanCollection.update(kanban)
                                                     .then(kanbanId =>{
                                                         resolve(id);
                                                     })
@@ -694,6 +722,62 @@ module.exports = class DailyOperationManager extends BaseManager {
         });
     }
 
+
+
+getDailyOperationBadReport(query){
+        return new Promise((resolve, reject) => {
+           
+            var date = {
+                "dateOutput" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                },
+                "_deleted" : false
+            };
+            // var kanbanQuery = {};
+            // if(query.kanban)
+            // {
+            //     kanbanQuery = {
+            //         "kanbanId" : new ObjectId(query.kanban)
+            //     };
+            // }
+            // var machineQuery = {};
+            //  if(query.machine)
+            //  {
+            //      machineQuery = {
+            //          "machineId" : new ObjectId(query.machine)
+            //      };
+            //  }
+           
+
+            //  var order = {
+            //     "kanban.productionOrder.orderNo" : 1
+            // };
+            // var QueryOutput = {"$and" : [date, machineQuery]};
+    //var Qmatch = {"$and" : [date, machineQuery]};
+        this.collection.aggregate([ 
+                {"$match" : date },       
+                             {
+                    "$group" : {
+                        //"_id" : {"orderNo" : "$kanban.productionOrder.orderNo"},
+                        //"_id" : {"machine" : "$machine.name", "orderNo" : "$kanban.productionOrder.orderNo"},
+                        "_id" : {"machine" : "$machine.name"},
+                        "badOutput" : {"$sum" : { $ifNull: [ "$badOutput", 0 ] }},
+                        "goodOutput" : {"$sum" : { $ifNull: [ "$goodOutput", 0 ] }}
+                     
+                    }
+                },
+                { $sort : { "_id.machine": 1} }
+             ])
+
+            .toArray()
+            .then(result => {
+                resolve(result);
+            });
+        });
+    }
+
+
     getDataDaily(query){
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -776,8 +860,15 @@ module.exports = class DailyOperationManager extends BaseManager {
             key: {
                 _updatedDate: -1
             }
-        }
+        };
+        
+        var deletedIndex = {
+            name: `ix_${map.production.finishingPrinting.collection.DailyOperation}__deleted`,
+            key: {
+                _deleted: 1
+            }
+        };
 
-        return this.collection.createIndexes([dateIndex]);
+        return this.collection.createIndexes([dateIndex, deletedIndex]);
     }
 };

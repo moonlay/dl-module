@@ -34,6 +34,53 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         this.vatManager = new VatManager(db, user);
         this.supplierManager = new SupplierManager(db, user);
         this.productManager = new ProductManager(db, user);
+        this.purchaseOrderFields = [
+            "_id",
+            "no",
+            "refNo",
+            "purchaseRequestId",
+            "purchaseRequest._id",
+            "purchaseRequest.no",
+            "purchaseOrderExternalId",
+            "purchaseOrderExternal._id",
+            "purchaseOrderExternal.no",
+            "supplierId",
+            "supplier.code",
+            "supplier.name",
+            "supplier.address",
+            "supplier.contact",
+            "supplier.PIC",
+            "supplier.import",
+            "supplier.NPWP",
+            "supplier.serialNumber",
+            "unitId",
+            "unit.code",
+            "unit.divisionId",
+            "unit.division",
+            "unit.name",
+            "categoryId",
+            "category.code",
+            "category.name",
+            "freightCostBy",
+            "currency.code",
+            "currency.symbol",
+            "currency.rate",
+            "currencyRate",
+            "paymentMethod",
+            "paymentDueDays",
+            "vat",
+            "useVat",
+            "vatRate",
+            "useIncomeTax",
+            "date",
+            "expectedDeliveryDate",
+            "actualDeliveryDate",
+            "isPosted",
+            "isClosed",
+            "remark",
+            "status",
+            "items"
+        ];
     }
 
     _getQuery(paging) {
@@ -322,7 +369,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         valid.items = valid.items || [];
         for (var po of valid.items) {
             if (ObjectId.isValid(po._id)) {
-                getPOInternal.push(this.purchaseOrderManager.getSingleByIdOrDefault(po._id));
+                getPOInternal.push(this.purchaseOrderManager.getSingleByIdOrDefault(po._id, this.purchaseOrderFields));
             }
         }
 
@@ -640,13 +687,13 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             });
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
 
             this.getSingleByIdOrDefault(id)
                 .then(pox => {
                     var getDefinition = require('../../pdf/definitions/purchase-order-external');
-                    var definition = getDefinition(pox);
+                    var definition = getDefinition(pox, offset);
 
                     var generatePdf = require('../../pdf/pdf-generator');
                     generatePdf(definition)
@@ -1015,31 +1062,31 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             }
                         ]
                     }, {
-                        $subtract: [
-                            { "$add": ["$items.purchaseRequest._createdDate", 60 * offset * 60 * 1000] },
-                            {
-                                "$add": [
-                                    { "$millisecond": "$items.purchaseRequest._createdDate" },
-                                    {
-                                        "$multiply": [
-                                            { "$second": "$items.purchaseRequest._createdDate" },
-                                            1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$minute": "$items.purchaseRequest._createdDate" },
-                                            60, 1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$hour": { "$add": ["$items.purchaseRequest._createdDate", 60 * offset * 60 * 1000] } },
-                                            60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }]
+                            $subtract: [
+                                { "$add": ["$items.purchaseRequest._createdDate", 60 * offset * 60 * 1000] },
+                                {
+                                    "$add": [
+                                        { "$millisecond": "$items.purchaseRequest._createdDate" },
+                                        {
+                                            "$multiply": [
+                                                { "$second": "$items.purchaseRequest._createdDate" },
+                                                1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$minute": "$items.purchaseRequest._createdDate" },
+                                                60, 1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$hour": { "$add": ["$items.purchaseRequest._createdDate", 60 * offset * 60 * 1000] } },
+                                                60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }]
                         }]
                 }, 86400000]
             };
@@ -1268,31 +1315,31 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             }
                         ]
                     }, {
-                        $subtract: [
-                            { "$add": ["$items._createdDate", 60 * offset * 60 * 1000] },
-                            {
-                                "$add": [
-                                    { "$millisecond": "$items._createdDate" },
-                                    {
-                                        "$multiply": [
-                                            { "$second": "$items._createdDate" },
-                                            1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$minute": "$items._createdDate" },
-                                            60, 1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$hour": { "$add": ["$items._createdDate", 60 * offset * 60 * 1000] } },
-                                            60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }]
+                            $subtract: [
+                                { "$add": ["$items._createdDate", 60 * offset * 60 * 1000] },
+                                {
+                                    "$add": [
+                                        { "$millisecond": "$items._createdDate" },
+                                        {
+                                            "$multiply": [
+                                                { "$second": "$items._createdDate" },
+                                                1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$minute": "$items._createdDate" },
+                                                60, 1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$hour": { "$add": ["$items._createdDate", 60 * offset * 60 * 1000] } },
+                                                60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }]
                         }]
                 }, 86400000]
             };

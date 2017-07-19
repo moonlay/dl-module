@@ -163,7 +163,7 @@ module.exports = function (salesContract, offset) {
                             }]
                         }]
                     }, '\n', {
-                        text: 'SALES CONTRACT NO: ' + no,
+                        text: 'SALES CONTRACT',
                         style: ['size11', 'bold'],
                         alignment: "center"
                     }]
@@ -187,6 +187,40 @@ module.exports = function (salesContract, offset) {
 
         body = [
             {
+
+                columns: [
+                    {
+                        width: '25%',
+                        text: 'Contract Number',
+                        style: ['size10']
+                    }, {
+                        width: '3%',
+                        text: ':',
+                        style: ['size10']
+                    },
+                    {
+                        width: '*',
+                        text: salesContract.dispositionNumber,
+                        style: ['size10']
+                    }]
+            },{
+
+                columns: [
+                    {
+                        width: '25%',
+                        text: 'Code',
+                        style: ['size10']
+                    }, {
+                        width: '3%',
+                        text: ':',
+                        style: ['size10']
+                    },
+                    {
+                        width: '*',
+                        text: no,
+                        style: ['size10']
+                    }]
+            },{
 
                 columns: [
                     {

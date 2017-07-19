@@ -8,10 +8,34 @@ module.exports = function (packing, offset) {
     // var number = packing.code;
     // var colorName = packing.colorName;
 
+    var orderType = (packing.orderType || "").toString().toLowerCase() === "printing" ? "Printing" : "Finishing";
+
     var locale = global.config.locale;
+
+    var buyerName = packing.buyerName ? packing.buyerName : "";
+    var colorType = packing.colorType ? packing.colorType : "";
+    var construction = packing.construction ? packing.construction : "";
+    var buyerAddress = packing.buyerAddress ? packing.buyerAddress : "";
 
     var moment = require('moment');
     moment.locale(locale.name);
+
+    var footerStack = [];
+    var footerStackValue = [];
+    var footerStackDivide = [];
+    if ((packing.orderType || "").toString().toLowerCase() === "solid") {
+        footerStack = ['Buyer', "Jenis Order", "Jenis Warna", 'Konstruksi', 'Tujuan'];
+        footerStackValue = [buyerName, orderType, colorType, construction, buyerAddress];
+        footerStackDivide = [':', ":", ":", ':', ':'];
+    } else if ((packing.orderType || "").toString().toLowerCase() === "printing") {
+        footerStack = ['Buyer', "Jenis Order", 'Konstruksi', 'Design/Motif', 'Tujuan'];
+        footerStackValue = [buyerName, orderType, construction, packing.designNumber && packing.designCode ? `${packing.designNumber} - ${packing.designCode}` : "", buyerAddress];
+        footerStackDivide = [':', ":", ":", ':', ':'];
+    } else {
+        footerStack = ['Buyer', "Jenis Order", 'Konstruksi', 'Tujuan'];
+        footerStackValue = [buyerName, orderType, construction, buyerAddress];
+        footerStackDivide = [':', ":", ":", ':'];
+    }
 
     var header = [{
         columns: [{
@@ -22,10 +46,10 @@ module.exports = function (packing, offset) {
                     style: ['size15'],
                     alignment: "center"
                 }, {
-                        text: 'BANARAN, GROGOL, SUKOHARJO',
-                        style: ['size09'],
-                        alignment: "center"
-                    }]
+                    text: 'BANARAN, GROGOL, SUKOHARJO',
+                    style: ['size09'],
+                    alignment: "center"
+                }]
             }]
 
         }]
@@ -33,7 +57,7 @@ module.exports = function (packing, offset) {
 
     var line = [{
         canvas: [{
-    	       type: 'line',
+            type: 'line',
             x1: 0,
             y1: 5,
             x2: 555,
@@ -54,11 +78,11 @@ module.exports = function (packing, offset) {
                     decoration: 'underline'
                 },
                     '\n',
-                    {
-                        text: iso,
-                        style: ['size09', 'bold'],
-                        alignment: "right"
-                    },
+                {
+                    text: iso,
+                    style: ['size09', 'bold'],
+                    alignment: "right"
+                },
                     '\n'
                 ]
             }]
@@ -71,62 +95,62 @@ module.exports = function (packing, offset) {
             width: '60%',
             columns: [{
                 width: '*',
-                stack: ['Kepada Yth. Bagian Penjualan ', 'Bersama ini kami kirimkan hasil produksi : Inspeksi Printing   '],
+                stack: ['Kepada Yth. Bagian Penjualan ', `Bersama ini kami kirimkan hasil produksi: Inspeksi ${orderType}`],
             }],
             style: ['size08']
         }
             ,
-            {
-                width: '5%',
-                text: ''
-            },
-            {
+        {
+            width: '5%',
+            text: ''
+        },
+        {
+            width: '40%',
+            columns: [{
                 width: '40%',
-                columns: [{
-                    width: '40%',
-                    stack: ['No', 'Sesuai No Order'],
+                stack: ['No', 'Sesuai No Order'],
 
-                }, {
-                        width: '5%',
-                        stack: [':', ':'],
+            }, {
+                width: '5%',
+                stack: [':', ':'],
 
-                    }, {
-                        width: '*',
-                        stack: [packing.code, packing.productionOrderNo],
+            }, {
+                width: '*',
+                stack: [packing.code, packing.productionOrderNo],
 
-                    }],
-                style: ['size08']
+            }],
+            style: ['size08']
 
-            }
+        }
 
         ]
-    }];
+    }, "\n"];
 
     var thead = [{
         text: 'NO',
         style: 'tableHeader'
     },
 
-        {
-            text: 'BARANG',
-            style: 'tableHeader'
-        },
-        {
-            text: 'Jumlah (PCS)',
-            style: 'tableHeader'
-        },
-        {
-            text: 'Berat (Kg)',
-            style: 'tableHeader'
-        },
-        {
-            text: 'Panjang (Meter)',
-            style: 'tableHeader'
-        },
-        {
-            text: 'Keterangan',
-            style: 'tableHeader'
-        }
+    {
+        text: 'BARANG',
+        style: 'tableHeader'
+    },
+    {
+        text: 'Jumlah (PCS)',
+        style: 'tableHeader'
+    },
+    {
+        text: 'Berat (Kg)',
+        style: 'tableHeader'
+    },
+    {
+        text: 'Panjang (Meter)',
+        style: 'tableHeader'
+    },
+    {
+        text: 'Keterangan',
+        style: 'tableHeader'
+    }
 
     ];
 
@@ -153,26 +177,26 @@ module.exports = function (packing, offset) {
             style: ['size08', 'center']
         },
 
-            {
-                text: packing.colorName + ' ' + item.lot + ' ' + item.grade + ' ' + gradeItem,
-                style: ['size08', 'center']
-            },
-            {
-                text: item.quantity,
-                style: ['size08', 'center']
-            },
-            {
-                text: item.weight,
-                style: ['size08', 'center']
-            },
-            {
-                text: item.length,
-                style: ['size08', 'center']
-            },
-            {
-                text: item.remark,
-                style: ['size08', 'center']
-            }
+        {
+            text: packing.colorName + ' ' + item.lot + ' ' + item.grade + ' ' + gradeItem,
+            style: ['size08', 'center']
+        },
+        {
+            text: item.quantity,
+            style: ['size08', 'center']
+        },
+        {
+            text: item.weight,
+            style: ['size08', 'center']
+        },
+        {
+            text: item.length,
+            style: ['size08', 'center']
+        },
+        {
+            text: item.remark,
+            style: ['size08', 'center']
+        }
 
         ];
     });
@@ -181,18 +205,18 @@ module.exports = function (packing, offset) {
         text: " ",
         style: ['size08', 'center']
     }, {
-            text: "Total",
-            style: ['size08', 'center']
-        }, {
-            text: totalJumlah,
-            style: ['size08', 'center']
-        }, {
-            text: totalBerat,
-            style: ['size08', 'center']
-        }, {
-            text: totalPanjang,
-            style: ['size08', 'center']
-        }, "",]];
+        text: "Total",
+        style: ['size08', 'center']
+    }, {
+        text: totalJumlah,
+        style: ['size08', 'center']
+    }, {
+        text: totalBerat,
+        style: ['size08', 'center']
+    }, {
+        text: totalPanjang,
+        style: ['size08', 'center']
+    }, "",]];
 
     tbody = tbody.length > 0 ? tbody : [
         [{
@@ -210,19 +234,19 @@ module.exports = function (packing, offset) {
         }
     }];
 
-    var footer = [{
+    var footer = ["\n", {
         stack: [{
             columns: [{
                 columns: [{
-                    width: '10%',
-                    stack: ['Buyer', 'Konstruksi', 'Design/Motif', 'Tujuan']
+                    width: '15%',
+                    stack: footerStack
                 }, {
-                        width: '3%',
-                        stack: [':', ':', ':', ':']
-                    }, {
-                        width: '*',
-                        stack: [packing.buyer, packing.construction, packing.motif ? packing.motif : " ", packing.buyerLocation]
-                    }]
+                    width: '2%',
+                    stack: footerStackDivide
+                }, {
+                    width: '*',
+                    stack: footerStackValue
+                }]
             }]
         }
         ],
@@ -234,23 +258,23 @@ module.exports = function (packing, offset) {
     var footer2 = ['\n', {
         columns: [{
             width: '25%',
-            stack: ['Diterima oleh:', '\n\n\n\n', '(                               )'],
+            stack: ['Diterima oleh:', '\n\n\n', '(                               )'],
             style: ['center']
         },
-            {
-                width: '25%',
-                stack: [],
-            },
-            {
-                width: '25%',
-                stack: [],
-            },
+        {
+            width: '25%',
+            stack: [],
+        },
+        {
+            width: '25%',
+            stack: [],
+        },
 
-            {
-                width: '25%',
-                stack: [`Sukoharjo, ${moment(packing.date).add(offset, 'h').format(locale.date.format)} `, 'Diserahkan oleh :', '\n\n\n', `(  ${packing._createdBy}  )`],
-                style: ['center']
-            }],
+        {
+            width: '25%',
+            stack: [`Sukoharjo, ${moment(packing.date).add(offset, 'h').format(locale.date.format)} `, 'Diserahkan oleh :', '\n\n', `(  ${packing._createdBy}  )`],
+            style: ['center']
+        }],
         style: ['size08']
     }];
 

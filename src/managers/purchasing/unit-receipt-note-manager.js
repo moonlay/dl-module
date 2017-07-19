@@ -70,6 +70,52 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             "items.fulfillments.purchaseOrder.items.product.name",
             "items.fulfillments.purchaseOrder.items.pricePerDealUnit"
         ];
+        this.purchaseOrderFields=[
+            "_id",
+            "no",
+            "refNo",
+            "purchaseRequestId",
+            "purchaseRequest._id",
+            "purchaseRequest.no",
+            "purchaseOrderExternalId",
+            "purchaseOrderExternal._id",
+            "purchaseOrderExternal.no",
+            "supplierId",
+            "supplier.code",
+            "supplier.name",
+            "supplier.address",
+            "supplier.contact",
+            "supplier.PIC",
+            "supplier.import",
+            "supplier.NPWP",
+            "supplier.serialNumber",
+            "unitId",
+            "unit.code",
+            "unit.divisionId",
+            "unit.division",
+            "unit.name",
+            "categoryId",
+            "category.code",
+            "category.name",
+            "freightCostBy",
+            "currency.code",
+            "currency.symbol",
+            "currency.rate",
+            "currencyRate",
+            "paymentMethod",
+            "paymentDueDays",
+            "vat",
+            "useVat",
+            "vatRate",
+            "useIncomeTax",
+            "date",
+            "expectedDeliveryDate",
+            "actualDeliveryDate",
+            "isPosted",
+            "isClosed",
+            "remark",
+            "items"
+        ];
     }
 
     _validate(unitReceiptNote) {
@@ -689,7 +735,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return this.getSingleByQuery(query)
             .then((unitReceiptNote) => {
                 var getPoInternals = unitReceiptNote.items.map((item) => {
-                    return this.purchaseOrderManager.getSingleById(item.purchaseOrderId)
+                    return this.purchaseOrderManager.getSingleById(item.purchaseOrderId,this.purchaseOrderFields)
                 })
                 return this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId,this.deliveryOrderFields)
                     .then((deliveryOrder) => {
@@ -731,12 +777,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             });
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
             this.getSingleById(id)
                 .then(unitReceiptNote => {
                     var getDefinition = require('../../pdf/definitions/unit-receipt-note');
-                    var definition = getDefinition(unitReceiptNote);
+                    var definition = getDefinition(unitReceiptNote, offset);
                     var generatePdf = require('../../pdf/pdf-generator');
                     generatePdf(definition)
                         .then(binary => {
@@ -753,7 +799,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    getUnitReceiptNotes(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, createdBy) {
+    getUnitReceiptNotes(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, offset,  createdBy) {
         return new Promise((resolve, reject) => {
             var query = Object.assign({});
 
@@ -782,10 +828,15 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 Object.assign(query, supplierId);
             }
             if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
+                var dateFrom = new Date(_dateFrom);
+                var dateTo = new Date(_dateTo);
+                dateFrom.setHours(dateFrom.getHours() - offset);
+                dateTo.setHours(dateTo.getHours() - offset);
+
                 var date = {
                     date: {
-                        $gte: new Date(_dateFrom),
-                        $lte: new Date(_dateTo)
+                        $gte: dateFrom,
+                        $lte: dateTo
                     }
                 };
                 Object.assign(query, date);
@@ -797,6 +848,40 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             }
             Object.assign(query, deleted);
 
+            this.collection
+                .where(query)
+                .execute()
+                .then(result => {
+                    resolve(result.data);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    getUnitReceiptWithoutSpb(_dateFrom, _dateTo, offset) {
+        return new Promise((resolve, reject) => {
+            var query = Object.assign({});                      
+            var deleted = { _deleted: false };
+                     
+            if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
+                var dateFrom = new Date(_dateFrom);
+                var dateTo = new Date(_dateTo);
+                dateFrom.setHours(dateFrom.getHours() - offset);
+                dateTo.setHours(dateTo.getHours() - offset);
+
+                var date = {
+                    date: {
+                        $gte: dateFrom,
+                        $lte: dateTo
+                    }
+                };
+                Object.assign(query, date);
+            }
+            
+            Object.assign(query, deleted);
+                     
             this.collection
                 .where(query)
                 .execute()
