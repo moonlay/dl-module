@@ -30,7 +30,6 @@ it("#01. should success when extract all data", function (done) {
     // var table2 = "POrder";
     instanceManager.extract(table1, table2)
         .then((result) => {
-
             extractedData = result;
             extractedData.should.instanceof(Array);
             extractedData.length.should.not.equal(0);
