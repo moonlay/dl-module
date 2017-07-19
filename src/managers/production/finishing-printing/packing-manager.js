@@ -124,6 +124,8 @@ module.exports = class PackingManager extends BaseManager {
                                                         properties: {
                                                             productionOrderId: productionOrder._id,
                                                             productionOrderNo: productionOrder.orderNo,
+                                                            designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                            designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
                                                             orderType: productionOrder.orderType,
                                                             buyerId: packing.buyerId,
                                                             buyerName: packing.buyerName,
@@ -197,6 +199,8 @@ module.exports = class PackingManager extends BaseManager {
                                                             productionOrderId: productionOrder._id,
                                                             productionOrderNo: productionOrder.orderNo,
                                                             orderType: productionOrder.orderType,
+                                                            designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                            designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
                                                             buyerId: packing.buyerId,
                                                             buyerName: packing.buyerName,
                                                             buyerAddress: packing.buyerAddress,
@@ -259,20 +263,20 @@ module.exports = class PackingManager extends BaseManager {
                 if (_duplicatePacking)
                     errors["code"] = i18n.__("Packing.code.isExist: %s is exist", i18n.__("Packing.code._:Code"));
 
-                if (!valid.productionOrderId || valid.productionOrderId === '')
-                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId.isRequired:%s is required", i18n.__("Packing.productionOrderId._:Production Order")); //"Nomor Order harus diisi";   
-                else if (!_productionOrder)
-                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId: %s not found", i18n.__("Packing.productionOrderId._:Production Order"));
+                if (!_productionOrder)
+                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId.isExists: %s is not exists", i18n.__("Packing.productionOrderId._:Production Order"));
+                else if (!valid.productionOrderId || valid.productionOrderId === '')
+                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId.isRequired:%s is required", i18n.__("Packing.productionOrderId._:Production Order")); //"Nomor Order harus diisi";                       
 
-                if (!valid.buyerId || valid.buyerId === '')
+                if (!_buyer)
+                    errors["buyerId"] = i18n.__("Packing.buyerId.isExists: %s is not exists", i18n.__("Packing.buyerId._:Buyer"));
+                else if (!valid.buyerId || valid.buyerId === '')
                     errors["buyerId"] = i18n.__("Packing.buyerId.isRequired:%s is required", i18n.__("Packing.buyerId._:Buyer")); //"Buyer harus diisi";   
-                else if (!_buyer)
-                    errors["buyerId"] = i18n.__("Packing.buyerId: %s not found", i18n.__("Packing.buyerId._:Buyer"));
 
-                if (!valid.materialConstructionFinishId || valid.materialConstructionFinishId === '')
+                if (!_materialContructionFinish)
+                    errors["materialConstructionFinishId"] = i18n.__("Packing.materialConstructionFinishId.isExists: %s is not exists", i18n.__("Packing.materialConstructionFinishId._:Material Konstruksi Finish"));
+                else if (!valid.materialConstructionFinishId || valid.materialConstructionFinishId === '')
                     errors["materialConstructionFinishId"] = i18n.__("Packing.materialConstructionFinishId.isRequired:%s is required", i18n.__("Packing.materialConstructionFinishId._:Material Konstruksi Finish")); //"Material Konstruksi harus diisi";   
-                else if (!_materialContructionFinish)
-                    errors["materialConstructionFinishId"] = i18n.__("Packing.materialConstructionFinishId: %s not found", i18n.__("Packing.materialConstructionFinishId._:Material Konstruksi Finish"));
 
                 if (!valid.date)
                     errors["date"] = i18n.__("Packing.date.isRequired:%s is required", i18n.__("Packing.date._:Date")); //"Grade harus diisi";
@@ -428,7 +432,7 @@ module.exports = class PackingManager extends BaseManager {
                 item["Nomor Packing"] = packing.code ? packing.code : '';
                 item["Nomor Order"] = packing.productionOrderNo ? packing.productionOrderNo : '';
                 item["Jenis Order"] = packing.orderType ? packing.orderType : '';
-                item["Buyer"] = packing.buyerName ? packing.buyerName : '';
+                item["Buyer"] = packing.buyer ? packing.buyer : '';
                 item["Konstruksi"] = packing.construction ? packing.construction : '';
                 item["Design/Motif"] = packing.designNumber ? packing.designNumber : '';
                 item["Warna yang diminta"] = packing.colorName ? packing.colorName : '';
