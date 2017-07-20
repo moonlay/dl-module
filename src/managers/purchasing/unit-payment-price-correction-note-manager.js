@@ -12,6 +12,7 @@ var UnitPaymentOrderManager = require('./unit-payment-order-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
 var UnitReceiptNoteManager = require('./unit-receipt-note-manager');
+var moment = require('moment');
 
 module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager {
     constructor(db, user) {
@@ -549,7 +550,90 @@ getDataKoreksiHarga(query){
                     })
             })
     }
+getXls(result, query){
+         var xls = {};
+         xls.data = [];
+         xls.options = [];
+         xls.name = '';
 
+         var index = 0;
+         var dateFormat = "DD/MM/YYYY";
+         // var dateFormat = "YYYY/MM/DD";
+
+         for(var corhrg of result.data){
+            index++;
+             var item = {};
+             item["NO"] = index;
+             item["NOMOR"] = corhrg.no ? corhrg.no : '';
+             item["TANGGAL"] = corhrg.date ? moment(new Date(corhrg.date)).format(dateFormat) : '';
+             item["NO SPB"] = corhrg.unitPaymentOrder? corhrg.unitPaymentOrder.no : '';
+             item["NO PO EXTERNAL"] = corhrg.items.purchaseOrder.purchaseOrderExternal? corhrg.items.purchaseOrder.purchaseOrderExternal.no : '';
+             item["NO PURCHASE REQUEST"] = corhrg.items.purchaseOrder.purchaseRequest? corhrg.items.purchaseOrder.purchaseRequest.no : '';
+             item["FAKTUR PAJAK PPN"] = corhrg.incomeTaxCorrectionNo? corhrg.incomeTaxCorrectionNo : '';
+             item["TANGGAL FAKTUR PAJAK PPN"] = corhrg.incomeTaxCorrectionDate? moment(new Date(corhrg.incomeTaxCorrectionDate)).format(dateFormat) : '';
+             item["SUPPLIER"] = corhrg.unitPaymentOrder.supplier? corhrg.unitPaymentOrder.supplier.name : '';
+             item["JENIS KOREKSI"] = corhrg.correctionType? corhrg.correctionType : '';
+             item["KODE"] = corhrg.items.product? corhrg.items.product.code : '';
+             item["NAMA"] = corhrg.items.product? corhrg.items.product.name : '';
+
+                var k= corhrg.items.quantity.toFixed(2).toString().split('.');
+                var k1=k[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                var quantity= k1 + '.' + k[1];
+
+             item["JUMLAH"] = quantity;
+            //  item["JUMLAH"] = corhrg.items.quantity? corhrg.items.quantity : '';
+             item["SATUAN"] = corhrg.items.uom.unit? corhrg.items.uom.unit : '';
+
+                var a= corhrg.items.pricePerUnit.toFixed(4).toString().split('.');
+                var a1=a[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                var harga= a1 + '.' + a[1];
+
+                var g= corhrg.items.priceTotal.toFixed(2).toString().split('.');
+                var g1=g[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                var total= g1 + '.' + g[1];
+
+             item["HARGA SATUAN"] = harga;
+             item["HARGA TOTAL"] = total;
+            //  item["HARGA SATUAN"] = corhrg.items.pricePerUnit? corhrg.items.pricePerUnit : '';
+            //  item["HARGA TOTAL"] = corhrg.items.priceTotal? corhrg.items.priceTotal : '';
+             item["USER INPUT"] = corhrg._createdBy? corhrg._createdBy : '';
+
+             xls.data.push(item);
+         }
+
+         xls.options["No"] = "number";
+         xls.options["no"] = "string";
+         xls.options["date"] = "date";
+         xls.options["no"] = "string";
+         xls.options["no"] = "string";
+         xls.options["no"] = "string";
+         xls.options["incomeTaxCorrectionNo"] = "string";
+         xls.options["incomeTaxCorrectionDate"] = "string";
+         xls.options["name"] = "string";
+         xls.options["correctionType"] = "string";
+         xls.options["code"] = "string";
+         xls.options["name"] = "string";
+         xls.options["quantity"] = "number";
+         xls.options["unit"] = "string";
+         xls.options["pricePerUnit"] = "number";
+         xls.options["priceTotal"] = "number";
+         xls.options["_createdBy"] = "string";
+
+
+         if(query.dateFrom && query.dateTo){
+             xls.name = `Monitoring Koreksi Harga ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+         }
+         else if(!query.dateFrom && query.dateTo){
+             xls.name = `Monitoring Koreksi Harga ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+         }
+         else if(query.dateFrom && !query.dateTo){
+             xls.name = `Monitoring Koreksi Harga ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+         }
+         else
+             xls.name = `Monitoring Koreksi Harga.xlsx`;
+
+         return Promise.resolve(xls);
+     }
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.purchasing.collection.UnitPaymentCorrectionNote}_date`,
