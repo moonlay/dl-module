@@ -231,7 +231,12 @@ it('#12. should success when get data report PO Per Unit,Kategori with date', fu
         });
 });
 
-it('#13. should success when get data report Per Supplier with date', function (done) {
+it('#13. should success when get data report Per Supplier Per Unit Per Kategori with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    var unit     = null;
+    var category = null;
+    var supplier = null;
     purchaseOrderManager.getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate)
     .then(po => {
         po.should.instanceof(Array);
@@ -242,7 +247,7 @@ it('#13. should success when get data report Per Supplier with date', function (
 
 });
 
-it('#14. should success when get data report Per Supplier', function (done) {
+it('#14. should success when get data report Per Supplier Per Unit Per Kategori', function (done) {
     purchaseOrderManager.getDataTotalBeliSupplier()
     .then(po => {
         po.should.instanceof(Array);
