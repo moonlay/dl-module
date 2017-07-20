@@ -23,23 +23,8 @@ before('#00. connect db', function (done) {
 var listPurchaseOrder = [];
 it('#01. should success when get new data purchase-request ', function (done) {
     purchaseRequestDataUtil.getNewTestData()
-        .then((purchaseRequest) => {
-            listPurchaseOrder.push(purchaseRequest); //1
-            return purchaseRequestDataUtil.getNewTestData()
-        })
         .then(purchaseRequest => {
-            listPurchaseOrder.push(purchaseRequest); //2
-            return purchaseRequestDataUtil.getNewTestData()
-        }).then((purchaseRequest) => {
-            listPurchaseOrder.push(purchaseRequest); //3
-            return purchaseRequestDataUtil.getNewTestData()
-        })
-        .then(purchaseRequest => {
-            listPurchaseOrder.push(purchaseRequest); //4
-            return purchaseRequestDataUtil.getNewTestData()
-        })
-        .then(purchaseRequest => {
-            listPurchaseOrder.push(purchaseRequest);//5
+            listPurchaseOrder.push(purchaseRequest);
             done();
         })
         .catch(e => {
