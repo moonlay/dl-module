@@ -257,3 +257,17 @@ it('#14. should success when get data report Per Supplier Per Unit Per Kategori'
         });
 
 });
+
+it('#15. should success when get data detail report Per Supplier with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    var supplierId = null;
+    purchaseOrderManager.getDataPOSplDetil(startdate, enddate, supplierId)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
