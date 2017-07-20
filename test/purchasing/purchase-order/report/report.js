@@ -230,3 +230,25 @@ it('#12. should success when get data report PO Per Unit,Kategori with date', fu
             done(e);
         });
 });
+
+it('#13. should success when get data report Per Supplier with date', function (done) {
+    purchaseOrderManager.getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#14. should success when get data report Per Supplier', function (done) {
+    purchaseOrderManager.getDataTotalBeliSupplier()
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
