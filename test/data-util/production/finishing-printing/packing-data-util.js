@@ -12,7 +12,7 @@ var PackingItemModel = Models.production.finishingPrinting.qualityControl.Packin
 class PackingDataUtil {
     getNewData() {
         return Promise.all([productionOrderDataUtil.getNewTestData()])
-            .then(result => {
+            .then((result) => {
                 var productionOrder = result[0];
 
 
@@ -21,9 +21,18 @@ class PackingDataUtil {
                     pointSystem: 10,
                     productionOrderId: productionOrder._id,
                     productionOrderNo: productionOrder.orderNo,
+
                     date: new Date(),
-                    buyer: productionOrder.buyer.name,
-                    buyerLocation: productionOrder.buyer.type,
+
+                    //buyer
+                    buyerId: productionOrder.buyer._id,
+
+                    //material construction
+                    materialConstructionFinishId: productionOrder.materialConstruction._id,
+
+                    //material width
+                    materialWidthFinish: "test",
+
                     packingUom: "PCS",
                     colorCode: productionOrder.details[0].code,
                     items: [{
@@ -33,14 +42,14 @@ class PackingDataUtil {
                         length: 120,
                         quantity: 6,
                         remark: "6 PCS @20 Meters"
-                     },// {
-                    //     lot: "LOT01",
-                    //     grade: "B",
-                    //     weight: 0,
-                    //     length: 120,
-                    //     quantity: 4,
-                    //     remark: "4 PCS @30 Meters"
-                    // }
+                    },// {
+                        //     lot: "LOT01",
+                        //     grade: "B",
+                        //     weight: 0,
+                        //     length: 120,
+                        //     quantity: 4,
+                        //     remark: "4 PCS @30 Meters"
+                        // }
                     ]
                 };
 
@@ -48,7 +57,7 @@ class PackingDataUtil {
             })
     }
 
-        getNewDataItems() {
+    getNewDataItems() {
         return Promise.all([productionOrderDataUtil.getNewTestData()])
             .then(result => {
                 var productionOrder = result[0];
@@ -59,9 +68,18 @@ class PackingDataUtil {
                     pointSystem: 10,
                     productionOrderId: productionOrder._id,
                     productionOrderNo: productionOrder.orderNo,
+
                     date: new Date(),
-                    buyer: productionOrder.buyer.name,
-                    buyerLocation: productionOrder.buyer.type,
+
+                    //buyer
+                    buyerId: productionOrder.buyer._id,
+
+                    //material construction
+                    materialConstructionFinishId: productionOrder.materialConstruction._id,
+
+                    //material width
+                    materialWidthFinish: "test",
+
                     packingUom: "PCS",
                     colorCode: productionOrder.details[0].code,
                     items: [{
@@ -72,14 +90,14 @@ class PackingDataUtil {
                         quantity: 0,
                         remark: ""
                     },
-                    // {
-                    //     lot: "a",
-                    //     grade: "",
-                    //     weight: 0,
-                    //     length: 0,
-                    //     quantity: 0,
-                    //     remark: ""
-                    // }
+                        // {
+                        //     lot: "a",
+                        //     grade: "",
+                        //     weight: 0,
+                        //     length: 0,
+                        //     quantity: 0,
+                        //     remark: ""
+                        // }
                     ]
                 };
 

@@ -9,6 +9,8 @@ var generateCode = require("../../../utils/code-generator");
 var ProductionOrderManager = require('../../sales/production-order-manager');
 var ProductManager = require('../../master/product-manager');
 var UomManager = require('../../master/uom-manager');
+var BuyerManager = require('../../master/buyer-manager');
+var MaterialConstructionManager = require('../../master/material-construction-manager');
 
 var Models = require("dl-models");
 var Map = Models.map;
@@ -26,7 +28,8 @@ module.exports = class PackingManager extends BaseManager {
         this.productionOrderManager = new ProductionOrderManager(db, user);
         this.productManager = new ProductManager(db, user);
         this.uomManager = new UomManager(db, user);
-
+        this.buyerManager = new BuyerManager(db, user);
+        this.materialConstructionManager = new MaterialConstructionManager(db, user);
     }
 
     _getQuery(paging) {
@@ -85,15 +88,15 @@ module.exports = class PackingManager extends BaseManager {
         return this.getSingleById(id)
             .then((packing) => {
                 return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
-                    .then((salesContractNo) => {
+                    .then((productionOrder) => {
                         var query = {
                             _deleted: false,
                             unit: packing.packingUom
                         };
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
-                                var getProduct = packing.items.map(item => {
-                                    var productName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
+                                var getProduct = packing.items.map((item) => {
+                                    var productName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -111,15 +114,30 @@ module.exports = class PackingManager extends BaseManager {
 
 
                                                 var createPackingProduct = packing.items.map(item => {
-                                                    var pName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
+                                                    var pName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
                                                     var packingProduct = {
                                                         code: generateCode(),
                                                         currency: {},
                                                         description: "",
                                                         name: pName,
                                                         price: 0,
-                                                        properties: {},
-                                                        tags: `sales contract #${salesContractNo.salesContractNo}`,
+                                                        properties: {
+                                                            productionOrderId: productionOrder._id,
+                                                            productionOrderNo: productionOrder.orderNo,
+                                                            designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                            designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
+                                                            orderType: productionOrder.orderType,
+                                                            buyerId: packing.buyerId,
+                                                            buyerName: packing.buyerName,
+                                                            buyerAddress: packing.buyerAddress,
+                                                            colorName: packing.colorName,
+                                                            construction: packing.construction,
+                                                            lot: item.lot,
+                                                            grade: item.grade,
+                                                            weight: item.weight,
+                                                            length: item.length
+                                                        },
+                                                        tags: `sales contract #${productionOrder.salesContractNo}`,
                                                         uom: uom,
                                                         uomId: uom._id
 
@@ -144,15 +162,15 @@ module.exports = class PackingManager extends BaseManager {
         return this.getSingleById(id)
             .then((packing) => {
                 return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
-                    .then((salesContractNo) => {
+                    .then((productionOrder) => {
                         var query = {
                             _deleted: false,
                             unit: packing.packingUom
                         };
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
-                                var getProduct = packing.items.map(item => {
-                                    var productName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
+                                var getProduct = packing.items.map((item) => {
+                                    var productName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -170,15 +188,30 @@ module.exports = class PackingManager extends BaseManager {
 
 
                                                 var createPackingProduct = packing.items.map(item => {
-                                                    var pName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
+                                                    var pName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
                                                     var packingProduct = {
                                                         code: generateCode(),
                                                         currency: {},
                                                         description: "",
                                                         name: pName,
                                                         price: 0,
-                                                        properties: {},
-                                                        tags: `sales contract #${salesContractNo.salesContractNo}`,
+                                                        properties: {
+                                                            productionOrderId: productionOrder._id,
+                                                            productionOrderNo: productionOrder.orderNo,
+                                                            orderType: productionOrder.orderType,
+                                                            designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                            designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
+                                                            buyerId: packing.buyerId,
+                                                            buyerName: packing.buyerName,
+                                                            buyerAddress: packing.buyerAddress,
+                                                            colorName: packing.colorName,
+                                                            construction: packing.construction,
+                                                            lot: item.lot,
+                                                            grade: item.grade,
+                                                            weight: item.weight,
+                                                            length: item.length
+                                                        },
+                                                        tags: `sales contract #${productionOrder.salesContractNo}`,
                                                         uom: uom,
                                                         uomId: uom._id
 
@@ -213,12 +246,16 @@ module.exports = class PackingManager extends BaseManager {
             code: valid.code
         });
         var getProductionOrder = valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(valid.productionOrderId) : Promise.resolve(null);
+        var getBuyer = valid.buyerId && ObjectId.isValid(valid.buyerId) ? this.buyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
+        var getMaterialConstruction = valid.materialConstructionFinishId && ObjectId.isValid(valid.materialConstructionFinishId) ? this.materialConstructionManager.getSingleByIdOrDefault(valid.materialConstructionFinishId) : Promise.resolve(null);
 
-        return Promise.all([getDbPacking, getDuplicatePacking, getProductionOrder])
+        return Promise.all([getDbPacking, getDuplicatePacking, getProductionOrder, getBuyer, getMaterialConstruction])
             .then(results => {
                 var _dbPacking = results[0];
                 var _duplicatePacking = results[1];
                 var _productionOrder = results[2];
+                var _buyer = results[3];
+                var _materialContructionFinish = results[4];
 
                 if (_dbPacking)
                     valid.code = _dbPacking.code; // prevent code changes.
@@ -226,16 +263,29 @@ module.exports = class PackingManager extends BaseManager {
                 if (_duplicatePacking)
                     errors["code"] = i18n.__("Packing.code.isExist: %s is exist", i18n.__("Packing.code._:Code"));
 
-                if (!valid.productionOrderId || valid.productionOrderId === '')
-                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId.isRequired:%s is required", i18n.__("Packing.productionOrderId._:Production Order")); //"Grade harus diisi";   
-                else if (!_productionOrder)
-                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId: %s not found", i18n.__("Packing.productionOrderId._:Production Order"));
+                if (!_productionOrder)
+                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId.isExists: %s is not exists", i18n.__("Packing.productionOrderId._:Production Order"));
+                else if (!valid.productionOrderId || valid.productionOrderId === '')
+                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId.isRequired:%s is required", i18n.__("Packing.productionOrderId._:Production Order")); //"Nomor Order harus diisi";                       
+
+                if (!_buyer)
+                    errors["buyerId"] = i18n.__("Packing.buyerId.isExists: %s is not exists", i18n.__("Packing.buyerId._:Buyer"));
+                else if (!valid.buyerId || valid.buyerId === '')
+                    errors["buyerId"] = i18n.__("Packing.buyerId.isRequired:%s is required", i18n.__("Packing.buyerId._:Buyer")); //"Buyer harus diisi";   
+
+                if (!_materialContructionFinish)
+                    errors["materialConstructionFinishId"] = i18n.__("Packing.materialConstructionFinishId.isExists: %s is not exists", i18n.__("Packing.materialConstructionFinishId._:Material Konstruksi Finish"));
+                else if (!valid.materialConstructionFinishId || valid.materialConstructionFinishId === '')
+                    errors["materialConstructionFinishId"] = i18n.__("Packing.materialConstructionFinishId.isRequired:%s is required", i18n.__("Packing.materialConstructionFinishId._:Material Konstruksi Finish")); //"Material Konstruksi harus diisi";   
 
                 if (!valid.date)
                     errors["date"] = i18n.__("Packing.date.isRequired:%s is required", i18n.__("Packing.date._:Date")); //"Grade harus diisi";
 
                 if (!valid.packingUom || valid.packingUom === '')
-                    errors["packingUom"] = i18n.__("Packing.packingUom.isRequired:%s is required", i18n.__("Packing.packingUom._:Packing UOM")); //"Grade harus diisi";   
+                    errors["packingUom"] = i18n.__("Packing.packingUom.isRequired:%s is required", i18n.__("Packing.packingUom._:Packing UOM")); //"UOM harus diisi";   
+
+                if (!valid.materialWidthFinish || valid.materialWidthFinish === '')
+                    errors["materialWidthFinish"] = i18n.__("Packing.materialWidthFinish.isRequired:%s is required", i18n.__("Packing.materialWidthFinish._:Lebar Finish")); //"UOM harus diisi";   
 
                 var targetColor;
                 if (!valid.colorCode || valid.colorCode === '')
@@ -288,10 +338,22 @@ module.exports = class PackingManager extends BaseManager {
 
                 valid.productionOrderId = _productionOrder._id;
                 valid.productionOrderNo = _productionOrder.orderNo;
-                valid.buyer = _productionOrder.buyer.name;
-                valid.buyerLocation = _productionOrder.buyer.type;
+
+                //Buyer Detail
+                valid.buyerId = _buyer._id;
+                valid.buyerCode = _buyer.code;
+                valid.buyerName = _buyer.name;
+                valid.buyerAddress = _buyer.address;
+                valid.buyerType = _buyer.type;
+
+                //Material Konstruksi Finish
+                valid.materialConstructionFinishId = _materialContructionFinish._id;
+                valid.materialConstructionFinishName = _materialContructionFinish.name;
+
+                //Width Finish
+
                 valid.colorName = targetColor.colorRequest;
-                valid.construction = `${_productionOrder.material.name} / ${_productionOrder.materialConstruction.name} / ${_productionOrder.materialWidth}`;
+                valid.construction = `${_productionOrder.material.name} / ${_materialContructionFinish.name} / ${valid.materialWidthFinish}`;
 
                 valid.salesContractNo = _productionOrder.salesContractNo;
 

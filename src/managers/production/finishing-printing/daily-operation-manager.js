@@ -441,6 +441,15 @@ module.exports = class DailyOperationManager extends BaseManager {
                         .then(kanban => {
                             if(daily.type === "output"){
                                 var tempKanban = kanban;
+
+                                var now = new Date();
+                                var ticks = ((now.getTime() * 10000) + 621355968000000000);
+                                
+                                tempKanban._stamp = ticks.toString(16);
+                                tempKanban._updatedBy = this.user.username;
+                                tempKanban._updatedDate = now;
+                                tempKanban._updateAgent = 'manager';
+
                                 tempKanban.currentQty = daily.goodOutput;
                                 tempKanban.currentStepIndex+=1;
                                 tempKanban.goodOutput=daily.goodOutput;
@@ -476,6 +485,15 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var tempKanban = kanban;
                                 var steps = tempKanban.instruction.steps.map(function (item) { return item.process });
                                 var idx = steps.indexOf(daily.step.process);
+
+                                var now = new Date();
+                                var ticks = ((now.getTime() * 10000) + 621355968000000000);
+                                
+                                tempKanban._stamp = ticks.toString(16);
+                                tempKanban._updatedBy = this.user.username;
+                                tempKanban._updatedDate = now;
+                                tempKanban._updateAgent = 'manager';
+
                                 tempKanban.currentQty = daily.goodOutput;
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
@@ -547,6 +565,15 @@ module.exports = class DailyOperationManager extends BaseManager {
                                                     kanban.goodOutput=0;
                                                     kanban.badOutput=0;
                                                 }
+
+                                                var now = new Date();
+                                                var ticks = ((now.getTime() * 10000) + 621355968000000000);
+                                                
+                                                kanban._stamp = ticks.toString(16);
+                                                kanban._updatedBy = this.user.username;
+                                                kanban._updatedDate = now;
+                                                kanban._updateAgent = 'manager';
+                                                
                                                 this.kanbanCollection.update(kanban)
                                                     .then(kanbanId =>{
                                                         resolve(id);
@@ -833,8 +860,15 @@ getDailyOperationBadReport(query){
             key: {
                 _updatedDate: -1
             }
-        }
+        };
+        
+        var deletedIndex = {
+            name: `ix_${map.production.finishingPrinting.collection.DailyOperation}__deleted`,
+            key: {
+                _deleted: 1
+            }
+        };
 
-        return this.collection.createIndexes([dateIndex]);
+        return this.collection.createIndexes([dateIndex, deletedIndex]);
     }
 };
