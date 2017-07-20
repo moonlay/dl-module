@@ -5,8 +5,8 @@ require('mongodb-toolkit');
 var DLModels = require('dl-models');
 var assert = require('assert');
 var map = DLModels.map;
-var PurchaseOrder = DLModels.purchasing.PurchaseOrder;
-var PurchaseRequest = DLModels.purchasing.PurchaseRequest;
+var PurchaseOrder = DLModels.garmentPurchasing.GarmentPurchaseOrder;
+var PurchaseRequest = DLModels.garmentPurchasing.GarmentPurchaseRequest;
 var PurchaseRequestManager = require('./purchase-request-manager');
 var generateCode = require('../../utils/code-generator');
 var BaseManager = require('module-toolkit').BaseManager;
@@ -29,34 +29,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "purchaseRequestId",
             "purchaseRequest._id",
             "purchaseRequest.no",
-            "purchaseOrderExternalId",
-            "purchaseOrderExternal._id",
-            "purchaseOrderExternal.no",
-            "supplierId",
-            "supplier.code",
-            "supplier.name",
-            "supplier.address",
-            "supplier.contact",
-            "supplier.PIC",
-            "supplier.import",
-            "supplier.NPWP",
-            "supplier.serialNumber",
-            "unitId",
-            "unit.code",
-            "unit.divisionId",
-            "unit.division",
-            "unit.name",
-            "freightCostBy",
-            "currency.code",
-            "currency.symbol",
-            "currency.rate",
-            "currencyRate",
-            "paymentMethod",
-            "paymentDueDays",
-            "vat",
-            "useVat",
-            "vatRate",
-            "useIncomeTax",
             "date",
             "expectedDeliveryDate",
             "actualDeliveryDate",
@@ -64,7 +36,51 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "isClosed",
             "remark",
             "status",
-            "items"
+            "items.purchaseOrderExternalId",
+            "items.purchaseOrderExternal._id",
+            "items.purchaseOrderExternal.no",
+            "items.supplierId",
+            "items.supplier.code",
+            "items.supplier.name",
+            "items.supplier.address",
+            "items.supplier.contact",
+            "items.supplier.PIC",
+            "items.supplier.import",
+            "items.supplier.NPWP",
+            "items.supplier.serialNumber",
+            "items.unitId",
+            "items.unit.code",
+            "items.unit.divisionId",
+            "items.unit.division",
+            "items.unit.name",
+            "items.freightCostBy",
+            "items.currency.code",
+            "items.currency.symbol",
+            "items.currency.rate",
+            "items.currencyRate",
+            "items.paymentMethod",
+            "items.paymentDueDays",
+            "items.vat",
+            "items.useVat",
+            "items.vatRate",
+            "items.useIncomeTax",
+            "items.productId",
+            "items.product",
+            "items.defaultQuantity",
+            "items.defaultUom",
+            "items.dealQuantity",
+            "items.dealUom",
+            "items.realizationQuantity",
+            "items.pricePerDealUnit",
+            "items.priceBeforeTax",
+            "items.budgetPrice",
+            "items.categoryId",
+            "items.category.code",
+            "items.category.name",
+            "items.conversion",
+            "items.isPosted",
+            "items.isClosed",
+
         ];
     }
 
@@ -200,9 +216,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     valid.refNo = _purchaseRequest.no;
                     valid.unit = _purchaseRequest.unit;
                     valid.unitId = new ObjectId(_purchaseRequest.unit._id);
-                    valid.unit._id = new ObjectId(_purchaseRequest.unit._id);
-                    valid.date = new Date(_purchaseRequest.date);
-                    valid.expectedDeliveryDate = new Date(_purchaseRequest.expectedDeliveryDate);
                     for (var poItem of valid.items) {
                         for (var _prItem of _purchaseRequest.items)
                             if (_prItem.product._id.toString() === poItem.product._id.toString()) {
@@ -214,6 +227,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         poItem.category = _prItem.category;
                         poItem.categoryId = new ObjectId(_prItem.category._id);
                         poItem.defaultQuantity = Number(poItem.defaultQuantity);
+                        poItem.budgetPrice = Number(poItem.budgetPrice);
                     }
                 }
 
@@ -357,59 +371,52 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
     createMultiple(listPurchaseRequest) {
-        return new Promise((resolve, reject) => {
-            var purchaseOrderIds = [];
-            for (var _purchaseRequest of listPurchaseRequest) {
-                return this.purchaseRequestManager.getSingleById(_purchaseRequest._id)
-                    .then((purchaseRequest) => {
-                        var purchaseOrder = {}
-                        purchaseOrder.status = poStatusEnum.CREATED;
-                        purchaseOrder._createdDate = new Date();
-                        purchaseOrder.no = generateCode();
-                        purchaseOrder.refNo = purchaseRequest.refNo;
-                        purchaseOrder.roNo = purchaseRequest.roNo;
+        var jobs = [];
+        for (var _purchaseRequest of listPurchaseRequest) {
+            var job = this.purchaseRequestManager.getSingleById(_purchaseRequest._id)
+                .then((purchaseRequest) => {
+                    var purchaseOrder = {}
+                    purchaseOrder.status = poStatusEnum.CREATED;
+                    purchaseOrder._createdDate = new Date();
+                    purchaseOrder.no = generateCode();
+                    purchaseOrder.refNo = purchaseRequest.no;
+                    purchaseOrder.roNo = purchaseRequest.roNo;
 
-                        purchaseOrder.buyerId = purchaseRequest.buyerId;
-                        purchaseOrder.buyer = purchaseRequest.buyer;
-                        purchaseOrder.artikel = purchaseRequest.artikel;
+                    purchaseOrder.buyerId = purchaseRequest.buyerId;
+                    purchaseOrder.buyer = purchaseRequest.buyer;
+                    purchaseOrder.artikel = purchaseRequest.artikel;
 
-                        purchaseOrder.purchaseRequestId = purchaseRequest._id;
-                        purchaseOrder.purchaseRequest = purchaseRequest;
+                    purchaseOrder.purchaseRequestId = purchaseRequest._id;
+                    purchaseOrder.purchaseRequest = purchaseRequest;
 
-                        purchaseOrder.unitId = purchaseRequest.unitId;
-                        purchaseOrder.unit = purchaseRequest.unit;
+                    purchaseOrder.unitId = purchaseRequest.unitId;
+                    purchaseOrder.unit = purchaseRequest.unit;
 
-                        purchaseOrder.date = purchaseRequest.date;
-                        purchaseOrder.expectedDeliveryDate = purchaseRequest.expectedDeliveryDate;
-                        purchaseOrder.shipmentDate = purchaseRequest.shipmentDate;
+                    purchaseOrder.date = purchaseRequest.date;
+                    purchaseOrder.expectedDeliveryDate = purchaseRequest.expectedDeliveryDate;
+                    purchaseOrder.shipmentDate = purchaseRequest.shipmentDate;
 
-                        purchaseOrder.remark = purchaseRequest.remark;
+                    purchaseOrder.remark = purchaseRequest.remark;
 
-                        var _items = [];
-                        purchaseRequest.items.map((item) => {
-                            var _item = {};
-                            _item.product = item.product;
-                            _item.defaultUom = item.uom;
-                            _item.defaultQuantity = item.quantity;
-                            _item.budgetPrice = item.budgetPrice;
-                            _item.remark = item.remark;
-                            _item.categoryId = item.categoryId;
-                            _item.category = item.category;
-                            _items.push(_item);
-                        })
-                        purchaseOrder.items = _items;
-                        this.create(purchaseOrder)
-                            .then(id => {
-                                purchaseOrderIds.push(id);
-                                resolve(id);
-                            })
-                            .catch(e => {
-                                reject(e);
-                            });
+                    var _items = [];
+                    purchaseRequest.items.map((item) => {
+                        var _item = {};
+                        _item.refNo = item.refNo;
+                        _item.product = item.product;
+                        _item.defaultUom = item.uom;
+                        _item.defaultQuantity = item.quantity;
+                        _item.budgetPrice = item.budgetPrice;
+                        _item.remark = item.remark;
+                        _item.categoryId = item.categoryId;
+                        _item.category = item.category;
+                        _items.push(_item);
                     })
-
-            }
-        });
+                    purchaseOrder.items = _items;
+                    return this.create(purchaseOrder)
+                });
+            jobs.push(job);
+        }
+        return Promise.all(jobs);
     }
 
     delete(purchaseOrder) {
