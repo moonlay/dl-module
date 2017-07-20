@@ -712,12 +712,9 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
             var isPosted = {
                 "purchaseOrderExternal.isPosted": true
             };
-
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
-
             var query = [deleted, isPosted];
-
            if (unit) {
                 var filterUnit = {
                     "unit._id": new ObjectId(unit)
@@ -736,7 +733,6 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                 };
                 query.push(filterSupplier);
             }
-
             if (startdate && enddate) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
@@ -768,12 +764,10 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                 };
                 query.push(filterDateFrom);
             }
-
             var match = { '$and': query };
             this.collection.aggregate(
                 [{
                     $match: match
-
                 }, {
                         $unwind: "$items"
                     }, {
