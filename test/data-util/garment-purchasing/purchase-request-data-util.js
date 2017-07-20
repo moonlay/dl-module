@@ -42,6 +42,7 @@ class PurchaseRequestDataUtil {
                         product: product01,
                         quantity: 10,
                         budgetPrice: 10000,
+                        uom: uom,
                         categoryId: category._id,
                         category: category,
                         remark: ""
@@ -50,6 +51,7 @@ class PurchaseRequestDataUtil {
                             product: product02,
                             quantity: 20,
                             budgetPrice: 20000,
+                            uom: uom,
                             categoryId: category._id,
                             category: category,
                             remark: ""
