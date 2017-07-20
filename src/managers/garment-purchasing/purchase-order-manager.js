@@ -378,7 +378,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     var purchaseOrder = {}
                     purchaseOrder.status = poStatusEnum.CREATED;
                     purchaseOrder._createdDate = new Date();
-                    purchaseOrder.no = generateCode();
                     purchaseOrder.refNo = purchaseRequest.no;
                     purchaseOrder.roNo = purchaseRequest.roNo;
 

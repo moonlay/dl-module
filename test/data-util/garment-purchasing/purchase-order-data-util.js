@@ -25,7 +25,7 @@ class PurchaseOrderDataUtil {
 
                         var poItems = purchaseRequest.items.map(prItem => {
                             return {
-                                refNo:prItem.refNo,
+                                refNo: prItem.refNo,
                                 productId: prItem.productId,
                                 product: prItem.product,
                                 defaultQuantity: prItem.quantity,
@@ -33,6 +33,7 @@ class PurchaseOrderDataUtil {
                                 defaultUom: prItem.uom,
                                 categoryId: prItem.categoryId,
                                 category: prItem.category,
+                                vat: purchaseRequest.vat
                             };
                         });
 
@@ -45,23 +46,10 @@ class PurchaseOrderDataUtil {
                             buyerId: purchaseRequest.buyerId,
                             buyer: purchaseRequest.buyer,
                             artikel: purchaseRequest.artikel,
-                            purchaseOrderExternalId: {},
-                            purchaseOrderExternal: {},
-                            sourcePurchaseOrderId: null,
-                            sourcePurchaseOrder: null,
-                            supplierId: {},
-                            supplier: new Supplier(),
                             unitId: purchaseRequest.unit._id,
                             unit: purchaseRequest.unit,
-                            categoryId: purchaseRequest.category._id,
-                            category: purchaseRequest.category,
-
-                            vat: purchaseRequest.vat,
-                            useVat: false,
-                            vatRate: 0,
-                            useIncomeTax: false,
-                            date: new Date(),
-                            expectedDeliveryDate: new Date(),
+                            date:purchaseRequest.date,
+                            expectedDeliveryDate:purchaseRequest.expectedDeliveryDate,
                             actualDeliveryDate: new Date(),
                             shipmentDate: purchaseRequest.shipmentDate,
                             isPosted: false,
