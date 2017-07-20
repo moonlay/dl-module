@@ -60,3 +60,14 @@ it('#03. should success when get pdf ', function(done) {
             }
         });
 });
+it("#04. should success when get report with date parameter", function(done) {
+    unitPaymentPriceCorrectionNoteManager.getDataKoreksiHarga({"dateFrom" : "2017-02-02", "dateTo" : "2017-02-02"})
+        .then((result) => {
+            result.should.instanceof(Array);
+            // result.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
