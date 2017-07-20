@@ -2,16 +2,11 @@ require("should");
 var helper = require("../../helper");
 
 var purchaseRequestDataUtil = require("../../data-util/garment-purchasing/purchase-request-data-util");
-var validatePR = require("dl-models").validator.garmentPurchasing.purchaseRequest;
-var PurchaseRequestManager = require("../../../src/managers/garment-purchasing/purchase-request-manager");
-var purchaseRequestManager = null;
-var purchaseRequest;
-
 var purchaseOrderDataUtil = require("../../data-util/garment-purchasing/purchase-order-data-util");
 var validatePO = require("dl-models").validator.garmentPurchasing.purchaseOrder;
 var PurchaseOrderManager = require("../../../src/managers/garment-purchasing/purchase-order-manager");
 var purchaseOrderManager = null;
-var purchaseOrder;
+
 
 before('#00. connect db', function (done) {
     helper.getDb()
