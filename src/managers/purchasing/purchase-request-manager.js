@@ -178,7 +178,9 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 valid.budget = _budget;
 
                 valid.date = new Date(valid.date);
-                valid.expectedDeliveryDate = new Date(valid.expectedDeliveryDate);
+                
+                if(valid.expectedDeliveryDate)
+                    valid.expectedDeliveryDate = new Date(valid.expectedDeliveryDate);
 
                 for (var prItem of valid.items) {
                     for (var _product of _products) {
