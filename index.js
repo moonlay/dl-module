@@ -60,6 +60,7 @@ module.exports = {
         },
         garmentPurchasing: {
             PurchaseRequestManager: require('./src/managers/garment-purchasing/purchase-request-manager'),
+            PurchaseOrderManager: require('./src/managers/garment-purchasing/purchase-order-manager'),
         },
         production: {
             spinning: {
