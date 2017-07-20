@@ -10,9 +10,9 @@ describe("CREATE SCENARIOS", function() {
 //     require("./update");
 // });
 
-// describe("SPLIT SCENARIOS", function() {
-//     require("./split");
-// });
+describe("SPLIT SCENARIOS", function() {
+    require("./split");
+});
 
 // describe("REPORT SCENARIOS", function() {
 //     require("./split");
