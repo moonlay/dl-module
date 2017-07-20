@@ -24,7 +24,6 @@ class PurchaseRequestDataUtil {
 
                 var data = {
                     no: `UT/PR/GARMENT${codeGenerator()}`,
-                    refNo: "UT/PR/GARMENT",
                     roNo: "UT/RO/PR/GARMENT",
                     buyerId: buyer._id,
                     buyer: buyer,
@@ -38,18 +37,22 @@ class PurchaseRequestDataUtil {
 
                     remark: "Unit Test",
                     items: [{
+                        refNo: "UT/PR/GARMENT/01",
                         productId: product01._id,
                         product: product01,
                         quantity: 10,
                         budgetPrice: 10000,
+                        uom: uom,
                         categoryId: category._id,
                         category: category,
                         remark: ""
                     }, {
+                            refNo: "UT/PR/GARMENT/02",
                             productId: product02._id,
                             product: product02,
                             quantity: 20,
                             budgetPrice: 20000,
+                            uom: uom,
                             categoryId: category._id,
                             category: category,
                             remark: ""
