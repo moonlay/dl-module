@@ -98,6 +98,8 @@ class ProductionOrderDataUtil {
                     materialOrigin:`greige`,
                     finishWidth:`width`,
                     design:`design`,
+                    designCode: `UT\Design`,
+                    designNumber: `UT\DesignNumber`,
                     handlingStandard:`handling`,
                     shrinkageStandard:`shrink`,
                     packingInstruction:`length`,
