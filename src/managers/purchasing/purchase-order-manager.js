@@ -78,7 +78,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 return new Promise((resolve, reject) => {
                     var query = Object.assign({});
 
-
                     if (productName !== "undefined" && productName !== "") {
                         Object.assign(query, {
                             "items.product.name": productName
@@ -682,7 +681,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             this.collection.aggregate(
                 [{
                     $match: qryMatch
-
                 }, {
                         $unwind: "$items"
                     }, {
@@ -810,7 +808,6 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                         }
                     })
             }
-
             this.collection.aggregate(
                 [{
                     $match: qryMatch
@@ -1041,7 +1038,6 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
             this.collection.aggregate(
                 [{
                     $match: match
-
                 }, {
                         $unwind: "$items"
                     }, {
