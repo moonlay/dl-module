@@ -92,6 +92,7 @@ describe('#dl-module', function (done) {
 
     //Garmet Purchasing 
     test('@GARMENT PURCHASING/PURCHASE REQUEST', './garment-purchasing/purchase-request');
+    test('@GARMENT PURCHASING/PURCHASE ORDER', './garment-purchasing/purchase-order');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
