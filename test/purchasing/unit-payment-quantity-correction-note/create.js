@@ -60,3 +60,16 @@ it('#03. should success when get pdf ', function(done) {
             }
         });
 });
+
+it("#04. should success when get report with date parameter", function(done) {
+    var dateFrom=new Date();
+    var dateTo=new Date();
+    unitPaymentQuantityCorrectionNoteManager.getMonitoringKoreksi(dateFrom,dateTo)
+        .then((result) => {
+            result.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
