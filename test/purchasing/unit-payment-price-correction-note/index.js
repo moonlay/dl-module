@@ -5,3 +5,7 @@ describe("BASIC CRUD SCENARIOS", function() {
 describe("CREATE SCENARIOS", function() {
     require("./create");
 });
+
+describe("CREATE REPORT", function() {
+    require("./report");
+});
