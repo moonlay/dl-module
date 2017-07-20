@@ -113,8 +113,8 @@ module.exports = class PackingManager extends BaseManager {
                                             } else {
 
 
-                                                var createPackingProduct = packing.items.map(item => {
-                                                    var pName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
+                                                var createPackingProduct = packing.items.map((item) => {
+                                                    var pName = item.remark !== "" || item.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}/${item.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
                                                     var packingProduct = {
                                                         code: generateCode(),
                                                         currency: {},
@@ -170,7 +170,7 @@ module.exports = class PackingManager extends BaseManager {
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packing.items.map((item) => {
-                                    var productName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
+                                    var productName = item.remark !== "" || item.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}/${item.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -187,8 +187,8 @@ module.exports = class PackingManager extends BaseManager {
                                             } else {
 
 
-                                                var createPackingProduct = packing.items.map(item => {
-                                                    var pName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
+                                                var createPackingProduct = packing.items.map((item) => {
+                                                    var pName = item.remark !== "" || item.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}/${item.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
                                                     var packingProduct = {
                                                         code: generateCode(),
                                                         currency: {},
@@ -310,14 +310,6 @@ module.exports = class PackingManager extends BaseManager {
 
                         if (!item.grade || item.grade.trim() === "")
                             itemsError["grade"] = i18n.__("Packing.items.grade.isRequired:%s is required", i18n.__("Packing.items.grade._:Grade"));
-                        else {
-                            var dup = valid.items.find((test, idx) => (item.lot === test.lot && item.grade === test.grade) && index != idx);
-                            if (dup) {
-                                itemsError["lot"] = i18n.__("Packing.items.lot.isDuplicate:%s is duplicate", i18n.__("Packing.items.lot._:Lot"));
-                                itemsError["grade"] = i18n.__("Packing.items.grade.isDuplicate:%s is duplicate", i18n.__("Packing.items.grade._:Grade"));
-                            }
-                        }
-
                         itemsErrors.push(itemsError);
                     })
 
