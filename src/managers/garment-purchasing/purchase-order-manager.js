@@ -220,7 +220,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         for (var _prItem of _purchaseRequest.items)
                             if (_prItem.product._id.toString() === poItem.product._id.toString()) {
                                 poItem.product = _prItem.product;
-                                poItem.defaultUom = _prItem.product.uom;
+                                poItem.defaultUom = _prItem.uom;
                                 break;
                             }
 
@@ -455,7 +455,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             });
     }
 
-    /*split(splittedPurchaseOrder) {
+    split(splittedPurchaseOrder) {
         return new Promise((resolve, reject) => {
             this.getSingleById(splittedPurchaseOrder.sourcePurchaseOrderId)
                 .then(sourcePurchaseOrder => {
@@ -472,7 +472,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                 }
                             }
                             sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
-                                return item.defaultQuantity > 0;
+                                return !item.isPosted && item.defaultQuantity > 0;
                             })
                             this.update(sourcePurchaseOrder)
                                 .then(results => {
@@ -492,7 +492,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 });
 
         });
-    }*/
+    }
 
     /*_getByPR(_purchaseRequestNo) {
         return new Promise((resolve, reject) => {
