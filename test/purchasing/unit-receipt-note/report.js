@@ -45,3 +45,33 @@ it('#02. should success get data when parameter dateFrom and dateTo', function (
         });
 });
 
+
+it('#03. should success get data when parameter null', function (done) {
+    unitReceiptNoteManager.getUnitReceiptNotes()
+      .then(data => {
+        data.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+});
+
+it('#04. should success when get data report PR using Parameter', function (done) {
+    var no=null;
+    var unitId=null;
+    var categoryId=null;
+    var supplierId=null;
+    var dateFrom=new Date();
+    var dateTo=new Date();
+    var offset=null;
+    var createdBy=null;
+    dateFrom.setDate(dateFrom.getDate() - 1);
+    unitReceiptNoteManager.getUnitReceiptNotes(no, unitId, categoryId, supplierId, dateFrom, dateTo, offset,  createdBy)
+    .then(data => {
+        data.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
