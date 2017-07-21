@@ -531,17 +531,17 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             });
     }
 
-    getDataPOIntMonitoring(unitId, categoryId, PODLNo, PRNo, supplierId, dateFrom, dateTo, state, budgetId, staffName, offset, createdBy) {
+    getDataPOIntMonitoring(unitId, categoryId,dateFrom, dateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
                     var query = Object.assign({});
 
-                    if (state !== -1) {
+                    /*if (state !== -1) {
                         Object.assign(query, {
                             "status.value": state
                         });
-                    }
+                    }*/
 
                     if (unitId !== "undefined" && unitId !== "") {
                         Object.assign(query, {
@@ -553,7 +553,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             categoryId: new ObjectId(categoryId)
                         });
                     }
-                    if (PODLNo !== "undefined" && PODLNo !== "") {
+                    /*if (PODLNo !== "undefined" && PODLNo !== "") {
                         Object.assign(query, {
                             "purchaseOrderExternal.no": PODLNo
                         });
@@ -567,7 +567,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         Object.assign(query, {
                             supplierId: new ObjectId(supplierId)
                         });
-                    }
+                    }*/
                     if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
                         var _dateFrom = new Date(dateFrom);
                         var _dateTo = new Date(dateTo);
@@ -590,11 +590,11 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             _createdBy: staffName
                         });
                     }*/
-                    if (budgetId !== undefined && budgetId !== "undefined" && budgetId !== "") {
+                    /*if (budgetId !== undefined && budgetId !== "undefined" && budgetId !== "") {
                         Object.assign(query, {
                             "purchaseRequest.budgetId": new ObjectId(budgetId)
                         });
-                    }
+                    }*/
                     query = Object.assign(query, { _deleted: false });
                     this.collection.find(query).toArray()
                         .then(purchaseOrders => {
