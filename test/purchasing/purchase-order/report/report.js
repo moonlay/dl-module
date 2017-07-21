@@ -221,7 +221,7 @@ it('#12. should success when get data report PO Per Unit,Kategori with date', fu
    var dateFrom = null;
    var dateTo   = null;
    var unitId   = null;
-   var categoryId   = null;
+   var categoryId   = "EMBALAGE";
     purchaseOrderManager.getDataPOIntMonitoring(dateFrom, dateTo, unitId, categoryId)
     .then(po => {
         po.should.instanceof(Array);
