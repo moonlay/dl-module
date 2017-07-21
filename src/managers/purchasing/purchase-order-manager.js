@@ -571,8 +571,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
                         var _dateFrom = new Date(dateFrom);
                         var _dateTo = new Date(dateTo);
-                        _dateFrom.setHours(_dateFrom.getHours() - offset);
-                        _dateTo.setHours(_dateTo.getHours() - offset);
+                        // _dateFrom.setHours(_dateFrom.getHours() - offset);
+                        // _dateTo.setHours(_dateTo.getHours() - offset);
                         Object.assign(query, {
                             date: {
                                 $gte: _dateFrom,
