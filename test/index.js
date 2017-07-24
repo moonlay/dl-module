@@ -78,7 +78,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/COMPANY', './master/company');
     test('@MASTER/CONTACT', './master/contact');
 
-    //Purchasing 
+    // Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
     test('@PURCHASING/PURCHASE ORDER', './purchasing/purchase-order');
     test('@PURCHASING/PURCHASE ORDER EXTERNAL', './purchasing/purchase-order-external');
