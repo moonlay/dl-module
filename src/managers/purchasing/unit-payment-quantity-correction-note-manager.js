@@ -557,7 +557,6 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                 var Jumlah= a1 + '.' + a[1];
 
             item["JUMLAH"] = Jumlah; 
-            // item["Jumlah"] = corqty.items.quantity? corqty.items.quantity : '';
             item["SATUAN"] = corqty.items.uom.unit? corqty.items.uom.unit : '';
 
                 var x= corqty.items.pricePerUnit.toFixed(4).toString().split('.');
