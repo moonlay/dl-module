@@ -33,7 +33,35 @@ it('#01. should error when create with empty data ', function(done) {
         });
 });
 
-it("#02. should success when get report with date parameter", function(done) {
+it('#02. should success when create new unit-payment-quantity-correction-note', function (done) {
+    unitPaymentQuantityCorrectionNoteDataUtil.getNewTestDataInsertTwice()
+        .then((data) => {
+            data.should.instanceof(item);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+
+it('#03. should success when get pdf ', function(done) {
+    unitPaymentQuantityCorrectionNoteManager.pdf(createdId)
+        .then((binary) => {
+            result.should.instanceof(binary);
+            done();
+        })
+        .catch(e => {
+            try {
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});
+
+it("#04. should success when get report with date parameter", function(done) {
     unitPaymentQuantityCorrectionNoteManager.getMonitoringKoreksi({"dateForm" : "2017-02-01", "dateTo" : "2017-02-01"})
         .then((result) => {
             result.should.instanceof(Array);
@@ -45,7 +73,7 @@ it("#02. should success when get report with date parameter", function(done) {
 });
 
  var resultForExcelTest = {};
-it('#03. should success when get data with Start Date', function (done) {
+it('#05. should success when get data with Start Date', function (done) {
     var query = {};
     query.dateFrom = "2017-02-01";
     query.dateTo = "2017-02-01";
@@ -106,7 +134,7 @@ it('#03. should success when get data with Start Date', function (done) {
         });
 });
 
-it('#04. should success when get data for Excel Report', function (done) {
+it('#06. should success when get data for Excel Report', function (done) {
     var query = {};
     query.dateFrom = "2017-02-01";
     query.dateTo = "2017-02-01";
