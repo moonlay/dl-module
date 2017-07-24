@@ -597,15 +597,6 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         if(query.dateFrom && query.dateTo){
             xls.name = `Monitoring Koreksi Jumlah ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
-        // else if(!query.dateFrom && query.dateTo){
-        //     xls.name = `Monitoring Koreksi Jumlah ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
-        // }
-        // else if(query.dateFrom && !query.dateTo){
-        //     xls.name = `Monitoring Koreksi Jumlah ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
-        // }
-        // else
-        //     xls.name = `Monitoring Koreksi Jumlah.xlsx`;
-
         return Promise.resolve(xls);
     }
 
