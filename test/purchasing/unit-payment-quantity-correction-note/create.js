@@ -33,30 +33,119 @@ it('#01. should error when create with empty data ', function(done) {
         });
 });
 
-it('#02. should success when create new unit-payment-quantity-correction-note', function (done) {
-    unitPaymentQuantityCorrectionNoteDataUtil.getNewTestDataInsertTwice()
-        .then((data) => {
-            data._id.should.be.Object();
-            createdId = data._id;
+// it('#02. should success when create new unit-payment-quantity-correction-note', function (done) {
+//     unitPaymentQuantityCorrectionNoteDataUtil.getNewTestDataInsertTwice()
+//         .then((data) => {
+//             data._id.should.be.Object();
+//             createdId = data._id;
+//             done();
+//         })
+//         .catch(e => {
+//             done(e);
+//         });
+// });
+
+
+// it('#03. should success when get pdf ', function(done) {
+//     unitPaymentQuantityCorrectionNoteManager.pdf(createdId)
+//         .then((binary) => {
+//             done();
+//         })
+//         .catch(e => {
+//             try {
+//                 done();
+//             }
+//             catch (ex) {
+//                 done(ex);
+//             }
+//         });
+// });
+
+it("#02. should success when get report with date parameter", function(done) {
+    unitPaymentQuantityCorrectionNoteManager.getMonitoringKoreksi({"dateForm" : "2017-02-01", "dateTo" : "2017-02-01"})
+        .then((result) => {
+            result.should.instanceof(Array);
             done();
         })
-        .catch(e => {
+        .catch((e) => {
             done(e);
         });
 });
 
+ var resultForExcelTest = {};
+it('#03. should success when get data with Start Date', function (done) {
+    var query = {};
+    query.dateFrom = "2017-02-01";
+    query.dateTo = "2017-02-01";
 
-it('#03. should success when get pdf ', function(done) {
-    unitPaymentQuantityCorrectionNoteManager.pdf(createdId)
-        .then((binary) => {
+    unitPaymentQuantityCorrectionNoteManager.getMonitoringKoreksi(query)
+        .then(result => {
+            var po = result;
+            resultForExcelTest.data = [{
+            "date" : new Date(),
+            "no":"A221",
+            "unitPaymentOrder.no":"AAA",
+            items:
+               { 
+                   quantity : 3,
+                   pricePerUnit : 1000,
+                   priceTotal :3000,
+                   purchaseOrder :
+                    {
+                        purchaseOrderExternal : { no :"BBB"},
+                        purchaseRequest : {  no :"aaaa"},
+                        unit:{
+                            name :"ccc"
+
+                        },
+                    },
+                    product: {
+                        code : "sss",
+                        name :"sdsd",
+
+                    },
+                    uom :
+                    {unit : "MTR"},
+                    
+               }
+                ,
+                unitPaymentOrder : 
+                {
+                    category : {
+                        name : "ddd"
+                    },
+                    supplier : {
+                        name : "aaa"
+                    }
+                },
+            
+            "returNoteNo":"ccc",
+            "incomeTaxCorrectionNo":"ccc",
+            "incomeTaxCorrectionDate": new Date(),
+            "Jumlah":100,
+            "HARGA":2000,
+            "TOTAL":2000,
+            "_createdBy":"AAA"
+        }];
+            po.should.instanceof(Array);
             done();
-        })
-        .catch(e => {
-            try {
-                done();
-            }
-            catch (ex) {
-                done(ex);
-            }
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#04. should success when get data for Excel Report', function (done) {
+    var query = {};
+    query.dateFrom = "2017-02-01";
+    query.dateTo = "2017-02-01";
+
+    unitPaymentQuantityCorrectionNoteManager.getXls(resultForExcelTest, query)
+        .then(xlsData => {             
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
         });
 });

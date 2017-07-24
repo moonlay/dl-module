@@ -13,6 +13,7 @@ var UnitPaymentOrderManager = require('./unit-payment-order-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
 var UnitReceiptNoteManager = require('./unit-receipt-note-manager');
+var moment = require('moment');
 
 module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseManager {
     constructor(db, user) {
@@ -522,6 +523,91 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                             })
                     })
             })
+    }
+
+    getXls(result, query){
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for(var corqty of result.data){
+            index++;
+            var item = {};
+            item["NO"] = index;
+            item["NO NOTA DEBET"] = corqty.no ? corqty.no : '';
+            item["TANGGAL NOTA DEBET"] = corqty.date ? moment(new Date(corqty.date)).format(dateFormat) : '';
+            item["NO SPB"] = corqty.unitPaymentOrder? corqty.unitPaymentOrder.no : '';
+            item["NO PO EXTERNAL"] = corqty.items.purchaseOrder.purchaseOrderExternal? corqty.items.purchaseOrder.purchaseOrderExternal.no : '';
+            item["NO PURCHASE REQUEST"] = corqty.items.purchaseOrder.purchaseRequest? corqty.items.purchaseOrder.purchaseRequest.no : '';
+            item["NOTA RETUR"] = corqty.returNoteNo? corqty.returNoteNo : '';
+            item["FAKTUR PAJAK PPN"] = corqty.incomeTaxCorrectionNo? corqty.incomeTaxCorrectionNo : '';
+            item["TANGGAL FAKTUR PAJAK PPN"] = corqty.incomeTaxCorrectionDate? moment(new Date(corqty.incomeTaxCorrectionDate)).format(dateFormat) : '';
+            item["UNIT"] = corqty.items.purchaseOrder.unit.name? corqty.items.purchaseOrder.unit.name : '';
+            item["KATEGORI"] = corqty.unitPaymentOrder.category? corqty.unitPaymentOrder.category.name : '';
+            item["SUPPLIER"] = corqty.unitPaymentOrder.supplier? corqty.unitPaymentOrder.supplier.name : '';
+            item["KODE BARANG"] = corqty.items.product? corqty.items.product.code : '';
+            item["NAMA BARANG"] = corqty.items.product? corqty.items.product.name : '';
+
+                var a= corqty.items.quantity.toFixed(2).toString().split('.');
+                var a1=a[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                var Jumlah= a1 + '.' + a[1];
+
+            item["JUMLAH"] = Jumlah; 
+            // item["Jumlah"] = corqty.items.quantity? corqty.items.quantity : '';
+            item["SATUAN"] = corqty.items.uom.unit? corqty.items.uom.unit : '';
+
+                var x= corqty.items.pricePerUnit.toFixed(4).toString().split('.');
+                var x1=x[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                var HARGA= x1 + '.' + x[1];
+
+                var y= corqty.items.priceTotal.toFixed(2).toString().split('.');
+                var y1=y[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                var TOTAL= y1 + '.' + y[1];
+   
+            item["HARGA SATUAN"] = HARGA;
+            item["HARGA TOTAL"] = TOTAL;
+            item["USER INPUT"] = corqty._createdBy? corqty._createdBy : '';
+            
+            xls.data.push(item);
+        }
+
+        xls.options["NO"] = "number";
+        xls.options["NO NOTA DEBET"] = "string";
+        xls.options["TANGGAL NOTA DEBET"] = "date";
+        xls.options["NO SPB"] = "string";
+        xls.options["NO PO EXTERNAL"] = "string";
+        xls.options["NO PURCHASE REQUEST"] = "string";
+        xls.options["NOTA RETUR"] = "string";
+        xls.options["FAKTUR PAJAK PPN"] = "string";
+        xls.options["TANGGAL FAKTUR PAJAK PPN"] = "date";
+        xls.options["UNIT"] = "string";
+        xls.options["KATEGORI"] = "string";
+        xls.options["SUPPLIER"] = "string";
+        xls.options["KODE BARANG"] = "string";
+        xls.options["NAMA BARANG"] = "string";
+        xls.options["JUMLAH"] = "number";
+        xls.options["SATUAN"] = "string";
+        xls.options["HARGA SATUAN"] = "number";
+        xls.options["HARGA TOTAL"] = "number";
+        xls.options["USER INPUT"] = "string";
+
+        if(query.dateFrom && query.dateTo){
+            xls.name = `Monitoring Koreksi Jumlah ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(!query.dateFrom && query.dateTo){
+            xls.name = `Monitoring Koreksi Jumlah ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(query.dateFrom && !query.dateTo){
+            xls.name = `Monitoring Koreksi Jumlah ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Monitoring Koreksi Jumlah.xlsx`;
+
+        return Promise.resolve(xls);
     }
 
     _createIndexes() {
