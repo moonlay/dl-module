@@ -92,6 +92,7 @@ describe('#dl-module', function (done) {
 
     //Garmet Purchasing 
     test('@GARMENT PURCHASING/PURCHASE REQUEST', './garment-purchasing/purchase-request');
+    test('@GARMENT PURCHASING/PURCHASE ORDER', './garment-purchasing/purchase-order');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
@@ -111,7 +112,9 @@ describe('#dl-module', function (done) {
     // test('@production/winding-quality-sampling-manager', './production/spinning/winding/winding-quality-sampling-manager-test');
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
 
+    //Inventory
     test('@INVENTORY/FINISHING-PRINTING/PACKING-RECEIPT', './inventory/finishing-printing/packing-receipt');
+    test('@INVENTORY/FINISHING-PRINTING/SHIPMENT-DOCUMENT', './inventory/finishing-printing/shipment-document');
     test('@INVENTORY/INVENTORY-SUMMARY', './inventory/inventory-summary');
     test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');

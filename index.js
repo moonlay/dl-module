@@ -44,7 +44,8 @@ module.exports = {
         },
         inventory: {
             finishingPrinting: {
-                FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager")
+                FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager"),
+                FPShipmentDocument: require("./src/managers/inventory/finishing-printing/fp-shipment-document-manager")
             },
             InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager"),
             InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
@@ -62,6 +63,7 @@ module.exports = {
         },
         garmentPurchasing: {
             PurchaseRequestManager: require('./src/managers/garment-purchasing/purchase-request-manager'),
+            PurchaseOrderManager: require('./src/managers/garment-purchasing/purchase-order-manager'),
         },
         production: {
             spinning: {

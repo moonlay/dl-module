@@ -781,6 +781,13 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "orderTypeId": (new ObjectId(filter.orderTypeId))
                 });
             }
+            
+            if (filter.accountId) {
+                Object.assign(qry, {
+                    "accountId": (new ObjectId(filter.accountId))
+                });
+            }
+
             if (filter.sdate && filter.edate) {
                 Object.assign(qry, {
                     "_createdDate": {
@@ -836,15 +843,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     .toArray());
             Promise.all(getPrdOrder).then(result => {
                 var resCount = result[0];
-                var count = resCount.length > 0 ? resCount[0].count : 0;
                 var prodOrders = result[1];
                 prodOrders = [].concat.apply([], prodOrders);
 
                         var results = {
                             data: prodOrders,
-                            count: prodOrders.length,
-                            size: 20,
-                            total: count,
                         }; 
                         resolve(results);
             })
