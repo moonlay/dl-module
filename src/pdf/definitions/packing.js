@@ -208,13 +208,13 @@ module.exports = function (packing, offset) {
         text: "Total",
         style: ['size08', 'center']
     }, {
-        text: totalJumlah,
+        text: totalJumlah.toFixed(2),
         style: ['size08', 'center']
     }, {
-        text: totalBerat,
+        text: totalBerat.toFixed(2),
         style: ['size08', 'center']
     }, {
-        text: totalPanjang,
+        text: totalPanjang.toFixed(2),
         style: ['size08', 'center']
     }, "",]];
 
