@@ -319,6 +319,104 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return query;
     }
 
+    getPurchaseOrderByTag(categoryId, keyword, shipmentDate) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var keywords = [];
+
+                    var query = Object.assign({});
+                    var queryCategory = {
+                        "items.categoryId": new ObjectId(categoryId),
+                        "items.isPosted": false
+                    };
+                    query = Object.assign(query, {
+                        _deleted: false,
+                        isClosed: false,
+                        isPosted: false
+                    });
+                    if (keyword) {
+                        var keywordFilters = [];
+                        if (keyword.indexOf("#") != -1) {
+                            keywords = keyword.split("#");
+                            keywords = this.cleanUp(keywords);
+                        } else {
+                            keywords.push(keyword)
+                        }
+                        for (var _keyword of keywords) {
+                            var keywordFilter = {};
+                            var regex = new RegExp(_keyword, "i");
+
+                            var filterRoNo = {
+                                "roNo": {
+                                    "$regex": regex
+                                }
+                            };
+
+                            var filterBuyer = {
+                                "buyer.name": {
+                                    "$regex": regex
+                                }
+                            };
+
+                            var filterArtikel = {
+                                "artikel": {
+                                    "$regex": regex
+                                }
+                            };
+
+                            keywordFilters.push(filterRoNo, filterBuyer, filterArtikel);
+                        }
+                        query['$or'] = keywordFilters;
+                    }
+
+                    var _select = {
+                        "no": 1,
+                        "purchaseRequest.no": 1,
+                        "roNo": 1,
+                        "isPosted": 1,
+                        "isUsed": 1,
+                        "_createdBy": 1,
+                        "year": { $year: "$shipmentDate" },
+                        "month": { $month: "$shipmentDate" },
+                        "day": { $dayOfMonth: "$shipmentDate" },
+                        "items.refNo": 1,
+                        "items.product": "$items.product",
+                        "items.productId": "$items.productId",
+                        "items.defaultQuantity": "$items.defaultQuantity",
+                        "items.defaultUom": "$items.defaultUom",
+                        "items.budgetPrice": "$items.budgetPrice",
+                        "items.isPosted": "$items.isPosted",
+                        "items.isClosed": "$items.isClosed",
+                        "items.category": "$items.category",
+                        "items.categoryId": "$items.categoryId",
+                    };
+
+                    var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryCategory }, { $project: _select }];
+
+                    var queryDate = Object.assign({});
+                    if (shipmentDate) {
+                        var _shipmentDate = new Date(shipmentDate);
+
+                        queryDate = {
+                            year: _shipmentDate.getFullYear(),
+                            month: _shipmentDate.getMonth() + 1,
+                            day: _shipmentDate.getDate()
+                        }
+                        qryMatch.push({ $match: queryDate })
+                    }
+
+                    this.collection.aggregate(qryMatch).toArray()
+                        .then((purchaseOrders) => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
     _beforeInsert(purchaseOrder) {
         purchaseOrder.no = generateCode();
         purchaseOrder.status = poStatusEnum.CREATED;
