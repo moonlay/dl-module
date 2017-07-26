@@ -99,6 +99,10 @@ describe('#dl-module', function (done) {
     test('@SALES/FINISHING PRINTING SALES CONTRACT', './sales/finishing-printing-sales-contract');
     test('@SALES/SPINNING SALES CONTRACT', './sales/spinning-sales-contract');
     test('@SALES/WEAVING SALES CONTRACT', './sales/weaving-sales-contract');
+    test('@SALES/DEAL TRACKING BOARD', './sales/deal-tracking-board');
+    test('@SALES/DEAL TRACKING STAGE', './sales/deal-tracking-stage');
+    test('@SALES/DEAL TRACKING DEAL', './sales/deal-tracking-deal');
+    test('@SALES/DEAL TRACKING ACTIVITY', './sales/deal-tracking-activity');
 
     //Production
     test('@PRODUCTION/FINISHING-PRINTING/KANBAN', './production/finishing-printing/kanban');
