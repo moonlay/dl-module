@@ -328,7 +328,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     var query = Object.assign({});
                     var queryCategory = {
                         "items.categoryId": new ObjectId(categoryId),
-                        "items.isPosted": false
+                        "items.isPosted": false,
+                        "items.isClosed": false
                     };
                     query = Object.assign(query, {
                         _deleted: false,
@@ -373,6 +374,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     var _select = {
                         "no": 1,
                         "purchaseRequest.no": 1,
+                        "purchaseRequest._id": 1,
                         "roNo": 1,
                         "isPosted": 1,
                         "isUsed": 1,
@@ -420,6 +422,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     _beforeInsert(purchaseOrder) {
         purchaseOrder.no = generateCode();
         purchaseOrder.status = poStatusEnum.CREATED;
+        purchaseOrder.items.map((item) => item.status = poStatusEnum.CREATED);
         purchaseOrder._createdDate = new Date();
         return Promise.resolve(purchaseOrder);
     }
