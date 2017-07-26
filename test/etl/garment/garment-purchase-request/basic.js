@@ -43,10 +43,25 @@ before("#00. connect db", function (done) {
 //         });
 // });
 
+var extractedData;
+it("#01. should success when extract all data", function (done) {
+
+    garmentPurchaseRequestDataUtil.getNewData()
+        .then((result) => {
+            extractedData = result;
+            extractedData.should.instanceof(Array);
+            extractedData.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            console.log(e);
+            done(e);
+        });
+});
+
 var transfrom;
 it("#02. should success when transfrom all data", function (done) {
-    garmentPurchaseRequestDataUtil.getNewData()
-        .then((data) => instanceManager.transform(data))
+    instanceManager.transform(extractedData)
         .then((result) => {
             transfrom = result;
             transfrom.should.instanceof(Array);
