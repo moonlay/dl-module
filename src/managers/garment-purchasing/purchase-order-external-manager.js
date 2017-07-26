@@ -265,7 +265,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             for (var items of valid.items) {
                                 var itemError = {};
                                 var po = _poInternals.find((poInternal) => poInternal._id.toString() == items.poId.toString());
-                                var poItem = po.items.find((item) => { item.product._id === new ObjectId(items.product._id) })
+                                var poItem = po.items.find((item) =>  item.product._id.toString() === items.product._id.toString() )
                                 if (poItem) {
                                     if (poItem.isPosted && !valid._id) {
                                         itemError["no"] = i18n.__("PurchaseOrderExternal.items.isPosted:%s is already used", i18n.__("PurchaseOrderExternal.items._:Purchase Order Internal ")); //"Purchase order internal tidak boleh kosong";
@@ -289,10 +289,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     }
                                     if (!items.priceBeforeTax || items.priceBeforeTax === 0) {
                                         itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
-                                    } else if (product) {
-                                        if (items.priceBeforeTax > items.budgetPrice) {
-                                            itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isGreater:%s must not be greater than default price", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
-                                        }
+                                    } else if (items.priceBeforeTax > items.budgetPrice) {
+                                        itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isGreater:%s must not be greater than budget price", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
                                     }
                                     var price = (items.priceBeforeTax.toString()).split(",");
                                     if (price[1] != undefined || price[1] !== "" || price[1] !== " ") {
@@ -314,7 +312,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             }
                             for (var itemError of itemErrors) {
                                 if (Object.getOwnPropertyNames(itemError).length > 0) {
-                                    errors.items = itemErrors;
+                                    error.items = itemErrors;
                                     break;
                                 }
                             }
@@ -350,7 +348,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             _item.dealQuantity = Number(_item.dealQuantity);
                             _item.defaultQuantity = Number(_item.defaultQuantity);
                             _item.priceBeforeTax = Number(_item.priceBeforeTax);
-                            _item.pricePerDealUnit = Number(_item.pricePerDealUnit);
+                            _item.pricePerDealUnit = _item.useIncomeTax ? (100 * _item.priceBeforeTax) / 110 : _item.priceBeforeTax;
                             _item.budgetPrice = Number(_item.budgetPrice);
                             _item.conversion = Number(_item.conversion);
                             items.push(_item);
@@ -375,37 +373,50 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
     _afterInsert(id) {
         return this.getSingleById(id)
             .then((purchaseOrderExternal) => {
-                var jobsGetPO = purchaseOrderExternal.items.map((poeItem) => {
-                    return this.purchaseOrderManager.getSingleByIdOrDefault(poeItem.poId)
+                var _poIds = purchaseOrderExternal.items.map((item) => {
+                    return item.poId.toString()
+                });
+                _poIds = [].concat.apply([], _poIds);
+
+                var _listPoIds = _poIds.filter(function (elem, index, self) {
+                    return index == self.indexOf(elem);
+                })
+                var jobsGetPO = _listPoIds.map((poeItem) => {
+                    return this.purchaseOrderManager.getSingleByIdOrDefault(poeItem)
                 });
                 return Promise.all(jobsGetPO)
                     .then((listPurchaseOrders) => {
-                        var jobsUpdatePO = listPurchaseOrders.map((purchaseOrder) => {
-                            purchaseOrder.status = poStatusEnum.PROCESSING;
-                            for (var poItem of purchaseOrder.items) {
-                                var poExtItem = purchaseOrderExternal.items.find((poeItem) => poItem.product._id.toString() === poeItem.product._id.toString());
-                                if (poExtItem) {
-                                    poItem.pricePerDealUnit = Number(poExtItem.pricePerDealUnit);
-                                    poItem.priceBeforeTax = Number(poExtItem.priceBeforeTax);
-                                    poItem.dealQuantity = Number(poExtItem.dealQuantity);
-                                    poItem.dealUom = poExtItem.dealUom;
-                                    poItem.conversion = Number(poExtItem.conversion);
-                                    poItem.isClosed = true;
-                                }
-                            }
-                            purchaseOrder.isClosed = purchaseOrder.items
-                                .map((item) => item.isClosed)
-                                .reduce((prev, curr, index) => {
-                                    return prev && curr
-                                }, true);
-                            return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
-                        });
-                        return Promise.all(jobsUpdatePO)
-                            .then((purchaseOrders) => {
-                                Promise.resolve(id)
-                            });
+                        this.updatePurchaseOrder(listPurchaseOrders, purchaseOrderExternal)
                     })
+            })
+            .then(() => {
+                return Promise.resolve(id)
             });
+    }
+
+    updatePurchaseOrder(listPurchaseOrders, purchaseOrderExternal) {
+        var jobsUpdatePO = listPurchaseOrders.map((purchaseOrder) => {
+            for (var poItem of purchaseOrder.items) {
+                var poExtItem = purchaseOrderExternal.items.find((poeItem) => purchaseOrder._id.toString() === poeItem.poId.toString() && poItem.product._id.toString() === poeItem.product._id.toString());
+                if (poExtItem) {
+                    poItem.pricePerDealUnit = Number(poExtItem.pricePerDealUnit);
+                    poItem.priceBeforeTax = Number(poExtItem.priceBeforeTax);
+                    poItem.dealQuantity = Number(poExtItem.dealQuantity);
+                    poItem.dealUom = poExtItem.dealUom;
+                    poItem.conversion = Number(poExtItem.conversion);
+                    poItem.isClosed = true;
+                    poItem.status = poStatusEnum.PROCESSING;
+                }
+            }
+            purchaseOrder.status = purchaseOrder.items.find((item) => item.status.value === Math.max.apply(Math, purchaseOrder.items.map(function (item) { return item.status.value; }))).status
+            purchaseOrder.isClosed = purchaseOrder.items
+                .map((item) => item.isClosed)
+                .reduce((prev, curr, index) => {
+                    return prev && curr
+                }, true);
+            return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+        });
+        return Promise.all(jobsUpdatePO)
     }
 
     _beforeUpdate(purchaseOrderExternal) {
@@ -415,15 +426,15 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 var newItems = [];
                 var jobs = [];
                 for (var oldItem of oldPurchaseOrderExternal.items) {
-                    var _item = purchaseOrderExternal.items.find(item => item._id.toString() === oldItem._id.toString());
-                    if (!_item) {
+                    var _itemIndex = purchaseOrderExternal.items.find((item) => item.poId.toString() === oldItem.poId.toString() && item.product._id.toString() === oldItem.product._id.toString());
+                    if (!_itemIndex) {
                         oldItems.push(oldItem);
                     }
                 }
 
                 for (var newItem of purchaseOrderExternal.items) {
-                    var _item = oldPurchaseOrderExternal.items.find(item => item._id.toString() === newItem._id.toString());
-                    if (!_item) {
+                    var _itemIndex = oldPurchaseOrderExternal.items.find((item) => item.poId.toString() === newItem.poId.toString() && item.product._id.toString() === newItem.product._id.toString());
+                    if (!_itemIndex) {
                         newItems.push(newItem);
                     }
                 }
@@ -445,69 +456,81 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
     }
 
     _deleteOldPO(oldItems) {
-        var getPurchaseOrderIds = oldItems.map((purchaseOrder) => this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrder._id));
-        var getPurchaseRequestIds = oldItems.map((purchaseOrder) => this.purchaseRequestManager.getSingleByIdOrDefault(purchaseOrder.purchaseRequest._id));
-        return Promise.all(getPurchaseRequestIds)
-            .then((purchaseRequests) => {
-                var jobsUpdatePR = purchaseRequests.map((purchaseRequest) => {
-                    purchaseRequest.status = prStatusEnum.PROCESSING;
-                    return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
-                })
-                return Promise.all(jobsUpdatePR);
-            })
-            .then((purchaseRequests) => {
-                return Promise.all(getPurchaseOrderIds)
-                    .then((purchaseOrders) => {
-                        var jobsUpdatePO = purchaseOrders.map((purchaseOrder) => {
-                            var _purchaseRequest = purchaseRequests.find((purchaseRequest) => purchaseRequest._id.toString() === purchaseOrder.purchaseRequest._id.toString());
-                            if (_purchaseRequest) {
-                                purchaseOrder.purchaseRequest = _purchaseRequest;
-                            }
-                            purchaseOrder.isPosted = false;
-                            purchaseOrder.status = poStatusEnum.CREATED;
-                            for (var poItem of purchaseOrder.items) {
+        var _poIds = oldItems.map((item) => {
+            return item.poId.toString()
+        });
+        _poIds = [].concat.apply([], _poIds);
+
+        var _listPoIds = _poIds.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+        var getPurchaseOrderIds = _listPoIds.map((poId) => this.purchaseOrderManager.getSingleByIdOrDefault(poId));
+
+        return Promise.all(getPurchaseOrderIds)
+            .then((purchaseOrders) => {
+                var jobsUpdatePO = purchaseOrders.map((purchaseOrder) => {
+                    for (var oldItem of oldItems) {
+                        if (purchaseOrder._id.toString() === oldItem.poId.toString()) {
+                            var poItem = purchaseOrder.items.find((poItem) => oldItem.product._id.toString() === poItem.product._id.toString());
+                            if (poItem) {
+                                poItem.pricePerDealUnit = 0;
                                 poItem.priceBeforeTax = 0;
                                 poItem.dealQuantity = 0;
                                 poItem.dealUom = new uom();
                                 poItem.conversion = 1;
-                                poItem.isClosed = true;
+                                poItem.isClosed = false;
+                                poItem.status = poStatusEnum.CREATED;
                             }
-
-                            purchaseOrder.isClosed = purchaseOrder.items
-                                .map((item) => item.isClosed)
-                                .reduce((prev, curr, index) => {
-                                    return prev && curr
-                                }, true);
-                            return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
-                        })
-                        return Promise.all(jobsUpdatePO)
-                    })
+                        }
+                    }
+                    purchaseOrder.status = purchaseOrder.items.find((item) => item.status.value === Math.max.apply(Math, purchaseOrder.items.map(function (item) { return item.status.value; }))).status
+                    purchaseOrder.isClosed = purchaseOrder.items
+                        .map((item) => item.isClosed)
+                        .reduce((prev, curr, index) => {
+                            return prev && curr
+                        }, true);
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                })
+                return Promise.all(jobsUpdatePO)
             })
     }
 
     _insertNewPO(newItems) {
-        var getPurchaseOrderIds = newItems.map((purchaseOrder) => this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrder._id));
+        var _poIds = newItems.map((item) => {
+            return item.poId.toString()
+        });
+        _poIds = [].concat.apply([], _poIds);
+
+        var _listPoIds = _poIds.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+        var getPurchaseOrderIds = _listPoIds.map((poId) => this.purchaseOrderManager.getSingleByIdOrDefault(poId));
+
         return Promise.all(getPurchaseOrderIds)
             .then((purchaseOrders) => {
                 var jobsUpdatePO = purchaseOrders.map((purchaseOrder) => {
-                    purchaseOrder.status = poStatusEnum.PROCESSING;
-                    var poeItem = newItems.find((po) => po._id.toString() === purchaseOrder._id.toString());
-                    if (poeItem) {
-                        for (var item of poeItem.items) {
-                            var poItem = purchaseOrder.items.find((_poItem) => _poItem.product._id.toString() === item.product._id.toString());
+                    for (var newItem of newItems) {
+                        if (purchaseOrder._id.toString() === newItem.poId.toString()) {
+                            var poItem = purchaseOrder.items.find((poItem) => poItem.product._id.toString() === newItem.product._id.toString());
                             if (poItem) {
-                                poItem.priceBeforeTax = item.priceBeforeTax;
-                                poItem.dealQuantity = item.dealQuantity;
-                                poItem.dealUom = item.dealUom;
-                                poItem.conversion = item.conversion;
+                                poItem.pricePerDealUnit = Number(newItem.pricePerDealUnit);
+                                poItem.priceBeforeTax = Number(newItem.priceBeforeTax);
+                                poItem.dealQuantity = Number(newItem.dealQuantity);
+                                poItem.dealUom = newItem.dealUom;
+                                poItem.conversion = Number(newItem.conversion);
                                 poItem.isClosed = true;
+                                poItem.status = poStatusEnum.PROCESSING;
                             }
                         }
-                        return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
-                    } else {
-                        return Promise.resolve(null);
                     }
-                })
+                    purchaseOrder.status = purchaseOrder.items.find((item) => item.status.value === Math.max.apply(Math, purchaseOrder.items.map(function (item) { return item.status.value; }))).status
+                    purchaseOrder.isClosed = purchaseOrder.items
+                        .map((item) => item.isClosed)
+                        .reduce((prev, curr, index) => {
+                            return prev && curr
+                        }, true);
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                });
                 return Promise.all(jobsUpdatePO)
             })
     }
@@ -518,61 +541,58 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 return this._validate(poExternal)
                     .then((purchaseOrderExternal) => {
                         purchaseOrderExternal._deleted = true;
-                        return this.update(purchaseOrderExternal);
+                        return this.collection
+                            .updateOne({
+                                _id: purchaseOrderExternal._id
+                            }, {
+                                $set: purchaseOrderExternal
+                            })
                     })
                     .then((poExId) => {
                         var query = {
-                            _id: ObjectId.isValid(poExId) ? new ObjectId(poExId) : {}
+                            _id: ObjectId.isValid(poExternal._id) ? new ObjectId(poExternal._id) : {}
                         };
                         return this.getSingleByQuery(query);
                     })
                     .then((purchaseOrderExternal) => {
-                        var getPurchaseOrderIds = purchaseOrderExternal.items.map((purchaseOrder) => this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrder._id));
-                        var getPurchaseRequestIds = purchaseOrderExternal.items.map((purchaseOrder) => this.purchaseRequestManager.getSingleByIdOrDefault(purchaseOrder.purchaseRequest._id));
+                        var _poIds = purchaseOrderExternal.items.map((item) => {
+                            return item.poId.toString()
+                        });
+                        _poIds = [].concat.apply([], _poIds);
 
-                        return Promise.all(getPurchaseRequestIds)
-                            .then((purchaseRequests) => {
-                                var jobsUpdatePR = purchaseRequests.map((purchaseRequest) => {
-                                    purchaseRequest.status = prStatusEnum.PROCESSING;
-                                    return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
-                                })
-                                return Promise.all(jobsUpdatePR);
-                            })
-                            .then((purchaseRequests) => {
-                                return Promise.all(getPurchaseOrderIds)
-                                    .then((purchaseOrders) => {
-                                        var jobsUpdatePO = purchaseOrders.map((purchaseOrder) => {
-                                            var _purchaseRequest = purchaseRequests.find((purchaseRequest) => purchaseRequest._id.toString() === purchaseOrder.purchaseRequest._id.toString());
-                                            if (_purchaseRequest) {
-                                                purchaseOrder.purchaseRequest = _purchaseRequest;
-                                            }
-                                            purchaseOrder.isPosted = false;
-                                            purchaseOrder.status = poStatusEnum.CREATED;
-                                            for (var poItem of purchaseOrder.items) {
+                        var _listPoIds = _poIds.filter(function (elem, index, self) {
+                            return index == self.indexOf(elem);
+                        })
+
+                        var jobsGetPO = _listPoIds.map((poId) => {
+                            return this.purchaseOrderManager.getSingleByIdOrDefault(poId)
+                        });
+                        return Promise.all(jobsGetPO)
+                            .then((listPurchaseOrders) => {
+                                var jobsUpdatePO = listPurchaseOrders.map((purchaseOrder) => {
+                                    for (var item of purchaseOrderExternal.items) {
+                                        if (purchaseOrder._id.toString() === item.poId.toString()) {
+                                            var poItem = purchaseOrder.items.find((poItem) => item.product._id.toString() === poItem.product._id.toString());
+                                            if (poItem) {
+                                                poItem.pricePerDealUnit = 0;
                                                 poItem.priceBeforeTax = 0;
                                                 poItem.dealQuantity = 0;
                                                 poItem.dealUom = new uom();
                                                 poItem.conversion = 1;
+                                                poItem.isClosed = false;
+                                                poItem.status = poStatusEnum.CREATED;
                                             }
-                                            return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder)
-                                        })
-                                        return Promise.all(jobsUpdatePO)
-                                    })
-                            })
-                            .then((purchaseOrders) => {
-                                for (var purchaseOrder of purchaseOrders) {
-                                    var item = purchaseOrderExternal.items.find(item => item._id.toString() === purchaseOrder._id.toString());
-                                    var index = purchaseOrderExternal.items.indexOf(item);
-                                    if (index !== -1) {
-                                        purchaseOrderExternal.items.splice(index, 1, purchaseOrder);
+                                        }
                                     }
-                                }
-                                return this.collection
-                                    .updateOne({
-                                        _id: purchaseOrderExternal._id
-                                    }, {
-                                        $set: purchaseOrderExternal
-                                    })
+                                    purchaseOrder.status = purchaseOrder.items.find((item) => item.status.value === Math.max.apply(Math, purchaseOrder.items.map(function (item) { return item.status.value; }))).status
+                                    purchaseOrder.isClosed = purchaseOrder.items
+                                        .map((item) => item.isClosed)
+                                        .reduce((prev, curr, index) => {
+                                            return prev && curr
+                                        }, true);
+                                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                                })
+                                return Promise.all(jobsUpdatePO)
                                     .then((result) => Promise.resolve(purchaseOrderExternal._id));
                             })
                     })
@@ -594,8 +614,24 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             return this.getSingleByIdOrDefault(poExId);
                         })
                         .then((purchaseOrderExternal) => {
-                            var getPurchaseOrderIds = purchaseOrderExternal.items.map((purchaseOrder) => this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrder._id));
-                            var getPurchaseRequestIds = purchaseOrderExternal.items.map((purchaseOrder) => this.purchaseRequestManager.getSingleByIdOrDefault(purchaseOrder.purchaseRequest._id));
+                            var _poIds = purchaseOrderExternal.items.map((item) => {
+                                return item.poId.toString()
+                            });
+                            _poIds = [].concat.apply([], _poIds);
+                            var _listPoIds = _poIds.filter(function (elem, index, self) {
+                                return index == self.indexOf(elem);
+                            })
+
+
+                            var _prIds = purchaseOrderExternal.items.map((item) => {
+                                return item.prId.toString()
+                            });
+                            _prIds = [].concat.apply([], _prIds);
+                            var _listPrIds = _prIds.filter(function (elem, index, self) {
+                                return index == self.indexOf(elem);
+                            })
+                            var getPurchaseOrderIds = _listPoIds.map((poId) => this.purchaseOrderManager.getSingleByIdOrDefault(poId));
+                            var getPurchaseRequestIds = _listPrIds.map((prId) => this.purchaseRequestManager.getSingleByIdOrDefault(prId));
 
                             return Promise.all(getPurchaseRequestIds)
                                 .then((purchaseRequests) => {
@@ -609,62 +645,46 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     return Promise.all(getPurchaseOrderIds)
                                         .then((purchaseOrders) => {
                                             var jobsUpdatePO = purchaseOrders.map((purchaseOrder) => {
-                                                var _purchaseRequest = purchaseRequests.find((purchaseRequest) => purchaseRequest._id.toString() === purchaseOrder.purchaseRequest._id.toString());
-                                                if (_purchaseRequest) {
-                                                    purchaseOrder.purchaseRequest = _purchaseRequest;
-                                                }
-                                                purchaseOrder.purchaseOrderExternalId = new ObjectId(purchaseOrderExternal._id);
-                                                purchaseOrder.purchaseOrderExternal = purchaseOrderExternal;
-                                                purchaseOrder.purchaseOrderExternal._id = new ObjectId(purchaseOrderExternal._id);
-                                                purchaseOrder.supplierId = new ObjectId(purchaseOrderExternal.supplierId);
-                                                purchaseOrder.supplier = purchaseOrderExternal.supplier;
-                                                purchaseOrder.supplier._id = new ObjectId(purchaseOrderExternal.supplier._id);
-                                                purchaseOrder.freightCostBy = purchaseOrderExternal.freightCostBy;
-                                                purchaseOrder.currency = purchaseOrderExternal.currency;
-                                                purchaseOrder.currencyRate = purchaseOrderExternal.currencyRate;
-                                                purchaseOrder.paymentMethod = _purchaseOrderExternal.paymentMethod;
-                                                purchaseOrder.paymentDueDays = purchaseOrderExternal.paymentDueDays;
-                                                purchaseOrder.vat = purchaseOrderExternal.vat;
-                                                purchaseOrder.useVat = purchaseOrderExternal.useVat;
-                                                purchaseOrder.vatRate = purchaseOrderExternal.vatRate;
-                                                purchaseOrder.useIncomeTax = purchaseOrderExternal.useIncomeTax;
-                                                purchaseOrder.isPosted = true;
-                                                purchaseOrder.status = poStatusEnum.ORDERED;
-
-                                                for (var poItem of purchaseOrder.items) {
-                                                    var _purchaseOrder = purchaseOrderExternal.items.find((_purchaseOrder) => _purchaseOrder._id.toString() === purchaseOrder._id.toString());
-                                                    var itemExternal = _purchaseOrder.items.find((_item) => _item.product._id.toString() === poItem.product._id.toString());
-                                                    if (itemExternal) {
-                                                        poItem.dealQuantity = Number(itemExternal.dealQuantity);
-                                                        poItem.dealUom = itemExternal.dealUom;
-                                                        poItem.priceBeforeTax = Number(itemExternal.priceBeforeTax);
-                                                        poItem.pricePerDealUnit = itemExternal.useIncomeTax ? (100 * itemExternal.priceBeforeTax) / 110 : itemExternal.priceBeforeTax;
-                                                        poItem.conversion = Number(itemExternal.conversion);
-                                                        poItem.currency = purchaseOrderExternal.currency;
-                                                        poItem.currencyRate = Number(purchaseOrderExternal.currencyRate);
+                                                for (var item of purchaseOrderExternal.items) {
+                                                    if (item.poId.toString() === purchaseOrder._id.toString()) {
+                                                        var poItem = purchaseOrder.items.find((poItem) => item.product._id.toString() === poItem.product._id.toString());
+                                                        if (poItem) {
+                                                            poItem.purchaseOrderExternalId = new ObjectId(purchaseOrderExternal._id);
+                                                            poItem.purchaseOrderExternal = purchaseOrderExternal;
+                                                            poItem.supplierId = new ObjectId(purchaseOrderExternal.supplierId);
+                                                            poItem.supplier = purchaseOrderExternal.supplier;
+                                                            poItem.freightCostBy = purchaseOrderExternal.freightCostBy;
+                                                            poItem.paymentMethod = purchaseOrderExternal.paymentMethod;
+                                                            poItem.paymentDueDays = purchaseOrderExternal.paymentDueDays;
+                                                            poItem.vat = purchaseOrderExternal.vat;
+                                                            poItem.useVat = purchaseOrderExternal.useVat;
+                                                            poItem.vatRate = purchaseOrderExternal.vatRate;
+                                                            poItem.useIncomeTax = purchaseOrderExternal.useIncomeTax;
+                                                            poItem.dealQuantity = Number(item.dealQuantity);
+                                                            poItem.dealUom = item.dealUom;
+                                                            poItem.priceBeforeTax = Number(item.priceBeforeTax);
+                                                            poItem.pricePerDealUnit = item.useIncomeTax ? (100 * item.priceBeforeTax) / 110 : item.priceBeforeTax;
+                                                            poItem.conversion = Number(item.conversion)
+                                                            poItem.currency = purchaseOrderExternal.currency;
+                                                            poItem.currencyRate = Number(purchaseOrderExternal.currencyRate);
+                                                            poItem.isPosted = true
+                                                            poItem.status = poStatusEnum.ORDERED;
+                                                        }
                                                     }
                                                 }
+
+                                                purchaseOrder.status = purchaseOrder.items.find((item) => item.status.value === Math.max.apply(Math, purchaseOrder.items.map(function (item) { return item.status.value; }))).status
+                                                purchaseOrder.isPosted = purchaseOrder.items
+                                                    .map((item) => item.isPosted)
+                                                    .reduce((prev, curr, index) => {
+                                                        return prev && curr
+                                                    }, true);
                                                 return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder)
                                             })
                                             return Promise.all(jobsUpdatePO)
                                         })
                                 })
-                                .then((purchaseOrders) => {
-                                    for (var purchaseOrder of purchaseOrders) {
-                                        var item = purchaseOrderExternal.items.find(item => item._id.toString() === purchaseOrder._id.toString());
-                                        var index = purchaseOrderExternal.items.indexOf(item);
-                                        if (index !== -1) {
-                                            purchaseOrderExternal.items.splice(index, 1, purchaseOrder);
-                                        }
-                                    }
-                                    return this.collection
-                                        .updateOne({
-                                            _id: purchaseOrderExternal._id
-                                        }, {
-                                            $set: purchaseOrderExternal
-                                        })
-                                        .then((result) => Promise.resolve(purchaseOrderExternal._id));
-                                })
+                                .then((result) => Promise.resolve(purchaseOrderExternal._id));
                         })
                 })
                 return Promise.all(jobs)
@@ -679,7 +699,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
 
             this.getSingleByIdOrDefault(id)
                 .then(pox => {
-                    var getDefinition = require('../../pdf/definitions/purchase-order-external');
+                    var getDefinition = require('../../pdf/definitions/garment-purchase-order-external');
                     var definition = getDefinition(pox, offset);
 
                     var generatePdf = require('../../pdf/pdf-generator');
@@ -729,14 +749,31 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     .then((poExId) => {
                         return this.getSingleByIdOrDefault(poExId);
                     })
+
                     .then((purchaseOrderExternal) => {
-                        var getPurchaseOrderIds = purchaseOrderExternal.items.map((purchaseOrder) => this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrder._id));
-                        var getPurchaseRequestIds = purchaseOrderExternal.items.map((purchaseOrder) => this.purchaseRequestManager.getSingleByIdOrDefault(purchaseOrder.purchaseRequest._id));
+                        var _poIds = purchaseOrderExternal.items.map((item) => {
+                            return item.poId.toString()
+                        });
+                        _poIds = [].concat.apply([], _poIds);
+                        var _listPoIds = _poIds.filter(function (elem, index, self) {
+                            return index == self.indexOf(elem);
+                        })
+
+
+                        var _prIds = purchaseOrderExternal.items.map((item) => {
+                            return item.prId.toString()
+                        });
+                        _prIds = [].concat.apply([], _prIds);
+                        var _listPrIds = _prIds.filter(function (elem, index, self) {
+                            return index == self.indexOf(elem);
+                        })
+                        var getPurchaseOrderIds = _listPoIds.map((poId) => this.purchaseOrderManager.getSingleByIdOrDefault(poId));
+                        var getPurchaseRequestIds = _listPrIds.map((prId) => this.purchaseRequestManager.getSingleByIdOrDefault(prId));
 
                         return Promise.all(getPurchaseRequestIds)
                             .then((purchaseRequests) => {
                                 var jobsUpdatePR = purchaseRequests.map((purchaseRequest) => {
-                                    purchaseRequest.status = prStatusEnum.PROCESSING
+                                    purchaseRequest.status = prStatusEnum.PROCESSING;
                                     return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
                                 })
                                 return Promise.all(jobsUpdatePR);
@@ -745,83 +782,92 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 return Promise.all(getPurchaseOrderIds)
                                     .then((purchaseOrders) => {
                                         var jobsUpdatePO = purchaseOrders.map((purchaseOrder) => {
-                                            var _purchaseRequest = purchaseRequests.find((purchaseRequest) => purchaseRequest._id.toString() === purchaseOrder.purchaseRequest._id.toString());
-                                            if (_purchaseRequest) {
-                                                purchaseOrder.purchaseRequest = _purchaseRequest;
+                                            for (var item of purchaseOrderExternal.items) {
+                                                if (item.poId.toString() === purchaseOrder._id.toString()) {
+                                                    var poItem = purchaseOrder.items.find((poItem) => item.product._id.toString() === poItem.product._id.toString());
+                                                    if (poItem) {
+                                                        poItem.purchaseOrderExternalId = {};
+                                                        poItem.purchaseOrderExternal = {};
+                                                        poItem.supplierId = {};
+                                                        poItem.supplier = {};
+                                                        poItem.freightCostBy = "";
+                                                        poItem.paymentMethod = "";
+                                                        poItem.paymentDueDays = 0;
+                                                        poItem.vat = {};
+                                                        poItem.useVat = false;
+                                                        poItem.vatRate = 1;
+                                                        poItem.useIncomeTax = false;
+                                                        poItem.currency = {};
+                                                        poItem.currencyRate = 1;
+                                                        poItem.isPosted = false;
+                                                        poItem.status = poStatusEnum.PROCESSING;
+                                                    }
+                                                }
                                             }
-                                            purchaseOrder.purchaseOrderExternalId = {};
-                                            purchaseOrder.purchaseOrderExternal = {};
-                                            purchaseOrder.supplierId = {};
-                                            purchaseOrder.supplier = {};
-                                            purchaseOrder.freightCostBy = '';
-                                            purchaseOrder.currency = {};
-                                            purchaseOrder.currencyRate = 1;
-                                            purchaseOrder.paymentMethod = '';
-                                            purchaseOrder.paymentDueDays = 0;
-                                            purchaseOrder.vat = {};
-                                            purchaseOrder.useVat = false;
-                                            purchaseOrder.vatRate = 0;
-                                            purchaseOrder.useIncomeTax = false;
-                                            purchaseOrder.status = poStatusEnum.PROCESSING;
-
-                                            for (var poItem of purchaseOrder.items) {
-                                                poItem.dealQuantity = 0;
-                                                poItem.dealUom = {};
-                                                poItem.priceBeforeTax = 0;
-                                                poItem.pricePerDealUnit = 0;
-                                                poItem.conversion = 1;
-                                                poItem.currency = {};
-                                                poItem.currencyRate = 1;
-                                            }
+                                            purchaseOrder.status = purchaseOrder.items.find((item) => item.status.value === Math.max.apply(Math, purchaseOrder.items.map(function (item) { return item.status.value; }))).status
+                                            purchaseOrder.isPosted = purchaseOrder.items
+                                                .map((item) => item.isPosted)
+                                                .reduce((prev, curr, index) => {
+                                                    return prev && curr
+                                                }, true);
                                             return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder)
                                         })
                                         return Promise.all(jobsUpdatePO)
                                     })
                             })
-                            .then((purchaseOrders) => {
-                                return this.collection
-                                    .updateOne({
-                                        _id: purchaseOrderExternal._id
-                                    }, {
-                                        $set: purchaseOrderExternal
-                                    })
-                                    .then((result) => Promise.resolve(purchaseOrderExternal._id));
-                            })
+                            .then((result) => Promise.resolve(purchaseOrderExternal._id));
                     })
             });
     }
 
     validateCancelAndUnpost(purchaseOrderExternal) {
-        var purchaseOrderExternalError = {};
+        var error = {};
         var valid = purchaseOrderExternal;
-
-        return this.getSingleByIdOrDefault(valid._id)
-            .then((poe) => {
+        var poId = valid.items.map((item) => { return item.poId })
+        poId = poId.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+        var getPOInternal = [];
+        for (var po of poId) {
+            if (ObjectId.isValid(po)) {
+                getPOInternal.push(this.purchaseOrderManager.getSingleByIdOrDefault(po, this.purchaseOrderFields));
+            }
+        }
+        return Promise.all([this.getSingleByIdOrDefault(valid._id)].concat(getPOInternal))
+            .then((results) => {
+                var poe = results[0];
+                var _poInternals = results.slice(1, results.length);
                 if (!poe.isPosted)
-                    purchaseOrderExternalError["no"] = i18n.__("PurchaseOrderExternal.isPosted:%s is not yet being posted", i18n.__("PurchaseOrderExternal.isPosted._:Posted"));
+                    error["no"] = i18n.__("PurchaseOrderExternal.isPosted:%s is not yet being posted", i18n.__("PurchaseOrderExternal.isPosted._:Posted"));
 
                 if (valid.items && valid.items.length > 0) {
-                    for (var purchaseOrder of valid.items) {
-                        var poItemError = {};
-                        var purchaseOrderItemErrors = [];
-                        var poItemHasError = false;
-                        for (var poItem of purchaseOrder.items) {
+                    var itemErrors = [];
+                    for (var item of valid.items) {
+                        var itemError = {};
+                        var purchaseOrder = _poInternals.find((poInternal) => poInternal._id.toString() === item.poId.toString())
+                        var poItem = {}
+                        if (purchaseOrder) {
+                            poItem = purchaseOrder.items.find((poItem) => poItem.product._id.toString() === item.product._id.toString())
+                        }
+                        if (poItem) {
                             if (poItem.fulfillments && poItem.fulfillments.length > 0) {
-                                poItemHasError = true;
-                                poItemError["no"] = i18n.__("PurchaseOrderExternal.items.items.no:%s is already have delivery order", i18n.__("PurchaseOrderExternal.items,items.no._:No"));
-
-                                purchaseOrderItemErrors.push(poItemError);
+                                itemError["no"] = i18n.__("PurchaseOrderExternal.items.items.no:%s is already have delivery order", i18n.__("PurchaseOrderExternal.items,items.no._:No"));
                             }
                         }
+                        itemErrors.push(itemError);
+                    }
 
-                        if (poItemHasError)
-                            purchaseOrderExternalError["items"] = purchaseOrderItemErrors;
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            error.items = itemErrors;
+                            break;
+                        }
                     }
                 }
 
-                if (Object.getOwnPropertyNames(purchaseOrderExternalError).length > 0) {
+                if (Object.getOwnPropertyNames(error).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
-                    return Promise.reject(new ValidationError('data podl does not pass validation', purchaseOrderExternalError));
+                    return Promise.reject(new ValidationError('data podl does not pass validation', error));
                 }
 
                 if (!valid.stamp) {
@@ -844,8 +890,24 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         return this.getSingleByIdOrDefault(poExId);
                     })
                     .then((purchaseOrderExternal) => {
-                        var getPurchaseOrderIds = purchaseOrderExternal.items.map((purchaseOrder) => this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrder._id));
-                        var getPurchaseRequestIds = purchaseOrderExternal.items.map((purchaseOrder) => this.purchaseRequestManager.getSingleByIdOrDefault(purchaseOrder.purchaseRequest._id));
+                        var _poIds = purchaseOrderExternal.items.map((item) => {
+                            return item.poId.toString()
+                        });
+                        _poIds = [].concat.apply([], _poIds);
+                        var _listPoIds = _poIds.filter(function (elem, index, self) {
+                            return index == self.indexOf(elem);
+                        })
+
+
+                        var _prIds = purchaseOrderExternal.items.map((item) => {
+                            return item.prId.toString()
+                        });
+                        _prIds = [].concat.apply([], _prIds);
+                        var _listPrIds = _prIds.filter(function (elem, index, self) {
+                            return index == self.indexOf(elem);
+                        })
+                        var getPurchaseOrderIds = _listPoIds.map((poId) => this.purchaseOrderManager.getSingleByIdOrDefault(poId));
+                        var getPurchaseRequestIds = _listPrIds.map((prId) => this.purchaseRequestManager.getSingleByIdOrDefault(prId));
 
                         return Promise.all(getPurchaseRequestIds)
                             .then((purchaseRequests) => {
@@ -859,35 +921,22 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 return Promise.all(getPurchaseOrderIds)
                                     .then((purchaseOrders) => {
                                         var jobsUpdatePO = purchaseOrders.map((purchaseOrder) => {
-                                            var _purchaseRequest = purchaseRequests.find((purchaseRequest) => purchaseRequest._id.toString() === purchaseOrder.purchaseRequest._id.toString());
-                                            if (_purchaseRequest) {
-                                                purchaseOrder.purchaseRequest = _purchaseRequest;
+                                            for (var item of purchaseOrderExternal.items) {
+                                                if (item.poId.toString() === purchaseOrder._id.toString()) {
+                                                    var poItem = purchaseOrder.items.find((poItem) => item.product._id.toString() === poItem.product._id.toString());
+                                                    if (poItem) {
+                                                        poItem.status = poStatusEnum.VOID;
+                                                    }
+                                                }
                                             }
-                                            purchaseOrder.status = poStatusEnum.VOID;
-
+                                            purchaseOrder.status = purchaseOrder.items.find((item) => item.status.value === Math.max.apply(Math, purchaseOrder.items.map(function (item) { return item.status.value; }))).status
                                             return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder)
                                         })
                                         return Promise.all(jobsUpdatePO)
                                     })
                             })
-                            .then((purchaseOrders) => {
-                                for (var purchaseOrder of purchaseOrders) {
-                                    var item = purchaseOrderExternal.items.find(item => item._id.toString() === purchaseOrder._id.toString());
-                                    var index = purchaseOrderExternal.items.indexOf(item);
-                                    if (index !== -1) {
-                                        purchaseOrderExternal.items.splice(index, 1, purchaseOrder);
-                                    }
-                                }
-                                return this.collection
-                                    .updateOne({
-                                        _id: purchaseOrderExternal._id
-                                    }, {
-                                        $set: purchaseOrderExternal
-                                    })
-                                    .then((result) => Promise.resolve(purchaseOrderExternal._id));
-                            })
-                    });
-
+                            .then((result) => Promise.resolve(purchaseOrderExternal._id));
+                    })
             });
     }
 
@@ -896,42 +945,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             .then((poExternal) => {
                 return this.validateClose(poExternal)
                     .then((purchaseOrderExternal) => {
+                        purchaseOrderExternal.items.map((item) => item.isClosed = true);
                         purchaseOrderExternal.isClosed = true;
                         return this.update(purchaseOrderExternal);
                     })
-                    .then((poExId) => {
-                        return this.getSingleByIdOrDefault(poExId);
-                    })
-                    .then((purchaseOrderExternal) => {
-                        var getPurchaseOrderIds = purchaseOrderExternal.items.map((purchaseOrder) => this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrder._id));
-
-                        return Promise.all(getPurchaseOrderIds)
-                            .then((purchaseOrders) => {
-                                var jobsUpdatePO = purchaseOrders.map((purchaseOrder) => {
-                                    purchaseOrder.items.map((item) => item.isClosed = true);
-                                    purchaseOrder.isClosed = true;
-                                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder)
-                                })
-                                return Promise.all(jobsUpdatePO)
-                            })
-                            .then((purchaseOrders) => {
-                                for (var purchaseOrder of purchaseOrders) {
-                                    var item = purchaseOrderExternal.items.find(item => item._id.toString() === purchaseOrder._id.toString());
-                                    var index = purchaseOrderExternal.items.indexOf(item);
-                                    if (index !== -1) {
-                                        purchaseOrderExternal.items.splice(index, 1, purchaseOrder);
-                                    }
-                                }
-                                return this.collection
-                                    .updateOne({
-                                        _id: purchaseOrderExternal._id
-                                    }, {
-                                        $set: purchaseOrderExternal
-                                    })
-                                    .then((result) => Promise.resolve(purchaseOrderExternal._id));
-                            })
-                    })
-            });
+                    .then((poExId) => Promise.resolve(purchaseOrderExternal._id));
+            })
     }
 
     validateClose(purchaseOrderExternal) {
@@ -956,7 +975,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             });
     }
 
-    getAllData(filter) {
+    /*getAllData(filter) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -993,9 +1012,9 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         });
                 });
             });
-    }
+    }*/
 
-    getDurationPRtoPOEksternalData(query) {
+    /*getDurationPRtoPOEksternalData(query) {
         return new Promise((resolve, reject) => {
             var deletedQuery = {
                 _deleted: false
@@ -1167,9 +1186,9 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     resolve(report);
                 });
         });
-    }
+    }*/
 
-    getXlsDurationPRtoPOEksternalData(result, query) {
+    /*getXlsDurationPRtoPOEksternalData(result, query) {
         var xls = {};
         xls.data = [];
         xls.options = [];
@@ -1247,9 +1266,9 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             xls.name = `LAPORAN DURASI PR - PO EKSTERNAL.xlsx`;
 
         return Promise.resolve(xls);
-    }
+    }*/
 
-    getDurationPOData(query) {
+    /*getDurationPOData(query) {
         return new Promise((resolve, reject) => {
             var deletedQuery = {
                 _deleted: false
@@ -1420,9 +1439,9 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     resolve(report);
                 });
         });
-    }
+    }*/
 
-    getXlsDurationPOData(result, query) {
+    /*getXlsDurationPOData(result, query) {
         var xls = {};
         xls.data = [];
         xls.options = [];
@@ -1501,5 +1520,5 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL.xlsx`;
 
         return Promise.resolve(xls);
-    }
+    }*/
 };
