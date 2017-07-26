@@ -5,9 +5,13 @@ var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require("module-toolkit").BaseManager;
 var moment = require("moment");
 var generateCode = require("../../../src/utils/code-generator");
+var Models = require("dl-models");
+var Map = Models.map;
 
 var UnitManager = require('../../managers/master/unit-manager');
 var UomManager = require('../../managers/master/uom-manager');
+
+var garmentPurchaseRequestManager = require('../../managers/garment-purchasing/purchase-request-manager');
 
 // internal deps 
 require("mongodb-toolkit");
@@ -16,13 +20,37 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.GarmentPurchaseRequest = this.db.collection("garment-purchase-requests");
+        // this.GarmentPurchaseRequest = this.db.collection("garment-purchase-requests");
+        // this.GarmentPurchaseRequest= new garmentPurchaseRequestManager(db,user);
+        this.collection = this.db.use(Map.garmentPurchasing.collection.GarmentPurchaseRequest);
         this.migrationLog = this.db.collection("migration-log");
         this.unitManager = new UnitManager(db, user);
         this.uomManager = new UomManager(db, user);
         this.categoryManager = this.db.collection("garment-categories");
         this.productManager = this.db.collection("garment-products");
         this.buyerManager = this.db.collection("garment-buyers");
+    }
+
+    _getQuery(paging) {
+        var _default = {
+            _deleted: false
+        },
+            pagingFilter = paging.filter || {},
+            keywordFilter = {},
+            query = {};
+
+        if (paging.keyword) {
+            var regex = new RegExp(paging.keyword, "i");
+            var noFilter = {
+                "no": {
+                    "$regex": regex
+                }
+            };
+
+            keywordFilter["$or"] = [noFilter];
+        }
+        query["$and"] = [_default, keywordFilter, pagingFilter];
+        return query;
     }
 
     run(table1, table2) {
@@ -35,6 +63,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         })
 
         return new Promise((resolve, reject) => {
+            var migrate;
             this.extract(table1, table2)
                 .then((data) => this.transform(data))
                 .then((data) => this.load(data))
@@ -49,7 +78,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         executionTime: spentTime + " minutes",
                         status: "Successful"
                     };
-                    var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
+                    migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
                     resolve(migrate);
                 })
             // .catch((err) => {
@@ -65,6 +94,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             //     };
             //     this.migrationLog.updateOne({ start: startedDate }, updateLog);
             // });
+            // resolve(migrate);
         });
     };
 
@@ -252,10 +282,13 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                                 },
                                             }
                                             items.push(item);
+                                            break;
                                         }
                                     }
                                 }
                             }
+
+                            break;
                         }
                     }
 
@@ -278,7 +311,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     _updatedDate: new Date(_updatedDate),
                                     _updateAgent: "manager",
                                     no: code,
-                                    nomorRO: uniq.Ro,
+                                    roNo: uniq.Ro,
                                     artikel: uniq.Art,
                                     shipmentDate: uniq.Shipment,
                                     date: new Date(uniq.TgValid),
@@ -324,7 +357,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                                 map.items = items;
                                 transformData.push(map);
-
+                                break;
                             }
 
                         }
@@ -343,7 +376,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             var processed = [];
 
             for (var map of dataArr) {
-                var process = this.GarmentPurchaseRequest.updateOne({ "nomorRO": map.nomorRO }, { $set: map }, { upsert: true });
+                var process = this.collection.updateOne({ "roNo": map.roNo }, { $set: map }, { upsert: true });
                 processed.push(process);
             }
 
@@ -352,6 +385,27 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             })
 
         });
+    }
+
+
+    _createIndexes() {
+        var dateIndex = {
+            name: `ix_${Map.garmentPurchasing.collection.GarmentPurchaseRequest}__updatedDate`,
+
+            key: {
+                _updatedDate: -1
+            }
+        }
+
+        var codeIndex = {
+            name: `ix_${Map.garmentPurchasing.collection.GarmentPurchaseRequest}_no`,
+            key: {
+                no: 1
+            },
+            unique: true
+        };
+
+        return this.collection.createIndexes([dateIndex, codeIndex]);
     }
 
 }
