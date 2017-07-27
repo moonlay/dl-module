@@ -41,8 +41,23 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            var deliveryDateFilter = {
-                "deliveryDate": {
+            var createdDateFilter = {
+                "_createdDate": {
+                    "$regex": regex
+                }
+            };
+            var shipmentNumberFilter = {
+                "shipmentNumber": {
+                    "$regex": regex
+                }
+            };
+            var deliveryCodeFilter = {
+                "deliveryCode": {
+                    "$regex": regex
+                }
+            };
+            var productIdentityFilter = {
+                "productIdentity": {
                     "$regex": regex
                 }
             };
@@ -51,12 +66,17 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     "$regex": regex
                 }
             };
+            var buyerCodeFilter = {
+                "buyerCode": {
+                    "$regex": regex
+                }
+            };
             var createdByFilter = {
                 "_createdBy": {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [codeFilter, deliveryDateFilter, buyerFilter, createdByFilter];
+            keywordFilter["$or"] = [codeFilter, createdDateFilter, shipmentNumberFilter, deliveryCodeFilter, productIdentityFilter, buyerFilter, buyerCodeFilter, createdByFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -85,6 +105,8 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             },
             code: valid.code
         });
+        
+        valid.details = valid.details || [];
 
         var getBuyer = valid.buyerId && ObjectId.isValid(valid.buyerId) ? this.buyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
 
@@ -104,12 +126,36 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     errors["code"] = i18n.__("ShipmentDocument.code.isExist: %s is exist", i18n.__("ShipmentDocument.code._:Code"));
 
                 if (!valid.buyerId || valid.buyerId === '')
-                    errors["buyerId"] = i18n.__("ShipmentDocument.buyerId.isExists:%s is not exists", i18n.__("ShipmentDocument.buyerId._:Buyer")); //"Grade harus diisi";   
+                    errors["buyerId"] = i18n.__("ShipmentDocument.buyerId.isExists:%s is not exists", i18n.__("ShipmentDocument.buyerId._:Buyer")); //"Buyer harus diisi";   
                 else if (!_buyer)
                     errors["buyerId"] = i18n.__("ShipmentDocument.buyerId.isRequired: %s not found", i18n.__("ShipmentDocument.buyerId._:Buyer"));
 
-                if (!valid.deliveryDate)
-                    errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryDate._:Date")); //"Grade harus diisi";
+                if (!valid.shipmentNumber || valid.shipmentNumber === "")
+                    errors["shipmentNumber"] = i18n.__("ShipmentDocument.shipmentNumber.isRequired:%s is required", i18n.__("ShipmentDocument.shipmentNumber._:NO."));
+
+                if (!valid.productIdentity || valid.productIdentity === "")
+                    errors["productIdentity"] = i18n.__("ShipmentDocument.productIdentity.isRequired:%s is required", i18n.__("ShipmentDocument.productIdentity._:Kode Produk"));
+
+                if (!valid.deliveryCode || valid.deliveryCode === "")
+                    errors["deliveryCode"] = i18n.__("ShipmentDocument.deliveryCode.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryCode._:DO No"));
+
+                if (valid.details.length > 0) {
+                    var itemErrors = [];
+                    for (var i = 0; i < valid.details.length; i++) {
+                        var itemError = {};
+                        if (!valid.details[i].productionOrderId || !valid.details[i].productionOrderId === "") {
+                            itemError["productionOrderId"] = i18n.__("PackingReceipt.details.productionOrderId.isRequired:%s is required", i18n.__("PackingReceipt.details.productionOrderId._:Nomor Order")); //"Nomor order harus diisi"; 
+                        }
+                        itemErrors.push(itemError);
+                    }
+
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            errors.details = itemErrors;
+                            break;
+                        }
+                    }
+                }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
@@ -156,7 +202,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 var fpShipmentDocument = fpShipmentDocument;
                 var insertItems = fpShipmentDocument.details.map((detail) => {
                     var data = {
-                        date: fpShipmentDocument.deliveryDate,
+                        date: fpShipmentDocument._createdDate,
                         referenceNo: `RFNO-${fpShipmentDocument.code}`,
                         referenceType: fpShipmentDocument.storageReferenceType,
                         type: fpShipmentDocument.storageType,
@@ -169,5 +215,162 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 return Promise.all(insertItems)
                     .then((result) => Promise.resolve(fpShipmentDocumentId))
             })
+    }
+
+    _afterUpdate(id) {
+        var fpShipmentDocumentId = id;
+        return this.getSingleById(id)
+            .then((fpShipmentDocument) => {
+                var fpShipmentDocument = fpShipmentDocument;
+                var insertItems = fpShipmentDocument.details.map((detail) => {
+                    var data = {
+                        date: new Date(),
+                        referenceNo: `RFNO-${fpShipmentDocument.code}`,
+                        referenceType: fpShipmentDocument.storageReferenceType,
+                        type: "IN",
+                        storageId: fpShipmentDocument.storageId,
+                        storageName: fpShipmentDocument.storageName,
+                        items: detail.items
+                    }
+                    return this.inventoryDocumentManager.create(data)
+                })
+                return Promise.all(insertItems)
+                    .then((result) => Promise.resolve(fpShipmentDocumentId))
+            })
+    }
+
+    getPdf(data) {
+        return new Promise((resolve, reject) => {
+            var getDefinition = require("../../../pdf/definitions/fp-shipment-document");
+            var definition = getDefinition(data);
+
+            var generatePdf = require("../../../pdf/pdf-generator");
+            generatePdf(definition)
+                .then((binary) => {
+                    resolve(binary);
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        })
+    }
+
+    getShipmentReport(info) {
+        var _defaultFilter = {
+            _deleted: false,
+            isVoid: false
+        };
+        var shipmentNumberFilter = {};
+        var deliveryCodeFilter = {};
+        var productIdentityFilter = {};
+        var buyerFilter = {};
+        var productionOrderFilter = {};
+        var dateFromFilter = {};
+        var dateToFilter = {};
+        var query = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var now = new Date();
+
+        if (info.shipmentNumber && info.shipmentNumber != '') {
+            shipmentNumberFilter = { "shipmentNumber": info.shipmentNumber };
+        }
+
+        if (info.deliveryCode && info.deliveryCode != '') {
+            deliveryCodeFilter = { "deliveryCode": info.deliveryCode };
+        }
+
+        if (info.productIdentity && info.productIdentity != '') {
+            productIdentityFilter = { "productIdentity": info.productIdentity };
+        }
+
+        if (info.buyerId && info.buyerId != '') {
+            buyerFilter = { "buyerId": new ObjectId(info.buyerId) };
+        }
+
+        if (info.productionOrderId && info.productionOrderId != '') {
+            productionOrderFilter = { "details.productionOrderId": new ObjectId(info.productionOrderId) };
+        }
+
+        var filterDate = {
+            "_createdDate": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+        query = { '$and': [_defaultFilter, shipmentNumberFilter, deliveryCodeFilter, productIdentityFilter, buyerFilter, productionOrderFilter, filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this.collection
+                    .where(query)
+                    .execute();
+            });
+    }
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var shipment of result.data) {
+
+            for (var detail of shipment.details) {
+
+                for (var field of detail.items) {
+
+                    var item = {};
+                    index += 1;
+                    item["No"] = index;
+                    item["Tanggal"] = shipment._createdDate ? moment(new Date(shipment._createdDate)).format(dateFormat) : '';
+                    item["Kode"] = shipment.code ? shipment.code : '';
+                    item["Kode Pengiriman"] = shipment.shipmentNumber ? shipment.shipmentNumber : '';
+                    item["Nomor Order"] = detail.productionOrderNo ? detail.productionOrderNo : '';
+                    item["Buyer"] = shipment.buyerName ? shipment.buyerName : '';
+                    item["Nama Barang"] = field.productName ? field.productName : '';
+                    item["Satuan"] = field.uomUnit ? field.uomUnit : '';
+                    item["Kuantiti Satuan"] = field.quantity ? field.quantity : 0;
+                    item["Panjang Total"] = field.length ? (field.length * field.quantity).toFixed(2) : 0;
+                    item["Berat Total"] = field.weight ? (field.weight * field.quantity).toFixed(2) : 0;
+
+                    xls.options["No"] = "number";
+                    xls.options["Tanggal"] = "string";
+                    xls.options["Kode"] = "string";
+                    xls.options["Kode Pengiriman"] = "string";
+                    xls.options["Nomor Order"] = "string";
+                    xls.options["Buyer"] = "string";
+                    xls.options["Nama Barang"] = "string";
+                    xls.options["Satuan"] = "string";
+                    xls.options["Kuantiti Satuan"] = "number";
+                    xls.options["Panjang Total"] = "number";
+                    xls.options["Berat Total"] = "number";
+
+                    xls.data.push(item);
+
+                }
+
+            }
+
+        }
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Shipment Document ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Shipment Document ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Shipment Document ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Shipment Document.xlsx`;
+
+        return Promise.resolve(xls);
     }
 };
