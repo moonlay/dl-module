@@ -114,8 +114,6 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
         return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getStorage])
             .then((results) => {
-                console.log(results[0]);
-                console.log(results[1]);
                 var _dbShipmentDocument = results[0];
                 var _duplicateShipmentDocument = results[1];
                 var _buyer = results[2];
