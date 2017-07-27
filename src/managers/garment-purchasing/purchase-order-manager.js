@@ -1080,7 +1080,16 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
-
+    
+    cleanUp(input) {
+        var newArr = [];
+        for (var i = 0; i < input.length; i++) {
+            if (input[i]) {
+                newArr.push(input[i]);
+            }
+        }
+        return newArr;
+    }
     /*selectDateById(id) {
         return new Promise((resolve, reject) => {
             var query = { "purchaseRequest._id": ObjectId.isValid(id) ? new ObjectId(id) : {}, "_deleted": false };
