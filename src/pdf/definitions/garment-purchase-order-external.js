@@ -3,18 +3,18 @@ var global = require('../../global');
 module.exports = function (pox, offset) {
 
     var _items = pox.items.map(poItem => {
-            // var productName = [poItem.product.name, po.refNo].filter(r => r && r.toString().trim() != '').join("\n");
-            return {
-                productName: poItem.product.name,
-                productCode: poItem.product.code,
-                productProperties: poItem.product.properties,
-                productDesc: poItem.product.description,
-                prNo: poItem.prNo,
-                quantity: poItem.dealQuantity,
-                uom: poItem.dealUom.unit,
-                price: poItem.pricePerDealUnit,
-                remark: poItem.remark
-            };
+        // var productName = [poItem.product.name, po.refNo].filter(r => r && r.toString().trim() != '').join("\n");
+        return {
+            productName: poItem.product.name,
+            productCode: poItem.product.code,
+            productProperties: poItem.product.properties,
+            productDesc: poItem.product.description,
+            prNo: poItem.prNo,
+            quantity: poItem.dealQuantity,
+            uom: poItem.dealUom.unit,
+            price: poItem.pricePerDealUnit,
+            remark: poItem.remark
+        };
     });
 
     _items = [].concat.apply([], _items);
@@ -22,14 +22,14 @@ module.exports = function (pox, offset) {
     var items = [];
     var map = new Map();
     for (var _item of _items) {
-        var key = _item.product;
+        var key = _item.productName;
         if (!map.has(key))
             map.set(key, [])
         map.get(key).push(_item);
     }
-    map.forEach((_items, product) => {
+    map.forEach((_items, productName) => {
         var poeItem = {};
-        poeItem.product = product;
+        poeItem.productName = productName;
         poeItem.quantity = _items
             .map(_item => _item.quantity)
             .reduce((prev, curr, index) => {
@@ -42,6 +42,12 @@ module.exports = function (pox, offset) {
                     prNos.push(_item.prNo);
                 }
             })
+        prNos = prNos.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+        poeItem.productCode = _items[0].productCode;
+        poeItem.productProperties = _items[0].productProperties;
+        poeItem.productDesc = _items[0].productDesc;
         poeItem.prNo = prNos.join("\n");
         poeItem.uom = _items[0].uom;
         poeItem.price = _items[0].price;
@@ -58,7 +64,7 @@ module.exports = function (pox, offset) {
     });
 
 
-    var iso = "FM-PB-00-06-009/R1";
+    var iso = pox.category.code === "FAB" ? "FM-00-PJ-02-004" : "FM-PB-00-06-009/R1";
     var number = pox.no;
     var currency = pox.currency.code;
     var supplier = pox.supplier.name;
@@ -182,7 +188,7 @@ module.exports = function (pox, offset) {
     if (pox.category.code === "FAB") {
         tbody = items.map(function (item) {
             return [{
-                stack: [item.productCode, item.productName, `COMPOSITON: ${item.properties[0]}`, `KONSTRUKSI: ${item.properties[1]}`, `YARN: ${item.properties[2]}`,item.productDesc, item.remark, {
+                stack: [item.productCode, item.productName, `COMPOSITON: ${item.productProperties[0]}`, `KONSTRUKSI: ${item.productProperties[1]}`, `YARN: ${item.productProperties[2]}`, item.productDesc, `Keterangan : ${item.remark}`, {
                     text: item.prNo,
                     style: 'bold'
                 }],
@@ -355,28 +361,7 @@ module.exports = function (pox, offset) {
                         }, `${pox.remark}`]
                     }]
                 }]
-            },
-                '\n\n\n', {
-                columns: [{
-                    width: '35%',
-                    stack: ['Pembeli\n\n\n\n\n', {
-                        text: pox._createdBy,
-                        style: ['bold']
-                    }],
-                    style: 'center'
-                }, {
-                    width: '30%',
-                    text: ''
-                }, {
-                    width: '35%',
-                    stack: ['Penjual\n\n\n\n\n', {
-                        text: supplier,
-                        style: ['bold']
-                    }],
-                    style: 'center'
-                }]
-            }
-            ],
+            }],
             style: ['size08']
         }
     ];
@@ -526,11 +511,41 @@ module.exports = function (pox, offset) {
         footer.push(stdQ)
     }
 
+    var signature = [
+        '\n\n\n',
+        {
+            stack: [
+                {
+                    columns: [
+                        {
+                            width: '35%',
+                            stack: ['Pembeli\n\n\n\n\n', {
+                                text: pox._createdBy,
+                                style: ['bold']
+                            }],
+                            style: 'center'
+                        }, {
+                            width: '30%',
+                            text: ''
+                        }, {
+                            width: '35%',
+                            stack: ['Penjual\n\n\n\n\n', {
+                                text: supplier,
+                                style: ['bold']
+                            }],
+                            style: 'center'
+                        }]
+                }
+            ],
+            style: ['size08']
+        }
+    ];
+
     var dd = {
         pageSize: 'A5',
         pageOrientation: 'portrait',
         pageMargins: 20,
-        content: [].concat(header, attention, opening, table, footer),
+        content: [].concat(header, attention, opening, table, footer, signature),
         styles: {
             size06: {
                 fontSize: 6

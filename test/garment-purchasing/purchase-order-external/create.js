@@ -107,3 +107,13 @@ it('#04. purchase-orders supplier & currency should be the same with one in purc
             done(e);
         });
 });
+
+it('#05. should success when generate pdf purchase-order-external', function (done) {
+    purchaseOrderExternalManager.pdf(purchaseOrderExternal._id, 7)
+        .then(results => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
