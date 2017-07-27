@@ -109,18 +109,7 @@ it('#04. purchase-orders supplier & currency should be the same with one in purc
 });
 
 it('#05. should success when generate pdf purchase-order-external', function (done) {
-    purchaseOrderExternalManager.pdf(purchaseOrderExternal, 7)
-        .then(results => {
-            done();
-        })
-        .catch(e => {
-            done(e);
-        });
-});
-
-it('#06. should success when generate pdf  purchase-order-external', function (done) {
-    purchaseOrderExternal.category.code = "FAB";
-    purchaseOrderExternalManager.pdf(purchaseOrderExternal, 7)
+    purchaseOrderExternalManager.pdf(purchaseOrderExternal._id, 7)
         .then(results => {
             done();
         })
