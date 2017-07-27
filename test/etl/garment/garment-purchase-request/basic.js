@@ -23,28 +23,26 @@ before("#00. connect db", function (done) {
         });
 });
 
+it("#01. should error when extract with empty data", function (done) {
+    var table1 = "table1";
+    var table2 = "table1";
 
-// var extractedData;
-// it("#01. should success when extract all data", function (done) {
-//     var table1 = "Budget1";
-//     var table2 = "POrder1";
-//     // var table1 = "Budget";
-//     // var table2 = "POrder";
-//     instanceManager.extract(table1, table2)
-//         .then((result) => {
-//             extractedData = result;
-//             extractedData.should.instanceof(Array);
-//             extractedData.length.should.not.equal(0);
-//             done();
-//         })
-//         .catch((e) => {
-//             console.log(e);
-//             done(e);
-//         });
-// });
+    instanceManager.extract(table1, table2)
+        .then((id) => {
+            done("Should not be able to create with empty data");
+        })
+        .catch((e) => {
+            try {
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
+        });
+});
 
 var extractedData;
-it("#01. should success when extract all data", function (done) {
+it("#02. should success when extract all data", function (done) {
 
     garmentPurchaseRequestDataUtil.getNewData()
         .then((result) => {
@@ -60,22 +58,23 @@ it("#01. should success when extract all data", function (done) {
 });
 
 var transfrom;
-it("#02. should success when transfrom all data", function (done) {
-    instanceManager.transform(extractedData)
-        .then((result) => {
-            transfrom = result;
-            transfrom.should.instanceof(Array);
-            transfrom.length.should.not.equal(0);
-            done();
+it("#03. should success when transfrom all data", function (done) {
+    garmentPurchaseRequestDataUtil.getData().then((data) => {
+        instanceManager.transform(extractedData, data)
+            .then((result) => {
+                transfrom = result;
+                transfrom.should.instanceof(Array);
+                transfrom.length.should.not.equal(0);
+                done();
 
-        })
-        .catch((e) => {
-            console.log(e);
-            done(e);
-        });
+            })
+    }).catch((e) => {
+        console.log(e);
+        done(e);
+    });
 });
 
-it("#03. should success when load all data", function (done) {
+it("#04. should success when load all data", function (done) {
     instanceManager.load(transfrom)
         .then((result) => {
 

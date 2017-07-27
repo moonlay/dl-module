@@ -112,8 +112,13 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         // var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from Budget1 as Budget inner join POrder1 as POrder On Budget.Po = POrder.Nopo";
 
                         request.query(sqlQuery, function (err, result) {
-                            resolve(result);
-                        });
+                            if (result) {
+                                resolve(result);
+                            } else {
+                                reject(err);
+                            }
+                        })
+
 
                     })
                 })
@@ -160,21 +165,33 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         });
     }
 
-    transform(datas) {
+    transform(datas, test) {
         return new Promise((resolve, reject) => {
 
-            var getUnit = this.getDataUnit();
-            var getCategory = this.getDataCategory();
-            var getProduct = this.getDataProduct();
-            var getBuyer = this.getDataBuyer();
-            var getUom = this.getDataUom();
+            var getUnit = this.getDataUnit() ? this.getDataUnit() : test.Unit;
+            var getCategory = this.getDataCategory() ? this.getDataCategory() : test.Category;
+            var getProduct = this.getDataProduct() ? this.getDataProduct() : test.Product;
+            var getBuyer = this.getDataBuyer() ? this.getDataBuyer() : test.Buyer;
+            var getUom = this.getDataUom() ? this.getDataUom() : test.Uom;
+
+            // var getUnit = this.getDataUnit();
+            // var getCategory = this.getDataCategory();
+            // var getProduct = this.getDataProduct();
+            // var getBuyer = this.getDataBuyer();
+            // var getUom = this.getDataUom();
+
+            // var getUnit = this.getDataUnit() ? test.Unit : "";
+            // var getCategory = this.getDataCategory() ? test.Category : "";
+            // var getProduct = this.getDataProduct() ? test.Product : "";
+            // var getBuyer = this.getDataBuyer() ? test.Buyer : "";
+            // var getUom = this.getDataUom() ? test.Uom : "";
 
             Promise.all([getUnit, getCategory, getProduct, getBuyer, getUom]).then((result) => {
-                var _unit = result[0].data;
-                var _category = result[1];
-                var _product = result[2];
-                var _buyer = result[3];
-                var _uom = result[4].data;
+                var _unit = result[0].data ? result[0].data : test.Unit;
+                var _category = result[1] ? result[1] : test.Category;
+                var _product = result[2] ? result[2] : test.Product;
+                var _buyer = result[3] ? result[3] : test.Buyer;
+                var _uom = result[4].data ? result[4].data : test.Uom;
                 var transformData = []
 
                 //distinct extracted data
@@ -208,6 +225,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         unitCode = "C1A"
                     } else if (uniq.Konf.trim() == "K.5") {
                         unitCode = "C2A"
+                    } else {
+                        unitCode = uniq.Konf.trim();
                     }
 
                     var _createdDatehours = new Date(uniq.Jamin).getHours() ? new Date(uniq.Jamin).getHours() : "";
