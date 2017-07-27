@@ -101,19 +101,24 @@ module.exports = class DealTrackingActivityManager extends BaseManager {
     read(paging) {
         var _paging = {
             filter: { dealId: new ObjectId(paging._id) },
-            select: ["_createdDate", "_createdBy", "code", "type", "field.status", "field.title", "field.notes", "field.assignedTo", "field.dueDate", "field.sourceStageId", "field.targetStageId", "field.attachments"]
+            select: ["_createdDate", "_createdBy", "code", "type", "field.status", "field.title", "field.notes", "field.assignedTo", "field.dueDate", "field.sourceStageId", "field.targetStageId", "field.attachments"],
+            page: paging.page ? paging.page : 1,
+            size: paging.size ? paging.size : 20,
+            order: paging.order ? paging.order : {}
         };
 
         if (paging.filter && Object.getOwnPropertyNames(paging.filter).length > 0) {
             _paging.filter = paging.filter;
         }
-
+        
         return this._createIndexes()
             .then((createIndexResults) => {
                 var query = this._getQuery(_paging);
                 return this.collection
                     .where(query)
                     .select(_paging.select)
+                    .page(_paging.page, _paging.size)
+                    .order(_paging.order)
                     .execute()
                     .then((result) => {
                         result.username = this.user.username;
