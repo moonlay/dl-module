@@ -4,10 +4,11 @@ var PoExternalManager = require('../../../src/managers/garment-purchasing/purcha
 var codeGenerator = require('../../../src/utils/code-generator');
 var supplier = require('../master/supplier-data-util');
 var currency = require('../master/currency-data-util');
+var category = require('../master/category-data-util');
 var vat = require('../master/vat-data-util');
 var po = require('./purchase-order-data-util');
 
-var get2NewPos = function() {
+var get2NewPos = function () {
     return po.getNewTestData()
         .then((po1) => {
             return po.getNewTestData()
@@ -23,27 +24,43 @@ class PurchaseOrderExternalDataUtil {
             .getManager(PoExternalManager)
             .then(manager => {
                 var getPurchaseOrders = purchaseOrders ? purchaseOrders : get2NewPos();
-                return Promise.all([supplier.getTestData(), currency.getTestData(), vat.getTestData(), getPurchaseOrders])
+                return Promise.all([supplier.getTestData(), currency.getTestData(), vat.getTestData(), category.getTestData(), getPurchaseOrders])
                     .then(results => {
                         var supplier = results[0];
                         var currency = results[1];
                         var vat = results[2];
-                        var pos = results[3];
+                        var category = results[3]
+                        var pos = results[4];
 
-                        for (var po of pos) {
-                            for (var poItem of po.items) {
-                                poItem.currency = currency;
-                                poItem.currencyRate = currency.rate;
-                                poItem.dealQuantity = poItem.defaultQuantity;
-                                poItem.dealUom = poItem.defaultUom;
-                                poItem.pricePerDealUnit = poItem.product.price * 0.05;
-                                poItem.priceBeforeTax = poItem.pricePerDealUnit;
-                            }
-                        }
+                        var items = pos.map((purchaseOrder) => {
+                            return purchaseOrder.items.map((item) => {
+                                if (item.categoryId.toString() === category._id.toString()) {
+                                    return {
+                                        poNo: purchaseOrder.no,
+                                        poId: purchaseOrder._id,
+                                        prNo: purchaseOrder.purchaseRequest.no,
+                                        prId: purchaseOrder.purchaseRequest._id,
+                                        prRefNo: item.refNo,
+                                        roNo: purchaseOrder.roNo,
+                                        productId: item.productId,
+                                        product: item.product,
+                                        defaultQuantity: Number(item.defaultQuantity),
+                                        defaultUom: item.defaultUom,
+                                        dealQuantity: Number(item.defaultQuantity),
+                                        dealUom: item.defaultUom,
+                                        budgetPrice: Number(item.budgetPrice),
+                                        priceBeforeTax: Number(item.budgetPrice),
+                                        pricePerDealUnit: Number(item.budgetPrice),
+                                        conversion: 1,
+                                        useIncomeTax: false
+                                    }
+                                }
+                            })
+                        })
+                        items = [].concat.apply([], items);
                         var no = `UT/PO External/${codeGenerator()}`;
                         var data = {
                             no: no,
-                            refNo: no,
                             supplierId: supplier._id,
                             supplier: supplier,
                             freightCostBy: 'Penjual',
@@ -55,13 +72,15 @@ class PurchaseOrderExternalDataUtil {
                             useVat: vat != undefined,
                             vatRate: vat.rate,
                             useIncomeTax: false,
+                            category:category,
+                            categoryId:category._id,
                             date: new Date(),
                             expectedDeliveryDate: new Date(),
                             actualDeliveryDate: new Date(),
                             isPosted: false,
                             isClosed: false,
                             remark: '',
-                            items: pos
+                            items: items
                         };
                         return Promise.resolve(data);
                     });
@@ -102,7 +121,7 @@ class PurchaseOrderExternalDataUtil {
                 return helper
                     .getManager(PoExternalManager)
                     .then(manager => {
-                        poe.isClosed=true;
+                        poe.isClosed = true;
                         return manager.update(poe)
                             .then(id => {
                                 return manager.getSingleById(id);
