@@ -65,7 +65,7 @@ module.exports = function (packing, offset) {
             lineWidth: 0.5
         }
         ]
-    }, '\n'];
+    }];
 
     var subheader = [{
         columns: [{
@@ -77,13 +77,11 @@ module.exports = function (packing, offset) {
                     alignment: "center",
                     decoration: 'underline'
                 },
-                    '\n',
                 {
                     text: iso,
                     style: ['size09', 'bold'],
                     alignment: "right"
-                },
-                    '\n'
+                }
                 ]
             }]
 
@@ -124,7 +122,7 @@ module.exports = function (packing, offset) {
         }
 
         ]
-    }, "\n"];
+    }];
 
     var thead = [{
         text: 'NO',
@@ -208,13 +206,13 @@ module.exports = function (packing, offset) {
         text: "Total",
         style: ['size08', 'center']
     }, {
-        text: totalJumlah,
+        text: totalJumlah.toFixed(2),
         style: ['size08', 'center']
     }, {
-        text: totalBerat,
+        text: totalBerat.toFixed(2),
         style: ['size08', 'center']
     }, {
-        text: totalPanjang,
+        text: totalPanjang.toFixed(2),
         style: ['size08', 'center']
     }, "",]];
 
@@ -234,7 +232,7 @@ module.exports = function (packing, offset) {
         }
     }];
 
-    var footer = ["\n", {
+    var footer = [{
         stack: [{
             columns: [{
                 columns: [{
@@ -258,7 +256,7 @@ module.exports = function (packing, offset) {
     var footer2 = ['\n', {
         columns: [{
             width: '25%',
-            stack: ['Diterima oleh:', '\n\n\n', '(                               )'],
+            stack: ['\n', 'Diterima oleh:', '\n\n\n\n', '(                               )'],
             style: ['center']
         },
         {
@@ -272,7 +270,7 @@ module.exports = function (packing, offset) {
 
         {
             width: '25%',
-            stack: [`Sukoharjo, ${moment(packing.date).add(offset, 'h').format(locale.date.format)} `, 'Diserahkan oleh :', '\n\n', `(  ${packing._createdBy}  )`],
+            stack: [`Sukoharjo, ${moment(packing.date).add(offset, 'h').format(locale.date.format)} `, 'Diserahkan oleh :', '\n\n\n\n', `(  ${packing._createdBy}  )`],
             style: ['center']
         }],
         style: ['size08']

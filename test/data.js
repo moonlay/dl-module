@@ -43,6 +43,10 @@ module.exports = {
     },
     sales: {
         productionOrder: require('./data-util/sales/production-order-data-util'),
+        dealTrackingBoard: require('./data-util/sales/deal-tracking-board-data-util'),
+        dealTrackingStage: require('./data-util/sales/deal-tracking-stage-data-util'),
+        dealTrackingDeal: require('./data-util/sales/deal-tracking-deal-data-util'),
+        dealTrackingActivity: require('./data-util/sales/deal-tracking-activity-data-util')
     },
 
 };

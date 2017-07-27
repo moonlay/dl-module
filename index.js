@@ -87,9 +87,12 @@ module.exports = {
             ProductionOrderManager: require('./src/managers/sales/production-order-manager'),
             FinishingPrintingSalesContractManager: require('./src/managers/sales/finishing-printing-sales-contract-manager'),
             SpinningSalesContractManager: require('./src/managers/sales/spinning-sales-contract-manager'),
-            WeavingSalesContractManager: require('./src/managers/sales/weaving-sales-contract-manager')
+            WeavingSalesContractManager: require('./src/managers/sales/weaving-sales-contract-manager'),
+            DealTrackingBoardManager: require('./src/managers/sales/deal-tracking-board-manager'),
+            DealTrackingStageManager: require('./src/managers/sales/deal-tracking-stage-manager'),
+            DealTrackingDealManager: require('./src/managers/sales/deal-tracking-deal-manager'),
+            DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager')
         }
-
     },
     test: {
         data: {
@@ -137,7 +140,8 @@ module.exports = {
             },
             inventory: {
                 finishingPrinting: {
-                    packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util")
+                    packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util"),
+                    shipmentDocument: require("./test/data-util/inventory/finishing-printing/fp-shipment-document-data-util")
                 },
                 inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),
                 inventoryMovement: require('./test/data-util/inventory/inventory-movement-data-util'),
@@ -156,7 +160,11 @@ module.exports = {
                 productionOrder: require('./test/data-util/sales/production-order-data-util'),
                 finishingPrintingSalesContract: require('./test/data-util/sales/finishing-printing-sales-contract-data-util'),
                 weavingSalesContract: require('./test/data-util/sales/weaving-sales-contract-data-util'),
-                spinningSalesContract: require('./test/data-util/sales/spinning-sales-contract-data-util')
+                spinningSalesContract: require('./test/data-util/sales/spinning-sales-contract-data-util'),
+                dealTrackingBoard: require('./test/data-util/sales/deal-tracking-board-data-util'),
+                dealTrackingStage: require('./test/data-util/sales/deal-tracking-stage-data-util'),
+                dealTrackingDeal: require('./test/data-util/sales/deal-tracking-deal-data-util'),
+                dealTrackingActivity: require('./test/data-util/sales/deal-tracking-activity-data-util')
             }
         }
     },
