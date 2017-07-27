@@ -949,7 +949,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         purchaseOrderExternal.isClosed = true;
                         return this.update(purchaseOrderExternal);
                     })
-                    .then((poExId) => Promise.resolve(purchaseOrderExternal._id));
+                    .then((poExId) => Promise.resolve(poExId));
             })
     }
 
