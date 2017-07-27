@@ -122,6 +122,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                     })
                 })
+                reject();
         })
     }
 
@@ -168,17 +169,17 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     transform(datas, test) {
         return new Promise((resolve, reject) => {
 
-            var getUnit = this.getDataUnit() ? this.getDataUnit() : test.Unit;
-            var getCategory = this.getDataCategory() ? this.getDataCategory() : test.Category;
-            var getProduct = this.getDataProduct() ? this.getDataProduct() : test.Product;
-            var getBuyer = this.getDataBuyer() ? this.getDataBuyer() : test.Buyer;
-            var getUom = this.getDataUom() ? this.getDataUom() : test.Uom;
+            // var getUnit = this.getDataUnit() ? this.getDataUnit() : test.Unit;
+            // var getCategory = this.getDataCategory() ? this.getDataCategory() : test.Category;
+            // var getProduct = this.getDataProduct() ? this.getDataProduct() : test.Product;
+            // var getBuyer = this.getDataBuyer() ? this.getDataBuyer() : test.Buyer;
+            // var getUom = this.getDataUom() ? this.getDataUom() : test.Uom;
 
-            // var getUnit = this.getDataUnit();
-            // var getCategory = this.getDataCategory();
-            // var getProduct = this.getDataProduct();
-            // var getBuyer = this.getDataBuyer();
-            // var getUom = this.getDataUom();
+            var getUnit = this.getDataUnit();
+            var getCategory = this.getDataCategory();
+            var getProduct = this.getDataProduct();
+            var getBuyer = this.getDataBuyer();
+            var getUom = this.getDataUom();
 
             // var getUnit = this.getDataUnit() ? test.Unit : "";
             // var getCategory = this.getDataCategory() ? test.Category : "";
