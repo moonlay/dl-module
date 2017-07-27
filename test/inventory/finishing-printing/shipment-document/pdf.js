@@ -33,6 +33,7 @@ it("#01. should success when create new data", function (done) {
             done();
         })
         .catch((e) => {
+            console.log(e);
             done(e);
         });
 });
@@ -47,6 +48,7 @@ it(`#02. should success when get created data with id`, function (done) {
             done();
         })
         .catch((e) => {
+            console.log(e);
             done(e);
         });
 });
@@ -59,6 +61,7 @@ it('#04. should success when create pdf', function (done) {
         .then((pdfData) => {
             done();
         }).catch((e) => {
+            console.log(e);
             done(e);
         });
 });
@@ -72,6 +75,7 @@ it("#05. should success when destroy all unit test data", function (done) {
             done();
         })
         .catch((e) => {
+            console.log(e);
             done(e);
         });
 });
