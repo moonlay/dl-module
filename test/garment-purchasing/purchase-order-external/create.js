@@ -109,7 +109,7 @@ it('#04. purchase-orders supplier & currency should be the same with one in purc
 });
 
 it('#05. should success when generate pdf purchase-order-external', function (done) {
-    purchaseOrderExternalManager.dpf(purchaseOrderExternal, 7)
+    purchaseOrderExternalManager.pdf(purchaseOrderExternal, 7)
         .then(results => {
             done();
         })
