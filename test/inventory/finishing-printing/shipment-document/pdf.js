@@ -24,7 +24,7 @@ before('#00. connect db', function (done) {
 
 var createdId;
 it("#01. should success when create new data", function (done) {
-    DataUtil.getNewTestData()
+    DataUtil.getNewData()
 
         .then((data) => instanceManager.create(data))
         .then((id) => {
@@ -33,7 +33,6 @@ it("#01. should success when create new data", function (done) {
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
@@ -48,7 +47,6 @@ it(`#02. should success when get created data with id`, function (done) {
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
@@ -61,7 +59,6 @@ it('#04. should success when create pdf', function (done) {
         .then((pdfData) => {
             done();
         }).catch((e) => {
-            console.log(e);
             done(e);
         });
 });
@@ -75,7 +72,6 @@ it("#05. should success when destroy all unit test data", function (done) {
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
