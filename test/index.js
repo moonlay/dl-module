@@ -93,7 +93,7 @@ describe('#dl-module', function (done) {
     //Garmet Purchasing 
     test('@GARMENT PURCHASING/PURCHASE REQUEST', './garment-purchasing/purchase-request');
     test('@GARMENT PURCHASING/PURCHASE ORDER', './garment-purchasing/purchase-order');
-    test('@GARMENT PURCHASING/PURCHASE ORDER EXTERNAL', './garment-purchasing/purchase-orderexternal');
+    test('@GARMENT PURCHASING/PURCHASE ORDER EXTERNAL', './garment-purchasing/purchase-order-external');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
