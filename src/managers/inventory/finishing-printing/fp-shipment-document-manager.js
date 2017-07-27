@@ -106,6 +106,8 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             code: valid.code
         });
 
+        valid.details = valid.details || [];
+
         var getBuyer = valid.buyerId && ObjectId.isValid(valid.buyerId) ? this.buyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
 
         var getStorage = valid.details ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
