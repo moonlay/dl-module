@@ -108,9 +108,6 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 else if (!_buyer)
                     errors["buyerId"] = i18n.__("ShipmentDocument.buyerId.isRequired: %s not found", i18n.__("ShipmentDocument.buyerId._:Buyer"));
 
-                if (!valid.deliveryDate)
-                    errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryDate._:Date")); //"Grade harus diisi";
-
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
                     return Promise.reject(new ValidationError('data does not pass validation', errors));
