@@ -280,7 +280,7 @@ getDataKoreksiHarga(query){
         return query;
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
 
             this.getSingleById(id)
@@ -337,7 +337,7 @@ getDataKoreksiHarga(query){
                         _item.priceTotal = priceTotal;
 
                     }
-                    var definition = getDefinition(unitPaymentQuantityCorrectionNote);
+                    var definition = getDefinition(unitPaymentQuantityCorrectionNote, offset);
                     var generatePdf = require('../../pdf/pdf-generator');
                     generatePdf(definition)
                         .then(binary => {
