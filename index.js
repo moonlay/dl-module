@@ -9,6 +9,7 @@ module.exports = {
             BuyerManager: require("./src/managers/master/buyer-manager"),
             GarmentBuyerManager: require("./src/managers/master/garment-buyer-manager"),
             SupplierManager: require("./src/managers/master/supplier-manager"),
+            GarmentSupplierManager: require("./src/managers/master/garment-supplier-manager"),
             ProductManager: require("./src/managers/master/product-manager"),
             GarmentProductManager: require("./src/managers/master/garment-product-manager"),
             CategoryManager: require('./src/managers/master/category-manager'),

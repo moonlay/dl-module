@@ -53,6 +53,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/PRODUCT', './master/product');
     test('@MASTER/GARMENT-PRODUCT', './master/garment-product');
     test('@MASTER/SUPPLIER', './master/supplier');
+    test('@MASTER/GARMENT-SUPPLIER', './master/garment-supplier');
     test('@MASTER/THREAD-SPECIFICATION', './master/thread-specification');
     test('@MASTER/UNIT', './master/unit');
     test('@MASTER/UOM', './master/uom');
