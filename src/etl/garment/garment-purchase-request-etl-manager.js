@@ -118,11 +118,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                 reject(err);
                             }
                         })
-
-
                     })
                 })
-                reject();
         })
     }
 
@@ -166,7 +163,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         });
     }
 
-    transform(datas, test) {
+    transform(datas) {
         return new Promise((resolve, reject) => {
 
             // var getUnit = this.getDataUnit() ? this.getDataUnit() : test.Unit;
@@ -188,12 +185,12 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             // var getUom = this.getDataUom() ? test.Uom : "";
 
             Promise.all([getUnit, getCategory, getProduct, getBuyer, getUom]).then((result) => {
-                var _unit = result[0].data ? result[0].data : test.Unit;
-                var _category = result[1] ? result[1] : test.Category;
-                var _product = result[2] ? result[2] : test.Product;
-                var _buyer = result[3] ? result[3] : test.Buyer;
-                var _uom = result[4].data ? result[4].data : test.Uom;
-                var transformData = []
+                var _unit = result[0].data;
+                var _category = result[1];
+                var _product = result[2];
+                var _buyer = result[3];
+                var _uom = result[4].data;
+                var transformData = [];
 
                 //distinct extracted data
                 var distinctData = [];
