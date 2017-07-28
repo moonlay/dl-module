@@ -45,18 +45,21 @@ it('#02. should success when create new purchase-order', function (done) {
 });
 
 var createdData;
+var categoryId;
 it(`#03. should success when get created data with id`, function (done) {
     purchaseOrderManager.getSingleById(createdId)
         .then((data) => {
             data.should.instanceof(Object);
             validatePO(data);
             createdData = data;
+            categoryId = createdData.items[0].categoryId
             done();
         })
         .catch((e) => {
             done(e);
         });
 });
+
 it("#04. should success when read data", function (done) {
     purchaseOrderManager.read({
         filter: {
@@ -75,7 +78,20 @@ it("#04. should success when read data", function (done) {
         });
 });
 
-it(`#05. should success when delete data`, function (done) {
+it('#05. should success when get data by keyword', function (done) {
+    var shipmentDate = new Date();
+    var moment = require('moment');
+    purchaseOrderManager.getPurchaseOrderByTag(categoryId,"#buyer1",moment(shipmentDate).format("YYYY-MM-DD"))
+        .then(data => {
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it(`#06. should success when delete data`, function (done) {
     purchaseOrderManager.delete(createdData)
         .then((id) => {
             id.toString().should.equal(createdId.toString());
@@ -87,7 +103,7 @@ it(`#05. should success when delete data`, function (done) {
 });
 
 
-it(`#06. should _deleted=true`, function (done) {
+it(`#07. should _deleted=true`, function (done) {
     purchaseOrderManager.getSingleByQuery({
         _id: createdId
     })

@@ -219,30 +219,6 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         return query;
     }
 
-    pdf(id, offset) {
-        return new Promise((resolve, reject) => {
-
-            this.getSingleById(id)
-                .then(purchaseRequest => {
-                    var getDefinition = require("../../pdf/definitions/garment-purchase-request");
-                    var definition = getDefinition(purchaseRequest, offset);
-
-                    var generatePdf = require("../../pdf/pdf-generator");
-                    generatePdf(definition)
-                        .then(binary => {
-                            resolve(binary);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-
-        });
-    }
-
     getAllDataPR(filter) {
         return this._createIndexes()
             .then((createIndexResults) => {
