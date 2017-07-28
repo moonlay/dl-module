@@ -1,0 +1,47 @@
+"use strict";
+var _getSert = require("../getsert");
+var generateCode = require("../../../src/utils/code-generator");
+
+class BuyerDataUtil {
+    getSert(input) {
+        var ManagerType = require("../../../src/managers/master/garment-buyer-manager");
+        return _getSert(input, ManagerType, (data) => {
+            return {
+                code: data.code
+            };
+        });
+    }
+
+    getNewData() {
+        var Model = require("dl-models").master.Buyer;
+        var data = new Model();
+
+        var code = generateCode();
+
+        data.code = code;
+        data.name = `name[${code}]`;
+        data.address = `address[${code}]`;
+        data.country = `country[${code}]`;
+        data.contact = `contact[${code}]`;
+        data.city = `city[${code}]`;
+        data.NPWP = `NPWP[${code}]`;
+        data.tempo = "30";
+        data.type = "Ekspor";
+        return Promise.resolve(data);
+    }
+
+    getTestData() {        
+        var data = {
+            code: "UT/BUY/01",
+            name: "Buyer 01",
+            address: "152 La Sierra Street Land O Lakes, FL 34639",
+            country: "US",
+            city: "test",
+            contact: "Mr. John Doe.",
+            tempo: "30",
+            type: "Ekspor",
+        };
+        return this.getSert(data);
+    }
+}
+module.exports = new BuyerDataUtil();

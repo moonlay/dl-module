@@ -14,7 +14,7 @@ module.exports = class CategoryManager extends BaseManager {
 
     constructor(db, user) {
         super(db, user);
-        this.collection = this.db.use(map.master.collection.Category);
+        this.collection = this.db.use("garment-categories");
     }
 
     _getQuery(paging) {

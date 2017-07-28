@@ -171,8 +171,19 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         if (_sourcePurchaseOrder) {
                             var sourcePoItem = valid.sourcePurchaseOrder.items.find((sourceItem) => sourceItem.product._id.toString() === item.product._id.toString());
                             if (sourcePoItem) {
-                                if (item.defaultQuantity >= sourcePoItem.defaultQuantity) {
-                                    itemError["defaultQuantity"] = i18n.__("PurchaseOrder.items.defaultQuantity.isGreater:%s cannot be greater than or equal the first PO", i18n.__("PurchaseOrder.items.defaultQuantity._:DefaultQuantity")); //"Jumlah default tidak boleh lebih besar dari PO asal";
+                                if (valid.items.length == valid.sourcePurchaseOrder.items.length) {
+
+                                    if (item.defaultQuantity >= sourcePoItem.defaultQuantity) {
+                                        itemError["defaultQuantity"] = i18n.__("PurchaseOrder.items.defaultQuantity.isGreater:%s cannot be greater than or equal the first PO", i18n.__("PurchaseOrder.items.defaultQuantity._:DefaultQuantity")); //"Jumlah default tidak boleh lebih besar dari PO asal";
+                                        break;
+                                    }
+                                }
+                                else {
+
+                                    if (item.defaultQuantity > sourcePoItem.defaultQuantity) {
+                                        itemError["defaultQuantity"] = i18n.__("PurchaseOrder.items.defaultQuantity.isGreater:%s is greater than the first PO", i18n.__("PurchaseOrder.items.defaultQuantity._:DefaultQuantity")); //"Jumlah default tidak boleh lebih besar dari PO asal";
+                                        break;
+                                    }
                                 }
                             }
                         }
