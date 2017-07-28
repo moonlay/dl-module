@@ -105,6 +105,8 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             },
             code: valid.code
         });
+        
+        valid.details = valid.details || [];
 
         valid.details = valid.details || [];
 

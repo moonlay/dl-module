@@ -24,7 +24,7 @@ before('#00. connect db', function (done) {
 
 var createdId;
 it("#01. should success when create new data", function (done) {
-    DataUtil.getNewTestData()
+    DataUtil.getNewData()
 
         .then((data) => instanceManager.create(data))
         .then((id) => {
