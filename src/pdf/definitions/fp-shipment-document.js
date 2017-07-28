@@ -115,15 +115,19 @@ module.exports = function (shipmentDocument, offset) {
         style: 'tableHeader'
     },
     {
-        text: 'QUANTITY',
+        text: 'SATUAN',
         style: 'tableHeader'
     },
     {
-        text: 'PANJANG TOTAL',
+        text: `KUANTITI`,
         style: 'tableHeader'
     },
     {
-        text: 'BERAT TOTAL',
+        text: 'PANJANG TOTAL\n(m)',
+        style: 'tableHeader'
+    },
+    {
+        text: 'BERAT TOTAL\n(Kg)',
         style: 'tableHeader'
     }
     ];
@@ -157,6 +161,10 @@ module.exports = function (shipmentDocument, offset) {
                 style: ['size08', 'center']
             },
             {
+                text: data.details[i].items[j].uomUnit,
+                style: ['size08', 'center']
+            },
+            {
                 text: data.details[i].items[j].quantity,
                 style: ['size08', 'center']
             },
@@ -182,16 +190,20 @@ module.exports = function (shipmentDocument, offset) {
     }
 
     var tfoot = [[{
-        text: "",
-        style: ['size08', 'center']
-    }, {
-        text: "",
-        style: ['size08', 'center']
-    }, {
-        text: "",
-        style: ['size08', 'center']
-    }, {
+        colSpan: 5,
         text: "Total",
+        style: ['size08', 'center']
+    }, {
+        text: "",
+        style: ['size08', 'center']
+    }, {
+        text: "",
+        style: ['size08', 'center']
+    }, {
+        text: "",
+        style: ['size08', 'center']
+    }, {
+        text: "",
         style: ['size08', 'center']
     }, {
         text: totalJumlah.toFixed(2),
@@ -214,7 +226,7 @@ module.exports = function (shipmentDocument, offset) {
 
     var table = [{
         table: {
-            widths: ['35%', '15%', '10%', '10%', '10%', '10%', '10%'],
+            widths: ['30%', '10%', '10%', '10%', '10%', '10%', '10%', '10%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot),
         }
@@ -243,7 +255,7 @@ module.exports = function (shipmentDocument, offset) {
     var footer2 = ['\n', {
         columns: [{
             width: '25%',
-            stack: ['\n', 'Diterima oleh:', '\n\n\n\n', '(Kasubsie Gudang Jadi)'],
+            stack: ['Mengetahui', 'Kasubsie Gudang Jadi', '\n\n\n\n', '(                  )'],
             style: ['center']
         },
         {
@@ -257,7 +269,7 @@ module.exports = function (shipmentDocument, offset) {
 
         {
             width: '25%',
-            stack: [`Sukoharjo, ${moment(data._createdDate).add(offset, 'h').format(locale.date.format)} `, 'Diserahkan oleh :', '\n\n\n\n', `(  ${data._createdBy}  )`],
+            stack: [`Sukoharjo, ${moment(data._createdDate).add(offset, 'h').format(locale.date.format)} `, 'Petugas Gudang', '\n\n\n\n', `(  ${data._createdBy}  )`],
             style: ['center']
         }],
         style: ['size08']

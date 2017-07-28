@@ -105,8 +105,6 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             },
             code: valid.code
         });
-        
-        valid.details = valid.details || [];
 
         valid.details = valid.details || [];
 
@@ -147,6 +145,9 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                         var itemError = {};
                         if (!valid.details[i].productionOrderId || !valid.details[i].productionOrderId === "") {
                             itemError["productionOrderId"] = i18n.__("PackingReceipt.details.productionOrderId.isRequired:%s is required", i18n.__("PackingReceipt.details.productionOrderId._:Nomor Order")); //"Nomor order harus diisi"; 
+                        }
+                        if (!valid.details[i].items || valid.details[i].items.length === 0) {
+                            itemError["productionOrderNo"] = i18n.__("PackingReceipt.details.productionOrderNo.isRequired:%s is required", i18n.__("PackingReceipt.details.productionOrderNo._:Nomor Order")); //"Harus ada item"; 
                         }
                         itemErrors.push(itemError);
                     }
@@ -291,8 +292,8 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             buyerFilter = { "buyerId": new ObjectId(info.buyerId) };
         }
 
-        if (info.productionOrderId && info.productionOrderId != '') {
-            productionOrderFilter = { "details.productionOrderId": new ObjectId(info.productionOrderId) };
+        if (info.productionOrderNo && info.productionOrderNo != '') {
+            productionOrderFilter = { "details.productionOrderNo": info.productionOrderNo };
         }
 
         var filterDate = {
@@ -333,6 +334,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     item["Tanggal"] = shipment._createdDate ? moment(new Date(shipment._createdDate)).format(dateFormat) : '';
                     item["Kode"] = shipment.code ? shipment.code : '';
                     item["Kode Pengiriman"] = shipment.shipmentNumber ? shipment.shipmentNumber : '';
+                    item["Kode Delivery Order"] = shipment.deliveryCode ? shipment.deliveryCode : '';
                     item["Nomor Order"] = detail.productionOrderNo ? detail.productionOrderNo : '';
                     item["Buyer"] = shipment.buyerName ? shipment.buyerName : '';
                     item["Nama Barang"] = field.productName ? field.productName : '';
@@ -345,6 +347,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     xls.options["Tanggal"] = "string";
                     xls.options["Kode"] = "string";
                     xls.options["Kode Pengiriman"] = "string";
+                    xls.options["Kode Delivery Order"] = "string";
                     xls.options["Nomor Order"] = "string";
                     xls.options["Buyer"] = "string";
                     xls.options["Nama Barang"] = "string";
