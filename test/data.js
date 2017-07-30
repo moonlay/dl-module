@@ -20,8 +20,9 @@ module.exports = {
         machineEvent: require('./data-util/master/machine-event-data-util'),
         comodity: require('./data-util/master/comodity-data-util'),
         quality: require('./data-util/master/quality-data-util'),
-        termOfPayment: require('./data-util/master/term-of-payment-data-util')
-
+        termOfPayment: require('./data-util/master/term-of-payment-data-util'),
+        company: require('./data-util/master/company-data-util'),
+        contact: require('./data-util/master/contact-data-util')
     },
     purchasing:{
         purchaseRequest: require('./data-util/purchasing/purchase-request-data-util'),
@@ -42,6 +43,10 @@ module.exports = {
     },
     sales: {
         productionOrder: require('./data-util/sales/production-order-data-util'),
+        dealTrackingBoard: require('./data-util/sales/deal-tracking-board-data-util'),
+        dealTrackingStage: require('./data-util/sales/deal-tracking-stage-data-util'),
+        dealTrackingDeal: require('./data-util/sales/deal-tracking-deal-data-util'),
+        dealTrackingActivity: require('./data-util/sales/deal-tracking-activity-data-util')
     },
 
 };

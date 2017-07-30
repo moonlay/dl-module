@@ -38,12 +38,15 @@ module.exports = {
             QualityManager: require('./src/managers/master/quality-manager'),
             TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager'),
             DesignMotiveManager: require('./src/managers/master/design-motive-manager'),
-            StorageManager: require('./src/managers/master/storage-manager')
+            StorageManager: require('./src/managers/master/storage-manager'),
+            CompanyManager: require('./src/managers/master/company-manager'),
+            ContactManager: require('./src/managers/master/contact-manager')
         },
         inventory: {
             finishingPrinting: {
                 FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager"),
-                FPReturToQCDocManager: require("./src/managers/inventory/finishing-printing/fp-retur-to-qc-doc-manager")
+                FPReturToQCDocManager: require("./src/managers/inventory/finishing-printing/fp-retur-to-qc-doc-manager"),
+                FPShipmentDocument: require("./src/managers/inventory/finishing-printing/fp-shipment-document-manager")
             },
             InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager"),
             InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
@@ -58,6 +61,11 @@ module.exports = {
             UnitPaymentPriceCorrectionNoteManager: require('./src/managers/purchasing/unit-payment-price-correction-note-manager'),
             UnitPaymentOrderManager: require('./src/managers/purchasing/unit-payment-order-manager'),
             UnitPaymentQuantityCorrectionNoteManager: require('./src/managers/purchasing/unit-payment-quantity-correction-note-manager')
+        },
+        garmentPurchasing: {
+            PurchaseRequestManager: require('./src/managers/garment-purchasing/purchase-request-manager'),
+            PurchaseOrderManager: require('./src/managers/garment-purchasing/purchase-order-manager'),
+            PurchaseOrderExternalManager: require('./src/managers/garment-purchasing/purchase-order-external-manager'),
         },
         production: {
             spinning: {
@@ -81,9 +89,12 @@ module.exports = {
             ProductionOrderManager: require('./src/managers/sales/production-order-manager'),
             FinishingPrintingSalesContractManager: require('./src/managers/sales/finishing-printing-sales-contract-manager'),
             SpinningSalesContractManager: require('./src/managers/sales/spinning-sales-contract-manager'),
-            WeavingSalesContractManager: require('./src/managers/sales/weaving-sales-contract-manager')
+            WeavingSalesContractManager: require('./src/managers/sales/weaving-sales-contract-manager'),
+            DealTrackingBoardManager: require('./src/managers/sales/deal-tracking-board-manager'),
+            DealTrackingStageManager: require('./src/managers/sales/deal-tracking-stage-manager'),
+            DealTrackingDealManager: require('./src/managers/sales/deal-tracking-deal-manager'),
+            DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager')
         }
-
     },
     test: {
         data: {
@@ -122,14 +133,34 @@ module.exports = {
                 comodity: require('./test/data-util/master/comodity-data-util'),
                 quality: require('./test/data-util/master/quality-data-util'),
                 termOfPayment: require('./test/data-util/master/term-of-payment-data-util'),
-                designMotive: require('./test/data-util/master/design-motive-data-util')
+                designMotive: require('./test/data-util/master/design-motive-data-util'),
+                company: require('./test/data-util/master/company-data-util'),
+                contact: require('./test/data-util/master/contact-data-util')
             },
             purchasing: {
-                purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util")
+                purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util"),
+                purchaseOrder: require("./test/data-util/purchasing/purchase-order-data-util"),
+                purchaseOrderExternal: require("./test/data-util/purchasing/purchase-order-external-data-util"),
+                deliveryOrder: require("./test/data-util/purchasing/delivery-order-data-util"),
+                unitReceiptNote: require("./test/data-util/purchasing/unit-receipt-note-data-util"),
+                unitPaymentOrder: require("./test/data-util/purchasing/unit-payment-order-data-util"),
+                unitPaymentPriceCorrectionNot: require("./test/data-util/purchasing/unit-payment-price-correction-note-data-util"),
+                unitPaymentQuantityCorrectionNote: require("./test/data-util/purchasing/unit-payment-quantity-correction-note-data-util"),
+            },
+            garmentPurchasing: {
+                purchaseRequest: require("./test/data-util/garment-purchasing/purchase-request-data-util"),
+                purchaseOrder: require("./test/data-util/garment-purchasing/purchase-order-data-util"),
+                purchaseOrderExternal: require("./test/data-util/garment-purchasing/purchase-order-external-data-util"),
+                // deliveryOrder: require("./test/data-util/garment-purchasing/delivery-order-data-util"),
+                // unitReceiptNote: require("./test/data-util/garment-purchasing/unit-receipt-note-data-util"),
+                // unitPaymentOrder: require("./test/data-util/garment-purchasing/unit-payment-order-data-util"),
+                // unitPaymentPriceCorrectionNot: require("./test/data-util/garment-purchasing/unit-payment-price-correction-note-data-util"),
+                // unitPaymentQuantityCorrectionNote: require("./test/data-util/garment-purchasing/unit-payment-quantity-correction-note-data-util"),
             },
             inventory: {
                 finishingPrinting: {
-                    packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util")
+                    packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util"),
+                    shipmentDocument: require("./test/data-util/inventory/finishing-printing/fp-shipment-document-data-util")
                 },
                 inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),
                 inventoryMovement: require('./test/data-util/inventory/inventory-movement-data-util'),
@@ -148,7 +179,11 @@ module.exports = {
                 productionOrder: require('./test/data-util/sales/production-order-data-util'),
                 finishingPrintingSalesContract: require('./test/data-util/sales/finishing-printing-sales-contract-data-util'),
                 weavingSalesContract: require('./test/data-util/sales/weaving-sales-contract-data-util'),
-                spinningSalesContract: require('./test/data-util/sales/spinning-sales-contract-data-util')
+                spinningSalesContract: require('./test/data-util/sales/spinning-sales-contract-data-util'),
+                dealTrackingBoard: require('./test/data-util/sales/deal-tracking-board-data-util'),
+                dealTrackingStage: require('./test/data-util/sales/deal-tracking-stage-data-util'),
+                dealTrackingDeal: require('./test/data-util/sales/deal-tracking-deal-data-util'),
+                dealTrackingActivity: require('./test/data-util/sales/deal-tracking-activity-data-util')
             }
         }
     },
@@ -184,6 +219,9 @@ module.exports = {
             factFinishingPrintingSalesContract: require("./src/etl/sales/fact-finishing-printing-sales-contract-etl-manager"),
             factSpinningSalesContract: require("./src/etl/sales/fact-spinning-sales-contract-etl-manager"),
             factProductionOrderStatus: require("./src/etl/sales/fact-production-order-status-etl-manager")
+        },
+        garment: {
+            garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
         }
     }
 }

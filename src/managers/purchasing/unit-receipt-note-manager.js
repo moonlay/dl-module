@@ -777,12 +777,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             });
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
             this.getSingleById(id)
                 .then(unitReceiptNote => {
                     var getDefinition = require('../../pdf/definitions/unit-receipt-note');
-                    var definition = getDefinition(unitReceiptNote);
+                    var definition = getDefinition(unitReceiptNote, offset);
                     var generatePdf = require('../../pdf/pdf-generator');
                     generatePdf(definition)
                         .then(binary => {
@@ -860,17 +860,17 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    getUnitReceiptWithoutSpb(_dateFrom, _dateTo, offset) {
+    getUnitReceiptWithoutSpb(_dateFrom, _dateTo) {
         return new Promise((resolve, reject) => {
             var query = Object.assign({});                      
             var deleted = { _deleted: false };
+            var bayar = {isPaid: false};
+            
                      
             if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
                 var dateFrom = new Date(_dateFrom);
                 var dateTo = new Date(_dateTo);
-                dateFrom.setHours(dateFrom.getHours() - offset);
-                dateTo.setHours(dateTo.getHours() - offset);
-
+               
                 var date = {
                     date: {
                         $gte: dateFrom,
@@ -881,6 +881,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             }
             
             Object.assign(query, deleted);
+            Object.assign(query, bayar);
+            
                      
             this.collection
                 .where(query)

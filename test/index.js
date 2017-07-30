@@ -37,7 +37,7 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-QUALITY-CONTROL', './etl/production/fact-fabric-quality-control');
     test('@ETL/FACT-INVENTORY-MOVEMENT', './etl/inventory/fact-inventory-movement');
     test('@ETL/FACT-INVENTORY-SUMMARY', './etl/inventory/fact-inventory-summary');
-
+    test('@ETL/garment-purchase-request', './etl/garment/garment-purchase-request');
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
     test('@MASTER/BUDGET', './master/budget');
@@ -75,6 +75,8 @@ describe('#dl-module', function (done) {
     test('@MASTER/TERM OF PAYMENT', './master/term-of-payment');
     test('@MASTER/DESIGN-MOTIVE', './master/design-motive');
     test('@MASTER/STORAGE', './master/storage');
+    test('@MASTER/COMPANY', './master/company');
+    test('@MASTER/CONTACT', './master/contact');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
@@ -85,14 +87,23 @@ describe('#dl-module', function (done) {
     test('@PURCHASING/UNIT PAYMENT ORDER', './purchasing/unit-payment-order');
     test('@PURCHASING/UNIT PAYMENT PRICE CORRECTION', './purchasing/unit-payment-price-correction-note');
     test('@PURCHASING/UNIT PAYMENT QUANTITY CORRECTION', './purchasing/unit-payment-quantity-correction-note');
-     test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');
+    test('@purchasing/purchase-order/report', './purchasing/purchase-order/report/report');
     test('@purchasing/purchase-order/report', './purchasing/duration-report');
+
+    //Garmet Purchasing 
+    test('@GARMENT PURCHASING/PURCHASE REQUEST', './garment-purchasing/purchase-request');
+    test('@GARMENT PURCHASING/PURCHASE ORDER', './garment-purchasing/purchase-order');
+    test('@GARMENT PURCHASING/PURCHASE ORDER EXTERNAL', './garment-purchasing/purchase-order-external');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
     test('@SALES/FINISHING PRINTING SALES CONTRACT', './sales/finishing-printing-sales-contract');
     test('@SALES/SPINNING SALES CONTRACT', './sales/spinning-sales-contract');
     test('@SALES/WEAVING SALES CONTRACT', './sales/weaving-sales-contract');
+    test('@SALES/DEAL TRACKING BOARD', './sales/deal-tracking-board');
+    test('@SALES/DEAL TRACKING STAGE', './sales/deal-tracking-stage');
+    test('@SALES/DEAL TRACKING DEAL', './sales/deal-tracking-deal');
+    test('@SALES/DEAL TRACKING ACTIVITY', './sales/deal-tracking-activity');
 
     //Production
     test('@PRODUCTION/FINISHING-PRINTING/KANBAN', './production/finishing-printing/kanban');
@@ -106,7 +117,9 @@ describe('#dl-module', function (done) {
     // test('@production/winding-quality-sampling-manager', './production/spinning/winding/winding-quality-sampling-manager-test');
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
 
+    //Inventory
     test('@INVENTORY/FINISHING-PRINTING/PACKING-RECEIPT', './inventory/finishing-printing/packing-receipt');
+    test('@INVENTORY/FINISHING-PRINTING/SHIPMENT-DOCUMENT', './inventory/finishing-printing/shipment-document');
     test('@INVENTORY/INVENTORY-SUMMARY', './inventory/inventory-summary');
     test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');

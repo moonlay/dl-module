@@ -336,7 +336,55 @@ it("#11. should success get all data Production Order (10 data) when searh repor
         });
 });
 
-it("#12. should success when destroy all data Production Order", function (done) {
+it("#12. should success get all data Sales Monthly when searh report with No parameter", function (done) {
+    var query = {
+        header: "application/json",
+        filter: { orderNo: orderNo }
+    };
+    manager.getSalesMonthlyReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#13. should success get all data Sales Monthly when searh report with Account parameter", function (done) {
+    var query = {
+        header: "application/json",
+        filter: { accountId: dataAccount1._id }
+    };
+    manager.getSalesMonthlyReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#14. should success get all data Sales Monthly when searh report with Order Type parameter", function (done) {
+    var query = {
+        header: "application/json",
+        filter: { orderTypeId: dataProcessType1.orderTypeId }
+    };
+    manager.getSalesMonthlyReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#15. should success when destroy all data Production Order", function (done) {
     var destroyData = [];
     for (var id of scId) {
         var data = manager.destroy(id);
@@ -354,7 +402,7 @@ it("#12. should success when destroy all data Production Order", function (done)
         });
 });
 
-it("#13. should success when create daily operation", function (done) {
+it("#16. should success when create daily operation", function (done) {
     var data = dailyOperationUtil.getNewTestData("input");
     Promise.all([data])
         .then(results => {
@@ -365,7 +413,7 @@ it("#13. should success when create daily operation", function (done) {
         });
 });
 
-it("#14. should success get all data Production Order when search report without parameter", function (done) {
+it("#17. should success get all data Production Order when search report without parameter", function (done) {
     var query = {
         page: 1,
         size: 20,
@@ -383,7 +431,7 @@ it("#14. should success get all data Production Order when search report without
         });
 });
 
-it("#15. should success get all data Production Order when search report without parameter (header : application/xls)", function (done) {
+it("#18. should success get all data Production Order when search report without parameter (header : application/xls)", function (done) {
     var query = {
         page: 1,
         size: 20,
