@@ -42,7 +42,8 @@ module.exports = {
         },
         inventory: {
             finishingPrinting: {
-                FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager")
+                FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager"),
+                FPReturToQCDocManager: require("./src/managers/inventory/finishing-printing/fp-retur-to-qc-doc-manager")
             },
             InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager"),
             InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
