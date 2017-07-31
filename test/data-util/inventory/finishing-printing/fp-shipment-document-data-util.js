@@ -29,7 +29,8 @@ class FPShipmentDocumentDataUtil {
                 var data = {
                     code: codeGenerator(),
                     deliveryDate: new Date(),
-                    deliveryNo: "UT/No-1",
+                    shipmentNumber: "UT/No-1",
+                    deliveryCode: "UT/No-1",
                     deliveryReference: "UT/Ref-01",
 
                     productIdentity: "UT/ID-1",
@@ -68,6 +69,19 @@ class FPShipmentDocumentDataUtil {
 
                 return Promise.resolve(data);
             })
+    }
+
+    getNewTestData() {
+        return helper
+            .getManager(ShipmentDocumentManager)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    return manager.create(data)
+                        .then((id) => {
+                            return manager.getSingleById(id)
+                        });
+                });
+            });
     }
 }
 module.exports = new FPShipmentDocumentDataUtil();
