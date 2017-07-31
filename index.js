@@ -45,6 +45,7 @@ module.exports = {
         inventory: {
             finishingPrinting: {
                 FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager"),
+                FPReturToQCDocManager: require("./src/managers/inventory/finishing-printing/fp-retur-to-qc-doc-manager"),
                 FPShipmentDocument: require("./src/managers/inventory/finishing-printing/fp-shipment-document-manager")
             },
             InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager"),
@@ -159,6 +160,7 @@ module.exports = {
             inventory: {
                 finishingPrinting: {
                     packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util"),
+                    fpReturToQCDoc: require("./test/data-util/inventory/finishing-printing/fp-retur-to-qc-doc-data-util"),
                     shipmentDocument: require("./test/data-util/inventory/finishing-printing/fp-shipment-document-data-util")
                 },
                 inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),
