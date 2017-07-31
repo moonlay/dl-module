@@ -160,6 +160,7 @@ module.exports = {
             inventory: {
                 finishingPrinting: {
                     packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util"),
+                    fpReturToQCDoc: require("./test/data-util/inventory/finishing-printing/fp-retur-to-qc-doc-data-util"),
                     shipmentDocument: require("./test/data-util/inventory/finishing-printing/fp-shipment-document-data-util")
                 },
                 inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),
