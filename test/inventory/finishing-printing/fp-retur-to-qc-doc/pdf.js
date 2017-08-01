@@ -55,7 +55,7 @@ it(`#02. should success when get created data with id`, function (done) {
 it('#04. should success when create pdf', function (done) {
     var query = {};
 
-    instanceManager.pdf(createdData,7)
+    instanceManager.pdf(createdData._id,7)
         .then((pdfData) => {
             done();
         }).catch((e) => {
