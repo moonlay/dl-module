@@ -295,13 +295,14 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                 var docs=[];
                 for(var a of retur.items){
                     var itemDocs=[];
+                    var storage="";
                     for(var b of a.details){
                         var items = {
                             productId:b.productId.toString(),
                             uomId: b.uomId.toString(),
                             quantity: b.returQuantity
                         }
-                        var storage=b.storageId.toString();
+                        storage=b.storageId.toString();
                         itemDocs.push(items);
                     }
                     var createDocuments={
