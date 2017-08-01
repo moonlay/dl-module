@@ -47,7 +47,8 @@ module.exports = {
         },
         inventory: {
             finishingPrinting: {
-                FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager")
+                FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager"),
+                FPShipmentDocument: require("./src/managers/inventory/finishing-printing/fp-shipment-document-manager")
             },
             InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager"),
             InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
@@ -90,9 +91,12 @@ module.exports = {
             ProductionOrderManager: require('./src/managers/sales/production-order-manager'),
             FinishingPrintingSalesContractManager: require('./src/managers/sales/finishing-printing-sales-contract-manager'),
             SpinningSalesContractManager: require('./src/managers/sales/spinning-sales-contract-manager'),
-            WeavingSalesContractManager: require('./src/managers/sales/weaving-sales-contract-manager')
+            WeavingSalesContractManager: require('./src/managers/sales/weaving-sales-contract-manager'),
+            DealTrackingBoardManager: require('./src/managers/sales/deal-tracking-board-manager'),
+            DealTrackingStageManager: require('./src/managers/sales/deal-tracking-stage-manager'),
+            DealTrackingDealManager: require('./src/managers/sales/deal-tracking-deal-manager'),
+            DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager')
         }
-
     },
     test: {
         data: {
@@ -133,7 +137,7 @@ module.exports = {
                 termOfPayment: require('./test/data-util/master/term-of-payment-data-util'),
                 designMotive: require('./test/data-util/master/design-motive-data-util'),
                 company: require('./test/data-util/master/company-data-util'),
-                contact: require('./test/data-util/master/contact-data-util')                
+                contact: require('./test/data-util/master/contact-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util"),
@@ -157,7 +161,8 @@ module.exports = {
             },
             inventory: {
                 finishingPrinting: {
-                    packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util")
+                    packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util"),
+                    shipmentDocument: require("./test/data-util/inventory/finishing-printing/fp-shipment-document-data-util")
                 },
                 inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),
                 inventoryMovement: require('./test/data-util/inventory/inventory-movement-data-util'),
@@ -176,7 +181,11 @@ module.exports = {
                 productionOrder: require('./test/data-util/sales/production-order-data-util'),
                 finishingPrintingSalesContract: require('./test/data-util/sales/finishing-printing-sales-contract-data-util'),
                 weavingSalesContract: require('./test/data-util/sales/weaving-sales-contract-data-util'),
-                spinningSalesContract: require('./test/data-util/sales/spinning-sales-contract-data-util')
+                spinningSalesContract: require('./test/data-util/sales/spinning-sales-contract-data-util'),
+                dealTrackingBoard: require('./test/data-util/sales/deal-tracking-board-data-util'),
+                dealTrackingStage: require('./test/data-util/sales/deal-tracking-stage-data-util'),
+                dealTrackingDeal: require('./test/data-util/sales/deal-tracking-deal-data-util'),
+                dealTrackingActivity: require('./test/data-util/sales/deal-tracking-activity-data-util')
             }
         }
     },
@@ -212,6 +221,9 @@ module.exports = {
             factFinishingPrintingSalesContract: require("./src/etl/sales/fact-finishing-printing-sales-contract-etl-manager"),
             factSpinningSalesContract: require("./src/etl/sales/fact-spinning-sales-contract-etl-manager"),
             factProductionOrderStatus: require("./src/etl/sales/fact-production-order-status-etl-manager")
+        },
+        garment: {
+            garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
         }
     }
 }

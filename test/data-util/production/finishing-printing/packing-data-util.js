@@ -42,7 +42,7 @@ class PackingDataUtil {
                         length: 120,
                         quantity: 6,
                         remark: "6 PCS @20 Meters"
-                    },// {
+                    }// {
                         //     lot: "LOT01",
                         //     grade: "B",
                         //     weight: 0,
