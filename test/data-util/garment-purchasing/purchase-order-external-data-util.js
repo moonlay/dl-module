@@ -2,9 +2,9 @@
 var helper = require('../../helper');
 var PoExternalManager = require('../../../src/managers/garment-purchasing/purchase-order-external-manager');
 var codeGenerator = require('../../../src/utils/code-generator');
-var supplier = require('../master/supplier-data-util');
+var supplier = require('../master/garment-supplier-data-util');
 var currency = require('../master/currency-data-util');
-var category = require('../master/category-data-util');
+var category = require('../master/garment-category-data-util');
 var vat = require('../master/vat-data-util');
 var po = require('./purchase-order-data-util');
 

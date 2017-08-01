@@ -7,10 +7,13 @@ module.exports = {
         },
         master: {
             BuyerManager: require("./src/managers/master/buyer-manager"),
+            GarmentBuyerManager: require("./src/managers/master/garment-buyer-manager"),
             SupplierManager: require("./src/managers/master/supplier-manager"),
+            GarmentSupplierManager: require("./src/managers/master/garment-supplier-manager"),
             ProductManager: require("./src/managers/master/product-manager"),
             GarmentProductManager: require("./src/managers/master/garment-product-manager"),
             CategoryManager: require('./src/managers/master/category-manager'),
+            GarmentCategoryManager: require('./src/managers/master/garment-category-manager'),
             DivisionManager: require('./src/managers/master/division-manager'),
             UnitManager: require('./src/managers/master/unit-manager'),
             UomManager: require('./src/managers/master/uom-manager'),
