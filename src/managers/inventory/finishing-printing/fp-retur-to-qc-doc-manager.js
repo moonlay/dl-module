@@ -199,8 +199,8 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                             }
                         }
 
-                        for (var detailError of detailErrors) {
-                            if (Object.getOwnPropertyNames(detailError).length > 0) {
+                        for (var errorDetail of detailErrors) {
+                            if (Object.getOwnPropertyNames(errorDetail).length > 0) {
                                 itemError.details=detailErrors;
                                 break;
                             }
