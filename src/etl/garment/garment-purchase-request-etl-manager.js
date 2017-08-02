@@ -164,18 +164,27 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     transform(datas) {
         return new Promise((resolve, reject) => {
 
-            var getUnit = this.getDataUnit();
-            var getCategory = this.getDataCategory();
-            var getProduct = this.getDataProduct();
-            var getBuyer = this.getDataBuyer();
-            var getUom = this.getDataUom();
+            if (!datas.dataTest) {
+                var getUnit = this.getDataUnit();
+                var getCategory = this.getDataCategory();
+                var getProduct = this.getDataProduct();
+                var getBuyer = this.getDataBuyer();
+                var getUom = this.getDataUom();
+            } else {
+                var getUnit = datas.dataTest.Unit;
+                var getCategory = datas.dataTest.Category;
+                var getProduct = datas.dataTest.Product;
+                var getBuyer = datas.dataTest.Buyer;
+                var getUom = datas.dataTest.Uom;
+            }
+
 
             Promise.all([getUnit, getCategory, getProduct, getBuyer, getUom]).then((result) => {
-                var _unit = result[0].data;
+                var _unit = result[0].data ? result[0].data : result[0];
                 var _category = result[1];
                 var _product = result[2];
                 var _buyer = result[3];
-                var _uom = result[4].data;
+                var _uom = result[4].data ? result[4].data : result[4];
                 var transformData = [];
 
                 //distinct extracted data
