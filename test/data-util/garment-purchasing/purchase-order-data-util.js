@@ -2,15 +2,8 @@
 var helper = require('../../helper');
 var PurchaseOrderManager = require('../../../src/managers/garment-purchasing/purchase-order-manager');
 var codeGenerator = require('../../../src/utils/code-generator');
-var unit = require('../master/unit-data-util');
-var vat = require('../master/vat-data-util');
-var category = require('../master/category-data-util');
 var PurchaseRequest = require('./purchase-request-data-util');
-var product = require('../master/garment-product-data-util');
 var DLModels = require('dl-models');
-var Currency = DLModels.master.Currency;
-var Buyer = DLModels.master.Buyer;
-var Supplier = DLModels.master.Supplier;
 
 class PurchaseOrderDataUtil {
     getNewData(pr) {

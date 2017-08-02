@@ -7,10 +7,13 @@ module.exports = {
         },
         master: {
             BuyerManager: require("./src/managers/master/buyer-manager"),
+            GarmentBuyerManager: require("./src/managers/master/garment-buyer-manager"),
             SupplierManager: require("./src/managers/master/supplier-manager"),
+            GarmentSupplierManager: require("./src/managers/master/garment-supplier-manager"),
             ProductManager: require("./src/managers/master/product-manager"),
             GarmentProductManager: require("./src/managers/master/garment-product-manager"),
             CategoryManager: require('./src/managers/master/category-manager'),
+            GarmentCategoryManager: require('./src/managers/master/garment-category-manager'),
             DivisionManager: require('./src/managers/master/division-manager'),
             UnitManager: require('./src/managers/master/unit-manager'),
             UomManager: require('./src/managers/master/uom-manager'),
@@ -45,6 +48,7 @@ module.exports = {
         inventory: {
             finishingPrinting: {
                 FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager"),
+                FPReturToQCDocManager: require("./src/managers/inventory/finishing-printing/fp-retur-to-qc-doc-manager"),
                 FPShipmentDocument: require("./src/managers/inventory/finishing-printing/fp-shipment-document-manager")
             },
             InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager"),
@@ -159,6 +163,7 @@ module.exports = {
             inventory: {
                 finishingPrinting: {
                     packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util"),
+                    fpReturToQCDoc: require("./test/data-util/inventory/finishing-printing/fp-retur-to-qc-doc-data-util"),
                     shipmentDocument: require("./test/data-util/inventory/finishing-printing/fp-shipment-document-data-util")
                 },
                 inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),

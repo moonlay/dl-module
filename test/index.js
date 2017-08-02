@@ -42,7 +42,9 @@ describe('#dl-module', function (done) {
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
     test('@MASTER/BUDGET', './master/budget');
     test('@MASTER/BUYER', './master/buyer');
+    test('@MASTER/GARMENT-BUYER', './master/garment-buyer');
     test('@MASTER/CATEGORY', './master/category');
+    test('@MASTER/GARMENT-CATEGORY', './master/garment-category');
     test('@MASTER/CURRENCY', './master/currency');
     test('@MASTER/DIVISION', './master/division');
     test('@MASTER/LAMP-STANDARD', './master/lamp-standard');
@@ -51,6 +53,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/PRODUCT', './master/product');
     test('@MASTER/GARMENT-PRODUCT', './master/garment-product');
     test('@MASTER/SUPPLIER', './master/supplier');
+    test('@MASTER/GARMENT-SUPPLIER', './master/garment-supplier');
     test('@MASTER/THREAD-SPECIFICATION', './master/thread-specification');
     test('@MASTER/UNIT', './master/unit');
     test('@MASTER/UOM', './master/uom');
@@ -119,6 +122,7 @@ describe('#dl-module', function (done) {
 
     //Inventory
     test('@INVENTORY/FINISHING-PRINTING/PACKING-RECEIPT', './inventory/finishing-printing/packing-receipt');
+    test('@INVENTORY/FINISHING-PRINTING/RETUR-TO-QC', './inventory/finishing-printing/fp-retur-to-qc-doc');
     test('@INVENTORY/FINISHING-PRINTING/SHIPMENT-DOCUMENT', './inventory/finishing-printing/shipment-document');
     test('@INVENTORY/INVENTORY-SUMMARY', './inventory/inventory-summary');
     test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
