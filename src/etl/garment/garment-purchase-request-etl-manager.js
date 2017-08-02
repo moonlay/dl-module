@@ -20,8 +20,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        // this.GarmentPurchaseRequest = this.db.collection("garment-purchase-requests");
-        // this.GarmentPurchaseRequest= new garmentPurchaseRequestManager(db,user);
         this.collection = this.db.use(Map.garmentPurchasing.collection.GarmentPurchaseRequest);
         this.migrationLog = this.db.collection("migration-log");
         this.unitManager = new UnitManager(db, user);
@@ -166,23 +164,11 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     transform(datas) {
         return new Promise((resolve, reject) => {
 
-            // var getUnit = this.getDataUnit() ? this.getDataUnit() : test.Unit;
-            // var getCategory = this.getDataCategory() ? this.getDataCategory() : test.Category;
-            // var getProduct = this.getDataProduct() ? this.getDataProduct() : test.Product;
-            // var getBuyer = this.getDataBuyer() ? this.getDataBuyer() : test.Buyer;
-            // var getUom = this.getDataUom() ? this.getDataUom() : test.Uom;
-
             var getUnit = this.getDataUnit();
             var getCategory = this.getDataCategory();
             var getProduct = this.getDataProduct();
             var getBuyer = this.getDataBuyer();
             var getUom = this.getDataUom();
-
-            // var getUnit = this.getDataUnit() ? test.Unit : "";
-            // var getCategory = this.getDataCategory() ? test.Category : "";
-            // var getProduct = this.getDataProduct() ? test.Product : "";
-            // var getBuyer = this.getDataBuyer() ? test.Buyer : "";
-            // var getUom = this.getDataUom() ? test.Uom : "";
 
             Promise.all([getUnit, getCategory, getProduct, getBuyer, getUom]).then((result) => {
                 var _unit = result[0].data;
