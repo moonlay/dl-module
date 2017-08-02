@@ -1,41 +1,15 @@
 var global = require('../../global');
 
-module.exports = function (packing, offset) {
+module.exports = function (shipmentDocument, offset) {
 
-    var items = [].concat.apply([], packing.items);
-
-    var iso = "FM.FP-GJ-15-003";
-    // var number = packing.code;
-    // var colorName = packing.colorName;
-
-    var orderType = (packing.orderType || "").toString().toLowerCase() === "printing" ? "Printing" : "Finishing";
+    var iso = "FM.FP-GJ-15-005";
 
     var locale = global.config.locale;
-
-    var buyerName = packing.buyerName ? packing.buyerName : "";
-    var colorType = packing.colorType ? packing.colorType : "";
-    var construction = packing.construction ? packing.construction : "";
-    var buyerAddress = packing.buyerAddress ? packing.buyerAddress : "";
 
     var moment = require('moment');
     moment.locale(locale.name);
 
-    var footerStack = [];
-    var footerStackValue = [];
-    var footerStackDivide = [];
-    if ((packing.orderType || "").toString().toLowerCase() === "solid") {
-        footerStack = ['Buyer', "Jenis Order", "Jenis Warna", 'Konstruksi', 'Tujuan'];
-        footerStackValue = [buyerName, orderType, colorType, construction, buyerAddress];
-        footerStackDivide = [':', ":", ":", ':', ':'];
-    } else if ((packing.orderType || "").toString().toLowerCase() === "printing") {
-        footerStack = ['Buyer', "Jenis Order", 'Konstruksi', 'Design/Motif', 'Tujuan'];
-        footerStackValue = [buyerName, orderType, construction, packing.designNumber && packing.designCode ? `${packing.designNumber} - ${packing.designCode}` : "", buyerAddress];
-        footerStackDivide = [':', ":", ":", ':', ':'];
-    } else {
-        footerStack = ['Buyer', "Jenis Order", 'Konstruksi', 'Tujuan'];
-        footerStackValue = [buyerName, orderType, construction, buyerAddress];
-        footerStackDivide = [':', ":", ":", ':'];
-    }
+    var data = shipmentDocument;
 
     var header = [{
         columns: [{
@@ -72,7 +46,7 @@ module.exports = function (packing, offset) {
             columns: [{
                 width: '*',
                 stack: [{
-                    text: 'BON PENYERAHAN PRODUKSI',
+                    text: 'BON PENGIRIMAN BARANG',
                     style: ['size09', 'bold'],
                     alignment: "center",
                     decoration: 'underline'
@@ -93,7 +67,7 @@ module.exports = function (packing, offset) {
             width: '60%',
             columns: [{
                 width: '*',
-                stack: ['Kepada Yth. Bagian Penjualan ', `Bersama ini kami kirimkan hasil produksi: Inspeksi ${orderType}`],
+                stack: ['Kepada Yth. Bagian Penjualan ', `U/ dikirim kepada: ${data.buyerName ? data.buyerName : ""}`],
             }],
             style: ['size08']
         }
@@ -106,7 +80,7 @@ module.exports = function (packing, offset) {
             width: '40%',
             columns: [{
                 width: '40%',
-                stack: ['No', 'Sesuai No Order'],
+                stack: ['NO.', 'Sesuai DO. No.'],
 
             }, {
                 width: '5%',
@@ -114,7 +88,7 @@ module.exports = function (packing, offset) {
 
             }, {
                 width: '*',
-                stack: [packing.code, packing.productionOrderNo],
+                stack: [data.shipmentNumber ? data.shipmentNumber : "", data.deliveryCode ? data.deliveryCode : ""],
 
             }],
             style: ['size08']
@@ -125,31 +99,37 @@ module.exports = function (packing, offset) {
     }];
 
     var thead = [{
-        text: 'NO',
-        style: 'tableHeader'
-    },
-
-    {
-        text: 'BARANG',
+        text: 'MACAM BARANG',
         style: 'tableHeader'
     },
     {
-        text: 'Jumlah (PCS)',
+        text: 'DESIGN',
         style: 'tableHeader'
     },
     {
-        text: 'Berat (Kg)',
+        text: 'S.P',
         style: 'tableHeader'
     },
     {
-        text: 'Panjang (Meter)',
+        text: 'C.W',
         style: 'tableHeader'
     },
     {
-        text: 'Keterangan',
+        text: 'SATUAN',
+        style: 'tableHeader'
+    },
+    {
+        text: `KUANTITI`,
+        style: 'tableHeader'
+    },
+    {
+        text: 'PANJANG TOTAL\n(m)',
+        style: 'tableHeader'
+    },
+    {
+        text: 'BERAT TOTAL\n(Kg)',
         style: 'tableHeader'
     }
-
     ];
 
 
@@ -158,63 +138,83 @@ module.exports = function (packing, offset) {
     var totalBerat = 0;
     var totalPanjang = 0;
 
-    var tbody = items.map(function (item, index) {
+    var tbody = [];
 
-        if (item.grade.toLowerCase() == "a" || item.grade.toLowerCase() == "b" || item.grade.toLowerCase() == "c") {
-            gradeItem = "BQ";
-        } else {
-            gradeItem = "BS";
+    for (var i = 0; i < data.details.length; i++) {
+        for (var j = 0; j < data.details[i].items.length; j++) {
+            var weightTotal = data.details[i].items[j].quantity * data.details[i].items[j].weight;
+            var lengthTotal = data.details[i].items[j].quantity * data.details[i].items[j].length;
+            var objArr = [{
+                text: data.details[i].items[j].productName,
+                style: ['size08', 'center']
+            },
+            {
+                text: data.details[i].designNumber,
+                style: ['size08', 'center']
+            },
+            {
+                text: data.details[i].productionOrderNo,
+                style: ['size08', 'center']
+            },
+            {
+                text: data.details[i].colorType,
+                style: ['size08', 'center']
+            },
+            {
+                text: data.details[i].items[j].uomUnit,
+                style: ['size08', 'center']
+            },
+            {
+                text: data.details[i].items[j].quantity,
+                style: ['size08', 'center']
+            },
+            {
+                text: lengthTotal.toFixed(2),
+                style: ['size08', 'center']
+            },
+            {
+                text: weightTotal.toFixed(2),
+                style: ['size08', 'center']
+            }]
+
+            totalJumlah += data.details[i].items[j].quantity;
+            totalBerat += weightTotal;
+            totalPanjang += lengthTotal;
+
+            weightTotal = 0;
+            lengthTotal = 0;
+
+            tbody.push(objArr);
+            objArr = [];
         }
-
-        totalJumlah += item.quantity;
-        totalBerat += item.weight;
-        totalPanjang += item.length;
-
-        return [{
-            text: (index + 1).toString() || '',
-            style: ['size08', 'center']
-        },
-
-        {
-            text: packing.colorName + ' ' + item.lot + ' ' + item.grade + ' ' + gradeItem,
-            style: ['size08', 'center']
-        },
-        {
-            text: item.quantity,
-            style: ['size08', 'center']
-        },
-        {
-            text: item.weight,
-            style: ['size08', 'center']
-        },
-        {
-            text: item.length,
-            style: ['size08', 'center']
-        },
-        {
-            text: item.remark,
-            style: ['size08', 'center']
-        }
-
-        ];
-    });
+    }
 
     var tfoot = [[{
-        text: " ",
+        colSpan: 5,
+        text: "Total",
         style: ['size08', 'center']
     }, {
-        text: "Total",
+        text: "",
+        style: ['size08', 'center']
+    }, {
+        text: "",
+        style: ['size08', 'center']
+    }, {
+        text: "",
+        style: ['size08', 'center']
+    }, {
+        text: "",
         style: ['size08', 'center']
     }, {
         text: totalJumlah.toFixed(2),
         style: ['size08', 'center']
     }, {
-        text: totalBerat.toFixed(2),
-        style: ['size08', 'center']
-    }, {
         text: totalPanjang.toFixed(2),
         style: ['size08', 'center']
-    }, "",]];
+    }, {
+        text: totalBerat.toFixed(2),
+        style: ['size08', 'center']
+    }]];
 
     tbody = tbody.length > 0 ? tbody : [
         [{
@@ -226,37 +226,36 @@ module.exports = function (packing, offset) {
 
     var table = [{
         table: {
-            widths: ['5%', '35%', '10%', '10%', '10%', '30%'],
+            widths: ['30%', '10%', '10%', '10%', '10%', '10%', '10%', '10%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot),
         }
     }];
 
-    var footer = [{
+    var footer = ["\n", {
         stack: [{
             columns: [{
                 columns: [{
-                    width: '15%',
-                    stack: footerStack
+                    width: '25%',
+                    stack: ['Di Ball / Lose Packing / Karton', 'Netto: ....... Kg Bruto: ......... Kg']
                 }, {
                     width: '2%',
-                    stack: footerStackDivide
+                    stack: ["", ""]
                 }, {
                     width: '*',
-                    stack: footerStackValue
+                    stack: ["", ""]
                 }]
             }]
         }
         ],
         style: ['size08']
-    },
-    ];
+    }];
 
 
     var footer2 = ['\n', {
         columns: [{
             width: '25%',
-            stack: ['\n', 'Diterima oleh:', '\n\n\n\n', '(                               )'],
+            stack: ['Mengetahui', 'Kasubsie Gudang Jadi', '\n\n\n\n', '(                  )'],
             style: ['center']
         },
         {
@@ -270,14 +269,14 @@ module.exports = function (packing, offset) {
 
         {
             width: '25%',
-            stack: [`Sukoharjo, ${moment(packing.date).add(offset, 'h').format(locale.date.format)} `, 'Diserahkan oleh :', '\n\n\n\n', `(  ${packing._createdBy}  )`],
+            stack: [`Sukoharjo, ${moment(data._createdDate).add(offset, 'h').format(locale.date.format)} `, 'Petugas Gudang', '\n\n\n\n', `(  ${data._createdBy}  )`],
             style: ['center']
         }],
         style: ['size08']
     }];
 
 
-    var packingPDF = {
+    var dataPdf = {
         pageSize: 'A5',
         pageOrientation: 'landscape',
         pageMargins: 20,
@@ -330,5 +329,5 @@ module.exports = function (packing, offset) {
         }
     };
 
-    return packingPDF;
+    return dataPdf;
 }

@@ -1,7 +1,7 @@
 var say = require('../../utils/say');
 var global = require('../../global');
 
-module.exports = function (unitPaymentCorrection) {
+module.exports = function (unitPaymentCorrection, offset) {
 
     var items = unitPaymentCorrection.items.map((item) => {
         return {
@@ -353,7 +353,7 @@ module.exports = function (unitPaymentCorrection) {
                             style: ['size08']
                         }, {
                             width: '*',
-                            text: moment(unitPaymentCorrection.unitPaymentOrder.dueDate).format(locale.date.format),
+                            text: moment(unitPaymentCorrection.unitPaymentOrder.dueDate).add(offset,'h').format(locale.date.format),
                             style: ['size08']
                         }]
                 }, {
@@ -401,7 +401,7 @@ module.exports = function (unitPaymentCorrection) {
                             style: ['size08']
                         }, {
                             width: '*',
-                            text: `${moment(sjDate).format(locale.date.format)} `,
+                            text: `${moment(sjDate).add(offset,'h').format(locale.date.format)} `,
                             style: ['size08']
                         }]
                 }]
