@@ -32,10 +32,10 @@ class garmentPurchaseRequestDataUtil {
             Userin: "uni-test",
         }, {
                 Art: "uni-test-art",
-                // Buyer: "testBuyer",
+
                 Buyer: "buyerNotFound",
                 Cat: "CatNotFound",
-                // Cat: "SPM2",
+
                 Delivery: new Date(),
                 Harga: 111,
                 Ketr: "ketr",
@@ -45,14 +45,13 @@ class garmentPurchaseRequestDataUtil {
                 Kett4: "Kett4",
                 Kett5: "Kett5",
                 Kodeb: "ProductNotFound",
-                // Kodeb: "testProduct",
-                // Konf: "testUnit",
+
                 Konf: "unitNotFound",
                 Nopo: "22222222222",
                 Qty: 1,
                 Ro: "unitTest-Ro2",
                 Satb: "uomNotFound",
-                // Satb: "PCS2",
+
                 Shipment: new Date(),
                 Tgled: new Date(),
                 Tglin: new Date(),
@@ -62,8 +61,7 @@ class garmentPurchaseRequestDataUtil {
             }, {
                 Art: "uni-test-art",
                 Buyer: "testBuyer",
-                // Buyer: "buyerNotFound",
-                // Cat: "CatNotFound",
+
                 Cat: "SPM2",
                 Delivery: new Date(),
                 Harga: 111,
@@ -74,14 +72,14 @@ class garmentPurchaseRequestDataUtil {
                 Kett4: "Kett4",
                 Kett5: "Kett5",
                 Kodeb: "ProductNotFound",
-                // Kodeb: "testProduct",
+
                 Konf: "testUnit",
-                // Konf: "unitNotFound",
+
                 Nopo: "33333333333",
                 Qty: 1,
                 Ro: "unitTest-Ro3",
                 Satb: "uomNotFound",
-                // Satb: "PCS2",
+
                 Shipment: new Date(),
                 Tgled: new Date(),
                 Tglin: new Date(),
@@ -90,9 +88,6 @@ class garmentPurchaseRequestDataUtil {
                 Userin: "uni-test",
             }];
 
-        // datas.push(data);
-
-        // return Promise.resolve(datas);
         return Promise.resolve(data);
     }
 
