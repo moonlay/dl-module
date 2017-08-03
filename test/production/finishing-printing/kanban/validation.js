@@ -33,16 +33,16 @@ before('#00. connect db', function (done) {
 
 var uom;
 it('#01. should success when create data "MTR" on uom', function (done) {
-    uomManager.getSingleByQueryOrDefault({"unit" : "MTR"})
+    uomManager.getSingleByQueryOrDefault({ "unit": "MTR" })
         .then(result => {
-            if(result){
+            if (result) {
                 uom = result;
                 done();
-            }else{
-                uomManager.create({"unit" : "MTR"})
+            } else {
+                uomManager.create({ "unit": "MTR" })
                     .then(id => {
                         uomManager.getSingleById(id)
-                            .then(data=>{
+                            .then(data => {
                                 uom = data;
                                 done();
                             })
@@ -67,7 +67,7 @@ it('#02. should success when create data production order with "MTR" uom', funct
             data.uom = uom;
             data.uomId = uom._id;
             var detail = [];
-            for(var a of data.details){
+            for (var a of data.details) {
                 a.uom = uom;
                 a.uomId = uom._id;
                 detail.push(a);
@@ -168,27 +168,25 @@ it('#05. should error when create new data with empty step', function (done) {
 });
 
 var kanbanId;
-it('#06. should success when create new data with old kanban id', function (done) {   
+it('#06. should success when create new data with old kanban id', function (done) {
     KanbanDataUtil.getNewData()
-            .then((data) => {
-                kanban = data;
-                kanbanManager.create(data)
-                    .then((id) => {
-                        kanban.oldKanbanId = id;
-                        kanban.oldKanban = data;
-                        kanban.oldKanban._id = id;
+        .then((data) => {
+            kanban = data;
+            kanbanManager.create(data)
+                .then((id) => {
+                    kanban.oldKanbanId = id;
 
-                        kanbanManager.create(kanban)
-                            .then((id) => {
-                                kanbanId = id;
-                                id.should.be.Object();
-                                done();
-                            })
-                    })
-            })
-            .catch((e) => {
-                done(e);
-            });
+                    kanbanManager.create(kanban)
+                        .then((id) => {
+                            kanbanId = id;
+                            id.should.be.Object();
+                            done();
+                        })
+                })
+        })
+        .catch((e) => {
+            done(e);
+        });
 });
 
 it('#07. should success when update IsComplete to true', function (done) {
