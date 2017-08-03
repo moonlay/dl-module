@@ -20,8 +20,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        // this.GarmentPurchaseRequest = this.db.collection("garment-purchase-requests");
-        // this.GarmentPurchaseRequest= new garmentPurchaseRequestManager(db,user);
         this.collection = this.db.use(Map.garmentPurchasing.collection.GarmentPurchaseRequest);
         this.migrationLog = this.db.collection("migration-log");
         this.unitManager = new UnitManager(db, user);
@@ -108,7 +106,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
 
-                        var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from " + table1.trim() + " as Budget inner join " + table2.trim() + " as POrder On Budget.Po = POrder.Nopo";
+                        var sqlQuery = "select POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from " + table1.trim() + " as Budget inner join " + table2.trim() + " as POrder On Budget.Po = POrder.Nopo";
                         // var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from Budget1 as Budget inner join POrder1 as POrder On Budget.Po = POrder.Nopo";
 
                         request.query(sqlQuery, function (err, result) {
@@ -166,30 +164,27 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     transform(datas) {
         return new Promise((resolve, reject) => {
 
-            // var getUnit = this.getDataUnit() ? this.getDataUnit() : test.Unit;
-            // var getCategory = this.getDataCategory() ? this.getDataCategory() : test.Category;
-            // var getProduct = this.getDataProduct() ? this.getDataProduct() : test.Product;
-            // var getBuyer = this.getDataBuyer() ? this.getDataBuyer() : test.Buyer;
-            // var getUom = this.getDataUom() ? this.getDataUom() : test.Uom;
+            if (!datas.dataTest) {
+                var getUnit = this.getDataUnit();
+                var getCategory = this.getDataCategory();
+                var getProduct = this.getDataProduct();
+                var getBuyer = this.getDataBuyer();
+                var getUom = this.getDataUom();
+            } else {
+                var getUnit = datas.dataTest.Unit;
+                var getCategory = datas.dataTest.Category;
+                var getProduct = datas.dataTest.Product;
+                var getBuyer = datas.dataTest.Buyer;
+                var getUom = datas.dataTest.Uom;
+            }
 
-            var getUnit = this.getDataUnit();
-            var getCategory = this.getDataCategory();
-            var getProduct = this.getDataProduct();
-            var getBuyer = this.getDataBuyer();
-            var getUom = this.getDataUom();
-
-            // var getUnit = this.getDataUnit() ? test.Unit : "";
-            // var getCategory = this.getDataCategory() ? test.Category : "";
-            // var getProduct = this.getDataProduct() ? test.Product : "";
-            // var getBuyer = this.getDataBuyer() ? test.Buyer : "";
-            // var getUom = this.getDataUom() ? test.Uom : "";
 
             Promise.all([getUnit, getCategory, getProduct, getBuyer, getUom]).then((result) => {
-                var _unit = result[0].data;
+                var _unit = result[0].data ? result[0].data : result[0];
                 var _category = result[1];
                 var _product = result[2];
                 var _buyer = result[3];
-                var _uom = result[4].data;
+                var _uom = result[4].data ? result[4].data : result[4];
                 var transformData = [];
 
                 //distinct extracted data
@@ -237,6 +232,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var _updatedDate = _updatedDatedate + ":" + _updatedDatehours + ":" + "" + _updatedDateminutes;
 
                     var items = [];
+                    // var Colors = [];
                     for (var data of datas) {
                         if (uniq.Ro == data.Ro) {
 
@@ -249,6 +245,31 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                         if (data.Cat.trim() == category.code.trim() && data.Kodeb.trim() == product.code.trim() && data.Satb.trim() == uom.unit.trim()) {
 
                                             var remark = (data.Ketr.trim() ? data.Ketr.trim() : "" + " " + data.Kett.trim() ? data.Kett.trim() : "") + " " + (data.Kett2.trim() ? data.Kett2.trim() : "") + " " + (data.Kett3.trim() ? data.Kett3.trim() : "") + " " + (data.Kett4.trim() ? data.Kett4.trim() : "") + " " + (data.Kett5.trim() ? data.Kett5.trim() : "");
+
+                                            var Colors = [];
+
+                                            if (data.Clr1) {
+                                                Colors.push(data.Clr1);
+                                            } if (data.Clr2) {
+                                                Colors.push(data.Clr2);
+                                            } if (data.Clr3) {
+                                                Colors.push(data.Clr3);
+                                            } if (data.Clr4) {
+                                                Colors.push(data.Clr4);
+                                            } if (data.Clr5) {
+                                                Colors.push(data.Clr5);
+                                            } if (data.Clr6) {
+                                                Colors.push(data.Clr6);
+                                            } if (data.Clr7) {
+                                                Colors.push(data.Clr7);
+                                            } if (data.Clr8) {
+                                                Colors.push(data.Clr8);
+                                            } if (data.Clr9) {
+                                                Colors.push(data.Clr9);
+                                            } if (data.Clr10) {
+                                                Colors.push(data.Clr10);
+                                            }
+
 
                                             var item = {
                                                 _stamp: "",
@@ -297,6 +318,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                                     code: category.code.trim(),
                                                     name: category.name.trim(),
                                                 },
+                                                colors: Colors,
                                             }
                                             items.push(item);
                                             break;
@@ -304,7 +326,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     }
                                 }
                             }
-
                             break;
                         }
                     }
