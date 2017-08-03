@@ -5,3 +5,7 @@ describe("BASIC CRUD SCENARIOS", function() {
 describe("PDF SCENARIOS", function() {
     require("./pdf");
 });
+
+describe("XLS SCENARIOS", function () {
+    require("./xls");
+});
