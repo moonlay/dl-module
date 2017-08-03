@@ -232,10 +232,11 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var _updatedDate = _updatedDatedate + ":" + _updatedDatehours + ":" + "" + _updatedDateminutes;
 
                     var items = [];
-                    // var Colors = [];
+
+
                     for (var data of datas) {
                         if (uniq.Ro == data.Ro) {
-
+                            var migrated = true;
                             for (var uom of _uom) {
 
                                 for (var product of _product) {
@@ -269,7 +270,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                             } if (data.Clr10) {
                                                 Colors.push(data.Clr10);
                                             }
-
 
                                             var item = {
                                                 _stamp: "",
@@ -324,19 +324,43 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                             break;
                                         }
                                     }
+
                                 }
+                            }
+
+                            // data not found
+                            if (items == 0 || !items || items == []) {
+                                var temps = [];
+
+                                if (data.Cat.trim() != category.code.trim()) {
+                                    temps.push("!(category.Code) data didnt exist: " + data.Cat.trim());
+                                }
+
+                                if (data.Kodeb.trim() != product.code.trim()) {
+
+                                    temps.push("!(product.Code) data didnt exist: " + data.Kodeb.trim());
+                                }
+
+
+                                if (data.Satb.trim() != uom.unit.trim()) {
+
+                                    temps.push("!(uom.Unit) data didnt exist: " + data.Satb.trim());
+                                }
+                                items.push(temps);
+                                migrated = false;
                             }
                             break;
                         }
                     }
 
+                    var map = {};
                     for (var buyer of _buyer) {
 
                         for (var unit of _unit) {
 
                             if (unitCode == unit.code.trim() && uniq.Buyer.trim() == buyer.code.trim()) {
 
-                                var map = {
+                                map = {
                                     _stamp: _stamp,
                                     _type: "purchase request",
                                     _version: "1.0.0",
@@ -393,12 +417,45 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                                 }
 
-                                map.items = items;
+                                if (migrated == true) {
+                                    map.items = items;
+                                    map.migrated = true;
+                                }
+                                else if (migrated == false) {
+                                    map.items = {
+                                        notFound: items
+                                    };
+                                    map.migrated = migrated;
+                                }
+
                                 transformData.push(map);
                                 break;
                             }
-
                         }
+                    }
+
+                    //data not found
+                    if (Object.getOwnPropertyNames(map).length == 0) {
+
+                        if (unitCode != unit.code.trim()) {
+                            map.unitId = ("!(unit.Code) data didnt exist: " + unitCode);
+                            map.unit = {};
+                        }
+
+                        if (uniq.Buyer.trim() != buyer.code.trim()) {
+                            map.buyerId = "!(buyer.Code) data didnt exist: " + uniq.Buyer.trim();
+                            map.buyer = {};
+                        }
+
+                        migrated = false;
+                        map.no = code;
+                        map.roNo = uniq.Ro;
+                        map.items = {
+                            notFound: items
+                        };
+                        map.migrated = migrated;
+
+                        transformData.push(map);
                     }
 
                 }
