@@ -220,19 +220,14 @@ module.exports = class KanbanManager extends BaseManager {
         var kanbanId = id;
         return this.getSingleById(id)
             .then((kanban) => {
-                if (kanban.oldKanban._id) {
-                    return this.getSingleById(kanban.oldKanbanId)
-                        .then((oldKanban) => {
-<<<<<<< HEAD
-                            oldKanban.isComplete = true;
-                            return this.update(oldKanban)
-=======
-                            return Promise.all([this.updateIsComplete(oldKanban._id)])
->>>>>>> origin/dev
-                                .then((result) => Promise.resolve(kanbanId))
-                        })
-                }
-                return Promise.resolve(kanbanId);
+                var getKanban = kanban.oldKanban._id ? this.getSingleById(kanban.oldKanban_id) : Promise.resolve(null);
+                return Promise.all([getKanban])
+                    .then((result) => {
+                        var oldKanban = result[0];
+                        var updateOldKanban = oldKanban ? this.updateIsComplete(oldKanban._id) : Promise.resolve(null);
+                        return Promise.all([updateOldKanban])
+                            .then((result) => Promise.resolve(kanbanId))
+                    })
             })
     }
 
