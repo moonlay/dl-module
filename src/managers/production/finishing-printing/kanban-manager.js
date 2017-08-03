@@ -223,12 +223,12 @@ module.exports = class KanbanManager extends BaseManager {
                 if (kanban.oldKanban._id) {
                     return this.getSingleById(kanban.oldKanbanId)
                         .then((oldKanban) => {
-                            return this.updateIsComplete(oldKanban._id)
+                            oldKanban.isComplete = true;
+                            return this.update(oldKanban)
                                 .then((result) => Promise.resolve(kanbanId))
                         })
-                } else {
-                    return Promise.resolve(kanbanId);
                 }
+                return Promise.resolve(kanbanId);
             })
     }
 
