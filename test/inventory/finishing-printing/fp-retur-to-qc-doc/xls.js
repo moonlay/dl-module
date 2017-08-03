@@ -60,12 +60,12 @@ it('#03. should success when create report', function (done) {
     info.dateFrom = createdData._createdDate;
     info.dateTo = createdData._createdDate.toISOString().split("T", "1").toString();
 
-    instanceManager.getShipmentReport(info)
+    instanceManager.getReturReport(info)
         .then(result => {
             resultForExcelTest = result;
-            var shipment = result.data;
-            shipment.should.instanceof(Array);
-            shipment.length.should.not.equal(0);
+            var retur = result.data;
+            retur.should.instanceof(Array);
+            retur.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
