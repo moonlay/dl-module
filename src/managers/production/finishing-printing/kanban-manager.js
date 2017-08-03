@@ -220,7 +220,7 @@ module.exports = class KanbanManager extends BaseManager {
         var kanbanId = id;
         return this.getSingleById(id)
             .then((kanban) => {
-                if (kanban.oldKanbanId) {
+                if (kanban.oldKanban._id) {
                     return this.getSingleById(kanban.oldKanbanId)
                         .then((oldKanban) => {
                             return this.updateIsComplete(oldKanban._id)
