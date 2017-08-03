@@ -166,37 +166,39 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                                     var detailError={};
                                     if(detail.quantityBefore>0){
                                         detailError["returQuantity"] = i18n.__("FPReturToQCDoc.items.details.returQuantity.isRequired:%s is required", i18n.__("FPReturToQCDoc.items.details.returQuantity._:returQuantity")); //"returQuantity tidak boleh lebih dari stockQuantity";
-                                        detailErrors.push(detailError);
-                                    }
-                                    
-                                }
-                            }
-                            else{
-                                item.details=details;
-                                for(var detail of details){
-                                    var detailError={};
-                                    if(detail.quantityBefore< detail.returQuantity){
-                                        detailError["returQuantity"] = i18n.__("FPReturToQCDoc.items.details.returQuantity.shouldNot:%s should not be more than stockQuantity", i18n.__("FPReturToQCDoc.items.details.returQuantity._:returQuantity")); //"returQuantity tidak boleh lebih dari stockQuantity";
-                                    }
-
-                                    if(!detail.remark || detail.remark==""){
-                                        detailError["remark"] = i18n.__("FPReturToQCDoc.items.details.remark.isRequired:%s is required", i18n.__("FPReturToQCDoc.items.details.remark._:remark")); //"remark tidak boleh kosong";
-                                    }
-
-                                    if(!detail.length || detail.length<=0){
-                                        detailError["length"] = i18n.__("FPReturToQCDoc.items.details.length.isRequired:%s is required", i18n.__("FPReturToQCDoc.items.details.length._:length")); //"length tidak boleh kosong";
-                                    }
-
-                                    if(!detail.weight || detail.weight<=0){
-                                        detailError["weight"] = i18n.__("FPReturToQCDoc.items.details.weight.isRequired:%s is required", i18n.__("FPReturToQCDoc.items.details.weight._:weight")); //"weight tidak boleh kosong";
-                                    }
-                                    
-                                    if(item.details.length===isEmpty){
-                                        detailError["returQuantity"] = i18n.__("FPReturToQCDoc.items.details.returQuantity.isRequired:%s is required", i18n.__("FPReturToQCDoc.items.details.returQuantity._:returQuantity")); //"returQuantity tidak boleh lebih dari stockQuantity";
+                                        
                                     }
                                     detailErrors.push(detailError);
                                 }
                             }
+                            else{
+                                for(var detail of item.details){
+                                    var detailError={};
+                                    if(detail.returQuantity>0){
+                                        if(detail.quantityBefore< detail.returQuantity){
+                                            detailError["returQuantity"] = i18n.__("FPReturToQCDoc.items.details.returQuantity.shouldNot:%s should not be more than stockQuantity", i18n.__("FPReturToQCDoc.items.details.returQuantity._:returQuantity")); //"returQuantity tidak boleh lebih dari stockQuantity";
+                                        }
+
+                                        if(!detail.remark || detail.remark==""){
+                                            detailError["remark"] = i18n.__("FPReturToQCDoc.items.details.remark.isRequired:%s is required", i18n.__("FPReturToQCDoc.items.details.remark._:remark")); //"remark tidak boleh kosong";
+                                        }
+
+                                        if(!detail.length || detail.length<=0){
+                                            detailError["length"] = i18n.__("FPReturToQCDoc.items.details.length.isRequired:%s is required", i18n.__("FPReturToQCDoc.items.details.length._:length")); //"length tidak boleh kosong";
+                                        }
+
+                                        if(!detail.weight || detail.weight<=0){
+                                            detailError["weight"] = i18n.__("FPReturToQCDoc.items.details.weight.isRequired:%s is required", i18n.__("FPReturToQCDoc.items.details.weight._:weight")); //"weight tidak boleh kosong";
+                                        }
+                                        
+                                        if(item.details.length===isEmpty){
+                                            detailError["returQuantity"] = i18n.__("FPReturToQCDoc.items.details.returQuantity.isRequired:%s is required", i18n.__("FPReturToQCDoc.items.details.returQuantity._:returQuantity")); //"returQuantity tidak boleh lebih dari stockQuantity";
+                                        }
+                                    }
+                                    detailErrors.push(detailError);
+                                }
+                            }
+                            item.details=details;
                         }
 
                         for (var errorDetail of detailErrors) {
@@ -210,8 +212,8 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                         index++;
                     }
 
-                    for (var itemError of itemErrors) {
-                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                    for (var errorItem of itemErrors) {
+                        if (Object.getOwnPropertyNames(errorItem).length > 0) {
                             errors.items = itemErrors;
                             break;
                         }
@@ -301,7 +303,7 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                             productId:b.productId.toString(),
                             uomId: b.uomId.toString(),
                             quantity: b.returQuantity
-                        }
+                        };
                         storage=b.storageId.toString();
                         itemDocs.push(items);
                     }
@@ -333,7 +335,7 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                             productId:b.productId.toString(),
                             uomId: b.uomId.toString(),
                             quantity: b.returQuantity
-                        }
+                        };
                         storage=b.storageId.toString();
                         itemDocs.push(items);
                     }
@@ -343,7 +345,7 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                         referenceType:"retur-to-qc",
                         items: itemDocs,
                         type:"IN"
-                    }
+                    };
                     var createOutMove= this.inventoryDocumentManager.create(createDocuments);
                     docs.push(createOutMove);
                 }
@@ -377,5 +379,120 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                 });
 
         });
+    }
+
+    getReturReport(info) {
+        var _defaultFilter = {
+            _deleted: false,
+            isVoid: false
+        };
+        var returNumberFilter = {};
+        var destinationFilter = {};
+        var doNoFilter = {};
+        var productionOrderFilter = {};
+        var dateFromFilter = {};
+        var dateToFilter = {};
+        var query = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var now = new Date();
+
+        if (info.returNo && info.returNo != '') {
+            returNumberFilter = { "returNo": info.returNo };
+        }
+
+        if (info.destination && info.destination != '') {
+            destinationFilter = { "destination": info.destination };
+        }
+
+        if (info.deliveryOrderNo && info.deliveryOrderNo != '') {
+            doNoFilter = { "deliveryOrderNo": info.deliveryOrderNo };
+        }
+
+        if (info.productionOrderNo && info.productionOrderNo != '') {
+            productionOrderFilter = { "items.productionOrderNo": info.productionOrderNo };
+        }
+
+        var filterDate = {
+            "_createdDate": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+        query = { '$and': [_defaultFilter, returNumberFilter, destinationFilter, doNoFilter, productionOrderFilter, filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this.collection
+                    .where(query)
+                    .execute();
+            });
+    }
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var retur of result.data) {
+            for (var item of retur.items) {
+                for (var detail of item.details) {
+                    var data = {};
+                    index += 1;
+                    data["No"] = index;
+                    data["No Retur"] = retur.returNo ? retur.returNo : '';
+                    data["Tgl Retur"] = retur.date ? moment(new Date(retur.date)).format(dateFormat) : '';
+                    data["Tujuan"] = retur.destination ? retur.destination : '';
+                    data["No DO"] = retur.deliveryOrderNo ? retur.deliveryOrderNo : '';
+                    data["Keterangan Retur"] = retur.remark ? retur.remark : '';
+                    data["No Order"] = item.productionOrderNo ? item.productionOrderNo : '';
+                    data["Nama Barang"] = detail.productName ? detail.productName : '';
+                    data["Keterangan"] =detail.remark ? detail.remark : '';
+                    data["Jumlah Retur"] =detail.returQuantity ? detail.returQuantity : '';
+                    data["Satuan"] =detail.uom ? detail.uom : '';
+                    data["Panjang (Meter)"] =detail.length ? detail.length : '';
+                    data["Berat (Kg)"] =detail.weight ? detail.weight : '';
+
+                    xls.options["No"] = "number";
+                    xls.options["No Retur"] = "string";
+                    xls.options["Tgl Retur"] = "string";
+                    xls.options["Tujuan"] = "string";
+                    xls.options["No DO"] = "string";
+                    xls.options["Keterangan Retur"] = "string";
+                    xls.options["No Order"] = "string";
+                    xls.options["Nama Barang"] = "string";
+                    xls.options["Keterangan"] = "string";
+                    xls.options["Jumlah Retur"] = "number";
+                    xls.options["Satuan"] = "string";
+                    xls.options["Panjang (Meter)"] = "number";
+                    xls.options["Berat (Kg)"] = "number";
+
+                    xls.data.push(data);
+
+                }
+
+            }
+
+        }
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Retur Barang ke QC ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Retur Barang ke QC ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Retur Barang ke QC ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Retur Barang ke QC.xlsx`;
+
+        return Promise.resolve(xls);
     }
 }
