@@ -192,6 +192,9 @@ module.exports = class GarmentProductManager extends BaseManager {
                                         // } else if (isNaN(data[i]["price"])) {
                                         //     errorMessage = errorMessage + "Harga harus numerik, ";
                                         // }
+                                        if (isNaN(data[i]["price"])) {
+                                            errorMessage = errorMessage + "Harga harus numerik, ";
+                                        }
                                         // else {
                                         //     var rateTemp = (data[i]["price"]).toString().split(".");
                                         //     if (rateTemp[1] === undefined) {
