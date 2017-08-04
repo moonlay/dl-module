@@ -80,6 +80,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/STORAGE', './master/storage');
     test('@MASTER/COMPANY', './master/company');
     test('@MASTER/CONTACT', './master/contact');
+    test('@MASTER/FINISHING PRINTING DURATION ESTIMATION', './master/fp-duration-estimation');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
