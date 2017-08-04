@@ -43,7 +43,9 @@ module.exports = {
             DesignMotiveManager: require('./src/managers/master/design-motive-manager'),
             StorageManager: require('./src/managers/master/storage-manager'),
             CompanyManager: require('./src/managers/master/company-manager'),
-            ContactManager: require('./src/managers/master/contact-manager')
+            ContactManager: require('./src/managers/master/contact-manager'),
+            FPDurationEstimationManager: require('./src/managers/master/fp-duration-estimation-manager')
+        },
         },
         inventory: {
             finishingPrinting: {
