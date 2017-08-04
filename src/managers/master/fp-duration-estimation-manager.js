@@ -51,29 +51,28 @@ module.exports = class DurationEstimationManager extends BaseManager {
     _validate(process) {
         var errors = {};
         var valid = process;
-        // 1. begin: Declare promises.
         var getEstimationPromise = this.collection.singleOrDefault({
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            _deleted: false,
+            code: valid.code,
+            _deleted: false
         });
-
         var getProcessPromise = ObjectId.isValid(valid.processTypeId) ? this.processTypeManager.getSingleByIdOrDefault(new ObjectId(valid.processTypeId)) : Promise.resolve(null);
 
         // 2. begin: Validation.
-        return Promise.all([getEstimationPromise, getProcessPromise])
+        return Promise.all([getProcessPromise, getEstimationPromise])
             .then(results => {
-                var _oldData = results[0];
-                var _process = results[1];
+                var _process = results[0];
+                var _oldData = results[1];
 
                 if (!valid.processTypeId)
                     errors["processTypeId"] = i18n.__("FPDurationEstimation.processTypeId.isRequired:%s is required", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));//"code Jenis proses tidak boleh kosong";
-                else if (_oldData) {
-                    errors["processTypeId"] = i18n.__("FPDurationEstimation.processTypeId.isExists:%s is already exists", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));
-                }
                 else if (!_process) {
                     errors["processTypeId"] = i18n.__("FPDurationEstimation.processTypeId.isRequired:%s is not exists", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));
+                }
+                if (_oldData) {
+                    errors["code"] = i18n.__("FPDurationEstimation.processTypeId.isExists:%s is already exists", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));
                 }
                 if (!valid.areas || valid.areas.length === 0) {
                     errors["areas"] = i18n.__("FPDurationEstimation.areas.isRequired:%s is required", i18n.__("FPDurationEstimation.areas._:Areas"));
@@ -114,6 +113,11 @@ module.exports = class DurationEstimationManager extends BaseManager {
             });
     }
 
+    _beforeInsert(data) {
+        data.code = generateCode();
+        data._createdDate = new Date();
+        return Promise.resolve(data);
+    }
 
     _createIndexes() {
         var dateIndex = {
@@ -123,7 +127,15 @@ module.exports = class DurationEstimationManager extends BaseManager {
             }
         };
 
-        return this.collection.createIndexes([dateIndex]);
+        var codeIndex = {
+            name: `ix_${map.master.collection.FinishingPrintingDurationEstimation}_code`,
+            key: {
+                code: 1
+            },
+            unique: true
+        };
+
+        return this.collection.createIndexes([dateIndex, codeIndex]);
     }
 
 }
