@@ -184,21 +184,21 @@ module.exports = class GarmentProductManager extends BaseManager {
                                         if (data[i]["uom"] === "" || data[i]["uom"] === undefined) {
                                             errorMessage = errorMessage + "Satuan tidak boleh kosong, ";
                                         }
-                                        if (data[i]["currency"] === "" || data[i]["currency"] === undefined) {
-                                            errorMessage = errorMessage + "Mata Uang tidak boleh kosong, ";
-                                        }
-                                        if (data[i]["price"] === "" || data[i]["price"] === undefined) {
-                                            errorMessage = errorMessage + "Harga tidak boleh kosong, ";
-                                        } else if (isNaN(data[i]["price"])) {
-                                            errorMessage = errorMessage + "Harga harus numerik, ";
-                                        }
-                                        else {
-                                            var rateTemp = (data[i]["price"]).toString().split(".");
-                                            if (rateTemp[1] === undefined) {
-                                            } else if (rateTemp[1].length > 2) {
-                                                errorMessage = errorMessage + "Harga maksimal memiliki 2 digit dibelakang koma, ";
-                                            }
-                                        }
+                                        // if (data[i]["currency"] === "" || data[i]["currency"] === undefined) {
+                                        //     errorMessage = errorMessage + "Mata Uang tidak boleh kosong, ";
+                                        // }
+                                        // if (data[i]["price"] === "" || data[i]["price"] === undefined) {
+                                        //     errorMessage = errorMessage + "Harga tidak boleh kosong, ";
+                                        // } else if (isNaN(data[i]["price"])) {
+                                        //     errorMessage = errorMessage + "Harga harus numerik, ";
+                                        // }
+                                        // else {
+                                        //     var rateTemp = (data[i]["price"]).toString().split(".");
+                                        //     if (rateTemp[1] === undefined) {
+                                        //     } else if (rateTemp[1].length > 2) {
+                                        //         errorMessage = errorMessage + "Harga maksimal memiliki 2 digit dibelakang koma, ";
+                                        //     }
+                                        // }
                                         for (var j = 0; j < product.length; j++) {
                                             if (product[j]["code"] === data[i]["code"]) {
                                                 errorMessage = errorMessage + "Kode tidak boleh duplikat, ";
