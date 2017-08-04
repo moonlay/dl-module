@@ -6,7 +6,7 @@ class garmentPurchaseRequestDataUtil {
     getNewData() {
         var datas = [];
 
-        var data = {
+        var data = [{
             Art: "uni-test-art",
             Buyer: "T02",
             Cat: "SPM",
@@ -30,11 +30,65 @@ class garmentPurchaseRequestDataUtil {
             TgValid: new Date(),
             Usered: "uni-test",
             Userin: "uni-test",
-        }
+        }, {
+                Art: "uni-test-art",
 
-        datas.push(data);
+                Buyer: "buyerNotFound",
+                Cat: "CatNotFound",
 
-        return Promise.resolve(datas);
+                Delivery: new Date(),
+                Harga: 111,
+                Ketr: "ketr",
+                Kett: "Kett",
+                Kett2: "Kett2",
+                Kett3: "Kett3",
+                Kett4: "Kett4",
+                Kett5: "Kett5",
+                Kodeb: "ProductNotFound",
+
+                Konf: "unitNotFound",
+                Nopo: "22222222222",
+                Qty: 1,
+                Ro: "unitTest-Ro2",
+                Satb: "uomNotFound",
+
+                Shipment: new Date(),
+                Tgled: new Date(),
+                Tglin: new Date(),
+                TgValid: new Date(),
+                Usered: "uni-test",
+                Userin: "uni-test",
+            }, {
+                Art: "uni-test-art",
+                Buyer: "testBuyer",
+
+                Cat: "SPM2",
+                Delivery: new Date(),
+                Harga: 111,
+                Ketr: "ketr",
+                Kett: "Kett",
+                Kett2: "Kett2",
+                Kett3: "Kett3",
+                Kett4: "Kett4",
+                Kett5: "Kett5",
+                Kodeb: "ProductNotFound",
+
+                Konf: "testUnit",
+
+                Nopo: "33333333333",
+                Qty: 1,
+                Ro: "unitTest-Ro3",
+                Satb: "uomNotFound",
+
+                Shipment: new Date(),
+                Tgled: new Date(),
+                Tglin: new Date(),
+                TgValid: new Date(),
+                Usered: "uni-test",
+                Userin: "uni-test",
+            }];
+
+        return Promise.resolve(data);
     }
 
     getData() {
@@ -60,13 +114,28 @@ class garmentPurchaseRequestDataUtil {
                 tempo: "test",
                 type: "test",
                 NPWP: "test"
-            }],
+            }, {
+                    _id: new ObjectId(),
+                    code: "testBuyer",
+                    name: "test",
+                    address: "test",
+                    city: "test",
+                    country: "test",
+                    contact: "test",
+                    tempo: "test",
+                    type: "test",
+                    NPWP: "test"
+                }],
 
             Category: [{
                 _id: catId,
                 code: "SPM",
                 name: "test"
-            }],
+            }, {
+                    _id: new ObjectId(),
+                    code: "SPM2",
+                    name: "test"
+                }],
 
             Product: [{
 
@@ -114,7 +183,53 @@ class garmentPurchaseRequestDataUtil {
                     "",
                     ""
                 ]
-            }],
+            }, {
+
+                    _id: new Object(),
+                    code: "testProduct",
+                    name: "test",
+                    price: 0,
+                    currency: {
+                        _stamp: "",
+                        _type: "currency",
+                        _version: "1.0.0",
+                        _active: false,
+                        _deleted: false,
+                        _createdBy: "",
+                        _createdDate: new Date(),
+                        _createAgent: "",
+                        _updatedBy: "",
+                        _updatedDate: new Date(),
+                        _updateAgent: "",
+                        code: "",
+                        symbol: "",
+                        rate: 1,
+                        description: ""
+                    },
+                    description: "uni test",
+                    uomId: uomId,
+                    uom: {
+                        _id: uomId,
+                        _stamp: "8d430992b300780",
+                        _type: "uom",
+                        _version: "1.0.0",
+                        _active: true,
+                        _deleted: false,
+                        _createdBy: "router",
+                        _createdDate: new Date(),
+                        _createAgent: "manager",
+                        _updatedBy: "router",
+                        _updatedDate: new Date(),
+                        _updateAgent: "manager",
+                        unit: "PCS"
+                    },
+                    tags: "",
+                    properties: [
+                        "",
+                        "",
+                        ""
+                    ]
+                }],
             Unit: [{
                 _id: unitId,
                 code: "C2B",
@@ -138,11 +253,37 @@ class garmentPurchaseRequestDataUtil {
                     name: "test",
                     description: ""
                 }
-            }],
+            }, {
+                    _id: new ObjectId(),
+                    code: "testUnit",
+                    name: "test",
+                    description: "",
+                    divisionId: ObjectId("586630e9f28e81002db4b28b"),
+                    division: {
+                        _id: ObjectId("586630e9f28e81002db4b28b"),
+                        _stamp: "8d4309b15d09d80",
+                        _type: "division",
+                        _version: "1.0.0",
+                        _active: true,
+                        _deleted: false,
+                        _createdBy: "router",
+                        _createdDate: new Date(),
+                        _createAgent: "manager",
+                        _updatedBy: "router",
+                        _updatedDate: new Date(),
+                        _updateAgent: "manager",
+                        code: "test",
+                        name: "test",
+                        description: ""
+                    }
+                }],
             Uom: [{
                 _id: uomId,
                 unit: "PCS"
-            }],
+            }, {
+                    _id: new ObjectId(),
+                    unit: "PCS2"
+                }],
         }
 
         return Promise.resolve(data);
