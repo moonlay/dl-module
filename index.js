@@ -46,7 +46,6 @@ module.exports = {
             ContactManager: require('./src/managers/master/contact-manager'),
             FPDurationEstimationManager: require('./src/managers/master/fp-duration-estimation-manager')
         },
-        },
         inventory: {
             finishingPrinting: {
                 FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager"),
@@ -98,7 +97,7 @@ module.exports = {
             DealTrackingStageManager: require('./src/managers/sales/deal-tracking-stage-manager'),
             DealTrackingDealManager: require('./src/managers/sales/deal-tracking-deal-manager'),
             DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager')
-        }
+        },
     },
     test: {
         data: {
@@ -139,7 +138,8 @@ module.exports = {
                 termOfPayment: require('./test/data-util/master/term-of-payment-data-util'),
                 designMotive: require('./test/data-util/master/design-motive-data-util'),
                 company: require('./test/data-util/master/company-data-util'),
-                contact: require('./test/data-util/master/contact-data-util')
+                contact: require('./test/data-util/master/contact-data-util'),
+                fpDurationEstimation: require('./test/data-util/master/fp-duration-estimation-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util"),
