@@ -107,7 +107,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             var getPoExternal = [];
             for (var doItem of valid.items || [])
                 if (doItem.hasOwnProperty("purchaseOrderExternalId")) {
-                    if (ObjectId.isValid(doItem.purchaseOrderExternaId))
+                    if (ObjectId.isValid(doItem.purchaseOrderExternalId))
                         getPoExternal.push(this.purchaseOrderExternalManager.getSingleByIdOrDefault(doItem.purchaseOrderExternalId));
                 }
             Promise.all([dbData, getDeliveryOrderPromise, getSupplier, getDeliveryderByRefNoPromise].concat(getPoExternal))
@@ -223,7 +223,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             item.purchaseOrderExternalId = new ObjectId(poExternal._id);
 
                             for (var fulfillment of item.fulfillments) {
-                                var poInternal = poExternal.find(poInternal => fulfillment.purchaseOrderId.toString() === poInternal._id.toString())
+                                var poInternal = poExternal.items.find(poInternal => fulfillment.purchaseOrderId.toString() === poInternal._id.toString())
                                 if (poInternal) {
                                     var poItem = poInternal.items.find(poItem => fulfillment.product._id.toString() === poItem.product._id.toString())
                                     if (poItem) {
