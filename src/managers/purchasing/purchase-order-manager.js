@@ -78,7 +78,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 return new Promise((resolve, reject) => {
                     var query = Object.assign({});
 
-
                     if (productName !== "undefined" && productName !== "") {
                         Object.assign(query, {
                             "items.product.name": productName
@@ -668,7 +667,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.date": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
@@ -682,7 +681,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             this.collection.aggregate(
                 [{
                     $match: qryMatch
-
                 }, {
                         $unwind: "$items"
                     }, {
@@ -703,7 +701,93 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         });
     }
 
-    getDataPOSupplier(startdate, enddate, offset) {
+getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var now = new Date();
+            var deleted = {
+                _deleted: false
+            };
+            var isPosted = {
+                "purchaseOrderExternal.isPosted": true
+            };
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+            var query = [deleted, isPosted];
+           if (unit) {
+                var filterUnit = {
+                    "unit._id": new ObjectId(unit)
+                };
+                query.push(filterUnit);
+            }
+            if (category) {
+                var filterCategory = {
+                    "category._id": new ObjectId(category)
+                };
+                query.push(filterCategory);
+            }
+            if (supplier) {
+                var filterSupplier = {
+                    "supplier._id": new ObjectId(supplier)
+                };
+                query.push(filterSupplier);
+            }
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "purchaseOrderExternal.date": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "purchaseOrderExternal.date": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
+            var match = { '$and': query };
+            this.collection.aggregate(
+                [{
+                    $match: match
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: { supplier: "$supplier.name", unit: "$unit.name", category: "$category.name" },
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                }
+                            }
+                        }
+                    }]
+            ).sort({ "_id": 1 })
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    console.log(result);
+                    resolve(result);
+                });
+        });
+    }
+
+  getDataPOSupplier(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
             qryMatch["$and"] = [
@@ -718,13 +802,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.date": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
                     })
             }
-
             this.collection.aggregate(
                 [{
                     $match: qryMatch
@@ -764,7 +847,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.date": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
@@ -808,7 +891,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.date": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
@@ -852,7 +935,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.date": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
@@ -923,7 +1006,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDate = {
-                    "date": {
+                    "purchaseOrderExternal.date": {
                         $gte: validStartDate,
                         $lte: validEndDate
                     }
@@ -955,7 +1038,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             this.collection.aggregate(
                 [{
                     $match: match
-
                 }, {
                         $unwind: "$items"
                     }, {

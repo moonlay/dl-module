@@ -64,9 +64,9 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
     }
 
     extract(times) {
-        var time = "2017-06-21T18:00:00.000Z";
+        var time = "2017-06-29T00:00:00.000Z";
         var timestamp = new Date(time);
-        var timestamps = new Date("2017-06-22T00:00:00.000Z");
+        var timestamps = new Date("2017-06-30T00:00:00.000Z");
         return this.fabricQualityControlManager.collection.find({
             _createdDate: {
                 "$gte": timestamp,
@@ -182,16 +182,16 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
 
                         this.sql.multiple = true;
 
-                        // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\fabric.txt";
+                        var fs = require("fs");
+                        var path = "C:\\Users\\aditya.henanda\\Desktop\\fabric.txt";
 
-                        // fs.writeFile(path, sqlQuery, function (error) {
-                        //     if (error) {
-                        //         console.log("write error:  " + error.message);
-                        //     } else {
-                        //         console.log("Successful Write to " + path);
-                        //     }
-                        // });
+                        fs.writeFile(path, sqlQuery, function (error) {
+                            if (error) {
+                                console.log("write error:  " + error.message);
+                            } else {
+                                console.log("Successful Write to " + path);
+                            }
+                        });
 
                         return Promise.all(command)
                             .then((results) => {

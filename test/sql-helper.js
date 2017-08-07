@@ -4,8 +4,9 @@ var config = {
     database: process.env.SQL_DATABASE,
     user: process.env.SQL_USERNAME,
     password: process.env.SQL_PASSWORD,
+    port: process.env.SQL_PORT,
     options: {
-        encrypt: true
+        encrypt: process.env.ENCRYPT != "false" ? true : false,
     },
     connectionTimeout: 120 * 60 * 1000,
     requestTimeout: 1000000

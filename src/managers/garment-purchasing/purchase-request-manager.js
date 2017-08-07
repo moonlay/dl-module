@@ -7,7 +7,7 @@ var map = DLModels.map;
 var PurchaseRequest = DLModels.garmentPurchasing.GarmentPurchaseRequest;
 var BaseManager = require("module-toolkit").BaseManager;
 var UnitManager = require("../master/unit-manager");
-var CategoryManager = require("../master/category-manager");
+var CategoryManager = require("../master/garment-category-manager");
 var ProductManager = require("../master/garment-product-manager");
 var i18n = require("dl-i18n");
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
@@ -22,7 +22,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         this.categoryManager = new CategoryManager(db, user);
         this.productManager = new ProductManager(db, user);
     }
-    
+
     _validate(purchaseRequest) {
         var errors = {};
         var valid = purchaseRequest;
@@ -35,114 +35,123 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         });
 
         var getUnit = ObjectId.isValid(valid.unitId) ? this.unitManager.getSingleByIdOrDefault(new ObjectId(valid.unitId)) : Promise.resolve(null);
-        var getCategory = ObjectId.isValid(valid.categoryId) ? this.categoryManager.getSingleByIdOrDefault(new ObjectId(valid.categoryId)) : Promise.resolve(null);
-        
+        // var getCategory = ObjectId.isValid(valid.categoryId) ? this.categoryManager.getSingleByIdOrDefault(new ObjectId(valid.categoryId)) : Promise.resolve(null);
+
         valid.items = valid.items instanceof Array ? valid.items : [];
         var getProducts = valid.items.map((item) => {
             return ObjectId.isValid(item.productId) ? this.productManager.getSingleByIdOrDefault(new ObjectId(item.productId)) : Promise.resolve(null);
         });
 
-        return Promise.all([getPurchaseRequestPromise, getUnit, getCategory].concat(getProducts))
-            .then(results => {
-                var _purchaseRequest = results[0];
-                var _unit = results[1];
-                var _category = results[2];
-                var _products = results.slice(3, results.length);
+        var getCategories = valid.items.map((item) => {
+            return ObjectId.isValid(item.productId) ? this.categoryManager.getSingleByIdOrDefault(new ObjectId(item.categoryId)) : Promise.resolve(null);
+        });
 
-                if (_purchaseRequest)
-                    errors["no"] = i18n.__("PurchaseRequest.no.isExists:%s is exists", i18n.__("PurchaseRequest.product._:No"));
+        return Promise.all(getCategories)
+            .then(_categories => {
+                return Promise.all([getPurchaseRequestPromise, getUnit].concat(getProducts))
+                    .then(results => {
+                        var _purchaseRequest = results[0];
+                        var _unit = results[1];
+                        var _products = results.slice(2, results.length);
 
-                if (!valid.date || valid.date == "" || valid.date == "undefined")
-                    errors["date"] = i18n.__("PurchaseRequest.date.isRequired:%s is required", i18n.__("PurchaseRequest.date._:Date")); //"Tanggal PR tidak boleh kosong";
-                else if (valid.date > valid.expectedDeliveryDate)
-                    errors["date"] = i18n.__("PurchaseRequest.date.isGreater:%s is greater than expected delivery date", i18n.__("PurchaseRequest.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
+                        if (_purchaseRequest)
+                            errors["no"] = i18n.__("PurchaseRequest.no.isExists:%s is exists", i18n.__("PurchaseRequest.product._:No"));
 
-                if (!_unit)
-                    errors["unit"] = i18n.__("PurchaseRequest.unit.isRequired:%s is not exists", i18n.__("PurchaseRequest.unit._:Unit")); //"Unit tidak boleh kosong";
-                else if (!valid.unitId)
-                    errors["unit"] = i18n.__("PurchaseRequest.unit.isRequired:%s is required", i18n.__("PurchaseRequest.unit._:Unit")); //"Unit tidak boleh kosong";
+                        if (!valid.date || valid.date == "" || valid.date == "undefined")
+                            errors["date"] = i18n.__("PurchaseRequest.date.isRequired:%s is required", i18n.__("PurchaseRequest.date._:Date")); //"Tanggal PR tidak boleh kosong";
+                        else if (valid.date > valid.expectedDeliveryDate)
+                            errors["date"] = i18n.__("PurchaseRequest.date.isGreater:%s is greater than expected delivery date", i18n.__("PurchaseRequest.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
 
-                if (!_category)
-                    errors["category"] = i18n.__("PurchaseRequest.category.isRequired:%s is not exists", i18n.__("PurchaseRequest.category._:Category")); //"Category tidak boleh kosong";
-                else if (!valid.categoryId)
-                    errors["category"] = i18n.__("PurchaseRequest.category.isRequired:%s is required", i18n.__("PurchaseRequest.category._:Category")); //"Category tidak boleh kosong";
+                        if (!_unit)
+                            errors["unit"] = i18n.__("PurchaseRequest.unit.isRequired:%s is not exists", i18n.__("PurchaseRequest.unit._:Unit")); //"Unit tidak boleh kosong";
+                        else if (!valid.unitId)
+                            errors["unit"] = i18n.__("PurchaseRequest.unit.isRequired:%s is required", i18n.__("PurchaseRequest.unit._:Unit")); //"Unit tidak boleh kosong";
 
-                if (!valid.expectedDeliveryDate || valid.expectedDeliveryDate === "" || valid.expectedDeliveryDate === "undefined")
-                    valid.expectedDeliveryDate = "";
+                        // if (!_category)
+                        //     errors["category"] = i18n.__("PurchaseRequest.category.isRequired:%s is not exists", i18n.__("PurchaseRequest.category._:Category")); //"Category tidak boleh kosong";
+                        // else if (!valid.categoryId)
+                        //     errors["category"] = i18n.__("PurchaseRequest.category.isRequired:%s is required", i18n.__("PurchaseRequest.category._:Category")); //"Category tidak boleh kosong";
 
-                if (valid.items && valid.items.length <= 0) {
-                    errors["items"] = i18n.__("PurchaseRequest.items.isRequired:%s is required", i18n.__("PurchaseRequest.items._:Item")); //"Harus ada minimal 1 barang";
-                }
-                else {
-                    var itemErrors = [];
-                    var valueArr = valid.items.map(function (item) { return item.productId.toString() });
+                        if (!valid.expectedDeliveryDate || valid.expectedDeliveryDate === "" || valid.expectedDeliveryDate === "undefined")
+                            valid.expectedDeliveryDate = "";
 
-                    var itemDuplicateErrors = new Array(valueArr.length);
-                    valueArr.some(function (item, idx) {
-                        var itemError = {};
-                        if (valueArr.indexOf(item) != idx) {
-                            itemError["product"] = i18n.__("PurchaseRequest.items.product.name.isDuplicate:%s is duplicate", i18n.__("PurchaseRequest.items.product.name._:Product")); //"Nama barang tidak boleh kosong";
+                        if (valid.items && valid.items.length <= 0) {
+                            errors["items"] = i18n.__("PurchaseRequest.items.isRequired:%s is required", i18n.__("PurchaseRequest.items._:Item")); //"Harus ada minimal 1 barang";
                         }
-                        if (Object.getOwnPropertyNames(itemError).length > 0) {
-                            itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
-                            itemDuplicateErrors[idx] = itemError;
-                        } else {
-                            itemDuplicateErrors[idx] = itemError;
+                        else {
+                            var itemErrors = [];
+                            var valueArr = valid.items.map(function (item) { return item.productId.toString() });
+
+                            var itemDuplicateErrors = new Array(valueArr.length);
+                            valueArr.some(function (item, idx) {
+                                var itemError = {};
+                                if (valueArr.indexOf(item) != idx) {
+                                    itemError["product"] = i18n.__("PurchaseRequest.items.product.name.isDuplicate:%s is duplicate", i18n.__("PurchaseRequest.items.product.name._:Product")); //"Nama barang tidak boleh kosong";
+                                }
+                                if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                    itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                                    itemDuplicateErrors[idx] = itemError;
+                                } else {
+                                    itemDuplicateErrors[idx] = itemError;
+                                }
+                            });
+                            for (var item of valid.items) {
+                                var itemError = {};
+                                var _index = valid.items.indexOf(item);
+                                if (!item.product || !item.product._id) {
+                                    itemError["product"] = i18n.__("PurchaseRequest.items.product.name.isRequired:%s is required", i18n.__("PurchaseRequest.items.product.name._:Product")); //"Nama barang tidak boleh kosong";
+                                } else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                                    Object.assign(itemError, itemDuplicateErrors[_index]);
+                                }
+                                if (item.quantity <= 0) {
+                                    itemError["quantity"] = i18n.__("PurchaseRequest.items.quantity.isRequired:%s is required", i18n.__("PurchaseRequest.items.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
+                                }
+                                itemErrors.push(itemError);
+                            }
+
+                            for (var itemError of itemErrors) {
+                                if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                    errors.items = itemErrors;
+                                    break;
+                                }
+                            }
+
                         }
+
+                        if (Object.getOwnPropertyNames(errors).length > 0) {
+                            var ValidationError = require("module-toolkit").ValidationError;
+                            return Promise.reject(new ValidationError("data does not pass validation", errors));
+                        }
+
+                        valid.unitId = _unit._id;
+                        valid.unit = _unit;
+
+                        // valid.categoryId = _category._id;
+                        // valid.category = _category;
+
+                        valid.date = new Date(valid.date);
+                        valid.expectedDeliveryDate = new Date(valid.expectedDeliveryDate);
+
+                        for (var prItem of valid.items) {
+                            for (var _product of _products) {
+                                if (prItem.product._id.toString() === _product._id.toString()) {
+                                    prItem.productId = _product._id;
+                                    prItem.product = _product;
+                                    break;
+                                }
+                            }
+                            var _category = _categories.find((category) => category._id.toString() === prItem.categoryId.toString())
+                            prItem.categoryId = _category._id;
+                            prItem.category = _category;
+                            prItem.quantity = Number(prItem.quantity);
+                        }
+
+                        if (!valid.stamp)
+                            valid = new PurchaseRequest(valid);
+
+                        valid.stamp(this.user.username, "manager");
+                        return Promise.resolve(valid);
                     });
-                    for (var item of valid.items) {
-                        var itemError = {};
-                        var _index = valid.items.indexOf(item);
-                        if (!item.product || !item.product._id) {
-                            itemError["product"] = i18n.__("PurchaseRequest.items.product.name.isRequired:%s is required", i18n.__("PurchaseRequest.items.product.name._:Product")); //"Nama barang tidak boleh kosong";
-                        } else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
-                            Object.assign(itemError, itemDuplicateErrors[_index]);
-                        }
-                        if (item.quantity <= 0) {
-                            itemError["quantity"] = i18n.__("PurchaseRequest.items.quantity.isRequired:%s is required", i18n.__("PurchaseRequest.items.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
-                        }
-                        itemErrors.push(itemError);
-                    }
-
-                    for (var itemError of itemErrors) {
-                        if (Object.getOwnPropertyNames(itemError).length > 0) {
-                            errors.items = itemErrors;
-                            break;
-                        }
-                    }
-
-                }
-
-                if (Object.getOwnPropertyNames(errors).length > 0) {
-                    var ValidationError = require("module-toolkit").ValidationError;
-                    return Promise.reject(new ValidationError("data does not pass validation", errors));
-                }
-
-                valid.unitId = _unit._id;
-                valid.unit = _unit;
-
-                valid.categoryId = _category._id;
-                valid.category = _category;
-
-                valid.date = new Date(valid.date);
-                valid.expectedDeliveryDate = new Date(valid.expectedDeliveryDate);
-
-                for (var prItem of valid.items) {
-                    for (var _product of _products) {
-                        if (prItem.product._id.toString() === _product._id.toString()) {
-                            prItem.productId = _product._id;
-                            prItem.product = _product;
-                            break;
-                        }
-                    }
-                    prItem.quantity = Number(prItem.quantity);
-                }
-
-                if (!valid.stamp)
-                    valid = new PurchaseRequest(valid);
-
-                valid.stamp(this.user.username, "manager");
-                return Promise.resolve(valid);
             });
     }
 
@@ -176,7 +185,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             };
 
             var filterBuyer = {
-                "buyer": {
+                "buyer.name": {
                     "$regex": regex
                 }
             };
@@ -200,7 +209,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             };
 
             var filterCategory = {
-                "category.name": {
+                "items.category.name": {
                     "$regex": regex
                 }
             };
@@ -208,30 +217,6 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
-    }
-
-    pdf(id, offset) {
-        return new Promise((resolve, reject) => {
-
-            this.getSingleById(id)
-                .then(purchaseRequest => {
-                    var getDefinition = require("../../pdf/definitions/garment-purchase-request");
-                    var definition = getDefinition(purchaseRequest, offset);
-
-                    var generatePdf = require("../../pdf/pdf-generator");
-                    generatePdf(definition)
-                        .then(binary => {
-                            resolve(binary);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-
-        });
     }
 
     getAllDataPR(filter) {
@@ -253,7 +238,6 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         "expectedDeliveryDate",
                         "shipmentDate",
                         "unit",
-                        "category",
                         "remark",
                         "isPosted",
                         "isUsed",
@@ -262,6 +246,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         "items.quantity",
                         "items.budgetPrice",
                         "items.uom",
+                        "items.category",
                         "items.remark"
                     ];
                     this.collection.where(query).select(_select).execute()
@@ -275,7 +260,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    getPurchaseRequestByTag(keyword) {
+    getPurchaseRequestByTag(keyword, shipmentDate) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -284,6 +269,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     var query = Object.assign({});
                     query = Object.assign(query, {
                         _deleted: false,
+                        isPosted: true,
                         isUsed: false
                     });
                     if (keyword) {
@@ -305,7 +291,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                             };
 
                             var filterBuyer = {
-                                "buyer": {
+                                "buyer.name": {
                                     "$regex": regex
                                 }
                             };
@@ -321,24 +307,40 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         query['$or'] = keywordFilters;
                     }
 
-                    var _select = [
-                        "no",
-                        "refNo",
-                        "roNo",
-                        "buyer",
-                        "artikel",
-                        "shipmentDate",
-                        "unit.name",
-                        "unit.division.name",
-                        "category.name",
-                        "isPosted",
-                        "isUsed",
-                        "_createdBy"
-                    ];
+                    var _select = {
+                        "no": 1,
+                        "refNo": 1,
+                        "roNo": 1,
+                        "buyer": "$buyer.name",
+                        "artikel": 1,
+                        "shipmentDate": 1,
+                        "unit": "$unit.name",
+                        "division": "$unit.division.name",
+                        "isPosted": 1,
+                        "isUsed": 1,
+                        "_createdBy": 1,
+                        "year": { $year: "$shipmentDate" },
+                        "month": { $month: "$shipmentDate" },
+                        "day": { $dayOfMonth: "$shipmentDate" },
+                    };
 
-                    this.collection.where(query).select(_select).execute()
+                    var qryMatch = [{ $match: query }, { $project: _select }];
+
+                    var queryDate = Object.assign({});
+                    if (shipmentDate) {
+                        var _shipmentDate = new Date(shipmentDate);
+
+                        queryDate = {
+                            year: _shipmentDate.getFullYear(),
+                            month: _shipmentDate.getMonth() + 1,
+                            day: _shipmentDate.getDate()
+                        }
+                        qryMatch.push({ $match: queryDate })
+                    }
+
+                    this.collection.aggregate(qryMatch).toArray()
                         .then((purchaseRequests) => {
-                            resolve(purchaseRequests.data);
+                            resolve(purchaseRequests);
                         })
                         .catch(e => {
                             reject(e);
@@ -366,7 +368,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     }
                     if (categoryId !== "undefined" && categoryId !== "" && categoryId !== undefined) {
                         Object.assign(query, {
-                            categoryId: new ObjectId(categoryId)
+                            "items.categoryId": new ObjectId(categoryId)
                         });
                     }
 

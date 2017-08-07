@@ -13,12 +13,12 @@ var PackingReceiptModel = Models.inventory.finishingPrinting.PackingReceipt;
 class PackingReceiptDataUtil {
     getNewData() {
         return Promise.all([PackingDataUtil.getNewTestData(), StorageDataUtil.getPackingTestData()])
-            .then(result => {
+            .then((result) => {
                 var packing = result[0];
 
                 var packingItems = packing.items.map((packingItem) => {
                     return {
-                        product: `${packing.salesContractNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}`,
+                        product: packingItem.remark !== "" || packingItem.remark !== null ? `${packing.productionOrderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${packing.productionOrderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`,
                         quantity: packingItem.quantity,
                         remark: packingItem.remark,
                         notes: "TEST"
