@@ -77,6 +77,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/STORAGE', './master/storage');
     test('@MASTER/COMPANY', './master/company');
     test('@MASTER/CONTACT', './master/contact');
+    test('@MASTER/BAD OUTPUT REASON', './master/bad-output-reason');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
