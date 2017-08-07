@@ -223,15 +223,12 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             item.purchaseOrderExternalId = new ObjectId(poExternal._id);
 
                             for (var fulfillment of item.fulfillments) {
-                                var poInternal = poExternal.items.find(poInternal => fulfillment.purchaseOrderId.toString() === poInternal.poId.toString())
+                                var poInternal = poExternal.items.find(poInternal => fulfillment.purchaseOrderId.toString() === poInternal.poId.toString() && fulfillment.product._id.toString() === poInternal.product._id.toString())
                                 if (poInternal) {
-                                    var poItem = poInternal.items.find(poItem => fulfillment.product._id.toString() === poItem.product._id.toString())
-                                    if (poItem) {
-                                        fulfillment.product = poItem.product;
-                                        fulfillment.purchaseOrderUom = poItem.dealUom;
-                                    }
-                                    fulfillment.productId = new ObjectId(poItem.product._id);
-                                    fulfillment.purchaseOrderId = new ObjectId(poInternal._id);
+                                    fulfillment.product = poInternal.product;
+                                    fulfillment.purchaseOrderUom = poInternal.dealUom;
+                                    fulfillment.productId = new ObjectId(poInternal.productId);
+                                    fulfillment.purchaseOrderId = new ObjectId(poInternal.poId);
                                     fulfillment.purchaseOrderNo = poInternal.No;
                                 }
                                 fulfillment.deliveredQuantity = Number(fulfillment.deliveredQuantity);
