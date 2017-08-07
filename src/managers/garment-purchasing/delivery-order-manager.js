@@ -152,11 +152,11 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     if (valid.items && valid.items.length > 0) {
                         var deliveryOrderItemErrors = [];
                         for (var doItem of valid.items || []) {
-                            var deliveryOrderItemError = [];
+                            var deliveryOrderItemError = {};
                             if (Object.getOwnPropertyNames(doItem).length === 0) {
                                 deliveryOrderItemError["purchaseOrderExternalId"] = i18n.__("DeliveryOrder.items.purchaseOrderExternalId.isRequired:%s is required", i18n.__("DeliveryOrder.items.purchaseOrderExternalId._:PurchaseOrderExternal")); //"Purchase order external tidak boleh kosong";
                             }
-                            else if (!doItem.purchaseOrderExternal) {
+                            else if (!doItem.purchaseOrderExternalId) {
                                 deliveryOrderItemError["purchaseOrderExternalId"] = i18n.__("DeliveryOrder.items.purchaseOrderExternalId.isRequired:%s is required", i18n.__("DeliveryOrder.items.purchaseOrderExternalId._:PurchaseOrderExternal")); //"Purchase order external tidak boleh kosong";
                             }
                             else {
