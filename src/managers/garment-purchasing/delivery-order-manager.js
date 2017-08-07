@@ -106,7 +106,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
             var getPoExternal = [];
             for (var doItem of valid.items || [])
-                if (doItem.hasOwnProperty("purchaseOrderExternaId")) {
+                if (doItem.hasOwnProperty("purchaseOrderExternalId")) {
                     if (ObjectId.isValid(doItem.purchaseOrderExternaId))
                         getPoExternal.push(this.purchaseOrderExternalManager.getSingleByIdOrDefault(doItem.purchaseOrderExternalId));
                 }
