@@ -216,15 +216,15 @@ module.exports = class GarmentProductManager extends BaseManager {
                                             errorMessage = errorMessage + "Satuan tidak terdaftar di Master Satuan, ";
                                         }
 
-                                        var _currency = currencies.find(currency => currency.code === data[i]["currency"])
-                                        if (!_currency) {
-                                            errorMessage = errorMessage + "Mata Uang tidak terdaftar di Master Mata Uang";
-                                        }
+                                        // var _currency = currencies.find(currency => currency.code === data[i]["currency"])
+                                        // if (!_currency) {
+                                        //     errorMessage = errorMessage + "Mata Uang tidak terdaftar di Master Mata Uang";
+                                        // }
 
                                         if (errorMessage !== "") {
                                             dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage });
                                         } else {
-                                            data[i]["currency"] = _currency;
+                                            // data[i]["currency"] = _currency;
                                             data[i]["uom"] = _uom;
                                         }
                                     }
