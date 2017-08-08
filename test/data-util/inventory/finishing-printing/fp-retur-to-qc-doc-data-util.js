@@ -57,7 +57,7 @@ class FPReturDataUtil {
                     items: Items
                 };
 
-                return data;
+                return Promise.resolve(data);
             })
     }
 

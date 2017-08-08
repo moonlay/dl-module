@@ -451,6 +451,7 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                     data["Tujuan"] = retur.destination ? retur.destination : '';
                     data["No DO"] = retur.deliveryOrderNo ? retur.deliveryOrderNo : '';
                     data["Keterangan Retur"] = retur.remark ? retur.remark : '';
+                    data["Kode Barang"] = retur.finishedGoodCode ? retur.finishedGoodCode : '';
                     data["No Order"] = item.productionOrderNo ? item.productionOrderNo : '';
                     data["Nama Barang"] = detail.productName ? detail.productName : '';
                     data["Keterangan"] =detail.remark ? detail.remark : '';
@@ -465,6 +466,7 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                     xls.options["Tujuan"] = "string";
                     xls.options["No DO"] = "string";
                     xls.options["Keterangan Retur"] = "string";
+                    xls.options["Kode Barang"] = "string";
                     xls.options["No Order"] = "string";
                     xls.options["Nama Barang"] = "string";
                     xls.options["Keterangan"] = "string";
@@ -474,7 +476,6 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                     xls.options["Berat (Kg)"] = "number";
 
                     xls.data.push(data);
-
                 }
 
             }
