@@ -228,9 +228,12 @@ module.exports = class GarmentProductManager extends BaseManager {
                                                 })
                                             jobs.push(job);
                                         }
-                                        return Promise.all(jobs);
+                                        Promise.all(jobs)
+                                        .then((results)=>{
+                                            resolve(results)
+                                        })
                                     } else {
-                                         return Promise.resolve(dataError);
+                                         resolve(dataError);
                                     }
                                 })
                         })
