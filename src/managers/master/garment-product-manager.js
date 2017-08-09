@@ -197,7 +197,9 @@ module.exports = class GarmentProductManager extends BaseManager {
                                             errorMessage.push("Satuan tidak terdaftar di Master Satuan");
                                         }
 
-                                        if (errorMessage.length > 0) {
+                                        if (errorMessage.length === 1) {
+                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage[0] });
+                                        } else if (errorMessage.length > 1) {
                                             dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage.split(', ') });
                                         } else {
                                             data[i]["uom"] = _uom;
