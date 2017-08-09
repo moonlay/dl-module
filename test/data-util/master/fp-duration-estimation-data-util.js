@@ -14,22 +14,25 @@ class DurationEstimationUtil {
     }
 
     getNewData() {
-        return Promise.all([processTypeDataUtil.getTestData()])
-            .then((results) => {
-                var _processType = results[0];
+        return processTypeDataUtil.getNewData()
+            .then((processType) => {
+                return processTypeDataUtil.getSert(processType)
+                    .then((results) => {
+                        var _processType = results;
 
-                var code = generateCode();
+                        var code = generateCode();
 
-                var areas = [{ "name": "PPIC", "duration": 2 }, { "name": "PRE TREATMENT", "duration": 4 }];
+                        var areas = [{ "name": "PPIC", "duration": 2 }, { "name": "PRE TREATMENT", "duration": 4 }];
 
-                var data = {
-                    code: code,
-                    processType: _processType,
-                    processTypeId: _processType._id,
-                    areas: areas
-                };
-                return Promise.resolve(data);
-            });
+                        var data = {
+                            code: code,
+                            processType: _processType,
+                            processTypeId: _processType._id,
+                            areas: areas
+                        };
+                        return Promise.resolve(data);
+                    });
+            })
     }
 
     getTestData() {
