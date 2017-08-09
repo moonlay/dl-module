@@ -199,7 +199,7 @@ module.exports = class GarmentProductManager extends BaseManager {
 
                                         if (errorMessage.length === 1) {
                                             dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage[0] });
-                                        } else if (errorMessage.length > 1) {
+                                        } if (errorMessage.length > 1) {
                                             dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage.split(', ') });
                                         } else {
                                             data[i]["uom"] = _uom;
@@ -229,11 +229,14 @@ module.exports = class GarmentProductManager extends BaseManager {
                                             jobs.push(job);
                                         }
                                         Promise.all(jobs)
-                                        .then((results)=>{
-                                            resolve(results)
-                                        })
+                                            .then((result) => {
+                                                resolve(result);
+                                            })
+                                            .catch(e => {
+                                                reject(e);
+                                            });
                                     } else {
-                                         resolve(dataError);
+                                        resolve(dataError);
                                     }
                                 })
                         })
