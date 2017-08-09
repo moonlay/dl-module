@@ -55,7 +55,7 @@ module.exports = class DurationEstimationManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            processTypeId: valid.processTypeId,
+            processTypeId: new ObjectId(valid.processTypeId),
             _deleted: false
         });
         var getProcessPromise = ObjectId.isValid(valid.processTypeId) ? this.processTypeManager.getSingleByIdOrDefault(new ObjectId(valid.processTypeId)) : Promise.resolve(null);
