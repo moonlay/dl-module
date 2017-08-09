@@ -157,8 +157,7 @@ module.exports = class DurationEstimationManager extends BaseManager {
             name: `ix_${map.master.collection.FinishingPrintingDurationEstimation}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, processTypeIdIndex, codeIndex]);
