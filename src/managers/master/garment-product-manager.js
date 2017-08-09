@@ -217,9 +217,9 @@ module.exports = class GarmentProductManager extends BaseManager {
                                         }
 
                                         var _currency = currencies.find(currency => currency.code === data[i]["currency"])
-                                        if (!_currency) {
-                                            errorMessage = errorMessage + "Mata Uang tidak terdaftar di Master Mata Uang";
-                                        }
+                                        // if (!_currency) {
+                                        //     errorMessage = errorMessage + "Mata Uang tidak terdaftar di Master Mata Uang";
+                                        // }
 
                                         if (errorMessage !== "") {
                                             dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage });
