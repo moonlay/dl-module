@@ -70,8 +70,7 @@ module.exports = class DurationEstimationManager extends BaseManager {
                     errors["processTypeId"] = i18n.__("FPDurationEstimation.processTypeId.isRequired:%s is required", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));//"code Jenis proses tidak boleh kosong";
                 else if (!_process) {
                     errors["processTypeId"] = i18n.__("FPDurationEstimation.processTypeId.isRequired:%s is not exists", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));
-                }
-                if (_oldData) {
+                } else if (_oldData) {
                     errors["processTypeId"] = i18n.__("FPDurationEstimation.processTypeId.isExists:%s is already exists", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));
                 }
                 if (!valid.areas || valid.areas.length === 0) {
