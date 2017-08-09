@@ -108,7 +108,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var sqlQuery = "select POrder.Harga,POrder.Tanggal,POrder.Post,POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from " + table1.trim() + " as Budget inner join " + table2.trim() + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and POrder.Harga = 0 and YEAR(POrder.Tanggal) >= 2016";
 
-                        // var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from Budget1 as Budget inner join POrder1 as POrder On Budget.Po = POrder.Nopo";
+                        // var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from " + table1.trim() + " as Budget inner join " + table2.trim() + " as POrder On Budget.Po = POrder.Nopo";
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
                                 resolve(result);
@@ -332,20 +332,19 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             if (items == 0 || !items || items == []) {
                                 var temps = [];
 
-                                if (data.Cat.trim() != category.code.trim()) {
-                                    temps.push("!(category.Code) data didnt exist: " + data.Cat.trim());
+                                if (!(_category.find(obj => obj.code.trim() == data.Cat.trim()))) {
+                                    temps.push("(category.code) data didnt exist: " + data.Cat.trim());
                                 }
 
-                                if (data.Kodeb.trim() != product.code.trim()) {
-
-                                    temps.push("!(product.Code) data didnt exist: " + data.Kodeb.trim());
+                                if (!(_product.find(obj => obj.code.trim() == data.Kodeb.trim()))) {
+                                    temps.push("(product.code) data didnt exist: " + data.Kodeb.trim());
                                 }
 
+                                if (!(_uom.find(obj => obj.unit.trim() == data.Satb.trim()))) {
 
-                                if (data.Satb.trim() != uom.unit.trim()) {
-
-                                    temps.push("!(uom.Unit) data didnt exist: " + data.Satb.trim());
+                                    temps.push("(uom.unit) data didnt exist: " + data.Satb.trim());
                                 }
+
                                 items.push(temps);
                                 migrated = false;
                             }
@@ -437,13 +436,13 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     //data not found
                     if (Object.getOwnPropertyNames(map).length == 0) {
 
-                        if (unitCode != unit.code.trim()) {
-                            map.unitId = ("!(unit.Code) data didnt exist: " + unitCode);
+                        if (!(_unit.find(obj => obj.code.trim() == unitCode))) {
+                            map.unitId = ("(unit.code) data didnt exist: " + unitCode);
                             map.unit = {};
                         }
 
-                        if (uniq.Buyer.trim() != buyer.code.trim()) {
-                            map.buyerId = "!(buyer.Code) data didnt exist: " + uniq.Buyer.trim();
+                        if (!(_buyer.find(obj => obj.code.trim() == uniq.Buyer.trim()))) {
+                            map.buyerId = "(buyer.code) data didnt exist: " + uniq.Buyer.trim();
                             map.buyer = {};
                         }
 
