@@ -7,6 +7,8 @@ var moment = require('moment');
 
 var DailyOperationManager = require("../../../../src/managers/production/finishing-printing/daily-operation-manager");
 var dailyOperationManager;
+var dateNow;
+var dateBefore;
 
 before('#00. connect db', function(done) {
     helper.getDb()
@@ -14,6 +16,8 @@ before('#00. connect db', function(done) {
             dailyOperationManager = new DailyOperationManager(db, {
                 username: 'dev'
             });
+            dateNow = new Date();
+            dateBefore = new Date();
             done();
         })
         .catch(e => {
@@ -26,7 +30,8 @@ var dataInput;
 it("#01. should success when create data", function(done) {
     dataUtil.getNewData("input")
             .then(data => {
-                data.dateInput = '2017-02-01';
+                dateBefore = dateBefore.setDate(dateBefore.getDate() - 10);
+                data.dateInput = moment(dateBefore).format('YYYY-MM-DD');
                 dataInput = data;
                 dailyOperationManager.create(data)
                     .then((item) => {
@@ -116,7 +121,7 @@ it("#06. should success when get report with kanban parameter", function(done) {
 
 var dataReport;
 it("#07. should success when get report with date parameter", function(done) {
-    dailyOperationManager.getDailyOperationReport({"dateFrom" : "2017-02-01", "dateTo" : "2017-02-01"})
+    dailyOperationManager.getDailyOperationReport({"dateFrom" : moment(dateBefore).format('YYYY-MM-DD'), "dateTo" : moment(dateNow).format('YYYY-MM-DD')})
         .then((item) => {
             dataReport = item;
             dataReport.data.should.instanceof(Array);
@@ -129,7 +134,7 @@ it("#07. should success when get report with date parameter", function(done) {
 });
 
 it("#08. should success when get data for Excel", function(done) {
-    dailyOperationManager.getXls(dataReport, {"dateFrom" : "2017-02-01", "dateTo" : "2017-02-01"})
+    dailyOperationManager.getXls(dataReport, {"dateFrom" : moment(dateBefore).format('YYYY-MM-DD'), "dateTo" : moment(dateNow).format('YYYY-MM-DD')})
         .then((item) => {
             item.should.have.property('data');
             item.should.have.property('options');
@@ -145,7 +150,7 @@ var dailyOutput;
 it("#09. should success when create data output", function(done) {
     dataUtil.getNewData("output")
             .then(data => {
-                data.dateOutput = '2017-02-02';
+                data.dateOutput = moment(dateNow).format('YYYY-MM-DD');
                 data.kanban = dataInput.kanban;
                 data.kanbanId = dataInput.kanbanId;
                 data.machine = dataInput.machine;
@@ -174,7 +179,7 @@ it("#09. should success when create data output", function(done) {
 });
 
 it("#10. should success when get report with date parameter", function(done) {
-    dailyOperationManager.getDailyOperationBadReport({"dateFrom" : "2017-02-02", "dateTo" : "2017-02-02"})
+    dailyOperationManager.getDailyOperationBadReport({"dateFrom" : moment(dateBefore).format('YYYY-MM-DD'), "dateTo" : moment(dateNow).format('YYYY-MM-DD')})
         .then((result) => {
             result.should.instanceof(Array);
             result.length.should.not.equal(0);
