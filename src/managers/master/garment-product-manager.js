@@ -230,7 +230,7 @@ module.exports = class GarmentProductManager extends BaseManager {
                                         }
                                         return Promise.all(jobs);
                                     } else {
-                                        resolve(dataError);
+                                         return Promise.resolve(dataError);
                                     }
                                 })
                         })
