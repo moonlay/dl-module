@@ -42,12 +42,8 @@ module.exports = function (packing, offset) {
             columns: [{
                 width: '*',
                 stack: [{
-                    text: 'PT DAN LIRIS',
+                    text: 'BON PENYERAHAN PRODUKSI',
                     style: ['size15'],
-                    alignment: "center"
-                }, {
-                    text: 'BANARAN, GROGOL, SUKOHARJO',
-                    style: ['size09'],
                     alignment: "center"
                 }]
             }]
@@ -72,12 +68,6 @@ module.exports = function (packing, offset) {
             columns: [{
                 width: '*',
                 stack: [{
-                    text: 'BON PENYERAHAN PRODUKSI',
-                    style: ['size09', 'bold'],
-                    alignment: "center",
-                    decoration: 'underline'
-                },
-                {
                     text: iso,
                     style: ['size09', 'bold'],
                     alignment: "right"
