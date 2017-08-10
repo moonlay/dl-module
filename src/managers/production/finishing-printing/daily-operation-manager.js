@@ -432,7 +432,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     itemErrors.push(itemError);
                                 }
                                 if(presentationTotal !== 100)
-                                    errors["badOutputReasons"] = i18n.__("Total presetasi harus 100", i18n.__("DailyOperation.badOutputReasons._:BadOutputReasons")); //"keterangan bad output tidak boleh kosong";
+                                    errors["badOutputReasons"] = i18n.__("Total presentase harus 100", i18n.__("DailyOperation.badOutputReasons._:BadOutputReasons")); //"keterangan bad output tidak boleh kosong";
                                 else{
                                     for (var itemError of itemErrors) {
                                         if (Object.getOwnPropertyNames(itemError).length > 0) {
