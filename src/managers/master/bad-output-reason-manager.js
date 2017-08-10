@@ -7,7 +7,7 @@ var map = DLModels.map;
 var BadOutputReason = DLModels.master.BadOutputReason;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
-var CodeGenerator = require("../../utils/code-generator");
+var generateCode = require("../../utils/code-generator");
 var MachineManager = require('./machine-manager');
 
 module.exports = class BadOutputReasonManager extends BaseManager {
@@ -51,7 +51,8 @@ module.exports = class BadOutputReasonManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            reason: valid.reason
+            reason: valid.reason,
+            _deleted: false
         });
         var getMachine = [];
         for(var machine of valid.machines || []){
@@ -76,7 +77,7 @@ module.exports = class BadOutputReasonManager extends BaseManager {
                     errors["machines"] = i18n.__("BadOutputReason.machines.isRequired:%s is required", i18n.__("BadOutputReason.machines._:Machines")); //"Mesin Harus diisi";
                 else{
                     var itemErrors = [];
-                    var valueArr = valid.machines.map(function (item) { return item._id.toString() });
+                    var valueArr = valid.machines.map(function (item) { return item._id ? item._id.toString() : "" });
 
                     var itemDuplicateErrors = new Array(valueArr.length);
                     valueArr.some(function (item, idx) {
