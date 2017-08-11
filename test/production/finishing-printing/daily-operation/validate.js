@@ -590,7 +590,7 @@ it("#18. on index 1 step 1 : should error when create new data Output with no re
                         e.errors.should.have.property('badOutputReasons');
                         // e.errors.badOutputReasons.should.instanceOf(Array);
                         // for(var a of e.errors.badOutputReasons){
-                        //     a.should.have.property('presentation');
+                        //     a.should.have.property('precentage');
                         //     a.should.have.property('description');
                         //     a.should.have.property('badOutputReason');
                         // }
@@ -606,7 +606,7 @@ it("#18. on index 1 step 1 : should error when create new data Output with no re
         });
 });
 
-it("#19. on index 1 step 1 : should error when create new data Output with presentation data in reason less then 100", function(done) {
+it("#19. on index 1 step 1 : should error when create new data Output with precentage data in reason less then 100", function(done) {
     dataUtil.getNewData("output")
         .then(data => {
             data.kanban = kanban;
@@ -619,13 +619,13 @@ it("#19. on index 1 step 1 : should error when create new data Output with prese
             var items = []
             for(var a of data.badOutputReasons){
                 var item = a;
-                item.presentation = 90;
+                item.precentage = 90;
                 items.push(item);
             }
             data.badOutputReasons = items
             dailyOperationManager.create(data)
                 .then(daily => {
-                    done("on index 1 step 1 : should error when create new data Output with presentation data in reason less then 100");
+                    done("on index 1 step 1 : should error when create new data Output with precentage data in reason less then 100");
                 })
                 .catch((e) => {
                     try {
@@ -657,7 +657,7 @@ it("#20. on index 1 step 1 : should error when create new data Output with dupli
             for(var a of data.badOutputReasons){
                 item = a;
             }
-            item.presentation = 50;
+            item.precentage = 50;
             items.push(item);
             items.push(item);
             data.badOutputReasons = items

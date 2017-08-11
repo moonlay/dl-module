@@ -55,7 +55,7 @@ module.exports = class DurationEstimationManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code,
+            processTypeId: new ObjectId(valid.processTypeId),
             _deleted: false
         });
         var getProcessPromise = ObjectId.isValid(valid.processTypeId) ? this.processTypeManager.getSingleByIdOrDefault(new ObjectId(valid.processTypeId)) : Promise.resolve(null);
@@ -70,24 +70,42 @@ module.exports = class DurationEstimationManager extends BaseManager {
                     errors["processTypeId"] = i18n.__("FPDurationEstimation.processTypeId.isRequired:%s is required", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));//"code Jenis proses tidak boleh kosong";
                 else if (!_process) {
                     errors["processTypeId"] = i18n.__("FPDurationEstimation.processTypeId.isRequired:%s is not exists", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));
-                }
-                if (_oldData) {
-                    errors["code"] = i18n.__("FPDurationEstimation.processTypeId.isExists:%s is already exists", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));
+                } else if (_oldData) {
+                    errors["processTypeId"] = i18n.__("FPDurationEstimation.processTypeId.isExists:%s is already exists", i18n.__("FPDurationEstimation.processTypeId._:Process Type"));
                 }
                 if (!valid.areas || valid.areas.length === 0) {
                     errors["areas"] = i18n.__("FPDurationEstimation.areas.isRequired:%s is required", i18n.__("FPDurationEstimation.areas._:Areas"));
                 }
                 else {
                     var areaErrors = [];
+
+                    var valueArr = valid.areas.map(function (area) { return area.name.toString() });
+                    var areasDuplicateErrors = new Array(valueArr.length);
+                    valueArr.some(function (item, idx) {
+                        var _areaError = {};
+                        if (valueArr.indexOf(item) != idx) {
+                            _areaError["name"] = i18n.__("FPDurationEstimation.areas.name.isDuplicate:%s is duplicate", i18n.__("FPDurationEstimation.areas.name._:Name"));
+                        }
+                        if (Object.getOwnPropertyNames(_areaError).length > 0) {
+                            areasDuplicateErrors[valueArr.indexOf(item)] = _areaError;
+                            areasDuplicateErrors[idx] = _areaError;
+                        } else {
+                            areasDuplicateErrors[idx] = _areaError;
+                        }
+                    });
                     for (var area of valid.areas) {
                         var areaError = {};
                         var listAreaName = ["PPIC", "PREPARING", "PRE TREATMENT", "DYEING", "PRINTING", "FINISHING", "QC"];
                         var index = listAreaName.find(name => name.trim().toLocaleLowerCase() === area.name.trim().toLocaleLowerCase())
+                        var _index = valid.areas.indexOf(area);
                         if (area.name == "" || !area.name) {
                             areaError["name"] = i18n.__("FPDurationEstimation.areas.name.isRequired:%s is required", i18n.__("FPDurationEstimation.areas.name._:Name"));
                         } else if (index === -1) {
                             areaError["name"] = i18n.__("FPDurationEstimation.areas.name.isNoExists:%s is no exists", i18n.__("FPDurationEstimation.areas.name._:Name"));
+                        } else if (Object.getOwnPropertyNames(areasDuplicateErrors[_index]).length > 0) {
+                            Object.assign(areaError, areasDuplicateErrors[_index]);
                         }
+
                         if (area.duration <= 0 || !area.duration) {
                             areaError["duration"] = i18n.__("FPDurationEstimation.areas.duration.isRequired:%s is required", i18n.__("FPDurationEstimation.areas.duration._:Duration"));
                         } else {
@@ -97,7 +115,7 @@ module.exports = class DurationEstimationManager extends BaseManager {
                     }
                     for (var areaError of areaErrors) {
                         if (Object.getOwnPropertyNames(areaError).length > 0) {
-                            errors.areas = itemErrors;
+                            errors.areas = areaErrors;
                             break;
                         }
                     }
@@ -127,15 +145,22 @@ module.exports = class DurationEstimationManager extends BaseManager {
             }
         };
 
-        var codeIndex = {
-            name: `ix_${map.master.collection.FinishingPrintingDurationEstimation}_code`,
+        var processTypeIdIndex = {
+            name: `ix_${map.master.collection.FinishingPrintingDurationEstimation}_processTypeId`,
             key: {
-                code: 1
+                processTypeId: 1
             },
             unique: true
         };
 
-        return this.collection.createIndexes([dateIndex, codeIndex]);
+        var codeIndex = {
+            name: `ix_${map.master.collection.FinishingPrintingDurationEstimation}_code`,
+            key: {
+                code: 1
+            }
+        };
+
+        return this.collection.createIndexes([dateIndex, processTypeIdIndex, codeIndex]);
     }
 
 }
