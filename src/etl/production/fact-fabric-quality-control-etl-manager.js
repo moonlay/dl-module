@@ -14,7 +14,7 @@ const SELECT = {
     "fabricGradeTests.criteria.score.A": 1,
     "fabricGradeTests.criteria.score.B": 1,
     "fabricGradeTests.criteria.score.C": 1,
-    "fabricGradeTests.criteria.score.D": 1,
+    "fabricGradeTests.criteria.score.D": 1, 
     "fabricGradeTests.pointSystem": 1,
     code: 1,
     pointSystem: 1,
@@ -137,7 +137,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
                     var totalScore = scoreA + scoreB + scoreC + scoreD;
                     return {
                         qcCode: qualityControl.code ? `'${qualityControl.code}'` : null,
-                        qcpointSystem: qualityControl.pointSystem >= 0 ? `${qualityControl.pointSystem}` : null,
+                        qcpointSystem: qualityControl.pointSystem >= 0 ? `'${qualityControl.pointSystem}'` : null,
                         dateIm: qualityControl.dateIm ? `'${moment(qualityControl.dateIm).format("L")}'` : null,
                         shiftIm: qualityControl.shiftIm ? `'${qualityControl.shiftIm}'` : null,
                         group: qualityControl.group ? `'${qualityControl.group}'` : null,
@@ -148,7 +148,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
                         kanbanCode: qualityControl.kanbanCode ? `'${qualityControl.kanbanCode}'` : null,
                         cartNo: qualityControl.cartNo ? `'${qualityControl.cartNo}'` : null,
                         buyer: qualityControl.buyer ? `'${qualityControl.buyer}'` : null,
-                        orderQuantity: qualityControl.orderQuantity >= 0 ? `${qualityControl.orderQuantity}` : null,
+                        orderQuantity: qualityControl.orderQuantity >= 0 ? `'${qualityControl.orderQuantity}'` : null,
                         color: qualityControl.color ? `'${qualityControl.color}'` : null,
                         construction: qualityControl.construction ? `'${qualityControl.construction}'` : null,
                         packingInstruction: qualityControl.packingInstruction ? `'${qualityControl.packingInstruction}'` : null,
@@ -156,23 +156,23 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
                         type: gradeTest.type ? `'${gradeTest.type}'` : null,
                         pcsNo: gradeTest.pcsNo ? `'${gradeTest.pcsNo}'` : null,
                         grade: gradeTest.grade ? `'${gradeTest.grade}'` : null,
-                        width: gradeTest.width >= 0 ? `${gradeTest.width}` : null,
-                        initLength: gradeTest.initLength >= 0 ? `${gradeTest.initLength}` : null,
-                        avalLength: gradeTest.avalLength >= 0 ? `${gradeTest.avalLength}` : null,
-                        finalLength: gradeTest.finalLength >= 0 ? `${gradeTest.finalLength}` : null,
-                        sampleLength: gradeTest.sampleLength >= 0 ? `${gradeTest.sampleLength}` : null,
-                        fabricGradeTest: gradeTest.fabricGradeTest >= 0 ? `${gradeTest.fabricGradeTest}` : null,
-                        finalGradeTest: gradeTest.finalGradeTest >= 0 ? `${gradeTest.finalGradeTest}` : null,
-                        score: gradeTest.score >= 0 ? `${gradeTest.score}` : null,
-                        finalScore: gradeTest.finalScore >= 0 ? `${gradeTest.finalScore}` : null,
-                        pointSystem: gradeTest.pointSystem >= 0 ? `${gradeTest.pointSystem}` : null,
+                        width: gradeTest.width >= 0 ? `'${gradeTest.width}'` : null,
+                        initLength: gradeTest.initLength >= 0 ? `'${gradeTest.initLength}'` : null,
+                        avalLength: gradeTest.avalLength >= 0 ? `'${gradeTest.avalLength}'` : null,
+                        finalLength: gradeTest.finalLength >= 0 ? `'${gradeTest.finalLength}'` : null,
+                        sampleLength: gradeTest.sampleLength >= 0 ? `'${gradeTest.sampleLength}'` : null,
+                        fabricGradeTest: gradeTest.fabricGradeTest >= 0 ? `'${gradeTest.fabricGradeTest}'` : null,
+                        finalGradeTest: gradeTest.finalGradeTest >= 0 ? `'${gradeTest.finalGradeTest}'` : null,
+                        score: gradeTest.score >= 0 ? `'${gradeTest.score}'` : null,
+                        finalScore: gradeTest.finalScore >= 0 ? `'${gradeTest.finalScore}'` : null,
+                        pointSystem: gradeTest.pointSystem >= 0 ? `'${gradeTest.pointSystem}'` : null,
                         criteriaCode: criteria.code ? `'${criteria.code}'` : null,
                         criteriaGroup: criteria.group ? `'${criteria.group}'` : null,
                         criteriaName: criteria.name ? `'${criteria.name}'` : null,
-                        criteriaA: criteria.score.A >= 0 ? `${criteria.score.A}` : null,
-                        criteriaB: criteria.score.B >= 0 ? `${criteria.score.B}` : null,
-                        criteriaC: criteria.score.C >= 0 ? `${criteria.score.C}` : null,
-                        criteriaD: criteria.score.D >= 0 ? `${criteria.score.D}` : null,
+                        criteriaA: criteria.score.A >= 0 ? `'${criteria.score.A}'` : null,
+                        criteriaB: criteria.score.B >= 0 ? `'${criteria.score.B}'` : null,
+                        criteriaC: criteria.score.C >= 0 ? `'${criteria.score.C}'` : null,
+                        criteriaD: criteria.score.D >= 0 ? `'${criteria.score.D}'` : null,
                         totalScore: `${totalScore}`,
                         deleted: `'${qualityControl._deleted}'`,
                         isUsed: `'${qualityControl.isUsed}'`
@@ -219,7 +219,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
                                 var queryString = `\nSELECT ${item.qcCode}, ${item.qcpointSystem}, ${item.dateIm}, ${item.shiftIm}, ${item.group}, ${item.operatorIm}, ${item.machineNoIm}, ${item.productionOrderNo}, ${item.productionOrderType}, ${item.kanbanCode}, ${item.cartNo}, ${item.buyer}, ${item.orderQuantity}, ${item.color}, ${item.construction}, ${item.packingInstruction}, ${item.uom}, ${item.type}, ${item.pcsNo}, ${item.grade}, ${item.width}, ${item.initLength}, ${item.avalLength}, ${item.finalLength}, ${item.sampleLength}, ${item.fabricGradeTest}, ${item.finalGradeTest}, ${item.score}, ${item.finalScore}, ${item.pointSystem}, ${item.criteriaCode}, ${item.criteriaGroup}, ${item.criteriaName}, ${item.criteriaA}, ${item.criteriaB}, ${item.criteriaC}, ${item.criteriaD}, ${item.totalScore}, ${item.deleted}, ${item.isUsed} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 4000 == 0) {
-                                    sqlQuery = sqlQuery.substring(0, sqlQuery.length - 9);
+                                    sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "INSERT INTO [DL_Fact_Fabric_Quality_Control_Temp] ";
                                 }
@@ -229,7 +229,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
                         }
 
                         if (sqlQuery !== "") {
-                            sqlQuery = sqlQuery.substring(0, sqlQuery.length - 9);
+                            sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                             command.push(this.insertQuery(request, `${sqlQuery}`));
                         }
 

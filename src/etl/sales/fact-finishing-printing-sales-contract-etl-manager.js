@@ -9,6 +9,22 @@ var moment = require("moment");
 require("mongodb-toolkit");
 
 var FinishingPrintingSalesContractManager = require("../../managers/sales/finishing-printing-sales-contract-manager");
+const SELECT = {
+    "uom.unit": 1,
+    orderQuantity: 1,
+    "material.name": 1,
+    "materialConstruction.name": 1,
+    "yarnMaterial.name": 1,
+    materialWidth: 1,
+    salesContractNo: 1,
+    _createdDate: 1,
+    "buyer.name": 1,
+    "buyer.type": 1,
+    "orderType.name": 1,
+    "buyer.code": 1,
+    _deleted: 1,
+    deliverySchedule: 1
+};
 
 module.exports = class FactFinishingPrintingSalesContractManager extends BaseManager {
     constructor(db, user, sql) {
@@ -62,13 +78,13 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
     }
 
     extract(times) {
-        var time = times.length > 0 ? times[0].start : "1970-01-01";
+        var time = "1970-01-01";
         var timestamp = new Date(time);
         return this.finishingPrintingSalesContractManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
             }
-        }).toArray();
+        }, SELECT).toArray();
     }
 
     orderQuantityConvertion(uom, quantity) {
@@ -113,7 +129,8 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
                 materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
                 materialWidth: item.materialWidth ? `'${item.materialWidth.replace(/'/g, '"')}'` : null,
                 material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null,
-                deleted: `'${item._deleted}'`
+                deleted: `'${item._deleted}'`,
+                deliverySchedule: `'${moment(item.deliverySchedule).format("L")}'`
             }
         });
         return Promise.resolve([].concat.apply([], result));
@@ -144,25 +161,28 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
                         var command = [];
 
-                        var sqlQuery = '';
+                        var sqlQuery = 'INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material], [_deleted], [deliverySchedule]) ';
 
                         var count = 1;
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material], [_deleted]) VALUES(${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material}, ${item.deleted});\n`;
+                                var queryString = `\nSELECT ${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material}, ${item.deleted}, ${item.deliverySchedule} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 1000 === 0) {
+                                if (count % 4000 === 0) {
+                                    sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                                     command.push(this.insertQuery(request, sqlQuery));
-                                    sqlQuery = "";
+                                    sqlQuery = "INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material], [_deleted], [deliverySchedule]) ";
                                 }
                                 console.log(`add data to query  : ${count}`);
                                 count++;
                             }
                         }
 
-                        if (sqlQuery != "")
+                        if (sqlQuery != "") {
+                            sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                             command.push(this.insertQuery(request, `${sqlQuery}`));
+                        }
 
                         this.sql.multiple = true;
 
