@@ -71,6 +71,7 @@ module.exports = {
             PurchaseRequestManager: require('./src/managers/garment-purchasing/purchase-request-manager'),
             PurchaseOrderManager: require('./src/managers/garment-purchasing/purchase-order-manager'),
             PurchaseOrderExternalManager: require('./src/managers/garment-purchasing/purchase-order-external-manager'),
+            DeliveryOrderManager: require('./src/managers/garment-purchasing/delivery-order-manager'),
         },
         production: {
             spinning: {
@@ -158,7 +159,7 @@ module.exports = {
                 purchaseRequest: require("./test/data-util/garment-purchasing/purchase-request-data-util"),
                 purchaseOrder: require("./test/data-util/garment-purchasing/purchase-order-data-util"),
                 purchaseOrderExternal: require("./test/data-util/garment-purchasing/purchase-order-external-data-util"),
-                // deliveryOrder: require("./test/data-util/garment-purchasing/delivery-order-data-util"),
+                deliveryOrder: require("./test/data-util/garment-purchasing/delivery-order-data-util"),
                 // unitReceiptNote: require("./test/data-util/garment-purchasing/unit-receipt-note-data-util"),
                 // unitPaymentOrder: require("./test/data-util/garment-purchasing/unit-payment-order-data-util"),
                 // unitPaymentPriceCorrectionNot: require("./test/data-util/garment-purchasing/unit-payment-price-correction-note-data-util"),

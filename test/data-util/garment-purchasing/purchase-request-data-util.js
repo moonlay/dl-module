@@ -22,7 +22,7 @@ class PurchaseRequestDataUtil {
 
                 var data = {
                     no: `UT/PR/GARMENT${codeGenerator()}`,
-                    roNo: "UT/RO/PR/GARMENT",
+                    roNo: `UT/RO/PR/GARMENT${codeGenerator()}`,
                     buyerId: buyer._id,
                     buyer: buyer,
                     artikel: "UT/ARTIKEL1",
