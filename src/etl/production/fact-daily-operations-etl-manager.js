@@ -40,7 +40,8 @@ const selectedFields = {
     "failedOutput": 1,
     "type": 1,
     "stepId": 1,
-    "step.process": 1
+    "step.process": 1,
+    "step.proccessArea": 1
 };
 
 // internal deps 
@@ -101,17 +102,15 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
     }
 
     extract(times) {
-        var time = "2017-04-01T00:00:00.000Z";
-        var timess = "2017-05-01T00:00:00.000Z";
         var timestamp = new Date(time);
-        var timestamps = new Date(timess);
         var inputArr = [];
         return this.dailyOperationManager.collection.find({
             _updatedDate: {
                 $gte: timestamp,
-                $lte: timestamps
             }
-        }, selectedFields).toArray()
+        }, {
+                "code": 1
+            }).toArray()
             .then((datas) => this.getInputDatas(datas))
             .then((inputDatas) => {
                 inputArr = inputDatas;
@@ -263,16 +262,16 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
                         this.sql.multiple = true;
 
-                        var fs = require("fs");
-                        var path = "C:\\Users\\leslie.aula\\Desktop\\daily.txt";
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\leslie.aula\\Desktop\\daily.txt";
 
-                        fs.writeFile(path, sqlQuery, function (error) {
-                            if (error) {
-                                console.log("write error:  " + error.message);
-                            } else {
-                                console.log("Successful Write to " + path);
-                            }
-                        });
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
 
                         return Promise.all(command)
                             .then((results) => {
