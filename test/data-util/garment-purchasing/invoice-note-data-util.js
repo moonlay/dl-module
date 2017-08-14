@@ -11,7 +11,7 @@ var deliveryOderDataUtil = require('../garment-purchasing/delivery-order-data-ut
 class InvoiceNoteDataUtil {
     getNewData() {
         return helper
-            .getManager(DeliveryOrderManager)
+            .getManager(InvoiceNoteManager)
             .then(manager => {
                 return Promise.all([supplierDataUtil.getTestData(), currencyDataUtil.getTestData(), vatDataUtil.getTestData(), deliveryOderDataUtil.getNewTestData()])
                     .then(results => {
@@ -21,46 +21,47 @@ class InvoiceNoteDataUtil {
                         var deliveryOder = results[3];
                         var items = deliveryOder.items.map(doItem => {
                             var fulfillment = doItem.fulfillments.map(doFulfillment => {
-                                return doFulfillment.purchaseOrder.items.map(poItem => {
-                                    return {
-                                        deliveryOrderId: deliveryOder._id,
-                                        deliveryOrderNo: deliveryOder.no,
-                                        purchaseOrderExternalId: doItem.purchaseOrderExternalId,
-                                        purchaseOrderExternalNo: doItem.purchaseOrderExternalNo,
-                                        purchaseOrderId: doFulfillment.purchaseOrderId,
-                                        purchaseOrderNo: doFulfillment.purchaseOrderNo,
-                                        purchaseRequestId: doFulfillment.purchaseRequestId,
-                                        purchaseRequestNo: doFulfillment.purchaseRequestNo,
-                                        productId: doFulfillment.productId,
-                                        product: doFulfillment.product,
-                                        purchaseOrderQuantity: doFulfillment.purchaseOrderQuantity,
-                                        purchaseOrderUom: doFulfillment.purchaseOrderUom,
-                                        deliveredQuantity: doFulfillment.deliveredQuantity
-                                    }
-                                });
+                                return {
+                                    purchaseOrderExternalId: doItem.purchaseOrderExternalId,
+                                    purchaseOrderExternalNo: doItem.purchaseOrderExternalNo,
+                                    purchaseOrderId: doFulfillment.purchaseOrderId,
+                                    purchaseOrderNo: doFulfillment.purchaseOrderNo,
+                                    purchaseRequestId: doFulfillment.purchaseRequestId,
+                                    purchaseRequestNo: doFulfillment.purchaseRequestNo,
+                                    productId: doFulfillment.productId,
+                                    product: doFulfillment.product,
+                                    purchaseOrderQuantity: doFulfillment.purchaseOrderQuantity,
+                                    purchaseOrderUom: doFulfillment.purchaseOrderUom,
+                                    deliveredQuantity: doFulfillment.deliveredQuantity
+                                }
                             });
                             fulfillment = [].concat.apply([], fulfillment);
                             return fulfillment;
                         });
 
                         items = [].concat.apply([], items);
+                        var invoiceNoteItem = {
+                            deliveryOrderId: deliveryOder._id,
+                            deliveryOrderNo: deliveryOder.no,
+                            items: items
+                        }
 
                         var data = {
                             no: `UT/IN/${codeGenerator()}`,
                             date: new Date(),
                             supplierId: dataSupplier._id,
                             supplier: dataSupplier,
-                            currency:dataCurrency,
+                            currency: dataCurrency,
                             useIncomeTax: true,
                             incomeTaxNo: `UT/PPN/${codeGenerator()}`,
                             incomeTaxDate: new Date(),
                             vatNo: `UT/PPH/${codeGenerator()}`,
                             vatDate: new Date(),
                             useVat: true,
-                            vat:dataVat,
-                            isPayTax:false,
+                            vat: dataVat,
+                            isPayTax: false,
                             remark: 'Unit Test Invoice Note',
-                            items: items
+                            items: invoiceNoteItem
                         };
                         return Promise.resolve(data);
                     });

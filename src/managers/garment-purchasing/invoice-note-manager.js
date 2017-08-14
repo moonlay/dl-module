@@ -12,12 +12,18 @@ var moment = require('moment');
 
 var InvoiceNote = DLModels.garmentPurchasing.GarmentInvoiceNote;
 var DeliveryOrderManager = require('./delivery-order-manager');
+var CurrencyManager = require('../master/currency-manager');
+var VatManager = require('../master/vat-manager');
+var SupplierManager = require('../master/garment-supplier-manager');
 
 module.exports = class InvoiceNoteManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentPurchasing.collection.GarmentInvoiceNote);
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
+        this.currencyManager = new CurrencyManager(db, user);
+        this.vatManager = new VatManager(db, user);
+        this.supplierManager = new SupplierManager(db, user);
     }
 
     _validate(invoiceNote) {
@@ -31,15 +37,14 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         });
 
         var getDeliveryOrder = [];
-        valid.items = valid.items || [];
-        var doIds = valid.items.map((item) => { return item.deliveryOrderId })
-        doIds = doIds.filter(function (elem, index, self) {
-            return index == self.indexOf(elem);
-        })
-        for (var doId of doIds) {
-            if (ObjectId.isValid(doId)) {
-                getDeliveryOrder.push(this.deliveryOrderManager.getSingleByIdOrDefault(doId));
+        if (valid.items) {
+            for (var item of valid.items) {
+                if (ObjectId.isValid(item.deliveryOrderId)) {
+                    getDeliveryOrder.push(this.deliveryOrderManager.getSingleByIdOrDefault(item.deliveryOrderId));
+                }
             }
+        } else {
+            getDeliveryOrder.push(Promise.resolve(null));
         }
         var getCurrency = valid.currency && ObjectId.isValid(valid.currency._id) ? this.currencyManager.getSingleByIdOrDefault(valid.currency._id) : Promise.resolve(null);
         var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
@@ -58,32 +63,32 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                 }
 
                 if (!valid.date || valid.date === "") {
-                    error["date"] = i18n.__("InvoiceNote.date.isRequired:%s is required", i18n.__("InvoiceNote.date._:Date"));
+                    errors["date"] = i18n.__("InvoiceNote.date.isRequired:%s is required", i18n.__("InvoiceNote.date._:Date"));
                     valid.date = '';
                 }
 
                 if (!valid.supplierId || valid.supplierId.toString() === "") {
-                    error["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
+                    errors["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
                 }
                 else if (valid.supplier) {
                     if (!valid.supplier._id) {
-                        error["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
+                        errors["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
                     }
                 }
                 else if (!_supplier) {
-                    error["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
+                    errors["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
                 }
 
                 if (!valid.currency) {
-                    error["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
+                    errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
                 }
                 else if (valid.currency) {
                     if (!valid.currency._id) {
-                        error["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
+                        errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
                     }
                 }
                 else if (!_currency) {
-                    error["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
+                    errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
                 }
 
                 if (valid.useIncomeTax) {
@@ -156,28 +161,31 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                 if (valid.useVat) {
                     valid.vat = _vat;
                 }
-                for (var item of valid.items) {
-                    var validDo = _deliveryOrders.find(deliveryOrder => deliveryOrder._id.toString() === item.deliveryOrderId.toString());
-                    var deliveryOrderItem = validDo.items.find(poExternal => poExternal._id.toString() === item.purchaseOrderExternalId.toString());
-                    var deliveryOrderFulfillment = deliveryOrderItem.fulfillments.find(poInternal => poInternal._id.toString() === item.purchaseOrderId.toString());
-                    if (deliveryOrderFulfillment) {
-                        item.deliveryOrderId = validDo._id;
-                        item.deliveryOrderNo = validDo.no;
+                for (var invoiceItem of valid.items) {
+                    var validDo = _deliveryOrders.find(deliveryOrder => deliveryOrder._id.toString() === invoiceItem.deliveryOrderId.toString());
+                    for (var item of invoiceItem.items) {
+                        var deliveryOrderItem = validDo.items.find(doItem => doItem.purchaseOrderExternalId.toString() === item.purchaseOrderExternalId.toString());
+                        var deliveryOrderFulfillment = deliveryOrderItem.fulfillments.find(doFulfillment => doFulfillment.purchaseOrderId.toString() === item.purchaseOrderId.toString());
+                        if (deliveryOrderFulfillment) {
+                            invoiceItem.deliveryOrderId = validDo._id;
+                            invoiceItem.deliveryOrderNo = validDo.no;
 
-                        item.purchaseOrderExternalId = deliveryOrderItem.purchaseOrderExternalId;
-                        item.purchaseOrderExternalNo = deliveryOrderItem.purchaseOrderExternalNo;
+                            item.purchaseOrderExternalId = deliveryOrderItem.purchaseOrderExternalId;
+                            item.purchaseOrderExternalNo = deliveryOrderItem.purchaseOrderExternalNo;
 
-                        item.purchaseOrderId = deliveryOrderFulfillment.purchaseOrderId;
-                        item.purchaseOrderNo = deliveryOrderFulfillment.purchaseOrderNo;
+                            item.purchaseOrderId = deliveryOrderFulfillment.purchaseOrderId;
+                            item.purchaseOrderNo = deliveryOrderFulfillment.purchaseOrderNo;
 
-                        item.purchaseRequestId = deliveryOrderFulfillment.purchaseRequestId;
-                        item.purchaseRequestNo = deliveryOrderFulfillment.purchaseRequestNo;
+                            item.purchaseRequestId = deliveryOrderFulfillment.purchaseRequestId;
+                            item.purchaseRequestNo = deliveryOrderFulfillment.purchaseRequestNo;
 
-                        item.productId = deliveryOrderFulfillment.productId;
-                        item.product = deliveryOrderFulfillment.product;
-                        item.purchaseOrderUom = deliveryOrderFulfillment.purchaseOrderUom;
-                        item.purchaseOrderQuantity = Number(deliveryOrderFulfillment.purchaseOrderQuantity);
-                        item.deliveredQuantity = Number(deliveryOrderFulfillment.deliveredQuantity);
+                            item.productId = deliveryOrderFulfillment.productId;
+                            item.product = deliveryOrderFulfillment.product;
+                            item.purchaseOrderUom = deliveryOrderFulfillment.purchaseOrderUom;
+                            item.purchaseOrderQuantity = Number(deliveryOrderFulfillment.purchaseOrderQuantity);
+                            item.deliveredQuantity = Number(deliveryOrderFulfillment.deliveredQuantity);
+                        }
+
                     }
                 }
 
@@ -265,7 +273,6 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         return this.getSingleById(newInvoiceNote._id)
             .then((oldInvoiceNote) => {
                 var getDeliveryOrder = [];
-                valid.items = valid.items || [];
                 var oldItems = oldInvoiceNote.items.map((item) => { return item.deliveryOrderId })
                 oldItems = oldItems.filter(function (elem, index, self) {
                     return index == self.indexOf(elem);
@@ -346,13 +353,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                                     .then((result) => Promise.resolve(invoiceNote._id));
                             })
                     })
-                    .catch(e => {
-                        reject(e);
-                    });
             })
-            .catch(e => {
-                reject(e);
-            });
     }
 
     _createIndexes() {
