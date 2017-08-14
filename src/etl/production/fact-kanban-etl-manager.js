@@ -88,11 +88,11 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
     }
 
     extract(times) {
-        var time = "1970-01-01";
+        var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
         return this.kanbanManager.collection.find({
             "_updatedDate": {
-                $gt: timestamp
+                $gte: timestamp
             }
         }, SELECTED_FIELDS).toArray()
             .then((kanbans) => this.joinDailyOperation(kanbans))
@@ -100,7 +100,7 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
 
     joinDailyOperation(kanbans) {
         var joinDailyOperations = kanbans.map((kanban) => {
-            var kanbanCurrentStepId = kanban.instruction.steps[kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex]._id;
+            var kanbanCurrentStepId = kanban.instruction && kanban.instruction.steps.length > 0 && kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)]._id ? kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)]._id : null;
             // if (kanban.currentStepIndex > kanban.instruction.steps.length)
             var getDailyOperations = this.dailyOperationManager.collection.find({
                 "kanban.code": kanban.code,
@@ -117,11 +117,11 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
 
             return getDailyOperations.then((dailyOperations) => {
                 var arr = dailyOperations.map((dailyOperation) => {
-                    kanban.dailyOperationMachine = dailyOperation.machine.name;
-                    kanban.dateInput = dailyOperation.dateInput;
-                    kanban.timeInput = dailyOperation.timeInput;
-                    kanban.inputQuantity = dailyOperation.input;
-                    kanban.dailyOperationProcessArea = dailyOperation.step.proccessArea;
+                    kanban.dailyOperationMachine = dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null;
+                    kanban.dateInput = dailyOperation.dateInput ? dailyOperation.dateInput : null;
+                    kanban.timeInput = dailyOperation.timeInput ? dailyOperation.timeInput : null;
+                    kanban.inputQuantity = dailyOperation.input ? dailyOperation.input : null;
+                    kanban.dailyOperationProcessArea = dailyOperation.step && dailyOperation.step.proccessArea ? dailyOperation.step.proccessArea : null;
                     return kanban;
                 });
 
@@ -148,7 +148,7 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
             var kanban = item.instruction && item.instruction.steps && item.instruction.steps.length > 0 ? item : null;
 
             if (kanban) {
-                var stepIndex = kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex;
+                var stepIndex = kanban.currentStepIndex === kanban.instruction.steps.length ? Math.abs(kanban.currentStepIndex - 1) : Math.abs(kanban.currentStepIndex);
                 var kanbanSteps = kanban.instruction.steps[stepIndex];
                 return {
                     deleted: `'${kanban._deleted}'`,
@@ -179,7 +179,6 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
                     dateTimeInput: kanban.timeInput && kanban.dateInput ? `'${moment(kanban.dateInput).subtract(7, "hours").format("L")} ${moment(kanban.timeInput).format("HH:mm:ss")}'` : null,
                     salesContractNo: kanban.productionOrder && kanban.productionOrder.salesContractNo ? `'${kanban.productionOrder.salesContractNo}'` : null
                 }
-
             }
 
         });
