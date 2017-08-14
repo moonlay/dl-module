@@ -100,6 +100,7 @@ describe('#dl-module', function (done) {
     test('@GARMENT PURCHASING/PURCHASE ORDER', './garment-purchasing/purchase-order');
     test('@GARMENT PURCHASING/PURCHASE ORDER EXTERNAL', './garment-purchasing/purchase-order-external');
     test('@GARMENT PURCHASING/DELIVERY ORDER', './garment-purchasing/delivery-order');
+    test('@GARMENT PURCHASING/INVOICE NOTE', './garment-purchasing/invoice-note');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
