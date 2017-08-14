@@ -667,7 +667,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.date": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
@@ -735,7 +735,7 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDate = {
-                    "date": {
+                    "purchaseOrderExternal.date": {
                         $gte: validStartDate,
                         $lte: validEndDate
                     }
@@ -745,7 +745,7 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
             else if (!startdate && enddate) {
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDateTo = {
-                    "date": {
+                    "purchaseOrderExternal.date": {
                         $gte: now,
                         $lte: validEndDate
                     }
@@ -802,7 +802,7 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.date": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
@@ -847,7 +847,7 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.date": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
@@ -891,7 +891,7 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.date": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
@@ -935,7 +935,7 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.date": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
@@ -1006,7 +1006,7 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDate = {
-                    "date": {
+                    "purchaseOrderExternal.date": {
                         $gte: validStartDate,
                         $lte: validEndDate
                     }
