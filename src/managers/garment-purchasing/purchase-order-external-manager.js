@@ -251,11 +251,11 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             error["currency"] = i18n.__("PurchaseOrderExternal.currency.isRequired:%s is required", i18n.__("PurchaseOrderExternal.currency._:Currency")); //"Currency tidak boleh kosong";
                         }
 
-                        if (!valid.paymentMethod || valid.paymentMethod.toUpperCase() != "CASH") {
-                            if (!valid.paymentDueDays || valid.paymentDueDays === "" || valid.paymentDueDays === 0) {
-                                error["paymentDueDays"] = i18n.__("PurchaseOrderExternal.paymentDueDays.isRequired:%s is required", i18n.__("PurchaseOrderExternal.paymentDueDays._:Payment Due Days")); //"Tempo Pembayaran tidak boleh kosong";
-                            }
-                        }
+                        // if (!valid.paymentMethod || valid.paymentMethod.toUpperCase() != "CASH") {
+                        //     if (!valid.paymentDueDays || valid.paymentDueDays === "" || valid.paymentDueDays === 0) {
+                        //         error["paymentDueDays"] = i18n.__("PurchaseOrderExternal.paymentDueDays.isRequired:%s is required", i18n.__("PurchaseOrderExternal.paymentDueDays._:Payment Due Days")); //"Tempo Pembayaran tidak boleh kosong";
+                        //     }
+                        // }
                         if ((valid.freightCostBy || "").toString() === "") {
                             error["freightCostBy"] = i18n.__("PurchaseOrderExternal.freightCostBy.isRequired:%s is required", i18n.__("PurchaseOrderExternal.freightCostBy._:FreightCostBy")); //"Tempo Pembayaran tidak boleh kosong";
                         }
