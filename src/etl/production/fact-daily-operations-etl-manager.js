@@ -69,6 +69,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
             .then((results) => {
+                console.log("Success!")
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
@@ -102,11 +103,12 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
     }
 
     extract(times) {
+        var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
         var inputArr = [];
         return this.dailyOperationManager.collection.find({
             _updatedDate: {
-                $gte: timestamp,
+                $gte: timestamp
             }
         }, {
                 "code": 1
@@ -153,22 +155,8 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
         return inputDatas;
     }
 
-    // orderQuantityConvertion(uom, quantity) {
-    //     if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-    //         return quantity;
-    //     } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
-    //         return quantity * 0.9144;
-    //     }
-    // }
-
     transform(data) {
         var result = data.map((item) => {
-            var orderUom = item.kanban.selectedProductionOrderDetail.uom ? item.kanban.selectedProductionOrderDetail.uom.unit : null;
-            //     var orderQuantity = item.orderQuantity ? item.orderQuantity : null;
-            //     var material = item.material ? item.material.name.replace(/'/g, '"') : null;
-            //     var materialConstruction = item.materialConstruction ? item.materialConstruction.name.replace(/'/g, '"') : null;
-            //     var yarnMaterialNo = item.yarnMaterial ? item.yarnMaterial.name.replace(/'/g, '"') : null;
-            //     var materialWidth = item.materialWidth ? item.materialWidth : null;
 
             return {
                 _deleted: `'${item._deleted}'`,
