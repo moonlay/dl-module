@@ -238,6 +238,13 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
     _beforeInsert(invoiceNote) {
         invoiceNote.no = generateCode();
+
+        if (invoiceNote.isPayTax && invoiceNote.useIncomeTax) {
+            invoiceNote.incomeTaxInvoiceNo = generateCode();
+        }
+        if (invoiceNote.isPayTax && invoiceNote.useVat) {
+            invoiceNote.vatInvoiceNo = generateCode();
+        }
         return Promise.resolve(invoiceNote);
     }
 
@@ -299,7 +306,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                     var item = oldItems.find(oldItem => newItem.toString() === oldItem.toString())
                     if (!item) {
                         updateDeliveryOrderPromise.push(this.deliveryOrderManager.getSingleByIdOrDefault(newItem).then((deliveryOrder) => {
-                            deliveryOrder.hasInvoice = false;
+                            deliveryOrder.hasInvoice = true;
                             return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
                         }));
                     }
@@ -373,5 +380,53 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, noIndex]);
+    }
+
+    pdfVat(id, offset) {
+        return new Promise((resolve, reject) => {
+
+            this.getSingleByIdOrDefault(id)
+                .then(pox => {
+                    var getDefinition = require('../../pdf/definitions/garment-invoice-vat-note');
+                    var definition = getDefinition(pox, offset);
+
+                    var generatePdf = require('../../pdf/pdf-generator');
+                    generatePdf(definition)
+                        .then(binary => {
+                            resolve(binary);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+
+        });
+    }
+
+    pdfIncomeTax(id, offset) {
+        return new Promise((resolve, reject) => {
+
+            this.getSingleByIdOrDefault(id)
+                .then(pox => {
+                    var getDefinition = require('../../pdf/definitions/garment-invoice-income-tax-note');
+                    var definition = getDefinition(pox, offset);
+
+                    var generatePdf = require('../../pdf/pdf-generator');
+                    generatePdf(definition)
+                        .then(binary => {
+                            resolve(binary);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+
+        });
     }
 };
