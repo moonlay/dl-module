@@ -3,13 +3,12 @@ var helper = require("../../helper");
 
 var invoiceNoteDataUtil = require("../../data-util/garment-purchasing/invoice-note-data-util");
 var deliveryOrderDataUtil = require('../../data-util/garment-purchasing/delivery-order-data-util');
-
+var ObjectId = require("mongodb").ObjectId;
 var validate = require("dl-models").validator.garmentPurchasing.garmentInvoiceNote;
 var InvoiceNoteManager = require("../../../src/managers/garment-purchasing/invoice-note-manager");
 var invoiceNoteManager = null;
 var invoiceNote = {};
 var invoiceNoteItem = [];
-var deliveryOrderId = {};
 
 before('#00. connect db', function (done) {
     helper.getDb()
@@ -18,11 +17,9 @@ before('#00. connect db', function (done) {
                 username: 'unit-test'
             });
 
-
             deliveryOrderDataUtil.getNewTestData()
                 .then(results => {
                     deliveryOrder = results;
-                    deliveryOrderId = deliveryOrder._id;
                     var items = deliveryOrder.items.map(doItem => {
                         var fulfillment = doItem.fulfillments.map(doFulfillment => {
                             return {
@@ -36,7 +33,8 @@ before('#00. connect db', function (done) {
                                 product: doFulfillment.product,
                                 purchaseOrderQuantity: doFulfillment.purchaseOrderQuantity,
                                 purchaseOrderUom: doFulfillment.purchaseOrderUom,
-                                deliveredQuantity: doFulfillment.deliveredQuantity
+                                deliveredQuantity: doFulfillment.deliveredQuantity,
+                                pricePerDealUnit: doFulfillment.pricePerDealUnit
                             }
                         });
                         fulfillment = [].concat.apply([], fulfillment);
@@ -46,6 +44,8 @@ before('#00. connect db', function (done) {
                     invoiceNoteItem = {
                         deliveryOrderId: deliveryOrder._id,
                         deliveryOrderNo: deliveryOrder.no,
+                        deliveryOrderDate: deliveryOder.date,
+                        deliveryOrderSupplierDoDate: deliveryOder.supplierDoDate,
                         items: items
                     }
                     done();
@@ -81,7 +81,7 @@ it('#02. should success when update invoice note add new item', function (done) 
             var getDeliveryOrder = [];
             for (var item of invoiceNote.items) {
                 if (ObjectId.isValid(item.deliveryOrderId)) {
-                    getDeliveryOrder.push(this.invoiceNoteManager.deliveryOrderManager.getSingleByIdOrDefault(item.deliveryOrderId, ["hasInvoice"]));
+                    getDeliveryOrder.push(invoiceNoteManager.deliveryOrderManager.getSingleByIdOrDefault(item.deliveryOrderId, ["hasInvoice"]));
                 }
             }
             return Promise.all(getDeliveryOrder)
@@ -99,13 +99,14 @@ it('#02. should success when update invoice note add new item', function (done) 
 });
 
 it('#03. should success when update invoice note delete new item', function (done) {
-    invoiceNote.items.splice(0, 1);
+    var deliveryOrderId = invoiceNote.items[invoiceNote.items.length - 1].deliveryOrderId;
+    invoiceNote.items.splice(1, 1);
     invoiceNoteManager.update(invoiceNote)
         .then((id) => {
             return invoiceNoteManager.getSingleById(id);
         })
         .then(invoiceNote => {
-            return this.invoiceNoteManager.deliveryOrderManager.getSingleByIdOrDefault(deliveryOrderId, ["hasInvoice"]);
+            return invoiceNoteManager.deliveryOrderManager.getSingleByIdOrDefault(deliveryOrderId, ["hasInvoice"]);
 
         })
         .then(deliveryOrder => {
