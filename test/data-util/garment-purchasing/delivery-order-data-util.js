@@ -19,19 +19,21 @@ class DeliveryOrderDataUtil {
                         var poEks = results[1];
                         var dataSupplier = results[0];
                         var poExt = poEks.items.map(poeItem => {
-                                return {
-                                    purchaseOrderId: poeItem.poId,
-                                    purchaseOrderNo: poeItem.poNo,
-                                    purchaseRequestId:poeItem.prId,
-                                    purchaseRequestNo:poeItem.prNo,
-                                    productId: poeItem.productId,
-                                    product: poeItem.product,
-                                    purchaseOrderQuantity: poeItem.dealQuantity,
-                                    purchaseOrderUom: poeItem.dealUom,
-                                    deliveredQuantity: poeItem.dealQuantity - 1,
-                                    realizationQuantity:[],
-                                    remark: ''
-                                }
+                            return {
+                                purchaseOrderId: poeItem.poId,
+                                purchaseOrderNo: poeItem.poNo,
+                                purchaseRequestId: poeItem.prId,
+                                purchaseRequestNo: poeItem.prNo,
+                                productId: poeItem.productId,
+                                product: poeItem.product,
+                                purchaseOrderQuantity: poeItem.dealQuantity,
+                                purchaseOrderUom: poeItem.dealUom,
+                                deliveredQuantity: poeItem.dealQuantity - 1,
+                                pricePerDealUnit: poeItem.pricePerDealUnit,
+                                currency: poEks.currency,
+                                realizationQuantity: [],
+                                remark: ''
+                            }
                         });
 
                         poExt = [].concat.apply([], poExt);
@@ -42,8 +44,8 @@ class DeliveryOrderDataUtil {
                             date: new Date(),
                             supplierDoDate: new Date(),
                             supplierId: dataSupplier._id,
-                            shipmentType:"By Air",
-                            shipmentNo:`SHIPMENT/NO/UT/DO/${codeGenerator()}`,
+                            shipmentType: "By Air",
+                            shipmentNo: `SHIPMENT/NO/UT/DO/${codeGenerator()}`,
                             supplier: dataSupplier,
                             isPosted: false,
                             remark: 'Unit Test Delivery Order',
@@ -69,19 +71,19 @@ class DeliveryOrderDataUtil {
                         var poEks = results[1];
                         var dataSupplier = results[0];
                         var poExt = poEks.items.map(poeItem => {
-                                return {
-                                    purchaseOrderId: poeItem.poId,
-                                    purchaseOrderNo: poeItem.poNo,
-                                    purchaseRequestId:poeItem.prId,
-                                    purchaseRequestNo:poeItem.prNo,
-                                    productId: poeItem.productId,
-                                    product: poeItem.product,
-                                    purchaseOrderQuantity: poeItem.dealQuantity,
-                                    purchaseOrderUom: poeItem.dealUom,
-                                    deliveredQuantity: poeItem.dealQuantity - 1,
-                                    realizationQuantity:[],
-                                    remark: ''
-                                }
+                            return {
+                                purchaseOrderId: poeItem.poId,
+                                purchaseOrderNo: poeItem.poNo,
+                                purchaseRequestId: poeItem.prId,
+                                purchaseRequestNo: poeItem.prNo,
+                                productId: poeItem.productId,
+                                product: poeItem.product,
+                                purchaseOrderQuantity: poeItem.dealQuantity,
+                                purchaseOrderUom: poeItem.dealUom,
+                                deliveredQuantity: poeItem.dealQuantity - 1,
+                                realizationQuantity: [],
+                                remark: ''
+                            }
                         });
 
                         poExt = [].concat.apply([], poExt);
@@ -93,8 +95,8 @@ class DeliveryOrderDataUtil {
                             supplierDoDate: new Date(),
                             supplierId: dataSupplier._id,
                             supplier: dataSupplier,
-                            shipmentType:"By Air",
-                            shipmentNo:`SHIPMENT/NO/UT/DO/${codeGenerator()}`,
+                            shipmentType: "By Air",
+                            shipmentNo: `SHIPMENT/NO/UT/DO/${codeGenerator()}`,
                             isPosted: false,
                             remark: 'Unit Test Delivery Order',
                             items: [{

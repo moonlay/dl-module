@@ -32,7 +32,8 @@ class InvoiceNoteDataUtil {
                                     product: doFulfillment.product,
                                     purchaseOrderQuantity: doFulfillment.purchaseOrderQuantity,
                                     purchaseOrderUom: doFulfillment.purchaseOrderUom,
-                                    deliveredQuantity: doFulfillment.deliveredQuantity
+                                    deliveredQuantity: doFulfillment.deliveredQuantity,
+                                    pricePerDealUnit: doFulfillment.pricePerDealUnit
                                 }
                             });
                             fulfillment = [].concat.apply([], fulfillment);
@@ -40,11 +41,13 @@ class InvoiceNoteDataUtil {
                         });
 
                         items = [].concat.apply([], items);
-                        var invoiceNoteItem = {
+                        var invoiceNoteItem = [{
                             deliveryOrderId: deliveryOder._id,
                             deliveryOrderNo: deliveryOder.no,
+                            deliveryOrderDate: deliveryOder.date,
+                            deliveryOrderSupplierDoDate: deliveryOder.supplierDoDate,
                             items: items
-                        }
+                        }]
 
                         var data = {
                             no: `UT/IN/${codeGenerator()}`,
