@@ -108,7 +108,7 @@ module.exports = function (data, offset) {
         }, {
             text: 'Nama Barang',
             style: ['size08', 'bold', 'center']
-        },  {
+        }, {
             text: 'Rate Pph',
             style: ['size08', 'bold', 'center']
         }, {
@@ -133,7 +133,7 @@ module.exports = function (data, offset) {
         }, {
             text: item.rate,
             style: ['size08', 'right']
-        },{
+        }, {
             text: parseFloat(item.price).toLocaleString(locale, locale.currency),
             style: ['size08', 'right']
         }];
@@ -143,8 +143,8 @@ module.exports = function (data, offset) {
         [{
             text: "tidak ada barang",
             style: ['size08', 'center'],
-            colSpan: 5 
-        }, "", "", "", ""]
+            colSpan: 6
+        }, "", "", "", "", ""]
     ];
 
     var sum = items.map(item => item.price)
@@ -156,8 +156,8 @@ module.exports = function (data, offset) {
         [{
             text: 'Total Pph',
             style: ['size08', 'bold', 'right'],
-            colSpan: 4
-        }, "", "", "", {
+            colSpan: 5
+        }, "", "", "", "", {
             text: parseFloat(sum).toLocaleString(locale, locale.currency),
             style: ['size08', 'bold', 'right']
         }]

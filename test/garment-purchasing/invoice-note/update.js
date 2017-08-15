@@ -19,7 +19,7 @@ before('#00. connect db', function (done) {
 
             deliveryOrderDataUtil.getNewTestData()
                 .then(results => {
-                    deliveryOrder = results;
+                    var deliveryOrder = results;
                     var items = deliveryOrder.items.map(doItem => {
                         var fulfillment = doItem.fulfillments.map(doFulfillment => {
                             return {
@@ -44,8 +44,8 @@ before('#00. connect db', function (done) {
                     invoiceNoteItem = {
                         deliveryOrderId: deliveryOrder._id,
                         deliveryOrderNo: deliveryOrder.no,
-                        deliveryOrderDate: deliveryOder.date,
-                        deliveryOrderSupplierDoDate: deliveryOder.supplierDoDate,
+                        deliveryOrderDate: deliveryOrder.date,
+                        deliveryOrderSupplierDoDate: deliveryOrder.supplierDoDate,
                         items: items
                     }
                     done();
@@ -71,7 +71,27 @@ it('#01. should success when create new invoice note', function (done) {
         });
 });
 
-it('#02. should success when update invoice note add new item', function (done) {
+it('#02. should success when generate pdf nota ppn ', function (done) {
+    invoiceNoteManager.pdfVat(invoiceNote._id, 7)
+        .then(results => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#03. should success when generate pdf nota pph', function (done) {
+    invoiceNoteManager.pdfIncomeTax(invoiceNote._id, 7)
+        .then(results => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#04. should success when update invoice note add new item', function (done) {
     invoiceNote.items.push(invoiceNoteItem);
     invoiceNoteManager.update(invoiceNote)
         .then((id) => {
@@ -98,7 +118,7 @@ it('#02. should success when update invoice note add new item', function (done) 
         });
 });
 
-it('#03. should success when update invoice note delete new item', function (done) {
+it('#05. should success when update invoice note delete new item', function (done) {
     var deliveryOrderId = invoiceNote.items[invoiceNote.items.length - 1].deliveryOrderId;
     invoiceNote.items.splice(1, 1);
     invoiceNoteManager.update(invoiceNote)

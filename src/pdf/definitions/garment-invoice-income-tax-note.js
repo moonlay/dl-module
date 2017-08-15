@@ -136,8 +136,8 @@ module.exports = function (data, offset) {
         [{
             text: "tidak ada barang",
             style: ['size08', 'center'],
-            colSpan: 4
-        }, "", "",  ""]
+            colSpan: 5
+        }, "", "", "", ""]
     ];
 
     var sum = items.map(item => item.price)
@@ -149,8 +149,8 @@ module.exports = function (data, offset) {
         [{
             text: 'Total Ppn',
             style: ['size08', 'bold', 'right'],
-            colSpan: 3
-        }, "", "",  {
+            colSpan: 4
+        }, "", "", "", {
             text: parseFloat(sum).toLocaleString(locale, locale.currency),
             style: ['size08', 'bold', 'right']
         }]
@@ -209,7 +209,7 @@ module.exports = function (data, offset) {
         pageSize: 'A5',
         pageOrientation: 'portrait',
         pageMargins: 20,
-        content: [].concat(header, subHeader,table, footer),
+        content: [].concat(header, subHeader, table, footer),
         styles: {
             size06: {
                 fontSize: 6
