@@ -175,7 +175,6 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                 if (valid.isPayTax && valid.useVat) {
                     valid.vatInvoiceNo = "";
                 }
-                re
 
                 for (var invoiceItem of valid.items) {
                     var validDo = _deliveryOrders.find(deliveryOrder => deliveryOrder._id.toString() === invoiceItem.deliveryOrderId.toString());
