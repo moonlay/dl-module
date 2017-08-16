@@ -43,7 +43,9 @@ module.exports = {
             DesignMotiveManager: require('./src/managers/master/design-motive-manager'),
             StorageManager: require('./src/managers/master/storage-manager'),
             CompanyManager: require('./src/managers/master/company-manager'),
-            ContactManager: require('./src/managers/master/contact-manager')
+            ContactManager: require('./src/managers/master/contact-manager'),
+            BadOutputReasonManager: require('./src/managers/master/bad-output-reason-manager'),
+            FPDurationEstimationManager: require('./src/managers/master/fp-duration-estimation-manager')
         },
         inventory: {
             finishingPrinting: {
@@ -69,6 +71,8 @@ module.exports = {
             PurchaseRequestManager: require('./src/managers/garment-purchasing/purchase-request-manager'),
             PurchaseOrderManager: require('./src/managers/garment-purchasing/purchase-order-manager'),
             PurchaseOrderExternalManager: require('./src/managers/garment-purchasing/purchase-order-external-manager'),
+            DeliveryOrderManager: require('./src/managers/garment-purchasing/delivery-order-manager'),
+            InvoiceNoteManager: require('./src/managers/garment-purchasing/invoice-note-manager'),
         },
         production: {
             spinning: {
@@ -97,7 +101,7 @@ module.exports = {
             DealTrackingStageManager: require('./src/managers/sales/deal-tracking-stage-manager'),
             DealTrackingDealManager: require('./src/managers/sales/deal-tracking-deal-manager'),
             DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager')
-        }
+        },
     },
     test: {
         data: {
@@ -138,7 +142,9 @@ module.exports = {
                 termOfPayment: require('./test/data-util/master/term-of-payment-data-util'),
                 designMotive: require('./test/data-util/master/design-motive-data-util'),
                 company: require('./test/data-util/master/company-data-util'),
-                contact: require('./test/data-util/master/contact-data-util')
+                contact: require('./test/data-util/master/contact-data-util'),
+                badOutputReason: require('./test/data-util/master/bad-output-reason-data-util'),
+                fpDurationEstimation: require('./test/data-util/master/fp-duration-estimation-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util"),
@@ -154,7 +160,8 @@ module.exports = {
                 purchaseRequest: require("./test/data-util/garment-purchasing/purchase-request-data-util"),
                 purchaseOrder: require("./test/data-util/garment-purchasing/purchase-order-data-util"),
                 purchaseOrderExternal: require("./test/data-util/garment-purchasing/purchase-order-external-data-util"),
-                // deliveryOrder: require("./test/data-util/garment-purchasing/delivery-order-data-util"),
+                deliveryOrder: require("./test/data-util/garment-purchasing/delivery-order-data-util"),
+                invoiceNoteManager: require('./test/data-util/garment-purchasing/invoice-note-data-util'),
                 // unitReceiptNote: require("./test/data-util/garment-purchasing/unit-receipt-note-data-util"),
                 // unitPaymentOrder: require("./test/data-util/garment-purchasing/unit-payment-order-data-util"),
                 // unitPaymentPriceCorrectionNot: require("./test/data-util/garment-purchasing/unit-payment-price-correction-note-data-util"),

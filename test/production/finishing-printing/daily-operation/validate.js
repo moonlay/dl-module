@@ -511,7 +511,7 @@ it("#15. on index 1 step 1 : should error when create new data with date Output 
         });
 });
 
-it("#16. on index 1 step 1 : should error when create new data with date input greater than date output", function(done) {
+it("#16. on index 1 step 1 : should error when create new data Output with date input greater than date output", function(done) {
     dataUtil.getNewData("output")
         .then(data => {
             data.kanban = kanban;
@@ -540,7 +540,183 @@ it("#16. on index 1 step 1 : should error when create new data with date input g
         });
 });
 
-it("#17. on index 1 step 1 : should error when create new data output with different data machine", function(done) {
+it("#17. on index 1 step 1 : should error when create new data Output with no data reason and action", function(done) {
+    dataUtil.getNewData("output")
+        .then(data => {
+            data.kanban = kanban;
+            data.kanbanId = kanban._id;
+            data.machine = machine;
+            data.machineId = machine._id;
+            data.step = step1;
+            data.stepId = step1._id;
+            delete data.action;
+            delete data.badOutputReasons;
+            dailyOperationManager.create(data)
+                .then(daily => {
+                    done("on index 1 step 1 : should error when create new data Output with no data reason and action");
+                })
+                .catch((e) => {
+                    try {
+                        e.errors.should.have.property('action');
+                        e.errors.should.have.property('badOutputReasons');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#18. on index 1 step 1 : should error when create new data Output with no reason", function(done) {
+    dataUtil.getNewData("output")
+        .then(data => {
+            data.kanban = kanban;
+            data.kanbanId = kanban._id;
+            data.machine = machine;
+            data.machineId = machine._id;
+            data.step = step1;
+            data.stepId = step1._id;
+            data.badOutputReasons = [];
+            dailyOperationManager.create(data)
+                .then(daily => {
+                    done("on index 1 step 1 : should error when create new data Output with no reason");
+                })
+                .catch((e) => {
+                    try {
+                        e.errors.should.have.property('badOutputReasons');
+                        // e.errors.badOutputReasons.should.instanceOf(Array);
+                        // for(var a of e.errors.badOutputReasons){
+                        //     a.should.have.property('precentage');
+                        //     a.should.have.property('description');
+                        //     a.should.have.property('badOutputReason');
+                        // }
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#19. on index 1 step 1 : should error when create new data Output with precentage data in reason less then 100", function(done) {
+    dataUtil.getNewData("output")
+        .then(data => {
+            data.kanban = kanban;
+            data.kanbanId = kanban._id;
+            data.machine = machine;
+            data.machineId = machine._id;
+            data.step = step1;
+            data.stepId = step1._id;
+            data.dateOutput = '2017-01-03';
+            var items = []
+            for(var a of data.badOutputReasons){
+                var item = a;
+                item.precentage = 90;
+                items.push(item);
+            }
+            data.badOutputReasons = items
+            dailyOperationManager.create(data)
+                .then(daily => {
+                    done("on index 1 step 1 : should error when create new data Output with precentage data in reason less then 100");
+                })
+                .catch((e) => {
+                    try {
+                        e.errors.should.have.property('badOutputReasons');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#20. on index 1 step 1 : should error when create new data Output with duplicate badoutput reason", function(done) {
+    dataUtil.getNewData("output")
+        .then(data => {
+            data.kanban = kanban;
+            data.kanbanId = kanban._id;
+            data.machine = machine;
+            data.machineId = machine._id;
+            data.step = step1;
+            data.stepId = step1._id;
+            data.dateOutput = '2017-01-03';
+            var items = []
+            var item;
+            for(var a of data.badOutputReasons){
+                item = a;
+            }
+            item.precentage = 50;
+            items.push(item);
+            items.push(item);
+            data.badOutputReasons = items
+            dailyOperationManager.create(data)
+                .then(daily => {
+                    done("on index 1 step 1 : should error when create new data Output with duplicate badoutput reason");
+                })
+                .catch((e) => {
+                    try {
+                        e.errors.should.have.property('badOutputReasons');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#21. on index 1 step 1 : should error when create new data Output with no exist data reason", function(done) {
+    dataUtil.getNewData("output")
+        .then(data => {
+            data.kanban = kanban;
+            data.kanbanId = kanban._id;
+            data.machine = machine;
+            data.machineId = machine._id;
+            data.step = step1;
+            data.stepId = step1._id;
+            data.dateOutput = '2017-01-03';
+            var items = []
+            for(var a of data.badOutputReasons){
+                var item = a;
+                item.badOutputReasonId = "badOutputReasonId";
+                items.push(item);
+            }
+            data.badOutputReasons = items
+            dailyOperationManager.create(data)
+                .then(daily => {
+                    done("on index 1 step 1 : should error when create new data Output with no exist data reason");
+                })
+                .catch((e) => {
+                    try {
+                        e.errors.should.have.property('badOutputReasons');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#22. on index 1 step 1 : should error when create new data output with different data machine", function(done) {
     dataUtil.getNewData("output")
         .then(data => {
             data.kanban = kanban;
@@ -569,7 +745,7 @@ it("#17. on index 1 step 1 : should error when create new data output with diffe
 });
 
 var step1DailyOutputId1;
-it("#18. on index 1 step 1 : should success when create new data Output", function(done) {
+it("#23. on index 1 step 1 : should success when create new data Output", function(done) {
     dataUtil.getNewData("output")
         .then(data => {
             data.kanban = kanban;
@@ -600,7 +776,7 @@ it("#18. on index 1 step 1 : should success when create new data Output", functi
         });
 });
 
-it("#19. on index 1 step 1 : should success when update data Output", function(done) {
+it("#24. on index 1 step 1 : should success when update data Output", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId1)
         .then(daily => {
             daily.goodOutput = 32;
@@ -632,7 +808,7 @@ it("#19. on index 1 step 1 : should success when update data Output", function(d
         });
 });
 
-it("#20. on index 1 step 1 : should error when create new data Output with no data input", function(done) {
+it("#25. on index 1 step 1 : should error when create new data Output with no data input", function(done) {
     dataUtil.getNewData("output")
         .then(data => {
             data.kanban = kanban;
@@ -662,7 +838,7 @@ it("#20. on index 1 step 1 : should error when create new data Output with no da
         });
 });
 
-it("#21. on index 1 step 1 : should error when create new data Input with step 1 index 3 before create data with step 2 index 2", function(done) {
+it("#26. on index 1 step 1 : should error when create new data Input with step 1 index 3 before create data with step 2 index 2", function(done) {
     dataUtil.getNewData()
         .then(data => {
             data.kanban = kanban;
@@ -692,7 +868,7 @@ it("#21. on index 1 step 1 : should error when create new data Input with step 1
         });
 });
 
-it("#22. on index 1 step 1 : should error when create new data Output with step 1 index 3 before create data with step 2 index 2", function(done) {
+it("#27. on index 1 step 1 : should error when create new data Output with step 1 index 3 before create data with step 2 index 2", function(done) {
     dataUtil.getNewData("output")
         .then(data => {
             data.kanban = kanban;
@@ -723,7 +899,7 @@ it("#22. on index 1 step 1 : should error when create new data Output with step 
 });
 
 var step2DailyInputId1;
-it("#23. on index 2 step 2 : should success when create new data Input", function(done) {
+it("#28. on index 2 step 2 : should success when create new data Input", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId1)
         .then(data => {
             data.dateInput = '2017-01-05';
@@ -753,7 +929,7 @@ it("#23. on index 2 step 2 : should success when create new data Input", functio
 });
 
 var step2DailyOutputId1;
-it("#24. on index 2 step 2 : should success when create new data Output", function(done) {
+it("#29. on index 2 step 2 : should success when create new data Output", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId1)
         .then(data => {
             data.dateOutput = '2017-01-06';
@@ -793,7 +969,7 @@ it("#24. on index 2 step 2 : should success when create new data Output", functi
         });
 });
 
-it("#25. on index 2 step 2 : should error when create new data Input with same machine, step, kanban", function(done) {
+it("#30. on index 2 step 2 : should error when create new data Input with same machine, step, kanban", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId1)
         .then(data => {
             data.dateInput = '2017-01-07';
@@ -821,7 +997,7 @@ it("#25. on index 2 step 2 : should error when create new data Input with same m
 });
 
 var step2DailyOutputId1;
-it("#26. on index 2 step 2 : should error when create new data Output with same machine, step, kanban", function(done) {
+it("#31. on index 2 step 2 : should error when create new data Output with same machine, step, kanban", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId1)
         .then(data => {
             data.dateOutput = '2017-01-08';
@@ -848,7 +1024,7 @@ it("#26. on index 2 step 2 : should error when create new data Output with same 
         });
 });
 
-it("#27. on index 2 step 2 : should error when update input with step 1", function(done) {
+it("#32. on index 2 step 2 : should error when update input with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId1)
         .then(daily => {
             daily.input = 30;
@@ -871,7 +1047,7 @@ it("#27. on index 2 step 2 : should error when update input with step 1", functi
         });
 });
 
-it("#28. on index 2 step 2 : should error when delete input with step 1", function(done) {
+it("#33. on index 2 step 2 : should error when delete input with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyInputId1)
         .then(daily => {
             dailyOperationManager.delete(daily)
@@ -893,7 +1069,7 @@ it("#28. on index 2 step 2 : should error when delete input with step 1", functi
         });
 });
 
-it("#29. on index 2 step 2 : should error when update output with step 1", function(done) {
+it("#34. on index 2 step 2 : should error when update output with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId1)
         .then(daily => {
             daily.goodOutput = 30;
@@ -916,7 +1092,7 @@ it("#29. on index 2 step 2 : should error when update output with step 1", funct
         });
 });
 
-it("#30. on index 2 step 2 : should error when delete output with step 1", function(done) {
+it("#35. on index 2 step 2 : should error when delete output with step 1", function(done) {
     dailyOperationManager.getSingleById(step1DailyOutputId1)
         .then(daily => {
             dailyOperationManager.delete(daily)
@@ -938,7 +1114,7 @@ it("#30. on index 2 step 2 : should error when delete output with step 1", funct
         });
 });
 
-it("#31. on index 2 step 2 : should success when update input with step 2", function(done) {
+it("#36. on index 2 step 2 : should success when update input with step 2", function(done) {
     dailyOperationManager.getSingleById(step2DailyInputId1)
         .then(daily => {
             daily.input = 35;
@@ -962,7 +1138,7 @@ it("#31. on index 2 step 2 : should success when update input with step 2", func
         });
 });
 
-it("#32. on index 2 step 2 : should success when update input with step 2", function(done) {
+it("#37. on index 2 step 2 : should success when update input with step 2", function(done) {
     dailyOperationManager.getSingleById(step2DailyOutputId1)
         .then(daily => {
             daily.goodOutput = 33;
@@ -996,7 +1172,7 @@ it("#32. on index 2 step 2 : should success when update input with step 2", func
 });
 
 var step3DailyInput;
-it("#33. on index 3 step 1 : should success when input data with index 3 step 1", function(done) {
+it("#38. on index 3 step 1 : should success when input data with index 3 step 1", function(done) {
     dailyOperationManager.getSingleById(step2DailyInputId1)
         .then(daily => {
             daily.step = step1;
@@ -1027,7 +1203,7 @@ it("#33. on index 3 step 1 : should success when input data with index 3 step 1"
 });
 
 var step3DailyOutput;
-it("#34. on index 3 step 1 : should success when output data with index 3 step 1 ", function(done) {
+it("#39. on index 3 step 1 : should success when output data with index 3 step 1 ", function(done) {
     dailyOperationManager.getSingleById(step2DailyOutputId1)
         .then(daily => {
             daily.step = step1;
@@ -1066,7 +1242,7 @@ it("#34. on index 3 step 1 : should success when output data with index 3 step 1
         });
 });
 
-it("#35. on index 3 step 1 : should success when delete output data with index 3 step 1 ", function(done) {
+it("#40. on index 3 step 1 : should success when delete output data with index 3 step 1 ", function(done) {
     dailyOperationManager.getSingleById(step3DailyOutput)
         .then(data => {
             dailyOperationManager.delete(data)

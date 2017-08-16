@@ -136,14 +136,14 @@ module.exports = class GarmentProductManager extends BaseManager {
 
     insert(dataFile) {
         return new Promise((resolve, reject) => {
-            var product, uoms, currencies;
+            var products, uoms, currencies;
             this.getProduct()
                 .then(results => {
                     this.uomManager.getUOM()
                         .then(_uoms => {
                             this.currencyManager.getCurrency()
                                 .then(_currencies => {
-                                    product = results.data;
+                                    products = results.data;
                                     uoms = _uoms.data;
                                     currencies = _currencies.data;
                                     var data = [];
@@ -174,81 +174,67 @@ module.exports = class GarmentProductManager extends BaseManager {
 
                                     var dataError = [], errorMessage;
                                     for (var i = 0; i < data.length; i++) {
-                                        errorMessage = "";
+                                        errorMessage = [];
                                         if (data[i]["code"] === "" || data[i]["code"] === undefined) {
-                                            errorMessage = errorMessage + "Kode tidak boleh kosong, ";
+                                            errorMessage.push("Kode tidak boleh kosong");
                                         }
                                         if (data[i]["name"] === "" || data[i]["name"] === undefined) {
-                                            errorMessage = errorMessage + "Nama tidak boleh kosong, ";
+                                            errorMessage.push("Nama tidak boleh kosong");
                                         }
                                         if (data[i]["uom"] === "" || data[i]["uom"] === undefined) {
-                                            errorMessage = errorMessage + "Satuan tidak boleh kosong, ";
+                                            errorMessage.push("Satuan tidak boleh kosong");
                                         }
-                                        if (data[i]["currency"] === "" || data[i]["currency"] === undefined) {
-                                            errorMessage = errorMessage + "Mata Uang tidak boleh kosong, ";
+                                        if (isNaN(data[i]["price"])) {
+                                            errorMessage.push("Harga harus numerik");
                                         }
-                                        if (data[i]["price"] === "" || data[i]["price"] === undefined) {
-                                            errorMessage = errorMessage + "Harga tidak boleh kosong, ";
-                                        } else if (isNaN(data[i]["price"])) {
-                                            errorMessage = errorMessage + "Harga harus numerik, ";
+                                        var _product = products.find(prd => prd.code == data[i]["code"])
+                                        if (_product) {
+                                            errorMessage.push("Kode tidak boleh duplikat");
                                         }
-                                        else {
-                                            var rateTemp = (data[i]["price"]).toString().split(".");
-                                            if (rateTemp[1] === undefined) {
-                                            } else if (rateTemp[1].length > 2) {
-                                                errorMessage = errorMessage + "Harga maksimal memiliki 2 digit dibelakang koma, ";
-                                            }
-                                        }
-                                        for (var j = 0; j < product.length; j++) {
-                                            if (product[j]["code"] === data[i]["code"]) {
-                                                errorMessage = errorMessage + "Kode tidak boleh duplikat, ";
-                                            }
-                                            if (product[j]["name"] === data[i]["name"]) {
-                                                errorMessage = errorMessage + "Nama tidak boleh duplikat, ";
-                                            }
-                                        }
-                                        // var flagUom = false;
+
                                         var _uom = uoms.find(uom => uom.unit === data[i]["uom"])
                                         if (!_uom) {
-                                            errorMessage = errorMessage + "Satuan tidak terdaftar di Master Satuan, ";
+                                            errorMessage.push("Satuan tidak terdaftar di Master Satuan");
                                         }
 
-                                        var _currency = currencies.find(currency => currency.code === data[i]["currency"])
-                                        if (!_currency) {
-                                            errorMessage = errorMessage + "Mata Uang tidak terdaftar di Master Mata Uang";
-                                        }
-
-                                        if (errorMessage !== "") {
-                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage });
+                                        if (errorMessage.length === 1) {
+                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage[0] });
+                                        } if (errorMessage.length > 1) {
+                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage.split(', ') });
                                         } else {
-                                            data[i]["currency"] = _currency;
                                             data[i]["uom"] = _uom;
+
+                                            if (data[i]["currency"] != "") {
+                                                var _currency = currencies.find(currency => currency.code === data[i]["currency"])
+                                                data[i]["currency"] = _currency;
+                                            }
                                         }
                                     }
                                     if (dataError.length === 0) {
                                         var newProduct = [];
-                                        for (var i = 0; i < data.length; i++) {
-                                            var valid = new Product(data[i]);
+                                        var jobs = [];
+                                        for (var prd of data) {
+                                            var valid = new Product(prd);
                                             valid.currency.rate = Number(valid.currency.rate);
                                             valid.price = Number(valid.price);
                                             valid.uomId = new ObjectId(valid.uom._id);
                                             valid.stamp(this.user.username, 'manager');
-                                            this.collection.insert(valid)
+                                            var job = this.collection.insert(valid)
                                                 .then(id => {
-                                                    this.getSingleById(id)
+                                                    return this.getSingleById(id)
                                                         .then(resultItem => {
-                                                            newProduct.push(resultItem)
-                                                            resolve(newProduct);
+                                                            return resultItem;
                                                         })
-                                                        .catch(e => {
-                                                            reject(e);
-                                                        });
                                                 })
-                                                .catch(e => {
-                                                    reject(e);
-                                                });
-
+                                            jobs.push(job);
                                         }
+                                        Promise.all(jobs)
+                                            .then((result) => {
+                                                resolve(result);
+                                            })
+                                            .catch(e => {
+                                                reject(e);
+                                            });
                                     } else {
                                         resolve(dataError);
                                     }
@@ -288,13 +274,13 @@ module.exports = class GarmentProductManager extends BaseManager {
                             $and: [{
                                 "tags": regex2
                             }, {
-                                    "_deleted": false
-                                }]
-                        }, {
-                                "name": {
-                                    "$regex": regex
-                                }
+                                "_deleted": false
                             }]
+                        }, {
+                            "name": {
+                                "$regex": regex
+                            }
+                        }]
                     }
                 }]
             )

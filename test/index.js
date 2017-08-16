@@ -38,6 +38,7 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-INVENTORY-MOVEMENT', './etl/inventory/fact-inventory-movement');
     test('@ETL/FACT-INVENTORY-SUMMARY', './etl/inventory/fact-inventory-summary');
     test('@ETL/garment-purchase-request', './etl/garment/garment-purchase-request');
+    test('@ETL/FACT-FP-PACKING-RECEIPT', './etl/inventory/fact-fp-packing-receipt');
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
     test('@MASTER/BUDGET', './master/budget');
@@ -80,6 +81,8 @@ describe('#dl-module', function (done) {
     test('@MASTER/STORAGE', './master/storage');
     test('@MASTER/COMPANY', './master/company');
     test('@MASTER/CONTACT', './master/contact');
+    test('@MASTER/BAD OUTPUT REASON', './master/bad-output-reason');
+    test('@MASTER/FINISHING PRINTING DURATION ESTIMATION', './master/fp-duration-estimation');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
@@ -97,6 +100,8 @@ describe('#dl-module', function (done) {
     test('@GARMENT PURCHASING/PURCHASE REQUEST', './garment-purchasing/purchase-request');
     test('@GARMENT PURCHASING/PURCHASE ORDER', './garment-purchasing/purchase-order');
     test('@GARMENT PURCHASING/PURCHASE ORDER EXTERNAL', './garment-purchasing/purchase-order-external');
+    test('@GARMENT PURCHASING/DELIVERY ORDER', './garment-purchasing/delivery-order');
+    test('@GARMENT PURCHASING/INVOICE NOTE', './garment-purchasing/invoice-note');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
