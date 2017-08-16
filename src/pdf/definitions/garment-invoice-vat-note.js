@@ -50,7 +50,7 @@ module.exports = function (data, offset) {
     var subHeader = [
         {
             columns: [{
-                width: '12%',
+                width: '15%',
                 text: 'No. Nota Pajak',
                 style: ['size08']
             }, {
@@ -65,32 +65,32 @@ module.exports = function (data, offset) {
         },
         {
             columns: [{
-                width: '12%',
+                width: '15%',
                 text: 'Kode Supplier',
-                style: ['size09']
+                style: ['size08']
             }, {
                 width: '2%',
                 text: ':',
-                style: ['size09']
+                style: ['size08']
             }, {
                 width: '*',
                 text: data.supplier.code,
-                style: ['size09']
+                style: ['size08']
             }]
         },
         {
             columns: [{
-                width: '12%',
+                width: '15%',
                 text: 'Nama Supplier',
-                style: ['size09']
+                style: ['size08']
             }, {
                 width: '2%',
                 text: ':',
-                style: ['size09']
+                style: ['size08']
             }, {
                 width: '*',
                 text: data.supplier.name,
-                style: ['size09']
+                style: ['size08']
             }]
         }
     ];
@@ -122,7 +122,7 @@ module.exports = function (data, offset) {
             text: item.deliveryOrderNo,
             style: ['size08', 'left']
         }, {
-            text: `${moment(item.date).add(offset, 'h').format(locale.date.format)}`,
+            text: `${moment(item.date).add(offset, 'h').format("DD MMM YYYY")}`,
             style: ['size08', 'right']
         }, {
             text: item.no,
@@ -165,49 +165,62 @@ module.exports = function (data, offset) {
 
     var table = [{
         table: {
-            widths: ['15%', '10%', '15%', '30%', '5%', '25%'],
+            widths: ['15%', '15%', '15%', '30%', '5%', '20%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot)
         }
     }];
 
-    var footer = [{
+    var footer = ['\n\n\n\n\n',{
         table: {
             widths: ['25%', '25%', '25%', '25%'],
             body: [
-                {
-                    text: 'Administrasi',
-                    style: ['size08', 'bold', 'center']
-                }, {
-                    text: 'Staff Pembelian',
-                    style: ['size08', 'bold', 'center']
-                }, {
-                    text: 'Verifikasi',
-                    style: ['size08', 'bold', 'center']
-                }, {
-                    text: 'Keuangan',
-                    style: ['size08', 'bold', 'center']
-                }, {
-                    text: '\n\n\n\n\n',
-                }, {
-                    text: '\n\n\n\n\n',
-                }, {
-                    text: '\n\n\n\n\n',
-                }, {
-                    text: '\n\n\n\n\n',
-                }, {
-                    text: '(Nama & Tanggal)',
-                    style: ['size08', 'center']
-                }, {
-                    text: '(Nama & Tanggal)',
-                    style: ['size08', 'center']
-                }, {
-                    text: '(Nama & Tanggal)',
-                    style: ['size08', 'center']
-                }, {
-                    text: '(Nama & Tanggal)',
-                    style: ['size08', 'center']
-                }
+                [
+                    {
+                        text: 'Administrasi',
+                        style: ['size08', 'bold', 'center']
+                    }, {
+                        text: 'Staff Pembelian',
+                        style: ['size08', 'bold', 'center']
+                    }, {
+                        text: 'Verifikasi',
+                        style: ['size08', 'bold', 'center']
+                    }, {
+                        text: 'Keuangan',
+                        style: ['size08', 'bold', 'center']
+                    }
+                ],
+                [
+                    {
+                        stack:[ '\n\n\n\n',
+                            {
+                                text: '(Nama & Tanggal)',
+                                style: ['size08', 'center']
+                            }
+                        ]
+                    },{
+                        stack:[ '\n\n\n\n',
+                            {
+                                text: '(Nama & Tanggal)',
+                                style: ['size08', 'center']
+                            }
+                        ]
+                    },{
+                        stack:[ '\n\n\n\n',
+                            {
+                                text: '(Nama & Tanggal)',
+                                style: ['size08', 'center']
+                            }
+                        ]
+                    },{
+                        stack:[ '\n\n\n\n',
+                            {
+                                text: '(Nama & Tanggal)',
+                                style: ['size08', 'center']
+                            }
+                        ]
+                    }
+                ] 
             ]
         }
     }];

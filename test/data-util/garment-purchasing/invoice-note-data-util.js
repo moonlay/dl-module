@@ -62,7 +62,7 @@ class InvoiceNoteDataUtil {
                             vatDate: new Date(),
                             useVat: true,
                             vat: dataVat,
-                            isPayTax: false,
+                            isPayTax: true,
                             remark: 'Unit Test Invoice Note',
                             items: invoiceNoteItem
                         };
