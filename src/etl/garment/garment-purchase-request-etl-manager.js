@@ -10,8 +10,7 @@ var Map = Models.map;
 
 var UnitManager = require('../../managers/master/unit-manager');
 var UomManager = require('../../managers/master/uom-manager');
-
-var garmentPurchaseRequestManager = require('../../managers/garment-purchasing/purchase-request-manager');
+var MigratedFalse = [];
 
 // internal deps 
 require("mongodb-toolkit");
@@ -22,11 +21,14 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         this.sql = sql;
         this.collection = this.db.use(Map.garmentPurchasing.collection.GarmentPurchaseRequest);
         this.migrationLog = this.db.collection("migration-log");
-        this.unitManager = new UnitManager(db, user);
-        this.uomManager = new UomManager(db, user);
+        // this.unitManager = new UnitManager(db, user);
+        this.unitManager = this.db.collection("units");
+        this.uomManager = this.db.collection("unit-of-measurements");
+        // this.uomManager = new UomManager(db, user);
         this.categoryManager = this.db.collection("garment-categories");
         this.productManager = this.db.collection("garment-products");
         this.buyerManager = this.db.collection("garment-buyers");
+        // this.migratedFalse = MigratedFalse;
     }
 
     _getQuery(paging) {
@@ -60,43 +62,109 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             start: startedDate,
         })
 
+
         return new Promise((resolve, reject) => {
-            var migrate;
-            this.extract(table1, table2)
-                .then((data) => this.transform(data))
-                .then((data) => this.load(data))
-                .then((results) => {
-                    var finishedDate = new Date();
-                    var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
-                    var updateLog = {
-                        code: "sql-gpr",
-                        description: "Sql to MongoDB: Garment-Purchase-Request",
-                        start: startedDate,
-                        finish: finishedDate,
-                        executionTime: spentTime + " minutes",
-                        status: "Successful"
-                    };
-                    migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
-                    resolve(migrate);
-                })
-            // .catch((err) => {
-            //     var finishedDate = new Date();
-            //     var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
-            //     var updateLog = {
-            //         code: "sql-gpr",
-            //         description: "Sql to MongoDB: Garment-Purchase-Request",
-            //         start: startedDate,
-            //         finish: finishedDate,
-            //         executionTime: spentTime + " minutes",
-            //         status: err
-            //     };
-            //     this.migrationLog.updateOne({ start: startedDate }, updateLog);
-            // });
-            // resolve(migrate);
+            this.getTimeStamp().then((result) => {
+                var dateStamp;
+
+                if (result.length != 0) {
+                    var year = result[0].start.getFullYear();
+                    var month = result[0].start.getMonth() + 1;
+                    var day = result[0].start.getDate();
+
+                    if (month < 10) {
+                        month = "0" + month;
+                    }
+                    if (day < 10) {
+                        day = "0" + day;
+                    }
+
+                    dateStamp = [year, month, day].join('-');
+                } else if (result.length == 0) {
+                    dateStamp = "2016-01-01";
+                }
+
+
+                this.getRowNumber(table1, table2)
+                    .then((data) => {
+
+                        var pageSize = 100;
+                        var dataLength = data;
+                        var totalPageNumber = Math.ceil(dataLength / pageSize);
+
+                        var date = dateStamp;
+                        var processedData = [];
+
+                        for (var i = 1; i <= totalPageNumber; i++) {
+                            processedData.push(new Promise((resolve, reject) => {
+                                this.extract(table1, table2, i, pageSize, date)
+                                    .then((extracted) => {
+                                        this.transform(extracted)
+                                            .then((transformed) => {
+                                                this.load(transformed)
+                                                    .then((result) => {
+                                                        resolve(result);
+                                                    })
+                                            })
+                                    })
+                            }))
+
+                        }
+
+                        Promise.all(processedData).then((processedData) => {
+                            var finishedDate = new Date();
+                            var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                            var updateLog = {};
+
+                            if (processedData[0].length == 0) {
+                                updateLog = {
+                                    code: "sql-gpr",
+                                    description: "Sql to MongoDB: Garment-Purchase-Request",
+                                    start: startedDate,
+                                    finish: finishedDate,
+                                    executionTime: spentTime + " minutes",
+                                    status: "today, data didnt exist",
+
+                                };
+                            } else {
+                                updateLog = {
+                                    code: "sql-gpr",
+                                    description: "Sql to MongoDB: Garment-Purchase-Request",
+                                    start: startedDate,
+                                    finish: finishedDate,
+                                    executionTime: spentTime + " minutes",
+                                    status: "Successful",
+
+                                };
+                            }
+
+                            var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
+                            resolve(processedData);
+
+                        });
+
+                    });
+            });
         });
     };
 
-    extract(table1, table2) {
+
+    getTimeStamp() {
+        return new Promise((resolve, reject) => {
+            this.migrationLog.find({
+                code: "sql-gpr",
+                description: "Sql to MongoDB: Garment-Purchase-Request",
+                status: "Successful"
+            }).sort({
+                finish: -1
+            }).limit(1).toArray(function (err, result) {
+                resolve(result);
+            });
+        })
+    }
+
+
+    getRowNumber(table1, table2) {
         return new Promise((resolve, reject) => {
             this.sql.startConnection()
                 .then(() => {
@@ -106,12 +174,11 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
 
-                        var sqlQuery = "select POrder.Harga,POrder.Tanggal,POrder.Post,POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from " + table1.trim() + " as Budget inner join " + table2.trim() + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and POrder.Harga = 0 and YEAR(POrder.Tanggal) >= 2016";
+                        var sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.Tanggal,20),10) >= '2016-01-01' and POrder.Harga = 0"
 
-                        // var sqlQuery = "select POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,Budget.Harga,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5 from " + table1.trim() + " as Budget inner join " + table2.trim() + " as POrder On Budget.Po = POrder.Nopo";
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
-                                resolve(result);
+                                resolve(result[0].NumberOfRow);
                             } else {
                                 reject(err);
                             }
@@ -121,41 +188,74 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         })
     }
 
-    getDataUnit() {
+    extract(table1, table2, page, pageSize, tgl) {
         return new Promise((resolve, reject) => {
-            this.unitManager.getUnit().then((result) => {
+            this.sql.startConnection()
+                .then(() => {
+
+                    var transaction = this.sql.transaction();
+                    transaction.begin((err) => {
+
+                        var request = this.sql.transactionRequest(transaction);
+                        var sqlQuery;
+
+
+                        if (table1 == "Budget" && table2 == "POrder") {
+                            sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
+                        } else {
+                            sqlQuery = "exec garment_purchase_request1 " + page + "," + pageSize + ",'" + tgl + "' ";
+                        }
+
+
+                        request.query(sqlQuery, function (err, result) {
+                            if (result) {
+
+                                resolve(result);
+
+                            } else {
+                                reject(err);
+                            }
+                        })
+                    })
+                })
+        })
+    }
+
+    getDataUnit(unit) {
+        return new Promise((resolve, reject) => {
+            this.unitManager.find({ "code": { "$in": unit } }).toArray(function (err, data) {
+                resolve(data);
+            })
+        });
+    }
+
+    getDataBuyer(buyer) {
+        return new Promise((resolve, reject) => {
+            this.buyerManager.find({ "code": { "$in": buyer } }).toArray(function (err, result) {
                 resolve(result);
             });
         });
     }
 
-    getDataBuyer() {
+    getDataUom(uom) {
         return new Promise((resolve, reject) => {
-            this.buyerManager.find({}).toArray(function (err, result) {
+            this.uomManager.find({ "unit": { "$in": uom } }).toArray(function (err, result) {
                 resolve(result);
             });
         });
     }
 
-    getDataUom() {
+    getDataProduct(product) {
         return new Promise((resolve, reject) => {
-            this.uomManager.getUOM().then((result) => {
+            this.productManager.find({ "code": { "$in": product } }).toArray(function (err, result) {
                 resolve(result);
             });
         });
     }
 
-    getDataProduct() {
+    getDataCategory(category) {
         return new Promise((resolve, reject) => {
-            this.productManager.find({}).toArray(function (err, result) {
-                resolve(result);
-            });
-        });
-    }
-
-    getDataCategory() {
-        return new Promise((resolve, reject) => {
-            this.categoryManager.find({}).toArray(function (err, result) {
+            this.categoryManager.find({ "code": { "$in": category } }).toArray(function (err, result) {
                 resolve(result);
             });
         });
@@ -163,220 +263,253 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
     transform(datas) {
         return new Promise((resolve, reject) => {
+            var nomorRo;
 
             if (!datas.dataTest) {
-                var getUnit = this.getDataUnit();
-                var getCategory = this.getDataCategory();
-                var getProduct = this.getDataProduct();
-                var getBuyer = this.getDataBuyer();
-                var getUom = this.getDataUom();
+                //distinct 
+                nomorRo = [];
+                var unitArr = [];
+                var catArr = [];
+                var productArr = [];
+                var buyerArr = [];
+                var uomArr = [];
+
+                for (var unique of datas) {
+                    var unitCode = "";
+
+                    var codeBarang = (unique.Kodeb.trim() == unique.Cat.trim()) ? unique.Kodeb.trim() + "001" : unique.Kodeb.trim();
+
+                    if (unique.Konf.trim() == "K.1") {
+                        unitCode = "C2A"
+                    } else if (unique.Konf.trim() == "K.2") {
+                        unitCode = "C2B"
+                    } else if (unique.Konf.trim() == "K.3") {
+                        unitCode = "C2C"
+                    } else if (unique.Konf.trim() == "K.4") {
+                        unitCode = "C1A"
+                    } else if (unique.Konf.trim() == "K.5") {
+                        unitCode = "C2A"
+                    } else {
+                        unitCode = unique.Konf.trim();
+                    }
+
+                    if (!(nomorRo.find(o => o == unique.Ro.trim()))) {
+
+                        nomorRo.push(unique.Ro.trim());
+                    }
+                    if (!(unitArr.find(o => o == unitCode))) {
+                        unitArr.push(unitCode);
+                    }
+                    if (!(catArr.find(o => o == unique.Cat.trim()))) {
+                        catArr.push(unique.Cat.trim());
+                    }
+                    if (!(productArr.find(o => o == codeBarang))) {
+                        productArr.push(codeBarang);
+                    }
+                    if (!(buyerArr.find(o => o == unique.Buyer.trim()))) {
+                        buyerArr.push(unique.Buyer.trim());
+                    }
+                    if (!(uomArr.find(o => o == unique.Satb.trim()))) {
+                        uomArr.push(unique.Satb.trim());
+                    }
+                }
+
+                var getUnit = this.getDataUnit(unitArr);
+                var getCategory = this.getDataCategory(catArr);
+                var getProduct = this.getDataProduct(productArr);
+                var getBuyer = this.getDataBuyer(buyerArr);
+                var getUom = this.getDataUom(uomArr);
+
             } else {
+                nomorRo = [];
                 var getUnit = datas.dataTest.Unit;
                 var getCategory = datas.dataTest.Category;
                 var getProduct = datas.dataTest.Product;
                 var getBuyer = datas.dataTest.Buyer;
                 var getUom = datas.dataTest.Uom;
+                
+                for (var unique of datas) {
+                    if (!(nomorRo.find(o => o == unique.Ro.trim()))) {
+
+                        nomorRo.push(unique.Ro.trim());
+                    }
+                }
             }
 
 
             Promise.all([getUnit, getCategory, getProduct, getBuyer, getUom]).then((result) => {
-                var _unit = result[0].data ? result[0].data : result[0];
+                var _unit = result[0];
                 var _category = result[1];
                 var _product = result[2];
                 var _buyer = result[3];
-                var _uom = result[4].data ? result[4].data : result[4];
-                var transformData = [];
+                var _uom = result[4];
 
-                //distinct extracted data
-                var distinctData = [];
-                for (var unique of datas) {
-                    var uniq = true;
-                    distinctData.filter((obj) => {
-                        if (unique.Ro == obj.Ro) {
-                            uniq = false;
-                        }
-                    });
-                    if (uniq == true) {
-                        distinctData.push(unique);
-                    }
-                }
+                var transformData = {
+                    datas: [],
+                    nomorRo: [],
+                };
 
-                //begin transform
-                for (var uniq of distinctData) {
+                var unitNotFound = [];
+                var buyerNotFound = [];
+                var categoryNotFound = [];
+                var productNotFound = [];
+                var uomNotFound = [];
+                var no = 1;
 
-                    var _stamp = ObjectId();
+                for (var Ro of nomorRo) {
                     var code = generateCode();
-                    var unitCode = "";
-
-                    if (uniq.Konf.trim() == "K.1") {
-                        unitCode = "C2A"
-                    } else if (uniq.Konf.trim() == "K.2") {
-                        unitCode = "C2B"
-                    } else if (uniq.Konf.trim() == "K.3") {
-                        unitCode = "C2C"
-                    } else if (uniq.Konf.trim() == "K.4") {
-                        unitCode = "C1A"
-                    } else if (uniq.Konf.trim() == "K.5") {
-                        unitCode = "C2A"
-                    } else {
-                        unitCode = uniq.Konf.trim();
-                    }
-
-                    var _createdDatehours = new Date(uniq.Jamin).getHours() ? new Date(uniq.Jamin).getHours() : "";
-                    var _createdDateminutes = new Date(uniq.Jamin).getMinutes() ? new Date(uniq.Jamin).getMinutes() : "";
-                    var _createdDatedate = uniq.Tglin.toString();
-                    var _createdDate = _createdDatedate + ":" + _createdDatehours + ":" + "" + _createdDateminutes;
-                    var _updatedDatehours = new Date(uniq.Jamed).getHours() ? new Date(uniq.Jamed).getHours() : "";
-                    var _updatedDateminutes = new Date(uniq.Jamed).getMinutes() ? new Date(uniq.Jamed).getMinutes() : "";
-                    var _updatedDatedate = uniq.Tgled.toString();
-                    var _updatedDate = _updatedDatedate + ":" + _updatedDatehours + ":" + "" + _updatedDateminutes;
-
                     var items = [];
-
-
-                    for (var data of datas) {
-                        if (uniq.Ro == data.Ro) {
-                            var migrated = true;
-                            for (var uom of _uom) {
-
-                                for (var product of _product) {
-
-                                    for (var category of _category) {
-
-                                        if (data.Cat.trim() == category.code.trim() && data.Kodeb.trim() == product.code.trim() && data.Satb.trim() == uom.unit.trim()) {
-
-                                            var remark = (data.Ketr.trim() ? data.Ketr.trim() : "" + " " + data.Kett.trim() ? data.Kett.trim() : "") + " " + (data.Kett2.trim() ? data.Kett2.trim() : "") + " " + (data.Kett3.trim() ? data.Kett3.trim() : "") + " " + (data.Kett4.trim() ? data.Kett4.trim() : "") + " " + (data.Kett5.trim() ? data.Kett5.trim() : "");
-
-                                            var Colors = [];
-
-                                            if (data.Clr1) {
-                                                Colors.push(data.Clr1);
-                                            } if (data.Clr2) {
-                                                Colors.push(data.Clr2);
-                                            } if (data.Clr3) {
-                                                Colors.push(data.Clr3);
-                                            } if (data.Clr4) {
-                                                Colors.push(data.Clr4);
-                                            } if (data.Clr5) {
-                                                Colors.push(data.Clr5);
-                                            } if (data.Clr6) {
-                                                Colors.push(data.Clr6);
-                                            } if (data.Clr7) {
-                                                Colors.push(data.Clr7);
-                                            } if (data.Clr8) {
-                                                Colors.push(data.Clr8);
-                                            } if (data.Clr9) {
-                                                Colors.push(data.Clr9);
-                                            } if (data.Clr10) {
-                                                Colors.push(data.Clr10);
-                                            }
-
-                                            var item = {
-                                                _stamp: "",
-                                                _type: "purchase-request-item",
-                                                _version: "",
-                                                _active: true,
-                                                _deleted: false,
-                                                _createdBy: "",
-                                                _createdDate: "",
-                                                createdAgent: "",
-                                                updatedBy: "",
-                                                _updatedDate: "",
-                                                updatedAgent: "",
-
-                                                productId: product._id,
-                                                product: {
-                                                    _id: product._id,
-                                                    code: product.code,
-                                                    name: product.name,
-                                                    price: product.price,
-                                                    currency: product.currency,
-                                                    description: product.description,
-                                                    uomId: product.uomId,
-                                                    uom: product.uom,
-                                                    tags: product.tags,
-                                                    properties: product.properties,
-                                                },
-
-                                                budgetPrice: data.Harga,
-                                                quantity: data.Qty,
-                                                deliveryOrderNos: [],
-                                                remark: remark,
-
-                                                refNo: data.Nopo,
-
-
-                                                uomId: uom._id,
-                                                uom: {
-                                                    _id: uom._id,
-                                                    unit: uom.unit,
-                                                },
-
-                                                categoryId: category._id,
-                                                category: {
-                                                    _id: category._id,
-                                                    code: category.code.trim(),
-                                                    name: category.name.trim(),
-                                                },
-                                                colors: Colors,
-                                            }
-                                            items.push(item);
-                                            break;
-                                        }
-                                    }
-
-                                }
-                            }
-
-                            // data not found
-                            if (items == 0 || !items || items == []) {
-                                var temps = [];
-
-                                if (!(_category.find(obj => obj.code.trim() == data.Cat.trim()))) {
-                                    temps.push("(category.code) data didnt exist: " + data.Cat.trim());
-                                }
-
-                                if (!(_product.find(obj => obj.code.trim() == data.Kodeb.trim()))) {
-                                    temps.push("(product.code) data didnt exist: " + data.Kodeb.trim());
-                                }
-
-                                if (!(_uom.find(obj => obj.unit.trim() == data.Satb.trim()))) {
-
-                                    temps.push("(uom.unit) data didnt exist: " + data.Satb.trim());
-                                }
-
-                                items.push(temps);
-                                migrated = false;
-                            }
-                            break;
-                        }
-                    }
-
                     var map = {};
-                    for (var buyer of _buyer) {
+                    for (var data of datas) {
 
-                        for (var unit of _unit) {
+                        var _createdDatehours = new Date(data.Jamin).getHours() ? new Date(data.Jamin).getHours() : "";
+                        var _createdDateminutes = new Date(data.Jamin).getMinutes() ? new Date(data.Jamin).getMinutes() : "";
+                        var _createdDatedate = data.Tglin.toString();
+                        var _createdDate = _createdDatedate + ":" + _createdDatehours + ":" + "" + _createdDateminutes;
 
-                            if (unitCode == unit.code.trim() && uniq.Buyer.trim() == buyer.code.trim()) {
+                        var _updatedDatehours = new Date(data.Jamed).getHours() ? new Date(data.Jamed).getHours() : "";
+                        var _updatedDateminutes = new Date(data.Jamed).getMinutes() ? new Date(data.Jamed).getMinutes() : "";
+                        var _updatedDatedate = data.Tgled.toString();
+                        var _updatedDate = _updatedDatedate + ":" + _updatedDatehours + ":" + "" + _updatedDateminutes;
 
-                                map = {
+
+                        if (Ro == data.Ro) {
+
+                            var unitCode = "";
+                            if (data.Konf.trim() == "K.1") {
+                                unitCode = "C2A"
+                            } else if (data.Konf.trim() == "K.2") {
+                                unitCode = "C2B"
+                            } else if (data.Konf.trim() == "K.3") {
+                                unitCode = "C2C"
+                            } else if (data.Konf.trim() == "K.4") {
+                                unitCode = "C1A"
+                            } else if (data.Konf.trim() == "K.5") {
+                                unitCode = "C2A"
+                            } else {
+                                unitCode = data.Konf.trim();
+                            }
+
+                            var _stamp = ObjectId();
+
+                            var codeBarang = (data.Kodeb.trim() == data.Cat.trim()) ? data.Kodeb.trim() + "001" : data.Kodeb.trim();
+
+                            var unit = (_unit.find(o => o.code.trim() == unitCode)) ? (_unit.find(o => o.code.trim() == unitCode)) : (unitNotFound.find(o => o == unitCode)) ? true : unitNotFound.push(unitCode);
+                            var buyer = (_buyer.find(o => o.code.trim() == data.Buyer.trim())) ? (_buyer.find(o => o.code.trim() == data.Buyer.trim())) : (buyerNotFound.find(o => o == data.Buyer)) ? true : buyerNotFound.push(data.Buyer);
+                            var product = (_product.find(o => o.code.trim() == codeBarang)) ? (_product.find(o => o.code.trim() == codeBarang)) : (productNotFound.find(o => o == codeBarang)) ? true : productNotFound.push(codeBarang);
+                            var uom = (_uom.find(o => o.unit.trim() == data.Satb.trim())) ? (_uom.find(o => o.unit.trim() == data.Satb.trim())) : (uomNotFound.find(o => o == data.Satb.trim())) ? true : uomNotFound.push(data.Satb.trim());
+                            var category = (_category.find(o => o.code.trim() == data.Cat.trim())) ? (_category.find(o => o.code.trim() == data.Cat.trim())) : (categoryNotFound.find(o => o == data.Cat.trim())) ? true : categoryNotFound.push(data.Cat.trim());
+
+                            //getting items
+                            var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
+
+                            var Colors = [];
+                            if (data.Clr1.trim() && data.Clr1.trim() != "" && data.Clr1.trim() == null) {
+                                Colors.push(data.Clr1.trim());
+                            } if (data.Clr2.trim() && data.Clr2.trim() != "" && data.Clr2.trim() == null) {
+                                Colors.push(data.Clr2.trim());
+                            } if (data.Clr3.trim() && data.Clr3.trim() != "" && data.Clr3.trim() == null) {
+                                Colors.push(data.Clr3.trim());
+                            } if (data.Clr4.trim() && data.Clr4.trim() != "" && data.Clr4.trim() == null) {
+                                Colors.push(data.Clr4.trim());
+                            } if (data.Clr5.trim() && data.Clr5.trim() != "" && data.Clr5.trim() == null) {
+                                Colors.push(data.Clr5.trim());
+                            } if (data.Clr6.trim() && data.Clr6.trim() != "" && data.Clr6.trim() == null) {
+                                Colors.push(data.Clr6.trim());
+                            } if (data.Clr7.trim() && data.Clr7.trim() != "" && data.Clr7.trim() == null) {
+                                Colors.push(data.Clr7.trim());
+                            } if (data.Clr8.trim() && data.Clr8.trim() != "" && data.Clr8.trim() == null) {
+                                Colors.push(data.Clr8.trim());
+                            } if (data.Clr9.trim() && data.Clr9.trim() != "" && data.Clr9.trim() == null) {
+                                Colors.push(data.Clr9.trim());
+                            } if (data.Clr10.trim() && data.Clr10.trim() != "" && data.Clr10.trim() == null) {
+                                Colors.push(data.Clr10.trim());
+                            }
+
+                            if (product._id && uom._id && category._id) {
+                                var item = {
+                                    _stamp: "",
+                                    _type: "purchase-request-item",
+                                    _version: "",
+                                    _active: true,
+                                    _deleted: false,
+                                    _createdBy: "",
+                                    _createdDate: "",
+                                    createdAgent: "",
+                                    updatedBy: "",
+                                    _updatedDate: "",
+                                    updatedAgent: "",
+
+                                    productId: product._id,
+                                    product: {
+                                        _id: product._id,
+                                        code: codeBarang,
+                                        name: product.name,
+                                        price: product.price,
+                                        currency: product.currency,
+                                        description: product.description,
+                                        uomId: product.uomId,
+                                        uom: product.uom,
+                                        tags: product.tags,
+                                        properties: product.properties,
+                                    },
+
+                                    budgetPrice: data.Harga,
+                                    quantity: data.Qty,
+                                    deliveryOrderNos: [],
+                                    remark: remark,
+
+                                    refNo: data.Nopo,
+
+                                    uomId: uom._id,
+                                    uom: {
+                                        _id: uom._id,
+                                        unit: uom.unit,
+                                    },
+
+                                    categoryId: category._id,
+                                    category: {
+                                        _id: category._id,
+                                        code: category.code.trim(),
+                                        name: category.name.trim(),
+                                    },
+                                    colors: Colors,
+                                    id_po: (data.ID_PO),
+                                }
+                                items.push(item);
+
+                            } else if (!product._id || !uom._id || !category._id) {
+                                // migrated = false;
+                                map.migrated = false;
+                                map.dataItemNotfound = {
+                                    uomUnit: uomNotFound,
+                                    categoryCode: categoryNotFound,
+                                    productCode: productNotFound,
+                                };
+                            }
+
+                            //begin transform
+                            if (unit._id && buyer._id) {
+
+                                Object.assign(map, {
                                     _stamp: _stamp,
                                     _type: "purchase request",
                                     _version: "1.0.0",
                                     _active: true,
                                     _deleted: false,
-                                    _createdBy: uniq.Userin,
+                                    _createdBy: data.Userin,
                                     _createdDate: new Date(_createdDate),
                                     _createAgent: "manager",
-                                    _updatedBy: uniq.Usered,
+                                    _updatedBy: data.Usered,
                                     _updatedDate: new Date(_updatedDate),
                                     _updateAgent: "manager",
-                                    no: code,
-                                    roNo: uniq.Ro,
-                                    artikel: uniq.Art,
-                                    shipmentDate: uniq.Shipment,
-                                    date: new Date(uniq.TgValid),
-                                    expectedDeliveryDate: uniq.expectedDeliveryDate ? uniq.expectedDeliveryDate : "",
+                                    // no: data.Ro,
+                                    no: generateCode() + (no++),
+                                    roNo: data.Ro,
+                                    artikel: data.Art,
+                                    shipmentDate: data.Shipment,
+                                    date: new Date(data.TgValid),
+                                    expectedDeliveryDate: data.expectedDeliveryDate ? data.expectedDeliveryDate : "",
 
                                     unitId: unit._id,
                                     unit: {
@@ -386,8 +519,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                         description: unit.description,
                                         divisionId: unit.divisionId,
                                         division: unit.division,
-
-
                                     },
 
                                     buyerId: buyer._id,
@@ -414,69 +545,91 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     },
                                     purchaseOrderIds: [],
 
-                                }
+                                })
 
-                                if (migrated == true) {
-                                    map.items = items;
-                                    map.migrated = true;
-                                }
-                                else if (migrated == false) {
-                                    map.items = {
-                                        notFound: items
-                                    };
-                                    map.migrated = migrated;
-                                }
+                            } else {
 
-                                transformData.push(map);
-                                break;
+                                map.migrated = false;
+                                map.dataNotfound = {
+                                    unitCode: unitNotFound,
+                                    buyerCode: buyerNotFound,
+                                };
                             }
                         }
+
                     }
 
-                    //data not found
-                    if (Object.getOwnPropertyNames(map).length == 0) {
-
-                        if (!(_unit.find(obj => obj.code.trim() == unitCode))) {
-                            map.unitId = ("(unit.code) data didnt exist: " + unitCode);
-                            map.unit = {};
-                        }
-
-                        if (!(_buyer.find(obj => obj.code.trim() == uniq.Buyer.trim()))) {
-                            map.buyerId = "(buyer.code) data didnt exist: " + uniq.Buyer.trim();
-                            map.buyer = {};
-                        }
-
-                        migrated = false;
-                        map.no = code;
-                        map.roNo = uniq.Ro;
-                        map.items = {
-                            notFound: items
-                        };
-                        map.migrated = migrated;
-
-                        transformData.push(map);
-                    }
+                    map.items = items;
+                    transformData.datas.push(map);
 
                 }
-                resolve(transformData)
-            })
-
+                transformData.nomorRo = (nomorRo);
+                resolve(transformData);
+            });
         })
 
     }
 
-    load(dataArr) {
+    findData(roNo) {
         return new Promise((resolve, reject) => {
-            var processed = [];
+            this.collection.find({ "roNo": { $in: roNo } }).toArray(function (err, result) {
+                resolve(result);
+            });
+        });
+    }
 
-            for (var map of dataArr) {
-                var process = this.collection.updateOne({ "roNo": map.roNo }, { $set: map }, { upsert: true });
-                processed.push(process);
-            }
-
-            Promise.all(processed).then((result) => {
+    upsertData(Ro, data) {
+        return new Promise((resolve, reject) => {
+            this.collection.updateOne({ "roNo": Ro }, { $set: data }, { upsert: true }).then((result) => {
                 resolve(result);
             })
+        });
+    }
+
+    load(dataArr) {
+        return new Promise((resolve, reject) => {
+
+            var processed = [];
+            var roNoArr = dataArr.nomorRo;
+            var dataTemp = [];
+
+            this.findData(roNoArr).then((result) => {
+                dataTemp = result;
+
+                for (var data of dataArr.datas) {
+
+                    var temp = dataTemp.find(o => o.roNo == data.roNo);
+
+                    if (temp) {
+                        for (var item of temp.items) {
+                            var itemTemp = data.items.find(o => o.id_po == item.id_po);
+                            if (!itemTemp) {
+                                data.items.push(item);
+                            }
+                        }
+                    };
+
+                    if (data.migrated == false) {
+                        MigratedFalse.find(o => o == data.roNo) ? true : MigratedFalse.push(data.roNo);
+                    }
+
+                    if ((MigratedFalse.find(o => o == data.roNo))) {
+                        data.migrated = false;
+                    }
+                    if (!(MigratedFalse.find(o => o == data.roNo))) {
+                        data.migrated = true;
+                        data.dataItemNotfound = {};
+                        data.dataNotfound = {};
+                    }
+
+                    processed.push(this.collection.updateOne({ "roNo": data.roNo }, { $set: data }, { upsert: true }));
+                }
+
+                Promise.all(processed).then((processed) => {
+                    resolve(processed);
+                })
+
+            });
 
         });
     }
