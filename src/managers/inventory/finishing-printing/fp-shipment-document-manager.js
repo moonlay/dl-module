@@ -174,7 +174,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                 if (!items[j].quantity || items[j].quantity <= 0) {
                                     itemError["quantity"] = i18n.__("PackingReceipt.details.items.quantity.mustBeGreater:%s must be greater than zero", i18n.__("PackingReceipt.details.items.quantity._:Quantity")); //"Kuantitas harus lebih besar dari 0";
                                 }
-                                else if(items[j].quantity > productInvSummary.quantity) {
+                                else if(productInvSummary && (items[j].quantity > productInvSummary.quantity)) {
                                     itemError["quantity"] = i18n.__("PackingReceipt.details.items.quantity.mustBeLessEqual:%s must be less than or equal to stock", i18n.__("PackingReceipt.details.items.quantity._:Quantity")); //"Kuantitas harus lebih kecil atau sama dengan stock";
                                 }
 
