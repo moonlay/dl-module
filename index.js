@@ -214,6 +214,8 @@ module.exports = {
             dimProduct: require("./src/etl/dim/dim-product-etl-manager")
         },
         inventory: {
+            factPackingReceipt: require("./src/etl/inventory/fact-fp-packing-receipt-etl-manager"),
+            factShipmentDocument: require("./src/etl/inventory/fact-shipment-document-etl-manager"),
             factInventoryMovement: require("./src/etl/inventory/fact-inventory-movement-etl-manager"),
             factInventorySummary: require("./src/etl/inventory/fact-inventory-summary-etl-manager")
         },
