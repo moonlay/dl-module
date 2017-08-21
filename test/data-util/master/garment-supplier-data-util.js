@@ -31,7 +31,7 @@ class SupplierDataUtil {
 
     getTestData() {
         var data = {
-            code: 'UT/SUP/01',
+            code: 'UT/GRMNT/SUP/01',
             name: 'Supplier 01',
             address: '7270 Colonial St. Hollis, NY 11423, USA',
             contact: 'Mrs. Smith',

@@ -48,7 +48,19 @@ it(`#02. should success when get created data with id`, function (done) {
         });
 });
 
-it(`#03. should success when delete data`, function (done) {
+it(`#03. should success when update data`, function (done) {
+    createdData.remark = "#test"
+    deliveryOrderManager.updateCollectionDeliveryOrder(createdData)
+        .then((id) => {
+            id.toString().should.equal(createdId.toString());
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#04. should success when delete data`, function (done) {
     deliveryOrderManager.delete(createdData)
         .then((id) => {
             id.toString().should.equal(createdId.toString());
@@ -60,7 +72,7 @@ it(`#03. should success when delete data`, function (done) {
 });
 
 
-it(`#04. should _deleted=true`, function (done) {
+it(`#05. should _deleted=true`, function (done) {
     deliveryOrderManager.getSingleByQuery({
         _id: createdId
     })
@@ -75,7 +87,7 @@ it(`#04. should _deleted=true`, function (done) {
         });
 });
 
-it("#05. should success when create deleted data", function (done) {
+it("#06. should success when create deleted data", function (done) {
     delete createdData._id;
     delete createdData.refNo;
     deliveryOrderManager.create(createdData)
@@ -89,7 +101,7 @@ it("#05. should success when create deleted data", function (done) {
         });
 });
 
-it('#06. should failed when create new delivery order with closed purchase order external', function (done) {
+it('#07. should failed when create new delivery order with closed purchase order external', function (done) {
     deliveryOrderDataUtil.getNewTestDataPoExternalIsClosed()
         .then(po => {
             done("purchase order external cannot be used to create delivery-order due closed status");
