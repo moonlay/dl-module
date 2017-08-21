@@ -157,7 +157,7 @@ module.exports = function (shipmentDocument, offset) {
                 style: ['size08', 'center']
             },
             {
-                text: data.details[i].colorType,
+                text: data.details[i].items[j].colorType,
                 style: ['size08', 'center']
             },
             {
