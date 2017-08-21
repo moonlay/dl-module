@@ -21,17 +21,17 @@ before("#00. connect db", function (done) {
         });
 });
 
-// it("#01. should success when create etl fact-production-order", function (done) {
-//     instanceManager.run()
-//         .then((a) => {
-//             console.log(a);
-//             done();
-//         })
-//         .catch((e) => {
-//             console.log(e);
-//             done(e);
-//         });
-// });
+it("#01. should success when create etl fact-production-order", function (done) {
+    instanceManager.run()
+        .then((a) => {
+            console.log(a);
+            done();
+        })
+        .catch((e) => {
+            console.log(e);
+            done(e);
+        });
+});
 
 
 it("#02. should success when transforming data for fact-production-order", function (done) {
@@ -94,17 +94,17 @@ it("#02. should success when transforming data for fact-production-order", funct
 //         });
 // });
 
-// it("#03. should error when insert empty data", function (done) {
-//     instanceManager.insertQuery(this.sql, "")
-//         .then((id) => {
-//             done("should error when create with empty data");
-//         })
-//         .catch((e) => {
-//             try {                
-//                 done();
-//             }
-//             catch (ex) {
-//                 done(ex);
-//             }
-//         });
-// });
+it("#03. should error when insert empty data", function (done) {
+    instanceManager.insertQuery(this.sql, "")
+        .then((id) => {
+            done("should error when create with empty data");
+        })
+        .catch((e) => {
+            try {                
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});
