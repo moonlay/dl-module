@@ -21,7 +21,8 @@ class ProductionOrderDataUtil {
         var buyerTestData = !dataSupport ? buyer.getTestData() : dataSupport.buyer ? Promise.resolve(null) : buyer.getTestData();
         var processTestData = !dataSupport ? processType.getTestData() : dataSupport.process ? Promise.resolve(null) : processType.getTestData();
         var accountTestData = !dataSupport ? account.getTestData() : dataSupport.account ? Promise.resolve(null) : account.getTestData();
-        return Promise.all([uom.getTestData(), buyerTestData, lampStandard.getTestData(), lampStandard.getTestData2(), processTestData, material.getTestData(), colorType.getTestData(), colorType.getTestData2(), standardTest.getTestData(), finishType.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), accountTestData,fpSC.getNewTestData()])
+        var fpSCTestData= !dataSupport ? fpSC.getNewTestData() : dataSupport.salesContract ? Promise.resolve(null) : fpSC.getNewTestData();
+        return Promise.all([uom.getTestData(), buyerTestData, lampStandard.getTestData(), lampStandard.getTestData2(), processTestData, material.getTestData(), colorType.getTestData(), colorType.getTestData2(), standardTest.getTestData(), finishType.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), accountTestData,fpSCTestData])
             .then((results) => {
                 var _uom = results[0];
                 var _buyer = !dataSupport ? results[1] : dataSupport.buyer ? dataSupport.buyer : results[1];
@@ -36,7 +37,7 @@ class ProductionOrderDataUtil {
                 var _yarn=results[10];
                 var _construction=results[11];
                 var _account= !dataSupport ? results[12] : dataSupport.account ? dataSupport.account : results[12];
-                var _fp=results[13];
+                var _fp=!dataSupport ? results[13] : dataSupport.salesContract ? dataSupport.salesContract : results[13];
                 var detail = [{
                         code:`code1/${codeGenerator()}`,
                         colorTypeId:color1._id,
