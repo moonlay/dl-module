@@ -112,11 +112,12 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
         var products = [];
 
-        for (var detail of valid.details) {
-            for (var item of detail.items) {
-                products.push(item.productCode);
+        if(valid.isVoid != true)
+            for (var detail of valid.details) {
+                for (var item of detail.items) {
+                    products.push(item.productCode);
+                }
             }
-        }
 
         var getBuyer = valid.buyerId && ObjectId.isValid(valid.buyerId) ? this.buyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
 
