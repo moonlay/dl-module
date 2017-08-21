@@ -8,6 +8,7 @@ var map = DLModels.map;
 var ProductionOrder = DLModels.sales.ProductionOrder;
 var ProductionOrderDetail = DLModels.sales.ProductionOrderDetail;
 var ProductionOrderLampStandard = DLModels.sales.ProductionOrderLampStandard;
+var FPSalesContractManager = require('./finishing-printing-sales-contract-manager');
 var LampStandardManager = require('../master/lamp-standard-manager');
 var BuyerManager = require('../master/buyer-manager');
 var UomManager = require('../master/uom-manager');
@@ -44,6 +45,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         this.FinishTypeManager = new FinishTypeManager(db, user);
         this.StandardTestManager = new StandardTestManager(db, user);
         this.AccountManager = new AccountManager(db, user);
+        this.fpSalesContractManager=new FPSalesContractManager(db,user);
     }
 
     _getQuery(paging) {
@@ -120,6 +122,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         var getStandardTest = ObjectId.isValid(valid.standardTestId) ? this.StandardTestManager.getSingleByIdOrDefault(valid.standardTestId) : Promise.resolve(null);
         var getMaterialConstruction = ObjectId.isValid(valid.materialConstructionId) ? this.MaterialConstructionManager.getSingleByIdOrDefault(valid.materialConstructionId) : Promise.resolve(null);
         var getAccount = ObjectId.isValid(valid.accountId) ? this.AccountManager.getSingleByIdOrDefault(valid.accountId) : Promise.resolve(null);
+        var getSC=ObjectId.isValid(valid.salesContractId)? this.fpSalesContractManager.getSingleByIdOrDefault(valid.salesContractId) : Promise.resolve(null);
 
         valid.details = valid.details || [];
         var getColorTypes = [];
@@ -139,7 +142,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             }
         }
 
-        return Promise.all([getProductionOrder, getBuyer, getUom, getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount].concat(getColorTypes, getLampStandards))
+        return Promise.all([getProductionOrder, getBuyer, getUom, getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount,getSC].concat(getColorTypes, getLampStandards))
             .then(results => {
                 var _productionOrder = results[0];
                 var _buyer = results[1];
@@ -152,12 +155,19 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var _standard = results[8];
                 var _construction = results[9];
                 var _account = results[10];
-                var _colors = results.slice(11, 11 + getColorTypes.length);
-                var _lampStandards = results.slice(11 + getColorTypes.length, results.length);
+                var _sc = results[11];
+                var _colors = results.slice(12, 12 + getColorTypes.length);
+                var _lampStandards = results.slice(12 + getColorTypes.length, results.length);
 
                 if (_productionOrder) {
                     errors["orderNo"] = i18n.__("ProductionOrder.orderNo.isExist:%s is Exist", i18n.__("Product.orderNo._:orderNo")); //"orderNo sudah ada";
                 }
+
+                if(!_sc){
+                    errors["salesContractNo"] = i18n.__("ProductionOrder.salesContractNo.isRequired:%s is not exists", i18n.__("ProductionOrder.salesContractNo._:SalesContractNo")); //"material tidak boleh kosong";
+
+                }
+
                 if (valid.uom) {
                     if (!_uom)
                         errors["uom"] = i18n.__("ProductionOrder.uom.isRequired:%s is required", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
