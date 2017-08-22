@@ -127,7 +127,7 @@ class ProductionOrderDataUtil {
                     };
                     return Promise.resolve(data);
                 
-                })
+                });
             });
     }
 
