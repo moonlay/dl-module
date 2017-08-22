@@ -91,7 +91,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     dateStamp = "2017-11%%";
                 }else if (date == 12) {
                     dateStamp = "2017-12%%";
-                } else if (date == "latest") {
+                } 
+                else if (date == "latest") {
                     if (result.length != 0) {
                         var year = result[0].start.getFullYear();
                         var month = result[0].start.getMonth() + 1;
