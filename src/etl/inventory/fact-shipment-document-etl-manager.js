@@ -8,37 +8,40 @@ var moment = require("moment");
 // internal deps 
 require("mongodb-toolkit");
 
-var FinishingPrintingSalesContractManager = require("../../managers/sales/finishing-printing-sales-contract-manager");
-
+var FPShipmentDocumentManager = require("../../managers/inventory/finishing-printing/fp-shipment-document-manager");
+const MIGRATION_LOG_DESCRIPTION = "Fact Shipment Document from MongoDB to Azure DWH";
 const SELECTED_FIELDS = {
-    "uom.unit": 1,
-    "orderQuantity": 1,
-    "material.name": 1,
-    "materialConstruction.name": 1,
-    "yarnMaterial.name": 1,
-    "materialWidth": 1,
-    "salesContractNo": 1,
-    "_createdDate": 1,
-    "deliverySchedule": 1,
-    "buyer.name": 1,
-    "buyer.type": 1,
-    "orderType.name": 1,
-    "buyer.code": 1,
-    "_deleted": 1
-}
+    "buyerCode": 1,
+    "buyerName": 1,
+    "buyerType": 1,
+    "code": 1,
+    "deliveryDate": 1,
+    "isVoid": 1,
+    "details.designCode": 1,
+    "details.designNumber": 1,
+    "details.productionOrderNo": 1,
+    "details.productionOrderType": 1,
+    "details.items.colorType": 1,
+    "details.items.length": 1,
+    "details.items.productCode": 1,
+    "details.items.productName": 1,
+    "details.items.quantity": 1,
+    "details.items.uomUnit": 1,
+    "details.items.weight": 1
+};
 
-module.exports = class FactFinishingPrintingSalesContractManager extends BaseManager {
+module.exports = class FPShipmentDocumentEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
-        this.finishingPrintingSalesContractManager = new FinishingPrintingSalesContractManager(db, user);
+        this.fpShipmentDocumentManager = new FPShipmentDocumentManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
 
     run() {
         var startedDate = new Date()
         this.migrationLog.insert({
-            description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
+            description: MIGRATION_LOG_DESCRIPTION,
             start: startedDate,
         })
         return this.timestamp()
@@ -46,11 +49,11 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
             .then((results) => {
-                console.log("Success!");
+                console.log("Success!")
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
+                    description: MIGRATION_LOG_DESCRIPTION,
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -62,7 +65,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
-                    description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
+                    description: MIGRATION_LOG_DESCRIPTION,
                     start: startedDate,
                     finish: finishedDate,
                     executionTime: spentTime + " minutes",
@@ -74,7 +77,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
     timestamp() {
         return this.migrationLog.find({
-            description: "Fact Finishing Printing Sales Contract from MongoDB to Azure DWH",
+            description: MIGRATION_LOG_DESCRIPTION,
             status: "Successful"
         }).sort({ finish: -1 }).limit(1).toArray()
     }
@@ -82,59 +85,41 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
     extract(times) {
         var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
-        return this.finishingPrintingSalesContractManager.collection.find({
+        return this.fpShipmentDocumentManager.collection.find({
             _updatedDate: {
                 $gt: timestamp
             }
-        }).toArray();
+        }, SELECTED_FIELDS).toArray();
     }
 
-    orderQuantityConvertion(uom, quantity) {
-        if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-            return quantity;
-        } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
-            return quantity * 0.9144;
-        } else {
-            return quantity;
-        }
-    }
-
-    joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth) {
-        if (material !== null && materialConstruction !== null && yarnMaterialNo !== null && materialWidth !== null) {
-            return `'${material.replace(/'/g, '"') + " " + materialConstruction.replace(/'/g, '"') + " " + yarnMaterialNo.replace(/'/g, '"') + " " + materialWidth.replace(/'/g, '"')}'`;
-        } else {
-            return null;
-        }
-    }
-
-    transform(data) {
-        var result = data.map((item) => {
-            var orderUom = item.uom ? item.uom.unit : null;
-            var orderQuantity = item.orderQuantity ? item.orderQuantity : null;
-            var material = item.material ? item.material.name.replace(/'/g, '"') : null;
-            var materialConstruction = item.materialConstruction ? item.materialConstruction.name.replace(/'/g, '"') : null;
-            var yarnMaterialNo = item.yarnMaterial ? item.yarnMaterial.name.replace(/'/g, '"') : null;
-            var materialWidth = item.materialWidth ? item.materialWidth : null;
-
-            return {
-                salesContractNo: item.salesContractNo ? `'${item.salesContractNo}'` : null,
-                salesContractDate: item._createdDate ? `'${moment(item._createdDate).format("L")}'` : null,
-                deliverySchedule: item.deliverySchedule ? `'${moment(item.deliverySchedule).format("L")}'` : null,
-                buyer: item.buyer ? `'${item.buyer.name.replace(/'/g, '"')}'` : null,
-                buyerType: item.buyer ? `'${item.buyer.type.replace(/'/g, '"')}'` : null,
-                orderType: item.orderType ? `'${item.orderType.name}'` : null,
-                orderQuantity: item.orderQuantity ? `${item.orderQuantity}` : null,
-                orderUom: item.uom ? `'${item.uom.unit.replace(/'/g, '"')}'` : null,
-                totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
-                buyerCode: item.buyer ? `'${item.buyer.code}'` : null,
-                productionType: `'${"Finishing Printing"}'`,
-                construction: this.joinConstructionString(material, materialConstruction, yarnMaterialNo, materialWidth),
-                materialConstruction: item.materialConstruction ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
-                materialWidth: item.materialWidth ? `'${item.materialWidth.replace(/'/g, '"')}'` : null,
-                material: item.material ? `'${item.material.name.replace(/'/g, '"')}'` : null,
-                deleted: `'${item._deleted}'`
-            }
-        });
+    transform(shipments) {
+        var result = shipments.map((shipment) => {
+            var results = shipment.details.map((detail) => {
+                var resultss = detail.items.map((item) => {
+                    return {
+                        buyerCode: shipment.buyerCode ? `'${shipment.buyerCode}'` : null,
+                        buyerName: shipment.buyerName ? `'${shipment.buyerName}'` : null,
+                        buyerType: shipment.buyerType ? `'${shipment.buyerType}'` : null,
+                        shipmentCode: shipment.code ? `'${shipment.code}'` : null,
+                        deliveryDate: shipment.deliveryDate ? `'${moment(shipment.deliveryDate).subtract(7, "hours").format("L")}'` : null,
+                        isVoid: `'${shipment.isVoid}'`,
+                        designCode: detail.designCode ? `'${detail.designCode}'` : null,
+                        designNumber: detail.designNumber ? `'${detail.designNumber}'` : null,
+                        productionOrderNo: detail.productionOrderNo ? `'${detail.productionOrderNo}'` : null,
+                        productionOrderType: detail.productionOrderType ? `'${detail.productionOrderType}'` : null,
+                        colorType: item.colorType ? `'${item.colorType}'` : null,
+                        length: item.length ? `${item.length}` : null,
+                        productCode: item.productCode ? `'${item.productCode}'` : null,
+                        productName: item.productName ? `'${item.productName}'` : null,
+                        quantity: item.quantity ? `${item.quantity}` : null,
+                        uomUnit: item.uomUnit ? `'${item.uomUnit}'` : null,
+                        weight: item.weight ? `${item.weight}` : null
+                    }
+                });
+                return [].concat.apply([], resultss);
+            });
+            return [].concat.apply([], results);
+        })
         return Promise.resolve([].concat.apply([], result));
     };
 
@@ -163,15 +148,16 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
                         var command = [];
 
-                        var sqlQuery = '';
+                        var sqlQuery = 'INSERT INTO [DL_Fact_Shipment_Document] ';
 
                         var count = 1;
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material], [_deleted], [deliverySchedule]) VALUES(${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material}, ${item.deleted}, ${item.deliverySchedule});\n`;
+                                var queryString = `\nSELECT ${item.buyerCode}, ${item.buyerName}, ${item.buyerType}, ${item.shipmentCode}, ${item.deliveryDate}, ${item.isVoid}, ${item.designCode}, ${item.designNumber}, ${item.productionOrderNo}, ${item.productionOrderType}, ${item.colorType}, ${item.length}, ${item.productCode}, ${item.productName}, ${item.quantity}, ${item.uomUnit}, ${item.weight} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
+                                    sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "";
                                 }
@@ -180,13 +166,15 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
                             }
                         }
 
-                        if (sqlQuery != "")
+                        if (sqlQuery != "") {
+                            sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                             command.push(this.insertQuery(request, `${sqlQuery}`));
+                        }
 
                         this.sql.multiple = true;
 
                         // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\Log.txt";
+                        // var path = "C:\\Users\\jacky.rusly\\Desktop\\Log.txt";
 
                         // fs.writeFile(path, sqlQuery, function (error) {
                         //     if (error) {
@@ -198,7 +186,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
                         return Promise.all(command)
                             .then((results) => {
-                                request.execute("DL_UPSERT_FACT_SALES_CONTRACT").then((execResult) => {
+                                request.execute("DL_UPSERT_FACT_SHIPMENT_DOCUMENT").then((execResult) => {
                                     transaction.commit((err) => {
                                         if (err)
                                             reject(err);

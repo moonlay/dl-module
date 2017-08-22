@@ -7,7 +7,7 @@ var ShipmentDocumentManager = require("../../../../src/managers/inventory/finish
 var ProductionOrderDataUtil = require("../../sales/production-order-data-util");
 var BuyerDataUtil = require("../../master/buyer-data-util");
 var StorageDataUtil = require('../../master/storage-data-util');
-var ProductDataUtil = require("../../master/product-data-util");
+var InventoryDocumentDataUtil = require('../inventory-document-data-util');
 
 var codeGenerator = require('../../../../src/utils/code-generator');
 
@@ -19,12 +19,12 @@ var FPShipmentDocumentModels = Models.inventory.finishingPrinting.FPShipmentDocu
 
 class FPShipmentDocumentDataUtil {
     getNewData() {
-        return Promise.all([ProductionOrderDataUtil.getNewTestData(), BuyerDataUtil.getTestData(), StorageDataUtil.getPackingTestData(), ProductDataUtil.getTestData()])
+        return Promise.all([ProductionOrderDataUtil.getNewTestData(), BuyerDataUtil.getTestData(), StorageDataUtil.getPackingTestData(), InventoryDocumentDataUtil.getPackingNewTestData()])
             .then((results) => {
                 var productionOrder1 = results[0];
                 var buyer = results[1];
                 var storage = results[2];
-                var product1 = results[3];
+                var inventoryDocument = results[3];
 
                 var data = {
                     code: codeGenerator(),
@@ -50,15 +50,15 @@ class FPShipmentDocumentDataUtil {
                             designNumber: productionOrder1.designNumber,
                             items: [
                                 {
-                                    productId: product1._id,
-                                    productCode: product1.code,
-                                    productName: product1.name,
+                                    productId: inventoryDocument.items[0].productId,
+                                    productCode: inventoryDocument.items[0].productCode,
+                                    productName: inventoryDocument.items[0].productName,
                                     designCode: productionOrder1.designCode,
                                     designNumber: productionOrder1.designNumber,
                                     colorType: productionOrder1.details[0].colorType.name,
                                     uomId: productionOrder1.uomId,
                                     uomUnit: productionOrder1.uom.unit,
-                                    quantity: 1,
+                                    quantity: inventoryDocument.items[0].quantity,
                                     length: 1,
                                     weight: 1
                                 }

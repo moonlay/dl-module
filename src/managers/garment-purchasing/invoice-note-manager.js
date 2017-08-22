@@ -98,6 +98,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
                     if (!valid.incomeTaxDate || valid.incomeTaxDate == '') {
                         errors["incomeTaxDate"] = i18n.__("InvoiceNote.incomeTaxDate.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxDate._:Tanggal Faktur Pajak (PPn)"));
+                        valid.incomeTaxDate = "";
                     }
                 }
                 if (valid.useVat) {
@@ -160,7 +161,21 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
                 if (valid.useVat) {
                     valid.vat = _vat;
+                } else {
+                    valid.vatDate = "";
                 }
+
+                if (!valid.useIncomeTax) {
+                    valid.incomeTaxDate = "";
+                }
+
+                if (valid.isPayTax && valid.useIncomeTax) {
+                    valid.incomeTaxInvoiceNo = "";
+                }
+                if (valid.isPayTax && valid.useVat) {
+                    valid.vatInvoiceNo = "";
+                }
+
                 for (var invoiceItem of valid.items) {
                     var validDo = _deliveryOrders.find(deliveryOrder => deliveryOrder._id.toString() === invoiceItem.deliveryOrderId.toString());
                     for (var item of invoiceItem.items) {
@@ -237,13 +252,13 @@ module.exports = class InvoiceNoteManager extends BaseManager {
     }
 
     _beforeInsert(invoiceNote) {
-        invoiceNote.no = generateCode();
+        invoiceNote.no = generateCode("invoiceNote");
 
         if (invoiceNote.isPayTax && invoiceNote.useIncomeTax) {
-            invoiceNote.incomeTaxInvoiceNo = generateCode();
+            invoiceNote.incomeTaxInvoiceNo = generateCode("incomeTaxInvoiceNo");
         }
         if (invoiceNote.isPayTax && invoiceNote.useVat) {
-            invoiceNote.vatInvoiceNo = generateCode();
+            invoiceNote.vatInvoiceNo = generateCode("vatInvoiceNo");
         }
         return Promise.resolve(invoiceNote);
     }
