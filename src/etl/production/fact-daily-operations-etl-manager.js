@@ -163,13 +163,13 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                 badOutput: item.badOutput ? `${item.badOutput}` : null,
                 badOutputDescription: item.badOutputDescription ? `'${item.badOutputDescription}'` : null,
                 code: item.code ? `'${item.code}'` : null,
-                inputDate: item.dateInput ? `'${moment(item.dateInput).subtract(7, "hours").format("YYYY-MM-DD")}'` : null,
-                outputDate: item.dateOutput ? `'${moment(item.dateOutput).subtract(7, "hours").format("YYYY-MM-DD")}'` : null,
+                inputDate: item.dateInput ? `'${moment(item.dateInput).add(7, "hours").format("YYYY-MM-DD")}'` : null,
+                outputDate: item.dateOutput ? `'${moment(item.dateOutput).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                 goodOutput: item.goodOutput ? `'${item.goodOutput}'` : null,
                 input: item.input ? `${item.input}` : null,
                 shift: item.shift ? `'${item.shift}'` : null,
-                inputTime: item.timeInput ? `'${moment(item.timeInput).subtract(7, "hours").format("HH:mm:ss")}'` : null,
-                outputTime: item.timeOutput ? `'${moment(item.timeOutput).subtract(7, "hours").format("HH:mm:ss")}'` : null,
+                inputTime: item.timeInput ? `'${moment(item.timeInput).add(7, "hours").format("HH:mm:ss")}'` : null,
+                outputTime: item.timeOutput ? `'${moment(item.timeOutput).add(7, "hours").format("HH:mm:ss")}'` : null,
                 kanbanCode: item.kanban ? `'${item.kanban.code}'` : null,
                 kanbanGrade: item.kanban ? `'${item.kanban.grade}'` : null,
                 kanbanCartCartNumber: item.kanban.cart ? `'${item.kanban.cart.cartNumber}'` : null,
@@ -193,6 +193,9 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                 goodOutputQuantityConvertion: item.goodOutput && item.kanban.selectedProductionOrderDetail.uom ? `${item.goodOutput}` : null,
                 badOutputQuantityConvertion: item.badOutput && item.kanban.selectedProductionOrderDetail.uom ? `${item.badOutput}` : null,
                 failedOutputQuantityConvertion: item.failedOutput && item.kanban.selectedProductionOrderDetail.uom ? `${item.failedOutput}` : null,
+                outputQuantity: null,
+                inputOutputDiff: null,
+                status: null,
                 type: item.type ? `'${item.type}'` : null,
                 stepProcessId: item.stepId ? `'${item.stepId}'` : null,
                 stepProcess: item.step && item.step.process ? `'${item.step.process}'` : null,
@@ -234,9 +237,9 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `\nSELECT ${item._deleted}, ${item.badOutput}, ${item.badOutputDescription}, ${item.code}, ${item.inputDate}, ${item.outputDate}, ${item.goodOutput}, ${item.input}, ${item.shift}, ${item.inputTime}, ${item.outputTime}, ${item.kanbanCode}, ${item.kanbanGrade}, ${item.kanbanCartCartNumber}, ${item.kanbanCartCode}, ${item.kanbanCartPcs}, ${item.kanbanCartQty}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.orderType}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.machineCode}, ${item.machineCondition}, ${item.machineManufacture}, ${item.machineMonthlyCapacity}, ${item.machineName}, ${item.machineProcess}, ${item.machineYear}, ${item.inputQuantityConvertion}, ${item.goodOutputQuantityConvertion}, ${item.badOutputQuantityConvertion}, ${item.failedOutputQuantityConvertion}, ${item.type}, ${item.stepProcessId}, ${item.stepProcess}, ${item.processArea} UNION ALL `;
+                                var queryString = `\nSELECT ${item._deleted}, ${item.badOutput}, ${item.badOutputDescription}, ${item.code}, ${item.inputDate}, ${item.outputDate}, ${item.goodOutput}, ${item.input}, ${item.shift}, ${item.inputTime}, ${item.outputTime}, ${item.kanbanCode}, ${item.kanbanGrade}, ${item.kanbanCartCartNumber}, ${item.kanbanCartCode}, ${item.kanbanCartPcs}, ${item.kanbanCartQty}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.orderType}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.machineCode}, ${item.machineCondition}, ${item.machineManufacture}, ${item.machineMonthlyCapacity}, ${item.machineName}, ${item.machineProcess}, ${item.machineYear}, ${item.inputQuantityConvertion}, ${item.goodOutputQuantityConvertion}, ${item.badOutputQuantityConvertion}, ${item.failedOutputQuantityConvertion}, ${item.outputQuantity}, ${item.inputOutputDiff}, ${item.status}, ${item.type}, ${item.stepProcessId}, ${item.stepProcess}, ${item.processArea} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 4000 === 0) {
+                                if (count % 500 === 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "INSERT INTO [DL_Fact_Fabric_Quality_Control_Temp] ";
