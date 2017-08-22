@@ -175,6 +175,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     errors["salesContractNo"] = i18n.__("ProductionOrder.salesContractNo.isRequired:%s is required", i18n.__("ProductionOrder.salesContractNo._:SalesContractNo")); //"salesContractNo tidak boleh kosong";
                 }
 
+                if (!_sc)
+                    errors["salesContractNo"] = i18n.__("ProductionOrder.salesContractNo.isRequired:%s is not exists", i18n.__("ProductionOrder.salesContractNo._:SalesContractNo")); //"salesContractNo tidak boleh kosong";
+
+
                 if (!_material)
                     errors["material"] = i18n.__("ProductionOrder.material.isRequired:%s is not exists", i18n.__("ProductionOrder.material._:Material")); //"material tidak boleh kosong";
 
@@ -369,6 +373,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 }
                 if (_buyer) {
                     valid.buyerId = new ObjectId(_buyer._id);
+                }
+                if(_sc){
+                    valid.salesContractId= new ObjectId(_sc._id);
                 }
                 if (_uom) {
                     valid.uomId = new ObjectId(_uom._id);
