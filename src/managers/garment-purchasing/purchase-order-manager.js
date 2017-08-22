@@ -148,16 +148,18 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isNotPosted:%s is need to be posted", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest harus sudah dipost";
                 }
                 else {
-                    for (var prItem of _purchaseRequest.items) {
-                        if (prItem.isUsed) {
-                            var searchId = valid.sourcePurchaseOrderId || valid._id || "";
-                            var poId = (prItem.purchaseOrderIds || []).find((id) => {
-                                return id.toString() === searchId.toString();
-                            });
-                            if (!poId) {
-                                errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest tidak boleh sudah dipakai";
+                    if (!_sourcePurchaseOrder && valid.items.length > 0) {
+                        var prItem = _purchaseRequest.items.find((item) => item.product._id.toString() === valid.items[0].product._id.toString() && item.id_po.toString() === valid.items[0].id_po.toString())
+                        if (prItem) {
+                            if (prItem.isUsed) {
+                                var searchId = valid.sourcePurchaseOrderId || valid._id || "";
+                                var poId = (prItem.purchaseOrderIds || []).find((id) => {
+                                    return id.toString() === searchId.toString();
+                                });
+                                if (!poId) {
+                                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest tidak boleh sudah dipakai";
+                                }
                             }
-                            break
                         }
                     }
                 }
@@ -628,27 +630,51 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 .then(sourcePurchaseOrder => {
                     delete splittedPurchaseOrder._id;
                     delete splittedPurchaseOrder.no;
+
+                    splittedPurchaseOrder.no = generateCode();
                     splittedPurchaseOrder.sourcePurchaseOrder = sourcePurchaseOrder;
                     splittedPurchaseOrder.sourcePurchaseOrderId = sourcePurchaseOrder._id;
                     this.create(splittedPurchaseOrder)
-                        .then(id => {
-                            for (var item of splittedPurchaseOrder.items) {
-                                var sourceItem = sourcePurchaseOrder.items.find((_sourceItem) => item.product._id.toString() === _sourceItem.product._id.toString());
-                                if (sourceItem) {
-                                    sourceItem.defaultQuantity = sourceItem.defaultQuantity - item.defaultQuantity;
-                                }
-                            }
-                            sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
-                                return !item.isPosted && item.defaultQuantity > 0;
-                            })
-                            this.update(sourcePurchaseOrder)
-                                .then(results => {
-                                    resolve(id);
+                        .then((purchaseOrderId) => {
+                            return this.getSingleById(purchaseOrderId, ["_id", "purchaseRequestId", "items.product._id", "items.id_po"])
+                                .then((purchaseOrder) => {
+                                    return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
+                                        .then(purchaseRequest => {
+                                            for (var item of purchaseOrder.items) {
+                                                var prItem = purchaseRequest.items.find(prItem => prItem.productId.toString() === item.product._id.toString() && prItem.id_po.toString() === item.id_po.toString());
+                                                if (prItem) {
+                                                    prItem.purchaseOrderIds = prItem.purchaseOrderIds || []
+                                                    prItem.purchaseOrderIds.push(purchaseOrder._id);
+                                                    prItem.isUsed = true;
+                                                }
+                                            }
+                                            purchaseRequest.isUsed = purchaseRequest.items
+                                                .map((item) => item.isUsed)
+                                                .reduce((prev, curr, index) => {
+                                                    return prev && curr
+                                                }, true);
+                                            purchaseRequest.status = prStatusEnum.PROCESSING;
+                                            return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
+                                        })
                                 })
-                                .catch(e => {
-                                    reject(e);
-                                });
-
+                                .then(result => {
+                                    for (var item of splittedPurchaseOrder.items) {
+                                        var sourceItem = sourcePurchaseOrder.items.find((_sourceItem) => item.product._id.toString() === _sourceItem.product._id.toString());
+                                        if (sourceItem) {
+                                            sourceItem.defaultQuantity = sourceItem.defaultQuantity - item.defaultQuantity;
+                                        }
+                                    }
+                                    sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
+                                        return !item.isPosted && item.defaultQuantity > 0;
+                                    })
+                                    this.update(sourcePurchaseOrder)
+                                        .then(results => {
+                                            resolve(purchaseOrderId);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
                         })
                         .catch(e => {
                             reject(e);
