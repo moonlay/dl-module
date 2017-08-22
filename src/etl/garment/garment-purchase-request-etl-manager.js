@@ -83,15 +83,15 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     dateStamp = "2017-07%%";
                 } else if (date == 8) {
                     dateStamp = "2017-08%%";
-                }else if (date == 9) {
+                } else if (date == 9) {
                     dateStamp = "2017-09%%";
-                }else if (date == 10) {
+                } else if (date == 10) {
                     dateStamp = "2017-10%%";
-                }else if (date == 11) {
+                } else if (date == 11) {
                     dateStamp = "2017-11%%";
-                }else if (date == 12) {
+                } else if (date == 12) {
                     dateStamp = "2017-12%%";
-                } 
+                }
                 else if (date == "latest") {
                     if (result.length != 0) {
                         var year = result[0].start.getFullYear();
@@ -123,7 +123,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                 //     dateStamp = [year, month, day].join('-');
                 // } else if (result.length == 0) {
-                //     dateStamp = "2017-01%%";
+                //     dateStamp = "2017-08-2%%";
                 // }
 
 
@@ -398,23 +398,44 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 var no = 1;
 
                 for (var Ro of nomorRo) {
-                    var code = generateCode();
+
                     var items = [];
                     var map = {};
+                    var createdDateTemp = [];
+                    var updatedDateTemp = [];
+
+                    var _createdDate;
+                    var _updatedDate;
+
                     for (var data of datas) {
-
-                        var _createdDatehours = new Date(data.Jamin).getHours() ? new Date(data.Jamin).getHours() : "";
-                        var _createdDateminutes = new Date(data.Jamin).getMinutes() ? new Date(data.Jamin).getMinutes() : "";
-                        var _createdDatedate = data.Tglin.toString();
-                        var _createdDate = _createdDatedate + ":" + _createdDatehours + ":" + "" + _createdDateminutes;
-
-                        var _updatedDatehours = new Date(data.Jamed).getHours() ? new Date(data.Jamed).getHours() : "";
-                        var _updatedDateminutes = new Date(data.Jamed).getMinutes() ? new Date(data.Jamed).getMinutes() : "";
-                        var _updatedDatedate = data.Tgled.toString();
-                        var _updatedDate = _updatedDatedate + ":" + _updatedDatehours + ":" + "" + _updatedDateminutes;
-
-
                         if (Ro == data.Ro) {
+                            var code = generateCode(data.ID_PO);
+                            var createdYear = data.Tglin.getFullYear();
+                            var createdMonth = data.Tglin.getMonth() + 1;
+                            var createdDay = data.Tglin.getDate();
+
+                            if (createdMonth < 10) {
+                                createdMonth = "0" + createdMonth;
+                            }
+                            if (createdDay < 10) {
+                                createdDay = "0" + createdDay;
+                            }
+                            _createdDate = [createdYear, createdMonth, createdDay].join('-');
+
+                            var updatedYear = data.Tglin.getFullYear();
+                            var updatedMonth = data.Tglin.getMonth() + 1;
+                            var updatedDay = data.Tglin.getDate();
+
+                            if (updatedMonth < 10) {
+                                updatedMonth = "0" + updatedMonth;
+                            }
+                            if (updatedDay < 10) {
+                                updatedDay = "0" + updatedDay;
+                            }
+                            _updatedDate = [updatedYear, updatedMonth, updatedDay].join('-');
+
+                            createdDateTemp.push(data.jamin.trim());
+                            updatedDateTemp.push(data.jamed.trim());
 
                             var unitCode = "";
                             if (data.Konf.trim() == "K.1") {
@@ -540,13 +561,13 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     _active: true,
                                     _deleted: false,
                                     _createdBy: data.Userin,
-                                    _createdDate: new Date(_createdDate),
+                                    // _createdDate: new Date(_createdDate),
                                     _createAgent: "manager",
                                     _updatedBy: data.Usered,
-                                    _updatedDate: new Date(_updatedDate),
+                                    // _updatedDate: new Date(_updatedDate),
                                     _updateAgent: "manager",
                                     // no: data.Ro,
-                                    no: generateCode() + (no++),
+                                    no: generateCode(),
                                     roNo: data.Ro,
                                     artikel: data.Art,
                                     shipmentDate: data.Shipment,
@@ -600,6 +621,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                     }
 
+                    map._createdDate = new Date(_createdDate + ":" + createdDateTemp.sort()[0]);
+                    map._updatedDate = new Date(_updatedDate + ":" + updatedDateTemp.sort()[0]);
                     map.items = items;
                     transformData.datas.push(map);
 
