@@ -53,7 +53,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return query;
     }
 
-    run(table1, table2) {
+    run(table1, table2, date) {
         var startedDate = new Date()
 
         this.migrationLog.insert({
@@ -67,28 +67,70 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             this.getTimeStamp().then((result) => {
                 var dateStamp;
 
-                if (result.length != 0) {
-                    var year = result[0].start.getFullYear();
-                    var month = result[0].start.getMonth() + 1;
-                    var day = result[0].start.getDate();
+                if (date == 1) {
+                    dateStamp = "2017-01%%";
+                } else if (date == 2) {
+                    dateStamp = "2017-02%%";
+                } else if (date == 3) {
+                    dateStamp = "2017-03%%";
+                } else if (date == 4) {
+                    dateStamp = "2017-04%%";
+                } else if (date == 5) {
+                    dateStamp = "2017-05%%";
+                } else if (date == 6) {
+                    dateStamp = "2017-06%%";
+                } else if (date == 7) {
+                    dateStamp = "2017-07%%";
+                } else if (date == 8) {
+                    dateStamp = "2017-08%%";
+                }else if (date == 9) {
+                    dateStamp = "2017-09%%";
+                }else if (date == 10) {
+                    dateStamp = "2017-10%%";
+                }else if (date == 11) {
+                    dateStamp = "2017-11%%";
+                }else if (date == 12) {
+                    dateStamp = "2017-12%%";
+                } 
+                else if (date == "latest") {
+                    if (result.length != 0) {
+                        var year = result[0].start.getFullYear();
+                        var month = result[0].start.getMonth() + 1;
+                        var day = result[0].start.getDate();
 
-                    if (month < 10) {
-                        month = "0" + month;
-                    }
-                    if (day < 10) {
-                        day = "0" + day;
-                    }
+                        if (month < 10) {
+                            month = "0" + month;
+                        }
+                        if (day < 10) {
+                            day = "0" + day;
+                        }
 
-                    dateStamp = [year, month, day].join('-');
-                } else if (result.length == 0) {
-                    dateStamp = "2016-01-01";
+                        dateStamp = [year, month, day].join('-');
+                    }
                 }
 
+                // if (result.length != 0) {
+                //     var year = result[0].start.getFullYear();
+                //     var month = result[0].start.getMonth() + 1;
+                //     var day = result[0].start.getDate();
 
-                this.getRowNumber(table1, table2)
+                //     if (month < 10) {
+                //         month = "0" + month;
+                //     }
+                //     if (day < 10) {
+                //         day = "0" + day;
+                //     }
+
+                //     dateStamp = [year, month, day].join('-');
+                // } else if (result.length == 0) {
+                //     dateStamp = "2017-01%%";
+                // }
+
+
+                this.getRowNumber(table1, table2, dateStamp)
                     .then((data) => {
 
-                        var pageSize = 100;
+                        var pageSize = 1000;
                         var dataLength = data;
                         var totalPageNumber = Math.ceil(dataLength / pageSize);
 
@@ -108,7 +150,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                             })
                                     })
                             }))
-
                         }
 
                         Promise.all(processedData).then((processedData) => {
@@ -164,7 +205,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     }
 
 
-    getRowNumber(table1, table2) {
+    getRowNumber(table1, table2, tgl) {
         return new Promise((resolve, reject) => {
             this.sql.startConnection()
                 .then(() => {
@@ -174,7 +215,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
 
-                        var sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.Tanggal,20),10) >= '2016-01-01' and POrder.Harga = 0"
+                        var sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.Tanggal,20),10) >= '" + tgl + "' and POrder.Harga = 0"
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
@@ -327,7 +368,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 var getProduct = datas.dataTest.Product;
                 var getBuyer = datas.dataTest.Buyer;
                 var getUom = datas.dataTest.Uom;
-                
+
                 for (var unique of datas) {
                     if (!(nomorRo.find(o => o == unique.Ro.trim()))) {
 
@@ -475,6 +516,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     },
                                     colors: Colors,
                                     id_po: (data.ID_PO),
+                                    isUsed: false,
                                 }
                                 items.push(item);
 
@@ -543,7 +585,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                         value: 2,
                                         label: "Belum diterima Pembelian",
                                     },
-                                    purchaseOrderIds: [],
 
                                 })
 
