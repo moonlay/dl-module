@@ -3,7 +3,46 @@
 // external deps 
 var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require("module-toolkit").BaseManager;
+var global = require("../../global");
+var locale = global.config.locale;
 var moment = require("moment");
+const selectedFields = {
+    "_deleted": 1,
+    "badOutput": 1,
+    "badOutputDescription": 1,
+    "code": 1,
+    "dateInput": 1,
+    "dateOutput": 1,
+    "goodOutput": 1,
+    "input": 1,
+    "shift": 1,
+    "timeInput": 1,
+    "timeOutput": 1,
+    "kanban.code": 1,
+    "kanban.grade": 1,
+    "kanban.cart.cartNumber": 1,
+    "kanban.cart.code": 1,
+    "kanban.cart.pcs": 1,
+    "kanban.cart.qty": 1,
+    "kanban.cart.instruction.code": 1,
+    "kanban.cart.instruction.name": 1,
+    "kanban.productionOrder.orderType.name": 1,
+    "kanban.selectedProductionOrderDetail.colorRequest": 1,
+    "kanban.selectedProductionOrderDetail.colorTemplate": 1,
+    "kanban.selectedProductionOrderDetail.uom.unit": 1,
+    "machine.code": 1,
+    "machine.condition": 1,
+    "machine.manufacture": 1,
+    "machine.monthlyCapacity": 1,
+    "machine.name": 1,
+    "machine.process": 1,
+    "machine.year": 1,
+    "failedOutput": 1,
+    "type": 1,
+    "stepId": 1,
+    "step.process": 1,
+    "step.proccessArea": 1
+};
 
 // internal deps 
 require("mongodb-toolkit");
@@ -19,6 +58,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
     }
 
     run() {
+        moment.locale(locale.name);
         var startedDate = new Date()
         this.migrationLog.insert({
             description: "Fact Daily Operation from MongoDB to Azure DWH",
@@ -29,6 +69,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
             .then((results) => {
+                console.log("Success!")
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
@@ -64,42 +105,71 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
     extract(times) {
         var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
+        var inputArr = [];
         return this.dailyOperationManager.collection.find({
             _updatedDate: {
                 $gte: timestamp
             }
-        }).toArray();
+        }, {
+                "code": 1
+            }).toArray()
+            .then((datas) => this.getInputDatas(datas))
+            .then((inputDatas) => {
+                inputArr = inputDatas;
+                return this.getOutputDatas(inputDatas)
+            })
+            .then((outputDatas) => {
+                return this.joinDatas(inputArr, outputDatas)
+            })
     }
 
-    // orderQuantityConvertion(uom, quantity) {
-    //     if (uom.toLowerCase() === "met" || uom.toLowerCase() === "mtr" || uom.toLowerCase() === "pcs") {
-    //         return quantity;
-    //     } else if (uom.toLowerCase() === "yard" || uom.toLowerCase() === "yds") {
-    //         return quantity * 0.9144;
-    //     }
-    // }
+    getInputDatas(datas) {
+        var inputCodeArr = datas.map((data) => {
+            return data.code;
+        });
+        return this.dailyOperationManager.collection.find({
+            "code": {
+                $in: inputCodeArr
+            },
+            "type": "input"
+        }, selectedFields).toArray()
+    }
+
+    getOutputDatas(inputDatas) {
+        var outputCodeArr = inputDatas.map((inputData) => {
+            return inputData.code;
+        });
+
+        return this.dailyOperationManager.collection.find({
+            "code": {
+                $in: outputCodeArr
+            },
+            "type": "output"
+        }, selectedFields).toArray()
+    }
+
+    joinDatas(inputDatas, outputDatas) {
+        for (var outputData of outputDatas) {
+            inputDatas.push(outputData);
+        }
+        return inputDatas;
+    }
 
     transform(data) {
         var result = data.map((item) => {
-            var orderUom = item.kanban.selectedProductionOrderDetail.uom ? item.kanban.selectedProductionOrderDetail.uom.unit : null;
-            //     var orderQuantity = item.orderQuantity ? item.orderQuantity : null;
-            //     var material = item.material ? item.material.name.replace(/'/g, '"') : null;
-            //     var materialConstruction = item.materialConstruction ? item.materialConstruction.name.replace(/'/g, '"') : null;
-            //     var yarnMaterialNo = item.yarnMaterial ? item.yarnMaterial.name.replace(/'/g, '"') : null;
-            //     var materialWidth = item.materialWidth ? item.materialWidth : null;
 
             return {
                 _deleted: `'${item._deleted}'`,
                 badOutput: item.badOutput ? `${item.badOutput}` : null,
                 badOutputDescription: item.badOutputDescription ? `'${item.badOutputDescription}'` : null,
                 code: item.code ? `'${item.code}'` : null,
-                inputDate: item.dateInput ? `'${moment(item.dateInput).format("YYYY-MM-DD")}'` : null,
-                outputDate: item.dateOutput ? `'${moment(item.dateOutput).format("YYYY-MM-DD")}'` : null,
+                inputDate: item.dateInput ? `'${moment(item.dateInput).subtract(7, "hours").format("YYYY-MM-DD")}'` : null,
+                outputDate: item.dateOutput ? `'${moment(item.dateOutput).subtract(7, "hours").format("YYYY-MM-DD")}'` : null,
                 goodOutput: item.goodOutput ? `'${item.goodOutput}'` : null,
                 input: item.input ? `${item.input}` : null,
                 shift: item.shift ? `'${item.shift}'` : null,
-                inputTime: item.timeInput ? `'${moment(item.timeInput).format("HH:mm:ss")}'` : null,
-                outputTime: item.timeOutput ? `'${moment(item.timeOutput).format("HH:mm:ss")}'` : null,
+                inputTime: item.timeInput ? `'${moment(item.timeInput).subtract(7, "hours").format("HH:mm:ss")}'` : null,
+                outputTime: item.timeOutput ? `'${moment(item.timeOutput).subtract(7, "hours").format("HH:mm:ss")}'` : null,
                 kanbanCode: item.kanban ? `'${item.kanban.code}'` : null,
                 kanbanGrade: item.kanban ? `'${item.kanban.grade}'` : null,
                 kanbanCartCartNumber: item.kanban.cart ? `'${item.kanban.cart.cartNumber}'` : null,
@@ -166,7 +236,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                             if (item) {
                                 var queryString = `INSERT INTO [dbo].[DL_Fact_Daily_Operation_Temp]([_deleted], [badOutput], [badOutputDescription], [code], [inputDate], [outputDate], [goodOutput], [input], [shift], [inputTime], [outputTime], [kanbanCode], [kanbanGrade], [kanbanCartCartNumber], [kanbanCartCode], [kanbanCartPcs], [kanbanCartQty], [kanbanInstructionCode], [kanbanInstructionName], [orderType], [selectedProductionOrderDetailCode], [selectedProductionOrderDetailColorRequest], [selectedProductionOrderDetailColorTemplate], [machineCode], [machineCondition], [machineManufacture], [machineMonthlyCapacity], [machineName], [machineProcess], [machineYear], [inputQuantityConvertion], [goodOutputQuantityConvertion], [badOutputQuantityConvertion], [failedOutputQuantityConvertion], [type], [stepProcessId], [stepProcess], [processArea]) VALUES(${item._deleted}, ${item.badOutput}, ${item.badOutputDescription}, ${item.code}, ${item.inputDate}, ${item.outputDate}, ${item.goodOutput}, ${item.input}, ${item.shift}, ${item.inputTime}, ${item.outputTime}, ${item.kanbanCode}, ${item.kanbanGrade}, ${item.kanbanCartCartNumber}, ${item.kanbanCartCode}, ${item.kanbanCartPcs}, ${item.kanbanCartQty}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.orderType}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.machineCode}, ${item.machineCondition}, ${item.machineManufacture}, ${item.machineMonthlyCapacity}, ${item.machineName}, ${item.machineProcess}, ${item.machineYear}, ${item.inputQuantityConvertion}, ${item.goodOutputQuantityConvertion}, ${item.badOutputQuantityConvertion}, ${item.failedOutputQuantityConvertion}, ${item.type}, ${item.stepProcessId}, ${item.stepProcess}, ${item.processArea});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 10000 === 0) {
+                                if (count % 100000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "";
                                 }
