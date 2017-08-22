@@ -21,108 +21,110 @@ class ProductionOrderDataUtil {
         var buyerTestData = !dataSupport ? buyer.getTestData() : dataSupport.buyer ? Promise.resolve(null) : buyer.getTestData();
         var processTestData = !dataSupport ? processType.getTestData() : dataSupport.process ? Promise.resolve(null) : processType.getTestData();
         var accountTestData = !dataSupport ? account.getTestData() : dataSupport.account ? Promise.resolve(null) : account.getTestData();
-        var fpSCTestData= !dataSupport ? fpSC.getNewData() : dataSupport.salesContract ? Promise.resolve(null) : fpSC.getNewData();
-        return Promise.all([uom.getTestData(), buyerTestData, lampStandard.getTestData(), lampStandard.getTestData2(), processTestData, material.getTestData(), colorType.getTestData(), colorType.getTestData2(), standardTest.getTestData(), finishType.getTestData(),  materialConstruction.getTestData(), accountTestData,fpSCTestData])
+        var fpSCTestData= !dataSupport ? fpSC.getNewTestData() : dataSupport.salesContract ? Promise.resolve(null) : fpSC.getNewTestData();
+        return Promise.all([uom.getTestData(), buyerTestData, lampStandard.getTestData(), lampStandard.getTestData2(), processTestData, material.getTestData(), colorType.getTestData(), colorType.getTestData2(), standardTest.getTestData(), finishType.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), accountTestData])
             .then((results) => {
-                var _uom = results[0];
-                var _buyer = !dataSupport ? results[1] : dataSupport.buyer ? dataSupport.buyer : results[1];
-                var _lampStandard1 = results[2];
-                var _lampStandard2 = results[3];
-                var _processType = !dataSupport ? results[4] : dataSupport.process ? dataSupport.process : results[4];
-                var _material = results[5];
-                var color1=results[6];
-                var color2=results[7];
-                var _standard= results[8];
-                var _finish= results[9];
-                var _construction=results[10];
-                var _account= !dataSupport ? results[11] : dataSupport.account ? dataSupport.account : results[11];
-                var _fp=!dataSupport ? results[12] : dataSupport.salesContract ? dataSupport.salesContract : results[12];
-                
-                var _yarn=_fp.yarnMaterial;
-                var detail = [{
-                        code:`code1/${codeGenerator()}`,
-                        colorTypeId:color1._id,
-                        colorType:color1,
-                        colorRequest:`reddish`,
-                        colorTemplate:`template1`,
-                        quantity:20,
-                        uomId: _uom._id,
-                        uom:_uom,
-                    }, {
-                        code:`code2/${codeGenerator()}`,
-                        colorTypeId:color2._id,
-                        colorType:color2,
-                        colorRequest:`gray`,
-                        colorTemplate:`template2`,
-                        quantity:20,
-                        uomId: _uom._id,
-                        uom:_uom,
-                    }];
-                if(dataSupport){
-                    if(dataSupport.isSinggle){
-                        detail = [{
+                return Promise.resolve(fpSCTestData).then(a=>{
+                    var _uom = results[0];
+                    var _buyer = !dataSupport ? results[1] : dataSupport.buyer ? dataSupport.buyer : results[1];
+                    var _lampStandard1 = results[2];
+                    var _lampStandard2 = results[3];
+                    var _processType = !dataSupport ? results[4] : dataSupport.process ? dataSupport.process : results[4];
+                    var _material = results[5];
+                    var color1=results[6];
+                    var color2=results[7];
+                    var _standard= results[8];
+                    var _finish= results[9];
+                    var _yarn=results[10];
+                    var _construction=results[11];
+                    var _account= !dataSupport ? results[12] : dataSupport.account ? dataSupport.account : results[12];
+                    var _fp=!dataSupport ? a : dataSupport.salesContract ? dataSupport.salesContract : a;
+                    var detail = [{
                             code:`code1/${codeGenerator()}`,
                             colorTypeId:color1._id,
                             colorType:color1,
                             colorRequest:`reddish`,
                             colorTemplate:`template1`,
-                            quantity:40,
+                            quantity:20,
                             uomId: _uom._id,
                             uom:_uom,
-                        }]
+                        }, {
+                            code:`code2/${codeGenerator()}`,
+                            colorTypeId:color2._id,
+                            colorType:color2,
+                            colorRequest:`gray`,
+                            colorTemplate:`template2`,
+                            quantity:20,
+                            uomId: _uom._id,
+                            uom:_uom,
+                        }];
+                    if(dataSupport){
+                        if(dataSupport.isSinggle){
+                            detail = [{
+                                code:`code1/${codeGenerator()}`,
+                                colorTypeId:color1._id,
+                                colorType:color1,
+                                colorRequest:`reddish`,
+                                colorTemplate:`template1`,
+                                quantity:40,
+                                uomId: _uom._id,
+                                uom:_uom,
+                            }]
+                        }
                     }
-                }
 
-                var data = {
-                    salesContractNo: _fp.salesContractNo,
-                    orderNo: `orderNo/${codeGenerator()}`,
-                    uomId: _uom._id,
-                    uom: _uom,
-                    buyerId: _buyer._id,
-                    buyer: _buyer,
-                    processType: _processType,
-                    processTypeId: _processType._id,
-                    orderType: _processType.orderType,
-                    orderTypeId: _processType.orderType._id,
-                    materialConstructionId:_construction._id,
-                    materialConstruction:_construction,
-                    salesContractId:_fp._id,
-                    material:_material,
-                    materialId:_material._id,
-                    materialWidth: `40x45`,
-                    orderQuantity:40,
-                    shippingQuantityTolerance:5,
-                    accountId: _account._id,
-                    account:_account,
-                    yarnMaterialId:_yarn._id,
-                    yarnMaterial:_yarn,
-                    finishTypeId:_finish._id,
-                    finishType:_finish,
-                    standardTestId:_standard._id,
-                    standardTest:_standard,
-                    materialOrigin:`greige`,
-                    finishWidth:`width`,
-                    design:`design`,
-                    designCode: `UT\Design`,
-                    designNumber: `UT\DesignNumber`,
-                    handlingStandard:`handling`,
-                    shrinkageStandard:`shrink`,
-                    packingInstruction:`length`,
-                    sample:`sample`,
-                    deliveryDate:new Date(),
-                    remark:`desc`,
-                    isUsed:false,
-                    lampStandards: [{
-                        lampStandardId: _lampStandard1._id,
-                        lampStandard: _lampStandard1,
-                    },
-                    {
-                        lampStandardId: _lampStandard2._id,
-                        lampStandard: _lampStandard2,
-                    }],
-                    details:  detail 
-                };
-                return Promise.resolve(data);
+                    var data = {
+                        salesContractNo: _fp.salesContractNo,
+                        orderNo: `orderNo/${codeGenerator()}`,
+                        uomId: _uom._id,
+                        uom: _uom,
+                        buyerId: _buyer._id,
+                        buyer: _buyer,
+                        processType: _processType,
+                        processTypeId: _processType._id,
+                        orderType: _processType.orderType,
+                        orderTypeId: _processType.orderType._id,
+                        materialConstructionId:_construction._id,
+                        materialConstruction:_construction,
+                        salesContractId:_fp._id,
+                        material:_material,
+                        materialId:_material._id,
+                        materialWidth: `40x45`,
+                        orderQuantity:40,
+                        shippingQuantityTolerance:5,
+                        accountId: _account._id,
+                        account:_account,
+                        yarnMaterialId:_yarn._id,
+                        yarnMaterial:_yarn,
+                        finishTypeId:_finish._id,
+                        finishType:_finish,
+                        standardTestId:_standard._id,
+                        standardTest:_standard,
+                        materialOrigin:`greige`,
+                        finishWidth:`width`,
+                        design:`design`,
+                        designCode: `UT\Design`,
+                        designNumber: `UT\DesignNumber`,
+                        handlingStandard:`handling`,
+                        shrinkageStandard:`shrink`,
+                        packingInstruction:`length`,
+                        sample:`sample`,
+                        deliveryDate:new Date(),
+                        remark:`desc`,
+                        isUsed:false,
+                        lampStandards: [{
+                            lampStandardId: _lampStandard1._id,
+                            lampStandard: _lampStandard1,
+                        },
+                        {
+                            lampStandardId: _lampStandard2._id,
+                            lampStandard: _lampStandard2,
+                        }],
+                        details:  detail 
+                    };
+                    return Promise.resolve(data);
+                })
+                
             });
     }
 
