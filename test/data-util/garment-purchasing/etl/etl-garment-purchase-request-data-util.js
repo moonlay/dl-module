@@ -7,6 +7,8 @@ class garmentPurchaseRequestDataUtil {
         var datas = [];
 
         var data = [{
+            jamin: "15:15:15",
+            jamed: "16:16:16",
             Art: "uni-test-art",
             Buyer: "T02",
             Cat: "SPM",
@@ -41,11 +43,11 @@ class garmentPurchaseRequestDataUtil {
             Usered: "uni-test",
             Userin: "uni-test",
         }, {
+                jamin: "15:15:15",
+                jamed: "16:16:16",
                 Art: "uni-test-art",
-
                 Buyer: "buyerNotFound",
                 Cat: "CatNotFound",
-
                 Delivery: new Date(),
                 Harga: 111,
                 Ketr: "ketr",
@@ -78,6 +80,8 @@ class garmentPurchaseRequestDataUtil {
                 Usered: "uni-test",
                 Userin: "uni-test",
             }, {
+                jamin: "15:15:15",
+                jamed: "16:16:16",
                 Art: "uni-test-art",
                 Buyer: "testBuyer",
 
