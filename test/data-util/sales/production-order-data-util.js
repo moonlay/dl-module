@@ -21,7 +21,7 @@ class ProductionOrderDataUtil {
         var buyerTestData = !dataSupport ? buyer.getTestData() : dataSupport.buyer ? Promise.resolve(null) : buyer.getTestData();
         var processTestData = !dataSupport ? processType.getTestData() : dataSupport.process ? Promise.resolve(null) : processType.getTestData();
         var accountTestData = !dataSupport ? account.getTestData() : dataSupport.account ? Promise.resolve(null) : account.getTestData();
-        var fpSCTestData= !dataSupport ? fpSC.getNewTestData() : dataSupport.salesContract ? Promise.resolve(null) : fpSC.getNewTestData();
+        var fpSCTestData= !dataSupport ? fpSC.getNewData() : dataSupport.salesContract ? Promise.resolve(null) : fpSC.getNewData();
         return Promise.all([uom.getTestData(), buyerTestData, lampStandard.getTestData(), lampStandard.getTestData2(), processTestData, material.getTestData(), colorType.getTestData(), colorType.getTestData2(), standardTest.getTestData(), finishType.getTestData(),  materialConstruction.getTestData(), accountTestData,fpSCTestData])
             .then((results) => {
                 var _uom = results[0];
