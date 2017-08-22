@@ -18,11 +18,11 @@ var fpSC = require('./finishing-printing-sales-contract-data-util');
 
 class ProductionOrderDataUtil {
     getNewData(dataSupport) {
-        var buyerTestData = !dataSupport ? buyer.getTestData() : dataSupport.buyer ? Promise.resolve(null) : buyer.getTestData();
-        var processTestData = !dataSupport ? processType.getTestData() : dataSupport.process ? Promise.resolve(null) : processType.getTestData();
-        var accountTestData = !dataSupport ? account.getTestData() : dataSupport.account ? Promise.resolve(null) : account.getTestData();
+        var buyerTestData = !dataSupport ? buyer.getNewData() : dataSupport.buyer ? Promise.resolve(null) : buyer.getNewData();
+        var processTestData = !dataSupport ? processType.getNewData() : dataSupport.process ? Promise.resolve(null) : processType.getNewData();
+        var accountTestData = !dataSupport ? account.getNewData() : dataSupport.account ? Promise.resolve(null) : account.getNewData();
         var fpSCTestData= !dataSupport ? fpSC.getNewTestData() : dataSupport.salesContract ? Promise.resolve(null) : fpSC.getNewTestData();
-        return Promise.all([uom.getTestData(), buyerTestData, lampStandard.getTestData(), lampStandard.getTestData2(), processTestData, material.getTestData(), colorType.getTestData(), colorType.getTestData2(), standardTest.getTestData(), finishType.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), accountTestData,fpSCTestData])
+        return Promise.all([uom.getTestData(), buyerTestData, lampStandard.getTestData(), lampStandard.getTestData2(), processTestData, material.getNewData(), colorType.getTestData(), colorType.getTestData2(), standardTest.getTestData(), finishType.getTestData(), yarnMaterial.getTestData(), materialConstruction.getNewData(), accountTestData,fpSCTestData])
             .then((results) => {
                 var _uom = results[0];
                 var _buyer = !dataSupport ? results[1] : dataSupport.buyer ? dataSupport.buyer : results[1];
