@@ -163,10 +163,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     errors["orderNo"] = i18n.__("ProductionOrder.orderNo.isExist:%s is Exist", i18n.__("Product.orderNo._:orderNo")); //"orderNo sudah ada";
                 }
 
-                if(!_sc){
-                    errors["salesContractNo"] = i18n.__("ProductionOrder.salesContractNo.isRequired:%s is not exists", i18n.__("ProductionOrder.salesContractNo._:SalesContractNo")); //"material tidak boleh kosong";
-
-                }
 
                 if (valid.uom) {
                     if (!_uom)

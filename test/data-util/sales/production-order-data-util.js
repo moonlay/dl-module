@@ -18,13 +18,13 @@ var fpSC = require('./finishing-printing-sales-contract-data-util');
 
 class ProductionOrderDataUtil {
     getNewData(dataSupport) {
+
         var buyerTestData = !dataSupport ? buyer.getTestData() : dataSupport.buyer ? Promise.resolve(null) : buyer.getTestData();
         var processTestData = !dataSupport ? processType.getTestData() : dataSupport.process ? Promise.resolve(null) : processType.getTestData();
         var accountTestData = !dataSupport ? account.getTestData() : dataSupport.account ? Promise.resolve(null) : account.getTestData();
         var fpSCTestData= !dataSupport ? fpSC.getNewData() : dataSupport.salesContract ? Promise.resolve(null) : fpSC.getNewData();
         return Promise.all([uom.getTestData(), buyerTestData, lampStandard.getTestData(), lampStandard.getTestData2(), processTestData, material.getTestData(), colorType.getTestData(), colorType.getTestData2(), standardTest.getTestData(), finishType.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), accountTestData])
             .then((results) => {
-                return Promise.resolve(fpSCTestData).then(a=>{
                     var _uom = results[0];
                     var _buyer = !dataSupport ? results[1] : dataSupport.buyer ? dataSupport.buyer : results[1];
                     var _lampStandard1 = results[2];
@@ -38,7 +38,9 @@ class ProductionOrderDataUtil {
                     var _yarn=results[10];
                     var _construction=results[11];
                     var _account= !dataSupport ? results[12] : dataSupport.account ? dataSupport.account : results[12];
-                    var _fp=!dataSupport ? a : dataSupport.salesContract ? dataSupport.salesContract : a;
+                    
+                return Promise.resolve(fpSCTestData).then(fp=>{
+                    var _fp=!dataSupport ? fp : dataSupport.salesContract ? dataSupport.salesContract : fp;
                     var detail = [{
                             code:`code1/${codeGenerator()}`,
                             colorTypeId:color1._id,
@@ -123,8 +125,8 @@ class ProductionOrderDataUtil {
                         details:  detail 
                     };
                     return Promise.resolve(data);
-                })
                 
+                })
             });
     }
 
