@@ -596,8 +596,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     .then(purchaseRequest => {
                                         for (var item of purchaseRequest.items) {
                                             item.purchaseOrderIds = item.purchaseOrderIds || []
-                                            var index = item.purchaseOrderIds.indexOf(validData._id);
-                                            if (index > -1) {
+                                            var poId = item.purchaseOrderIds.find((poId) => poId.toString() === validData._id.toString());
+                                            if (poId) {
+                                                var poIndex = item.purchaseOrderIds.indexOf(poId)
                                                 item.purchaseOrderIds.splice(poIndex, 1);
                                                 item.isUsed = false;
                                             }
@@ -667,6 +668,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
                                         return !item.isPosted && item.defaultQuantity > 0;
                                     })
+                                    sourcePurchaseOrder.isSplit = true;
                                     this.update(sourcePurchaseOrder)
                                         .then(results => {
                                             resolve(purchaseOrderId);
