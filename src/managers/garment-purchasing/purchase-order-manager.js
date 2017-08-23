@@ -558,7 +558,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     var job = this.purchaseRequestManager.getSingleById(purchaseRequestId)
                                         .then((purchaseRequest) => {
                                             for (var item of items) {
-                                                var prItem = purchaseRequest.items.find(prItem => prItem.productId.toString() === item.productId.toString() && prItem.id_po.toString() === item.id_po.toString());
+                                                var prItem = purchaseRequest.items.find(prItem => prItem.product._id.toString() === item.productId.toString() && prItem.id_po.toString() === item.id_po.toString());
                                                 if (prItem) {
                                                     prItem.purchaseOrderIds = prItem.purchaseOrderIds || []
                                                     prItem.purchaseOrderIds.push(item.purchaseOrderId);
