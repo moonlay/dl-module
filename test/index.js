@@ -38,7 +38,6 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-INVENTORY-MOVEMENT', './etl/inventory/fact-inventory-movement');
     test('@ETL/FACT-INVENTORY-SUMMARY', './etl/inventory/fact-inventory-summary');
     test('@ETL/garment-purchase-request', './etl/garment/garment-purchase-request');
-    test('@ETL/FACT-FP-PACKING-RECEIPT', './etl/inventory/fact-fp-packing-receipt');
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
     test('@MASTER/BUDGET', './master/budget');
