@@ -106,6 +106,7 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                 var _construction=results[2];
                 var _packings = results.slice(3, 3 + results.length);
 
+                valid.date=new Date(valid.date);
                 if (_retur)
                     errors["returNo"] = i18n.__("FPReturToQCDoc.returNo.isExist: %s is exist", i18n.__("FPReturToQCDoc.returNo._:ReturNo"));
                 
@@ -187,7 +188,7 @@ module.exports = class FPReturToQCDocManager extends BaseManager {
                                         }
 
                                         if(!detail.weight || detail.weight<=0){
-                                            detail.weight=0;
+                                            detailError["weight"] = i18n.__("FPReturToQCDoc.items.details.weight.isRequired:%s is required", i18n.__("FPReturToQCDoc.items.details.weight._:weight")); //"weight tidak boleh kosong";
                                         }
                                         
                                         if(item.details.length===isEmpty){
