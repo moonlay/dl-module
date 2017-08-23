@@ -228,25 +228,28 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
                         var command = [];
 
-                        var sqlQuery = '';
+                        var sqlQuery = 'INSERT INTO [DL_Fact_Daily_Operation_Temp] ';
 
                         var count = 1;
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [dbo].[DL_Fact_Daily_Operation_Temp]([_deleted], [badOutput], [badOutputDescription], [code], [inputDate], [outputDate], [goodOutput], [input], [shift], [inputTime], [outputTime], [kanbanCode], [kanbanGrade], [kanbanCartCartNumber], [kanbanCartCode], [kanbanCartPcs], [kanbanCartQty], [kanbanInstructionCode], [kanbanInstructionName], [orderType], [selectedProductionOrderDetailCode], [selectedProductionOrderDetailColorRequest], [selectedProductionOrderDetailColorTemplate], [machineCode], [machineCondition], [machineManufacture], [machineMonthlyCapacity], [machineName], [machineProcess], [machineYear], [inputQuantityConvertion], [goodOutputQuantityConvertion], [badOutputQuantityConvertion], [failedOutputQuantityConvertion], [type], [stepProcessId], [stepProcess], [processArea]) VALUES(${item._deleted}, ${item.badOutput}, ${item.badOutputDescription}, ${item.code}, ${item.inputDate}, ${item.outputDate}, ${item.goodOutput}, ${item.input}, ${item.shift}, ${item.inputTime}, ${item.outputTime}, ${item.kanbanCode}, ${item.kanbanGrade}, ${item.kanbanCartCartNumber}, ${item.kanbanCartCode}, ${item.kanbanCartPcs}, ${item.kanbanCartQty}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.orderType}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.machineCode}, ${item.machineCondition}, ${item.machineManufacture}, ${item.machineMonthlyCapacity}, ${item.machineName}, ${item.machineProcess}, ${item.machineYear}, ${item.inputQuantityConvertion}, ${item.goodOutputQuantityConvertion}, ${item.badOutputQuantityConvertion}, ${item.failedOutputQuantityConvertion}, ${item.type}, ${item.stepProcessId}, ${item.stepProcess}, ${item.processArea});\n`;
+                                var queryString = `\nSELECT ${item._deleted}, ${item.badOutput}, ${item.badOutputDescription}, ${item.code}, ${item.inputDate}, ${item.outputDate}, ${item.goodOutput}, ${item.input}, ${item.shift}, ${item.inputTime}, ${item.outputTime}, ${item.kanbanCode}, ${item.kanbanGrade}, ${item.kanbanCartCartNumber}, ${item.kanbanCartCode}, ${item.kanbanCartPcs}, ${item.kanbanCartQty}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.orderType}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.machineCode}, ${item.machineCondition}, ${item.machineManufacture}, ${item.machineMonthlyCapacity}, ${item.machineName}, ${item.machineProcess}, ${item.machineYear}, ${item.inputQuantityConvertion}, ${item.goodOutputQuantityConvertion}, ${item.badOutputQuantityConvertion}, ${item.failedOutputQuantityConvertion}, ${item.type}, ${item.stepProcessId}, ${item.stepProcess}, ${item.processArea} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 100000 === 0) {
+                                if (count % 4000 === 0) {
+                                    sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                                     command.push(this.insertQuery(request, sqlQuery));
-                                    sqlQuery = "";
+                                    sqlQuery = "INSERT INTO [DL_Fact_Fabric_Quality_Control_Temp] ";
                                 }
                                 console.log(`add data to query  : ${count}`);
                                 count++;
                             }
                         }
 
-                        if (sqlQuery != "")
+                        if (sqlQuery != "") {
+                            sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                             command.push(this.insertQuery(request, `${sqlQuery}`));
+                        }
 
                         this.sql.multiple = true;
 

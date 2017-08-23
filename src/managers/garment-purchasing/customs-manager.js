@@ -294,6 +294,37 @@ module.exports = class CustomsManager extends BaseManager {
         });
     }
 
+    delete(data) {
+        return new Promise((resolve, reject) => {
+            this.collection.singleOrDefault({"_id" : new ObjectId(data._id)})
+                .then(customs => {
+                    var updateDeliveryOrder = [];
+                    for(var dOrder of customs.deliveryOrders){
+                        delete dOrder.customsId;
+                        delete dOrder.customsNo;
+                        updateDeliveryOrder.push(this.deliveryOrderManager.update(dOrder));
+                    }
+                    Promise.all(updateDeliveryOrder)
+                        .then(id => {
+                            data._deleted = true;
+                            this.collection.update(data)
+                                .then(id => {
+                                    resolve(id);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                })
+                        })
+                        .catch(e => {
+                            reject(e);
+                        })
+                })
+                .catch(e => {
+                    reject(e);
+                })
+        });
+    }
+
     getCustomsReport(query){
         return new Promise((resolve, reject) => {
             var deletedQuery = {

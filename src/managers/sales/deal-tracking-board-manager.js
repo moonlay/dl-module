@@ -98,7 +98,8 @@ module.exports = class DealTrackingBoardManager extends BaseManager {
 
     read(paging) {
         var _paging = Object.assign({
-            select: ["title"]
+            select: ["title"],
+            order: { "_createdDate": "asc" }
         }, paging);
 
         return this._createIndexes()
@@ -107,6 +108,7 @@ module.exports = class DealTrackingBoardManager extends BaseManager {
                 return this.collection
                     .where(query)
                     .select(_paging.select)
+                    .order(_paging.order)
                     .execute();
             });
     }
