@@ -6,7 +6,6 @@ var purchaseOrderDataUtil = require("../../data-util/garment-purchasing/purchase
 var validatePO = require("dl-models").validator.garmentPurchasing.garmentPurchaseOrder;
 var PurchaseOrderManager = require("../../../src/managers/garment-purchasing/purchase-order-manager");
 var purchaseOrderManager = null;
-var purchaseOrder = {};
 
 before('#00. connect db', function (done) {
     helper.getDb()
@@ -14,25 +13,69 @@ before('#00. connect db', function (done) {
             purchaseOrderManager = new PurchaseOrderManager(db, {
                 username: 'dev'
             });
-
-            purchaseOrderDataUtil.getNewTestData()
-                .then(po => {
-                    purchaseOrder = po;
-                    validatePO(purchaseOrder);
-                    done();
-                })
-                .catch(e => {
-                    done(e);
-                });
+            done();
         })
         .catch(e => {
             done(e);
         });
 });
 
-it('#01. should error when split quantity with same amount as default quantity', function (done) {
-    purchaseOrder.sourcePurchaseOrderId = purchaseOrder._id;
-    purchaseOrderManager.split(purchaseOrder)
+var listPurchaseOrder = [];
+it('#01. should success when get new data purchase-request ', function (done) {
+    purchaseRequestDataUtil.getNewTestData()
+        .then(purchaseRequest => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#02. should success when get data by keyword', function (done) {
+    purchaseOrderManager.purchaseRequestManager.getPurchaseRequestByTag()
+        .then(data => {
+            listPurchaseOrder = data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+var createdId = {};
+it('#03. should success when create new purchase-order', function (done) {
+    purchaseOrderManager.createMultiple(listPurchaseOrder)
+        .then(data => {
+            data.should.be.instanceof(Array);
+            createdId = data[0];
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+var createdData;
+var purchaseOrder;
+it(`#04. should success when get created data with id`, function (done) {
+    purchaseOrderManager.getSingleById(createdId)
+        .then((data) => {
+            data.should.instanceof(Object);
+            validatePO(data);
+            createdData = Object.assign({},data);
+            purchaseOrder = Object.assign({},data);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it('#05. should error when split quantity with same amount as default quantity', function (done) {
+    createdData.sourcePurchaseOrderId = purchaseOrder._id
+    createdData.sourcePurchaseOrder = Object.assign({},purchaseOrder);
+    purchaseOrderManager.split(createdData)
         .then((id) => {
             return purchaseOrderManager.getSingleById(id);
         })
@@ -49,7 +92,6 @@ it('#01. should error when split quantity with same amount as default quantity',
                 for(var err of e.errors.items) {
                     err.should.have.property("defaultQuantity");
                 }
-
                 done();
             }
             catch (ex) {
@@ -58,17 +100,16 @@ it('#01. should error when split quantity with same amount as default quantity',
         });
 });
 
-it('#02. should success when split quantity purchase-order', function (done) {
-
-    purchaseOrder.items.map((item) => {
+it('#06. should success when split quantity purchase-order', function (done) {
+    createdData.items.map((item) => {
         item.defaultQuantity = item.defaultQuantity / 2;
     })
 
-    purchaseOrderManager.split(purchaseOrder)
+    purchaseOrderManager.split(createdData)
         .then((id) => {
 
             var query = {
-                "purchaseRequest.no": purchaseOrder.purchaseRequest.no,
+                "purchaseRequest.no": createdData.purchaseRequest.no,
                 _deleted: false
             };
             return purchaseOrderManager.collection.find(query).toArray();
