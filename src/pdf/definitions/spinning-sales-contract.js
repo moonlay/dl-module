@@ -418,7 +418,7 @@ module.exports = function (salesContract) {
                     style: ['size09'],
                     alignment: "left"
                 }, '\n', {
-                    text: 'COMMISSION AGREEMENT NO: ' + code + '\n' + 'FOR SALES CONTRACT NO: ' + no,
+                    text: 'COMMISSION AGREEMENT NO: ' + salesContract.dispositionNumber + '\n' + 'FOR SALES CONTRACT NO: ' + no,
                     style: ['size11', 'bold'],
                     alignment: "center"
                 }]
