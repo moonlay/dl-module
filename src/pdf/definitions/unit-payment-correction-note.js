@@ -41,7 +41,7 @@ module.exports = function (unitPaymentCorrection, offset) {
                     style: ['size15', 'bold', 'left']
                 }, {
                     width: '60%',
-                    text: 'NOTA KOREKSI',
+                    text: 'NOTA DEBET',
                     style: ['size15', 'bold', 'left']
 
                 }]
@@ -99,8 +99,8 @@ module.exports = function (unitPaymentCorrection, offset) {
                     text: ''
                 }, {
                     width: '30%',
-                    text: `Nomor : ${unitPaymentCorrection.no}`,
-                    style: ['size13', 'left', 'bold']
+                    text: `Nomor ${unitPaymentCorrection.no}`,
+                    style: ['size09', 'left', 'bold']
                 }]
         }, '\n'
     ];

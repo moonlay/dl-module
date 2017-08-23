@@ -10,16 +10,6 @@ require("mongodb-toolkit");
 
 var InventorySummaryManager = require("../../managers/inventory/inventory-summary-manager");
 const MIGRATION_LOG_DESCRIPTION = "Fact Inventory Summary from MongoDB to Azure DWH"
-const SELECT = {
-    storageCode: 1,
-    storageName: 1,
-    quantity: 1,
-    productCode: 1,
-    productName: 1,
-    uom: 1,
-    _deleted: 1,
-    code: 1
-};
 
 module.exports = class FactInventorySummaryManager extends BaseManager {
     constructor(db, user, sql) {
@@ -124,30 +114,27 @@ module.exports = class FactInventorySummaryManager extends BaseManager {
 
                         var command = [];
 
-                        var sqlQuery = 'INSERT INTO [DL_Fact_Inventory_Summary_Temp]([Storage Code], [UOM], [Product Code], [Quantity], [Deleted], [Code], [Storage Name], [Product Name]) ';
+                        var sqlQuery = '';
 
                         var count = 1;
 
                         for (var item of data) {
                             if (item) {
                                 var values = `${item.storageCode}, ${item.uom}, ${item.productCode}, ${item.qty}, ${item.deleted}, ${item.code}, ${item.storageName}, ${item.productName}`;
-                                var queryString = `\nSELECT ${values} UNION ALL `;
+                                var queryString = sqlQuery === "" ? `INSERT INTO [DL_Fact_Inventory_Summary_Temp]([Storage Code], [UOM], [Product Code], [Quantity], [Deleted], [Code], [Storage Name], [Product Name]) VALUES(${values})` : `,(${values})`;
 
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 4000 === 0) {
-                                    sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
+                                if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
-                                    sqlQuery = "INSERT INTO [DL_Fact_Inventory_Summary_Temp]([Storage Code], [UOM], [Product Code], [Quantity], [Deleted], [Code], [Storage Name], [Product Name]) ";
+                                    sqlQuery = "";
                                 }
                                 console.log(`add data to query  : ${count}`);
                                 count++;
                             }
                         }
 
-                        if (sqlQuery != "") {
-                            sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
+                        if (sqlQuery != "")
                             command.push(this.insertQuery(request, `${sqlQuery}`));
-                        }
 
                         this.sql.multiple = true;
 
