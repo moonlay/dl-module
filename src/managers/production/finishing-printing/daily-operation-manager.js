@@ -797,12 +797,24 @@ module.exports = class DailyOperationManager extends BaseManager {
                                         tamp.action = dataOutput.action ? dataOutput.action : "";
                                     else
                                         tamp["action"] = dataOutput.action ? dataOutput.action : "";
-                                    if(tamp.hasOwnProperty("badOutputDescription")) 
+                                    if(tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription")) 
                                         tamp.badOutputDescription = dataOutput.badOutputDescription;
-                                    else{
+                                    else if (!tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
+                                        tamp["badOutputDescription"] = dataOutput.badOutputDescription;
+                                    else if(tamp.hasOwnProperty("badOutputDescription") && !dataOutput.hasOwnProperty("badOutputDescription")){
                                         var description = ""
-                                        for(var a of dataOutput.badOutputReasons){
-                                            description += `${a.badOutputReason.reason}, `
+                                        if(dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0){
+                                            for(var a of dataOutput.badOutputReasons){
+                                                description += `${a.badOutputReason.reason}, `
+                                            }
+                                        }
+                                        tamp.badOutputDescription = description;
+                                    }else{
+                                        var description = ""
+                                        if(dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0){
+                                            for(var a of dataOutput.badOutputReasons){
+                                                description += `${a.badOutputReason.reason}, `
+                                            }
                                         }
                                         tamp["badOutputDescription"] = description;
                                     }
