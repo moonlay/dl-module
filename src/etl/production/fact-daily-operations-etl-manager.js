@@ -231,7 +231,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
                         var command = [];
 
-                        var sqlQuery = 'INSERT INTO [DL_Fact_Daily_Operation_Temp] ';
+                        var sqlQuery = 'INSERT INTO [DL_FACT_DAILY_OPERATION_TEMP] ';
 
                         var count = 1;
 
@@ -242,7 +242,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                                 if (count % 500 === 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                                     command.push(this.insertQuery(request, sqlQuery));
-                                    sqlQuery = "INSERT INTO [DL_Fact_Fabric_Quality_Control_Temp] ";
+                                    sqlQuery = "INSERT INTO [DL_FACT_DAILY_OPERATION_TEMP] ";
                                 }
                                 console.log(`add data to query  : ${count}`);
                                 count++;
