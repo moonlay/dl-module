@@ -218,7 +218,7 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
                             if (item) {
                                 var queryString = `\nSELECT ${item.deleted}, ${item.kanbanCode}, ${item.kanbanDate}, ${item.productionOrderNo}, ${item.kanbanGrade}, ${item.kanbanCartNumber}, ${item.kanbanCartQuantity}, ${item.kanbanInstructionId}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.kanbanStepsId}, ${item.kanbanStepsCode}, ${item.kanbanStepsName}, ${item.machineCode}, ${item.machineName}, ${item.machineMonthlyCapacity}, ${item.deadline}, ${item.currentStepIndex}, ${item.processArea}, ${item.isComplete}, ${item.stepsLength}, ${item.dailyOperationMachine}, ${item.dateInput},  ${item.inputQuantity}, ${item.timeInput}, ${item.dateTimeInput}, ${item.salesContractNo} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 1000 === 0) {
+                                if (count % 500 === 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "";
