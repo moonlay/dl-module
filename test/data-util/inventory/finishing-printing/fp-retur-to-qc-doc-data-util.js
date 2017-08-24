@@ -14,12 +14,11 @@ var Map = Models.map;
 
 class FPReturDataUtil {
     getNewData() {
-        return Promise.all([PackingDataUtil.getNewTestData(), InventoryDataUtil.getNewTestData(),ProductDataUtil.getRandomTestData(), ConstructionDataUtil.getTestData() ])
+        return Promise.all([PackingDataUtil.getNewTestData(), InventoryDataUtil.getNewTestData(), ConstructionDataUtil.getTestData() ])
             .then(result => {
                 var packing = result[0];
                 var inventory = result [1];
-                var material=result[2];
-                var construction=result[3];
+                var construction=result[2];
 
                 var details=[{
                     productId:inventory.productId,
@@ -51,7 +50,7 @@ class FPReturDataUtil {
                     date: new Date(),
                     accepted: true,
                     remark: "test",
-                    materialId:material._id,
+                    materialId:inventory.productId,
                     materialConstructionId:construction._id,
                     materialWidthFinish:"widthTest",
                     items: Items
