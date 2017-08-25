@@ -215,7 +215,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
 
-                        var sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.Tanggal,20),10) >= '" + tgl + "' and POrder.Harga = 0"
+                        var sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
@@ -466,25 +466,25 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
 
                             var Colors = [];
-                            if (data.Clr1.trim() && data.Clr1.trim() != "" && data.Clr1.trim() == null) {
+                            if (data.Clr1.trim() != "") {
                                 Colors.push(data.Clr1.trim());
-                            } if (data.Clr2.trim() && data.Clr2.trim() != "" && data.Clr2.trim() == null) {
+                            } if (data.Clr2.trim() != "") {
                                 Colors.push(data.Clr2.trim());
-                            } if (data.Clr3.trim() && data.Clr3.trim() != "" && data.Clr3.trim() == null) {
+                            } if (data.Clr3.trim() != "") {
                                 Colors.push(data.Clr3.trim());
-                            } if (data.Clr4.trim() && data.Clr4.trim() != "" && data.Clr4.trim() == null) {
+                            } if (data.Clr4.trim() != "") {
                                 Colors.push(data.Clr4.trim());
-                            } if (data.Clr5.trim() && data.Clr5.trim() != "" && data.Clr5.trim() == null) {
+                            } if (data.Clr5.trim() != "") {
                                 Colors.push(data.Clr5.trim());
-                            } if (data.Clr6.trim() && data.Clr6.trim() != "" && data.Clr6.trim() == null) {
+                            } if (data.Clr6.trim() != "") {
                                 Colors.push(data.Clr6.trim());
-                            } if (data.Clr7.trim() && data.Clr7.trim() != "" && data.Clr7.trim() == null) {
+                            } if (data.Clr7.trim() != "") {
                                 Colors.push(data.Clr7.trim());
-                            } if (data.Clr8.trim() && data.Clr8.trim() != "" && data.Clr8.trim() == null) {
+                            } if (data.Clr8.trim() != "") {
                                 Colors.push(data.Clr8.trim());
-                            } if (data.Clr9.trim() && data.Clr9.trim() != "" && data.Clr9.trim() == null) {
+                            } if (data.Clr9.trim() != "") {
                                 Colors.push(data.Clr9.trim());
-                            } if (data.Clr10.trim() && data.Clr10.trim() != "" && data.Clr10.trim() == null) {
+                            } if (data.Clr10.trim() != "") {
                                 Colors.push(data.Clr10.trim());
                             }
 
@@ -538,6 +538,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     colors: Colors,
                                     id_po: (data.ID_PO),
                                     isUsed: false,
+                                    purchaseOrderId:{},
                                 }
                                 items.push(item);
 
@@ -567,7 +568,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     // _updatedDate: new Date(_updatedDate),
                                     _updateAgent: "manager",
                                     // no: data.Ro,
-                                    no: generateCode(),
+                                    no: code,
                                     roNo: data.Ro,
                                     artikel: data.Art,
                                     shipmentDate: data.Shipment,
