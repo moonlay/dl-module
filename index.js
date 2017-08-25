@@ -72,6 +72,8 @@ module.exports = {
             PurchaseOrderManager: require('./src/managers/garment-purchasing/purchase-order-manager'),
             PurchaseOrderExternalManager: require('./src/managers/garment-purchasing/purchase-order-external-manager'),
             DeliveryOrderManager: require('./src/managers/garment-purchasing/delivery-order-manager'),
+            CustomsManager: require('./src/managers/garment-purchasing/customs-manager'),
+            InvoiceNoteManager: require('./src/managers/garment-purchasing/invoice-note-manager'),
         },
         production: {
             spinning: {
@@ -160,6 +162,8 @@ module.exports = {
                 purchaseOrder: require("./test/data-util/garment-purchasing/purchase-order-data-util"),
                 purchaseOrderExternal: require("./test/data-util/garment-purchasing/purchase-order-external-data-util"),
                 deliveryOrder: require("./test/data-util/garment-purchasing/delivery-order-data-util"),
+                customsOrder: require("./test/data-util/garment-purchasing/customs-data-util"),
+                invoiceNoteManager: require('./test/data-util/garment-purchasing/invoice-note-data-util'),
                 // unitReceiptNote: require("./test/data-util/garment-purchasing/unit-receipt-note-data-util"),
                 // unitPaymentOrder: require("./test/data-util/garment-purchasing/unit-payment-order-data-util"),
                 // unitPaymentPriceCorrectionNot: require("./test/data-util/garment-purchasing/unit-payment-price-correction-note-data-util"),
@@ -210,6 +214,8 @@ module.exports = {
             dimProduct: require("./src/etl/dim/dim-product-etl-manager")
         },
         inventory: {
+            factPackingReceipt: require("./src/etl/inventory/fact-fp-packing-receipt-etl-manager"),
+            factShipmentDocument: require("./src/etl/inventory/fact-shipment-document-etl-manager"),
             factInventoryMovement: require("./src/etl/inventory/fact-inventory-movement-etl-manager"),
             factInventorySummary: require("./src/etl/inventory/fact-inventory-summary-etl-manager")
         },

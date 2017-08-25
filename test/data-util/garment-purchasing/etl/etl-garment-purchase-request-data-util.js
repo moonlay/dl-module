@@ -7,6 +7,8 @@ class garmentPurchaseRequestDataUtil {
         var datas = [];
 
         var data = [{
+            jamin: "15:15:15",
+            jamed: "16:16:16",
             Art: "uni-test-art",
             Buyer: "T02",
             Cat: "SPM",
@@ -19,7 +21,17 @@ class garmentPurchaseRequestDataUtil {
             Kett4: "Kett4",
             Kett5: "Kett5",
             Kodeb: "SPM",
-            Konf: "C2B",
+            Clr1: "",
+            Clr2: "",
+            Clr3: "",
+            Clr4: "",
+            Clr5: "",
+            Clr6: "",
+            Clr7: "",
+            Clr8: "",
+            Clr9: "",
+            Clr10: "",
+            Konf: "",
             Nopo: "PA16100606",
             Qty: 1,
             Ro: "unitTest-Ro",
@@ -31,11 +43,11 @@ class garmentPurchaseRequestDataUtil {
             Usered: "uni-test",
             Userin: "uni-test",
         }, {
+                jamin: "15:15:15",
+                jamed: "16:16:16",
                 Art: "uni-test-art",
-
                 Buyer: "buyerNotFound",
                 Cat: "CatNotFound",
-
                 Delivery: new Date(),
                 Harga: 111,
                 Ketr: "ketr",
@@ -45,7 +57,16 @@ class garmentPurchaseRequestDataUtil {
                 Kett4: "Kett4",
                 Kett5: "Kett5",
                 Kodeb: "ProductNotFound",
-
+                Clr1: "Clr1",
+                Clr2: "Clr2",
+                Clr3: "Clr3",
+                Clr4: "Clr4",
+                Clr5: "Clr5",
+                Clr6: "Clr6",
+                Clr7: "Clr7",
+                Clr8: "Clr8",
+                Clr9: "Clr9",
+                Clr10: "Clr10",
                 Konf: "unitNotFound",
                 Nopo: "22222222222",
                 Qty: 1,
@@ -59,6 +80,8 @@ class garmentPurchaseRequestDataUtil {
                 Usered: "uni-test",
                 Userin: "uni-test",
             }, {
+                jamin: "15:15:15",
+                jamed: "16:16:16",
                 Art: "uni-test-art",
                 Buyer: "testBuyer",
 
@@ -72,6 +95,17 @@ class garmentPurchaseRequestDataUtil {
                 Kett4: "Kett4",
                 Kett5: "Kett5",
                 Kodeb: "ProductNotFound",
+
+                Clr1: "Clr1",
+                Clr2: "Clr2",
+                Clr3: "Clr3",
+                Clr4: "Clr4",
+                Clr5: "Clr5",
+                Clr6: "Clr6",
+                Clr7: "Clr7",
+                Clr8: "Clr8",
+                Clr9: "Clr9",
+                Clr10: "Clr10",
 
                 Konf: "testUnit",
 
