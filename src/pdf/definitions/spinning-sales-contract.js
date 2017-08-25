@@ -352,7 +352,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:'- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- '+ salesContract.shippingQuantityTolerance +'% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - CARTON BOX (NET WEIGHT : 1.89 / CONE, 1 BOX: 18 CONE) CONTAMINATION FREE. \n'+ salesContract.condition,
+                        text:'- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- '+ salesContract.shippingQuantityTolerance +'% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - CARTON BOX (NET WEIGHT : 1.89 / CONE, 1 BOX: 18 CONE). \n'+ salesContract.condition,
                         style: ['size09']
                     }]
             }];
@@ -418,7 +418,7 @@ module.exports = function (salesContract) {
                     style: ['size09'],
                     alignment: "left"
                 }, '\n', {
-                    text: 'COMMISSION AGREEMENT NO: ' + code + '\n' + 'FOR SALES CONTRACT NO: ' + no,
+                    text: 'COMMISSION AGREEMENT NO: ' + salesContract.dispositionNumber + '\n' + 'FOR SALES CONTRACT NO: ' + no,
                     style: ['size11', 'bold'],
                     alignment: "center"
                 }]
