@@ -60,7 +60,7 @@ it('#02. it should error when create new data with different total quantity', fu
 
             manager.create(sc)
                 .then(id => {
-                    done("should error when create new data without detail");
+                    done("should error when create new data with different total quantity");
                 })
                 .catch(e => {
                     try {
@@ -77,7 +77,36 @@ it('#02. it should error when create new data with different total quantity', fu
         });
 });
 
-it('#03. it should error when create new data with invalid LampStandard', function (done) {
+it('#01. it should error when create new data with more quantity than sc remaining quantity', function (done) {
+    dataUtil.getNewData()
+        .then(sc => {
+            sc.orderQuantity=1000;
+            sc.detail = [{
+                        quantity:500,
+                    }, {
+                        quantity:500,
+                    }];
+
+            manager.create(sc)
+                .then(id => {
+                    done("should error when create new data with more quantity than sc remaining quantity");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('orderQuantity');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#04. it should error when create new data with invalid LampStandard', function (done) {
     dataUtil.getNewData()
         .then(sc => {
             sc.lampStandards= [{
