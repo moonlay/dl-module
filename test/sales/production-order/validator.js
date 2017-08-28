@@ -80,11 +80,11 @@ it('#02. it should error when create new data with different total quantity', fu
 it('#01. it should error when create new data with more quantity than sc remaining quantity', function (done) {
     dataUtil.getNewData()
         .then(sc => {
-            sc.orderQuantity=100;
+            sc.orderQuantity=1000;
             sc.detail = [{
-                        quantity:50,
+                        quantity:500,
                     }, {
-                        quantity:50,
+                        quantity:500,
                     }];
 
             manager.create(sc)
@@ -93,7 +93,7 @@ it('#01. it should error when create new data with more quantity than sc remaini
                 })
                 .catch(e => {
                     try {
-                        e.errors.should.have.property('details');
+                        e.errors.should.have.property('orderQuantity');
                         done();
                     }
                     catch (ex) {

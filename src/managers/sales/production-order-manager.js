@@ -392,6 +392,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     valid.accountId = new ObjectId(_account._id);
                 }
 
+                if(valid.designMotive){
+                    valid.designMotiveId=new ObjectId(valid.designMotive._id);
+                }
+
                 if (valid.lampStandards.length > 0) {
                     for (var lamp of valid.lampStandards) {
                         for (var _lampStandard of _lampStandards) {
