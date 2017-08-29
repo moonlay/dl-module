@@ -4,7 +4,7 @@ var options = {
     util: require("../../data-util/master/fp-duration-estimation-data-util"),
     validator: require("dl-models").validator.master.finishingPrintingDurationEstimation,
     createDuplicate: true,
-    keys: ["code"]
+    keys: ["processTypeId"]
 };
 
 var basicTest = require("../../basic-test-factory");

@@ -393,7 +393,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 errors["badOutputReasons"] = i18n.__("Harus diisi minimal 1 Keterangan", i18n.__("DailyOperation.badOutputReasons._:BadOutputReasons")); //"keterangan bad output tidak boleh kosong";
                             else{
                                 var itemErrors = [];
-                                var presentationTotal = 0;
+                                var precentageTotal = 0;
                                 var valueArr = valid.badOutputReasons.map(function (item) { return item.badOutputReasonId ? item.badOutputReasonId.toString() : "" });
 
                                 var itemDuplicateErrors = new Array(valueArr.length);
@@ -412,10 +412,10 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 for(var a of valid.badOutputReasons){
                                     var itemError = {};
                                     var _index = valid.badOutputReasons.indexOf(a);
-                                    var presentation = !a.presentation || a.presentation === "" ? 0 : a.presentation;
-                                    presentationTotal += presentation;
-                                    if(presentation < 1)
-                                        itemError["presentation"] = i18n.__("Harus lebih dari 0", i18n.__("DailyOperation.badOutputReasons.presentation._:Presentation")); //"keterangan bad output tidak boleh kosong";
+                                    var precentage = !a.precentage || a.precentage === "" ? 0 : a.precentage;
+                                    precentageTotal += precentage;
+                                    if(precentage < 1)
+                                        itemError["precentage"] = i18n.__("Harus lebih dari 0", i18n.__("DailyOperation.badOutputReasons.precentage._:Precentage")); //"keterangan bad output tidak boleh kosong";
                                     if(!a.description || a.description === "")
                                         itemError["description"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.description._:Description")); //"keterangan bad output tidak boleh kosong";
                                     function searchItem(params) {
@@ -431,8 +431,8 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     }
                                     itemErrors.push(itemError);
                                 }
-                                if(presentationTotal !== 100)
-                                    errors["badOutputReasons"] = i18n.__("Total presetasi harus 100", i18n.__("DailyOperation.badOutputReasons._:BadOutputReasons")); //"keterangan bad output tidak boleh kosong";
+                                if(precentageTotal !== 100)
+                                    errors["badOutputReasons"] = i18n.__("Total persentase harus 100", i18n.__("DailyOperation.badOutputReasons._:BadOutputReasons")); //"keterangan bad output tidak boleh kosong";
                                 else{
                                     for (var itemError of itemErrors) {
                                         if (Object.getOwnPropertyNames(itemError).length > 0) {
@@ -495,7 +495,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 }
                                 var dataBadOutput = _badOutput.find(searchItem);
                                 var data = new BadOutputReasonItem({
-                                    presentation : a.presentation,
+                                    precentage : a.precentage,
                                     description : a.description,
                                     badOutputReasonId : new ObjectId(dataBadOutput._id),
                                     badOutputReason : dataBadOutput
@@ -797,12 +797,24 @@ module.exports = class DailyOperationManager extends BaseManager {
                                         tamp.action = dataOutput.action ? dataOutput.action : "";
                                     else
                                         tamp["action"] = dataOutput.action ? dataOutput.action : "";
-                                    if(tamp.hasOwnProperty("badOutputDescription")) 
+                                    if(tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription")) 
                                         tamp.badOutputDescription = dataOutput.badOutputDescription;
-                                    else{
+                                    else if (!tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
+                                        tamp["badOutputDescription"] = dataOutput.badOutputDescription;
+                                    else if(tamp.hasOwnProperty("badOutputDescription") && !dataOutput.hasOwnProperty("badOutputDescription")){
                                         var description = ""
-                                        for(var a of dataOutput.badOutputReasons){
-                                            description += `${a.badOutputReason.reason}, `
+                                        if(dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0){
+                                            for(var a of dataOutput.badOutputReasons){
+                                                description += `${a.badOutputReason.reason}, `
+                                            }
+                                        }
+                                        tamp.badOutputDescription = description;
+                                    }else{
+                                        var description = ""
+                                        if(dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0){
+                                            for(var a of dataOutput.badOutputReasons){
+                                                description += `${a.badOutputReason.reason}, `
+                                            }
                                         }
                                         tamp["badOutputDescription"] = description;
                                     }

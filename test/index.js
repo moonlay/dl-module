@@ -38,6 +38,8 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-INVENTORY-MOVEMENT', './etl/inventory/fact-inventory-movement');
     test('@ETL/FACT-INVENTORY-SUMMARY', './etl/inventory/fact-inventory-summary');
     test('@ETL/garment-purchase-request', './etl/garment/garment-purchase-request');
+    test('@ETL/FACT-FP-PACKING-RECEIPT', './etl/inventory/fact-fp-packing-receipt');
+    test('@ETL/FACT-FP-SHIPMENT-DOCUMENT', './etl/inventory/fact-fp-shipment-document');
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
     test('@MASTER/BUDGET', './master/budget');
@@ -100,6 +102,8 @@ describe('#dl-module', function (done) {
     test('@GARMENT PURCHASING/PURCHASE ORDER', './garment-purchasing/purchase-order');
     test('@GARMENT PURCHASING/PURCHASE ORDER EXTERNAL', './garment-purchasing/purchase-order-external');
     test('@GARMENT PURCHASING/DELIVERY ORDER', './garment-purchasing/delivery-order');
+    test('@GARMENT PURCHASING/CUSTOMS', './garment-purchasing/customs');
+    test('@GARMENT PURCHASING/INVOICE NOTE', './garment-purchasing/invoice-note');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');

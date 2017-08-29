@@ -10,6 +10,23 @@ require("mongodb-toolkit");
 
 var FinishingPrintingSalesContractManager = require("../../managers/sales/finishing-printing-sales-contract-manager");
 
+const SELECTED_FIELDS = {
+    "uom.unit": 1,
+    "orderQuantity": 1,
+    "material.name": 1,
+    "materialConstruction.name": 1,
+    "yarnMaterial.name": 1,
+    "materialWidth": 1,
+    "salesContractNo": 1,
+    "_createdDate": 1,
+    "deliverySchedule": 1,
+    "buyer.name": 1,
+    "buyer.type": 1,
+    "orderType.name": 1,
+    "buyer.code": 1,
+    "_deleted": 1
+}
+
 module.exports = class FactFinishingPrintingSalesContractManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
@@ -29,6 +46,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
             .then((results) => {
+                console.log("Success!");
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
@@ -101,6 +119,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
             return {
                 salesContractNo: item.salesContractNo ? `'${item.salesContractNo}'` : null,
                 salesContractDate: item._createdDate ? `'${moment(item._createdDate).format("L")}'` : null,
+                deliverySchedule: item.deliverySchedule ? `'${moment(item.deliverySchedule).format("L")}'` : null,
                 buyer: item.buyer ? `'${item.buyer.name.replace(/'/g, '"')}'` : null,
                 buyerType: item.buyer ? `'${item.buyer.type.replace(/'/g, '"')}'` : null,
                 orderType: item.orderType ? `'${item.orderType.name}'` : null,
@@ -150,7 +169,7 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material], [_deleted]) VALUES(${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material}, ${item.deleted});\n`;
+                                var queryString = `INSERT INTO [DL_Fact_Sales_Contract_Temp]([Nomor Sales Contract], [Tanggal Sales Contract], [Buyer], [Jenis Buyer], [Jenis Order], [Jumlah Order], [Satuan], [Jumlah Order Konversi], [Kode Buyer], [Jenis Produksi], [Konstruksi], [Konstruksi Material], [Lebar Material], [Material], [_deleted], [deliverySchedule]) VALUES(${item.salesContractNo}, ${item.salesContractDate}, ${item.buyer}, ${item.buyerType}, ${item.orderType}, ${item.orderQuantity}, ${item.orderUom}, ${item.totalOrderConvertion}, ${item.buyerCode}, ${item.productionType}, ${item.construction}, ${item.materialConstruction}, ${item.materialWidth}, ${item.material}, ${item.deleted}, ${item.deliverySchedule});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
@@ -165,6 +184,17 @@ module.exports = class FactFinishingPrintingSalesContractManager extends BaseMan
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
+
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\leslie.aula\\Desktop\\Log.txt";
+
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
 
                         return Promise.all(command)
                             .then((results) => {

@@ -57,7 +57,7 @@ class DailyOperationDataUtil {
                                                             type : "output",
                                                             action : "Digudangkan",
                                                             badOutputReasons : [{
-                                                                presentation : 100,
+                                                                precentage : 100,
                                                                 description : "Rusak",
                                                                 badOutputReasonId : reason._id,
                                                                 badOutputReason : reason
