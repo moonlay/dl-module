@@ -283,13 +283,3 @@ it('#16. should success when get data report PO Per Staff with date', function (
 
 });
 
-it('#17. should success when get data report PO Detail Per Staff with date', function (done) {
-    purchaseOrderManager.getDataPODetailStaff(startDate,endDate)
-    .then(po => {
-        po.should.instanceof(Array);
-        done();
-    }).catch(e => {
-            done(e);
-        });
-
-});
