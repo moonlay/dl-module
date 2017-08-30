@@ -4,19 +4,36 @@
 var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require("module-toolkit").BaseManager;
 var moment = require("moment");
+const SELECTED_FIELDS = {
+    "_id": 1,
+    "salesContractNo": 1,
+    "uom.unit": 1,
+    "orderQuantity": 1,
+    "material.name": 1,
+    "materialConstruction.name": 1,
+    "yarnMaterial.name": 1,
+    "materialWidth": 1,
+    "orderNo": 1,
+    "orderType.name": 1,
+    "processType.name": 1,
+    "buyer.name": 1,
+    "buyer.type": 1,
+    "deliveryDate": 1,
+    "_createdDate": 1,
+    "buyer.code": 1,
+    "_deleted": 1
+}
 
 // internal deps 
 require("mongodb-toolkit");
 
 var ProductionOrderManager = require("../../managers/sales/production-order-manager");
-var KanbanManager = require("../../managers/production/finishing-printing/kanban-manager")
 
 module.exports = class FactProductionOrderEtlManager extends BaseManager {
     constructor(db, user, sql) {
         super(db, user);
         this.sql = sql;
         this.productionOrderManager = new ProductionOrderManager(db, user);
-        this.kanbanManager = new KanbanManager(db, user);
         this.migrationLog = this.db.collection("migration-log");
     }
 
@@ -31,6 +48,7 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
             .then((results) => {
+                console.log("Success!");
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
@@ -71,44 +89,6 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
                 $gt: timestamp
             }
         }).toArray()
-            .then((productionOrder) => {
-                return this.joinKanban(productionOrder);
-            })
-    }
-
-    joinKanban(productionOrders) {
-        var joinKanbans = productionOrders.map((productionOrder) => {
-            return this.kanbanManager.collection.find({
-                productionOrderId: productionOrder._id
-            }).toArray()
-                .then((kanbans) => {
-                    var arr = kanbans.map((kanban) => {
-                        return {
-                            productionOrder: productionOrder,
-                            kanban: kanban
-                        };
-                    });
-
-                    if (arr.length === 0)
-                        arr.push({
-                            productionOrder: productionOrder,
-                            kanban: null
-                        });
-
-                    return Promise.resolve(arr);
-                })
-                .catch((e) => {
-                    console.log(e);
-                    reject(e);
-                });
-        });
-        return Promise.all(joinKanbans)
-            .then((joinKanban) => {
-                return Promise.resolve([].concat.apply([], joinKanban));
-            }).catch((e) => {
-                console.log(e);
-                reject(e);
-            });
     }
 
     orderQuantityConvertion(uom, quantity) {
@@ -131,8 +111,8 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
 
     transform(data) {
         var result = data.map((items) => {
-            var item = items.productionOrder;
-            var kanban = items.kanban;
+            var item = items;
+            // var kanban = items.kanban;
             var orderUom = item.uom ? item.uom.unit : null;
             var orderQuantity = item.orderQuantity ? item.orderQuantity : null;
             var material = item.material ? item.material.name.replace(/'/g, '"') : null;
@@ -158,8 +138,8 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
                 totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
                 construction: this.joinConstructionString(material.replace(/'/g, '"'), materialConstruction.replace(/'/g, '"'), yarnMaterialNo.replace(/'/g, '"'), materialWidth),
                 buyerCode: item.buyer ? `'${item.buyer.code}'` : null,
-                cartQuantity: kanban && kanban.cart && kanban.cart.qty ? `${kanban.cart.qty}` : null,
-                kanbanCode: kanban && kanban.code ? `'${kanban.code}'` : null,
+                cartQuantity: null,
+                kanbanCode: null,
                 deleted: `'${item._deleted}'`
             }
         });

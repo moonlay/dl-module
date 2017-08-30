@@ -7,6 +7,7 @@ var generateCode = require("../../../utils/code-generator");
 var BuyerManager = require('../../master/buyer-manager');
 var StorageManager = require('../../master/storage-manager');
 var InventoryDocumentManager = require('../inventory-document-manager');
+var InventorySummaryManager = require('../inventory-summary-manager');
 
 var Models = require("dl-models");
 var Map = Models.map;
@@ -24,6 +25,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
         this.buyerManager = new BuyerManager(db, user);
         this.storageManager = new StorageManager(db, user);
         this.inventoryDocumentManager = new InventoryDocumentManager(db, user);
+        this.inventorySummaryManager = new InventorySummaryManager(db, user);
     }
 
     _getQuery(paging) {
@@ -108,16 +110,28 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
         valid.details = valid.details || [];
 
+        var products = [];
+
+        if(valid.isVoid != true)
+            for (var detail of valid.details) {
+                for (var item of detail.items) {
+                    products.push(item.productCode);
+                }
+            }
+
         var getBuyer = valid.buyerId && ObjectId.isValid(valid.buyerId) ? this.buyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
 
         var getStorage = valid.details ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
 
-        return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getStorage])
+        var getInventorySummary = products.length != 0 ? this.inventorySummaryManager.collection.find({ "productCode": { "$in": products }, "quantity": { "$gt": 0 }, storageName: "Gudang Jadi Finishing Printing" }, { "productCode": 1, "quantity": 1, "uom": 1 }).toArray() : Promise.resolve([]);
+        
+        return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getStorage, getInventorySummary])
             .then((results) => {
                 var _dbShipmentDocument = results[0];
                 var _duplicateShipmentDocument = results[1];
                 var _buyer = results[2];
                 var _storages = results[3];
+                var _products = results[4];
 
                 if (_dbShipmentDocument)
                     valid.code = _dbShipmentDocument.code; // prevent code changes.
@@ -140,21 +154,48 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     errors["deliveryCode"] = i18n.__("ShipmentDocument.deliveryCode.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryCode._:DO No"));
 
                 if (valid.details.length > 0) {
-                    var itemErrors = [];
+                    var detailErrors = [];
                     for (var i = 0; i < valid.details.length; i++) {
-                        var itemError = {};
+                        var detailError = {};
                         if (!valid.details[i].productionOrderId || !valid.details[i].productionOrderId === "") {
-                            itemError["productionOrderId"] = i18n.__("PackingReceipt.details.productionOrderId.isRequired:%s is required", i18n.__("PackingReceipt.details.productionOrderId._:Nomor Order")); //"Nomor order harus diisi"; 
+                            detailError["productionOrderId"] = i18n.__("PackingReceipt.details.productionOrderId.isRequired:%s is required", i18n.__("PackingReceipt.details.productionOrderId._:Nomor Order")); //"Nomor order harus diisi"; 
                         }
                         if (!valid.details[i].items || valid.details[i].items.length === 0) {
-                            itemError["productionOrderNo"] = i18n.__("PackingReceipt.details.productionOrderNo.isRequired:%s is required", i18n.__("PackingReceipt.details.productionOrderNo._:Nomor Order")); //"Harus ada item"; 
+                            detailError["productionOrderNo"] = i18n.__("PackingReceipt.details.productionOrderNo.isRequired:%s is required", i18n.__("PackingReceipt.details.productionOrderNo._:Nomor Order")); //"Harus ada item"; 
                         }
-                        itemErrors.push(itemError);
+                        else {
+                            var itemErrors = [];
+                            var items = valid.details[i].items;
+
+                            for (var j = 0; j < items.length; j++) {
+                                var itemError = {};
+                                
+                                var productInvSummary = _products.find(p => p.productCode === items[j].productCode && p.uom === items[j].uomUnit);
+
+                                if (!items[j].quantity || items[j].quantity <= 0) {
+                                    itemError["quantity"] = i18n.__("PackingReceipt.details.items.quantity.mustBeGreater:%s must be greater than zero", i18n.__("PackingReceipt.details.items.quantity._:Quantity")); //"Kuantitas harus lebih besar dari 0";
+                                }
+                                else if(productInvSummary && (items[j].quantity > productInvSummary.quantity)) {
+                                    itemError["quantity"] = i18n.__("PackingReceipt.details.items.quantity.mustBeLessEqual:%s must be less than or equal to stock", i18n.__("PackingReceipt.details.items.quantity._:Quantity")); //"Kuantitas harus lebih kecil atau sama dengan stock";
+                                }
+
+                                itemErrors.push(itemError);
+                            }
+
+                            for (var itemError of itemErrors) {
+                                if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                    detailError.items = itemErrors;
+                                    break;
+                                }
+                            }
+                        }
+
+                        detailErrors.push(detailError);
                     }
 
-                    for (var itemError of itemErrors) {
-                        if (Object.getOwnPropertyNames(itemError).length > 0) {
-                            errors.details = itemErrors;
+                    for (var detailError of detailErrors) {
+                        if (Object.getOwnPropertyNames(detailError).length > 0) {
+                            errors.details = detailErrors;
                             break;
                         }
                     }
