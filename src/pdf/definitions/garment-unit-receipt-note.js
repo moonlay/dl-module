@@ -4,7 +4,7 @@ module.exports = function (unitReceiptNote, offset) {
 
     var items = [].concat.apply([], unitReceiptNote.items);
 
-    var iso = "FM-PB-00-06-010/R1";
+    var iso = "FM-00-AD-09-004B/R1";
     var number = unitReceiptNote.no;
 
     var locale = global.config.locale;
@@ -17,36 +17,36 @@ module.exports = function (unitReceiptNote, offset) {
         text: 'BON PENERIMAAN BARANG',
         style: ['size10', 'bold']
     }, {
-            columns: [
-                {
-                    columns: [{
-                        width: '*',
-                        stack: [{
-                            text: 'PT DAN LIRIS',
-                            style: ['size15', 'bold']
-                        }, {
-                                text: 'BANARAN, GROGOL, SUKOHARJO',
-                                style: ['size09']
-                            }]
+        columns: [
+            {
+                columns: [{
+                    width: '*',
+                    stack: [{
+                        text: 'PT DAN LIRIS',
+                        style: ['size08', 'bold']
+                    }, {
+                        text: 'BANARAN, GROGOL, SUKOHARJO',
+                        style: ['size08']
                     }]
-
-                },
-                {
-                    columns: [{
-                        width: '*',
-                        stack: [{
-                            alignment: "right",
-                            text: ' ',
-                            style: ['size15', 'bold']
-                        }, {
-                                alignment: "right",
-                                text: iso,
-                                style: ['size08', 'bold']
-                            }]
-                    }]
-
                 }]
-        }];
+
+            },
+            {
+                columns: [{
+                    width: '*',
+                    stack: [{
+                        alignment: "right",
+                        text: ' ',
+                        style: ['size08', 'bold']
+                    }, {
+                        alignment: "right",
+                        text: iso,
+                        style: ['size08', 'bold']
+                    }]
+                }]
+
+            }]
+    }];
 
     var subHeader = [{
         columns: [
@@ -54,29 +54,40 @@ module.exports = function (unitReceiptNote, offset) {
                 width: '50%',
                 stack: [{
                     columns: [{
-                        width: '25%',
-                        text: 'Tanggal'
+                        width: '33%',
+                        text: 'Tgl. Terima'
                     }, {
-                            width: '5%',
-                            text: ':'
-                        }, {
-                            width: '*',
-                            text: `${moment(unitReceiptNote.date).add(offset,'h').format(locale.date.format)}`
-                        }]
+                        width: '2%',
+                        text: ':'
+                    }, {
+                        width: '*',
+                        text: `${moment(unitReceiptNote.deliveryOrderDate).add(offset, 'h').format(locale.date.format)}`
+                    }]
                 }, {
-                        columns: [{
-                            width: '25%',
-                            text: 'Diterima dari'
-                        }, {
-                                width: '5%',
-                                text: ':'
-                            }, {
-                                width: '*',
-                                text: unitReceiptNote.supplier.name
-                            }]
-                    }
+                    columns: [{
+                        width: '33%',
+                        text: 'Diterima dari'
+                    }, {
+                        width: '2%',
+                        text: ':'
+                    }, {
+                        width: '*',
+                        text: unitReceiptNote.supplier.name
+                    }]
+                }, {
+                    columns: [{
+                        width: '33%',
+                        text: 'Dasar Penerimaan'
+                    }, {
+                        width: '2%',
+                        text: ':'
+                    }, {
+                        width: '*',
+                        text: unitReceiptNote.deliveryOrderNo
+                    }]
+                }
                 ],
-                style: ['size08']
+                style: ['size07']
             },
             {
                 width: '10%',
@@ -86,28 +97,39 @@ module.exports = function (unitReceiptNote, offset) {
                 width: '40%',
                 stack: [{
                     columns: [{
-                        width: '25%',
+                        width: '45%',
+                        text: 'Tgl. Bon Penerimaan'
+                    }, {
+                        width: '2%',
+                        text: ':'
+                    }, {
+                        width: '*',
+                        text: `${moment(unitReceiptNote.date).add(offset, 'h').format(locale.date.format)}`
+                    }]
+                }, {
+                    columns: [{
+                        width: '45%',
                         text: 'Bagian'
                     }, {
-                            width: '5%',
-                            text: ':'
-                        }, {
-                            width: '*',
-                            text: unitReceiptNote.unit.name
-                        }]
+                        width: '2%',
+                        text: ':'
+                    }, {
+                        width: '*',
+                        text: unitReceiptNote.unit.name
+                    }]
                 }, {
-                        columns: [{
-                            width: '25%',
-                            text: 'No.'
-                        }, {
-                                width: '5%',
-                                text: ':'
-                            }, {
-                                width: '*',
-                                text: unitReceiptNote.no
-                            }]
-                    }],
-                style: ['size08']
+                    columns: [{
+                        width: '45%',
+                        text: 'No.'
+                    }, {
+                        width: '2%',
+                        text: ':'
+                    }, {
+                        width: '*',
+                        text: unitReceiptNote.no
+                    }]
+                }],
+                style: ['size07']
             }
         ]
     }, '\n'];
@@ -124,10 +146,11 @@ module.exports = function (unitReceiptNote, offset) {
         ]
     }, '\n'];
 
-    var thead = [{
-        text: 'No.',
-        style: 'tableHeader'
-    }, {
+    var thead = [
+        {
+            text: 'No.',
+            style: 'tableHeader'
+        }, {
             text: 'Nama barang',
             style: 'tableHeader'
         }, {
@@ -141,33 +164,29 @@ module.exports = function (unitReceiptNote, offset) {
             style: 'tableHeader'
         }];
 
-
-
-
-
     var tbody = items.map(function (item, index) {
         return [{
             text: (index + 1).toString() || '',
-            style: ['size08', 'center']
+            style: ['size06', 'center']
         }, {
-                text: item.product.code + " - " + item.product.name,
-                style: ['size08', 'left']
-            }, {
-                text: parseFloat(item.deliveredQuantity).toLocaleString(locale, locale.decimal),
-                style: ['size08', 'center']
-            }, {
-                text: item.deliveredUom.unit,
-                style: ['size08', 'center']
-            }, {
-                text: item.remark || '',
-                style: ['size08', 'left']
-            }];
+            text: item.product.code + " - " + item.product.name,
+            style: ['size06', 'left']
+        }, {
+            text: parseFloat(item.deliveredQuantity).toLocaleString(locale, locale.decimal),
+            style: ['size06', 'center']
+        }, {
+            text: item.deliveredUom.unit,
+            style: ['size06', 'center']
+        }, {
+            text: `${item.refNo};${item.roNo};${item.artikel};${item.remark}` || '',
+            style: ['size06', 'left']
+        }];
     });
 
     tbody = tbody.length > 0 ? tbody : [
         [{
             text: "tidak ada barang",
-            style: ['size08', 'center'],
+            style: ['size06', 'center'],
             colSpan: 5
         }, "", "", "", ""]
     ];
@@ -183,24 +202,24 @@ module.exports = function (unitReceiptNote, offset) {
     var footer = [
         '\n', {
             stack: [{
-                text: `Sukoharjo, ${moment(unitReceiptNote.date).add(offset,'h').format(locale.date.format)}`,
+                text: `Sukoharjo, ${moment(unitReceiptNote.date).add(offset, 'h').format(locale.date.format)}`,
                 alignment: "right"
             }, {
-                    columns: [{
-                        width: '35%',
-                        stack: ['Mengetahui\n\n\n\n\n', '(_______________________)'],
-                        style: 'center'
-                    }, {
-                            width: '30%',
-                            text: ''
-                        }, {
-                            width: '35%',
-                            stack: ['Yang Menerima\n\n\n\n\n', '(_______________________)'],
-                            style: 'center'
-                        }]
-                }
+                columns: [{
+                    width: '35%',
+                    stack: ['Mengetahui\n\n\n\n\n', '(_______________________)'],
+                    style: 'center'
+                }, {
+                    width: '30%',
+                    text: ''
+                }, {
+                    width: '35%',
+                    stack: ['Yang Menerima\n\n\n\n\n', '(_______________________)'],
+                    style: 'center'
+                }]
+            }
             ],
-            style: ['size08']
+            style: ['size07']
         }
     ];
 
@@ -245,7 +264,7 @@ module.exports = function (unitReceiptNote, offset) {
             },
             tableHeader: {
                 bold: true,
-                fontSize: 8,
+                fontSize: 7,
                 color: 'black',
                 alignment: 'center'
             }

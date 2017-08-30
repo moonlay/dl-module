@@ -658,16 +658,44 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return new Promise((resolve, reject) => {
             this.getSingleById(id)
                 .then(unitReceiptNote => {
-                    var getDefinition = require('../../pdf/definitions/garment-unit-receipt-note');
-                    var definition = getDefinition(unitReceiptNote, offset);
-                    var generatePdf = require('../../pdf/pdf-generator');
-                    generatePdf(definition)
-                        .then(binary => {
-                            resolve(binary);
+                    this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId, ['date'])
+                        .then((deliveryOrder) => {
+                            var _purchaseOrders = unitReceiptNote.items.map((item) => {
+                                return item.purchaseOrderId
+                            });
+                            _purchaseOrders = [].concat.apply([], _purchaseOrders);
+
+                            var _listPurchaseOrderIds = _purchaseOrders.filter(function (elem, index, self) {
+                                return index == self.indexOf(elem);
+                            })
+                            var getPurchaseOrder = _listPurchaseOrderIds.map((purchaseOrderId) => {
+                                if (ObjectId.isValid(purchaseOrderId)) {
+                                    return this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrderId, ["_id", "no", "artikel","roNo","items.refNo"])
+                                } else {
+                                    return Promise.resolve(null)
+                                }
+                            });
+                            Promise.all(getPurchaseOrder)
+                                .then((listPurchaseOrder) => {
+                                    unitReceiptNote.deliveryOrderDate = deliveryOrder.date;
+                                    unitReceiptNote.items.map((item) => {
+                                        var purchaseOrder = listPurchaseOrder.find((po) => item.purchaseOrderId.toString() === po._id.toString());
+                                        item.artikel = purchaseOrder.artikel;
+                                        item.roNo = purchaseOrder.roNo;
+                                        item.refNo = purchaseOrder.items[0].refNo;
+                                    });
+                                    var getDefinition = require('../../pdf/definitions/garment-unit-receipt-note');
+                                    var definition = getDefinition(unitReceiptNote, offset);
+                                    var generatePdf = require('../../pdf/pdf-generator');
+                                    generatePdf(definition)
+                                        .then(binary => {
+                                            resolve(binary);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
                         })
-                        .catch(e => {
-                            reject(e);
-                        });
                 })
                 .catch(e => {
                     reject(e);
