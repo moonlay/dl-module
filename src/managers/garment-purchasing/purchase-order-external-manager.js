@@ -239,6 +239,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             error["paymentMethod"] = i18n.__("PurchaseOrderExternal.paymentMethod.isRequired:%s is required", i18n.__("PurchaseOrderExternal.paymentMethod._:Payment Method")); //"Metode Pembayaran tidak boleh kosong";
                         }
 
+                        if (!valid.paymentType || valid.paymentType === "") {
+                            error["paymentType"] = i18n.__("PurchaseOrderExternal.paymentType.isRequired:%s is required", i18n.__("PurchaseOrderExternal.paymentType._:Payment Type")); //"Metode Pembayaran tidak boleh kosong";
+                        }
+
                         if (!valid.currency) {
                             error["currency"] = i18n.__("PurchaseOrderExternal.currency.isRequired:%s is required", i18n.__("PurchaseOrderExternal.currency._:Currency")); //"Currency tidak boleh kosong";
                         }
@@ -367,6 +371,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
     _beforeInsert(purchaseOrderExternal) {
         purchaseOrderExternal.no = generateCode();
         purchaseOrderExternal.status = poStatusEnum.CREATED;
+        purchaseOrderExternal.date = new Date();
         return Promise.resolve(purchaseOrderExternal)
     }
 
