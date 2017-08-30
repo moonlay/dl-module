@@ -3,7 +3,7 @@ var global = require('../../global');
 module.exports = function (pox, offset) {
 
     var items = pox.items.map(poItem => {
-         return {
+        return {
             productName: poItem.product.name,
             productCode: poItem.product.code,
             productProperties: poItem.product.properties,
@@ -12,7 +12,8 @@ module.exports = function (pox, offset) {
             quantity: poItem.dealQuantity,
             uom: poItem.dealUom.unit,
             price: poItem.pricePerDealUnit,
-            remark: poItem.remark
+            remark: poItem.remark,
+            colors: poItem.colors || []
         };
     });
 
@@ -142,7 +143,7 @@ module.exports = function (pox, offset) {
     if (pox.category.code === "FAB") {
         tbody = items.map(function (item) {
             return [{
-                stack: [item.productCode, item.productName, `COMPOSITON: ${item.productProperties[0]}`, `KONSTRUKSI: ${item.productProperties[1]}`, `YARN: ${item.productProperties[2]}`, item.productDesc, `Keterangan : ${item.remark}`, {
+                stack: [item.productCode, item.productName, , `COMPOSITION: ${item.productDesc}`, `KONSTRUKSI: ${item.productProperties[0]}`, `YARN: ${item.productProperties[1]}`, `LEBAR: ${item.productProperties[2]}`, "QUALITY : EXPORT QUALITY", `DESIGN/COLOUR : ${item.colors.split(', ')}`, `Keterangan : ${item.remark}`, {
                     text: item.prNo,
                     style: 'bold'
                 }],
