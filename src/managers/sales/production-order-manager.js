@@ -282,7 +282,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         }
                     }
                     if (valid.orderQuantity != totalqty) {
-                        errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.should:%s should equal SUM quantity in details", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh berbeda dari total jumlah detail";
+                        errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.shouldNot:%s should equal SUM quantity in details", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh berbeda dari total jumlah detail";
 
                     }
                     

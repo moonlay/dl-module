@@ -52,11 +52,6 @@ it('#02. it should error when create new data with different total quantity', fu
     dataUtil.getNewData()
         .then(sc => {
             sc.orderQuantity=100;
-            sc.detail = [{
-                        quantity:10,
-                    }, {
-                        quantity:5,
-                    }];
 
             manager.create(sc)
                 .then(id => {
@@ -77,15 +72,10 @@ it('#02. it should error when create new data with different total quantity', fu
         });
 });
 
-it('#01. it should error when create new data with more quantity than sc remaining quantity', function (done) {
+it('#03. it should error when create new data with more quantity than sc remaining quantity', function (done) {
     dataUtil.getNewData()
         .then(sc => {
             sc.orderQuantity=1000;
-            sc.detail = [{
-                        quantity:500,
-                    }, {
-                        quantity:500,
-                    }];
 
             manager.create(sc)
                 .then(id => {
