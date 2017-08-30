@@ -315,7 +315,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return query;
     }
 
-    getPurchaseOrderByTag(categoryId, keyword, shipmentDateFrom, shipmentDateTo) {
+    getPurchaseOrderByTag(user, categoryId, keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -330,7 +330,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     query = Object.assign(query, {
                         _deleted: false,
                         isClosed: false,
-                        isPosted: false
+                        isPosted: false,
+                        "_createdBy": user
                     });
                     if (keyword) {
                         keyword = keyword.replace(/ \#/g, '#');
