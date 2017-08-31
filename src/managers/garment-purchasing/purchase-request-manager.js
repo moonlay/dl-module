@@ -279,6 +279,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     });
 
                     if (keyword) {
+                        keyword = keyword.replace(/ \#/g, '#');
                         var keywordFilters = [];
                         if (keyword.indexOf("#") != -1) {
                             keywords = keyword.split("#");
@@ -344,6 +345,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         "items.categoryId": "$items.categoryId",
                         "items.category": "$items.category.name",
                         "items.id_po": "$items.id_po",
+                        "items.remark": "$items.remark",
                         "year": { $year: "$shipmentDate" },
                         "month": { $month: "$shipmentDate" },
                         "day": { $dayOfMonth: "$shipmentDate" },
