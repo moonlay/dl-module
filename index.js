@@ -51,7 +51,8 @@ module.exports = {
             finishingPrinting: {
                 FPPackingReceiptManager: require("./src/managers/inventory/finishing-printing/fp-packing-receipt-manager"),
                 FPReturToQCDocManager: require("./src/managers/inventory/finishing-printing/fp-retur-to-qc-doc-manager"),
-                FPShipmentDocument: require("./src/managers/inventory/finishing-printing/fp-shipment-document-manager")
+                FPShipmentDocument: require("./src/managers/inventory/finishing-printing/fp-shipment-document-manager"),
+                FPReturFromBuyerManager: require("./src/managers/inventory/finishing-printing/fp-retur-fr-byr-doc-manager")
             },
             InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager"),
             InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
@@ -173,7 +174,8 @@ module.exports = {
                 finishingPrinting: {
                     packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util"),
                     fpReturToQCDoc: require("./test/data-util/inventory/finishing-printing/fp-retur-to-qc-doc-data-util"),
-                    shipmentDocument: require("./test/data-util/inventory/finishing-printing/fp-shipment-document-data-util")
+                    shipmentDocument: require("./test/data-util/inventory/finishing-printing/fp-shipment-document-data-util"),
+                    fpReturFromBuyerDoc: require("./test/data-util/inventory/finishing-printing/fp-retur-fr-byr-doc-data-util")
                 },
                 inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),
                 inventoryMovement: require('./test/data-util/inventory/inventory-movement-data-util'),
