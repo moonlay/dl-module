@@ -573,7 +573,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                     "coverLetter" : 1,
                     "productCode" : "$details.items.productCode",
                     "productName" : "$details.items.productName",
-                    "productDescription" : "details.items.productDescription",
+                    "productDescription" : "$details.items.productDescription",
                     "orderNo" : "$details.productionOrderNo",
                     "remark" : "$details.items.remark",
                     "returQuantity" : "$details.items.returQuantity",
