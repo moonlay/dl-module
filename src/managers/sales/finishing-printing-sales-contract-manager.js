@@ -228,6 +228,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                         }
                     }
                 }
+                valid.remainingQuantity=valid.orderQuantity+(valid.orderQuantity*valid.shippingQuantityTolerance/100);
 
                 valid.details = valid.details || [];
                 if (valid.details && valid.details.length <= 0) {
