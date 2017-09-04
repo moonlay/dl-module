@@ -463,7 +463,7 @@ module.exports = function (pox, offset) {
     ];
 
     if (pox.category.code === "FAB") {
-        footer.push(stdQ)
+        footer.concat(stdQ)
     }
 
     var signature = [
