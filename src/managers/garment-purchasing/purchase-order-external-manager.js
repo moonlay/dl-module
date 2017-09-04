@@ -269,7 +269,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             for (var items of valid.items) {
                                 var itemError = {};
                                 var po = _poInternals.find((poInternal) => poInternal._id.toString() == items.poId.toString());
-                                var poItem = po.items.find((item) =>  item.product._id.toString() === items.product._id.toString() )
+                                var poItem = po.items.find((item) => item.product._id.toString() === items.product._id.toString())
                                 if (poItem) {
                                     if (poItem.isPosted && !valid._id) {
                                         itemError["no"] = i18n.__("PurchaseOrderExternal.items.isPosted:%s is already used", i18n.__("PurchaseOrderExternal.items._:Purchase Order Internal ")); //"Purchase order internal tidak boleh kosong";
@@ -704,17 +704,36 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
 
             this.getSingleByIdOrDefault(id)
                 .then(pox => {
-                    var getDefinition = require('../../pdf/definitions/garment-purchase-order-external');
-                    var definition = getDefinition(pox, offset);
+                    var getPurchaseRequests = [];
+                    pox.items = pox.items || [];
+                    var prId = pox.items.map((item) => { return item.prId })
+                    prId = prId.filter(function (elem, index, self) {
+                        return index == self.indexOf(elem);
+                    })
+                    for (var pr of prId) {
+                        if (ObjectId.isValid(pr)) {
+                            getPurchaseRequests.push(this.purchaseRequestManager.getSingleByIdOrDefault(pr, ["items.product._id", "items.colors", "no", "_id"]));
+                        }
+                    }
+                    Promise.all(getPurchaseRequests)
+                        .then((purchaseRequests) => {
+                            for (var item of pox.items) {
+                                var _pr = purchaseRequests.find((purchaseRequest) => purchaseRequest._id.toString() === item.prId.toString())
+                                var _prItem = _pr.items.find((prItem) => prItem.product._id.toString() === item.product._id.toString())
+                                item.colors = _prItem.colors || []
+                            }
+                            var getDefinition = require('../../pdf/definitions/garment-purchase-order-external');
+                            var definition = getDefinition(pox, offset);
 
-                    var generatePdf = require('../../pdf/pdf-generator');
-                    generatePdf(definition)
-                        .then(binary => {
-                            resolve(binary);
+                            var generatePdf = require('../../pdf/pdf-generator');
+                            generatePdf(definition)
+                                .then(binary => {
+                                    resolve(binary);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
                         })
-                        .catch(e => {
-                            reject(e);
-                        });
                 })
                 .catch(e => {
                     reject(e);
