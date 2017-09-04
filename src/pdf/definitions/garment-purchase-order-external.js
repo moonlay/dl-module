@@ -143,7 +143,7 @@ module.exports = function (pox, offset) {
     if (pox.category.code === "FAB") {
         tbody = items.map(function (item) {
             return [{
-                stack: [item.productCode, item.productName, , `COMPOSITION: ${item.productDesc}`, `KONSTRUKSI: ${item.productProperties[0]}`, `YARN: ${item.productProperties[1]}`, `LEBAR: ${item.productProperties[2]}`, "QUALITY : EXPORT QUALITY", `DESIGN/COLOUR : ${item.colors.join(', ')}`, `Keterangan : ${item.remark}`, {
+                stack: [item.productCode, item.productName, `COMPOSITION: ${item.productDesc}`, `KONSTRUKSI: ${item.productProperties[0]}`, `YARN: ${item.productProperties[1]}`, `LEBAR: ${item.productProperties[2]}`, "QUALITY : EXPORT QUALITY", `DESIGN/COLOUR : ${item.colors.join(', ')}`, `Keterangan : ${item.remark}`, {
                     text: item.prNo,
                     style: 'bold'
                 }],
