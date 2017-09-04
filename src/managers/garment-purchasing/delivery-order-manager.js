@@ -110,7 +110,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     if (ObjectId.isValid(doItem.purchaseOrderExternalId))
                         getPoExternal.push(this.purchaseOrderExternalManager.getSingleByIdOrDefault(doItem.purchaseOrderExternalId));
                 }
-            var currencies = deliveryOrder.items.map((doItem) => {
+            valid.items = valid.items || [];
+            var currencies = valid.items.map((doItem) => {
                 return doItem.fulfillments.map((fulfillment) => {
                     return fulfillment.currency
                 })
@@ -192,8 +193,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                     fulfillmentError["deliveredQuantity"] = i18n.__("DeliveryOrder.items.fulfillments.deliveredQuantity.isRequired:%s is required or not 0", i18n.__("DeliveryOrder.items.fulfillments.deliveredQuantity._:DeliveredQuantity")); //"Jumlah barang diterima tidak boleh kosong";
                                 }
 
-                                if (currencies.length>1) {
-                                    fulfillmentError["currency"] = i18n.__("DeliveryOrder.items.fulfillments.currency.isMultilpe:%s is multiple type", i18n.__("DeliveryOrder.items.fulfillments.currency._:Currency")); 
+                                if (currencies.length > 1) {
+                                    fulfillmentError["currency"] = i18n.__("DeliveryOrder.items.fulfillments.currency.isMultilpe:%s is multiple type", i18n.__("DeliveryOrder.items.fulfillments.currency._:Currency"));
                                 }
                                 fulfillmentErrors.push(fulfillmentError);
                             }
