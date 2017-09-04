@@ -132,15 +132,32 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                         var errItems = []
                         for (var item of valid.items) {
                             if (item.deliveryOrderId) {
+                                var errItem = {};
                                 var _deliveryOrder = _deliveryOrders.find(deliveryOrder => deliveryOrder._id.toString() === item.deliveryOrderId.toString());
                                 if (!_deliveryOrder) {
-                                    errItems.push({ "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) })
+                                    errItem = { "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }
                                 }
                             } else if (!item.deliveryOrderId) {
-                                errItems.push({ "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) })
+                                errItem = { "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }
                             } else {
-                                errItems.push({})
+                                errItem = {}
                             }
+                            var fulfillmentErrors = [];
+                            for (var fulfillmentItems of item.items || []) {
+                                var fulfillmentError = {};
+
+                                if (!fulfillmentItems.deliveredQuantity || fulfillmentItems.deliveredQuantity === 0) {
+                                    fulfillmentError["deliveredQuantity"] = i18n.__("InvoiceNote.items.items.deliveredQuantity.isRequired:%s is required or not 0", i18n.__("InvoiceNote.items.items.deliveredQuantity._:DeliveredQuantity")); //"Jumlah barang diterima tidak boleh kosong";
+                                }
+                                fulfillmentErrors.push(fulfillmentError);
+                            }
+                            for (var fulfillmentError of fulfillmentErrors) {
+                                if (Object.getOwnPropertyNames(fulfillmentError).length > 0) {
+                                    errItem.items = fulfillmentErrors;
+                                    break;
+                                }
+                            }
+                            errItems.push(errItem);
                         }
                         for (var errItem of errItems) {
                             if (Object.getOwnPropertyNames(errItem).length > 0) {

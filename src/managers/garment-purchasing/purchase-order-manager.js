@@ -333,38 +333,40 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         isPosted: false
                     });
                     if (keyword) {
+                        keyword = keyword.replace(/ \#/g, '#');
                         var keywordFilters = [];
                         if (keyword.indexOf("#") != -1) {
                             keywords = keyword.split("#");
-                            keywords = this.cleanUp(keywords);
+                            keywords.splice(0, 1)
                         } else {
                             keywords.push(keyword)
                         }
-                        for (var _keyword of keywords) {
+                        for (var j = 0; j < keywords.length; j++) {
                             var keywordFilter = {};
-                            var regex = new RegExp(_keyword, "i");
-
-                            var filterRoNo = {
-                                "roNo": {
-                                    "$regex": regex
+                            var _keyword = keywords[j]
+                            if (_keyword) {
+                                var regex = new RegExp(_keyword, "i");
+                                switch (j) {
+                                    case 0:
+                                        keywordFilters.push({
+                                            "unit.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
+                                    case 1:
+                                        keywordFilters.push({
+                                            "buyer.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
                                 }
-                            };
-
-                            var filterBuyer = {
-                                "buyer.name": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            var filterArtikel = {
-                                "artikel": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            keywordFilters.push(filterRoNo, filterBuyer, filterArtikel);
+                            }
                         }
-                        query['$or'] = keywordFilters;
+                        if (keywordFilters.length > 0) {
+                            query['$and'] = keywordFilters;
+                        }
                     }
 
                     var _select = {
@@ -388,6 +390,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         "items.isClosed": "$items.isClosed",
                         "items.category": "$items.category",
                         "items.categoryId": "$items.categoryId",
+                        "items.remark": "$items.remark"
                     };
 
                     var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryCategory }, { $project: _select }];
@@ -1176,15 +1179,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
 
-    cleanUp(input) {
-        var newArr = [];
-        for (var i = 0; i < input.length; i++) {
-            if (input[i]) {
-                newArr.push(input[i]);
-            }
-        }
-        return newArr;
-    }
     /*selectDateById(id) {
         return new Promise((resolve, reject) => {
             var query = { "purchaseRequest._id": ObjectId.isValid(id) ? new ObjectId(id) : {}, "_deleted": false };
