@@ -113,7 +113,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             valid.items = valid.items || [];
             var currencies = valid.items.map((doItem) => {
                 return doItem.fulfillments.map((fulfillment) => {
-                    return fulfillment.currency
+                    return fulfillment.currency.code
                 })
             })
             currencies = [].concat.apply([], currencies);
