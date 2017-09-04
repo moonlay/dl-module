@@ -487,12 +487,16 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     .then((sc) => {
                         if(sc.remainingQuantity){
                             sc.remainingQuantity = sc.remainingQuantity-spp.orderQuantity;
-                        }
-                        return this.fpSalesContractManager.update(sc)
-                            .then(
-                                (id) => 
-                                Promise.resolve(sppId));
-                            });
+                            return this.fpSalesContractManager.update(sc)
+                                .then(
+                                    (id) => 
+                                    Promise.resolve(sppId));
+                            }
+                            else{
+                                Promise.resolve(sppId);
+                            }
+                        });
+                            
                     });
     }
 
@@ -505,7 +509,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             if(sc.remainingQuantity){
                                 sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
                                 return this.fpSalesContractManager.update(sc)
-                                    .then((id) => Promise.resolve(data));
+                                    .then((id) => 
+                                        Promise.resolve(data));
                                 }
                                 else{
                                     return Promise.resolve(data);
@@ -521,19 +526,20 @@ module.exports = class ProductionOrderManager extends BaseManager {
     _afterUpdate(id) {
         return this.getSingleById(id)
             .then((spp) => {
+                var sppId = id;
                 if(spp.salesContractId){
-                    var sppId = id;
                     return this.fpSalesContractManager.getSingleById(spp.salesContractId)
                         .then((sc) => {
                             if(sc.remainingQuantity){
                                 sc.remainingQuantity -= spp.orderQuantity;
                             }
                             return this.fpSalesContractManager.update(sc)
-                                .then((id) => Promise.resolve(sppId));
+                                .then((id) => 
+                                    Promise.resolve(sppId));
                                 });
                 }
                 else{
-                    Promise.resolve(id);
+                    Promise.resolve(sppId);
                 }
             });
     }
