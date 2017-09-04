@@ -315,7 +315,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return query;
     }
 
-    getPurchaseOrderByTag(categoryId, keyword, shipmentDate) {
+    getPurchaseOrderByTag(user, categoryId, keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -330,7 +330,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     query = Object.assign(query, {
                         _deleted: false,
                         isClosed: false,
-                        isPosted: false
+                        isPosted: false,
+                        "_createdBy": user
                     });
                     if (keyword) {
                         keyword = keyword.replace(/ \#/g, '#');
@@ -396,13 +397,14 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryCategory }, { $project: _select }];
 
                     var queryDate = Object.assign({});
-                    if (shipmentDate) {
-                        var _shipmentDate = new Date(shipmentDate);
+                    if (shipmentDateFrom && shipmentDateTo) {
+                        var _shipmentDateFrom = new Date(shipmentDateFrom);
+                        var _shipmentDateTo = new Date(shipmentDateTo);
 
                         queryDate = {
-                            year: _shipmentDate.getFullYear(),
-                            month: _shipmentDate.getMonth() + 1,
-                            day: _shipmentDate.getDate()
+                            year: { $gte: _shipmentDateFrom.getFullYear(), $lte: _shipmentDateTo.getFullYear() },
+                            month: { $gte: _shipmentDateFrom.getMonth() + 1, $lte: _shipmentDateTo.getMonth() + 1 },
+                            day: { $gte: _shipmentDateFrom.getDate(), $lte: _shipmentDateTo.getDate() },
                         }
                         qryMatch.push({ $match: queryDate })
                     }
