@@ -272,6 +272,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if (!valid.orderQuantity || valid.orderQuantity === 0)
                     errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.isRequired:%s is required", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh kosong";
                 else {
+                    if(valid.remainingQuantity){
+                        valid.remainingQuantity+=valid.beforeQuantity;
+                        if(valid.orderQuantity>valid.remainingQuantity){
+                            errors["orderQuantity"] =i18n.__("ProductionOrder.orderQuantity.isRequired:%s should not be more than SC remaining quantity", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity"));
+                        }
+                    }
                     var totalqty = 0;
                     if (valid.details.length > 0) {
                         for (var i of valid.details) {
@@ -282,6 +288,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.shouldNot:%s should equal SUM quantity in details", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh berbeda dari total jumlah detail";
 
                     }
+                    
                 }
 
                 if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
@@ -365,7 +372,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }
                     if (detailErrors.length > 0)
                         errors.details = detailErrors;
-
 
                 }
                 if (!valid.orderNo || valid.orderNo === '') {
@@ -471,6 +477,87 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                 return Promise.resolve(valid);
             });
+    }
+
+     _afterInsert(id) {
+        return this.getSingleById(id)
+            .then((spp) => {
+                var sppId = id;
+                return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                    .then((sc) => {
+                        if(sc.remainingQuantity){
+                            sc.remainingQuantity = sc.remainingQuantity-spp.orderQuantity;
+                        }
+                        return this.fpSalesContractManager.update(sc)
+                            .then(
+                                (id) => 
+                                Promise.resolve(sppId));
+                            });
+                    });
+    }
+
+    _beforeUpdate(data) {
+            return this.getSingleById(data._id)
+                .then(spp => {
+                    if(spp.salesContractId){
+                        return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                        .then((sc) => {
+                            if(sc.remainingQuantity){
+                                sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
+                                return this.fpSalesContractManager.update(sc)
+                                    .then((id) => Promise.resolve(data));
+                                }
+                                else{
+                                    return Promise.resolve(data);
+                                }
+                            });
+                        }
+                        else{
+                            return Promise.resolve(data);
+                        }
+            });
+    }
+    
+    _afterUpdate(id) {
+        return this.getSingleById(id)
+            .then((spp) => {
+                if(spp.salesContractId){
+                    var sppId = id;
+                    return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                        .then((sc) => {
+                            if(sc.remainingQuantity){
+                                sc.remainingQuantity -= spp.orderQuantity;
+                            }
+                            return this.fpSalesContractManager.update(sc)
+                                .then((id) => Promise.resolve(sppId));
+                                });
+                }
+                else{
+                    Promise.resolve(id);
+                }
+            });
+    }
+
+    delete(data) {
+        return this.getSingleById(data._id)
+        .then(spp => {
+            spp._deleted=true;
+            if(spp.salesContractId){
+                return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                .then((sc) => {
+                    if(sc.remainingQuantity){
+                        sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
+                    }
+                    return this.fpSalesContractManager.update(sc)
+                    .then((id) =>{
+                        return this.collection.update(spp);
+                    });
+                });
+            }
+            else{
+                return this.collection.update(spp);
+            }
+        });
     }
 
     _createIndexes() {
