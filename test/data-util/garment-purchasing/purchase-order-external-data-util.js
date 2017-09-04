@@ -67,6 +67,7 @@ class PurchaseOrderExternalDataUtil {
                             currency: currency,
                             currencyRate: currency.rate,
                             paymentMethod: 'CASH',
+                            paymentType:'CASH',
                             paymentDueDays: 0,
                             vat: vat,
                             useVat: vat != undefined,
