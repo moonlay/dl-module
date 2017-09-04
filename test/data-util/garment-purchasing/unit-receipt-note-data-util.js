@@ -3,7 +3,7 @@ var helper = require('../../helper');
 var UnitReceiptNoteManager = require('../../../src/managers/garment-purchasing/unit-receipt-note-manager');
 var codeGenerator = require('../../../src/utils/code-generator');
 var unit = require("../master/unit-data-util");
-var supplier = require('../master/supplier-data-util');
+var supplier = require('../master/garment-supplier-data-util');
 var deliveryOrder = require('../garment-purchasing/delivery-order-data-util');
 
 class UnitReceiptNoteDataUtil {
