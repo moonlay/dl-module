@@ -260,7 +260,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    getPurchaseRequestByTag(keyword, shipmentDate) {
+    getPurchaseRequestByTag(keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -279,6 +279,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     });
 
                     if (keyword) {
+                        keyword = keyword.replace(/ \#/g, '#');
                         var keywordFilters = [];
                         if (keyword.indexOf("#") != -1) {
                             keywords = keyword.split("#");
@@ -344,6 +345,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         "items.categoryId": "$items.categoryId",
                         "items.category": "$items.category.name",
                         "items.id_po": "$items.id_po",
+                        "items.remark": "$items.remark",
                         "year": { $year: "$shipmentDate" },
                         "month": { $month: "$shipmentDate" },
                         "day": { $dayOfMonth: "$shipmentDate" },
@@ -352,12 +354,14 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryMatchItems }, { $project: _select }];
 
                     var queryDate = Object.assign({});
-                    if (shipmentDate) {
-                        var _shipmentDate = new Date(shipmentDate);
+                    if (shipmentDateFrom && shipmentDateTo) {
+                        var _shipmentDateFrom = new Date(shipmentDateFrom);
+                        var _shipmentDateTo = new Date(shipmentDateTo);
 
                         queryDate = {
-                            year: _shipmentDate.getFullYear(),
-                            month: _shipmentDate.getMonth() + 1,
+                            year: { $gte: _shipmentDateFrom.getFullYear(), $lte: _shipmentDateTo.getFullYear() },
+                            month: { $gte: _shipmentDateFrom.getMonth() + 1, $lte: _shipmentDateTo.getMonth() + 1 },
+                            day: { $gte: _shipmentDateFrom.getDate(), $lte: _shipmentDateTo.getDate() },
                         }
                         qryMatch.push({ $match: queryDate })
                     }

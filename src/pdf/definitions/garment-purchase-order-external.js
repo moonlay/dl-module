@@ -2,8 +2,7 @@ var global = require('../../global');
 
 module.exports = function (pox, offset) {
 
-    var _items = pox.items.map(poItem => {
-        // var productName = [poItem.product.name, po.refNo].filter(r => r && r.toString().trim() != '').join("\n");
+    var items = pox.items.map(poItem => {
         return {
             productName: poItem.product.name,
             productCode: poItem.product.code,
@@ -13,56 +12,12 @@ module.exports = function (pox, offset) {
             quantity: poItem.dealQuantity,
             uom: poItem.dealUom.unit,
             price: poItem.pricePerDealUnit,
-            remark: poItem.remark
+            remark: poItem.remark,
+            colors: poItem.colors || []
         };
     });
 
-    _items = [].concat.apply([], _items);
-
-    var items = [];
-    var map = new Map();
-    for (var _item of _items) {
-        var key = _item.productName;
-        if (!map.has(key))
-            map.set(key, [])
-        map.get(key).push(_item);
-    }
-    map.forEach((_items, productName) => {
-        var poeItem = {};
-        poeItem.productName = productName;
-        poeItem.quantity = _items
-            .map(_item => _item.quantity)
-            .reduce((prev, curr, index) => {
-                return prev + curr;
-            }, 0);
-        var prNos = [];
-        _items
-            .map(function (_item) {
-                if (_item.prNo != "") {
-                    prNos.push(_item.prNo);
-                }
-            })
-        prNos = prNos.filter(function (elem, index, self) {
-            return index == self.indexOf(elem);
-        })
-        poeItem.productCode = _items[0].productCode;
-        poeItem.productProperties = _items[0].productProperties;
-        poeItem.productDesc = _items[0].productDesc;
-        poeItem.prNo = prNos.join("\n");
-        poeItem.uom = _items[0].uom;
-        poeItem.price = _items[0].price;
-
-        var remaks = [];
-        _items
-            .map(function (_item) {
-                if (_item.remark != "") {
-                    remaks.push(_item.remark);
-                }
-            })
-        poeItem.remark = remaks.join("\n");
-        items.push(poeItem);
-    });
-
+    items = [].concat.apply([], items);
 
     var iso = pox.category.code === "FAB" ? "FM-00-PJ-02-004" : "FM-PB-00-06-009/R1";
     var number = pox.no;
@@ -188,7 +143,7 @@ module.exports = function (pox, offset) {
     if (pox.category.code === "FAB") {
         tbody = items.map(function (item) {
             return [{
-                stack: [item.productCode, item.productName, `COMPOSITON: ${item.productProperties[0]}`, `KONSTRUKSI: ${item.productProperties[1]}`, `YARN: ${item.productProperties[2]}`, item.productDesc, `Keterangan : ${item.remark}`, {
+                stack: [item.productCode, item.productName, `COMPOSITION: ${item.productDesc}`, `KONSTRUKSI: ${item.productProperties[0]}`, `YARN: ${item.productProperties[1]}`, `LEBAR: ${item.productProperties[2]}`, "QUALITY : EXPORT QUALITY", `DESIGN/COLOUR : ${item.colors.join(', ')}`, `Keterangan : ${item.remark}`, {
                     text: item.prNo,
                     style: 'bold'
                 }],
@@ -508,7 +463,7 @@ module.exports = function (pox, offset) {
     ];
 
     if (pox.category.code === "FAB") {
-        footer.push(stdQ)
+        footer.concat(stdQ)
     }
 
     var signature = [
