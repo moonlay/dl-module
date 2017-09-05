@@ -66,49 +66,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return new Promise((resolve, reject) => {
             this.getTimeStamp().then((result) => {
                 var dateStamp;
-
-                // if (date == 1) {
-                //     dateStamp = "2017-01%%";
-                // } else if (date == 2) {
-                //     dateStamp = "2017-02%%";
-                // } else if (date == 3) {
-                //     dateStamp = "2017-03%%";
-                // } else if (date == 4) {
-                //     dateStamp = "2017-04%%";
-                // } else if (date == 5) {
-                //     dateStamp = "2017-05%%";
-                // } else if (date == 6) {
-                //     dateStamp = "2017-06%%";
-                // } else if (date == 7) {
-                //     dateStamp = "2017-07%%";
-                // } else if (date == 8) {
-                //     dateStamp = "2017-08%%";
-                // } else if (date == 9) {
-                //     dateStamp = "2017-09%%";
-                // } else if (date == 10) {
-                //     dateStamp = "2017-10%%";
-                // } else if (date == 11) {
-                //     dateStamp = "2017-11%%";
-                // } else if (date == 12) {
-                //     dateStamp = "2017-12%%";
-                // }
-                // else if (date == "latest") {
-                //     if (result.length != 0) {
-                //         var year = result[0].start.getFullYear();
-                //         var month = result[0].start.getMonth() + 1;
-                //         var day = result[0].start.getDate();
-
-                //         if (month < 10) {
-                //             month = "0" + month;
-                //         }
-                //         if (day < 10) {
-                //             day = "0" + day;
-                //         }
-
-                //         dateStamp = [year, month, day].join('-');
-                //     }
-                // }
-
                 if (result.length != 0) {
                     var year = result[0].start.getFullYear();
                     var month = result[0].start.getMonth() + 1;
@@ -134,7 +91,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     if (day < 10) {
                         day = "0" + day;
                     }
-                    // dateStamp = "2017- 08-2%%";
                     dateStamp = [year, month, day].join('-');
                 }
 
@@ -148,8 +104,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var date = dateStamp;
                         var processedData = [];
-
-                        // var i=15;
 
                         for (var i = 1; i <= totalPageNumber; i++) {
                             processedData.push(new Promise((resolve, reject) => {
@@ -171,7 +125,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                             var updateLog = {};
 
-                            if (processedData[0].length == 0) {
+                            if (!processedData[0]) {
                                 updateLog = {
                                     code: "sql-gpr",
                                     description: "Sql to MongoDB: Garment-Purchase-Request",

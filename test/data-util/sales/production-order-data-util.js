@@ -115,6 +115,7 @@ class ProductionOrderDataUtil {
                         deliveryDate:new Date(),
                         remark:`desc`,
                         isUsed:false,
+                        beforeQuantity:0,
                         remainingQuantity:_fp.remainingQuantity,
                         lampStandards: [{
                             lampStandardId: _lampStandard1._id,
