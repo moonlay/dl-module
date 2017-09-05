@@ -232,7 +232,7 @@ it("#10. should error when create new data with data delivery order useCostumes 
         .then((data) => {
             var updateDeliveryOrder = [];
             for (var deliveryOrder of data.deliveryOrders) {
-                deliveryOrderManager.collection.findOneAndUpdate({ _id: new ObjectId(deliveryOrder._id) }, { $set: { useCostumes: false } });
+                deliveryOrderManager.collection.updateOne({ _id: new ObjectId(deliveryOrder._id) }, { $set: { useCostumes: false } });
             }
             Promise.all(updateDeliveryOrder)
                 .then((result) => {
