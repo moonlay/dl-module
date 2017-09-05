@@ -1,5 +1,6 @@
 'use strict';
 
+var ObjectId = require("mongodb").ObjectId;
 var should = require('should');
 var helper = require("../../helper");
 var CustomsManager = require("../../../src/managers/garment-purchasing/customs-manager");
