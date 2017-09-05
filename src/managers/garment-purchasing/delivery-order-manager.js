@@ -187,7 +187,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             for (var doFulfillment of doItem.fulfillments || []) {
                                 var fulfillmentError = {};
 
-                                var poExternalItem = _poExternal.items.find((item) => { item.poId.toString() === doFulfillment.purchaseOrderId.toString() && item.product._id.toString() === doFulfillment.product._id.toString() })
+                                var poExternalItem = _poExternal.items.find((item) =>  item.poId.toString() === doFulfillment.purchaseOrderId.toString() && item.product._id.toString() === doFulfillment.product._id.toString() )
                                 if (Object.getOwnPropertyNames(doFulfillment).length === 0) {
                                     fulfillmentError["purchaseOrderId"] = i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId.isRequired:%s is required", i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId._:PurchaseOrderInternal"));
                                 } else if (poExternalItem.isClosed) {
