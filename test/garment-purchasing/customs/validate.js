@@ -4,6 +4,8 @@ var should = require('should');
 var helper = require("../../helper");
 var CustomsManager = require("../../../src/managers/garment-purchasing/customs-manager");
 var customsManager = null;
+var DeliveryOrderManager = require("../../../src/managers/garment-purchasing/delivery-order-manager");
+var deliveryOrderManager = null;
 var customsDataUtil = require("../../data-util/garment-purchasing/customs-data-util");
 var validate = require("dl-models").validator.garmentPurchasing.customs;
 var moment = require('moment');
@@ -14,6 +16,9 @@ before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
             customsManager = new CustomsManager(db, {
+                username: 'unit-test'
+            });
+            deliveryOrderManager = new DeliveryOrderManager(db, {
                 username: 'unit-test'
             });
             dateNow = new Date();
@@ -224,19 +229,26 @@ it("#09. should error when create new data with same no, supplier, customs date,
 it("#10. should error when create new data with data delivery order useCostumes = false", function (done) {
     customsDataUtil.getNewData()
         .then((data) => {
-            data.deliveryOrders.map((deliveryOrder) => {
-                deliveryOrder.useCustoms = false;
-            })
-            customsManager.create(data)
-                .then((id) => {
-                    done("should error when create new data with data delivery order useCostumes = false");
+            var updateDeliveryOrder = [];
+            for (var deliveryOrder of data.deliveryOrders) {
+                deliveryOrderManager.collection.findOneAndUpdate({ _id: new ObjectId(deliveryOrder._id) }, { $set: { useCostumes: false } });
+            }
+            Promise.all(updateDeliveryOrder)
+                .then((result) => {
+                    customsManager.create(data)
+                        .then((id) => {
+                            done("should error when create new data with data delivery order useCostumes = false");
+                        })
+                        .catch((e) => {
+                            e.name.should.equal("ValidationError");
+                            e.should.have.property("errors");
+                            e.errors.should.instanceof(Object);
+                            e.errors.should.have.property('deliveryOrders');
+                            done();
+                        });
                 })
                 .catch((e) => {
-                    e.name.should.equal("ValidationError");
-                    e.should.have.property("errors");
-                    e.errors.should.instanceof(Object);
-                    e.errors.should.have.property('deliveryOrders');
-                    done();
+                    done(e);
                 });
         })
         .catch((e) => {
