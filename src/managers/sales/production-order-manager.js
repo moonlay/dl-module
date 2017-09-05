@@ -272,7 +272,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if (!valid.orderQuantity || valid.orderQuantity === 0)
                     errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.isRequired:%s is required", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh kosong";
                 else {
-                    if(valid.remainingQuantity){
+                    if(valid.remainingQuantity!=undefined){
                         valid.remainingQuantity+=valid.beforeQuantity;
                         if(valid.orderQuantity>valid.remainingQuantity){
                             errors["orderQuantity"] =i18n.__("ProductionOrder.orderQuantity.isRequired:%s should not be more than SC remaining quantity", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity"));
@@ -485,14 +485,18 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var sppId = id;
                 return this.fpSalesContractManager.getSingleById(spp.salesContractId)
                     .then((sc) => {
-                        if(sc.remainingQuantity){
+                        if(sc.remainingQuantity!=undefined){
                             sc.remainingQuantity = sc.remainingQuantity-spp.orderQuantity;
-                        }
-                        return this.fpSalesContractManager.update(sc)
-                            .then(
-                                (id) => 
-                                Promise.resolve(sppId));
-                            });
+                            return this.fpSalesContractManager.update(sc)
+                                .then(
+                                    (id) => 
+                                    Promise.resolve(sppId));
+                            }
+                            else{
+                                Promise.resolve(sppId);
+                            }
+                        });
+                            
                     });
     }
 
@@ -502,10 +506,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     if(spp.salesContractId){
                         return this.fpSalesContractManager.getSingleById(spp.salesContractId)
                         .then((sc) => {
-                            if(sc.remainingQuantity){
+                            if(sc.remainingQuantity!=undefined){
                                 sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
                                 return this.fpSalesContractManager.update(sc)
-                                    .then((id) => Promise.resolve(data));
+                                    .then((id) => 
+                                        Promise.resolve(data));
                                 }
                                 else{
                                     return Promise.resolve(data);
@@ -521,19 +526,20 @@ module.exports = class ProductionOrderManager extends BaseManager {
     _afterUpdate(id) {
         return this.getSingleById(id)
             .then((spp) => {
+                var sppId = id;
                 if(spp.salesContractId){
-                    var sppId = id;
                     return this.fpSalesContractManager.getSingleById(spp.salesContractId)
                         .then((sc) => {
-                            if(sc.remainingQuantity){
+                            if(sc.remainingQuantity!=undefined){
                                 sc.remainingQuantity -= spp.orderQuantity;
                             }
                             return this.fpSalesContractManager.update(sc)
-                                .then((id) => Promise.resolve(sppId));
+                                .then((id) => 
+                                    Promise.resolve(sppId));
                                 });
                 }
                 else{
-                    Promise.resolve(id);
+                    Promise.resolve(sppId);
                 }
             });
     }
@@ -545,7 +551,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             if(spp.salesContractId){
                 return this.fpSalesContractManager.getSingleById(spp.salesContractId)
                 .then((sc) => {
-                    if(sc.remainingQuantity){
+                    if(sc.remainingQuantity!=undefined){
                         sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
                     }
                     return this.fpSalesContractManager.update(sc)
