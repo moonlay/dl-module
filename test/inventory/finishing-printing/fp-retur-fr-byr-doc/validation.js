@@ -65,6 +65,12 @@ it("#02. should error when create new data with no exist data buyer", function (
                         e.should.have.property("errors");
                         e.errors.should.instanceof(Object);
                         e.errors.should.have.property('buyer');
+                        e.errors.should.have.property('details');
+                        for(var a of e.errors.details){
+                            for(var b of a.items){
+                                b.should.have.property('productName');
+                            }
+                        }
                         done();
                     });
             })
@@ -240,7 +246,7 @@ it("#06. should error when create new data with no data remark, weight, length, 
                 for(var b of a.items){
                     b.should.have.property('remark');
                     b.should.have.property('length');
-                    b.should.have.property('weight');
+                    //b.should.have.property('weight');
                     b.should.have.property('productName');
                 }
             }
@@ -258,7 +264,7 @@ it("#06. should error when create new data with no data remark, weight, length, 
                     for(var a of e.errors.details){
                         for(var b of a.items){
                             b.should.have.property('length');
-                            b.should.have.property('weight');
+                            //b.should.have.property('weight');
                         }
                     }
                     done();
@@ -277,7 +283,7 @@ it("#07. should error when create new data with no data new product", function (
         coverLetter : newData.coverLetter,
         codeProduct : newData.codeProduct,
         details : [{
-                productionOrderNo : "",
+                productionOrderNo : newData.details[0].productionOrderNo,
                 productionOrderId : newData.details[0].productionOrderId,
                 items : newData.details[0].items,
                 newProducts : []
@@ -339,7 +345,7 @@ it("#08. should error when create new data with no productName, description, rem
             for(var a of e.errors.details){
                 for(var b of a.newProducts){
                     b.should.have.property('length');
-                    b.should.have.property('weight');
+                    //b.should.have.property('weight');
                     b.should.have.property('productName');
                     b.should.have.property('description');
                     b.should.have.property('remark');
@@ -364,7 +370,7 @@ it("#08. should error when create new data with no productName, description, rem
                     for(var a of e.errors.details){
                         for(var b of a.newProducts){
                             b.should.have.property('length');
-                            b.should.have.property('weight');
+                            //b.should.have.property('weight');
                             b.should.have.property('construction');
                         }
                     }
