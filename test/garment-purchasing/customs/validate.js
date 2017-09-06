@@ -230,11 +230,21 @@ it("#09. should error when create new data with same no, supplier, customs date,
 it("#10. should error when create new data with data delivery order useCostumes = false", function (done) {
     customsDataUtil.getNewData()
         .then((data) => {
-            var updateDeliveryOrder = [];
+            var updateDeliveryOrders = [];
             for (var deliveryOrder of data.deliveryOrders) {
-                updateDeliveryOrder.push(deliveryOrderManager.collection.updateOne({ _id: new ObjectId(deliveryOrder._id) }, { $set: { useCostumes: false } }));
+                var updateDeliveryOrder = deliveryOrderManager.getSingleById(deliveryOrder._id)
+                    .then((_deliveryOrder) => {
+                        _deliveryOrder.useCustoms = false;
+                        return deliveryOrderManager.collection
+                            .updateOne({
+                                _id: _deliveryOrder._id
+                            }, {
+                                $set: _deliveryOrder
+                            })
+                    })
+                    updateDeliveryOrders.push(updateDeliveryOrder)
             }
-            Promise.all(updateDeliveryOrder)
+            Promise.all(updateDeliveryOrders)
                 .then((result) => {
                     customsManager.create(data)
                         .then((id) => {
