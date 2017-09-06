@@ -425,4 +425,15 @@ it("#08. should success when create new data with new Product", function (done) 
         });
 });
 
-
+it("#09. should success when read data", function (done) {
+    returManager.read({keyword : newData.code})
+        .then((documents) => {
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

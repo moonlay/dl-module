@@ -53,7 +53,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            var destinationoFilter = {
+            var destinationFilter = {
                 "destination": {
                     "$regex": regex
                 }
@@ -63,7 +63,17 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [codeFilter, destinationoFilter, buyerFilter];
+            var spkFilter = {
+                "spk": {
+                    "$regex": regex
+                }
+            };
+            var coverLetterFilter = {
+                "coverLetter": {
+                    "$regex": regex
+                }
+            };
+            keywordFilter["$or"] = [codeFilter, destinationFilter, buyerFilter, spkFilter, coverLetterFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -585,6 +595,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                     "buyer" : "$buyer.name",
                     "spk" : 1,
                     "coverLetter" : 1,
+                    "codeProduct" : 1,
                     "productCode" : "$details.items.productCode",
                     "productName" : "$details.items.productName",
                     "productDescription" : "$details.items.productDescription",
@@ -616,7 +627,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                         count: docs.length,
                         size: limit,
                         total: count,
-                        page: skip + 1,
+                        page: query && query.page && query.page !== "" ? Number(query.page) : 1,
                         filter: query && query.filter ? query.filter : null,
                         order : query.order
                     }
@@ -648,11 +659,11 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                 item["Buyer"] = data.buyer ? data.buyer : '';
                 item["No Spk"] = data.spk ? data.spk : '';
                 item["No Surat Pengantar"] = data.coverLetter ? data.coverLetter : '';
+                item["Kode Barang"] = data.codeProduct ? data.codeProduct : '';
                 item["No Order"] = data.orderNo ? data.orderNo : '';
-                item["Kode Barang"] = data.productCode ? data.productCode : '';
                 item["Nama Barang"] = data.productName ? data.productName : '';
-                item["Ket. Produk"] = data.productDescription ? data.productDescription : '';
-                item["Ket. Barang"] = data.remark ? data.remark : '';
+                item["Ket Produk"] = data.productDescription ? data.productDescription : '';
+                item["Keterangan"] = data.remark ? data.remark : '';
                 item["Jumlah Retur"] = data.returQuantity ? data.returQuantity : 0;
                 item["Satuan"] = data.uom ? data.uom : '';
                 item["Panjang (Meter)"] = data.length ? (data.length * data.returQuantity) : 0;
@@ -668,11 +679,11 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
             xls.options["Buyer"] = "string";
             xls.options["No Spk"] = "string";
             xls.options["No Surat Pengantar"] = "string";
-            xls.options["No Order"] = "string";
             xls.options["Kode Barang"] = "string";
+            xls.options["No Order"] = "string";
             xls.options["Nama Barang"] = "string";
-            xls.options["Ket. Produk"] = "string";
-            xls.options["Ket. Barang"] = "string";
+            xls.options["Ket Produk"] = "string";
+            xls.options["Keterangan"] = "string";
             xls.options["Jumlah Retur"] = "number";
             xls.options["Satuan"] = "string";
             xls.options["Panjang (Meter)"] = "number";
