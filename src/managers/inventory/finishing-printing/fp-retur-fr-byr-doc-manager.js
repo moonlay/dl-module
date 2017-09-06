@@ -193,8 +193,8 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                 detailError["dataItems"] = i18n.__("Data Produk harus diisi minimal 1", i18n.__("FPReturFromBuyerDoc.details.dataItems._:DataItems"));
                             if(detail.items && detail.items.length === 0 && detail.newProducts && detail.newProducts.length === 0)
                                 detailError["dataItems"] = i18n.__("Data Produk harus diisi minimal 1", i18n.__("FPReturFromBuyerDoc.details.dataItems._:DataItems"));
-                            if(detail.items && detail.items.length > 0 && detail.newProducts && detail.newProducts.length === 0)
-                                detailError["dataItems"] = i18n.__("Data Produk Baru harus diisi minimal 1", i18n.__("FPReturFromBuyerDoc.details.dataItems._:DataItems"));
+                            // if(detail.items && detail.items.length > 0 && detail.newProducts && detail.newProducts.length === 0)
+                            //     detailError["dataItems"] = i18n.__("Data Produk Baru harus diisi minimal 1", i18n.__("FPReturFromBuyerDoc.details.dataItems._:DataItems"));
                             else{
                                 if(detail.items && detail.items.length > 0){
                                     var itemErrors = [];

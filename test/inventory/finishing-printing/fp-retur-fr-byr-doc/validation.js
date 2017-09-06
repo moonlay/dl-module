@@ -272,37 +272,37 @@ it("#06. should error when create new data with no data remark, weight, length, 
         });
 });
 
-it("#07. should error when create new data with no data new product", function (done) {
-    var data = {
-        code : newData.code,
-        destination : newData.destination,
-        buyerId : newData.buyerId,
-        buyer : newData.buyer,
-        date : newData.date,
-        spk : newData.spk,
-        coverLetter : newData.coverLetter,
-        codeProduct : newData.codeProduct,
-        details : [{
-                productionOrderNo : newData.details[0].productionOrderNo,
-                productionOrderId : newData.details[0].productionOrderId,
-                items : newData.details[0].items,
-                newProducts : []
-            }]
-    };
-    returManager.create(data)
-        .then((id) => {
-            done("should error when create new data with no data production order");
-        })
-        .catch((e) => {
-            e.name.should.equal("ValidationError");
-            e.should.have.property("errors");
-            e.errors.should.instanceof(Object);
-            e.errors.should.have.property('details');
-            done();
-        });
-});
+// it("#07. should error when create new data with no data new product", function (done) {
+//     var data = {
+//         code : newData.code,
+//         destination : newData.destination,
+//         buyerId : newData.buyerId,
+//         buyer : newData.buyer,
+//         date : newData.date,
+//         spk : newData.spk,
+//         coverLetter : newData.coverLetter,
+//         codeProduct : newData.codeProduct,
+//         details : [{
+//                 productionOrderNo : newData.details[0].productionOrderNo,
+//                 productionOrderId : newData.details[0].productionOrderId,
+//                 items : newData.details[0].items,
+//                 newProducts : []
+//             }]
+//     };
+//     returManager.create(data)
+//         .then((id) => {
+//             done("should error when create new data with no data production order");
+//         })
+//         .catch((e) => {
+//             e.name.should.equal("ValidationError");
+//             e.should.have.property("errors");
+//             e.errors.should.instanceof(Object);
+//             e.errors.should.have.property('details');
+//             done();
+//         });
+// });
 
-it("#08. should error when create new data with no productName, description, remark, uom, length, weight, lot, grade, construction in new Product", function (done) {
+it("#07. should error when create new data with no productName, description, remark, uom, length, weight, lot, grade, construction in new Product", function (done) {
     var data = {
         code : newData.code,
         destination : newData.destination,
@@ -379,7 +379,7 @@ it("#08. should error when create new data with no productName, description, rem
         });
 });
 
-it("#09. should success when create new data with new Product", function (done) {
+it("#08. should success when create new data with new Product", function (done) {
     constructionDataUtil.getTestData()
         .then(dataCons => {
             var data = {
