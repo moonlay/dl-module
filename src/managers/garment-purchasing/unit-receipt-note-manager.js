@@ -163,17 +163,15 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     valid.date = new Date(valid.date);
 
                     for (var item of valid.items) {
-                        var _purchaseOrder = _purchaseOrderList.find((poInternal) => poInternal._id.toString() === item.purchaseOrderId.toString())
-                        var _purchaseOrderItem = _purchaseOrder.items.find((item) => item.product._id.toString() === item.product._id.toString())
-                        item.product = _purchaseOrderItem.product;
-                        item.deliveredUom = _purchaseOrderItem.dealUom;
-                        item.currency = _purchaseOrderItem.currency;
-                        item.category = _purchaseOrderItem.category;
-                        item.categoryId = _purchaseOrderItem.category._id;
-                        item.purchaseOrderId = _purchaseOrder._id;
-                        item.purchaseOrderNo = _purchaseOrder.no;
-                        item.purchaseRequestId = _purchaseOrder.purchaseRequest._id;
-                        item.purchaseRequestNo = _purchaseOrder.purchaseRequest.no;
+                        // var _purchaseOrder = _purchaseOrderList.find((poInternal) => poInternal._id.toString() === item.purchaseOrderId.toString())
+                        // var _purchaseOrderItem = _purchaseOrder.items.find((item) => item.product._id.toString() === item.product._id.toString())
+                        // item.product = _purchaseOrderItem.product;
+                        // item.deliveredUom = _purchaseOrderItem.dealUom;
+                        // item.currency = _purchaseOrderItem.currency;
+                        // item.category = _purchaseOrderItem.category;
+                        // item.categoryId = new ObjectId(item.categoryId);
+                        // item.purchaseOrderId = new ObjectId(item.purchaseOrderId);
+                        // item.purchaseRequestId = new ObjectId(item.purchaseRequestId);
                         item.deliveredQuantity = Number(item.deliveredQuantity);
                         item.purchaseOrderQuantity = Number(item.purchaseOrderQuantity);
                         item.pricePerDealUnit = Number(item.pricePerDealUnit);
