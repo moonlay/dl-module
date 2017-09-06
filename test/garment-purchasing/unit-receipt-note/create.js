@@ -50,8 +50,31 @@ it('#02. should error when create new data with same code', function (done) {
             }
         })
 });
+
 it('#03. should error when create new blank data', function (done) {
     unitReceiptNoteManager.create({})
+        .then(id => {
+            id.should.be.Object();
+            done();
+        })
+        .catch(e => {
+            try {
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        })
+});
+
+it("#04. should error when create new data with deliveredQuantity greater than deliveredQuantity on delivery order", function (done) {
+    unitReceiptNote.getNewData()
+        .then((data) => {
+            data.items.map((item) => {
+                item.deliveredQuantity = item.deliveredQuantity + 2;
+            })
+            return unitReceiptNoteManager.create(data)
+        })
         .then(id => {
             id.should.be.Object();
             done();
