@@ -315,7 +315,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return query;
     }
 
-    getPurchaseOrderByTag(categoryId, keyword, shipmentDate) {
+    getPurchaseOrderByTag(user, categoryId, keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -330,41 +330,44 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     query = Object.assign(query, {
                         _deleted: false,
                         isClosed: false,
-                        isPosted: false
+                        isPosted: false,
+                        "_createdBy": user
                     });
                     if (keyword) {
+                        keyword = keyword.replace(/ \#/g, '#');
                         var keywordFilters = [];
                         if (keyword.indexOf("#") != -1) {
                             keywords = keyword.split("#");
-                            keywords = this.cleanUp(keywords);
+                            keywords.splice(0, 1)
                         } else {
                             keywords.push(keyword)
                         }
-                        for (var _keyword of keywords) {
+                        for (var j = 0; j < keywords.length; j++) {
                             var keywordFilter = {};
-                            var regex = new RegExp(_keyword, "i");
-
-                            var filterRoNo = {
-                                "roNo": {
-                                    "$regex": regex
+                            var _keyword = keywords[j]
+                            if (_keyword) {
+                                var regex = new RegExp(_keyword, "i");
+                                switch (j) {
+                                    case 0:
+                                        keywordFilters.push({
+                                            "unit.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
+                                    case 1:
+                                        keywordFilters.push({
+                                            "buyer.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
                                 }
-                            };
-
-                            var filterBuyer = {
-                                "buyer.name": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            var filterArtikel = {
-                                "artikel": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            keywordFilters.push(filterRoNo, filterBuyer, filterArtikel);
+                            }
                         }
-                        query['$or'] = keywordFilters;
+                        if (keywordFilters.length > 0) {
+                            query['$and'] = keywordFilters;
+                        }
                     }
 
                     var _select = {
@@ -388,18 +391,20 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         "items.isClosed": "$items.isClosed",
                         "items.category": "$items.category",
                         "items.categoryId": "$items.categoryId",
+                        "items.remark": "$items.remark"
                     };
 
                     var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryCategory }, { $project: _select }];
 
                     var queryDate = Object.assign({});
-                    if (shipmentDate) {
-                        var _shipmentDate = new Date(shipmentDate);
+                    if (shipmentDateFrom && shipmentDateTo) {
+                        var _shipmentDateFrom = new Date(shipmentDateFrom);
+                        var _shipmentDateTo = new Date(shipmentDateTo);
 
                         queryDate = {
-                            year: _shipmentDate.getFullYear(),
-                            month: _shipmentDate.getMonth() + 1,
-                            day: _shipmentDate.getDate()
+                            year: { $gte: _shipmentDateFrom.getFullYear(), $lte: _shipmentDateTo.getFullYear() },
+                            month: { $gte: _shipmentDateFrom.getMonth() + 1, $lte: _shipmentDateTo.getMonth() + 1 },
+                            day: { $gte: _shipmentDateFrom.getDate(), $lte: _shipmentDateTo.getDate() },
                         }
                         qryMatch.push({ $match: queryDate })
                     }
@@ -1176,15 +1181,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
 
-    cleanUp(input) {
-        var newArr = [];
-        for (var i = 0; i < input.length; i++) {
-            if (input[i]) {
-                newArr.push(input[i]);
-            }
-        }
-        return newArr;
-    }
     /*selectDateById(id) {
         return new Promise((resolve, reject) => {
             var query = { "purchaseRequest._id": ObjectId.isValid(id) ? new ObjectId(id) : {}, "_deleted": false };

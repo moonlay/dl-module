@@ -34,7 +34,7 @@ it('#01. should success when get new data purchase-request ', function (done) {
 it('#02. should success when get data by keyword', function (done) {
     purchaseOrderManager.purchaseRequestManager.getPurchaseRequestByTag()
         .then(data => {
-            data.splice(0,1);
+            data.splice(0, 1);
             listPurchaseOrder = data;
             data.should.be.instanceof(Array);
             done();
@@ -93,7 +93,7 @@ it("#05. should success when read data", function (done) {
 it('#06. should success when get data by keyword', function (done) {
     var shipmentDate = new Date();
     var moment = require('moment');
-    purchaseOrderManager.getPurchaseOrderByTag(categoryId, "#buyer1", moment(shipmentDate).format("YYYY-MM-DD"))
+    purchaseOrderManager.getPurchaseOrderByTag('dev', categoryId, "#Test Unit #buyer 01", moment(shipmentDate).format("YYYY-MM-DD"), moment(shipmentDate).format("YYYY-MM-DD"))
         .then(data => {
             data.should.be.instanceof(Array);
             done();

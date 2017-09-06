@@ -81,6 +81,7 @@ class DeliveryOrderDataUtil {
                                 purchaseOrderQuantity: poeItem.dealQuantity,
                                 purchaseOrderUom: poeItem.dealUom,
                                 deliveredQuantity: poeItem.dealQuantity - 1,
+                                currency: poEks.currency,
                                 realizationQuantity: [],
                                 remark: ''
                             }

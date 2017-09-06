@@ -104,6 +104,7 @@ describe('#dl-module', function (done) {
     test('@GARMENT PURCHASING/DELIVERY ORDER', './garment-purchasing/delivery-order');
     test('@GARMENT PURCHASING/CUSTOMS', './garment-purchasing/customs');
     test('@GARMENT PURCHASING/INVOICE NOTE', './garment-purchasing/invoice-note');
+    test('@GARMENT PURCHASING/UNIT RECEIPT NOTE', './garment-purchasing/unit-receipt-note');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
@@ -134,4 +135,5 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-SUMMARY', './inventory/inventory-summary');
     test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
+    test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
 });
