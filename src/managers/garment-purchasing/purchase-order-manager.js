@@ -1814,7 +1814,11 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     getReport(info) {
         var _defaultFilter = {
             _deleted: false
-        }, noFilter = {}, categoryFilter = {}, unitFilter = {}, buyerFilter = {},
+        },
+            noFilter = {},
+            categoryFilter = {},
+            unitFilter = {},
+            buyerFilter = {},
             dateFromFilter = {},
             dateToFilter = {},
             query = {};

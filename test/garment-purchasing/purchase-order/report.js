@@ -63,9 +63,9 @@ it('#03. should success when create report', function (done) {
     manager.getReport(info)
         .then(result => {
             resultForExcelTest = result;
-            var PO = result.data;
-            PO.should.instanceof(Array);
-            PO.length.should.not.equal(0);
+            var POdata = result.data;
+            POdata.should.instanceof(Array);
+            POdata.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);

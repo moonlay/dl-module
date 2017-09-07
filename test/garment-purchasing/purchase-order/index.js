@@ -6,6 +6,6 @@ describe("SPLIT SCENARIOS", function() {
     require("./split");
 });
 
-describe("REPORT SCENARIOS", function () {
+describe("report SCENARIOS", function () {
     require("./report");
 });
