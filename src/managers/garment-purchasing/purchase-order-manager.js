@@ -1835,7 +1835,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
         if (info.category && info.category != '') {
             var category = ObjectId.isValid(info.category) ? new ObjectId(info.category) : {};
-            categoryFilter = { 'category._id': category };
+            categoryFilter = { 'items.category._id': category };
         }
 
         if (info.buyer && info.buyer != '') {

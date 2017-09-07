@@ -1,603 +1,679 @@
 'use strict'
 
 var ObjectId = require("mongodb").ObjectId;
-require("mongodb-toolkit");
-
+require('mongodb-toolkit');
 var DLModels = require('dl-models');
+var assert = require('assert');
 var map = DLModels.map;
-var ProductionOrder = DLModels.sales.ProductionOrder;
-var ProductionOrderDetail = DLModels.sales.ProductionOrderDetail;
-var ProductionOrderLampStandard = DLModels.sales.ProductionOrderLampStandard;
-var FPSalesContractManager = require('./finishing-printing-sales-contract-manager');
-var LampStandardManager = require('../master/lamp-standard-manager');
-var BuyerManager = require('../master/buyer-manager');
-var UomManager = require('../master/uom-manager');
-var ProductManager = require('../master/product-manager');
-var ProcessTypeManager = require('../master/process-type-manager');
-var OrderTypeManager = require('../master/order-type-manager');
-var ColorTypeManager = require('../master/color-type-manager');
-var FinishTypeManager = require('../master/finish-type-manager');
-var StandardTestManager = require('../master/standard-test-manager');
-var MaterialConstructionManager = require('../master/material-construction-manager');
-var YarnMaterialManager = require('../master/yarn-material-manager');
-var AccountManager = require('../auth/account-manager');
+var PurchaseOrder = DLModels.garmentPurchasing.GarmentPurchaseOrder;
+var PurchaseRequest = DLModels.garmentPurchasing.GarmentPurchaseRequest;
+var PurchaseRequestManager = require('./purchase-request-manager');
+var generateCode = require('../../utils/code-generator');
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
-var generateCode = require("../../utils/code-generator");
-var assert = require('assert');
+var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
+var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
+var moment = require('moment');
 
-module.exports = class ProductionOrderManager extends BaseManager {
+module.exports = class PurchaseOrderManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
+        this.moduleId = 'PO';
+        this.year = (new Date()).getFullYear().toString().substring(2, 4);
+        this.collection = this.db.use(map.garmentPurchasing.collection.GarmentPurchaseOrder);
+        this.purchaseRequestManager = new PurchaseRequestManager(db, user);
+        this.purchaseOrderFields = [
+            "_id",
+            "no",
+            "refNo",
+            "purchaseRequestId",
+            "purchaseRequest._id",
+            "purchaseRequest.no",
+            "date",
+            "expectedDeliveryDate",
+            "actualDeliveryDate",
+            "isPosted",
+            "isClosed",
+            "remark",
+            "status",
+            "items.purchaseOrderExternalId",
+            "items.purchaseOrderExternal._id",
+            "items.purchaseOrderExternal.no",
+            "items.supplierId",
+            "items.supplier.code",
+            "items.supplier.name",
+            "items.supplier.address",
+            "items.supplier.contact",
+            "items.supplier.PIC",
+            "items.supplier.import",
+            "items.supplier.NPWP",
+            "items.supplier.serialNumber",
+            "items.unitId",
+            "items.unit.code",
+            "items.unit.divisionId",
+            "items.unit.division",
+            "items.unit.name",
+            "items.freightCostBy",
+            "items.currency.code",
+            "items.currency.symbol",
+            "items.currency.rate",
+            "items.currencyRate",
+            "items.paymentMethod",
+            "items.paymentDueDays",
+            "items.vat",
+            "items.useVat",
+            "items.vatRate",
+            "items.useIncomeTax",
+            "items.productId",
+            "items.product",
+            "items.defaultQuantity",
+            "items.defaultUom",
+            "items.dealQuantity",
+            "items.dealUom",
+            "items.realizationQuantity",
+            "items.pricePerDealUnit",
+            "items.priceBeforeTax",
+            "items.budgetPrice",
+            "items.categoryId",
+            "items.category.code",
+            "items.category.name",
+            "items.conversion",
+            "items.isPosted",
+            "items.isClosed",
 
-        this.collection = this.db.collection(map.sales.collection.ProductionOrder);
-        this.dailyOperationCollection = this.db.collection(map.production.finishingPrinting.collection.DailyOperation);
-        this.fabricQualityControlCollection = this.db.use(map.production.finishingPrinting.qualityControl.defect.collection.FabricQualityControl);
-        this.LampStandardManager = new LampStandardManager(db, user);
-        this.BuyerManager = new BuyerManager(db, user);
-        this.UomManager = new UomManager(db, user);
-        this.ProductManager = new ProductManager(db, user);
-        this.ProcessTypeManager = new ProcessTypeManager(db, user);
-        this.ColorTypeManager = new ColorTypeManager(db, user);
-        this.OrderTypeManager = new OrderTypeManager(db, user);
-        this.MaterialConstructionManager = new MaterialConstructionManager(db, user);
-        this.YarnMaterialManager = new YarnMaterialManager(db, user);
-        this.FinishTypeManager = new FinishTypeManager(db, user);
-        this.StandardTestManager = new StandardTestManager(db, user);
-        this.AccountManager = new AccountManager(db, user);
-        this.fpSalesContractManager=new FPSalesContractManager(db,user);
+        ];
     }
 
-    _getQuery(paging) {
-        var deletedFilter = {
-            _deleted: false
-        }, keywordFilter = {};
+    /*getPrice(dateFrom, dateTo, productName) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+                    if (productName !== "undefined" && productName !== "") {
+                        Object.assign(query, {
+                            "items.product.name": productName
+                        }
+                        );
+                    }
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        Object.assign(query, {
+                            date: {
+                                $gte: new Date(dateFrom),
+                                $lte: new Date(dateTo)
+                            }
+                        });
+                    }
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.aggregate([{ "$unwind": "$items" }, { "$match": query }, { $sort: { date: 1 } }]).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }*/
 
-        var query = {};
-        if (paging.keyword) {
-            var regex = new RegExp(paging.keyword, "i");
-
-            var filterSalesContract = {
-                'salesContractNo': {
-                    '$regex': regex
-                }
-            };
-
-            var filterOrderNo = {
-                'orderNo': {
-                    '$regex': regex
-                }
-            };
-
-            var filterBuyerName = {
-                'buyer.name': {
-                    '$regex': regex
-                }
-            };
-
-            var filterBuyerType = {
-                'buyer.type': {
-                    '$regex': regex
-                }
-            };
-
-            var filterProcessType = {
-                'processType.name': {
-                    '$regex': regex
-                }
-            };
-
-            keywordFilter = {
-                '$or': [filterSalesContract, filterOrderNo, filterBuyerName, filterBuyerType, filterProcessType]
-            };
-        }
-        query = { '$and': [deletedFilter, paging.filter, keywordFilter] }
-        return query;
-    }
-
-    _beforeInsert(productionOrder) {
-        productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
-        productionOrder._createdDate = new Date();
-        return Promise.resolve(productionOrder);
-    }
-
-    _validate(productionOrder) {
+    _validate(purchaseOrder) {
         var errors = {};
-
-        var valid = productionOrder;
-        var getProductionOrder = this.collection.singleOrDefault({
+        var valid = purchaseOrder;
+        var getPurchaseOrder = this.collection.singleOrDefault({
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            orderNo: valid.orderNo
+            no: valid.no || ""
         });
+        var getPurchaseRequest = ObjectId.isValid(valid.purchaseRequestId) ? this.purchaseRequestManager.getSingleByIdOrDefault(valid.purchaseRequestId) : Promise.resolve(null);
+        var getSourcePurchaseOrder = ObjectId.isValid(valid.sourcePurchaseOrderId) ? this.getSingleByIdOrDefault(valid.sourcePurchaseOrderId) : Promise.resolve(null);
 
-        var getBuyer = ObjectId.isValid(valid.buyerId) ? this.BuyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
-        var getUom = valid.uom && ObjectId.isValid(valid.uomId) ? this.UomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
-        var getProduct = ObjectId.isValid(valid.materialId) ? this.ProductManager.getSingleByIdOrDefault(valid.materialId) : Promise.resolve(null);
-        var getProcessType = ObjectId.isValid(valid.processTypeId) ? this.ProcessTypeManager.getSingleByIdOrDefault(valid.processTypeId) : Promise.resolve(null);
-        var getOrderType = ObjectId.isValid(valid.orderTypeId) ? this.OrderTypeManager.getSingleByIdOrDefault(valid.orderTypeId) : Promise.resolve(null);
-        var getFinishType = ObjectId.isValid(valid.finishTypeId) ? this.FinishTypeManager.getSingleByIdOrDefault(valid.finishTypeId) : Promise.resolve(null);
-        var getYarnMaterial = ObjectId.isValid(valid.yarnMaterialId) ? this.YarnMaterialManager.getSingleByIdOrDefault(valid.yarnMaterialId) : Promise.resolve(null);
-        var getStandardTest = ObjectId.isValid(valid.standardTestId) ? this.StandardTestManager.getSingleByIdOrDefault(valid.standardTestId) : Promise.resolve(null);
-        var getMaterialConstruction = ObjectId.isValid(valid.materialConstructionId) ? this.MaterialConstructionManager.getSingleByIdOrDefault(valid.materialConstructionId) : Promise.resolve(null);
-        var getAccount = ObjectId.isValid(valid.accountId) ? this.AccountManager.getSingleByIdOrDefault(valid.accountId) : Promise.resolve(null);
-        var getSC=ObjectId.isValid(valid.salesContractId)? this.fpSalesContractManager.getSingleByIdOrDefault(valid.salesContractId) : Promise.resolve(null);
-
-        valid.details = valid.details || [];
-        var getColorTypes = [];
-        for (var detail of valid.details) {
-            if (ObjectId.isValid(detail.colorTypeId)) {
-                var color = ObjectId.isValid(detail.colorTypeId) ? this.ColorTypeManager.getSingleByIdOrDefault(detail.colorTypeId) : Promise.resolve(null);
-                getColorTypes.push(color);
-            }
-        }
-
-        valid.lampStandards = valid.lampStandards || [];
-        var getLampStandards = [];
-        for (var lamp of valid.lampStandards) {
-            if (ObjectId.isValid(lamp.lampStandardId)) {
-                var lamps = ObjectId.isValid(lamp.lampStandardId) ? this.LampStandardManager.getSingleByIdOrDefault(lamp.lampStandardId) : Promise.resolve(null);
-                getLampStandards.push(lamps);
-            }
-        }
-
-        return Promise.all([getProductionOrder, getBuyer, getUom, getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount,getSC].concat(getColorTypes, getLampStandards))
+        return Promise.all([getPurchaseOrder, getPurchaseRequest, getSourcePurchaseOrder])
             .then(results => {
-                var _productionOrder = results[0];
-                var _buyer = results[1];
-                var _uom = results[2];
-                var _material = results[3];
-                var _process = results[4];
-                var _order = results[5];
-                var _finish = results[6];
-                var _yarn = results[7];
-                var _standard = results[8];
-                var _construction = results[9];
-                var _account = results[10];
-                var _sc = results[11];
-                var _colors = results.slice(12, 12 + getColorTypes.length);
-                var _lampStandards = results.slice(12 + getColorTypes.length, results.length);
+                var _purchaseOrder = results[0];
+                var _purchaseRequest = results[1];
+                var _sourcePurchaseOrder = results[2];
 
-                if (_productionOrder) {
-                    errors["orderNo"] = i18n.__("ProductionOrder.orderNo.isExist:%s is Exist", i18n.__("Product.orderNo._:orderNo")); //"orderNo sudah ada";
+                if (_purchaseOrder) {
+                    errors["no"] = i18n.__("PurchaseOrder.no.isExist:%s is exist", i18n.__("PurchaseOrder.no._:No")); //"purchaseRequest tidak boleh kosong";
                 }
 
-
-                if (valid.uom) {
-                    if (!_uom)
-                        errors["uom"] = i18n.__("ProductionOrder.uom.isRequired:%s is required", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
+                if (!_purchaseRequest) {
+                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isRequired:%s is required", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest tidak boleh kosong";
                 }
-                else
-                    errors["uom"] = i18n.__("ProductionOrder.uom.isRequired:%s is required", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
-
-                if (!valid.salesContractNo || valid.salesContractNo === '') {
-                    errors["salesContractNo"] = i18n.__("ProductionOrder.salesContractNo.isRequired:%s is required", i18n.__("ProductionOrder.salesContractNo._:SalesContractNo")); //"salesContractNo tidak boleh kosong";
+                else if (!_purchaseRequest.isPosted) {
+                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isNotPosted:%s is need to be posted", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest harus sudah dipost";
                 }
-
-                if (!_sc)
-                    errors["salesContractNo"] = i18n.__("ProductionOrder.salesContractNo.isRequired:%s is not exists", i18n.__("ProductionOrder.salesContractNo._:SalesContractNo")); //"salesContractNo tidak boleh kosong";
-
-
-                if (!_material)
-                    errors["material"] = i18n.__("ProductionOrder.material.isRequired:%s is not exists", i18n.__("ProductionOrder.material._:Material")); //"material tidak boleh kosong";
-
-                if (!_process)
-                    errors["processType"] = i18n.__("ProductionOrder.processType.isRequired:%s is not exists", i18n.__("ProductionOrder.processType._:ProcessType")); //"processType tidak boleh kosong";
-
-                if (!_order)
-                    errors["orderType"] = i18n.__("ProductionOrder.orderType.isRequired:%s is not exists", i18n.__("ProductionOrder.orderType._:OrderType")); //"orderType tidak boleh kosong";
-
-                if (!_yarn)
-                    errors["yarnMaterial"] = i18n.__("ProductionOrder.yarnMaterial.isRequired:%s is not exists", i18n.__("ProductionOrder.yarnMaterial._:YarnMaterial")); //"yarnMaterial tidak boleh kosong";
-
-                if (!_construction)
-                    errors["materialConstruction"] = i18n.__("ProductionOrder.materialConstruction.isRequired:%s is not exists", i18n.__("ProductionOrder.materialConstruction._:MaterialConstruction")); //"materialConstruction tidak boleh kosong";
-
-                if (!_finish)
-                    errors["finishType"] = i18n.__("ProductionOrder.finishType.isRequired:%s is not exists", i18n.__("ProductionOrder.finishType._:FinishType")); //"finishType tidak boleh kosong";
-
-                if (!_standard)
-                    errors["standardTest"] = i18n.__("ProductionOrder.standardTest.isRequired:%s is not exists", i18n.__("ProductionOrder.standardTest._:StandardTest")); //"standardTest tidak boleh kosong";
-
-                if (!_account) {
-                    errors["account"] = i18n.__("ProductionOrder.account.isRequired:%s is not exists", i18n.__("ProductionOrder.account._:Account")); //"account tidak boleh kosong";
-                }
-                if (!valid.packingInstruction || valid.packingInstruction === '') {
-                    errors["packingInstruction"] = i18n.__("ProductionOrder.packingInstruction.isRequired:%s is required", i18n.__("ProductionOrder.packingInstruction._:PackingInstruction")); //"PackingInstruction tidak boleh kosong";
-                }
-
-                if (!valid.materialOrigin || valid.materialOrigin === '') {
-                    errors["materialOrigin"] = i18n.__("ProductionOrder.materialOrigin.isRequired:%s is required", i18n.__("ProductionOrder.materialOrigin._:MaterialOrigin")); //"materialOrigin tidak boleh kosong";
-                }
-
-                if (!valid.finishWidth || valid.finishWidth === '') {
-                    errors["finishWidth"] = i18n.__("ProductionOrder.finishWidth.isRequired:%s is required", i18n.__("ProductionOrder.finishWidth._:FinishWidth")); //"finishWidth tidak boleh kosong";
-                }
-
-                if (!valid.sample || valid.sample === '') {
-                    errors["sample"] = i18n.__("ProductionOrder.sample.isRequired:%s is required", i18n.__("ProductionOrder.sample._:Sample")); //"sample tidak boleh kosong";
-                }
-
-                if (!valid.handlingStandard || valid.handlingStandard === '') {
-                    errors["handlingStandard"] = i18n.__("ProductionOrder.handlingStandard.isRequired:%s is required", i18n.__("ProductionOrder.handlingStandard._:HandlingStandard")); //"handlingStandard tidak boleh kosong";
-                }
-
-                if (!valid.shrinkageStandard || valid.shrinkageStandard === '') {
-                    errors["shrinkageStandard"] = i18n.__("ProductionOrder.shrinkageStandard.isRequired:%s is required", i18n.__("ProductionOrder.shrinkageStandard._:ShrinkageStandard")); //"shrinkageStandard tidak boleh kosong";
-                }
-
-                if (!valid.deliveryDate || valid.deliveryDate === "") {
-                    errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.isRequired:%s is required", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"deliveryDate tidak boleh kosong";
-                }
-                // else{
-                //     valid.deliveryDate=new Date(valid.deliveryDate);
-                //     var today=new Date();
-                //     today.setHours(0,0,0,0);
-                //     if(today>valid.deliveryDate){
-                //         errors["deliveryDate"] = i18n.__("ProductionOrder.deliveryDate.shouldNot:%s should not be less than today's date", i18n.__("ProductionOrder.deliveryDate._:deliveryDate")); //"deliveryDate tidak boleh kurang dari tanggal hari ini";
-                //     }
-                // }
-
-                if (_order) {
-                    if (_order.name.trim().toLowerCase() == "printing") {
-                        if (!valid.RUN || valid.RUN == "") {
-                            errors["RUN"] = i18n.__("ProductionOrder.RUN.isRequired:%s is required", i18n.__("ProductionOrder.RUN._:RUN")); //"RUN tidak boleh kosong";
-                        }
-                        if (valid.RUN && valid.RUN != "Tanpa RUN") {
-                            if (!valid.RUNWidth || valid.RUNWidth.length <= 0) {
-                                errors["RUNWidth"] = i18n.__("ProductionOrder.RUNWidth.isRequired:%s is required", i18n.__("ProductionOrder.RUNWidth._:RUNWidth")); //"RUNWidth tidak boleh kosong";
-                            }
-                            if (valid.RUNWidth.length > 0) {
-                                for (var r = 0; r < valid.RUNWidth.length; r++) {
-                                    if (valid.RUNWidth[r] <= 0) {
-                                        errors["RUNWidth"] = i18n.__("ProductionOrder.RUNWidth.shouldNot:%s should not be less than or equal zero", i18n.__("ProductionOrder.RUNWidth._:RUNWidth")); //"RUNWidth tidak boleh nol";
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        if (!valid.designNumber || valid.designNumber == "") {
-                            errors["designNumber"] = i18n.__("ProductionOrder.designNumber.isRequired:%s is required", i18n.__("ProductionOrder.designNumber._:DesignNumber")); //"designNumber tidak boleh kosong";
-                        }
-                        if (!valid.designCode || valid.designCode == "") {
-                            errors["designCode"] = i18n.__("ProductionOrder.designCode.isRequired:%s is required", i18n.__("ProductionOrder.designCode._:DesignCode")); //"designCode tidak boleh kosong";
-                        }
-                    }
-                }
-
-                if (!_buyer)
-                    errors["buyer"] = i18n.__("ProductionOrder.buyer.isRequired:%s is not exists", i18n.__("ProductionOrder.buyer._:Buyer")); //"Buyer tidak boleh kosong";
-
-                if (!valid.orderQuantity || valid.orderQuantity === 0)
-                    errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.isRequired:%s is required", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh kosong";
                 else {
-                    if(valid.remainingQuantity!=undefined){
-                        valid.remainingQuantity+=valid.beforeQuantity;
-                        if(valid.orderQuantity>valid.remainingQuantity){
-                            errors["orderQuantity"] =i18n.__("ProductionOrder.orderQuantity.isRequired:%s should not be more than SC remaining quantity", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity"));
-                        }
-                    }
-                    var totalqty = 0;
-                    if (valid.details.length > 0) {
-                        for (var i of valid.details) {
-                            totalqty += i.quantity;
-                        }
-                    }
-                    if (valid.orderQuantity != totalqty) {
-                        errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.shouldNot:%s should equal SUM quantity in details", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh berbeda dari total jumlah detail";
-
-                    }
-                    
-                }
-
-                if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
-                    errors["shippingQuantityTolerance"] = i18n.__("ProductionOrder.shippingQuantityTolerance.isRequired:%s is required", i18n.__("ProductionOrder.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
-                else if (valid.shippingQuantityTolerance > 100) {
-                    errors["shippingQuantityTolerance"] = i18n.__("ProductionOrder.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("ProductionOrder.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
-                }
-
-                if (!valid.materialWidth || valid.materialWidth === "")
-                    errors["materialWidth"] = i18n.__("ProductionOrder.materialWidth.isRequired:%s is required", i18n.__("ProductionOrder.materialWidth._:MaterialWidth")); //"materialWidth tidak boleh kosong";
-
-                valid.lampStandards = valid.lampStandards || [];
-                if (valid.lampStandards && valid.lampStandards.length <= 0) {
-                    errors["lampStandards"] = i18n.__("ProductionOrder.lampStandards.isRequired:%s is required", i18n.__("ProductionOrder.lampStandards._:LampStandards")); //"Harus ada minimal 1 lampStandard";
-                }
-                else if (valid.lampStandards.length > 0) {
-                    var lampErrors = [];
-                    for (var lamp of valid.lampStandards) {
-                        var lampError = {};
-                        if (!_lampStandards || _lampStandards.length <= 0) {
-                            lampError["lampStandards"] = i18n.__("ProductionOrder.lampStandards.lampStandard.isRequired:%s is not exists", i18n.__("ProductionOrder.lampStandards.lampStandard._:LampStandard")); //"lampStandard tidak boleh kosong";
-
-                        }
-                        if (!lamp.lampStandard._id) {
-                            lampError["lampStandards"] = i18n.__("ProductionOrder.lampStandards.lampStandard.isRequired:%s is not exists", i18n.__("ProductionOrder.lampStandards.lampStandard._:LampStandard")); //"lampStandard tidak boleh kosong";
-
-                        }
-                        if (Object.getOwnPropertyNames(lampError).length > 0)
-                            lampErrors.push(lampError);
-                    }
-                    if (lampErrors.length > 0)
-                        errors.lampStandards = lampErrors;
-                }
-
-                valid.details = valid.details || [];
-                if (valid.details && valid.details.length <= 0) {
-                    errors["details"] = i18n.__("ProductionOrder.details.isRequired:%s is required", i18n.__("ProductionOrder.details._:Details")); //"Harus ada minimal 1 detail";
-                }
-                else if (valid.details.length > 0) {
-                    var detailErrors = [];
-                    var totalqty = 0;
-                    for (var i of valid.details) {
-                        totalqty += i.quantity;
-                    }
-                    for (var detail of valid.details) {
-                        var detailError = {};
-                        detail.code = generateCode();
-                        if (!detail.colorRequest || detail.colorRequest == "")
-                            detailError["colorRequest"] = i18n.__("ProductionOrder.details.colorRequest.isRequired:%s is required", i18n.__("ProductionOrder.details.colorRequest._:ColorRequest")); //"colorRequest tidak boleh kosong";
-                        if (detail.quantity <= 0)
-                            detailError["quantity"] = i18n.__("ProductionOrder.details.quantity.isRequired:%s is required", i18n.__("ProductionOrder.details.quantity._:Quantity")); //Jumlah barang tidak boleh kosong";
-                        if (valid.orderQuantity != totalqty)
-                            detailError["total"] = i18n.__("ProductionOrder.details.quantity.shouldNot:%s Total should equal Order Quantity", i18n.__("ProductionOrder.details.quantity._:Quantity")); //Jumlah barang tidak boleh berbeda dari jumlah order";
-
-                        if (!_uom)
-                            detailError["uom"] = i18n.__("ProductionOrder.details.uom.isRequired:%s is not exists", i18n.__("ProductionOrder.details.uom._:Uom")); //"satuan tidak boleh kosong";
-
-                        if (_uom) {
-                            detail.uomId = new ObjectId(_uom._id);
-                        }
-                        if (!detail.colorTemplate || detail.colorTemplate == "")
-                            detailError["colorTemplate"] = i18n.__("ProductionOrder.details.colorTemplate.isRequired:%s is required", i18n.__("ProductionOrder.details.colorTemplate._:ColorTemplate")); //"colorTemplate tidak boleh kosong";
-
-                    }
-                    if (_order) {
-                        if (_order.name.toLowerCase() == "yarn dyed" || _order.name.toLowerCase() == "printing") {
-                            _colors = {};
-                        }
-                        else {
-                            if (!_colors)
-                                detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("ProductionOrder.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
-                            else if (!detail.colorType) {
-                                detailError["colorType"] = i18n.__("ProductionOrder.details.colorType.isRequired:%s is required", i18n.__("ProductionOrder.details.colorType._:ColorType")); //"colorType tidak boleh kosong";
-
-                            }
-
-                        }
-
-                        if (Object.getOwnPropertyNames(detailError).length > 0)
-                            detailErrors.push(detailError);
-                    }
-                    if (detailErrors.length > 0)
-                        errors.details = detailErrors;
-
-                }
-                if (!valid.orderNo || valid.orderNo === '') {
-                    valid.orderNo = generateCode();
-                }
-                if (_buyer) {
-                    valid.buyerId = new ObjectId(_buyer._id);
-                }
-                if(_sc){
-                    valid.salesContractId= new ObjectId(_sc._id);
-                }
-                if (_uom) {
-                    valid.uomId = new ObjectId(_uom._id);
-                }
-                if (_process) {
-                    valid.processTypeId = new ObjectId(_process._id);
-                }
-
-                if (_account) {
-                    valid.accountId = new ObjectId(_account._id);
-                }
-
-                if (valid.lampStandards.length > 0) {
-                    for (var lamp of valid.lampStandards) {
-                        for (var _lampStandard of _lampStandards) {
-                            if (_lampStandard) {
-                                if (lamp.lampStandardId.toString() === _lampStandard._id.toString()) {
-                                    lamp.lampStandardId = _lampStandard._id;
-                                    lamp.lampStandard = _lampStandard;
+                    if (!_sourcePurchaseOrder && valid.items.length > 0) {
+                        var prItem = _purchaseRequest.items.find((item) => item.product._id.toString() === valid.items[0].product._id.toString() && item.id_po.toString() === valid.items[0].id_po.toString())
+                        if (prItem) {
+                            if (prItem.isUsed) {
+                                var searchId = valid.sourcePurchaseOrderId || valid._id || "";
+                                var poId = (prItem.purchaseOrderIds || []).find((id) => {
+                                    return id.toString() === searchId.toString();
+                                });
+                                if (!poId) {
+                                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest tidak boleh sudah dipakai";
                                 }
                             }
                         }
                     }
                 }
 
-                if (_order) {
-                    valid.orderTypeId = new ObjectId(_order._id);
-                    if (_order.name.toLowerCase() != "printing") {
-                        valid.RUN = "";
-                        valid.RUNWidth = [];
-                        valid.designCode = "";
-                        valid.designNumber = "";
-                        valid.articleFabricEdge = "";
-                    }
-                    if (_order.name.toLowerCase() == "yarn dyed" || _order.name.toLowerCase() == "printing") {
-                        for (var detail of valid.details) {
-                            detail.colorTypeId = null;
-                            detail.colorType = null;
-                        }
-                    }
-                    else {
-                        for (var detail of valid.details) {
-                            if (detail.colorType) {
-                                for (var _color of _colors) {
-                                    if (_color) {
-                                        if (detail.colorTypeId.toString() === _color._id.toString()) {
-                                            detail.colorTypeId = _color._id;
-                                            detail.colorType = _color;
-                                        }
+                valid.items = valid.items || [];
+                if (valid.items.length > 0) {
+                    var itemErrors = [];
+                    for (var item of valid.items) {
+                        var itemError = {};
+
+                        if (!item.product || !item.product._id)
+                            itemError["product"] = i18n.__("PurchaseOrder.items.product.name.isRequired:%s is required", i18n.__("PurchaseOrder.items.product.name._:Name")); //"Nama barang tidak boleh kosong";
+                        if (!item.defaultQuantity || item.defaultQuantity === 0)
+                            itemError["defaultQuantity"] = i18n.__("PurchaseOrder.items.defaultQuantity.isRequired:%s is required", i18n.__("PurchaseOrder.items.defaultQuantity._:DefaultQuantity")); //"Jumlah default tidak boleh kosong";
+
+                        if (_sourcePurchaseOrder) {
+                            var sourcePoItem = valid.sourcePurchaseOrder.items.find((sourceItem) => sourceItem.product._id.toString() === item.product._id.toString());
+                            if (sourcePoItem) {
+                                if (valid.items.length == valid.sourcePurchaseOrder.items.length) {
+                                    if (item.defaultQuantity >= sourcePoItem.defaultQuantity) {
+                                        itemError["defaultQuantity"] = i18n.__("PurchaseOrder.items.defaultQuantity.isGreater:%s cannot be greater than or equal the first PO", i18n.__("PurchaseOrder.items.defaultQuantity._:DefaultQuantity")); //"Jumlah default tidak boleh lebih besar dari PO asal";
+                                    }
+                                }
+                                else {
+                                    if (item.defaultQuantity > sourcePoItem.defaultQuantity) {
+                                        itemError["defaultQuantity"] = i18n.__("PurchaseOrder.items.defaultQuantity.isGreater:%s is greater than the first PO", i18n.__("PurchaseOrder.items.defaultQuantity._:DefaultQuantity")); //"Jumlah default tidak boleh lebih besar dari PO asal";
                                     }
                                 }
                             }
                         }
+                        itemErrors.push(itemError);
+                    }
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            errors.items = itemErrors;
+                            break;
+                        }
                     }
                 }
-                if (_material) {
-                    valid.material = _material;
-                    valid.materialId = new ObjectId(_material._id);
+                else {
+                    errors["items"] = i18n.__("PurchaseOrder.items.isRequired:%s is required", i18n.__("PurchaseOrder.items._:Items")); //"Harus ada minimal 1 barang";
                 }
-
-                if (_finish) {
-                    valid.finishType = _finish;
-                    valid.finishTypeId = new ObjectId(_finish._id);
-                }
-
-                if (_yarn) {
-                    valid.yarnMaterial = _yarn;
-                    valid.yarnMaterialId = new ObjectId(_yarn._id);
-                }
-
-                if (_standard) {
-                    valid.standardTest = _standard;
-                    valid.standardTestId = _standard._id;
-                }
-
-                if (_construction) {
-                    valid.materialConstruction = _construction;
-                    valid.materialConstructionId = _construction._id;
-                }
-
-                valid.deliveryDate = new Date(valid.deliveryDate);
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
                     return Promise.reject(new ValidationError('data does not pass validation', errors));
                 }
 
-                if (!valid.stamp) {
-                    valid = new ProductionOrder(valid);
+                if (_purchaseRequest) {
+                    valid.purchaseRequest = _purchaseRequest;
+                    valid.purchaseRequestId = new ObjectId(_purchaseRequest._id);
+                    valid.refNo = _purchaseRequest.no;
+                    valid.unit = _purchaseRequest.unit;
+                    valid.unitId = new ObjectId(_purchaseRequest.unit._id);
+                    for (var poItem of valid.items) {
+                        var _prItem = _purchaseRequest.items.find((item) => { item.product._id.toString() === poItem.product._id.toString() && item.id_po.toString() === poItem.id_po.toString() })
+                        if (_prItem) {
+                            poItem.product = _prItem.product;
+                            poItem.defaultUom = _prItem.uom;
+                            poItem.category = _prItem.category;
+                            poItem.categoryId = new ObjectId(_prItem.category._id);
+                            poItem.defaultQuantity = Number(poItem.defaultQuantity);
+                            poItem.budgetPrice = Number(poItem.budgetPrice);
+                        }
+                    }
                 }
 
-                valid.stamp(this.user.username, "manager");
+                if (!valid.stamp) {
+                    valid = new PurchaseOrder(valid);
+                }
 
+                valid.stamp(this.user.username, 'manager');
                 return Promise.resolve(valid);
             });
     }
 
-     _afterInsert(id) {
-        return this.getSingleById(id)
-            .then((spp) => {
-                var sppId = id;
-                return this.fpSalesContractManager.getSingleById(spp.salesContractId)
-                    .then((sc) => {
-                        if(sc.remainingQuantity!=undefined){
-                            sc.remainingQuantity = sc.remainingQuantity-spp.orderQuantity;
-                            return this.fpSalesContractManager.update(sc)
-                                .then(
-                                    (id) => 
-                                    Promise.resolve(sppId));
-                            }
-                            else{
-                                Promise.resolve(sppId);
-                            }
-                        });
-                            
+    _getQuery(paging) {
+        var deletedFilter = {
+            _deleted: false
+        },
+            keywordFilter = {};
+
+        var query = {};
+        if (paging.keyword) {
+            var regex = new RegExp(paging.keyword, "i");
+
+            var filterRefPONo = {
+                'refNo': {
+                    '$regex': regex
+                }
+            };
+            var filterRefPOEksternal = {
+                "purchaseOrderExternal.refNo": {
+                    '$regex': regex
+                }
+            };
+            var filterPONo = {
+                'no': {
+                    '$regex': regex
+                }
+            };
+            var filterUnitDivision = {
+                "unit.division": {
+                    '$regex': regex
+                }
+            };
+            var filterUnitSubDivision = {
+                "unit.subDivision": {
+                    '$regex': regex
+                }
+            };
+            var filterCategory = {
+                "items.category.name": {
+                    '$regex': regex
+                }
+            };
+            var filterStaff = {
+                '_createdBy': {
+                    '$regex': regex
+                }
+            };
+            var filterBuyerName = {
+                "buyer.name": {
+                    '$regex': regex
+                }
+            };
+
+            var filterRoNo = {
+                "roNo": {
+                    "$regex": regex
+                }
+            };;
+
+            var filterBuyer = {
+                "buyer": {
+                    "$regex": regex
+                }
+            };
+
+            var filterArtikel = {
+                "artikel": {
+                    "$regex": regex
+                }
+            };
+
+            keywordFilter = {
+                '$or': [filterRefPONo, filterRefPOEksternal, filterPONo, filterUnitDivision, filterUnitSubDivision, filterCategory, filterRoNo, filterBuyer, filterArtikel]
+            };
+        }
+        query = {
+            '$and': [deletedFilter, paging.filter, keywordFilter]
+        }
+        return query;
+    }
+
+    getPurchaseOrderByTag(user, categoryId, keyword, shipmentDateFrom, shipmentDateTo) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var keywords = [];
+
+                    var query = Object.assign({});
+                    var queryCategory = {
+                        "items.categoryId": new ObjectId(categoryId),
+                        "items.isPosted": false,
+                        "items.isClosed": false
+                    };
+                    query = Object.assign(query, {
+                        _deleted: false,
+                        isClosed: false,
+                        isPosted: false,
+                        "_createdBy": user
                     });
-    }
-
-    _beforeUpdate(data) {
-            return this.getSingleById(data._id)
-                .then(spp => {
-                    if(spp.salesContractId){
-                        return this.fpSalesContractManager.getSingleById(spp.salesContractId)
-                        .then((sc) => {
-                            if(sc.remainingQuantity!=undefined){
-                                sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
-                                return this.fpSalesContractManager.update(sc)
-                                    .then((id) => 
-                                        Promise.resolve(data));
-                                }
-                                else{
-                                    return Promise.resolve(data);
-                                }
-                            });
+                    if (keyword) {
+                        keyword = keyword.replace(/ \#/g, '#');
+                        var keywordFilters = [];
+                        if (keyword.indexOf("#") != -1) {
+                            keywords = keyword.split("#");
+                            keywords.splice(0, 1)
+                        } else {
+                            keywords.push(keyword)
                         }
-                        else{
-                            return Promise.resolve(data);
-                        }
-            });
-    }
-    
-    _afterUpdate(id) {
-        return this.getSingleById(id)
-            .then((spp) => {
-                var sppId = id;
-                if(spp.salesContractId){
-                    return this.fpSalesContractManager.getSingleById(spp.salesContractId)
-                        .then((sc) => {
-                            if(sc.remainingQuantity!=undefined){
-                                sc.remainingQuantity -= spp.orderQuantity;
+                        for (var j = 0; j < keywords.length; j++) {
+                            var keywordFilter = {};
+                            var _keyword = keywords[j]
+                            if (_keyword) {
+                                var regex = new RegExp(_keyword, "i");
+                                switch (j) {
+                                    case 0:
+                                        keywordFilters.push({
+                                            "unit.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
+                                    case 1:
+                                        keywordFilters.push({
+                                            "buyer.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
+                                }
                             }
-                            return this.fpSalesContractManager.update(sc)
-                                .then((id) => 
-                                    Promise.resolve(sppId));
-                                });
-                }
-                else{
-                    Promise.resolve(sppId);
-                }
-            });
-    }
-
-    delete(data) {
-        return this.getSingleById(data._id)
-        .then(spp => {
-            spp._deleted=true;
-            if(spp.salesContractId){
-                return this.fpSalesContractManager.getSingleById(spp.salesContractId)
-                .then((sc) => {
-                    if(sc.remainingQuantity!=undefined){
-                        sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
+                        }
+                        if (keywordFilters.length > 0) {
+                            query['$and'] = keywordFilters;
+                        }
                     }
-                    return this.fpSalesContractManager.update(sc)
-                    .then((id) =>{
-                        return this.collection.update(spp);
-                    });
+
+                    var _select = {
+                        "no": 1,
+                        "purchaseRequest.no": 1,
+                        "purchaseRequest._id": 1,
+                        "roNo": 1,
+                        "isPosted": 1,
+                        "isUsed": 1,
+                        "_createdBy": 1,
+                        "year": { $year: "$shipmentDate" },
+                        "month": { $month: "$shipmentDate" },
+                        "day": { $dayOfMonth: "$shipmentDate" },
+                        "items.refNo": 1,
+                        "items.product": "$items.product",
+                        "items.productId": "$items.productId",
+                        "items.defaultQuantity": "$items.defaultQuantity",
+                        "items.defaultUom": "$items.defaultUom",
+                        "items.budgetPrice": "$items.budgetPrice",
+                        "items.isPosted": "$items.isPosted",
+                        "items.isClosed": "$items.isClosed",
+                        "items.category": "$items.category",
+                        "items.categoryId": "$items.categoryId",
+                        "items.remark": "$items.remark"
+                    };
+
+                    var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryCategory }, { $project: _select }];
+
+                    var queryDate = Object.assign({});
+                    if (shipmentDateFrom && shipmentDateTo) {
+                        var _shipmentDateFrom = new Date(shipmentDateFrom);
+                        var _shipmentDateTo = new Date(shipmentDateTo);
+
+                        queryDate = {
+                            year: { $gte: _shipmentDateFrom.getFullYear(), $lte: _shipmentDateTo.getFullYear() },
+                            month: { $gte: _shipmentDateFrom.getMonth() + 1, $lte: _shipmentDateTo.getMonth() + 1 },
+                            day: { $gte: _shipmentDateFrom.getDate(), $lte: _shipmentDateTo.getDate() },
+                        }
+                        qryMatch.push({ $match: queryDate })
+                    }
+
+                    this.collection.aggregate(qryMatch).toArray()
+                        .then((purchaseOrders) => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
                 });
-            }
-            else{
-                return this.collection.update(spp);
-            }
-        });
+            });
     }
 
-    _createIndexes() {
-        var dateIndex = {
-            name: `ix_${map.sales.collection.ProductionOrder}__updatedDate`,
-            key: {
-                _updatedDate: -1
-            }
-        }
-
-        var noIndex = {
-            name: `ix_${map.sales.collection.ProductionOrder}_orderNo`,
-            key: {
-                orderNo: 1
-            },
-            unique: true
-        }
-
-        return this.collection.createIndexes([dateIndex, noIndex]);
+    _beforeInsert(purchaseOrder) {
+        purchaseOrder.status = poStatusEnum.CREATED;
+        purchaseOrder.items.map((item) => item.status = poStatusEnum.CREATED);
+        purchaseOrder._createdDate = new Date();
+        return Promise.resolve(purchaseOrder);
     }
 
-    pdf(id) {
+    /*_afterInsert(id) {
+        return this.getSingleById(id)
+            .then((purchaseOrder) => {
+                return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
+                    .then((purchaseRequest) => {
+                        var purchaseOrderError = {};
+                        var _prItem = purchaseRequest.items.find((item) => item.product._id.toString() === purchaseOrder.items[0].product._id.toString() && item.id_po.toString() === purchaseOrder.items[0].id_po.toString())
+                        _prItem.purchaseOrderIds = _prItem.purchaseOrderIds || [];
+                        if (_prItem.purchaseOrderIds.length > 0) {
+                            var poId = _prItem.purchaseOrderIds.find((_poId) => _poId.toString() === id.toString());
+                            if (poId) {
+                                purchaseOrderError["purchaseRequestId"] = i18n.__("purchaseRequest.purchaseOrderIds:%s is already used", i18n.__("purchaseRequest.purchaseOrderIds._:Used"));
+                            }
+                        } else if (_prItem.isUsed) {
+                            purchaseOrderError["purchaseRequestId"] = i18n.__("purchaseRequest.isUsed:%s is already used", i18n.__("purchaseRequest.isUsed._:Used"));
+                        }
+                        if (Object.getOwnPropertyNames(purchaseOrderError).length > 0) {
+                            var ValidationError = require("module-toolkit").ValidationError;
+                            return Promise.reject(new ValidationError("data does not pass validation", purchaseOrderError));
+                        }
+                        if (!purchaseRequest.stamp) {
+                            purchaseRequest = new PurchaseRequest(purchaseRequest);
+                        }
+                        purchaseRequest.stamp(this.user.username, 'manager');
+                        return Promise.resolve(purchaseRequest)
+                    })
+                    .then((purchaseRequest) => {
+                        purchaseRequest.status = prStatusEnum.PROCESSING;
+                        var _prItem = purchaseRequest.items.find((item) => item.product._id.toString() === purchaseOrder.items[0].product._id.toString() && item.id_po.toString() === purchaseOrder.items[0].id_po.toString())
+                        _prItem.purchaseOrderIds = purchaseRequest.purchaseOrderIds || [];
+                        _prItem.purchaseOrderIds.push(id);
+                        _prItem.isUsed = true;
+                        purchaseRequest.isUsed = purchaseRequest.items
+                            .map((item) => item.isUsed)
+                            .reduce((prev, curr, index) => {
+                                return prev && curr
+                            }, true);
+                        return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
+                    })
+                    .then((result) => Promise.resolve(purchaseOrder._id));
+            })
+    }*/
+
+    createMultiple(listPurchaseRequest) {
+        var getPurchaseRequests = [];
+        var prIds = listPurchaseRequest.map((pr) => { return pr._id.toString() })
+        prIds = prIds.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+        for (var prId of prIds) {
+            if (ObjectId.isValid(prId)) {
+                getPurchaseRequests.push(this.purchaseRequestManager.getSingleByIdOrDefault(prId));
+            }
+        }
+        return Promise.all(getPurchaseRequests)
+            .then((purchaseRequests) => {
+                var jobs = [];
+                for (var _purchaseRequest of listPurchaseRequest) {
+                    var purchaseRequest = purchaseRequests.find((pr) => pr._id.toString() === _purchaseRequest._id.toString());
+                    var purchaseOrder = {}
+                    purchaseOrder.no = generateCode(_purchaseRequest.items.id_po.toString());
+                    purchaseOrder.status = poStatusEnum.CREATED;
+                    purchaseOrder._createdDate = new Date();
+                    purchaseOrder.refNo = purchaseRequest.no;
+                    purchaseOrder.roNo = purchaseRequest.roNo;
+
+                    purchaseOrder.buyerId = purchaseRequest.buyerId;
+                    purchaseOrder.buyer = purchaseRequest.buyer;
+                    purchaseOrder.artikel = purchaseRequest.artikel;
+
+                    purchaseOrder.purchaseRequestId = purchaseRequest._id;
+                    purchaseOrder.purchaseRequest = purchaseRequest;
+
+                    purchaseOrder.unitId = purchaseRequest.unitId;
+                    purchaseOrder.unit = purchaseRequest.unit;
+
+                    purchaseOrder.date = purchaseRequest.date;
+                    purchaseOrder.expectedDeliveryDate = purchaseRequest.expectedDeliveryDate;
+                    purchaseOrder.shipmentDate = purchaseRequest.shipmentDate;
+
+                    purchaseOrder.remark = purchaseRequest.remark;
+
+                    var _items = [];
+                    var prItems = purchaseRequest.items.find((item) => item.product._id.toString() === _purchaseRequest.items.productId.toString() && item.id_po.toString() === _purchaseRequest.items.id_po.toString())
+                    if (prItems) {
+                        var _item = {};
+                        _item.refNo = prItems.refNo;
+                        _item.product = prItems.product;
+                        _item.defaultUom = prItems.uom;
+                        _item.defaultQuantity = prItems.quantity;
+                        _item.budgetPrice = prItems.budgetPrice;
+                        _item.remark = prItems.remark;
+                        _item.id_po = prItems.id_po;
+                        _item.categoryId = prItems.categoryId;
+                        _item.category = prItems.category;
+                        _items.push(_item);
+                    }
+                    purchaseOrder.items = _items;
+                    jobs.push(this.create(purchaseOrder));
+                }
+                return Promise.all(jobs)
+                    .then((poIds) => {
+                        var getPurchaseOrder = [];
+                        for (var poId of poIds) {
+                            getPurchaseOrder.push(this.getSingleById(poId, ["_id", "purchaseRequestId", "items.product._id", "items.id_po"]))
+                        }
+                        return Promise.all(getPurchaseOrder)
+                            .then((results) => {
+                                var listPurchaseOrders = results.map((poInternal) => {
+                                    return poInternal.items.map((item) => {
+                                        return {
+                                            purchaseOrderId: poInternal._id,
+                                            purchaseRequestId: poInternal.purchaseRequestId,
+                                            productId: item.product._id,
+                                            id_po: item.id_po
+                                        }
+                                    })
+                                })
+                                listPurchaseOrders = [].concat.apply([], listPurchaseOrders);
+                                var map = new Map();
+                                for (var purchaseOrder of listPurchaseOrders) {
+                                    var key = purchaseOrder.purchaseRequestId.toString();
+                                    if (!map.has(key))
+                                        map.set(key, [])
+                                    map.get(key).push(purchaseOrder);
+                                }
+
+                                var jobs = [];
+                                map.forEach((items, purchaseRequestId) => {
+                                    var job = this.purchaseRequestManager.getSingleById(purchaseRequestId)
+                                        .then((purchaseRequest) => {
+                                            for (var item of items) {
+                                                var prItem = purchaseRequest.items.find(prItem => prItem.product._id.toString() === item.productId.toString() && prItem.id_po.toString() === item.id_po.toString());
+                                                if (prItem) {
+                                                    prItem.purchaseOrderIds = prItem.purchaseOrderIds || []
+                                                    prItem.purchaseOrderIds.push(item.purchaseOrderId);
+                                                    prItem.isUsed = true;
+                                                }
+                                            }
+                                            purchaseRequest.isUsed = purchaseRequest.items
+                                                .map((item) => item.isUsed)
+                                                .reduce((prev, curr, index) => {
+                                                    return prev && curr
+                                                }, true);
+                                            purchaseRequest.status = prStatusEnum.PROCESSING;
+                                            return this.purchaseRequestManager.updateCollectionPR(purchaseRequest);
+                                        });
+                                    jobs.push(job);
+                                })
+
+                                return Promise.all(jobs).then((results) => {
+                                    return Promise.resolve(poIds);
+                                })
+                            })
+                    })
+            });
+    }
+
+    delete(purchaseOrder) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this._validate(purchaseOrder)
+                    .then(validData => {
+                        return this.collection.updateOne({ _id: validData._id }, { $set: { "_deleted": true } })
+                            .then((result) => Promise.resolve(validData._id))
+                            .then((purchaseOrderId) => {
+                                return this.purchaseRequestManager.getSingleById(validData.purchaseRequest._id)
+                                    .then(purchaseRequest => {
+                                        for (var item of purchaseRequest.items) {
+                                            item.purchaseOrderIds = item.purchaseOrderIds || []
+                                            var poId = item.purchaseOrderIds.find((poId) => poId.toString() === validData._id.toString());
+                                            if (poId) {
+                                                var poIndex = item.purchaseOrderIds.indexOf(poId)
+                                                item.purchaseOrderIds.splice(poIndex, 1);
+                                                item.isUsed = false;
+                                            }
+                                        }
+                                        purchaseRequest.isUsed = purchaseRequest.items
+                                            .map((item) => item.isUsed)
+                                            .reduce((prev, curr, index) => {
+                                                return prev && curr
+                                            }, true);
+
+                                        var cekStatus = purchaseRequest.items
+                                            .map((item) => item.isUsed)
+                                            .reduce((prev, curr, index) => {
+                                                return prev || curr
+                                            }, true);
+                                        if (!cekStatus) {
+                                            purchaseRequest.status = prStatusEnum.POSTED;
+                                        }
+                                        return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
+                                            .then((result) => Promise.resolve(purchaseOrderId));
+                                    })
+                            })
+                    })
+            })
+    }
+
+    split(splittedPurchaseOrder) {
         return new Promise((resolve, reject) => {
+            this.getSingleById(splittedPurchaseOrder.sourcePurchaseOrderId)
+                .then(sourcePurchaseOrder => {
+                    delete splittedPurchaseOrder._id;
+                    delete splittedPurchaseOrder.no;
 
-            this.getSingleById(id)
-                .then(productionOrder => {
-
-                    var getDefinition = require("../../pdf/definitions/production-order");
-                    var definition = getDefinition(productionOrder);
-
-                    var generatePdf = require("../../pdf/pdf-generator");
-                    generatePdf(definition)
-                        .then(binary => {
-                            resolve(binary);
+                    splittedPurchaseOrder.no = generateCode();
+                    splittedPurchaseOrder.sourcePurchaseOrder = sourcePurchaseOrder;
+                    splittedPurchaseOrder.sourcePurchaseOrderId = sourcePurchaseOrder._id;
+                    this.create(splittedPurchaseOrder)
+                        .then((purchaseOrderId) => {
+                            return this.getSingleById(purchaseOrderId, ["_id", "purchaseRequestId", "items.product._id", "items.id_po"])
+                                .then((purchaseOrder) => {
+                                    return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
+                                        .then(purchaseRequest => {
+                                            for (var item of purchaseOrder.items) {
+                                                var prItem = purchaseRequest.items.find(prItem => prItem.productId.toString() === item.product._id.toString() && prItem.id_po.toString() === item.id_po.toString());
+                                                if (prItem) {
+                                                    prItem.purchaseOrderIds = prItem.purchaseOrderIds || []
+                                                    prItem.purchaseOrderIds.push(purchaseOrder._id);
+                                                    prItem.isUsed = true;
+                                                }
+                                            }
+                                            purchaseRequest.isUsed = purchaseRequest.items
+                                                .map((item) => item.isUsed)
+                                                .reduce((prev, curr, index) => {
+                                                    return prev && curr
+                                                }, true);
+                                            purchaseRequest.status = prStatusEnum.PROCESSING;
+                                            return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
+                                        })
+                                })
+                                .then(result => {
+                                    for (var item of splittedPurchaseOrder.items) {
+                                        var sourceItem = sourcePurchaseOrder.items.find((_sourceItem) => item.product._id.toString() === _sourceItem.product._id.toString());
+                                        if (sourceItem) {
+                                            sourceItem.defaultQuantity = sourceItem.defaultQuantity - item.defaultQuantity;
+                                        }
+                                    }
+                                    sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
+                                        return !item.isPosted && item.defaultQuantity > 0;
+                                    })
+                                    sourcePurchaseOrder.isSplit = true;
+                                    this.update(sourcePurchaseOrder)
+                                        .then(results => {
+                                            resolve(purchaseOrderId);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
                         })
                         .catch(e => {
                             reject(e);
@@ -606,537 +682,1152 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 .catch(e => {
                     reject(e);
                 });
+
         });
     }
 
-    getSingleProductionOrderDetail(detailCode) {
+    /*_getByPR(_purchaseRequestNo) {
         return new Promise((resolve, reject) => {
-            var query = { "details": { "$elemMatch": { "code": detailCode } } };
-            this.collection.singleOrDefault(query).then((result) => {
-                var dataReturn = {};
-                if (result) {
-                    for (var detail of result.details) {
-                        if (detailCode === detail.code)
-                            dataReturn = new ProductionOrderDetail(detail);
+            if (_purchaseRequestNo === '')
+                resolve(null);
+            var query = {
+                "purchaseRequest.no": _purchaseRequestNo,
+                _deleted: false
+            };
+            this.getSingleByQuery(query)
+                .then(module => {
+                    resolve(module);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }*/
+
+    /*getDataPOMonitoringPembelian(unitId, categoryId, PODLNo, PRNo, supplierId, dateFrom, dateTo, state, budgetId, staffName, offset, createdBy) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+    
+                    if (state !== -1) {
+                        Object.assign(query, {
+                            "status.value": state
+                        });
                     }
-                }
-                resolve(dataReturn);
+    
+                    if (unitId !== "undefined" && unitId !== "") {
+                        Object.assign(query, {
+                            unitId: new ObjectId(unitId)
+                        });
+                    }
+                    if (categoryId !== "undefined" && categoryId !== "") {
+                        Object.assign(query, {
+                            categoryId: new ObjectId(categoryId)
+                        });
+                    }
+                    if (PODLNo !== "undefined" && PODLNo !== "") {
+                        Object.assign(query, {
+                            "purchaseOrderExternal.no": PODLNo
+                        });
+                    }
+                    if (PRNo !== "undefined" && PRNo !== "") {
+                        Object.assign(query, {
+                            "purchaseRequest.no": PRNo
+                        });
+                    }
+                    if (supplierId !== "undefined" && supplierId !== "") {
+                        Object.assign(query, {
+                            supplierId: new ObjectId(supplierId)
+                        });
+                    }
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        var _dateFrom = new Date(dateFrom);
+                        var _dateTo = new Date(dateTo);
+                        _dateFrom.setHours(_dateFrom.getHours() - offset);
+                        _dateTo.setHours(_dateTo.getHours() - offset);
+                        Object.assign(query, {
+                            date: {
+                                $gte: _dateFrom,
+                                $lte: _dateTo
+                            }
+                        });
+                    }
+                    if (createdBy !== undefined && createdBy !== "") {
+                        Object.assign(query, {
+                            _createdBy: createdBy
+                        });
+                    }
+                    if (staffName !== undefined && staffName !== "") {
+                        Object.assign(query, {
+                            _createdBy: staffName
+                        });
+                    }
+                    if (budgetId !== undefined && budgetId !== "undefined" && budgetId !== "") {
+                        Object.assign(query, {
+                            "purchaseRequest.budgetId": new ObjectId(budgetId)
+                        });
+                    }
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.find(query).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
             });
-        });
-    }
+    }*/
 
-    getReport(query) {
+    /*getDataPOUnit(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
-            if (!query.size) {
-                query.size = 20;
-            }
-            if (!query.page) {
-                query.page = 1;
-            }
-            var _page = parseInt(query.page);
-            var _size = parseInt(query.size);
-            var qry = Object.assign({});
-            var filter = query.filter || {};
-
-            if (filter.salesContractNo) {
-                Object.assign(qry, {
-                    "salesContractNo": {
-                        "$regex": (new RegExp(filter.salesContractNo, "i"))
-                    }
-                });
-            }
-            if (filter.orderNo) {
-                Object.assign(qry, {
-                    "orderNo": {
-                        "$regex": (new RegExp(filter.orderNo, "i"))
-                    }
-                });
-            }
-            if (filter.orderTypeId) {
-                Object.assign(qry, {
-                    "orderTypeId": (new ObjectId(filter.orderTypeId))
-                });
-            }
-            if (filter.processTypeId) {
-                Object.assign(qry, {
-                    "processTypeId": (new ObjectId(filter.processTypeId))
-                });
-            }
-            if (filter.buyerId) {
-                Object.assign(qry, {
-                    "buyerId": (new ObjectId(filter.buyerId))
-                });
-            }
-            if (filter.accountId) {
-                Object.assign(qry, {
-                    "accountId": (new ObjectId(filter.accountId))
-                });
-            }
-            if (filter.sdate && filter.edate) {
-                Object.assign(qry, {
-                    "_createdDate": {
-                        "$gte": new Date(`${filter.sdate} 00:00:00`),
-                        "$lte": new Date(`${filter.edate} 23:59:59`)
-                    }
-                });
-            }
-
-            qry = Object.assign(qry, { _deleted: false });
-            var getPrdOrder = [];
-            getPrdOrder.push(this.collection
-                .aggregate([
-                    { $match: qry },
-                    { $unwind: "$details" },
-                    { $group: { _id: null, count: { $sum: 1 } } }
-                ])
-                .toArray());
-            if ((query.accept || '').toString().indexOf("application/xls") < 0) {
-                getPrdOrder.push(this.collection
-                    .aggregate([
-                        { $match: qry },
-                        { $unwind: "$details" },
-                        {
-                            $project: {
-                                "salesContractNo": 1,
-                                "_createdDate": 1,
-                                "orderNo": 1,
-                                "orderType": "$orderType.name",
-                                "processType": "$processType.name",
-                                "buyer": "$buyer.name",
-                                "buyerType": "$buyer.type",
-                                "orderQuantity": "$orderQuantity",
-                                "uom": "$uom.unit",
-                                "colorCode": "$details.code",
-                                "colorTemplate": "$details.colorTemplate",
-                                "colorRequest": "$details.colorRequest",
-                                "colorType": "$details.colorType.name",
-                                "quantity": "$details.quantity",
-                                "uomDetail": "$details.uom.unit",
-                                "deliveryDate": "$deliveryDate",
-                                "firstname": "$account.profile.firstname",
-                                "lastname": "$account.profile.lastname"
-                            }
-                        },
-                        { $sort: { "_createdDate": -1 } },
-                        { $skip: ((_page - 1) * _size) },
-                        { $limit: (_size) }
-                    ])
-                    .toArray());
-            } else {
-                getPrdOrder.push(this.collection
-                    .aggregate([
-                        { $match: qry },
-                        { $unwind: "$details" },
-                        {
-                            $project: {
-                                "salesContractNo": 1,
-                                "_createdDate": 1,
-                                "orderNo": 1,
-                                "orderType": "$orderType.name",
-                                "processType": "$processType.name",
-                                "buyer": "$buyer.name",
-                                "buyerType": "$buyer.type",
-                                "orderQuantity": "$orderQuantity",
-                                "uom": "$uom.unit",
-                                "colorCode": "$details.code",
-                                "colorTemplate": "$details.colorTemplate",
-                                "colorRequest": "$details.colorRequest",
-                                "colorType": "$details.colorType.name",
-                                "quantity": "$details.quantity",
-                                "uomDetail": "$details.uom.unit",
-                                "deliveryDate": "$deliveryDate",
-                                "firstname": "$account.profile.firstname",
-                                "lastname": "$account.profile.lastname"
-                            }
-                        },
-                        { $sort: { "_createdDate": -1 } }
-                    ])
-                    .toArray());
-            }
-            Promise.all(getPrdOrder).then(result => {
-                var resCount = result[0];
-                var count = resCount.length > 0 ? resCount[0].count : 0;
-                var prodOrders = result[1];
-                prodOrders = [].concat.apply([], prodOrders);
-
-                var jobsGetDailyOperation = [];
-                for (var prodOrder of prodOrders) {
-                    jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
-                        {
-                            $match: {
-                                "type": "input",
-                                "_deleted": false,
-                                "kanban.selectedProductionOrderDetail.code": prodOrder.colorCode,
-                                "kanban.productionOrder.orderNo": prodOrder.orderNo
-                            }
-                        }, {
-                            $project:
-                            {
-                                "orderNo": "$kanban.productionOrder.orderNo",
-                                "kanbanCode": "$kanban.code",
-                                "colorCode": "$kanban.selectedProductionOrderDetail.code",
-                                "input": 1
-                            }
-                        }
-                    ]).toArray());
-                }
-                if (jobsGetDailyOperation.length == 0) {
-                    jobsGetDailyOperation.push(Promise.resolve(null))
-                }
-                Promise.all(jobsGetDailyOperation).then(dailyOperations => {//Get DailyOperation
-                    dailyOperations = [].concat.apply([], dailyOperations);
-                    dailyOperations = this.cleanUp(dailyOperations);
-                    var jobsGetQC = [];
-                    for (var prodOrder of prodOrders) {
-                        var _dailyOperations = dailyOperations.filter(function (dailyOperation) {
-                            return dailyOperation.orderNo === prodOrder.orderNo && dailyOperation.colorCode === prodOrder.colorCode;
-                        })
-                        var filters = ["orderNo", "colorCode", "kanbanCode"];
-                        _dailyOperations = this.removeDuplicates(_dailyOperations, filters);
-
-                        if (_dailyOperations.length > 0) {
-                            var kanbanCodes = [];
-                            _dailyOperations.some(function (dailyOperation, idx) {
-                                kanbanCodes.push(dailyOperation.kanbanCode);
-                            });
-                            var sum = _dailyOperations
-                                .map(dailyOperation => dailyOperation.input)
-                                .reduce(function (prev, curr, index, arr) {
-                                    return prev + curr;
-                                }, 0);
-
-                            for (var dailyOperation of _dailyOperations) {
-                                jobsGetQC.push(this.fabricQualityControlCollection.aggregate([
-                                    {
-                                        $match: {
-                                            "_deleted": false,
-                                            "productionOrderNo": dailyOperation.orderNo,
-                                            "kanbanCode": dailyOperation.kanbanCode
-                                        }
-                                    }, {
-                                        $project:
-                                        {
-                                            "productionOrderNo": 1,
-                                            "kanbanCode": 1,
-                                            "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
-                                        }
-                                    }
-                                ]).toArray());
-                            }
-                            prodOrder.input = sum;
-                            prodOrder.kanbanCodes = kanbanCodes;
-                        }
-                        else {
-                            prodOrder.input = 0;
-                            prodOrder.kanbanCodes = [];
-                        }
-                    }
-                    if (jobsGetQC.length == 0) {
-                        jobsGetQC.push(Promise.resolve(null))
-                    }
-                    Promise.all(jobsGetQC).then(qualityControls => {//Get QC
-                        qualityControls = [].concat.apply([], qualityControls);
-                        qualityControls = this.cleanUp(qualityControls);
-                        for (var prodOrder of prodOrders) {
-                            var _qualityControls = qualityControls.filter(function (qualityControl) {
-                                return qualityControl.productionOrderNo === prodOrder.orderNo && prodOrder.kanbanCodes.includes(qualityControl.kanbanCode);
-                            })
-                            // filters = ["productionOrderNo", "kanbanCode"];
-                            // _qualityControls = this.removeDuplicates(_qualityControls, filters);
-                            var _orderQuantityQC = 0
-                            if (_qualityControls.length > 0) {
-                                _orderQuantityQC = _qualityControls
-                                    .map(qualityControl => qualityControl.orderQuantityQC)
-                                    .reduce(function (prev, curr, index, arr) {
-                                        return prev + curr;
-                                    }, 0);
-                            }
-                            prodOrder.orderQuantityQC = _orderQuantityQC;
-
-                            if (prodOrder.orderQuantityQC > 0) {
-                                prodOrder.status = "Sudah dalam pemeriksaan kain";
-                            } else if (prodOrder.input > 0) {
-                                prodOrder.status = "Sudah dalam produksi";
-                            } else if (prodOrder.input == 0) {
-                                prodOrder.status = "Belum dalam produksi";
-                            }
-                            prodOrder.detail = `${prodOrder.quantity} di spp\n${prodOrder.input} di produksi\n${prodOrder.orderQuantityQC} di pemeriksaan`;
-
-                        }
-                        var results = {
-                            data: prodOrders,
-                            count: prodOrders.length,
-                            size: 20,
-                            total: count,
-                            page: (_page * _size) / _size
-                        };
-                        resolve(results);
-                    })
-                })
-            })
-        });
-    }
-
-    getSalesMonthlyReport(query) {
-        return new Promise((resolve, reject) => {
-            var qry = Object.assign({});
-            var filter = query.filter || {};
-
-            if (filter.orderTypeId) {
-                Object.assign(qry, {
-                    "orderTypeId": (new ObjectId(filter.orderTypeId))
-                });
-            }
-            
-            if (filter.accountId) {
-                Object.assign(qry, {
-                    "accountId": (new ObjectId(filter.accountId))
-                });
-            }
-
-            if (filter.sdate && filter.edate) {
-                Object.assign(qry, {
-                    "_createdDate": {
-                        "$gte": new Date(`${filter.sdate} 00:00:00`),
-                        "$lte": new Date(`${filter.edate} 23:59:59`)
-                    }
-                });
-            }
-
-            qry = Object.assign(qry, { _deleted: false });
-            var getPrdOrder = [];
-            var orderInMeter = {"$cond" : [{"$eq" : ["$uom.unit" ,"YDS"]}, { $multiply: [ "$orderQuantity", 0.9144 ] }, "$orderQuantity"]}
-            getPrdOrder.push(this.collection
-                .aggregate([
-                    { $match: qry }
-                ])
-                .toArray());
-                getPrdOrder.push(this.collection
-                    .aggregate([
-                        { $match : qry },
-                        { $project : {
-                            "account" : "$account.username",
-                            "januari" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,1]}, orderInMeter, 0]},
-                            "februari" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,2]}, orderInMeter, 0]},
-                            "maret" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,3]}, orderInMeter, 0]},
-                            "april" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,4]}, orderInMeter, 0]},
-                            "mei" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,5]}, orderInMeter, 0]},
-                            "juni" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,6]}, orderInMeter, 0]},
-                            "juli" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,7]}, orderInMeter, 0]},
-                            "agustus" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,8]}, orderInMeter, 0]},
-                            "september" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,9]}, orderInMeter, 0]},
-                            "oktober" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,10]}, orderInMeter, 0]},
-                            "november" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,11]}, orderInMeter, 0]},
-                            "desember" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,12]}, orderInMeter, 0]},
-                            "totalOrder" : orderInMeter
-                        }},
-                        {$group : {_id : {"sales" : "$account"},
-                        "jan" : {"$sum" : "$januari"},
-                        "feb" : {"$sum" : "$februari"},
-                        "mar" : {"$sum" : "$maret"},
-                        "apr" : {"$sum" : "$april"},
-                        "mei" : {"$sum" : "$mei"},
-                        "jun" : {"$sum" : "$juni"},
-                        "jul" : {"$sum" : "$juli"},
-                        "agu" : {"$sum" : "$agustus"},
-                        "sep" : {"$sum" : "$september"},
-                        "okt" : {"$sum" : "$oktober"},
-                        "nov" : {"$sum" : "$november"},
-                        "des" : {"$sum" : "$desember"},
-                        "totalOrder" : { "$sum": "$totalOrder" }
-                    }}
-                    ])
-                    .toArray());
-            Promise.all(getPrdOrder).then(result => {
-                var resCount = result[0];
-                var prodOrders = result[1];
-                prodOrders = [].concat.apply([], prodOrders);
-
-                        var results = {
-                            data: prodOrders,
-                        }; 
-                        resolve(results);
-            })
-        });
-    }
-
-    getDetailReport(salesContractNo) {
-        return new Promise((resolve, reject) => {
-            var qry = Object.assign({});
-            var data = {}
-            if (salesContractNo) {
-                Object.assign(qry, {
-                    "salesContractNo": {
-                        "$regex": (new RegExp(salesContractNo, "i"))
-                    }
-                });
-            }
-            qry = Object.assign(qry, { _deleted: false });
-
-            this.collection
-                .aggregate([
-                    { $match: qry },
-                    { $unwind: "$details" },
+            var qryMatch = {};
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "purchaseOrderExternal.isPosted": true }];
+    
+            if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
+                var validStartDate = new Date(startdate);
+                var validEndDate = new Date(enddate);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+    
+                qryMatch["$and"].push(
                     {
+                        "date": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+            }
+            this.collection.aggregate(
+                [{
+                    $match: qryMatch
+                }, {
+                        $unwind: "$items"
+                    }, {
                         $group: {
-                            "_id": "$orderNo",
-                            "salesContractNo": { "$first": "$salesContractNo" },
-                            "orderQuantity": { "$first": "$orderQuantity" },
-                            "uom": { "$first": "$uom.unit" },
-                            "details": {
-                                "$push": {
-                                    "colorTemplate": "$details.colorTemplate",
-                                    "colorCode": "$details.code",
-                                    "colorRequest": "$details.colorRequest",
-                                    "colorType": "$details.colorType.name",
-                                    "quantity": "$details.quantity",
-                                    "uomDetail": "$details.uom.unit",
+                            _id: "$unit.division",
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                                 }
                             }
                         }
-                    },
-                    { $sort: { "_createdDate": -1 } }
-                ])
-                .toArray().then(prodOrders => {
-                    prodOrders = [].concat.apply([], prodOrders);
-                    Object.assign(data, { productionOrders: prodOrders });
-                    var _prodOrders = prodOrders.map((prodOrder) => {
-                        return prodOrder.details.map((detail) => {
-                            return {
-                                salesContractNo: prodOrder.salesContractNo,
-                                orderNo: prodOrder._id,
-                                colorCode: detail.colorCode
-                            }
-                        })
-                    })
-                    _prodOrders = [].concat.apply([], _prodOrders);
-
-                    var filters = ["orderNo"];
-                    _prodOrders = this.removeDuplicates(_prodOrders, filters);
-                    var jobsGetDailyOperation = [];
-                    for (var prodOrder of _prodOrders) {
-                        jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
-                            {
-                                $match: {
-                                    "type": "input",
-                                    "_deleted": false,
-                                    // "kanban.selectedProductionOrderDetail.code": prodOrder.colorCode,
-                                    "kanban.productionOrder.orderNo": prodOrder.orderNo
-                                }
-                            },
-                            {
-                                $unwind: "$kanban.instruction.steps"
-                            },
-                            {
-                                $project:
-                                {
-                                    "orderNo": "$kanban.productionOrder.orderNo",
-                                    "kanbanCode": "$kanban.code",
-                                    "machine": "$machine.name",
-                                    "color": "$kanban.selectedProductionOrderDetail.colorRequest",
-                                    "step": "$kanban.instruction.steps.process",
-                                    "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
-                                    "qty": "$input"
-                                }
-                            },
-                            {
-                                $match: { "cmp": true }
-                            },
-                            { $sort: { "kanbanCode": -1, "_createdDate": 1 } }
-                        ]).toArray());
-                    }
-                    if (jobsGetDailyOperation.length == 0) {
-                        jobsGetDailyOperation.push(Promise.resolve(null))
-                    }
-                    Promise.all(jobsGetDailyOperation).then(dailyOperations => {
-                        dailyOperations = [].concat.apply([], dailyOperations);
-                        var _dailyOperations = []
-                        if (dailyOperations.length > 0) {
-                            dailyOperations.reduce(function (res, value) {
-                                if (!res[`${value.step}${value.machine}${value.color}`]) {
-                                    res[`${value.step}${value.machine}${value.color}`] = {
-                                        qty: 0,
-                                        orderNo: value.orderNo,
-                                        color: value.color,
-                                        step: value.step,
-                                        machine: value.machine,
-                                        kanbanCode: value.kanbanCode
-                                    };
-                                    _dailyOperations.push(res[`${value.step}${value.machine}${value.color}`])
-                                }
-                                res[`${value.step}${value.machine}${value.color}`].qty += value.qty
-                                return res;
-                            }, {});
-                        }
-                        _dailyOperations = this.cleanUp(_dailyOperations);
-                        dailyOperations = this.cleanUp(dailyOperations);
-                        Object.assign(data, { dailyOperations: _dailyOperations });
-                        var jobsGetQC = []
-                        var filters = ["orderNo", "colorCode", "kanbanCode"];
-                        var _dailyOperations = this.removeDuplicates(dailyOperations, filters);
-                        for (var dailyOperation of _dailyOperations) {
-                            jobsGetQC.push(this.fabricQualityControlCollection.aggregate([
-                                {
-                                    $match: {
-                                        "_deleted": false,
-                                        "productionOrderNo": dailyOperation.orderNo,
-                                        "kanbanCode": dailyOperation.kanbanCode
-                                    }
-                                },
-                                { $unwind: "$fabricGradeTests" },
-                                {
-                                    $group:
-                                    {
-                                        "_id": "$fabricGradeTests.grade",
-                                        "productionOrderNo": { "$first": "$productionOrderNo" },
-                                        "qty": { "$sum": "$fabricGradeTests.initLength" },
-                                    }
-                                }, {
-                                    $sort: { "_id": 1 }
-                                }
-                            ]).toArray());
-                        }
-                        if (jobsGetQC.length == 0) {
-                            jobsGetQC.push(Promise.resolve(null))
-                        }
-                        Promise.all(jobsGetQC).then(qualityControls => {
-                            qualityControls = [].concat.apply([], qualityControls);
-                            qualityControls = this.cleanUp(qualityControls);
-                            Object.assign(data, { qualityControls: qualityControls });
-                            resolve(data);
-                        })
-                    })
-                })
+                    }]
+            )
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
         });
+    }*/
+
+    /*getDataPODetailUnit(startdate, enddate, divisiId, offset) {
+        return new Promise((resolve, reject) => {
+            var qryMatch = {};
+    
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "purchaseOrderExternal.isPosted": true }];
+    
+            if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
+                var validStartDate = new Date(startdate);
+                var validEndDate = new Date(enddate);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+    
+                qryMatch["$and"].push(
+                    {
+                        "date": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+            }
+            if (!divisiId) {
+                qryMatch["$and"].push({
+                    "unit.division._id": new ObjectId(divisiId)
+                })
+            }
+            this.collection.aggregate(
+                [{
+                    $match: qryMatch
+    
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: "$unit.name",
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                }
+                            }
+                        }
+                    }]
+            )
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }*/
+
+    /*getDataPOSupplier(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var qryMatch = {};
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "purchaseOrderExternal.isPosted": true }];
+    
+            if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
+                var validStartDate = new Date(startdate);
+                var validEndDate = new Date(enddate);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+    
+                qryMatch["$and"].push(
+                    {
+                        "date": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+            }
+    
+            this.collection.aggregate(
+                [{
+                    $match: qryMatch
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: "$supplier",
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                }
+                            }
+                        }
+                    }]
+            )
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }*/
+
+    /*getDataPOSplDetil(startdate, enddate, supplierId, offset) {
+        return new Promise((resolve, reject) => {
+            var qryMatch = {};
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "purchaseOrderExternal.isPosted": true },
+                { "supplier._id": new ObjectId(supplierId) }];
+    
+            if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
+                var validStartDate = new Date(startdate);
+                var validEndDate = new Date(enddate);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+    
+                qryMatch["$and"].push(
+                    {
+                        "date": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+            }
+            this.collection.aggregate(
+                [{
+                    $match: qryMatch
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: "$purchaseOrderExternal.no",
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                }
+                            }
+                        }
+                    }]
+            )
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }*/
+
+    /*getDataPOCategory(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var qryMatch = {};
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "purchaseOrderExternal.isPosted": true }];
+    
+            if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
+                var validStartDate = new Date(startdate);
+                var validEndDate = new Date(enddate);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+    
+                qryMatch["$and"].push(
+                    {
+                        "date": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+            }
+            this.collection.aggregate(
+                [{
+                    $match: qryMatch
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: "$category.name",
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                }
+                            }
+                        }
+                    }]
+            )
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }*/
+
+    /*getDataPOUnitCategory(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var qryMatch = {};
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "isPosted": true }];
+    
+            if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
+                var validStartDate = new Date(startdate);
+                var validEndDate = new Date(enddate);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+    
+                qryMatch["$and"].push(
+                    {
+                        "date": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+            }
+            this.collection.aggregate(
+                [{
+                    $match: qryMatch
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: { division: "$unit.division.name", unit: "$unit.name", category: "$category.name" },
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                }
+                            }
+                        }
+                    }]
+            )
+                .sort({ "_id": 1 })
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }*/
+
+    /*getDataPOUnitCategory(startdate, enddate, divisi, unit, category, currency, offset) {
+        return new Promise((resolve, reject) => {
+            var now = new Date();
+            var deleted = {
+                _deleted: false
+            };
+            var isPosted = {
+                "purchaseOrderExternal.isPosted": true
+            };
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+    
+            var query = [deleted, isPosted];
+            if (divisi) {
+                var filterDivisi = {
+                    "unit.division._id": new ObjectId(divisi)
+                };
+                query.push(filterDivisi);
+            }
+            if (unit) {
+                var filterUnit = {
+                    "unit._id": new ObjectId(unit)
+                };
+                query.push(filterUnit);
+            }
+            if (category) {
+                var filterCategory = {
+                    "category._id": new ObjectId(category)
+                };
+                query.push(filterCategory);
+            }
+            if (currency) {
+                var filterCurrency = {
+                    "currency._id": new ObjectId(currency)
+                };
+                query.push(filterCurrency);
+            }
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "date": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
+    
+            var match = { '$and': query };
+            this.collection.aggregate(
+                [{
+                    $match: match
+    
+                }, {
+                        $unwind: "$items"
+                    }, {
+                        $group: {
+                            _id: { division: "$unit.division.name", unit: "$unit.name", category: "$category.name", currency: "$currency.code" },
+                            "pricePerCurrency": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"]
+                                }
+                            },
+                            "pricetotal": {
+                                $sum: {
+                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
+                                }
+                            }
+                        }
+                    }]
+            ).sort({ "_id": 1 })
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    console.log(result);
+                    resolve(result);
+                });
+        });
+    }*/
+
+    _createIndexes() {
+        var dateIndex = {
+            name: `ix_${map.purchasing.collection.PurchaseOrder}_date`,
+            key: {
+                date: -1
+            }
+        };
+
+        var noIndex = {
+            name: `ix_${map.purchasing.collection.PurchaseOrder}_no`,
+            key: {
+                no: 1
+            },
+            unique: true
+        };
+
+        return this.collection.createIndexes([dateIndex, noIndex]);
     }
 
-    removeDuplicates(arr, filters) {
-        var new_arr = [];
-        var lookup = {};
-        for (var i in arr) {
-            var attr = "";
-            for (var n in filters) {
-                attr += arr[i][filters[n]];
-            }
-            if (!lookup[attr]) {
-                lookup[attr] = arr[i];
-            }
-        }
+    /*selectDateById(id) {
+        return new Promise((resolve, reject) => {
+            var query = { "purchaseRequest._id": ObjectId.isValid(id) ? new ObjectId(id) : {}, "_deleted": false };
+            var _select = ["_createdDate", "purchaseRequest._id"];
+            this.collection.where(query).select(_select).execute()
+                .then((purchaseRequests) => {
+                    if (purchaseRequests.data.length > 0) {
+                        resolve(purchaseRequests.data[0]);
+                    } else {
+                        resolve({});
+                    }
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }*/
 
-        for (i in lookup) {
-            new_arr.push(lookup[i]);
+    updateCollectionPurchaseOrder(purchaseOrder) {
+        if (!purchaseOrder.stamp) {
+            purchaseOrder = new PurchaseOrder(purchaseOrder);
         }
-
-        return new_arr;
+        purchaseOrder.stamp(this.user.username, 'manager');
+        return this.collection
+            .updateOne({
+                _id: purchaseOrder._id
+            }, {
+                $set: purchaseOrder
+            })
+            .then((result) => { return this.getSingleByIdOrDefault(purchaseOrder._id, this.purchaseOrderFields) });
     }
 
-    cleanUp(input) {
-        var newArr = [];
-        for (var i = 0; i < input.length; i++) {
-            if (input[i]) {
-                newArr.push(input[i]);
+    /*getDataDuration(query) {
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                _deleted: false
+            };
+            var postedQuery = {
+                isPosted: true
+            };
+            var closedQuery = {
+                isClosed: false
+            };
+            var date = {
+                "purchaseRequest._createdDate": {
+                    "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                }
+            };
+            var offset = query.offset;
+            var unitQuery = {};
+            if (query.unitId && query.unitId != "") {
+                unitQuery = {
+                    "purchaseRequest.unit._id": new ObjectId(query.unitId)
+                }
             }
+            var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$_createdDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$_createdDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$_createdDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$_createdDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$_createdDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                            $subtract: [
+                                { "$add": ["$purchaseRequest._createdDate", 60 * 60 * 1000 * offset] },
+                                {
+                                    "$add": [
+                                        { "$millisecond": "$purchaseRequest._createdDate" },
+                                        {
+                                            "$multiply": [
+                                                { "$second": "$purchaseRequest._createdDate" },
+                                                1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$minute": "$purchaseRequest._createdDate" },
+                                                60, 1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$hour": { "$add": ["$purchaseRequest._createdDate", 60 * 60 * 1000 * offset] } },
+                                                60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }]
+                        }]
+                }, 86400000]
+            };
+            var durationQuery = {};
+            if (query.duration === "8-14 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: {
+                            "$and": [
+                                { $gt: [dates, 7] },
+                                { $lte: [dates, 14] }
+                            ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if (query.duration === "15-30 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: {
+                            "$and": [
+                                { $gt: [dates, 14] },
+                                { $lte: [dates, 30] }
+                            ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if (query.duration === "> 30 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: { $gt: [dates, 30] },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            var Query = { "$and": [date, deletedQuery, unitQuery] };
+            this.collection.aggregate([
+                { $unwind: "$items" },
+                { $match: Query },
+                { $redact: durationQuery },
+                {
+                    $project: {
+                        "purchaseRequest._createdDate": 1,
+                        "prDate": "$purchaseRequest.date",
+                        "prCreatedDate": "$purchaseRequest._createdDate",
+                        "prNo": "$purchaseRequest.no",
+                        "division": "$purchaseRequest.unit.division.name",
+                        "unit": "$purchaseRequest.unit.name",
+                        "budget": "$purchaseRequest.budget.name",
+                        "category": "$category.name",
+                        "productCode": "$items.product.code",
+                        "productName": "$items.product.name",
+                        "productQuantity": "$items.defaultQuantity",
+                        "productUom": "$items.defaultUom.unit",
+                        "poDate": "$_createdDate",
+                        "dateDiff": dates,
+                        "staff": "$_createdBy"
+                    }
+                },
+                { $sort: { "purchaseRequest._createdDate": -1 } }
+            ])
+                .toArray().then(report => {
+                    var index = 0;
+                    for (var x of report) {
+                        index++;
+                        x.index = index;
+                    }
+                    report.data = report.slice(parseInt(query.size) * (parseInt(query.page) - 1), parseInt(query.size) + (parseInt(query.size) * (parseInt(query.page) - 1)));
+                    report.info = {
+                        total: report.length,
+                        size: query.size,
+                        count: query.size,
+                        page: query.page
+                    }
+                    resolve(report);
+                });
+        });
+    }*/
+
+    /*getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var offset = query.offset;
+        for (var report of result.info) {
+            index++;
+            var dateDiff = Math.ceil(report.dateDiff);
+            var item = {};
+            item["No"] = index;
+            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Buat Purchase Request"] = moment(new Date(report.prCreatedDate)).add(7, 'h').format(dateFormat);
+            item["No Purchase Request"] = report.prNo;
+            item["Divisi"] = report.division;
+            item["Unit"] = report.unit;
+            item["Budget"] = report.budget;
+            item["Kategori"] = report.category;
+            item["Kode Barang"] = report.productCode;
+            item["Nama Barang"] = report.productName;
+            item["Jumlah Barang"] = report.productQuantity;
+            item["Satuan Barang"] = report.productUom;
+            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).add(7, 'h').format(dateFormat);
+            item["Selisih Tanggal PR - PO Internal (hari)"] = dateDiff;
+            item["Nama Staff Pembelian"] = report.staff;
+            xls.data.push(item);
         }
-        return newArr;
+        xls.options = {
+            "No": "number",
+            "Tanggal Purchase Request": "string",
+            "No Purchase Request": "string",
+            "Divisi": "string",
+            "Unit": "string",
+            "Budget": "string",
+            "Kategori": "string",
+            "Kode Barang": "string",
+            "Nama Barang": "string",
+            "Jumlah Barang": "number",
+            "Satuan Barang": "string",
+            "Tanggal Terima PO Internal": "string",
+            "Selisih Tanggal PR - PO Internal (hari)": "number",
+            "Nama Staff Pembelian": "string",
+        };
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `LAPORAN DURASI PR - PO INTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `LAPORAN DURASI PR - PO INTERNAL ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `LAPORAN DURASI PR - PO INTERNAL ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `LAPORAN DURASI PR - PO INTERNAL.xlsx`;
+        return Promise.resolve(xls);
+    }*/
+
+    /*getDurationPOEksDoData(query) {
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                "purchaseOrderExternal._deleted": false
+            };
+            var postedQuery = {
+                "purchaseOrderExternal.isPosted": true
+            };
+            var closedQuery = {
+                "purchaseOrderExternal.isClosed": false
+            };
+            var date = {
+                "purchaseOrderExternal._createdDate": {
+                    "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                }
+            };
+            var offset = query.offset;
+            var unitQuery = {};
+            if (query.unitId && query.unitId != "") {
+                unitQuery = {
+                    "purchaseRequest.unit._id": new ObjectId(query.unitId)
+                }
+            }
+            var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$items.fulfillments.supplierDoDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$items.fulfillments.supplierDoDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$items.fulfillments.supplierDoDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$items.fulfillments.supplierDoDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$items.fulfillments.supplierDoDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                            $subtract: [
+                                { "$add": ["$purchaseOrderExternal._createdDate", 60 * 60 * 1000 * offset] },
+                                {
+                                    "$add": [
+                                        { "$millisecond": "$purchaseOrderExternal._createdDate" },
+                                        {
+                                            "$multiply": [
+                                                { "$second": "$purchaseOrderExternal._createdDate" },
+                                                1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$minute": "$purchaseOrderExternal._createdDate" },
+                                                60, 1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$hour": { "$add": ["$purchaseOrderExternal._createdDate", 60 * 60 * 1000 * offset] } },
+                                                60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }]
+                        }]
+                }, 86400000]
+            };
+            var durationQuery = {};
+            if (query.duration === "31-60 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: {
+                            "$and": [
+                                { $gt: [dates, 30] },
+                                { $lte: [dates, 60] }
+                            ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if (query.duration === "61-90 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: {
+                            "$and": [
+                                { $gt: [dates, 60] },
+                                { $lte: [dates, 90] }
+                            ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if (query.duration === "> 90 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: { $gt: [dates, 90] },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            var Query = { "$and": [date, deletedQuery, unitQuery] };
+            this.collection.aggregate([
+                { $unwind: "$items" },
+                { $unwind: "$items.fulfillments" },
+                { $match: Query },
+                { $redact: durationQuery },
+                {
+                    $project: {
+                        "purchaseOrderExternal._createdDate": 1,
+                        "prDate": "$items.purchaseRequest.date",
+                        "prCreatedDate": "$items.purchaseRequest._createdDate",
+                        "prNo": "$purchaseRequest.no",
+                        "division": "$purchaseRequest.unit.division.name",
+                        "unit": "$purchaseRequest.unit.name",
+                        "budget": "$purchaseRequest.budget.name",
+                        "category": "$category.name",
+                        "productCode": "$items.product.code",
+                        "productName": "$items.product.name",
+                        "productQuantity": "$items.fulfillments.deliveryOrderDeliveredQuantity",
+                        "productUom": "$items.defaultUom.unit",
+                        "productPrice": "$items.pricePerDealUnit",
+                        "supplierCode": "$purchaseOrderExternal.supplier.code",
+                        "supplierName": "$purchaseOrderExternal.supplier.name",
+                        "poDate": "$_createdDate",
+                        "poEksDate": "$purchaseOrderExternal.date",
+                        "poEksCreatedDate": "$purchaseOrderExternal._createdDate",
+                        "expectedDate": "$purchaseOrderExternal.expectedDeliveryDate",
+                        "poEksNo": "$purchaseOrderExternal.no",
+                        "doDate": "$items.fulfillments.supplierDoDate",
+                        "arrivedDate": "$items.fulfillments.deliveryOrderDate",
+                        "doNo": "$items.fulfillments.deliveryOrderNo",
+                        "dateDiff": dates,
+                        "staff": "$_createdBy"
+                    }
+                },
+                { $sort: { "purchaseOrderExternal._createdDate": -1 } }
+            ])
+                .toArray().then(report => {
+                    var index = 0;
+                    for (var x of report) {
+                        index++;
+                        x.index = index;
+                    }
+                    report.data = report.slice(parseInt(query.size) * (parseInt(query.page) - 1), parseInt(query.size) + (parseInt(query.size) * (parseInt(query.page) - 1)));
+                    report.info = {
+                        total: report.length,
+                        size: query.size,
+                        count: query.size,
+                        page: query.page
+                    }
+                    resolve(report);
+                });
+        });
+    }*/
+
+    /*getPrice(dateFrom, dateTo, productName) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+                    if (productName !== "undefined" && productName !== "") {
+                        Object.assign(query, {
+                            "items.product.name": productName
+                        }
+                        );
+                    }
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        Object.assign(query, {
+                            date: {
+                                $gte: new Date(dateFrom),
+                                $lte: new Date(dateTo)
+                            }
+                        });
+                    }
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.aggregate([{ "$unwind": "$items" }, { "$match": query }, { $sort: { date: 1 } }]).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }*/
+
+    /*getXlsDurationPOEksDoData(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var offset = query.offset;
+        for (var report of result.info) {
+            index++;
+            var dateDiff = Math.ceil(report.dateDiff);
+            var item = {};
+            item["No"] = index;
+            item["Tanggal Purchase Request"] = moment(new Date(report.prDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Buat Purchase Request"] = moment(new Date(report.prCreatedDate)).add(7, 'h').format(dateFormat);
+            item["No Purchase Request"] = report.prNo;
+            item["Divisi"] = report.division;
+            item["Unit"] = report.unit;
+            item["Budget"] = report.budget;
+            item["Kategori"] = report.category;
+            item["Kode Barang"] = report.productCode;
+            item["Nama Barang"] = report.productName;
+            item["Jumlah Barang"] = report.productQuantity;
+            item["Satuan Barang"] = report.productUom;
+            item["Harga Barang"] = report.productPrice;
+            item["Kode Supplier"] = report.supplierCode;
+            item["Nama Supplier"] = report.supplierName;
+            item["Tanggal Terima PO Internal"] = moment(new Date(report.poDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Buat PO Eksternal"] = moment(new Date(report.poEksCreatedDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).add(7, 'h').format(dateFormat);
+            item["No PO Eksternal"] = report.poEksNo;
+            item["Tanggal Surat Jalan"] = moment(new Date(report.doDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Datang Barang"] = moment(new Date(report.arrivedDate)).add(7, 'h').format(dateFormat);
+            item["No Surat Jalan"] = report.doNo;
+            item["Selisih Tanggal PO Eksternal - Surat Jalan (hari)"] = dateDiff;
+            item["Nama Staff Pembelian"] = report.staff;
+            xls.data.push(item);
+        }
+        xls.options = {
+            "No": "number",
+            "Tanggal Purchase Request": "string",
+            "No Purchase Request": "string",
+            "Divisi": "string",
+            "Unit": "string",
+            "Budget": "string",
+            "Kategori": "string",
+            "Kode Barang": "string",
+            "Nama Barang": "string",
+            "Jumlah Barang": "number",
+            "Satuan Barang": "string",
+            "Harga Barang": "number",
+            "Kode Supplier": "string",
+            "Nama Supplier": "string",
+            "Tanggal Terima PO Internal": "string",
+            "Tanggal PO Eksternal": "string",
+            "Tanggal Target Datang": "string",
+            "No PO Eksternal": "string",
+            "Tanggal Surat Jalan": "string",
+            "Tanggal Datang Barang": "string",
+            "No Surat Jalan": "string",
+            "Selisih Tanggal PO Eksternal - Surat Jalan (hari)": "number",
+            "Nama Staff Pembelian": "string"
+        };
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN.xlsx`;
+        return Promise.resolve(xls);
+    }*/
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
+
+        for (var data of result.data) {
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["Nomor Purchase Order"] = data ? data.no : '';
+            item["Tanggal PO"] = data.date ? moment(new Date(data.date)).format(dateFormat) : '';
+            item["Tanggal Shipment"] = data.shipmentDate ? moment(new Date(data.shipmentDate)).format(dateFormat) : '';
+            item["Nomor RO"] = data.roNo ? data.roNo : '';
+            item["Buyer"] = data.buyer.name ? data.buyer.name : '';
+            item["Artikel"] = data.artikel ? data.artikel : '';
+            item["Unit"] = data.unit.name ? data.unit.name : '';
+            item["Nomor Referensi PR"] = data.items[0].refNo ? data.items[0].refNo : '';
+            item["Kategori"] = data.items[0].category.name ? data.items[0].category.name : '';
+            item["Kode Barang"] = data.items[0].product.code ? data.items[0].product.code : '';
+            item["Nama Barang"] = data.items[0].product.name ? data.items[0].product.name : '';
+            item["Keterangan"] = data.items[0].remark ? data.items[0].remark : '';
+            item["Jumlah"] = data.items[0].defaultQuantity ? data.items[0].defaultQuantity : '';
+            item["Satuan"] = data.items[0].defaultUom.unit ? data.items[0].defaultUom.unit : '';
+            item["Harga Budget"] = data.items[0].budgetPrice ? data.items[0].budgetPrice : '';
+
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Nomor Purchase Order"] = "string";
+        xls.options["Tanggal PO"] = "string";
+        xls.options["Tanggal Shipment"] = "string";
+        xls.options["Nomor RO"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Artikel"] = "string";
+        xls.options["Unit"] = "string";
+        xls.options["Nomor Referensi PR"] = "string";
+        xls.options["Kategori"] = "string";
+        xls.options["Kode Barang"] = "string";
+        xls.options["Nama Barang"] = "string";
+        xls.options["Keterangan"] = "string";
+        xls.options["Jumlah"] = "number";
+        xls.options["Satuan"] = "string";
+        xls.options["Harga Budget"] = "number";
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Purchase Order Internal  Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Purchase Order Internal Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Purchase Order Internal Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Purchase Order Internal Report.xlsx`;
+
+        return Promise.resolve(xls);
     }
-}
+
+
+    getReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        }, noFilter = {}, categoryFilter = {}, unitFilter = {}, buyerFilter = {},
+            dateFromFilter = {},
+            dateToFilter = {},
+            query = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var now = new Date();
+
+        if (info.no && info.no != '') {
+            var nomorPr = ObjectId.isValid(info.no) ? new ObjectId(info.no) : {};
+            noFilter = { '_id': nomorPr };
+        }
+
+        if (info.unit && info.unit != '') {
+            var unit = ObjectId.isValid(info.unit) ? new ObjectId(info.unit) : {};
+            unitFilter = { 'unit._id': unit };
+        }
+
+        if (info.category && info.category != '') {
+            var category = ObjectId.isValid(info.category) ? new ObjectId(info.category) : {};
+            categoryFilter = { 'items.category._id': category };
+        }
+
+        if (info.buyer && info.buyer != '') {
+            var buyer = ObjectId.isValid(info.buyer) ? new ObjectId(info.buyer) : {};
+            buyerFilter = { 'buyer._id': buyer };
+        }
+
+        var filterDate = {
+            "_createdDate": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+        query = { '$and': [_defaultFilter, buyerFilter, categoryFilter, unitFilter, noFilter, filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return !info.xls ?
+                    this.collection
+                        .where(query)
+                        .execute() :
+                    this.collection
+                        .where(query)
+                        .page(info.page, info.size)
+                        .execute();
+            });
+    }
+};
