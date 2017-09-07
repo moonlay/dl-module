@@ -666,8 +666,8 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                 item["Keterangan"] = data.remark ? data.remark : '';
                 item["Jumlah Retur"] = data.returQuantity ? data.returQuantity : 0;
                 item["Satuan"] = data.uom ? data.uom : '';
-                item["Panjang (Meter)"] = data.length ? (data.length * data.returQuantity) : 0;
-                item["Berat (Kg)"] = data.weight ? (data.weight * data.returQuantity) : 0;
+                item["Panjang (Meter)"] = data.length ? (data.length * data.returQuantity).toFixed(2) : 0;
+                item["Berat (Kg)"] = data.weight ? (data.weight * data.returQuantity).toFixed(2) : 0;
                 
                 xls.data.push(item);
             }
