@@ -12,6 +12,19 @@ var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
 var moment = require('moment');
 
+const SELECTED_PURCHASE_ORDER_FIELDS = {
+    "iso": 1,
+    "refNo": 1,
+    "artikel": 1,
+    "unitId": 1,
+    "unit.code": 1,
+    "unit.name": 1,
+    "unit.divisionId": 1,
+    "unit.division.code": 1,
+    "unit.division.name": 1,
+    "date": 1
+}
+
 module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
@@ -22,14 +35,14 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
 
     _createIndexes() {
         var dateIndex = {
-            name: `ix_${map.purchasing.collection.Garment}_date`,
+            name: `ix_${map.garmentPurchasing.collection.GarmentPurchaseCorrection}_date`,
             key: {
                 date: -1
             }
         }
 
         var noIndex = {
-            name: `ix_${map.purchasing.collection.UnitPaymentCorrectionNote}_no`,
+            name: `ix_${map.garmentPurchasing.collection.GarmentPurchaseCorrection}_no`,
             key: {
                 no: 1
             },
@@ -96,16 +109,28 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 }]
             });
 
-            valid.items = valid.items instanceof Array && valid.items.length > 0 ? valid.items : [];
+            valid.items = valid.items || [];
+
+            var purchaseOrders = [];
+
+            if (valid.items.length > 0) {
+                for (var item of valid.items) {
+                    if (ObjectId.isValid(item.purchaseOrderInternalId)) {
+                        purchaseOrders.push(new ObjectId(item.purchaseOrderInternalId));
+                    }
+                }
+            }
 
             var getDeliveryOrder = valid.deliveryOrder && ObjectId.isValid(valid.deliveryOrderId) ? this.deliveryOrderManager.getSingleByIdOrDefault(valid.deliveryOrderId) : Promise.resolve(null);
 
-            Promise.all([getPurchaseQuantityCorrection, getDeliveryOrder])
+            var getPurchaseOrder = purchaseOrders.length > 0 ? this.purchaseOrderManager.collection.find({ "_id": { "$in": purchaseOrders } }, SELECTED_PURCHASE_ORDER_FIELDS).toArray() : Promise.resolve([]);
+
+            Promise.all([getPurchaseQuantityCorrection, getDeliveryOrder, getPurchaseOrder])
                 .then((results) => {
                     var _purchaseQuantityCorrection = results[0];
                     var _deliveryOrder = results[1];
+                    var _purchaseOrders = results[2];
 
-                    var now = new Date();
                     if (_purchaseQuantityCorrection)
                         errors["no"] = i18n.__("PurchaseQuantityCorrection.no.isExists:%s is already exists", i18n.__("PurchaseQuantityCorrection.no._:No"));
 
@@ -131,6 +156,9 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
 
                                 var doItem = _deliveryOrder.items.find((i) => i.purchaseOrderExternalId.toString() === item.purchaseOrderExternalId.toString());
                                 var fulfillment = doItem.fulfillments.find((fulfillment) => fulfillment.purchaseOrderId.toString() === item.purchaseOrderInternalId.toString() && fulfillment.purchaseRequestId.toString() === item.purchaseRequestId.toString() && fulfillment.productId.toString() === item.productId.toString());
+                                var purchaseOrder = _purchaseOrders.find((purchaseOrder) => purchaseOrder._id.toString() === item.purchaseOrderInternalId.toString());
+
+                                item.purchaseOrderInternal = purchaseOrder;
 
                                 if (fulfillment) {
                                     fulfillment.corrections = fulfillment.corrections || [];
@@ -206,8 +234,10 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
             .then((deliveryOrder) => {
                 for (var correction of purchaseQuantityCorrection.items) {
                     var purchaseOrderExternalId = correction.purchaseOrderExternalId;
-                    var doItem = deliveryOrder.items.find(item => item.purchaseOrderExternalId.toString() === purchaseOrderExternalId.toString());
-                    var fulfillment = doItem.fulfillments.find(fulfillment => fulfillment.purchaseOrderId.toString() === correction.purchaseOrderInternalId.toString() && fulfillment.purchaseRequestId.toString() === correction.purchaseRequestId.toString() && fulfillment.productId.toString() === correction.productId.toString());
+                    var doItem = deliveryOrder.items.find((item) => item.purchaseOrderExternalId.toString() === purchaseOrderExternalId.toString());
+                    var fulfillment = doItem.fulfillments.find((fulfillment) => fulfillment.purchaseOrderId.toString() === correction.purchaseOrderInternalId.toString() && fulfillment.purchaseRequestId.toString() === correction.purchaseRequestId.toString() && fulfillment.productId.toString() === correction.productId.toString());
+
+                    correction.oldQuantity = fulfillment.deliveredQuantity;
 
                     if (fulfillment) {
                         fulfillment.corrections = fulfillment.corrections || [];
@@ -245,6 +275,8 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 pricePerUnit: item.pricePerUnit,
                 priceTotal: item.priceTotal,
                 productId: item.productId,
+                oldQuantity: item.oldQuantity,
+                oldPriceTotal: item.oldQuantity * item.pricePerUnit
             }
         });
         correctionItems = [].concat.apply([], correctionItems);
@@ -263,32 +295,37 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 .then((purchaseOrder) => {
                     for (var correction of corrections) {
                         var productId = correction.productId;
-                        var poItem = purchaseOrder.items.find(item => item.product._id.toString() === productId.toString());
+                        var poItem = purchaseOrder.items.find((item) => item.product._id.toString() === productId.toString());
                         var fulfillment = poItem.fulfillments.find((fulfillment) => correction.deliveryOrderNo === fulfillment.deliveryOrderNo)
 
                         if (fulfillment) {
                             fulfillment.corrections = fulfillment.corrections || [];
 
-                            var oldPricePerUnit = 0,
-                                newPricePerUnit = correction.pricePerUnit,
-                                oldPriceTotal = 0,
-                                newPriceTotal = correction.priceTotal;
+                            var oldPricePerUnit = 0;
+                            var newPricePerUnit = correction.pricePerUnit
+                            var oldPriceTotal = 0;
+                            var newPriceTotal = correction.priceTotal;
+                            var oldQuantity = 0;
+                            var newQuantity = correction.quantity;
 
-                            if (fulfillment.correction.length > 0) {
-                                oldPricePerUnit = fulfillment.correction[fulfillment.correction.length - 1].newPricePerUnit;
-                                oldPriceTotal = fulfillment.correction[fulfillment.correction.length - 1].newPriceTotal;
+                            if (fulfillment.corrections.length > 0) {
+                                oldPricePerUnit = fulfillment.corrections[fulfillment.corrections.length - 1].newPricePerUnit;
+                                oldPriceTotal = fulfillment.corrections[fulfillment.corrections.length - 1].newPriceTotal;
+                                oldQuantity = fulfillment.corrections[fulfillment.corrections.length - 1].newCorrectionQuantity;
                             } else {
                                 oldPricePerUnit = poItem.pricePerDealUnit;
-                                oldPriceTotal = poItem.pricePerDealUnit * correction.quantity;
+                                oldPriceTotal = correction.oldPriceTotal;
+                                oldQuantity = correction.oldQuantity;
                             }
+
 
                             var _correction = {
                                 correctionNo: correction.correctionNo,
                                 correctionDate: correction.correctionDate,
                                 correctionType: correction.correctionType,
                                 currencyRate: correction.currencyRate,
-                                oldCorrectionQuantity: correction.quantity,
-                                newCorrectionQuantity: correction.quantity,
+                                oldCorrectionQuantity: oldQuantity,
+                                newCorrectionQuantity: newQuantity,
                                 oldPricePerUnit: oldPricePerUnit,
                                 newPricePerUnit: newPricePerUnit,
                                 oldPriceTotal: oldPriceTotal,
