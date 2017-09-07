@@ -34,6 +34,9 @@ module.exports = function (fpRetur, offset) {
     moment.locale(locale.name); 
 
     var header = [{
+        text: 'FM.7.MK-03-074',
+        style: ['size08', 'right']
+    },{
         columns: [{
             columns: [{
                 width: '*',
@@ -49,7 +52,6 @@ module.exports = function (fpRetur, offset) {
 
     var left=[
             {
-                
                 columns: [
                     {
                         width: '25%',
@@ -259,11 +261,15 @@ module.exports = function (fpRetur, offset) {
                 style: ['size08', 'left']
             },{
             columns: [{
-                width: '50%',
+                width: '35%',
+                stack: ['\n','Audit ' , '\n\n\n', '(  .............................  )'],
+                style: ['center']
+            },{
+                width: '35%',
                 stack: ['\n','Mengetahui ' , '\n\n\n', '(  .............................  )'],
                 style: ['center']
             }, {
-                    width: '50%',
+                    width: '30%',
                     stack: ['\n','Yang Menerima', '\n\n\n', '(  .............................  )'],
                     style: ['center']
                 }],
