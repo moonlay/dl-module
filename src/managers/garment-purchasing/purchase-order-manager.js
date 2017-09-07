@@ -147,13 +147,20 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 else if (!_purchaseRequest.isPosted) {
                     errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isNotPosted:%s is need to be posted", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest harus sudah dipost";
                 }
-                else if (_purchaseRequest.isUsed) {
-                    var searchId = valid.sourcePurchaseOrderId || valid._id || "";
-                    var poId = (_purchaseRequest.purchaseOrderIds || []).find((id) => {
-                        return id.toString() === searchId.toString();
-                    });
-                    if (!poId) {
-                        errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest tidak boleh sudah dipakai";
+                else {
+                    if (!_sourcePurchaseOrder && valid.items.length > 0) {
+                        var prItem = _purchaseRequest.items.find((item) => item.product._id.toString() === valid.items[0].product._id.toString() && item.id_po.toString() === valid.items[0].id_po.toString())
+                        if (prItem) {
+                            if (prItem.isUsed) {
+                                var searchId = valid.sourcePurchaseOrderId || valid._id || "";
+                                var poId = (prItem.purchaseOrderIds || []).find((id) => {
+                                    return id.toString() === searchId.toString();
+                                });
+                                if (!poId) {
+                                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest tidak boleh sudah dipakai";
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -208,17 +215,15 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     valid.unit = _purchaseRequest.unit;
                     valid.unitId = new ObjectId(_purchaseRequest.unit._id);
                     for (var poItem of valid.items) {
-                        for (var _prItem of _purchaseRequest.items)
-                            if (_prItem.product._id.toString() === poItem.product._id.toString()) {
-                                poItem.product = _prItem.product;
-                                poItem.defaultUom = _prItem.uom;
-                                break;
-                            }
-
-                        poItem.category = _prItem.category;
-                        poItem.categoryId = new ObjectId(_prItem.category._id);
-                        poItem.defaultQuantity = Number(poItem.defaultQuantity);
-                        poItem.budgetPrice = Number(poItem.budgetPrice);
+                        var _prItem = _purchaseRequest.items.find((item) => { item.product._id.toString() === poItem.product._id.toString() && item.id_po.toString() === poItem.id_po.toString() })
+                        if (_prItem) {
+                            poItem.product = _prItem.product;
+                            poItem.defaultUom = _prItem.uom;
+                            poItem.category = _prItem.category;
+                            poItem.categoryId = new ObjectId(_prItem.category._id);
+                            poItem.defaultQuantity = Number(poItem.defaultQuantity);
+                            poItem.budgetPrice = Number(poItem.budgetPrice);
+                        }
                     }
                 }
 
@@ -310,7 +315,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return query;
     }
 
-    getPurchaseOrderByTag(categoryId, keyword, shipmentDate) {
+    getPurchaseOrderByTag(user, categoryId, keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -325,41 +330,44 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     query = Object.assign(query, {
                         _deleted: false,
                         isClosed: false,
-                        isPosted: false
+                        isPosted: false,
+                        "_createdBy": user
                     });
                     if (keyword) {
+                        keyword = keyword.replace(/ \#/g, '#');
                         var keywordFilters = [];
                         if (keyword.indexOf("#") != -1) {
                             keywords = keyword.split("#");
-                            keywords = this.cleanUp(keywords);
+                            keywords.splice(0, 1)
                         } else {
                             keywords.push(keyword)
                         }
-                        for (var _keyword of keywords) {
+                        for (var j = 0; j < keywords.length; j++) {
                             var keywordFilter = {};
-                            var regex = new RegExp(_keyword, "i");
-
-                            var filterRoNo = {
-                                "roNo": {
-                                    "$regex": regex
+                            var _keyword = keywords[j]
+                            if (_keyword) {
+                                var regex = new RegExp(_keyword, "i");
+                                switch (j) {
+                                    case 0:
+                                        keywordFilters.push({
+                                            "unit.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
+                                    case 1:
+                                        keywordFilters.push({
+                                            "buyer.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
                                 }
-                            };
-
-                            var filterBuyer = {
-                                "buyer.name": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            var filterArtikel = {
-                                "artikel": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            keywordFilters.push(filterRoNo, filterBuyer, filterArtikel);
+                            }
                         }
-                        query['$or'] = keywordFilters;
+                        if (keywordFilters.length > 0) {
+                            query['$and'] = keywordFilters;
+                        }
                     }
 
                     var _select = {
@@ -383,18 +391,20 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         "items.isClosed": "$items.isClosed",
                         "items.category": "$items.category",
                         "items.categoryId": "$items.categoryId",
+                        "items.remark": "$items.remark"
                     };
 
                     var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryCategory }, { $project: _select }];
 
                     var queryDate = Object.assign({});
-                    if (shipmentDate) {
-                        var _shipmentDate = new Date(shipmentDate);
+                    if (shipmentDateFrom && shipmentDateTo) {
+                        var _shipmentDateFrom = new Date(shipmentDateFrom);
+                        var _shipmentDateTo = new Date(shipmentDateTo);
 
                         queryDate = {
-                            year: _shipmentDate.getFullYear(),
-                            month: _shipmentDate.getMonth() + 1,
-                            day: _shipmentDate.getDate()
+                            year: { $gte: _shipmentDateFrom.getFullYear(), $lte: _shipmentDateTo.getFullYear() },
+                            month: { $gte: _shipmentDateFrom.getMonth() + 1, $lte: _shipmentDateTo.getMonth() + 1 },
+                            day: { $gte: _shipmentDateFrom.getDate(), $lte: _shipmentDateTo.getDate() },
                         }
                         qryMatch.push({ $match: queryDate })
                     }
@@ -411,26 +421,26 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
     _beforeInsert(purchaseOrder) {
-        purchaseOrder.no = generateCode();
         purchaseOrder.status = poStatusEnum.CREATED;
         purchaseOrder.items.map((item) => item.status = poStatusEnum.CREATED);
         purchaseOrder._createdDate = new Date();
         return Promise.resolve(purchaseOrder);
     }
 
-    _afterInsert(id) {
+    /*_afterInsert(id) {
         return this.getSingleById(id)
             .then((purchaseOrder) => {
                 return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
                     .then((purchaseRequest) => {
                         var purchaseOrderError = {};
-
-                        if (purchaseRequest.purchaseOrderIds.length > 0) {
-                            var poId = purchaseRequest.purchaseOrderIds.find((_poId) => _poId.toString() === id.toString());
+                        var _prItem = purchaseRequest.items.find((item) => item.product._id.toString() === purchaseOrder.items[0].product._id.toString() && item.id_po.toString() === purchaseOrder.items[0].id_po.toString())
+                        _prItem.purchaseOrderIds = _prItem.purchaseOrderIds || [];
+                        if (_prItem.purchaseOrderIds.length > 0) {
+                            var poId = _prItem.purchaseOrderIds.find((_poId) => _poId.toString() === id.toString());
                             if (poId) {
                                 purchaseOrderError["purchaseRequestId"] = i18n.__("purchaseRequest.purchaseOrderIds:%s is already used", i18n.__("purchaseRequest.purchaseOrderIds._:Used"));
                             }
-                        } else if (purchaseRequest.isUsed) {
+                        } else if (_prItem.isUsed) {
                             purchaseOrderError["purchaseRequestId"] = i18n.__("purchaseRequest.isUsed:%s is already used", i18n.__("purchaseRequest.isUsed._:Used"));
                         }
 
@@ -446,28 +456,42 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         return Promise.resolve(purchaseRequest)
                     })
                     .then((purchaseRequest) => {
-                        purchaseRequest.isUsed = true;
                         purchaseRequest.status = prStatusEnum.PROCESSING;
-                        purchaseRequest.purchaseOrderIds = purchaseRequest.purchaseOrderIds || [];
-                        purchaseRequest.purchaseOrderIds.push(id);
+                        var _prItem = purchaseRequest.items.find((item) => item.product._id.toString() === purchaseOrder.items[0].product._id.toString() && item.id_po.toString() === purchaseOrder.items[0].id_po.toString())
+                        _prItem.purchaseOrderIds = purchaseRequest.purchaseOrderIds || [];
+                        _prItem.purchaseOrderIds.push(id);
+                        _prItem.isUsed = true;
+
+                        purchaseRequest.isUsed = purchaseRequest.items
+                            .map((item) => item.isUsed)
+                            .reduce((prev, curr, index) => {
+                                return prev && curr
+                            }, true);
+
                         return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
                     })
-                    .then((purchaseRequest) => {
-                        if (purchaseOrder.purchaseRequestId.toString() === purchaseRequest._id.toString()) {
-                            purchaseOrder.purchaseRequest = purchaseRequest
-                            return this.updateCollectionPurchaseOrder(purchaseOrder)
-                                .then((result) => Promise.resolve(purchaseOrder._id));
-                        }
-                    });
+                    .then((result) => Promise.resolve(purchaseOrder._id));
             })
-    }
+    }*/
 
     createMultiple(listPurchaseRequest) {
-        var jobs = [];
-        for (var _purchaseRequest of listPurchaseRequest) {
-            var job = this.purchaseRequestManager.getSingleById(_purchaseRequest._id)
-                .then((purchaseRequest) => {
+        var getPurchaseRequests = [];
+        var prIds = listPurchaseRequest.map((pr) => { return pr._id.toString() })
+        prIds = prIds.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+        for (var prId of prIds) {
+            if (ObjectId.isValid(prId)) {
+                getPurchaseRequests.push(this.purchaseRequestManager.getSingleByIdOrDefault(prId));
+            }
+        }
+        return Promise.all(getPurchaseRequests)
+            .then((purchaseRequests) => {
+                var jobs = [];
+                for (var _purchaseRequest of listPurchaseRequest) {
+                    var purchaseRequest = purchaseRequests.find((pr) => pr._id.toString() === _purchaseRequest._id.toString());
                     var purchaseOrder = {}
+                    purchaseOrder.no = generateCode(_purchaseRequest.items.id_po.toString());
                     purchaseOrder.status = poStatusEnum.CREATED;
                     purchaseOrder._createdDate = new Date();
                     purchaseOrder.refNo = purchaseRequest.no;
@@ -490,24 +514,79 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     purchaseOrder.remark = purchaseRequest.remark;
 
                     var _items = [];
-                    purchaseRequest.items.map((item) => {
+                    var prItems = purchaseRequest.items.find((item) => item.product._id.toString() === _purchaseRequest.items.productId.toString() && item.id_po.toString() === _purchaseRequest.items.id_po.toString())
+                    if (prItems) {
                         var _item = {};
-                        _item.refNo = item.refNo;
-                        _item.product = item.product;
-                        _item.defaultUom = item.uom;
-                        _item.defaultQuantity = item.quantity;
-                        _item.budgetPrice = item.budgetPrice;
-                        _item.remark = item.remark;
-                        _item.categoryId = item.categoryId;
-                        _item.category = item.category;
+                        _item.refNo = prItems.refNo;
+                        _item.product = prItems.product;
+                        _item.defaultUom = prItems.uom;
+                        _item.defaultQuantity = prItems.quantity;
+                        _item.budgetPrice = prItems.budgetPrice;
+                        _item.remark = prItems.remark;
+                        _item.id_po = prItems.id_po;
+                        _item.categoryId = prItems.categoryId;
+                        _item.category = prItems.category;
                         _items.push(_item);
-                    })
+                    }
                     purchaseOrder.items = _items;
-                    return this.create(purchaseOrder)
-                });
-            jobs.push(job);
-        }
-        return Promise.all(jobs);
+                    jobs.push(this.create(purchaseOrder));
+                }
+                return Promise.all(jobs)
+                    .then((poIds) => {
+                        var getPurchaseOrder = [];
+                        for (var poId of poIds) {
+                            getPurchaseOrder.push(this.getSingleById(poId, ["_id", "purchaseRequestId", "items.product._id", "items.id_po"]))
+                        }
+                        return Promise.all(getPurchaseOrder)
+                            .then((results) => {
+                                var listPurchaseOrders = results.map((poInternal) => {
+                                    return poInternal.items.map((item) => {
+                                        return {
+                                            purchaseOrderId: poInternal._id,
+                                            purchaseRequestId: poInternal.purchaseRequestId,
+                                            productId: item.product._id,
+                                            id_po: item.id_po
+                                        }
+                                    })
+                                })
+                                listPurchaseOrders = [].concat.apply([], listPurchaseOrders);
+                                var map = new Map();
+                                for (var purchaseOrder of listPurchaseOrders) {
+                                    var key = purchaseOrder.purchaseRequestId.toString();
+                                    if (!map.has(key))
+                                        map.set(key, [])
+                                    map.get(key).push(purchaseOrder);
+                                }
+
+                                var jobs = [];
+                                map.forEach((items, purchaseRequestId) => {
+                                    var job = this.purchaseRequestManager.getSingleById(purchaseRequestId)
+                                        .then((purchaseRequest) => {
+                                            for (var item of items) {
+                                                var prItem = purchaseRequest.items.find(prItem => prItem.product._id.toString() === item.productId.toString() && prItem.id_po.toString() === item.id_po.toString());
+                                                if (prItem) {
+                                                    prItem.purchaseOrderIds = prItem.purchaseOrderIds || []
+                                                    prItem.purchaseOrderIds.push(item.purchaseOrderId);
+                                                    prItem.isUsed = true;
+                                                }
+                                            }
+                                            purchaseRequest.isUsed = purchaseRequest.items
+                                                .map((item) => item.isUsed)
+                                                .reduce((prev, curr, index) => {
+                                                    return prev && curr
+                                                }, true);
+                                            purchaseRequest.status = prStatusEnum.PROCESSING;
+                                            return this.purchaseRequestManager.updateCollectionPR(purchaseRequest);
+                                        });
+                                    jobs.push(job);
+                                })
+
+                                return Promise.all(jobs).then((results) => {
+                                    return Promise.resolve(poIds);
+                                })
+                            })
+                    })
+            });
     }
 
     delete(purchaseOrder) {
@@ -515,21 +594,32 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             .then((createIndexResults) => {
                 return this._validate(purchaseOrder)
                     .then(validData => {
-                        // validData._deleted = true;
-                        return this.collection
-                            .updateOne({
-                                _id: validData._id
-                            }, {
-                                $set: { "_deleted": true }
-                            })
+                        return this.collection.updateOne({ _id: validData._id }, { $set: { "_deleted": true } })
                             .then((result) => Promise.resolve(validData._id))
                             .then((purchaseOrderId) => {
                                 return this.purchaseRequestManager.getSingleById(validData.purchaseRequest._id)
                                     .then(purchaseRequest => {
-                                        var poIndex = purchaseRequest.purchaseOrderIds.indexOf(validData._id);
-                                        purchaseRequest.purchaseOrderIds.splice(poIndex, 1);
-                                        if (purchaseRequest.purchaseOrderIds.length === 0) {
-                                            purchaseRequest.isUsed = false;
+                                        for (var item of purchaseRequest.items) {
+                                            item.purchaseOrderIds = item.purchaseOrderIds || []
+                                            var poId = item.purchaseOrderIds.find((poId) => poId.toString() === validData._id.toString());
+                                            if (poId) {
+                                                var poIndex = item.purchaseOrderIds.indexOf(poId)
+                                                item.purchaseOrderIds.splice(poIndex, 1);
+                                                item.isUsed = false;
+                                            }
+                                        }
+                                        purchaseRequest.isUsed = purchaseRequest.items
+                                            .map((item) => item.isUsed)
+                                            .reduce((prev, curr, index) => {
+                                                return prev && curr
+                                            }, true);
+
+                                        var cekStatus = purchaseRequest.items
+                                            .map((item) => item.isUsed)
+                                            .reduce((prev, curr, index) => {
+                                                return prev || curr
+                                            }, true);
+                                        if (!cekStatus) {
                                             purchaseRequest.status = prStatusEnum.POSTED;
                                         }
                                         return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
@@ -537,13 +627,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     })
                             })
                     })
-                    .catch(e => {
-                        reject(e);
-                    });
             })
-            .catch(e => {
-                reject(e);
-            });
     }
 
     split(splittedPurchaseOrder) {
@@ -552,27 +636,52 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 .then(sourcePurchaseOrder => {
                     delete splittedPurchaseOrder._id;
                     delete splittedPurchaseOrder.no;
+
+                    splittedPurchaseOrder.no = generateCode();
                     splittedPurchaseOrder.sourcePurchaseOrder = sourcePurchaseOrder;
                     splittedPurchaseOrder.sourcePurchaseOrderId = sourcePurchaseOrder._id;
                     this.create(splittedPurchaseOrder)
-                        .then(id => {
-                            for (var item of splittedPurchaseOrder.items) {
-                                var sourceItem = sourcePurchaseOrder.items.find((_sourceItem) => item.product._id.toString() === _sourceItem.product._id.toString());
-                                if (sourceItem) {
-                                    sourceItem.defaultQuantity = sourceItem.defaultQuantity - item.defaultQuantity;
-                                }
-                            }
-                            sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
-                                return !item.isPosted && item.defaultQuantity > 0;
-                            })
-                            this.update(sourcePurchaseOrder)
-                                .then(results => {
-                                    resolve(id);
+                        .then((purchaseOrderId) => {
+                            return this.getSingleById(purchaseOrderId, ["_id", "purchaseRequestId", "items.product._id", "items.id_po"])
+                                .then((purchaseOrder) => {
+                                    return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
+                                        .then(purchaseRequest => {
+                                            for (var item of purchaseOrder.items) {
+                                                var prItem = purchaseRequest.items.find(prItem => prItem.productId.toString() === item.product._id.toString() && prItem.id_po.toString() === item.id_po.toString());
+                                                if (prItem) {
+                                                    prItem.purchaseOrderIds = prItem.purchaseOrderIds || []
+                                                    prItem.purchaseOrderIds.push(purchaseOrder._id);
+                                                    prItem.isUsed = true;
+                                                }
+                                            }
+                                            purchaseRequest.isUsed = purchaseRequest.items
+                                                .map((item) => item.isUsed)
+                                                .reduce((prev, curr, index) => {
+                                                    return prev && curr
+                                                }, true);
+                                            purchaseRequest.status = prStatusEnum.PROCESSING;
+                                            return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
+                                        })
                                 })
-                                .catch(e => {
-                                    reject(e);
-                                });
-
+                                .then(result => {
+                                    for (var item of splittedPurchaseOrder.items) {
+                                        var sourceItem = sourcePurchaseOrder.items.find((_sourceItem) => item.product._id.toString() === _sourceItem.product._id.toString());
+                                        if (sourceItem) {
+                                            sourceItem.defaultQuantity = sourceItem.defaultQuantity - item.defaultQuantity;
+                                        }
+                                    }
+                                    sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
+                                        return !item.isPosted && item.defaultQuantity > 0;
+                                    })
+                                    sourcePurchaseOrder.isSplit = true;
+                                    this.update(sourcePurchaseOrder)
+                                        .then(results => {
+                                            resolve(purchaseOrderId);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
                         })
                         .catch(e => {
                             reject(e);
@@ -608,13 +717,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
                     var query = Object.assign({});
-
+    
                     if (state !== -1) {
                         Object.assign(query, {
                             "status.value": state
                         });
                     }
-
+    
                     if (unitId !== "undefined" && unitId !== "") {
                         Object.assign(query, {
                             unitId: new ObjectId(unitId)
@@ -685,13 +794,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             qryMatch["$and"] = [
                 { "_deleted": false },
                 { "purchaseOrderExternal.isPosted": true }];
-
+    
             if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
                 var validStartDate = new Date(startdate);
                 var validEndDate = new Date(enddate);
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
-
+    
                 qryMatch["$and"].push(
                     {
                         "date": {
@@ -726,17 +835,17 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     /*getDataPODetailUnit(startdate, enddate, divisiId, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
-
+    
             qryMatch["$and"] = [
                 { "_deleted": false },
                 { "purchaseOrderExternal.isPosted": true }];
-
+    
             if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
                 var validStartDate = new Date(startdate);
                 var validEndDate = new Date(enddate);
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
-
+    
                 qryMatch["$and"].push(
                     {
                         "date": {
@@ -753,7 +862,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             this.collection.aggregate(
                 [{
                     $match: qryMatch
-
+    
                 }, {
                         $unwind: "$items"
                     }, {
@@ -780,13 +889,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             qryMatch["$and"] = [
                 { "_deleted": false },
                 { "purchaseOrderExternal.isPosted": true }];
-
+    
             if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
                 var validStartDate = new Date(startdate);
                 var validEndDate = new Date(enddate);
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
-
+    
                 qryMatch["$and"].push(
                     {
                         "date": {
@@ -795,7 +904,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         }
                     })
             }
-
+    
             this.collection.aggregate(
                 [{
                     $match: qryMatch
@@ -826,13 +935,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 { "_deleted": false },
                 { "purchaseOrderExternal.isPosted": true },
                 { "supplier._id": new ObjectId(supplierId) }];
-
+    
             if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
                 var validStartDate = new Date(startdate);
                 var validEndDate = new Date(enddate);
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
-
+    
                 qryMatch["$and"].push(
                     {
                         "date": {
@@ -870,13 +979,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             qryMatch["$and"] = [
                 { "_deleted": false },
                 { "purchaseOrderExternal.isPosted": true }];
-
+    
             if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
                 var validStartDate = new Date(startdate);
                 var validEndDate = new Date(enddate);
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
-
+    
                 qryMatch["$and"].push(
                     {
                         "date": {
@@ -914,13 +1023,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             qryMatch["$and"] = [
                 { "_deleted": false },
                 { "isPosted": true }];
-
+    
             if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
                 var validStartDate = new Date(startdate);
                 var validEndDate = new Date(enddate);
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
-
+    
                 qryMatch["$and"].push(
                     {
                         "date": {
@@ -964,7 +1073,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             };
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
-
+    
             var query = [deleted, isPosted];
             if (divisi) {
                 var filterDivisi = {
@@ -1021,12 +1130,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 };
                 query.push(filterDateFrom);
             }
-
+    
             var match = { '$and': query };
             this.collection.aggregate(
                 [{
                     $match: match
-
+    
                 }, {
                         $unwind: "$items"
                     }, {
@@ -1072,15 +1181,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
 
-    cleanUp(input) {
-        var newArr = [];
-        for (var i = 0; i < input.length; i++) {
-            if (input[i]) {
-                newArr.push(input[i]);
-            }
-        }
-        return newArr;
-    }
     /*selectDateById(id) {
         return new Promise((resolve, reject) => {
             var query = { "purchaseRequest._id": ObjectId.isValid(id) ? new ObjectId(id) : {}, "_deleted": false };
@@ -1644,4 +1744,124 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
         return Promise.resolve(xls);
     }*/
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
+
+        for (var data of result.data) {
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["Nomor Purchase Order"] = data ? data.no : '';
+            item["Tanggal PO"] = data.date ? moment(new Date(data.date)).format(dateFormat) : '';
+            item["Tanggal Shipment"] = data.shipmentDate ? moment(new Date(data.shipmentDate)).format(dateFormat) : '';
+            item["Nomor RO"] = data.roNo ? data.roNo : '';
+            item["Buyer"] = data.buyer.name ? data.buyer.name : '';
+            item["Artikel"] = data.artikel ? data.artikel : '';
+            item["Unit"] = data.unit.name ? data.unit.name : '';
+            item["Nomor Referensi PR"] = data.items[0].refNo ? data.items[0].refNo : '';
+            item["Kategori"] = data.items[0].category.name ? data.items[0].category.name : '';
+            item["Kode Barang"] = data.items[0].product.code ? data.items[0].product.code : '';
+            item["Nama Barang"] = data.items[0].product.name ? data.items[0].product.name : '';
+            item["Keterangan"] = data.items[0].remark ? data.items[0].remark : '';
+            item["Jumlah"] = data.items[0].defaultQuantity ? data.items[0].defaultQuantity : '';
+            item["Satuan"] = data.items[0].defaultUom.unit ? data.items[0].defaultUom.unit : '';
+            item["Harga Budget"] = data.items[0].budgetPrice ? data.items[0].budgetPrice : '';
+
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Nomor Purchase Order"] = "string";
+        xls.options["Tanggal PO"] = "string";
+        xls.options["Tanggal Shipment"] = "string";
+        xls.options["Nomor RO"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Artikel"] = "string";
+        xls.options["Unit"] = "string";
+        xls.options["Nomor Referensi PR"] = "string";
+        xls.options["Kategori"] = "string";
+        xls.options["Kode Barang"] = "string";
+        xls.options["Nama Barang"] = "string";
+        xls.options["Keterangan"] = "string";
+        xls.options["Jumlah"] = "number";
+        xls.options["Satuan"] = "string";
+        xls.options["Harga Budget"] = "number";
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Purchase Order Internal  Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Purchase Order Internal Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Purchase Order Internal Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Purchase Order Internal Report.xlsx`;
+
+        return Promise.resolve(xls);
+    }
+
+
+    getReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        }, noFilter = {}, categoryFilter = {}, unitFilter = {}, buyerFilter = {},
+            dateFromFilter = {},
+            dateToFilter = {},
+            query = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var now = new Date();
+
+        if (info.no && info.no != '') {
+            var nomorPr = ObjectId.isValid(info.no) ? new ObjectId(info.no) : {};
+            noFilter = { '_id': nomorPr };
+        }
+
+        if (info.unit && info.unit != '') {
+            var unit = ObjectId.isValid(info.unit) ? new ObjectId(info.unit) : {};
+            unitFilter = { 'unit._id': unit };
+        }
+
+        if (info.category && info.category != '') {
+            var category = ObjectId.isValid(info.category) ? new ObjectId(info.category) : {};
+            categoryFilter = { 'category._id': category };
+        }
+
+        if (info.buyer && info.buyer != '') {
+            var buyer = ObjectId.isValid(info.buyer) ? new ObjectId(info.buyer) : {};
+            buyerFilter = { 'buyer._id': buyer };
+        }
+
+        var filterDate = {
+            "_createdDate": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+        query = { '$and': [_defaultFilter, buyerFilter, categoryFilter, unitFilter, noFilter, filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return !info.xls ?
+                    this.collection
+                        .where(query)
+                        .execute() :
+                    this.collection
+                        .where(query)
+                        .page(info.page, info.size)
+                        .execute();
+            });
+    }
 };
