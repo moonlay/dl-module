@@ -260,7 +260,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    getPurchaseRequestByTag(keyword, shipmentDate) {
+    getPurchaseRequestByTag(keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -272,68 +272,96 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         isPosted: true,
                         isUsed: false
                     });
+
+                    var queryMatchItems = Object.assign({});
+                    queryMatchItems = Object.assign(queryMatchItems, {
+                        "items.isUsed": false
+                    });
+
                     if (keyword) {
+                        keyword = keyword.replace(/ \#/g, '#');
                         var keywordFilters = [];
                         if (keyword.indexOf("#") != -1) {
                             keywords = keyword.split("#");
-                            keywords = this.cleanUp(keywords);
+                            keywords.splice(0, 1)
                         } else {
                             keywords.push(keyword)
                         }
-                        for (var _keyword of keywords) {
+
+                        for (var j = 0; j < keywords.length; j++) {
                             var keywordFilter = {};
-                            var regex = new RegExp(_keyword, "i");
-
-                            var filterRoNo = {
-                                "roNo": {
-                                    "$regex": regex
+                            var _keyword = keywords[j]
+                            if (_keyword) {
+                                var regex = new RegExp(_keyword, "i");
+                                switch (j) {
+                                    case 0:
+                                        keywordFilters.push({
+                                            "unit.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
+                                    case 1:
+                                        keywordFilters.push({
+                                            "buyer.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
+                                    case 2:
+                                        queryMatchItems = Object.assign(queryMatchItems, {
+                                            "items.category.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
                                 }
-                            };
-
-                            var filterBuyer = {
-                                "buyer.name": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            var filterArtikel = {
-                                "artikel": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            keywordFilters.push(filterRoNo, filterBuyer, filterArtikel);
+                            }
                         }
-                        query['$or'] = keywordFilters;
+                        if (keywordFilters.length > 0) {
+                            query['$and'] = keywordFilters;
+                        }
                     }
 
                     var _select = {
                         "no": 1,
-                        "refNo": 1,
                         "roNo": 1,
+                        "buyerId": "$buyer._id",
                         "buyer": "$buyer.name",
                         "artikel": 1,
                         "shipmentDate": 1,
+                        "unitId": "$unit._id",
                         "unit": "$unit.name",
                         "division": "$unit.division.name",
                         "isPosted": 1,
                         "isUsed": 1,
                         "_createdBy": 1,
+                        "items.refNo": "$items.refNo",
+                        "items.productId": "$items.productId",
+                        "items.product": "$items.product.name",
+                        "items.quantity": "$items.quantity",
+                        "items.budgetPrice": "$items.budgetPrice",
+                        "items.uom": "$items.uom.unit",
+                        "items.categoryId": "$items.categoryId",
+                        "items.category": "$items.category.name",
+                        "items.id_po": "$items.id_po",
+                        "items.remark": "$items.remark",
                         "year": { $year: "$shipmentDate" },
                         "month": { $month: "$shipmentDate" },
                         "day": { $dayOfMonth: "$shipmentDate" },
                     };
 
-                    var qryMatch = [{ $match: query }, { $project: _select }];
+                    var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryMatchItems }, { $project: _select }];
 
                     var queryDate = Object.assign({});
-                    if (shipmentDate) {
-                        var _shipmentDate = new Date(shipmentDate);
+                    if (shipmentDateFrom && shipmentDateTo) {
+                        var _shipmentDateFrom = new Date(shipmentDateFrom);
+                        var _shipmentDateTo = new Date(shipmentDateTo);
 
                         queryDate = {
-                            year: _shipmentDate.getFullYear(),
-                            month: _shipmentDate.getMonth() + 1,
-                            day: _shipmentDate.getDate()
+                            year: { $gte: _shipmentDateFrom.getFullYear(), $lte: _shipmentDateTo.getFullYear() },
+                            month: { $gte: _shipmentDateFrom.getMonth() + 1, $lte: _shipmentDateTo.getMonth() + 1 },
+                            day: { $gte: _shipmentDateFrom.getDate(), $lte: _shipmentDateTo.getDate() },
                         }
                         qryMatch.push({ $match: queryDate })
                     }
@@ -441,15 +469,5 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 $set: purchaseRequest
             })
             .then((result) => { return this.getSingleByIdOrDefault(purchaseRequest._id) });
-    }
-
-    cleanUp(input) {
-        var newArr = [];
-        for (var i = 0; i < input.length; i++) {
-            if (input[i]) {
-                newArr.push(input[i]);
-            }
-        }
-        return newArr;
     }
 };

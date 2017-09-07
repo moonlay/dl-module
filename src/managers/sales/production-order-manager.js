@@ -8,6 +8,7 @@ var map = DLModels.map;
 var ProductionOrder = DLModels.sales.ProductionOrder;
 var ProductionOrderDetail = DLModels.sales.ProductionOrderDetail;
 var ProductionOrderLampStandard = DLModels.sales.ProductionOrderLampStandard;
+var FPSalesContractManager = require('./finishing-printing-sales-contract-manager');
 var LampStandardManager = require('../master/lamp-standard-manager');
 var BuyerManager = require('../master/buyer-manager');
 var UomManager = require('../master/uom-manager');
@@ -44,6 +45,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         this.FinishTypeManager = new FinishTypeManager(db, user);
         this.StandardTestManager = new StandardTestManager(db, user);
         this.AccountManager = new AccountManager(db, user);
+        this.fpSalesContractManager=new FPSalesContractManager(db,user);
     }
 
     _getQuery(paging) {
@@ -120,6 +122,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         var getStandardTest = ObjectId.isValid(valid.standardTestId) ? this.StandardTestManager.getSingleByIdOrDefault(valid.standardTestId) : Promise.resolve(null);
         var getMaterialConstruction = ObjectId.isValid(valid.materialConstructionId) ? this.MaterialConstructionManager.getSingleByIdOrDefault(valid.materialConstructionId) : Promise.resolve(null);
         var getAccount = ObjectId.isValid(valid.accountId) ? this.AccountManager.getSingleByIdOrDefault(valid.accountId) : Promise.resolve(null);
+        var getSC=ObjectId.isValid(valid.salesContractId)? this.fpSalesContractManager.getSingleByIdOrDefault(valid.salesContractId) : Promise.resolve(null);
 
         valid.details = valid.details || [];
         var getColorTypes = [];
@@ -139,7 +142,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             }
         }
 
-        return Promise.all([getProductionOrder, getBuyer, getUom, getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount].concat(getColorTypes, getLampStandards))
+        return Promise.all([getProductionOrder, getBuyer, getUom, getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount,getSC].concat(getColorTypes, getLampStandards))
             .then(results => {
                 var _productionOrder = results[0];
                 var _buyer = results[1];
@@ -152,12 +155,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var _standard = results[8];
                 var _construction = results[9];
                 var _account = results[10];
-                var _colors = results.slice(11, 11 + getColorTypes.length);
-                var _lampStandards = results.slice(11 + getColorTypes.length, results.length);
+                var _sc = results[11];
+                var _colors = results.slice(12, 12 + getColorTypes.length);
+                var _lampStandards = results.slice(12 + getColorTypes.length, results.length);
 
                 if (_productionOrder) {
                     errors["orderNo"] = i18n.__("ProductionOrder.orderNo.isExist:%s is Exist", i18n.__("Product.orderNo._:orderNo")); //"orderNo sudah ada";
                 }
+
+
                 if (valid.uom) {
                     if (!_uom)
                         errors["uom"] = i18n.__("ProductionOrder.uom.isRequired:%s is required", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
@@ -168,6 +174,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if (!valid.salesContractNo || valid.salesContractNo === '') {
                     errors["salesContractNo"] = i18n.__("ProductionOrder.salesContractNo.isRequired:%s is required", i18n.__("ProductionOrder.salesContractNo._:SalesContractNo")); //"salesContractNo tidak boleh kosong";
                 }
+
+                if (!_sc)
+                    errors["salesContractNo"] = i18n.__("ProductionOrder.salesContractNo.isRequired:%s is not exists", i18n.__("ProductionOrder.salesContractNo._:SalesContractNo")); //"salesContractNo tidak boleh kosong";
+
 
                 if (!_material)
                     errors["material"] = i18n.__("ProductionOrder.material.isRequired:%s is not exists", i18n.__("ProductionOrder.material._:Material")); //"material tidak boleh kosong";
@@ -262,6 +272,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if (!valid.orderQuantity || valid.orderQuantity === 0)
                     errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.isRequired:%s is required", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh kosong";
                 else {
+                    if(valid.remainingQuantity!=undefined){
+                        valid.remainingQuantity+=valid.beforeQuantity;
+                        if(valid.orderQuantity>valid.remainingQuantity){
+                            errors["orderQuantity"] =i18n.__("ProductionOrder.orderQuantity.isRequired:%s should not be more than SC remaining quantity", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity"));
+                        }
+                    }
                     var totalqty = 0;
                     if (valid.details.length > 0) {
                         for (var i of valid.details) {
@@ -272,6 +288,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.shouldNot:%s should equal SUM quantity in details", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh berbeda dari total jumlah detail";
 
                     }
+                    
                 }
 
                 if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
@@ -356,13 +373,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     if (detailErrors.length > 0)
                         errors.details = detailErrors;
 
-
                 }
                 if (!valid.orderNo || valid.orderNo === '') {
                     valid.orderNo = generateCode();
                 }
                 if (_buyer) {
                     valid.buyerId = new ObjectId(_buyer._id);
+                }
+                if(_sc){
+                    valid.salesContractId= new ObjectId(_sc._id);
                 }
                 if (_uom) {
                     valid.uomId = new ObjectId(_uom._id);
@@ -458,6 +477,93 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                 return Promise.resolve(valid);
             });
+    }
+
+     _afterInsert(id) {
+        return this.getSingleById(id)
+            .then((spp) => {
+                var sppId = id;
+                return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                    .then((sc) => {
+                        if(sc.remainingQuantity!=undefined){
+                            sc.remainingQuantity = sc.remainingQuantity-spp.orderQuantity;
+                            return this.fpSalesContractManager.update(sc)
+                                .then(
+                                    (id) => 
+                                    Promise.resolve(sppId));
+                            }
+                            else{
+                                Promise.resolve(sppId);
+                            }
+                        });
+                            
+                    });
+    }
+
+    _beforeUpdate(data) {
+            return this.getSingleById(data._id)
+                .then(spp => {
+                    if(spp.salesContractId){
+                        return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                        .then((sc) => {
+                            if(sc.remainingQuantity!=undefined){
+                                sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
+                                return this.fpSalesContractManager.update(sc)
+                                    .then((id) => 
+                                        Promise.resolve(data));
+                                }
+                                else{
+                                    return Promise.resolve(data);
+                                }
+                            });
+                        }
+                        else{
+                            return Promise.resolve(data);
+                        }
+            });
+    }
+    
+    _afterUpdate(id) {
+        return this.getSingleById(id)
+            .then((spp) => {
+                var sppId = id;
+                if(spp.salesContractId){
+                    return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                        .then((sc) => {
+                            if(sc.remainingQuantity!=undefined){
+                                sc.remainingQuantity -= spp.orderQuantity;
+                            }
+                            return this.fpSalesContractManager.update(sc)
+                                .then((id) => 
+                                    Promise.resolve(sppId));
+                                });
+                }
+                else{
+                    Promise.resolve(sppId);
+                }
+            });
+    }
+
+    delete(data) {
+        return this.getSingleById(data._id)
+        .then(spp => {
+            spp._deleted=true;
+            if(spp.salesContractId){
+                return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                .then((sc) => {
+                    if(sc.remainingQuantity!=undefined){
+                        sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
+                    }
+                    return this.fpSalesContractManager.update(sc)
+                    .then((id) =>{
+                        return this.collection.update(spp);
+                    });
+                });
+            }
+            else{
+                return this.collection.update(spp);
+            }
+        });
     }
 
     _createIndexes() {

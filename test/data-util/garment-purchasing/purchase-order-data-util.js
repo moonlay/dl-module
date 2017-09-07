@@ -26,7 +26,8 @@ class PurchaseOrderDataUtil {
                                 defaultUom: prItem.uom,
                                 categoryId: prItem.categoryId,
                                 category: prItem.category,
-                                vat: purchaseRequest.vat
+                                vat: purchaseRequest.vat,
+                                id_po: prItem.id_po
                             };
                         });
 

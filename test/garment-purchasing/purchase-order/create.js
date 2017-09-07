@@ -24,7 +24,19 @@ var listPurchaseOrder = [];
 it('#01. should success when get new data purchase-request ', function (done) {
     purchaseRequestDataUtil.getNewTestData()
         .then(purchaseRequest => {
-            listPurchaseOrder.push(purchaseRequest);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#02. should success when get data by keyword', function (done) {
+    purchaseOrderManager.purchaseRequestManager.getPurchaseRequestByTag()
+        .then(data => {
+            data.splice(0, 1);
+            listPurchaseOrder = data;
+            data.should.be.instanceof(Array);
             done();
         })
         .catch(e => {
@@ -32,7 +44,7 @@ it('#01. should success when get new data purchase-request ', function (done) {
         });
 });
 var createdId = {};
-it('#02. should success when create new purchase-order', function (done) {
+it('#03. should success when create new purchase-order', function (done) {
     purchaseOrderManager.createMultiple(listPurchaseOrder)
         .then(data => {
             data.should.be.instanceof(Array);
@@ -46,7 +58,7 @@ it('#02. should success when create new purchase-order', function (done) {
 
 var createdData;
 var categoryId;
-it(`#03. should success when get created data with id`, function (done) {
+it(`#04. should success when get created data with id`, function (done) {
     purchaseOrderManager.getSingleById(createdId)
         .then((data) => {
             data.should.instanceof(Object);
@@ -60,7 +72,7 @@ it(`#03. should success when get created data with id`, function (done) {
         });
 });
 
-it("#04. should success when read data", function (done) {
+it("#05. should success when read data", function (done) {
     purchaseOrderManager.read({
         filter: {
             _id: createdId
@@ -78,10 +90,10 @@ it("#04. should success when read data", function (done) {
         });
 });
 
-it('#05. should success when get data by keyword', function (done) {
+it('#06. should success when get data by keyword', function (done) {
     var shipmentDate = new Date();
     var moment = require('moment');
-    purchaseOrderManager.getPurchaseOrderByTag(categoryId,"#buyer1",moment(shipmentDate).format("YYYY-MM-DD"))
+    purchaseOrderManager.getPurchaseOrderByTag('dev', categoryId, "#Test Unit #buyer 01", moment(shipmentDate).format("YYYY-MM-DD"), moment(shipmentDate).format("YYYY-MM-DD"))
         .then(data => {
             data.should.be.instanceof(Array);
             done();
@@ -91,7 +103,7 @@ it('#05. should success when get data by keyword', function (done) {
         });
 });
 
-it(`#06. should success when delete data`, function (done) {
+it(`#07. should success when delete data`, function (done) {
     purchaseOrderManager.delete(createdData)
         .then((id) => {
             id.toString().should.equal(createdId.toString());
@@ -103,7 +115,7 @@ it(`#06. should success when delete data`, function (done) {
 });
 
 
-it(`#07. should _deleted=true`, function (done) {
+it(`#08. should _deleted=true`, function (done) {
     purchaseOrderManager.getSingleByQuery({
         _id: createdId
     })
@@ -118,20 +130,20 @@ it(`#07. should _deleted=true`, function (done) {
         });
 });
 
-it("#08 should error when create with empty data", function (done) {
-        purchaseOrderManager.create({})
-            .then((id) => {
-                done("Should not be able to create with empty data");
-            })
-            .catch((e) => {
-                try {
-                    e.name.should.equal("ValidationError");
-                    e.should.have.property("errors");
-                    e.errors.should.instanceof(Object);
-                    done();
-                }
-                catch (ex) {
-                    done(e);
-                }
-            });
-    });
+it("#09 should error when create with empty data", function (done) {
+    purchaseOrderManager.create({})
+        .then((id) => {
+            done("Should not be able to create with empty data");
+        })
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
+        });
+});

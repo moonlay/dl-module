@@ -32,10 +32,12 @@ class PurchaseRequestDataUtil {
                     unitId: unit._id,
                     unit: unit,
                     isPosted: true,
+                    isUsed: false,
 
                     remark: "Unit Test",
                     items: [{
                         refNo: "UT/PR/GARMENT/01",
+                        id_po: `UT/PR/IDPO/01${codeGenerator("UT/PR/IDPO/01")}`,
                         productId: product01._id,
                         product: product01,
                         quantity: 10,
@@ -43,9 +45,13 @@ class PurchaseRequestDataUtil {
                         uom: uom,
                         categoryId: category._id,
                         category: category,
+                        isUsed: false,
+                        purchaseOrderIds: [],
+                        colors:["WHITE","BLACK"],
                         remark: ""
                     }, {
                         refNo: "UT/PR/GARMENT/02",
+                        id_po: `UT/PR/IDPO/02${codeGenerator("UT/PR/IDPO/02")}`,
                         productId: product02._id,
                         product: product02,
                         quantity: 20,
@@ -53,6 +59,9 @@ class PurchaseRequestDataUtil {
                         uom: uom,
                         categoryId: category._id,
                         category: category,
+                        isUsed: false,
+                        purchaseOrderIds: [],
+                        colors:["WHITE","BLACK"],
                         remark: ""
                     }]
                 };

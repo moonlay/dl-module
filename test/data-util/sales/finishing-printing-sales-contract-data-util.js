@@ -58,7 +58,7 @@ class FinishingPrintingSalesContractDataUtil {
                     comodityId:_comodity._id,
                     termOfPaymentId:_payment._id,
                     termOfPayment:_payment,
-                    orderQuantity:30,
+                    orderQuantity:50,
                     shippingQuantityTolerance:5,
                     materialWidth:'Width',
                     designMotive:_motive,
@@ -66,7 +66,7 @@ class FinishingPrintingSalesContractDataUtil {
                     pointSystem:10,
                     termOfShipment:"test",
                     amount:1,
-
+                    remainingQuantity:50,
                     paymentMethod:`Telegraphic Transfer (TT)`,
                     rollLength:`length`,
                     packing:`pack`,

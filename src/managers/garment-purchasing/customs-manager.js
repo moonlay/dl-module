@@ -176,6 +176,9 @@ module.exports = class CustomsManager extends BaseManager {
                                     if(!dOrder){
                                         itemError["no"] = i18n.__("Surat Jalan tidak ditemukan", i18n.__("Customs.deliveryOrders.no._:No")); //Surat Jalan harus dipilih
                                         itemError["dOrderNumber"] = i18n.__(`${item.no}`, i18n.__("Customs.deliveryOrders.dOrderNumber._:DOrderNumber"));
+                                    }else if(!dOrder.useCustoms){
+                                        itemError["no"] = i18n.__("Surat Jalan tidak dikenakan bea cukai", i18n.__("Customs.deliveryOrders.no._:No")); //Surat Jalan harus dipilih
+                                        itemError["dOrderNumber"] = i18n.__(`${item.no}`, i18n.__("Customs.deliveryOrders.dOrderNumber._:DOrderNumber"));
                                     }
                                 }
                                 itemErrors.push(itemError);
@@ -230,6 +233,7 @@ module.exports = class CustomsManager extends BaseManager {
                     for(var data of customs.deliveryOrders){
                         data.customsId = customs._id;
                         data.customsNo = customs.no;
+                        data.hasCustoms = true;
                         updateDeliveryOrder.push(this.deliveryOrderManager.update(data));
                     }
                     Promise.all(updateDeliveryOrder)
@@ -254,6 +258,7 @@ module.exports = class CustomsManager extends BaseManager {
                     for(var dOrder of customs.deliveryOrders){
                         delete dOrder.customsId;
                         delete dOrder.customsNo;
+                        dOrder.hasCustoms = false;
                         updateDeliveryOrder.push(this.deliveryOrderManager.update(dOrder));
                     }
                     Promise.all(updateDeliveryOrder)
@@ -278,11 +283,44 @@ module.exports = class CustomsManager extends BaseManager {
                     for(var data of customs.deliveryOrders){
                         data.customsId = customs._id;
                         data.customsNo = customs.no;
+                        data.hasCustoms = true;
                         updateDeliveryOrder.push(this.deliveryOrderManager.update(data));
                     }
                     Promise.all(updateDeliveryOrder)
                         .then(data => {
                             resolve(id);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        })
+                })
+                .catch(e => {
+                    reject(e);
+                })
+        });
+    }
+
+    delete(data) {
+        return new Promise((resolve, reject) => {
+            this.collection.singleOrDefault({"_id" : new ObjectId(data._id)})
+                .then(customs => {
+                    var updateDeliveryOrder = [];
+                    for(var dOrder of customs.deliveryOrders){
+                        delete dOrder.customsId;
+                        delete dOrder.customsNo;
+                        dOrder.hasCustoms = false;
+                        updateDeliveryOrder.push(this.deliveryOrderManager.update(dOrder));
+                    }
+                    Promise.all(updateDeliveryOrder)
+                        .then(id => {
+                            data._deleted = true;
+                            this.collection.update(data)
+                                .then(id => {
+                                    resolve(id);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                })
                         })
                         .catch(e => {
                             reject(e);
@@ -382,7 +420,7 @@ module.exports = class CustomsManager extends BaseManager {
                 item["No"] = index;
                 item["Jenis Dokumen"] = data._id.customsType ? data._id.customsType : '';
                 item["Nomor Dokumen Pabean"] = data._id.no ? data._id.no : '';
-                item["Tanggal Dokumen Pabean"] = data._id.customsDate ? moment(data._id.customsDate).format('HH:mm') : '';
+                item["Tanggal Dokumen Pabean"] = data._id.customsDate ? moment(data._id.customsDate).format("DD/MM/YYYY") : '';
                 item["Pemasok / Pengirim"] = data._id.supplier ? data._id.supplier : '';
                 item["Kode Barang"] = data._id.productCode ? data._id.productCode : '';
                 item["Nama Barang"] = data._id.productName ? data._id.productName : '';

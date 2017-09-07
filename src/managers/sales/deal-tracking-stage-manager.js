@@ -91,7 +91,8 @@ module.exports = class DealTrackingStageManager extends BaseManager {
     read(paging) {
         var _paging = {
             filter: { boardId: new ObjectId(paging._id) },
-            select: ["code", "name", "deals"]
+            select: ["code", "name", "deals"],
+            order: { "_createdDate": "asc" }
         };
 
         if (paging.filter && Object.getOwnPropertyNames(paging.filter).length > 0) {
@@ -104,6 +105,7 @@ module.exports = class DealTrackingStageManager extends BaseManager {
                 return this.collection
                     .where(query)
                     .select(_paging.select)
+                    .order(_paging.order)
                     .execute()
                     .then((result) => {
                         var promises = result.data.map((data) => {
