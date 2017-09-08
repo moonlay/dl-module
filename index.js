@@ -77,6 +77,7 @@ module.exports = {
             InvoiceNoteManager: require('./src/managers/garment-purchasing/invoice-note-manager'),
             PurchasePriceCorrection: require('./src/managers/garment-purchasing/purchase-price-correction-manager'),
             UnitReceiptNoteManager: require('./src/managers/garment-purchasing/unit-receipt-note-manager'),
+            InternNoteManager: require('./src/managers/garment-purchasing/intern-note-manager'),
             PurchaseQuantityCorrectionManager: require('./src/managers/garment-purchasing/purchase-quantity-correction-manager'),
         },
         production: {
