@@ -5,3 +5,7 @@ describe("CREATE SCENARIOS", function() {
 describe("SPLIT SCENARIOS", function() {
     require("./split");
 });
+
+describe("report SCENARIOS", function () {
+    require("./report");
+});
