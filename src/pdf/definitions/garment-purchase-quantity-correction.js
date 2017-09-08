@@ -149,34 +149,34 @@ module.exports = function (purchaseQuantityCorrection, offset) {
     var thead = [
         {
             text: 'Plan PO',
-            style: 'tableHeader'
+            style: ['size08', 'bold', 'center']
         }, {
             text: 'Artikel',
-            style: 'tableHeader'
+            style: ['size08', 'bold', 'center']
         }, {
             text: 'Kode Barang',
-            style: 'tableHeader'
+            style: ['size08', 'bold', 'center']
         }, {
             text: 'Nama Barang',
-            style: 'tableHeader'
+            style: ['size08', 'bold', 'center']
         }, {
             text: 'Jumlah',
-            style: 'tableHeader'
+            style: ['size08', 'bold', 'center']
         }, {
             text: 'Satuan',
-            style: 'tableHeader'
+            style: ['size08', 'bold', 'center']
         }, {
             text: 'Harga Satuan',
-            style: 'tableHeader'
+            style: ['size08', 'bold', 'center']
         }, {
             text: 'Jumlah Koreksi',
-            style: 'tableHeader'
+            style: ['size08', 'bold', 'center']
         }, {
             text: 'Harga/Satuan\n(Koreksi)',
-            style: 'tableHeader'
+            style: ['size08', 'bold', 'center']
         }, {
             text: 'Total Harga',
-            style: 'tableHeader'
+            style: ['size08', 'bold', 'center']
         }
     ];
 
