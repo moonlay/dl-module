@@ -17,6 +17,7 @@ var SupplierManager = require('../master/garment-supplier-manager');
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 var generateCode = require('../../utils/code-generator');
+var moment = require('moment');
 
 module.exports = class DeliveryOrderManager extends BaseManager {
     constructor(db, user) {
@@ -949,5 +950,147 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 $set: deliveryOrder
             })
             .then((result) => Promise.resolve(deliveryOrder._id));
+    }
+
+    getMonitoringDO(info) {
+        return new Promise((resolve, reject) => {
+            var _defaultFilter = {
+                _deleted: false
+            };
+            var doNoFilter = {};
+            var supplierFilter = {};
+            var dateFromFilter = {};
+            var dateToFilter = {};
+            var query = {};
+
+            var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+            var now = new Date();
+
+            if (info.no && info.no != '') {
+                doNoFilter = { "items.purchaseOrderExternalNo": info.no };
+            }
+
+            if (info.supplierId && info.supplierId != '') {
+                supplierFilter = { "supplierId": new ObjectId(info.supplierId) };
+            }
+
+            var filterDate = {
+                "supplierDoDate": {
+                    $gte: new Date(dateFrom),
+                    $lte: new Date(dateTo)
+                }
+            };
+
+            query = { '$and': [_defaultFilter,  doNoFilter, supplierFilter, filterDate] };
+
+            return this.collection
+                    .aggregate([
+                        {"$unwind" : "$items"}
+                        ,{"$unwind" : "$items.fulfillments"}
+                        ,{"$match" : query }
+                        ,{"$project" : {
+                            "no" : 1,
+                            "doDate":"$supplierDoDate",
+                            "arrivedDate":"$date",
+                            "supplier" : "$supplier.name",
+                            "supplierType":"$supplier.import",
+                            "shipmentType":"$shipmentType",
+                            "shipmentNo":"$shipmentNo",
+                            "customs":"$useCustoms",
+                            "poEksNo":"$items.purchaseOrderExternalNo",
+                            "prNo":"$items.fulfillments.purchaseRequestNo",
+                            "productCode" : "$items.fulfillments.product.code",
+                            "productName" : "$items.fulfillments.product.name",
+                            "qty" : "$items.fulfillments.purchaseOrderQuantity",
+                            "delivered" : "$items.fulfillments.deliveredQuantity",
+                            "price" : "$items.fulfillments.pricePerDealUnit",
+                            "uom" : "$items.fulfillments.purchaseOrderUom.unit",
+                            "currency" : "$items.fulfillments.currency.description",
+                            "remark":"$items.fulfillments.remark"
+                        }},
+                        {"$sort" : {
+                            "_updatedDate" : -1
+                        }}
+                    ])
+                    .toArray()
+                    .then(results => {
+                        resolve(results);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    });
+        });
+    }
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for(var _data of result.data){
+            var data = {};
+            index += 1;
+            data["No"] = index;
+            data["Nomor Surat Jalan"] = _data.no? _data.no : "";
+            data["Tanggal Surat Jalan"] = _data.doDate ? moment(new Date(_data.doDate)).format(dateFormat) : '';
+            data["Tanggal Tiba"] = _data.arrivedDate ? moment(new Date(_data.arrivedDate)).format(dateFormat) : '';
+            data["Supplier"] = _data.supplier ? _data.supplier : '';
+            data["Jenis Supplier"] = _data.supplierType ? "Import" : "Lokal";
+            data["Pengiriman"] = _data.shipmentType ? _data.shipmentType : '';
+            data["Nomor BL"] = _data.shipmentNo ? _data.shipmentNo : '';
+            data["Dikenakan Bea Cukai"] =_data.customs ? "Ya" : "Tidak";
+            data["Nomor PO Eksternal"] =_data.poEksNo;
+            data["Nomor PR"] =_data.prNo;
+            data["Kode Barang"] = _data.productCode;
+            data["Nama Barang"] = _data.productName;
+            data["Jumlah Dipesan"] =_data.qty;
+            data["Jumlah Diterima"] =_data.delivered;
+            data["Satuan"] =_data.uom;
+            data["Harga"] =_data.price * _data.delivered;
+            data["Mata Uang"] =_data.currency;
+            data["Keterangan"] =_data.remark? _data.remark : '';
+
+            xls.options["No"] = "number";
+            xls.options["Nomor Surat Jalan"] = "string";
+            xls.options["Tanggal Surat Jalan"] = "string";
+            xls.options["Tanggal Tiba"] = "string";
+            xls.options["Supplier"] = "string";
+            xls.options["Jenis Supplier"] = "string";
+            xls.options["Pengiriman"] = "string";
+            xls.options["Nomor BL"] = "string";
+            xls.options["Dikenakan Bea Cukai"] = "string";
+            xls.options["Nomor PO Eksternal"] = "string";
+            xls.options["Nomor PR"] = "string";
+            xls.options["Kode Barang"] = "string";
+            xls.options["Nama Barang"] = "string";
+            xls.options["Jumlah Dipesan"] = "number";
+            xls.options["Jumlah Diterima"] = "number";
+            xls.options["Satuan"] = "string";
+            xls.options["Harga"] = "number";
+            xls.options["Mata Uang"] = "string";
+            xls.options["Keterangan"] = "string";
+
+            xls.data.push(data);
+
+        }
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Monitoring Surat Jalan ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Monitoring Surat Jalan ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Monitoring Surat Jalan ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Monitoring Surat Jalan.xlsx`;
+
+        return Promise.resolve(xls);
     }
 };
