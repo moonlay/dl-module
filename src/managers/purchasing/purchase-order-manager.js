@@ -651,6 +651,121 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         });
     }
 
+
+getDataPOStaff(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var qryMatch = {};
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "purchaseOrderExternal.isPosted": true }];
+    var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                            $subtract: [
+                                { "$add": ["$items.fulfillments.deliveryOrderDate", 60 * 60 * 1000 * offset] },
+                                {
+                                    "$add": [
+                                        { "$millisecond": "$items.fulfillments.deliveryOrderDate" },
+                                        {
+                                            "$multiply": [
+                                                { "$second": "$items.fulfillments.deliveryOrderDate" },
+                                                1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$minute": "$items.fulfillments.deliveryOrderDate" },
+                                                60, 1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$hour": { "$add": ["$items.fulfillments.deliveryOrderDate", 60 * 60 * 1000 * offset] } },
+                                                60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }]
+                        }]
+                }, 86400000]
+            };
+         
+
+
+            if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
+                var validStartDate = new Date(startdate);
+                var validEndDate = new Date(enddate);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+
+                qryMatch["$and"].push(
+                    {
+                        "date": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+            }
+            this.collection.aggregate(
+                [{
+                    $match: qryMatch
+                }, {
+                        $unwind: "$items"
+                    }, 
+                    { $unwind: "$items.fulfillments" },
+                    {
+                        $group: {
+                           _id:{_id:"$author",namee:"$_createdBy",noprr:"$purchaseOrderExternal.no"},
+                           "selisih": { $first: dates },
+                            "tgltarget": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$purchaseOrderExternal.expectedDeliveryDate" } }},
+                           "tgldatang": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$items.fulfillments.deliveryOrderDate" } }},
+                             
+                        }
+                    },
+                    {
+            $group: {
+                           _id:{name:"$_id.namee"},
+                        "isi": { $push: { no: "$_id.no" ,tglt: "$tgltarget",tgld: "$tgldatang" } },
+                   "count":{$sum:1}}
+    },
+                    { $sort : { "_id.name" : 1 } }]
+            )
+                .toArray(function(err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }
+
+
+
     getDataPODetailUnit(startdate, enddate, divisiId, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
@@ -700,6 +815,135 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 });
         });
     }
+
+
+getDataPODetailStaff(startdate, enddate, staff, offset) {
+        return new Promise((resolve, reject) => {
+            var qryMatch = {};
+
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "purchaseOrderExternal.isPosted": true }];
+
+
+ var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                            $subtract: [
+                                { "$add": ["$items.fulfillments.deliveryOrderDate", 60 * 60 * 1000 * offset] },
+                                {
+                                    "$add": [
+                                        { "$millisecond": "$items.fulfillments.deliveryOrderDate" },
+                                        {
+                                            "$multiply": [
+                                                { "$second": "$items.fulfillments.deliveryOrderDate" },
+                                                1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$minute": "$items.fulfillments.deliveryOrderDate" },
+                                                60, 1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$hour": { "$add": ["$items.fulfillments.deliveryOrderDate", 60 * 60 * 1000 * offset] } },
+                                                60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }]
+                        }]
+                }, 86400000]
+            };
+         
+
+            if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
+                var validStartDate = new Date(startdate);
+                var validEndDate = new Date(enddate);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+  qryMatch["$and"].push(
+                    {
+                        "date": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    }
+                   
+                    )
+            }
+            
+
+               if (staff!=="") {
+                qryMatch["$and"].push({
+                    "_createdBy":staff
+                 })
+                
+                
+
+            }
+
+            this.collection.aggregate(
+                [
+                    {
+                    $match: qryMatch
+                },
+                 {
+                        $unwind: "$items"
+                    }, 
+                    { $unwind: "$items.fulfillments" },
+                    {
+                        $group: {
+                           _id:{_id:"$author",name:"$purchaseOrderExternal.no"},
+                           "user": { $first: "$_createdBy"},
+                           "selisih": { $first: dates },
+                            "tgltarget": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$purchaseOrderExternal.expectedDeliveryDate" } }},
+                           "tgldatang": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$items.fulfillments.deliveryOrderDate" } }},
+                            "tgpr": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$_createdDate" } }},    
+                        }
+                    },
+                 
+                      { $sort : { "purchaseRequest.date" : 1 } }
+                    ]
+    
+            )
+                .toArray(function(err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }
+
+
 
 getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
         return new Promise((resolve, reject) => {

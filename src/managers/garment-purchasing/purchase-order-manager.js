@@ -315,7 +315,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return query;
     }
 
-    getPurchaseOrderByTag(categoryId, keyword, shipmentDate) {
+    getPurchaseOrderByTag(user, categoryId, keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -330,41 +330,44 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     query = Object.assign(query, {
                         _deleted: false,
                         isClosed: false,
-                        isPosted: false
+                        isPosted: false,
+                        "_createdBy": user
                     });
                     if (keyword) {
+                        keyword = keyword.replace(/ \#/g, '#');
                         var keywordFilters = [];
                         if (keyword.indexOf("#") != -1) {
                             keywords = keyword.split("#");
-                            keywords = this.cleanUp(keywords);
+                            keywords.splice(0, 1)
                         } else {
                             keywords.push(keyword)
                         }
-                        for (var _keyword of keywords) {
+                        for (var j = 0; j < keywords.length; j++) {
                             var keywordFilter = {};
-                            var regex = new RegExp(_keyword, "i");
-
-                            var filterRoNo = {
-                                "roNo": {
-                                    "$regex": regex
+                            var _keyword = keywords[j]
+                            if (_keyword) {
+                                var regex = new RegExp(_keyword, "i");
+                                switch (j) {
+                                    case 0:
+                                        keywordFilters.push({
+                                            "unit.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
+                                    case 1:
+                                        keywordFilters.push({
+                                            "buyer.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
                                 }
-                            };
-
-                            var filterBuyer = {
-                                "buyer.name": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            var filterArtikel = {
-                                "artikel": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            keywordFilters.push(filterRoNo, filterBuyer, filterArtikel);
+                            }
                         }
-                        query['$or'] = keywordFilters;
+                        if (keywordFilters.length > 0) {
+                            query['$and'] = keywordFilters;
+                        }
                     }
 
                     var _select = {
@@ -388,18 +391,20 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         "items.isClosed": "$items.isClosed",
                         "items.category": "$items.category",
                         "items.categoryId": "$items.categoryId",
+                        "items.remark": "$items.remark"
                     };
 
                     var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryCategory }, { $project: _select }];
 
                     var queryDate = Object.assign({});
-                    if (shipmentDate) {
-                        var _shipmentDate = new Date(shipmentDate);
+                    if (shipmentDateFrom && shipmentDateTo) {
+                        var _shipmentDateFrom = new Date(shipmentDateFrom);
+                        var _shipmentDateTo = new Date(shipmentDateTo);
 
                         queryDate = {
-                            year: _shipmentDate.getFullYear(),
-                            month: _shipmentDate.getMonth() + 1,
-                            day: _shipmentDate.getDate()
+                            year: { $gte: _shipmentDateFrom.getFullYear(), $lte: _shipmentDateTo.getFullYear() },
+                            month: { $gte: _shipmentDateFrom.getMonth() + 1, $lte: _shipmentDateTo.getMonth() + 1 },
+                            day: { $gte: _shipmentDateFrom.getDate(), $lte: _shipmentDateTo.getDate() },
                         }
                         qryMatch.push({ $match: queryDate })
                     }
@@ -1176,15 +1181,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
 
-    cleanUp(input) {
-        var newArr = [];
-        for (var i = 0; i < input.length; i++) {
-            if (input[i]) {
-                newArr.push(input[i]);
-            }
-        }
-        return newArr;
-    }
     /*selectDateById(id) {
         return new Promise((resolve, reject) => {
             var query = { "purchaseRequest._id": ObjectId.isValid(id) ? new ObjectId(id) : {}, "_deleted": false };
@@ -1748,4 +1744,128 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
         return Promise.resolve(xls);
     }*/
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
+
+        for (var data of result.data) {
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["Nomor Purchase Order"] = data ? data.no : '';
+            item["Tanggal PO"] = data.date ? moment(new Date(data.date)).format(dateFormat) : '';
+            item["Tanggal Shipment"] = data.shipmentDate ? moment(new Date(data.shipmentDate)).format(dateFormat) : '';
+            item["Nomor RO"] = data.roNo ? data.roNo : '';
+            item["Buyer"] = data.buyer.name ? data.buyer.name : '';
+            item["Artikel"] = data.artikel ? data.artikel : '';
+            item["Unit"] = data.unit.name ? data.unit.name : '';
+            item["Nomor Referensi PR"] = data.items[0].refNo ? data.items[0].refNo : '';
+            item["Kategori"] = data.items[0].category.name ? data.items[0].category.name : '';
+            item["Kode Barang"] = data.items[0].product.code ? data.items[0].product.code : '';
+            item["Nama Barang"] = data.items[0].product.name ? data.items[0].product.name : '';
+            item["Keterangan"] = data.items[0].remark ? data.items[0].remark : '';
+            item["Jumlah"] = data.items[0].defaultQuantity ? data.items[0].defaultQuantity : '';
+            item["Satuan"] = data.items[0].defaultUom.unit ? data.items[0].defaultUom.unit : '';
+            item["Harga Budget"] = data.items[0].budgetPrice ? data.items[0].budgetPrice : '';
+
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Nomor Purchase Order"] = "string";
+        xls.options["Tanggal PO"] = "string";
+        xls.options["Tanggal Shipment"] = "string";
+        xls.options["Nomor RO"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Artikel"] = "string";
+        xls.options["Unit"] = "string";
+        xls.options["Nomor Referensi PR"] = "string";
+        xls.options["Kategori"] = "string";
+        xls.options["Kode Barang"] = "string";
+        xls.options["Nama Barang"] = "string";
+        xls.options["Keterangan"] = "string";
+        xls.options["Jumlah"] = "number";
+        xls.options["Satuan"] = "string";
+        xls.options["Harga Budget"] = "number";
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Purchase Order Internal  Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Purchase Order Internal Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Purchase Order Internal Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Purchase Order Internal Report.xlsx`;
+
+        return Promise.resolve(xls);
+    }
+
+
+    getReport(info) {
+        var _defaultFilter = {
+            _deleted: false
+        },
+            noFilter = {},
+            categoryFilter = {},
+            unitFilter = {},
+            buyerFilter = {},
+            dateFromFilter = {},
+            dateToFilter = {},
+            query = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var now = new Date();
+
+        if (info.no && info.no != '') {
+            var nomorPr = ObjectId.isValid(info.no) ? new ObjectId(info.no) : {};
+            noFilter = { '_id': nomorPr };
+        }
+
+        if (info.unit && info.unit != '') {
+            var unit = ObjectId.isValid(info.unit) ? new ObjectId(info.unit) : {};
+            unitFilter = { 'unit._id': unit };
+        }
+
+        if (info.category && info.category != '') {
+            var category = ObjectId.isValid(info.category) ? new ObjectId(info.category) : {};
+            categoryFilter = { 'items.category._id': category };
+        }
+
+        if (info.buyer && info.buyer != '') {
+            var buyer = ObjectId.isValid(info.buyer) ? new ObjectId(info.buyer) : {};
+            buyerFilter = { 'buyer._id': buyer };
+        }
+
+        var filterDate = {
+            "_createdDate": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+        query = { '$and': [_defaultFilter, buyerFilter, categoryFilter, unitFilter, noFilter, filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return !info.xls ?
+                    this.collection
+                        .where(query)
+                        .execute() :
+                    this.collection
+                        .where(query)
+                        .page(info.page, info.size)
+                        .execute();
+            });
+    }
 };

@@ -48,6 +48,7 @@ class DeliveryOrderDataUtil {
                             shipmentNo: `SHIPMENT/NO/UT/DO/${codeGenerator()}`,
                             supplier: dataSupplier,
                             isPosted: false,
+                            useCustoms: true,
                             remark: 'Unit Test Delivery Order',
                             items: [{
                                 purchaseOrderExternalId: poEks._id,
@@ -81,6 +82,7 @@ class DeliveryOrderDataUtil {
                                 purchaseOrderQuantity: poeItem.dealQuantity,
                                 purchaseOrderUom: poeItem.dealUom,
                                 deliveredQuantity: poeItem.dealQuantity - 1,
+                                currency: poEks.currency,
                                 realizationQuantity: [],
                                 remark: ''
                             }

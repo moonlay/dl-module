@@ -271,3 +271,28 @@ it('#15. should success when get data detail report Per Supplier with date', fun
         });
 
 });
+
+it('#16. should success when get data report PO Per Staff with date', function (done) {
+    purchaseOrderManager.getDataPOStaff(startDate,endDate)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#17. should success when get data detail report Per Staff with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    var staff = null;
+    purchaseOrderManager.getDataPODetailStaff(startdate, enddate, staff)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});

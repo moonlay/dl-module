@@ -33,5 +33,14 @@ class CategoryDataUtil {
         };
         return this.getSert(data);
     }
+
+    getTestData2() {
+        var data = {
+            code: "FAB",
+            name: "Category FAB",
+            codeRequirement: ""
+        };
+        return this.getSert(data);
+    }
 }
 module.exports = new CategoryDataUtil();

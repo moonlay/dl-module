@@ -113,7 +113,6 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
                     "input": 1,
                     "step.proccessArea": 1
                 }).limit(1).toArray();
-
             return getDailyOperations.then((dailyOperations) => {
                 var arr = dailyOperations.map((dailyOperation) => {
                     kanban.dailyOperationMachine = dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null;
@@ -123,7 +122,6 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
                     kanban.dailyOperationProcessArea = dailyOperation.step && dailyOperation.step.proccessArea ? dailyOperation.step.proccessArea : null;
                     return kanban;
                 });
-
                 if (arr.length === 0) {
                     kanban.dailyOperationMachine = null;
                     kanban.dateInput = null;
@@ -135,7 +133,6 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
                 return Promise.resolve(arr);
             });
         });
-
         return Promise.all(joinDailyOperations)
             .then(((joinDailyOperation) => {
                 return Promise.resolve([].concat.apply([], joinDailyOperation));
