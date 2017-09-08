@@ -13,6 +13,7 @@ var SupplierManager = require('../master/garment-supplier-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
+var moment = require('moment');
 
 module.exports = class UnitReceiptNoteManager extends BaseManager {
     constructor(db, user) {
@@ -889,5 +890,117 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             }
         }
         return newArr;
+    }
+
+     getUnitReceiptReport(query) {
+        return new Promise((resolve, reject) => {
+           var _query = Object.assign({});
+            var deleted = { _deleted: false };
+            
+
+            var date = new Date();
+            var dateString = moment(date).format('YYYY-MM-DD');
+            var dateNow = new Date(dateString);
+            var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            var dateQuery = {
+                "date": {
+                    "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
+                    "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
+                }
+            };
+            Object.assign(_query, dateQuery);
+            
+           if (query.no)
+           {
+                Object.assign(_query, 
+                {
+                   "items.purchaseRequestNo": query.no
+                }
+                        );
+           }
+           if (query.unit)
+           {
+                Object.assign(_query, 
+                {
+                   "unit.code": query.unit
+                }
+                        );
+           }
+           if (query.supplier)
+           {
+                Object.assign(_query, 
+                {
+                   "supplier.code": query.supplier
+                }
+                        );
+           }
+            Object.assign(_query, deleted);
+
+
+            this.collection
+                .where(_query)
+                .execute()
+                .then(result => {
+                    resolve(result.data);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+    getUnitReceiptReportXls(dataReport,query) {
+
+        return new Promise((resolve, reject) => {
+            var xls = {};
+            xls.data = [];
+            xls.options = [];
+            xls.name = '';
+
+            var dateFormat = "DD/MM/YYYY";
+
+            for(var data of dataReport.data){
+            for(var items of data.items)
+            {
+                var item = {};
+                item["No Bon Terima Unit"] = data.no;
+                item["Tanggal Bon Terima Unit"] = data.date ? moment(data.date).format(dateFormat) : '';
+                item["Unit"] = data.unit.name ? data.unit.name : '';
+                item["Supplier"] = data.supplier.name ? data.supplier.name : '';
+                item["Surat Jalan"] = data.deliveryOrderNo ? data.deliveryOrderNo : '';
+                item["Kode Barang"] = items.product.code ? items.product.code : '';
+                item["Nama Barang"] = items.product.name ? items.product.name : '';
+                item["Jumlah"] = items.deliveredQuantity ? items.deliveredQuantity : '';
+                item["Satuan"] = items.deliveredUom.unit ? items.deliveredUom.unit : '';
+                item["Keterangan"] = items.remark ? items.remark : '';
+ 
+                xls.data.push(item);
+            }
+            }
+
+            xls.options["No Bon Terima Unit"] = "string";
+            xls.options["Tanggal Bon Terima Unit"] = "string";
+            xls.options["Unit"] = "string";
+            xls.options["Supplier"] = "string";
+            xls.options["Surat Jalan"] = "string";
+            xls.options["Kode Barang"] = "string";
+            xls.options["Nama Barang"] = "string";
+            xls.options["Jumlah"] = "number";
+            xls.options["Satuan"] = "string";
+            xls.options["Keterangan"] = "string";
+
+            if(query.dateFrom && query.dateTo){
+                xls.name = `Unit Receipt Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            }
+            else if(!query.dateFrom && query.dateTo){
+                xls.name = `Unit Receipt Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            }
+            else if(query.dateFrom && !query.dateTo){
+                xls.name = `Unit Receipt Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+            }
+            else
+                xls.name = `Unit Receipt Report.xlsx`;
+            
+            resolve(xls);
+        });
     }
 };
