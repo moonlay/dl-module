@@ -131,6 +131,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                     var _deliveryOrder = results[1];
                     var _purchaseOrders = results[2];
 
+                    var now = new Date();
                     if (_purchaseQuantityCorrection)
                         errors["no"] = i18n.__("PurchaseQuantityCorrection.no.isExists:%s is already exists", i18n.__("PurchaseQuantityCorrection.no._:No"));
 
@@ -143,6 +144,8 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
 
                     if (!valid.date || valid.date == '')
                         errors["date"] = i18n.__("PurchaseQuantityCorrection.date.isRequired:%s is required", i18n.__("PurchaseQuantityCorrection.date._:Correction Date"));
+                    if (new Date(valid.date) > now)
+                        errors["date"] = i18n.__("PurchaseQuantityCorrection.date.isGreater:%s is greater than now", i18n.__("PurchaseQuantityCorrection.date._:Correction Date"));
 
                     if (valid.items && !ObjectId.isValid(valid._id)) {
                         if (valid.items.length > 0) {
@@ -255,7 +258,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                     }
                 }
 
-                return this.deliveryOrderManager.update(deliveryOrder)
+                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
                     .then((result) => {
                         return Promise.resolve(purchaseQuantityCorrection);
                     })
@@ -335,7 +338,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                             fulfillment.corrections.push(_correction);
                         }
                     }
-                    return this.purchaseOrderManager.update(purchaseOrder);
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 });
             jobs.push(job);
         })
