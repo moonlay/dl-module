@@ -1759,7 +1759,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             index++;
             var item = {};
             item["No"] = index;
-            item["Nomor Purchase Order"] = data ? data.no : '';
+            item["Nomor Purchase Order"] = data ? data.refNo : '';
             item["Tanggal PO"] = data.date ? moment(new Date(data.date)).format(dateFormat) : '';
             item["Tanggal Shipment"] = data.shipmentDate ? moment(new Date(data.shipmentDate)).format(dateFormat) : '';
             item["Nomor RO"] = data.roNo ? data.roNo : '';
@@ -1814,20 +1814,26 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
 
     getReport(info) {
+        if (info.test == "test") {
+            var _defaultFilter = {
+                _deleted: false
+            }
+        } else {
+            var _defaultFilter = {
+                $and: [{ _createdBy: { $ne: "dev2" } },
+                    { _createdBy: { $ne: "dev" } },
+                    { _deleted: false }]
+            };
+        }
 
-        var _defaultFilter = {
-            $and: [{ _createdBy: { $ne: "dev2" } },
-                { _createdBy: { $ne: "dev" } },
-                { _deleted: false }]
-        },
 
-            noFilter = {},
-            categoryFilter = {},
-            unitFilter = {},
-            buyerFilter = {},
-            dateFromFilter = {},
-            dateToFilter = {},
-            query = {};
+        var noFilter = {};
+        var categoryFilter = {};
+        var unitFilter = {};
+        var buyerFilter = {};
+        var dateFromFilter = {};
+        var dateToFilter = {};
+        var query = {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
         var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
