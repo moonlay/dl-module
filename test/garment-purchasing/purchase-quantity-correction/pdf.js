@@ -48,7 +48,31 @@ it(`#02. should success when get created data with id`, function (done) {
         });
 });
 
-it('#03. should success when create pdf', function (done) {
+it("#03. should error when create new data with date Input greater than today", function (done) {
+    PurchaseQuantityCorrectionDataUtil.getNewData()
+        .then((data) => {
+            var dateTomorrow = new Date().setDate(new Date().getDate() + 2);
+            data.date = moment(dateTomorrow).format('YYYY-MM-DD');
+            purchaseQuantityCorrectionManager.create(data)
+                .then((purchaseQuantityCorrection) => {
+                    done("should error when create new data with date is greater than today");
+                })
+                .catch((e) => {
+                    try {
+                        e.errors.should.have.property('date');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it('#04. should success when create pdf', function (done) {
     var query = {};
 
     purchaseQuantityCorrectionManager.getPdf(createdData, 7)
@@ -59,7 +83,7 @@ it('#03. should success when create pdf', function (done) {
         });
 });
 
-it("#04. should success when destroy all unit test data", function (done) {
+it("#05. should success when destroy all unit test data", function (done) {
     purchaseQuantityCorrectionManager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();
