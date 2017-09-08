@@ -53,7 +53,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return query;
     }
 
-    run(table1, table2, date) {
+    run(table1, table2) {
         var startedDate = new Date()
 
         this.migrationLog.insert({
@@ -66,71 +66,39 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return new Promise((resolve, reject) => {
             this.getTimeStamp().then((result) => {
                 var dateStamp;
+                if (result.length != 0) {
+                    var year = result[0].start.getFullYear();
+                    var month = result[0].start.getMonth() + 1;
+                    var day = result[0].start.getDate();
 
-                if (date == 1) {
-                    dateStamp = "2017-01%%";
-                } else if (date == 2) {
-                    dateStamp = "2017-02%%";
-                } else if (date == 3) {
-                    dateStamp = "2017-03%%";
-                } else if (date == 4) {
-                    dateStamp = "2017-04%%";
-                } else if (date == 5) {
-                    dateStamp = "2017-05%%";
-                } else if (date == 6) {
-                    dateStamp = "2017-06%%";
-                } else if (date == 7) {
-                    dateStamp = "2017-07%%";
-                } else if (date == 8) {
-                    dateStamp = "2017-08%%";
-                } else if (date == 9) {
-                    dateStamp = "2017-09%%";
-                } else if (date == 10) {
-                    dateStamp = "2017-10%%";
-                } else if (date == 11) {
-                    dateStamp = "2017-11%%";
-                } else if (date == 12) {
-                    dateStamp = "2017-12%%";
-                }
-                else if (date == "latest") {
-                    if (result.length != 0) {
-                        var year = result[0].start.getFullYear();
-                        var month = result[0].start.getMonth() + 1;
-                        var day = result[0].start.getDate();
-
-                        if (month < 10) {
-                            month = "0" + month;
-                        }
-                        if (day < 10) {
-                            day = "0" + day;
-                        }
-
-                        dateStamp = [year, month, day].join('-');
+                    if (month < 10) {
+                        month = "0" + month;
                     }
+                    if (day < 10) {
+                        day = "0" + day;
+                    }
+
+                    dateStamp = [year, month, day].join('-');
+                } else if (result.length == 0) {
+
+                    var year = new Date().getFullYear();
+                    var month = new Date().getMonth() + 1;
+                    var day = new Date().getDate();
+
+                    if (month < 10) {
+                        month = "0" + month;
+                    }
+                    if (day < 10) {
+                        day = "0" + day;
+                    }
+                    dateStamp = [year, month, day].join('-');
                 }
-
-                // if (result.length != 0) {
-                //     var year = result[0].start.getFullYear();
-                //     var month = result[0].start.getMonth() + 1;
-                //     var day = result[0].start.getDate();
-
-                //     if (month < 10) {
-                //         month = "0" + month;
-                //     }
-                //     if (day < 10) {
-                //         day = "0" + day;
-                //     }
-
-                //     dateStamp = [year, month, day].join('-');
-                // } else if (result.length == 0) {
-                //     dateStamp = "2017-08-2%%";
-                // }
 
 
                 this.getRowNumber(table1, table2, dateStamp)
                     .then((data) => {
 
-                        var pageSize = 1000;
+                        var pageSize = 5000;
                         var dataLength = data;
                         var totalPageNumber = Math.ceil(dataLength / pageSize);
 
@@ -157,7 +125,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                             var updateLog = {};
 
-                            if (processedData[0].length == 0) {
+                            if (!processedData[0]) {
                                 updateLog = {
                                     code: "sql-gpr",
                                     description: "Sql to MongoDB: Garment-Purchase-Request",
@@ -215,7 +183,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
 
-                        var sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.Tanggal,20),10) >= '" + tgl + "' and POrder.Harga = 0"
+                        var sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
@@ -466,25 +434,25 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
 
                             var Colors = [];
-                            if (data.Clr1.trim() && data.Clr1.trim() != "" && data.Clr1.trim() == null) {
+                            if (data.Clr1.trim() != "") {
                                 Colors.push(data.Clr1.trim());
-                            } if (data.Clr2.trim() && data.Clr2.trim() != "" && data.Clr2.trim() == null) {
+                            } if (data.Clr2.trim() != "") {
                                 Colors.push(data.Clr2.trim());
-                            } if (data.Clr3.trim() && data.Clr3.trim() != "" && data.Clr3.trim() == null) {
+                            } if (data.Clr3.trim() != "") {
                                 Colors.push(data.Clr3.trim());
-                            } if (data.Clr4.trim() && data.Clr4.trim() != "" && data.Clr4.trim() == null) {
+                            } if (data.Clr4.trim() != "") {
                                 Colors.push(data.Clr4.trim());
-                            } if (data.Clr5.trim() && data.Clr5.trim() != "" && data.Clr5.trim() == null) {
+                            } if (data.Clr5.trim() != "") {
                                 Colors.push(data.Clr5.trim());
-                            } if (data.Clr6.trim() && data.Clr6.trim() != "" && data.Clr6.trim() == null) {
+                            } if (data.Clr6.trim() != "") {
                                 Colors.push(data.Clr6.trim());
-                            } if (data.Clr7.trim() && data.Clr7.trim() != "" && data.Clr7.trim() == null) {
+                            } if (data.Clr7.trim() != "") {
                                 Colors.push(data.Clr7.trim());
-                            } if (data.Clr8.trim() && data.Clr8.trim() != "" && data.Clr8.trim() == null) {
+                            } if (data.Clr8.trim() != "") {
                                 Colors.push(data.Clr8.trim());
-                            } if (data.Clr9.trim() && data.Clr9.trim() != "" && data.Clr9.trim() == null) {
+                            } if (data.Clr9.trim() != "") {
                                 Colors.push(data.Clr9.trim());
-                            } if (data.Clr10.trim() && data.Clr10.trim() != "" && data.Clr10.trim() == null) {
+                            } if (data.Clr10.trim() != "") {
                                 Colors.push(data.Clr10.trim());
                             }
 
@@ -538,6 +506,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     colors: Colors,
                                     id_po: (data.ID_PO),
                                     isUsed: false,
+                                    purchaseOrderId: {},
                                 }
                                 items.push(item);
 
@@ -567,7 +536,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     // _updatedDate: new Date(_updatedDate),
                                     _updateAgent: "manager",
                                     // no: data.Ro,
-                                    no: generateCode(),
+                                    no: code,
                                     roNo: data.Ro,
                                     artikel: data.Art,
                                     shipmentDate: data.Shipment,

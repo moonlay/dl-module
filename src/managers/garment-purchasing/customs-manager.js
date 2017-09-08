@@ -176,6 +176,9 @@ module.exports = class CustomsManager extends BaseManager {
                                     if(!dOrder){
                                         itemError["no"] = i18n.__("Surat Jalan tidak ditemukan", i18n.__("Customs.deliveryOrders.no._:No")); //Surat Jalan harus dipilih
                                         itemError["dOrderNumber"] = i18n.__(`${item.no}`, i18n.__("Customs.deliveryOrders.dOrderNumber._:DOrderNumber"));
+                                    }else if(!dOrder.useCustoms){
+                                        itemError["no"] = i18n.__("Surat Jalan tidak dikenakan bea cukai", i18n.__("Customs.deliveryOrders.no._:No")); //Surat Jalan harus dipilih
+                                        itemError["dOrderNumber"] = i18n.__(`${item.no}`, i18n.__("Customs.deliveryOrders.dOrderNumber._:DOrderNumber"));
                                     }
                                 }
                                 itemErrors.push(itemError);
@@ -230,6 +233,7 @@ module.exports = class CustomsManager extends BaseManager {
                     for(var data of customs.deliveryOrders){
                         data.customsId = customs._id;
                         data.customsNo = customs.no;
+                        data.hasCustoms = true;
                         updateDeliveryOrder.push(this.deliveryOrderManager.update(data));
                     }
                     Promise.all(updateDeliveryOrder)
@@ -254,6 +258,7 @@ module.exports = class CustomsManager extends BaseManager {
                     for(var dOrder of customs.deliveryOrders){
                         delete dOrder.customsId;
                         delete dOrder.customsNo;
+                        dOrder.hasCustoms = false;
                         updateDeliveryOrder.push(this.deliveryOrderManager.update(dOrder));
                     }
                     Promise.all(updateDeliveryOrder)
@@ -278,6 +283,7 @@ module.exports = class CustomsManager extends BaseManager {
                     for(var data of customs.deliveryOrders){
                         data.customsId = customs._id;
                         data.customsNo = customs.no;
+                        data.hasCustoms = true;
                         updateDeliveryOrder.push(this.deliveryOrderManager.update(data));
                     }
                     Promise.all(updateDeliveryOrder)
@@ -302,6 +308,7 @@ module.exports = class CustomsManager extends BaseManager {
                     for(var dOrder of customs.deliveryOrders){
                         delete dOrder.customsId;
                         delete dOrder.customsNo;
+                        dOrder.hasCustoms = false;
                         updateDeliveryOrder.push(this.deliveryOrderManager.update(dOrder));
                     }
                     Promise.all(updateDeliveryOrder)

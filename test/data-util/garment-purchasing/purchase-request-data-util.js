@@ -47,6 +47,7 @@ class PurchaseRequestDataUtil {
                         category: category,
                         isUsed: false,
                         purchaseOrderIds: [],
+                        colors:["WHITE","BLACK"],
                         remark: ""
                     }, {
                         refNo: "UT/PR/GARMENT/02",
@@ -60,6 +61,7 @@ class PurchaseRequestDataUtil {
                         category: category,
                         isUsed: false,
                         purchaseOrderIds: [],
+                        colors:["WHITE","BLACK"],
                         remark: ""
                     }]
                 };

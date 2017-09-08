@@ -14,7 +14,7 @@ const SELECT = {
     "fabricGradeTests.criteria.score.A": 1,
     "fabricGradeTests.criteria.score.B": 1,
     "fabricGradeTests.criteria.score.C": 1,
-    "fabricGradeTests.criteria.score.D": 1, 
+    "fabricGradeTests.criteria.score.D": 1,
     "fabricGradeTests.pointSystem": 1,
     code: 1,
     pointSystem: 1,
@@ -70,6 +70,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
             .then((data) => this.transform(data))
             .then((data) => this.load(data))
             .then(() => {
+                console.log("Success!");
                 var finishedDate = new Date();
                 var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                 var updateLog = {
@@ -105,9 +106,8 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
     }
 
     // extract(times) {
-    //     var time = "2017-06-29T00:00:00.000Z";
-    //     var timestamp = new Date(time);
-    //     var timestamps = new Date("2017-06-30T00:00:00.000Z");
+    //     var timestamp = new Date("2017-08-09T00:00:00.000Z");
+    //     var timestamps = new Date("2017-08-10T00:00:00.000Z");
     //     return this.fabricQualityControlManager.collection.find({
     //         _createdDate: {
     //             "$gte": timestamp,
@@ -136,43 +136,43 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
                     var scoreD = criteria.score.D >= 0 && gradeTest.pointSystem === 10 ? criteria.score.D * 10 : null;
                     var totalScore = scoreA + scoreB + scoreC + scoreD;
                     return {
-                        qcCode: qualityControl.code ? `'${qualityControl.code}'` : null,
-                        qcpointSystem: qualityControl.pointSystem >= 0 ? `'${qualityControl.pointSystem}'` : null,
-                        dateIm: qualityControl.dateIm ? `'${moment(qualityControl.dateIm).format("L")}'` : null,
-                        shiftIm: qualityControl.shiftIm ? `'${qualityControl.shiftIm}'` : null,
-                        group: qualityControl.group ? `'${qualityControl.group}'` : null,
-                        operatorIm: qualityControl.operatorIm ? `'${qualityControl.operatorIm}'` : null,
-                        machineNoIm: qualityControl.machineNoIm ? `'${qualityControl.machineNoIm}'` : null,
-                        productionOrderNo: qualityControl.productionOrderNo ? `'${qualityControl.productionOrderNo}'` : null,
-                        productionOrderType: qualityControl.productionOrderType ? `'${qualityControl.productionOrderType}'` : null,
-                        kanbanCode: qualityControl.kanbanCode ? `'${qualityControl.kanbanCode}'` : null,
-                        cartNo: qualityControl.cartNo ? `'${qualityControl.cartNo}'` : null,
-                        buyer: qualityControl.buyer ? `'${qualityControl.buyer}'` : null,
-                        orderQuantity: qualityControl.orderQuantity >= 0 ? `'${qualityControl.orderQuantity}'` : null,
-                        color: qualityControl.color ? `'${qualityControl.color}'` : null,
-                        construction: qualityControl.construction ? `'${qualityControl.construction}'` : null,
-                        packingInstruction: qualityControl.packingInstruction ? `'${qualityControl.packingInstruction}'` : null,
-                        uom: qualityControl.uom ? `'${qualityControl.uom}'` : null,
-                        type: gradeTest.type ? `'${gradeTest.type}'` : null,
-                        pcsNo: gradeTest.pcsNo ? `'${gradeTest.pcsNo}'` : null,
-                        grade: gradeTest.grade ? `'${gradeTest.grade}'` : null,
-                        width: gradeTest.width >= 0 ? `'${gradeTest.width}'` : null,
-                        initLength: gradeTest.initLength >= 0 ? `'${gradeTest.initLength}'` : null,
-                        avalLength: gradeTest.avalLength >= 0 ? `'${gradeTest.avalLength}'` : null,
-                        finalLength: gradeTest.finalLength >= 0 ? `'${gradeTest.finalLength}'` : null,
-                        sampleLength: gradeTest.sampleLength >= 0 ? `'${gradeTest.sampleLength}'` : null,
-                        fabricGradeTest: gradeTest.fabricGradeTest >= 0 ? `'${gradeTest.fabricGradeTest}'` : null,
-                        finalGradeTest: gradeTest.finalGradeTest >= 0 ? `'${gradeTest.finalGradeTest}'` : null,
-                        score: gradeTest.score >= 0 ? `'${gradeTest.score}'` : null,
-                        finalScore: gradeTest.finalScore >= 0 ? `'${gradeTest.finalScore}'` : null,
-                        pointSystem: gradeTest.pointSystem >= 0 ? `'${gradeTest.pointSystem}'` : null,
-                        criteriaCode: criteria.code ? `'${criteria.code}'` : null,
-                        criteriaGroup: criteria.group ? `'${criteria.group}'` : null,
-                        criteriaName: criteria.name ? `'${criteria.name}'` : null,
-                        criteriaA: criteria.score.A >= 0 ? `'${criteria.score.A}'` : null,
-                        criteriaB: criteria.score.B >= 0 ? `'${criteria.score.B}'` : null,
-                        criteriaC: criteria.score.C >= 0 ? `'${criteria.score.C}'` : null,
-                        criteriaD: criteria.score.D >= 0 ? `'${criteria.score.D}'` : null,
+                        qcCode: qualityControl.code && qualityControl.code !== '' ? `'${qualityControl.code.replace(/'/g, '"')}'` : null,
+                        qcpointSystem: qualityControl.pointSystem >= 0 && qualityControl.pointSystem !== '' && qualityControl.pointSystem ? `'${qualityControl.pointSystem}'` : null,
+                        dateIm: qualityControl.dateIm ? `'${moment(qualityControl.dateIm).add(7, "hours").format("L")}'` : null,
+                        shiftIm: qualityControl.shiftIm && qualityControl.shiftIm !== '' ? `'${qualityControl.shiftIm.replace(/'/g, '"')}'` : null,
+                        group: qualityControl.group && qualityControl.group !== '' ? `'${qualityControl.group.replace(/'/g, '"')}'` : null,
+                        operatorIm: qualityControl.operatorIm && qualityControl.operatorIm !== '' ? `'${qualityControl.operatorIm.replace(/'/g, '"')}'` : null,
+                        machineNoIm: qualityControl.machineNoIm && qualityControl.machineNoIm !== '' ? `'${qualityControl.machineNoIm.replace(/'/g, '"')}'` : null,
+                        productionOrderNo: qualityControl.productionOrderNo && qualityControl.productionOrderNo !== '' ? `'${qualityControl.productionOrderNo.replace(/'/g, '"')}'` : null,
+                        productionOrderType: qualityControl.productionOrderType && qualityControl.productionOrderType !== '' ? `'${qualityControl.productionOrderType.replace(/'/g, '"')}'` : null,
+                        kanbanCode: qualityControl.kanbanCode && qualityControl.kanbanCode !== '' ? `'${qualityControl.kanbanCode.replace(/'/g, '"')}'` : null,
+                        cartNo: qualityControl.cartNo && qualityControl.cartNo !== '' ? `'${qualityControl.cartNo.replace(/'/g, '"')}'` : null,
+                        buyer: qualityControl.buyer && qualityControl.buyer !== '' ? `'${qualityControl.buyer.replace(/'/g, '"')}'` : null,
+                        orderQuantity: qualityControl.orderQuantity >= 0 && qualityControl.orderQuantity !== '' && qualityControl.orderQuantity ? `'${qualityControl.orderQuantity}'` : null,
+                        color: qualityControl.color && qualityControl.color !== '' ? `'${qualityControl.color.replace(/'/g, '"')}'` : null,
+                        construction: qualityControl.construction && qualityControl.construction !== '' ? `'${qualityControl.construction.replace(/'/g, '"')}'` : null,
+                        packingInstruction: qualityControl.packingInstruction && qualityControl.packingInstruction !== '' ? `'${qualityControl.packingInstruction.replace(/'/g, '"')}'` : null,
+                        uom: qualityControl.uom && qualityControl.uom !== '' ? `'${qualityControl.uom.replace(/'/g, '"')}'` : null,
+                        type: gradeTest.type && gradeTest.type !== '' ? `'${gradeTest.type.replace(/'/g, '"')}'` : null,
+                        pcsNo: gradeTest.pcsNo && gradeTest.pcsNo !== '' ? `'${gradeTest.pcsNo.replace(/'/g, '"')}'` : null,
+                        grade: gradeTest.grade && gradeTest.grade !== '' ? `'${gradeTest.grade.replace(/'/g, '"')}'` : null,
+                        width: gradeTest.width >= 0 && gradeTest.width !== '' && gradeTest.width ? `'${gradeTest.width}'` : null,
+                        initLength: gradeTest.initLength >= 0 && gradeTest.initLength && gradeTest.initLength ? `'${gradeTest.initLength}'` : null,
+                        avalLength: gradeTest.avalLength >= 0 && gradeTest.avalLength !== '' && gradeTest.avalLength ? `'${gradeTest.avalLength}'` : null,
+                        finalLength: gradeTest.finalLength >= 0 && gradeTest.finalLength !== '' && gradeTest.finalLength ? `'${gradeTest.finalLength}'` : null,
+                        sampleLength: gradeTest.sampleLength >= 0 && gradeTest.sampleLength !== '' && gradeTest.sampleLength ? `'${gradeTest.sampleLength}'` : null,
+                        fabricGradeTest: gradeTest.fabricGradeTest >= 0 && gradeTest.fabricGradeTest !== '' && gradeTest.fabricGradeTest ? `'${gradeTest.fabricGradeTest}'` : null,
+                        finalGradeTest: gradeTest.finalGradeTest >= 0 && gradeTest.finalGradeTest !== '' && gradeTest.finalGradeTest ? `'${gradeTest.finalGradeTest}'` : null,
+                        score: gradeTest.score >= 0 && gradeTest.score !== '' && gradeTest.score ? `'${gradeTest.score}'` : null,
+                        finalScore: gradeTest.finalScore >= 0 && gradeTest.finalScore !== '' && gradeTest.finalScore ? `'${gradeTest.finalScore}'` : null,
+                        pointSystem: gradeTest.pointSystem >= 0 && gradeTest.pointSystem !== '' && gradeTest.pointSystem ? `'${gradeTest.pointSystem}'` : null,
+                        criteriaCode: criteria.code && criteria.code !== '' && criteria.code ? `'${criteria.code.replace(/'/g, '"')}'` : null,
+                        criteriaGroup: criteria.group && criteria.group !== '' && criteria.group ? `'${criteria.group.replace(/'/g, '"')}'` : null,
+                        criteriaName: criteria.name && criteria.name !== '' && criteria.name ? `'${criteria.name.replace(/'/g, '"')}'` : null,
+                        criteriaA: criteria.score.A >= 0 && criteria.score.A !== '' && criteria.score.A ? `${criteria.score.A}` : null,
+                        criteriaB: criteria.score.B >= 0 && criteria.score.B !== '' && criteria.score.B ? `${criteria.score.B}` : null,
+                        criteriaC: criteria.score.C >= 0 && criteria.score.C !== '' && criteria.score.C ? `${criteria.score.C}` : null,
+                        criteriaD: criteria.score.D >= 0 && criteria.score.D !== '' && criteria.score.D ? `${criteria.score.D}` : null,
                         totalScore: `${totalScore}`,
                         deleted: `'${qualityControl._deleted}'`,
                         isUsed: `'${qualityControl.isUsed}'`
@@ -218,7 +218,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
                             if (item) {
                                 var queryString = `\nSELECT ${item.qcCode}, ${item.qcpointSystem}, ${item.dateIm}, ${item.shiftIm}, ${item.group}, ${item.operatorIm}, ${item.machineNoIm}, ${item.productionOrderNo}, ${item.productionOrderType}, ${item.kanbanCode}, ${item.cartNo}, ${item.buyer}, ${item.orderQuantity}, ${item.color}, ${item.construction}, ${item.packingInstruction}, ${item.uom}, ${item.type}, ${item.pcsNo}, ${item.grade}, ${item.width}, ${item.initLength}, ${item.avalLength}, ${item.finalLength}, ${item.sampleLength}, ${item.fabricGradeTest}, ${item.finalGradeTest}, ${item.score}, ${item.finalScore}, ${item.pointSystem}, ${item.criteriaCode}, ${item.criteriaGroup}, ${item.criteriaName}, ${item.criteriaA}, ${item.criteriaB}, ${item.criteriaC}, ${item.criteriaD}, ${item.totalScore}, ${item.deleted}, ${item.isUsed} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 4000 == 0) {
+                                if (count % 1000 == 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                                     command.push(this.insertQuery(request, sqlQuery));
                                     sqlQuery = "INSERT INTO [DL_Fact_Fabric_Quality_Control_Temp] ";
@@ -236,7 +236,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
                         this.sql.multiple = true;
 
                         // var fs = require("fs");
-                        // var path = "C:\\Users\\jacky.rusly\\Desktop\\fabric.txt";
+                        // var path = "C:\\Users\\leslie.aula\\Desktop\\fabric.txt";
 
                         // fs.writeFile(path, sqlQuery, function (error) {
                         //     if (error) {
