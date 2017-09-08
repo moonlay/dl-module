@@ -14,11 +14,15 @@ var InternNote = DLModels.garmentPurchasing.GarmentInternNote;
 var InvoiceNoteManager = require('./invoice-note-manager');
 var CurrencyManager = require('../master/currency-manager');
 var SupplierManager = require('../master/garment-supplier-manager');
+var PurchaseRequestManager = require('./purchase-request-manager');
+var DeliveryOrderManager = require('./delivery-order-manager');
 
 module.exports = class InternNoteManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentPurchasing.collection.GarmentInternNote);
+        this.purchaseRequestManager = new PurchaseRequestManager(db, user);
+        this.deliveryOrderManager = new DeliveryOrderManager(db, user);
         this.invoiceNoteManager = new InvoiceNoteManager(db, user);
         this.currencyManager = new CurrencyManager(db, user);
         this.supplierManager = new SupplierManager(db, user);
@@ -380,16 +384,110 @@ module.exports = class InternNoteManager extends BaseManager {
 
     pdf(id, offset) {
         return new Promise((resolve, reject) => {
-            this.getSingleByIdOrDefault(id)
+            this.getSingleById(id)
                 .then(internNote => {
 
-                    var getDefinition = require('../../pdf/definitions/garment-intern-note');
-                    var definition = getDefinition(internNote, offset);
+                    var listDOid = internNote.items.map(invoiceNote => {
+                        var invoiceItem = invoiceNote.items.map(dataItem => {
+                            return dataItem.deliveryOrderId.toString()
+                        })
+                        invoiceItem = [].concat.apply([], invoiceItem);
+                        return invoiceItem;
+                    });
+                    listDOid = [].concat.apply([], listDOid);
+                    listDOid = listDOid.filter(function (elem, index, self) {
+                        return index == self.indexOf(elem);
+                    })
 
-                    var generatePdf = require('../../pdf/pdf-generator');
-                    generatePdf(definition)
-                        .then(binary => {
-                            resolve(binary);
+                    var getListDO = [];
+                    for (var doID of listDOid) {
+                        if (ObjectId.isValid(doID)) {
+                            getListDO.push(this.deliveryOrderManager.getSingleByIdOrDefault(doID, ["_id", "no", "items.fulfillments.purchaseOrderId", "items.fulfillments.purchaseRequestId", "items.fulfillments.product._id", "items.fulfillments.corrections"]));
+                        }
+                    }
+                    Promise.all(getListDO)
+                        .then((listDO) => {
+                            var listCorretion = listDO.map(_do => {
+                                var _listDO = _do.items.map(doItem => {
+                                    var _items = doItem.fulfillments.map(fulfillment => {
+                                        var correction = fulfillment.corrections ? fulfillment.corrections[fulfillment.corrections.length - 1] : {};
+                                        return {
+                                            doId: _do._id,
+                                            doNo: _do.no,
+                                            doPOid: fulfillment.purchaseOrderId,
+                                            doPRid: fulfillment.purchaseRequestId,
+                                            doProductid: fulfillment.product._id,
+                                            doCorrection: fulfillment.correction || {},
+                                        }
+                                    });
+                                    _items = [].concat.apply([], _items);
+                                    return _items;
+                                })
+                                _listDO = [].concat.apply([], _listDO);
+                                return _listDO;
+                            });
+                            listCorretion = [].concat.apply([], listCorretion);
+                            listCorretion = listCorretion.filter(function (elem, index, self) {
+                                return index == self.indexOf(elem);
+                            })
+
+                            var listPRid = internNote.items.map(invoiceNote => {
+                                var invoiceItem = invoiceNote.items.map(dataItem => {
+                                    var _items = dataItem.items.map(item => {
+                                        return item.purchaseRequestId.toString()
+                                    });
+                                    _items = [].concat.apply([], _items);
+                                    return _items;
+                                })
+                                invoiceItem = [].concat.apply([], invoiceItem);
+                                return invoiceItem;
+                            });
+                            listPRid = [].concat.apply([], listPRid);
+                            listPRid = listPRid.filter(function (elem, index, self) {
+                                return index == self.indexOf(elem);
+                            })
+
+                            var getListPR = [];
+                            for (var pr of listPRid) {
+                                if (ObjectId.isValid(pr)) {
+                                    getListPR.push(this.purchaseRequestManager.getSingleByIdOrDefault(pr, ["_id", "no", "unit"]));
+                                }
+                            }
+
+                            Promise.all(getListPR)
+                                .then((listPR) => {
+                                    internNote.items.map(invoiceNote => {
+                                        invoiceNote.items.map(dataItem => {
+                                            dataItem.items.map(item => {
+                                                var pr = listPR.find((PR) => PR._id.toString() === item.purchaseRequestId.toString())
+                                                var correction = listCorretion.find((cItem) =>
+                                                    cItem.doId.toString() == dataItem.deliveryOrderId.toString() &&
+                                                    cItem.doNo == dataItem.deliveryOrderNo &&
+                                                    cItem.doPRid.toString() == item.purchaseRequestId.toString() &&
+                                                    cItem.doProductid.toString() == item.product.toString() &&
+                                                    cItem.doPOid.toString() == item.purchaseOrderId.toString());
+
+                                                item.correction = correction ? correction.doCorrection : {};
+                                                item.unit = pr.unit.code || "";
+                                            });
+                                        })
+                                    });
+
+                                    var getDefinition = require('../../pdf/definitions/garment-intern-note');
+                                    var definition = getDefinition(internNote, offset);
+
+                                    var generatePdf = require('../../pdf/pdf-generator');
+                                    generatePdf(definition)
+                                        .then(binary => {
+                                            resolve(binary);
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
                         })
                         .catch(e => {
                             reject(e);
@@ -398,8 +496,6 @@ module.exports = class InternNoteManager extends BaseManager {
                 .catch(e => {
                     reject(e);
                 });
-
         });
     }
-
-};
+}
