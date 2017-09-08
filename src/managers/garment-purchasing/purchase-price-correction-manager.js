@@ -61,7 +61,9 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
 
                     if (!valid.date || valid.date == '')
                         errors["date"] = i18n.__("garmentPurchaseCorrection.date.isRequired:%s is required", i18n.__("garmentPurchaseCorrection.date._:Correction Date"));
-
+                    else if(new Date(valid.date) > new Date())
+                        errors["date"] = i18n.__("garmentPurchaseCorrection.date.mustBeLessEqual:%s must be less than or equals today's", i18n.__("garmentPurchaseCorrection.date._:Correction Date"));
+                         
                     if (!valid.deliveryOrder || valid.deliveryOrder == '')
                         errors["deliveryOrder"] = i18n.__("garmentPurchaseCorrection.deliveryOrder.isRequired:%s is required", i18n.__("garmentPurchaseCorrection.deliveryOrder._:Delivery Order"));
                     else if (!_deliveryOrder)
@@ -205,7 +207,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                     }
                 }
 
-                return this.deliveryOrderManager.update(deliveryOrder)
+                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
                     .then((result) => {
                         return Promise.resolve(purchasePriceCorrection);
                     })
@@ -278,7 +280,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                             fulfillment.corrections.push(_correction);
                         }
                     }
-                    return this.purchaseOrderManager.update(purchaseOrder);
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 });
             jobs.push(job);
         })
