@@ -76,6 +76,7 @@ module.exports = {
             CustomsManager: require('./src/managers/garment-purchasing/customs-manager'),
             InvoiceNoteManager: require('./src/managers/garment-purchasing/invoice-note-manager'),
             UnitReceiptNoteManager: require('./src/managers/garment-purchasing/unit-receipt-note-manager'),
+            InternNoteManager: require('./src/managers/garment-purchasing/intern-note-manager'),
         },
         production: {
             spinning: {

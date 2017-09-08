@@ -105,6 +105,7 @@ describe('#dl-module', function (done) {
     test('@GARMENT PURCHASING/CUSTOMS', './garment-purchasing/customs');
     test('@GARMENT PURCHASING/INVOICE NOTE', './garment-purchasing/invoice-note');
     test('@GARMENT PURCHASING/UNIT RECEIPT NOTE', './garment-purchasing/unit-receipt-note');
+    test('@GARMENT PURCHASING/INTERN NOTE', './garment-purchasing/intern-note');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
