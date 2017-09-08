@@ -170,7 +170,7 @@ module.exports = function (data, offset) {
         }
 
         if(data.correctionType === "Harga Total") {
-            pricePerUnit = item.pricePerUnit;
+            pricePerUnit = "-";
         }
 
         if(item.purchaseOrderInternal) {
@@ -217,7 +217,7 @@ module.exports = function (data, offset) {
             text: item.quantity,
             style: ['size08', 'right']
         }, {
-            text: pricePerUnit.toFixed(4),
+            text: pricePerUnit === "-" ? pricePerUnit : pricePerUnit.toFixed(4),
             style: ['size08', 'right']
         }, {
             text: data.correctionType != "Harga Total" ? (pricePerUnit * item.quantity).toFixed(4) : priceTotal.toFixed(4),
