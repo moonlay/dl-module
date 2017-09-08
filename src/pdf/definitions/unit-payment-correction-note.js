@@ -127,7 +127,44 @@ module.exports = function (unitPaymentCorrection, offset) {
         }
     ];
 
-    var tbody = items.map(function (item, index) {
+if (unitPaymentCorrection.correctionType === "Jumlah") {
+   var tbody = items.map(function (item, index) {
+        return [{
+            text: (index + 1).toString() || '',
+            style: ['size08', 'center']
+        }, {
+                text: item.product.name,
+                style: ['size08', 'left']
+            }, {
+                text: `${item.quantity * -1}   ${item.uom.unit}`,
+                style: ['size08', 'right']
+            }, {
+                columns: [{
+                    width: '20%',
+                    text: currency,
+                    style: ['size08']
+                }, {
+                        width: '*',
+                        text: parseFloat(item.pricePerUnit).toLocaleString(locale, locale.currency),
+                        style: ['size08', 'right']
+                    }]
+            }, {
+                columns: [{
+                    width: '20%',
+                    text: currency,
+                    style: ['size08']
+                }, {
+                        width: '*',
+                        text: (parseFloat(item.priceTotal * -1).toLocaleString(locale, locale.currency)),
+                        style: ['size08', 'right']
+                    }]
+            }, {
+                text: item.prNo,
+                style: ['size08', 'left']
+            }];
+    });
+    } else {
+     var tbody = items.map(function (item, index) {
         return [{
             text: (index + 1).toString() || '',
             style: ['size08', 'center']
@@ -154,14 +191,15 @@ module.exports = function (unitPaymentCorrection, offset) {
                     style: ['size08']
                 }, {
                         width: '*',
-                        text: parseFloat(item.priceTotal).toLocaleString(locale, locale.currency),
+                        text: (parseFloat(item.priceTotal).toLocaleString(locale, locale.currency)),
                         style: ['size08', 'right']
                     }]
             }, {
                 text: item.prNo,
                 style: ['size08', 'left']
             }];
-    });
+       });    
+    }
 
     tbody = tbody.length > 0 ? tbody : [
         [{
@@ -183,11 +221,19 @@ module.exports = function (unitPaymentCorrection, offset) {
         priceTotal: 0
     };
 
-    var _jumlah = (items.length > 0 ? items : [initialValue])
-        .map(item => item.priceTotal)
-        .reduce(function (prev, curr, index, arr) {
-            return prev + curr;
-        }, 0);
+if (unitPaymentCorrection.correctionType === "Jumlah") {
+       var _jumlah = (items.length > 0 ? items : [initialValue])
+          .map(item => item.priceTotal)
+           .reduce(function (prev, curr, index, arr) {
+               return (prev + curr) * -1;
+           }, 0);
+    } else {
+       var _jumlah = (items.length > 0 ? items : [initialValue])
+          .map(item => item.priceTotal)
+           .reduce(function (prev, curr, index, arr) {
+               return prev + curr;
+           }, 0);
+    }
 
     var useIncomeTax = unitPaymentCorrection.useIncomeTax ? _jumlah * 0.1 : 0;
     var useVAT = unitPaymentCorrection.useVat ? _jumlah * (unitPaymentCorrection.unitPaymentOrder.vatRate / 100) : 0;
