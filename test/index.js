@@ -6,7 +6,7 @@ function test(name, path) {
 
 
 describe('#dl-module', function (done) {
-    this.timeout(2 * 60000);
+    this.timeout(60 * 60000);
 
     // Auth
     test('@AUTH/ACCOUNT', './auth/account');
@@ -106,6 +106,7 @@ describe('#dl-module', function (done) {
     test('@GARMENT PURCHASING/INVOICE NOTE', './garment-purchasing/invoice-note');
     test('@GARMENT PURCHASING/PURCHASE PRICE CORRECTION', './garment-purchasing/purchase-price-correction');
     test('@GARMENT PURCHASING/UNIT RECEIPT NOTE', './garment-purchasing/unit-receipt-note');
+    test('@GARMENT PURCHASING/PURCHASE QUANTITY CORRECTION', './garment-purchasing/purchase-quantity-correction');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
