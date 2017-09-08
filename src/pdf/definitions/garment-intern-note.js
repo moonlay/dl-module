@@ -13,6 +13,7 @@ module.exports = function (data, offset) {
                     productDesc: item.product.description,
                     quantity: item.deliveredQuantity,
                     uom: item.purchaseOrderUom.unit,
+                    unit: item.unit,
                     price: item.pricePerDealUnit,
                     priceTotal: item.pricePerDealUnit * item.deliveredQuantity
                 }
@@ -24,6 +25,36 @@ module.exports = function (data, offset) {
         return invoiceItem;
     });
     items = [].concat.apply([], items);
+
+    var useIncomeTax = data.items
+        .map((item) => item.useIncomeTax)
+        .reduce((prev, curr, index) => {
+            return prev && curr
+        }, true);
+
+    var useVat = data.items
+        .map((item) => item.useVat)
+        .reduce((prev, curr, index) => {
+            return prev && curr
+        }, true);
+
+    var vatRate = 0;
+    if (useVat) {
+        vatRate = data.items[0].vat.rate;
+    }
+
+    var sumByUnit = [];
+    items.reduce(function (res, value) {
+        if (!res[value.unit]) {
+            res[value.unit] = {
+                priceTotal: 0,
+                unit: value.unit
+            };
+            sumByUnit.push(res[value.unit])
+        }
+        res[value.unit].priceTotal += value.priceTotal
+        return res;
+    }, {});
 
     var locale = global.config.locale;
     var moment = require('moment');
@@ -217,7 +248,232 @@ module.exports = function (data, offset) {
         }
     }];
 
-    var footer = ['\n\n\n\n\n', {
+    var unitK1 = sumByUnit.find((item) => item.unit.toUpperCase() == "C2A");
+    var unitK2 = sumByUnit.find((item) => item.unit.toUpperCase() == "C2B");
+    var unitK3 = sumByUnit.find((item) => item.unit.toUpperCase() == "C2C");
+    var unitK4 = sumByUnit.find((item) => item.unit.toUpperCase() == "C1A");
+    var unit2D = sumByUnit.find((item) => item.unit.toUpperCase() == "C1B");
+    var sum = sumByUnit.map(item => item.priceTotal)
+        .reduce(function (prev, curr, index, arr) {
+            return prev + curr;
+        }, 0);
+    var sumByCurrency = sum * data.currency.rate;
+    var incomeTaxTotal = useIncomeTax ? sumByCurrency * 0.1 : 0;
+    var vatTotal = useVat ? sumByCurrency * vatRate / 100 : 0;
+    var sumTotal = sumByCurrency - vatTotal + incomeTaxTotal;
+
+    var subFooter = [
+        {
+            text: '\n',
+            style: ['size06']
+        },
+        {
+            columns: [
+                {
+                    stack: [
+                        {
+                            columns: [
+                                {
+                                    width: '25%',
+                                    text: 'Total K1 (2A)'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: unitK1 ? parseFloat(unitK1.priceTotal).toLocaleString(locale, locale.currency) : ""
+                                }
+                            ]
+                        },
+                        {
+                            columns: [
+                                {
+                                    width: '25%',
+                                    text: 'Total K2 (2B)'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: unitK2 ? parseFloat(unitK2.priceTotal).toLocaleString(locale, locale.currency) : ""
+                                }
+                            ]
+                        },
+                        {
+                            columns: [
+                                {
+                                    width: '25%',
+                                    text: 'Total K3 (2C)'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: unitK3 ? parseFloat(unitK3.priceTotal).toLocaleString(locale, locale.currency) : ""
+                                }
+                            ]
+                        },
+                        {
+                            columns: [
+                                {
+                                    width: '25%',
+                                    text: 'Total K4 (1)'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: unitK4 ? parseFloat(unitK4.priceTotal).toLocaleString(locale, locale.currency) : ""
+                                }
+                            ]
+                        },
+                        {
+                            columns: [
+                                {
+                                    width: '25%',
+                                    text: 'Total 2D'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: unit2D ? parseFloat(unit2D.priceTotal).toLocaleString(locale, locale.currency) : ""
+                                }
+                            ]
+                        },
+                    ]
+                },
+                {
+                    stack: [
+                        {
+                            columns: [
+                                {
+                                    width: '45%',
+                                    text: 'Total Harga Pokok (DPP)'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: parseFloat(sum).toLocaleString(locale, locale.currency)
+                                }
+                            ]
+                        },
+                        {
+                            columns: [
+                                {
+                                    width: '45%',
+                                    text: 'Mata Uang'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: data.currency.code
+                                }
+                            ]
+                        },
+                        {
+                            columns: [
+                                {
+                                    width: '45%',
+                                    text: 'Total Harga Pokok (Rp)'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: parseFloat(sum * data.currency.rate).toLocaleString(locale, locale.currency)
+                                }
+                            ]
+                        },
+                        {
+                            columns: [
+                                {
+                                    width: '45%',
+                                    text: 'Total Nota Koreksi'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: parseFloat(sum).toLocaleString(locale, locale.currency)
+                                }
+                            ]
+                        },
+                        {
+                            columns: [
+                                {
+                                    width: '45%',
+                                    text: 'Total Nota PPN'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: parseFloat(incomeTaxTotal).toLocaleString(locale, locale.currency)
+                                }
+                            ]
+                        },
+                        {
+                            columns: [
+                                {
+                                    width: '45%',
+                                    text: 'Total Nota PPH'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: parseFloat(vatTotal).toLocaleString(locale, locale.currency)
+                                }
+                            ]
+                        },
+                        {
+                            columns: [
+                                {
+                                    width: '45%',
+                                    text: 'Total yang harus dibayar'
+                                },
+                                {
+                                    width: '2%',
+                                    text: ':'
+                                },
+                                {
+                                    width: '*',
+                                    text: parseFloat(sumTotal).toLocaleString(locale, locale.currency)
+                                }
+                            ]
+                        },
+                    ]
+                }
+            ],
+            style: ['size07']
+        }];
+
+    var footer = ['\n\n', {
         alignment: "center",
         table: {
             widths: ['33%', '33%', '33%'],
@@ -266,7 +522,7 @@ module.exports = function (data, offset) {
         pageSize: 'A5',
         pageOrientation: 'portrait',
         pageMargins: 20,
-        content: [].concat(header, subHeader, table, footer),
+        content: [].concat(header, subHeader, table, subFooter, footer),
         styles: {
             size06: {
                 fontSize: 6
