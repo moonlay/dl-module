@@ -144,7 +144,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                     if (!valid.date || valid.date == '')
                         errors["date"] = i18n.__("PurchaseQuantityCorrection.date.isRequired:%s is required", i18n.__("PurchaseQuantityCorrection.date._:Correction Date"));
 
-                    if (valid.items) {
+                    if (valid.items && !ObjectId.isValid(valid._id)) {
                         if (valid.items.length > 0) {
                             var itemErrors = [];
 
@@ -342,6 +342,22 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
 
         return Promise.all(jobs).then((results) => {
             return Promise.resolve(purchaseQuantityCorrection);
+        })
+    }
+
+    getPdf(data, offset) {
+        return new Promise((resolve, reject) => {
+            var getDefinition = require("../../pdf/definitions/garment-purchase-quantity-correction");
+            var definition = getDefinition(data, offset);
+
+            var generatePdf = require("../../pdf/pdf-generator");
+            generatePdf(definition)
+                .then((binary) => {
+                    resolve(binary);
+                })
+                .catch((e) => {
+                    reject(e);
+                });
         })
     }
 
