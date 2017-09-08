@@ -377,4 +377,29 @@ module.exports = class InternNoteManager extends BaseManager {
 
         return this.collection.createIndexes([dateIndex, noIndex]);
     }
+
+    pdf(id, offset) {
+        return new Promise((resolve, reject) => {
+            this.getSingleByIdOrDefault(id)
+                .then(internNote => {
+
+                    var getDefinition = require('../../pdf/definitions/garment-intern-note');
+                    var definition = getDefinition(internNote, offset);
+
+                    var generatePdf = require('../../pdf/pdf-generator');
+                    generatePdf(definition)
+                        .then(binary => {
+                            resolve(binary);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+
+        });
+    }
+
 };
