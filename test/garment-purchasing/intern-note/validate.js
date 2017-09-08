@@ -199,3 +199,27 @@ it("#09. should error when create new data with different useIncomeTax on items"
             done(e);
         });
 });
+
+var createdId = {}
+it("#10. should success when create new data", function (done) {
+    var data = Object.assign({}, interNoteData);
+    interNoteDataUtil.getNewTestData()
+        .then((data) => {
+            data.should.be.Object();
+            createdId = data._id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it('#11. should success when generate pdf intern note', function (done) {
+    internNoteManager.pdf(createdId, 7)
+        .then(results => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
