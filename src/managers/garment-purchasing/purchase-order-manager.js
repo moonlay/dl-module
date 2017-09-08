@@ -1774,6 +1774,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             item["Jumlah"] = data.items[0].defaultQuantity ? data.items[0].defaultQuantity : '';
             item["Satuan"] = data.items[0].defaultUom.unit ? data.items[0].defaultUom.unit : '';
             item["Harga Budget"] = data.items[0].budgetPrice ? data.items[0].budgetPrice : '';
+            item["Staff"] = data._createdBy ? data._createdBy : '';
 
             xls.data.push(item);
         }
@@ -1794,6 +1795,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         xls.options["Jumlah"] = "number";
         xls.options["Satuan"] = "string";
         xls.options["Harga Budget"] = "number";
+        xls.options["Staff"] = "string";
 
         if (query.dateFrom && query.dateTo) {
             xls.name = `Purchase Order Internal  Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
@@ -1812,9 +1814,16 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
 
     getReport(info) {
+        // var _defaultFilter = {
+        //     _deleted: false
+        // },
+
         var _defaultFilter = {
-            _deleted: false
+            $and: [{ _createdBy: { $ne: "dev2" } },
+                { _createdBy: { $ne: "dev" } },
+                { _deleted: false }]
         },
+
             noFilter = {},
             categoryFilter = {},
             unitFilter = {},
@@ -1848,7 +1857,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         }
 
         var filterDate = {
-            "_createdDate": {
+            "date": {
                 $gte: new Date(dateFrom),
                 $lte: new Date(dateTo)
             }
