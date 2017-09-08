@@ -21,8 +21,10 @@ class PurchaseRequestDataUtil {
                 var buyer = results[5];
 
                 var data = {
+                    _createdBy: "Unit Test",
                     no: `UT/PR/GARMENT${codeGenerator()}`,
                     roNo: `UT/RO/PR/GARMENT${codeGenerator()}`,
+                    refNo:"UT/PR/GARMENT/01",
                     buyerId: buyer._id,
                     buyer: buyer,
                     artikel: "UT/ARTIKEL1",
@@ -47,23 +49,23 @@ class PurchaseRequestDataUtil {
                         category: category,
                         isUsed: false,
                         purchaseOrderIds: [],
-                        colors:["WHITE","BLACK"],
+                        colors: ["WHITE", "BLACK"],
                         remark: ""
                     }, {
-                        refNo: "UT/PR/GARMENT/02",
-                        id_po: `UT/PR/IDPO/02${codeGenerator("UT/PR/IDPO/02")}`,
-                        productId: product02._id,
-                        product: product02,
-                        quantity: 20,
-                        budgetPrice: 20000,
-                        uom: uom,
-                        categoryId: category._id,
-                        category: category,
-                        isUsed: false,
-                        purchaseOrderIds: [],
-                        colors:["WHITE","BLACK"],
-                        remark: ""
-                    }]
+                            refNo: "UT/PR/GARMENT/02",
+                            id_po: `UT/PR/IDPO/02${codeGenerator("UT/PR/IDPO/02")}`,
+                            productId: product02._id,
+                            product: product02,
+                            quantity: 20,
+                            budgetPrice: 20000,
+                            uom: uom,
+                            categoryId: category._id,
+                            category: category,
+                            isUsed: false,
+                            purchaseOrderIds: [],
+                            colors: ["WHITE", "BLACK"],
+                            remark: ""
+                        }]
                 };
                 return Promise.resolve(data);
             });
