@@ -176,6 +176,9 @@ module.exports = class CustomsManager extends BaseManager {
                                     if(!dOrder){
                                         itemError["no"] = i18n.__("Surat Jalan tidak ditemukan", i18n.__("Customs.deliveryOrders.no._:No")); //Surat Jalan harus dipilih
                                         itemError["dOrderNumber"] = i18n.__(`${item.no}`, i18n.__("Customs.deliveryOrders.dOrderNumber._:DOrderNumber"));
+                                    }else if(!dOrder.useCustoms){
+                                        itemError["no"] = i18n.__("Surat Jalan tidak dikenakan bea cukai", i18n.__("Customs.deliveryOrders.no._:No")); //Surat Jalan harus dipilih
+                                        itemError["dOrderNumber"] = i18n.__(`${item.no}`, i18n.__("Customs.deliveryOrders.dOrderNumber._:DOrderNumber"));
                                     }
                                 }
                                 itemErrors.push(itemError);

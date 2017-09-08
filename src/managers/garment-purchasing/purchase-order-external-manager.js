@@ -285,17 +285,24 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     if (!items.dealQuantity || items.dealQuantity === 0) {
                                         itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
                                     }
-                                    else if (dealUomId.equals(defaultUomId) && items.dealQuantity > items.defaultQuantity) {
-                                        itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isGreater:%s must not be greater than defaultQuantity", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
+                                    else if (items.dealQuantity * items.priceBeforeTax > items.defaultQuantity * items.budgetPrice) {
+                                        itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Total price"));
                                     }
+                                    // else if (dealUomId.equals(defaultUomId) && items.dealQuantity > items.defaultQuantity) {
+                                    //     itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isGreater:%s must not be greater than defaultQuantity", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
+                                    // }
                                     if (!items.dealUom || !items.dealUom.unit || items.dealUom.unit === "") {
                                         itemError["dealUom"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
                                     }
                                     if (!items.priceBeforeTax || items.priceBeforeTax === 0) {
                                         itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
-                                    } else if (items.priceBeforeTax > items.budgetPrice) {
-                                        itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isGreater:%s must not be greater than budget price", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
                                     }
+                                    else if (items.dealQuantity * items.priceBeforeTax > items.defaultQuantity * items.budgetPrice) {
+                                        itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Total price"));
+                                    }
+                                    // else if (items.priceBeforeTax > items.budgetPrice) {
+                                    //     itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isGreater:%s must not be greater than budget price", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
+                                    // }
                                     var price = (items.priceBeforeTax.toString()).split(",");
                                     if (price[1] != undefined || price[1] !== "" || price[1] !== " ") {
                                         {

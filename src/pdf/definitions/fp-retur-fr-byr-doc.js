@@ -26,7 +26,7 @@ module.exports = function (fpRetur, offset) {
         sumWeight+=(item.item.weight * item.item.returQuantity);
     }
 
-    sumLengthY=sumLengthM / 0.9144;
+    // sumLengthY=sumLengthM / 0.9144;
 
     var locale = global.config.locale; 
 
@@ -34,6 +34,9 @@ module.exports = function (fpRetur, offset) {
     moment.locale(locale.name); 
 
     var header = [{
+        text: 'FM.7.MK-03-074',
+        style: ['size08', 'right']
+    },{
         columns: [{
             columns: [{
                 width: '*',
@@ -49,7 +52,6 @@ module.exports = function (fpRetur, offset) {
 
     var left=[
             {
-                
                 columns: [
                     {
                         width: '25%',
@@ -169,9 +171,9 @@ module.exports = function (fpRetur, offset) {
             text: 'SAT',
             style: 'tableHeader'
         },{
-            text: 'YDS',
-            style: 'tableHeader'
-        }, {
+        //     text: 'YDS',
+        //     style: 'tableHeader'
+        // }, {
             text: 'MTR',
             style: 'tableHeader'
         }, {
@@ -208,9 +210,9 @@ module.exports = function (fpRetur, offset) {
                 text: detail.item.uom,
                 style: ['size06', 'center']
             },{
-                text: parseFloat((detail.item.length * detail.item.returQuantity) / 0.9144).toLocaleString(locale, locale.decimal),
-                style: ['size06', 'center']
-            },{
+            //     text: parseFloat((detail.item.length * detail.item.returQuantity) / 0.9144).toLocaleString(locale, locale.decimal),
+            //     style: ['size06', 'center']
+            // },{
                 text: parseFloat(detail.item.length * detail.item.returQuantity).toLocaleString(locale, locale.decimal),
                 style: ['size06', 'center']
             },{
@@ -227,9 +229,9 @@ module.exports = function (fpRetur, offset) {
                 text: parseFloat(sumRetur).toLocaleString(locale, locale.decimal),
                 style: ['size06', 'center']
             },"",{
-                text: parseFloat(sumLengthY).toLocaleString(locale, locale.decimal),
-                style: ['size06', 'center']
-            },{
+            //     text: parseFloat(sumLengthY).toLocaleString(locale, locale.decimal),
+            //     style: ['size06', 'center']
+            // },{
                 text: parseFloat(sumLengthM).toLocaleString(locale, locale.decimal),
                 style: ['size06', 'center']
             },{
@@ -247,7 +249,7 @@ module.exports = function (fpRetur, offset) {
 
     var table = [{
         table: {
-            widths: ['3%', '18%', '10%', '8%', '8%', '12%', '7%', '8%', '6%','8%', '8%', '6%'],
+            widths: ['3%', '18%', '10%', '8%', '8%', '12%', '7%', '10%', '6%', '10%', '10%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot)
         }
@@ -259,11 +261,15 @@ module.exports = function (fpRetur, offset) {
                 style: ['size08', 'left']
             },{
             columns: [{
-                width: '50%',
+                width: '35%',
+                stack: ['\n','Audit ' , '\n\n\n', '(  .............................  )'],
+                style: ['center']
+            },{
+                width: '35%',
                 stack: ['\n','Mengetahui ' , '\n\n\n', '(  .............................  )'],
                 style: ['center']
             }, {
-                    width: '50%',
+                    width: '30%',
                     stack: ['\n','Yang Menerima', '\n\n\n', '(  .............................  )'],
                     style: ['center']
                 }],
