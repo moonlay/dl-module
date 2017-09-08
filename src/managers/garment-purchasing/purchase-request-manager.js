@@ -377,7 +377,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    getDataPRMonitoring(unitId, categoryId, PRNo, dateFrom, dateTo, state, offset, createdBy) {//all user or by user (createdBy)
+    getDataPRMonitoring(unitId, categoryId,buyerId, PRNo, dateFrom, dateTo, state, offset, createdBy) {//all user or by user (createdBy)
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -397,6 +397,12 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     if (categoryId !== "undefined" && categoryId !== "" && categoryId !== undefined) {
                         Object.assign(query, {
                             "items.categoryId": new ObjectId(categoryId)
+                        });
+                    }
+
+                    if (buyerId !== "undefined" && buyerId !== "" && buyerId !== undefined) {
+                        Object.assign(query, {
+                            "buyerId": new ObjectId(buyerId)
                         });
                     }
 
@@ -427,15 +433,43 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         isPosted: true
                     });
 
-                    this.collection.find(query).toArray()
-                        .then((purchaseRequests) => {
-                            resolve(purchaseRequests);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
+                    return this.collection
+                    .aggregate([
+                        {"$unwind" : "$items"}
+                        ,{"$match" : query }
+                        ,{"$project" : {
+                            "prDate":"$date",
+                            "shipmentDate":"$shipmentDate",
+                            "roNo" : "$roNo",
+                            "buyer":"$buyer.name",
+                            "artikel":"$artikel",
+                            "prNo":"$no",
+                            "refNo":"$items.refNo",
+                            "productName":"$items.product.name",
+                            "division":"$unit.division.name",
+                            "unit":"$unit.name",
+                            "category" : "$items.category.name",
+                            "productCode" : "$items.product.code",
+                            "productQty" : "$items.quantity",
+                            "productUom" : "$items.product.uom.unit",
+                            "expected" : "$expectedDeliveryDate",
+                            "remark":"$items.remark",
+                            "status":"$status",
+                            "deliveryOrderNos":"$items.deliveryOrderNos"
+                        }},
+                        {"$sort" : {
+                            "_updatedDate" : -1
+                        }}
+                    ])
+                    .toArray()
+                    .then(results => {
+                        resolve(results);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    });
                 });
-            });
+        });
     }
 
     _createIndexes() {
