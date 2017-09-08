@@ -164,6 +164,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     if (valid.items && valid.items.length > 0) {
                         var deliveryOrderItemErrors = [];
                         for (var doItem of valid.items || []) {
+                            var _poExternal = {};
                             var deliveryOrderItemError = {};
                             if (Object.getOwnPropertyNames(doItem).length === 0) {
                                 deliveryOrderItemError["purchaseOrderExternalId"] = i18n.__("DeliveryOrder.items.purchaseOrderExternalId.isRequired:%s is required", i18n.__("DeliveryOrder.items.purchaseOrderExternalId._:PurchaseOrderExternal")); //"Purchase order external tidak boleh kosong";
@@ -172,7 +173,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                 deliveryOrderItemError["purchaseOrderExternalId"] = i18n.__("DeliveryOrder.items.purchaseOrderExternalId.isRequired:%s is required", i18n.__("DeliveryOrder.items.purchaseOrderExternalId._:PurchaseOrderExternal")); //"Purchase order external tidak boleh kosong";
                             }
                             else {
-                                var _poExternal = _poExternals.find(poExternal => poExternal._id.toString() == doItem.purchaseOrderExternalId.toString())
+                                _poExternal = _poExternals.find(poExternal => poExternal._id.toString() == doItem.purchaseOrderExternalId.toString())
                                 if (_poExternal) {
                                     if (!_poExternal.isPosted) {
                                         deliveryOrderItemError["purchaseOrderExternalId"] = i18n.__("DeliveryOrder.items.purchaseOrderExternalId.isPosted:%s is need to be posted", i18n.__("DeliveryOrder.items.purchaseOrderExternalId._:PurchaseOrderExternal"));
@@ -187,8 +188,11 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             for (var doFulfillment of doItem.fulfillments || []) {
                                 var fulfillmentError = {};
 
+                                var poExternalItem = _poExternal.items.find((item) =>  item.poId.toString() === doFulfillment.purchaseOrderId.toString() && item.product._id.toString() === doFulfillment.product._id.toString() )
                                 if (Object.getOwnPropertyNames(doFulfillment).length === 0) {
                                     fulfillmentError["purchaseOrderId"] = i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId.isRequired:%s is required", i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId._:PurchaseOrderInternal"));
+                                } else if (poExternalItem.isClosed) {
+                                    fulfillmentError["purchaseOrderId"] = i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId.isRequired:%s is closed", i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId._:PurchaseOrderExternal"));
                                 }
                                 if (!doFulfillment.deliveredQuantity || doFulfillment.deliveredQuantity === 0) {
                                     fulfillmentError["deliveredQuantity"] = i18n.__("DeliveryOrder.items.fulfillments.deliveredQuantity.isRequired:%s is required or not 0", i18n.__("DeliveryOrder.items.fulfillments.deliveredQuantity._:DeliveredQuantity")); //"Jumlah barang diterima tidak boleh kosong";

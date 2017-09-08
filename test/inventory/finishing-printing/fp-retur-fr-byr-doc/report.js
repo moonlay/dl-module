@@ -107,7 +107,34 @@ it("#04. should success get report with filter Retur No", function (done) {
         });
 });
 
-it("#05. should success get report with filter buyer", function (done) {
+it("#05. should success get report with filter destination", function (done) {
+    instanceManager.getReportMonitoring({filter : {destination : createdData.destination}}, false)
+        .then((data) => {
+            data.should.instanceof(Object);
+            data.should.have.property("data");
+            data.should.have.property("count");
+            data.should.have.property("size");
+            data.should.have.property("total");
+            data.should.have.property("page");
+            data.data.should.instanceof(Array);
+            instanceManager.getXls(data)
+                .then(xls => {
+                    xls.should.instanceof(Object);
+                    xls.should.have.property("data");
+                    xls.should.have.property("options");
+                    xls.should.have.property("name");
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#06. should success get report with filter buyer", function (done) {
     instanceManager.getReportMonitoring({filter : {buyer : createdData.buyer.code}}, false)
         .then((data) => {
             data.should.instanceof(Object);
@@ -134,7 +161,7 @@ it("#05. should success get report with filter buyer", function (done) {
         });
 });
 
-it("#06. should success get report with filter production order No", function (done) {
+it("#07. should success get report with filter production order No", function (done) {
     instanceManager.getReportMonitoring({filter : {productionOrderNo : createdData.details[0].productionOrderNo}}, false)
         .then((data) => {
             data.should.instanceof(Object);
@@ -161,7 +188,7 @@ it("#06. should success get report with filter production order No", function (d
         });
 });
 
-it("#07. should success get report with filter date From", function (done) {
+it("#08. should success get report with filter date From", function (done) {
     instanceManager.getReportMonitoring({filter : {dateFrom : dateAfter}}, false)
         .then((data) => {
             data.should.instanceof(Object);
@@ -188,7 +215,7 @@ it("#07. should success get report with filter date From", function (done) {
         });
 });
 
-it("#08. should success get report with filter date To", function (done) {
+it("#09. should success get report with filter date To", function (done) {
     instanceManager.getReportMonitoring({filter : {dateTo : dateNow}}, false)
         .then((data) => {
             data.should.instanceof(Object);
@@ -215,7 +242,7 @@ it("#08. should success get report with filter date To", function (done) {
         });
 });
 
-it("#09. should success get report with filter date From and date To", function (done) {
+it("#10. should success get report with filter date From and date To", function (done) {
     instanceManager.getReportMonitoring({filter : {dateFrom : dateAfter, dateTo : dateNow}}, false)
         .then((data) => {
             data.should.instanceof(Object);

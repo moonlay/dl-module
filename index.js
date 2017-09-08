@@ -75,6 +75,7 @@ module.exports = {
             DeliveryOrderManager: require('./src/managers/garment-purchasing/delivery-order-manager'),
             CustomsManager: require('./src/managers/garment-purchasing/customs-manager'),
             InvoiceNoteManager: require('./src/managers/garment-purchasing/invoice-note-manager'),
+            UnitReceiptNoteManager: require('./src/managers/garment-purchasing/unit-receipt-note-manager'),
         },
         production: {
             spinning: {
@@ -223,6 +224,7 @@ module.exports = {
         },
         production: {
             factMonitoringEvent: require("./src/etl/production/fact-monitoring-event-etl-manager"),
+            factKanban: require("./src/etl/production/fact-kanban-etl-manager"),
             factProductionOrder: require("./src/etl/production/fact-production-order-etl-manager"),
             factDailyOperations: require("./src/etl/production/fact-daily-operations-etl-manager"),
             factFabricQualityControl: require("./src/etl/production/fact-fabric-quality-control-etl-manager")
