@@ -891,10 +891,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         }
         return newArr;
     }
-     getUnitReceiptReport(query) {
+   getUnitReceiptReport(query,user) {
         return new Promise((resolve, reject) => {
-           var _query = Object.assign({});
-            var deleted = { _deleted: false };
+         
+            var deletedQuery = { _deleted: false };
+            var userQuery = {_createdBy : user.username};
             
 
             var date = new Date();
@@ -907,40 +908,63 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
                 }
             };
-            Object.assign(_query, dateQuery);
-            
-           if (query.no)
-           {
-                Object.assign(_query, 
-                {
-                   "items.purchaseRequestNo": query.no
-                }
-                        );
-           }
-           if (query.unit)
-           {
-                Object.assign(_query, 
-                {
-                   "unit.code": query.unit
-                }
-                        );
-           }
-           if (query.supplier)
-           {
-                Object.assign(_query, 
-                {
-                   "supplier.code": query.supplier
-                }
-                        );
-           }
-            Object.assign(_query, deleted);
+        
+          var noQuery = {};
+            if (query.no !="" && query.no != "undefined"){
+                noQuery = {
+                    "no" : (query.no)
+                };
+            }
+        
+           var purchaseRequestQuery = {};
+              if (query.pr !="" && query.pr != "undefined"){
+                purchaseRequestQuery = {
+                     "items.purchaseRequestNo" : (query.pr)
+                };
+            }
+          
+            var unitQuery = {};
+            if (query.unit !="" && query.unit != "undefined"){
+                unitQuery = {
+                    "unit.code" : (query.unit)
+                };
+            }
 
+            var supplierQuery = {};
+            if (query.supplier !="" && query.supplier != "undefined"){
+                supplierQuery = {
+                    "supplier.code" : (query.supplier)
+                };
+            }
+          
 
+           var Query = { "$and": [userQuery,dateQuery, deletedQuery, supplierQuery, unitQuery, purchaseRequestQuery,noQuery] };
             this.collection
-                .where(_query)
-                .execute()
-                .then(result => {
-                    resolve(result.data);
+                .aggregate([
+                    {"$unwind" : "$items"}
+                    ,{"$unwind" : "$items.product"}
+                    , {"$match" : Query }
+                    ,{"$project" : {
+                        "no" : "$no",
+                        "date" : 1,
+                        "unit" : "$unit.name",
+                        "supplier" : "$supplier.name",
+                        "deliveryorderNo" :"$deliveryOrderNo",
+                        "purchaseRequestNo" : "$items.purchaseRequestNo",
+                        "productCode" : "$items.product.code",
+                        "productName" : "$items.product.name",
+                        "quantity" : "$items.deliveredQuantity",
+                        "unitCode" : "$items.deliveredUom.unit",
+                        "remark" : "$items.remark",
+                    }},
+                   
+                    {"$sort" : {
+                        "date" : 1,
+                    }}
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
                 })
                 .catch(e => {
                     reject(e);
@@ -956,24 +980,22 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             xls.name = '';
 
             var dateFormat = "DD/MM/YYYY";
-
+           
             for(var data of dataReport.data){
-            for(var items of data.items)
-            {
-                var item = {};
+                 var item = {};
                 item["No Bon Terima Unit"] = data.no;
                 item["Tanggal Bon Terima Unit"] = data.date ? moment(data.date).format(dateFormat) : '';
-                item["Unit"] = data.unit.name ? data.unit.name : '';
-                item["Supplier"] = data.supplier.name ? data.supplier.name : '';
-                item["Surat Jalan"] = data.deliveryOrderNo ? data.deliveryOrderNo : '';
-                item["Kode Barang"] = items.product.code ? items.product.code : '';
-                item["Nama Barang"] = items.product.name ? items.product.name : '';
-                item["Jumlah"] = items.deliveredQuantity ? items.deliveredQuantity : '';
-                item["Satuan"] = items.deliveredUom.unit ? items.deliveredUom.unit : '';
-                item["Keterangan"] = items.remark ? items.remark : '';
- 
+                item["Unit"] = data.unit ? data.unit : '';
+                item["Supplier"] = data.supplier ? data.supplier : '';
+                item["Surat Jalan"] = data.deliveryorderNo ? data.deliveryorderNo : '';
+                item["No PR"] = data.purchaseRequestNo ? data.purchaseRequestNo : '';
+                item["Kode Barang"] = data.productCode ? data.productCode : '';
+                item["Nama Barang"] = data.productName ? data.productName : '';
+                item["Jumlah"] = data.quantity ? data.quantity : '';
+                item["Satuan"] = data.unitCode ? data.unitCode : '';
+                item["Keterangan"] = data.remark ? data.remark : '';
                 xls.data.push(item);
-            }
+           
             }
 
             xls.options["No Bon Terima Unit"] = "string";
@@ -981,6 +1003,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             xls.options["Unit"] = "string";
             xls.options["Supplier"] = "string";
             xls.options["Surat Jalan"] = "string";
+            xls.options["No PR"]="string";
             xls.options["Kode Barang"] = "string";
             xls.options["Nama Barang"] = "string";
             xls.options["Jumlah"] = "number";

@@ -12,6 +12,7 @@ var dateBefore;
 var supplier;
 var unit;
 var no;
+var user ={};
 require("should");
 
 
@@ -29,7 +30,7 @@ before('#00. connect db', function (done) {
 });
 
 it("#01. should success when get report with parameter no", function (done) {
-    unitReceiptNoteManager.getUnitReceiptReport({"no" : no})
+    unitReceiptNoteManager.getUnitReceiptReport({"no" : no},user)
         .then((data) => {
             data.should.instanceof(Array);
             done();
@@ -39,7 +40,7 @@ it("#01. should success when get report with parameter no", function (done) {
         });
 });
 it("#02. should success when get report with parameter unit", function (done) {
-    unitReceiptNoteManager.getUnitReceiptReport({"unit" : unit})
+    unitReceiptNoteManager.getUnitReceiptReport({"unit" : unit},user)
         .then((data) => {
             data.should.instanceof(Array);
             done();
@@ -49,7 +50,7 @@ it("#02. should success when get report with parameter unit", function (done) {
         });
 });
 it("#03. should success when get report with parameter supplier", function (done) {
-    unitReceiptNoteManager.getUnitReceiptReport({"supplier" : supplier})
+    unitReceiptNoteManager.getUnitReceiptReport({"supplier" : supplier},user)
         .then((data) => {
             data.should.instanceof(Array);
             done();
@@ -60,7 +61,7 @@ it("#03. should success when get report with parameter supplier", function (done
 });
 
 it("#04. should success when get report with parameter dateFrom", function (done) {
-    unitReceiptNoteManager.getUnitReceiptReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD')})
+    unitReceiptNoteManager.getUnitReceiptReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD')},user)
         .then((data) => {
             data.should.instanceof(Array);
             var result = {
@@ -83,7 +84,7 @@ it("#04. should success when get report with parameter dateFrom", function (done
         });
 });
 it("#05. should success when get report with parameter dateFrom and dateTo", function (done) {
-    unitReceiptNoteManager.getUnitReceiptReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')})
+    unitReceiptNoteManager.getUnitReceiptReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')},user)
         .then((data) => {
             data.should.instanceof(Array);
             var result = {
@@ -107,7 +108,7 @@ it("#05. should success when get report with parameter dateFrom and dateTo", fun
 });
 
 it("#06. should success when get report with no parameter and get excel", function (done) {
-    unitReceiptNoteManager.getUnitReceiptReport({})
+    unitReceiptNoteManager.getUnitReceiptReport({},user)
         .then((data) => {
            
             data.should.instanceof(Array);
