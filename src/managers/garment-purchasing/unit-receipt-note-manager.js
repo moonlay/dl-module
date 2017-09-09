@@ -891,7 +891,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         }
         return newArr;
     }
-   getUnitReceiptReport(query,user) {
+    getUnitReceiptReport(query,user) {
         return new Promise((resolve, reject) => {
          
             var deletedQuery = { _deleted: false };
@@ -910,28 +910,28 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             };
         
           var noQuery = {};
-            if (query.no !="" && query.no != "undefined"){
+            if (query.no ){
                 noQuery = {
                     "no" : (query.no)
                 };
             }
         
            var purchaseRequestQuery = {};
-              if (query.pr !="" && query.pr != "undefined"){
+              if (query.pr ){
                 purchaseRequestQuery = {
                      "items.purchaseRequestNo" : (query.pr)
                 };
             }
           
             var unitQuery = {};
-            if (query.unit !="" && query.unit != "undefined"){
+            if (query.unit){
                 unitQuery = {
                     "unit.code" : (query.unit)
                 };
             }
 
             var supplierQuery = {};
-            if (query.supplier !="" && query.supplier != "undefined"){
+            if (query.supplier){
                 supplierQuery = {
                     "supplier.code" : (query.supplier)
                 };

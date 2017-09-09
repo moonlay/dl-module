@@ -12,7 +12,8 @@ var dateBefore;
 var supplier;
 var unit;
 var no;
-var user ={};
+var user = {username :"unit-test"};
+
 require("should");
 
 
