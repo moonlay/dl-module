@@ -56,6 +56,8 @@ it('#03. should success when create report', function (done) {
     info.supplierId = createdData.supplierId.toString();
     info.dateFrom = createdData._createdDate.toISOString().split("T", "1").toString();
     info.dateTo = createdData._createdDate.toISOString().split("T", "1").toString();
+    info.offset=7;
+    info.user="unit-test";
 
     instanceManager.getMonitoringDO(info)
         .then(result => {
