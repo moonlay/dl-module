@@ -75,7 +75,10 @@ module.exports = {
             DeliveryOrderManager: require('./src/managers/garment-purchasing/delivery-order-manager'),
             CustomsManager: require('./src/managers/garment-purchasing/customs-manager'),
             InvoiceNoteManager: require('./src/managers/garment-purchasing/invoice-note-manager'),
+            PurchasePriceCorrection: require('./src/managers/garment-purchasing/purchase-price-correction-manager'),
             UnitReceiptNoteManager: require('./src/managers/garment-purchasing/unit-receipt-note-manager'),
+            InternNoteManager: require('./src/managers/garment-purchasing/intern-note-manager'),
+            PurchaseQuantityCorrectionManager: require('./src/managers/garment-purchasing/purchase-quantity-correction-manager'),
         },
         production: {
             spinning: {
@@ -166,6 +169,8 @@ module.exports = {
                 deliveryOrder: require("./test/data-util/garment-purchasing/delivery-order-data-util"),
                 customsOrder: require("./test/data-util/garment-purchasing/customs-data-util"),
                 invoiceNoteManager: require('./test/data-util/garment-purchasing/invoice-note-data-util'),
+                purchaseQuantityCorrection: require('./test/data-util/garment-purchasing/purchase-quantity-correction-data-util'),
+                purchasePriceCorrection: require('./test/data-util/garment-purchasing/purchase-price-correction-data-util'),
                 // unitReceiptNote: require("./test/data-util/garment-purchasing/unit-receipt-note-data-util"),
                 // unitPaymentOrder: require("./test/data-util/garment-purchasing/unit-payment-order-data-util"),
                 // unitPaymentPriceCorrectionNot: require("./test/data-util/garment-purchasing/unit-payment-price-correction-note-data-util"),
