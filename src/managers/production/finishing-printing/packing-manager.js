@@ -282,7 +282,13 @@ module.exports = class PackingManager extends BaseManager {
                     errors["date"] = i18n.__("Packing.date.isRequired:%s is required", i18n.__("Packing.date._:Date")); //"Grade harus diisi";
 
                 if (!valid.packingUom || valid.packingUom === '')
-                    errors["packingUom"] = i18n.__("Packing.packingUom.isRequired:%s is required", i18n.__("Packing.packingUom._:Packing UOM")); //"UOM harus diisi";   
+                    errors["packingUom"] = i18n.__("Packing.packingUom.isRequired:%s is required", i18n.__("Packing.packingUom._:Packing UOM")); //"UOM harus diisi";
+
+                if (!valid.deliveryType || valid.deliveryType === '')
+                    errors["deliveryType"] = i18n.__("Packing.deliveryType.isRequired:%s is required", i18n.__("Packing.deliveryType._:Jenis Pengiriman")); //"Jenis Pengiriman Harus Diisi"; 
+
+                if (!valid.finishedProductType || valid.finishedProductType === '')
+                    errors["finishedProductType"] = i18n.__("Packing.finishedProductType.isRequired:%s is required", i18n.__("Packing.finishedProductType._:Jenis Barang Jadi")); //"Jenis Barang Jadi harus diisi"; 
 
                 if (!valid.materialWidthFinish || valid.materialWidthFinish === '')
                     errors["materialWidthFinish"] = i18n.__("Packing.materialWidthFinish.isRequired:%s is required", i18n.__("Packing.materialWidthFinish._:Lebar Finish")); //"UOM harus diisi";   
