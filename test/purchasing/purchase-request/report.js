@@ -54,3 +54,14 @@ it('#03. should success when get data report PR using Parameter', function (done
         });
 
 });
+
+it('#04. should success when get data report PR using Parameter', function (done) {
+    purchaseRequestManager.getDataPRMonitoringAll(purchaseRequest.unitId, purchaseRequest.categoryId, purchaseRequest.budgetId, purchaseRequest.no, new Date(), new Date(), 2, 7, "dev")
+    .then(pr => {
+        pr.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});

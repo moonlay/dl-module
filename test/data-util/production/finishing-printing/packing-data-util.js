@@ -33,6 +33,10 @@ class PackingDataUtil {
                     //material width
                     materialWidthFinish: "test",
 
+                    //Jenis Pengiriman dan Jenis Barang Jadi
+                    deliveryType: "TEST",
+                    finishedProductType: "TEST",
+
                     packingUom: "PCS",
                     colorCode: productionOrder.details[0].code,
                     items: [{
