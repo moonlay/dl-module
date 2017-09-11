@@ -48,6 +48,7 @@ class DeliveryOrderDataUtil {
                             shipmentNo: `SHIPMENT/NO/UT/DO/${codeGenerator()}`,
                             supplier: dataSupplier,
                             isPosted: false,
+                            useCustoms: true,
                             remark: 'Unit Test Delivery Order',
                             items: [{
                                 purchaseOrderExternalId: poEks._id,

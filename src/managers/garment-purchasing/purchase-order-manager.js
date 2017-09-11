@@ -1744,4 +1744,140 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
         return Promise.resolve(xls);
     }*/
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
+
+        for (var data of result.data) {
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["Nomor Purchase Order"] = data ? data.refNo : '';
+            item["Tanggal PO"] = data.date ? moment(new Date(data.date)).format(dateFormat) : '';
+            item["Tanggal Shipment"] = data.shipmentDate ? moment(new Date(data.shipmentDate)).format(dateFormat) : '';
+            item["Nomor RO"] = data.roNo ? data.roNo : '';
+            item["Buyer"] = data.buyer.name ? data.buyer.name : '';
+            item["Artikel"] = data.artikel ? data.artikel : '';
+            item["Unit"] = data.unit.name ? data.unit.name : '';
+            item["Nomor Referensi PR"] = data.items[0].refNo ? data.items[0].refNo : '';
+            item["Kategori"] = data.items[0].category.name ? data.items[0].category.name : '';
+            item["Kode Barang"] = data.items[0].product.code ? data.items[0].product.code : '';
+            item["Nama Barang"] = data.items[0].product.name ? data.items[0].product.name : '';
+            item["Keterangan"] = data.items[0].remark ? data.items[0].remark : '';
+            item["Jumlah"] = data.items[0].defaultQuantity ? data.items[0].defaultQuantity : '';
+            item["Satuan"] = data.items[0].defaultUom.unit ? data.items[0].defaultUom.unit : '';
+            item["Harga Budget"] = data.items[0].budgetPrice ? data.items[0].budgetPrice : '';
+            item["Staff"] = data._createdBy ? data._createdBy : '';
+
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Nomor Purchase Order"] = "string";
+        xls.options["Tanggal PO"] = "string";
+        xls.options["Tanggal Shipment"] = "string";
+        xls.options["Nomor RO"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Artikel"] = "string";
+        xls.options["Unit"] = "string";
+        xls.options["Nomor Referensi PR"] = "string";
+        xls.options["Kategori"] = "string";
+        xls.options["Kode Barang"] = "string";
+        xls.options["Nama Barang"] = "string";
+        xls.options["Keterangan"] = "string";
+        xls.options["Jumlah"] = "number";
+        xls.options["Satuan"] = "string";
+        xls.options["Harga Budget"] = "number";
+        xls.options["Staff"] = "string";
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Purchase Order Internal  Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Purchase Order Internal Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Purchase Order Internal Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Purchase Order Internal Report.xlsx`;
+
+        return Promise.resolve(xls);
+    }
+
+
+    getReport(info) {
+        if (info.test == "test") {
+            var _defaultFilter = {
+                _deleted: false
+            }
+        } else {
+            var _defaultFilter = {
+                $and: [{ _createdBy: { $ne: "dev2" } },
+                    { _createdBy: { $ne: "dev" } },
+                    { _deleted: false }]
+            };
+        }
+
+
+        var noFilter = {};
+        var categoryFilter = {};
+        var unitFilter = {};
+        var buyerFilter = {};
+        var dateFromFilter = {};
+        var dateToFilter = {};
+        var query = {};
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var now = new Date();
+
+        if (info.no && info.no != '') {
+            var nomorPr = ObjectId.isValid(info.no) ? new ObjectId(info.no) : {};
+            noFilter = { '_id': nomorPr };
+        }
+
+        if (info.unit && info.unit != '') {
+            var unit = ObjectId.isValid(info.unit) ? new ObjectId(info.unit) : {};
+            unitFilter = { 'unit._id': unit };
+        }
+
+        if (info.category && info.category != '') {
+            var category = ObjectId.isValid(info.category) ? new ObjectId(info.category) : {};
+            categoryFilter = { 'items.category._id': category };
+        }
+
+        if (info.buyer && info.buyer != '') {
+            var buyer = ObjectId.isValid(info.buyer) ? new ObjectId(info.buyer) : {};
+            buyerFilter = { 'buyer._id': buyer };
+        }
+
+        var filterDate = {
+            "date": {
+                $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            }
+        };
+
+        query = { '$and': [_defaultFilter, buyerFilter, categoryFilter, unitFilter, noFilter, filterDate] };
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return !info.xls ?
+                    this.collection
+                        .where(query)
+                        .execute() :
+                    this.collection
+                        .where(query)
+                        .page(info.page, info.size)
+                        .execute();
+            });
+    }
 };

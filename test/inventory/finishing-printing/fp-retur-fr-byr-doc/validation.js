@@ -65,6 +65,12 @@ it("#02. should error when create new data with no exist data buyer", function (
                         e.should.have.property("errors");
                         e.errors.should.instanceof(Object);
                         e.errors.should.have.property('buyer');
+                        e.errors.should.have.property('details');
+                        for(var a of e.errors.details){
+                            for(var b of a.items){
+                                b.should.have.property('productName');
+                            }
+                        }
                         done();
                     });
             })
@@ -240,7 +246,7 @@ it("#06. should error when create new data with no data remark, weight, length, 
                 for(var b of a.items){
                     b.should.have.property('remark');
                     b.should.have.property('length');
-                    b.should.have.property('weight');
+                    //b.should.have.property('weight');
                     b.should.have.property('productName');
                 }
             }
@@ -258,7 +264,7 @@ it("#06. should error when create new data with no data remark, weight, length, 
                     for(var a of e.errors.details){
                         for(var b of a.items){
                             b.should.have.property('length');
-                            b.should.have.property('weight');
+                            //b.should.have.property('weight');
                         }
                     }
                     done();
@@ -266,37 +272,37 @@ it("#06. should error when create new data with no data remark, weight, length, 
         });
 });
 
-it("#07. should error when create new data with no data new product", function (done) {
-    var data = {
-        code : newData.code,
-        destination : newData.destination,
-        buyerId : newData.buyerId,
-        buyer : newData.buyer,
-        date : newData.date,
-        spk : newData.spk,
-        coverLetter : newData.coverLetter,
-        codeProduct : newData.codeProduct,
-        details : [{
-                productionOrderNo : "",
-                productionOrderId : newData.details[0].productionOrderId,
-                items : newData.details[0].items,
-                newProducts : []
-            }]
-    };
-    returManager.create(data)
-        .then((id) => {
-            done("should error when create new data with no data production order");
-        })
-        .catch((e) => {
-            e.name.should.equal("ValidationError");
-            e.should.have.property("errors");
-            e.errors.should.instanceof(Object);
-            e.errors.should.have.property('details');
-            done();
-        });
-});
+// it("#07. should error when create new data with no data new product", function (done) {
+//     var data = {
+//         code : newData.code,
+//         destination : newData.destination,
+//         buyerId : newData.buyerId,
+//         buyer : newData.buyer,
+//         date : newData.date,
+//         spk : newData.spk,
+//         coverLetter : newData.coverLetter,
+//         codeProduct : newData.codeProduct,
+//         details : [{
+//                 productionOrderNo : newData.details[0].productionOrderNo,
+//                 productionOrderId : newData.details[0].productionOrderId,
+//                 items : newData.details[0].items,
+//                 newProducts : []
+//             }]
+//     };
+//     returManager.create(data)
+//         .then((id) => {
+//             done("should error when create new data with no data production order");
+//         })
+//         .catch((e) => {
+//             e.name.should.equal("ValidationError");
+//             e.should.have.property("errors");
+//             e.errors.should.instanceof(Object);
+//             e.errors.should.have.property('details');
+//             done();
+//         });
+// });
 
-it("#08. should error when create new data with no productName, description, remark, uom, length, weight, lot, grade, construction in new Product", function (done) {
+it("#07. should error when create new data with no productName, description, remark, uom, length, weight, lot, grade, construction in new Product", function (done) {
     var data = {
         code : newData.code,
         destination : newData.destination,
@@ -339,7 +345,7 @@ it("#08. should error when create new data with no productName, description, rem
             for(var a of e.errors.details){
                 for(var b of a.newProducts){
                     b.should.have.property('length');
-                    b.should.have.property('weight');
+                    //b.should.have.property('weight');
                     b.should.have.property('productName');
                     b.should.have.property('description');
                     b.should.have.property('remark');
@@ -364,7 +370,7 @@ it("#08. should error when create new data with no productName, description, rem
                     for(var a of e.errors.details){
                         for(var b of a.newProducts){
                             b.should.have.property('length');
-                            b.should.have.property('weight');
+                            //b.should.have.property('weight');
                             b.should.have.property('construction');
                         }
                     }
@@ -373,7 +379,7 @@ it("#08. should error when create new data with no productName, description, rem
         });
 });
 
-it("#09. should success when create new data with new Product", function (done) {
+it("#08. should success when create new data with new Product", function (done) {
     constructionDataUtil.getTestData()
         .then(dataCons => {
             var data = {
@@ -419,4 +425,15 @@ it("#09. should success when create new data with new Product", function (done) 
         });
 });
 
-
+it("#09. should success when read data", function (done) {
+    returManager.read({keyword : newData.code})
+        .then((documents) => {
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

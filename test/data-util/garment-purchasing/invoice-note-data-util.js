@@ -63,6 +63,69 @@ class InvoiceNoteDataUtil {
                             useVat: true,
                             vat: dataVat,
                             isPayTax: true,
+                            hasInternNote: false,
+                            remark: 'Unit Test Invoice Note',
+                            items: invoiceNoteItem
+                        };
+                        return Promise.resolve(data);
+                    });
+            })
+    }
+
+    getNewData2() {
+        return helper
+            .getManager(InvoiceNoteManager)
+            .then(manager => {
+                return Promise.all([supplierDataUtil.getTestData(), currencyDataUtil.getTestData(), deliveryOderDataUtil.getNewTestData()])
+                    .then(results => {
+                        var dataSupplier = results[0];
+                        var dataCurrency = results[1];
+                        var deliveryOder = results[2];
+                        var items = deliveryOder.items.map(doItem => {
+                            var fulfillment = doItem.fulfillments.map(doFulfillment => {
+                                return {
+                                    purchaseOrderExternalId: doItem.purchaseOrderExternalId,
+                                    purchaseOrderExternalNo: doItem.purchaseOrderExternalNo,
+                                    purchaseOrderId: doFulfillment.purchaseOrderId,
+                                    purchaseOrderNo: doFulfillment.purchaseOrderNo,
+                                    purchaseRequestId: doFulfillment.purchaseRequestId,
+                                    purchaseRequestNo: doFulfillment.purchaseRequestNo,
+                                    productId: doFulfillment.productId,
+                                    product: doFulfillment.product,
+                                    purchaseOrderQuantity: doFulfillment.purchaseOrderQuantity,
+                                    purchaseOrderUom: doFulfillment.purchaseOrderUom,
+                                    deliveredQuantity: doFulfillment.deliveredQuantity,
+                                    pricePerDealUnit: doFulfillment.pricePerDealUnit
+                                }
+                            });
+                            fulfillment = [].concat.apply([], fulfillment);
+                            return fulfillment;
+                        });
+
+                        items = [].concat.apply([], items);
+                        var invoiceNoteItem = [{
+                            deliveryOrderId: deliveryOder._id,
+                            deliveryOrderNo: deliveryOder.no,
+                            deliveryOrderDate: deliveryOder.date,
+                            deliveryOrderSupplierDoDate: deliveryOder.supplierDoDate,
+                            items: items
+                        }]
+
+                        var data = {
+                            no: `UT/IN/${codeGenerator()}`,
+                            date: new Date(),
+                            supplierId: dataSupplier._id,
+                            supplier: dataSupplier,
+                            currency: dataCurrency,
+                            useIncomeTax: false,
+                            incomeTaxNo: "",
+                            incomeTaxDate:"",
+                            vatNo: "",
+                            vatDate: "",
+                            useVat: false,
+                            vat: {},
+                            isPayTax: false,
+                            hasInternNote: false,
                             remark: 'Unit Test Invoice Note',
                             items: invoiceNoteItem
                         };

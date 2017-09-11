@@ -53,7 +53,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            var destinationoFilter = {
+            var destinationFilter = {
                 "destination": {
                     "$regex": regex
                 }
@@ -63,7 +63,17 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            keywordFilter["$or"] = [codeFilter, destinationoFilter, buyerFilter];
+            var spkFilter = {
+                "spk": {
+                    "$regex": regex
+                }
+            };
+            var coverLetterFilter = {
+                "coverLetter": {
+                    "$regex": regex
+                }
+            };
+            keywordFilter["$or"] = [codeFilter, destinationFilter, buyerFilter, spkFilter, coverLetterFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -132,7 +142,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
             }
             var getSPP = spp.length > 0 ? this.productionOrderManager.collection.find({ "orderNo": { "$in": spp }}).toArray() : Promise.resolve([]);
             var getProduct = product.length > 0 ? this.productManager.collection.find({ "code": { "$in": product }}).toArray() : Promise.resolve([]);
-            var getProductShipment = spp.length > 0 ? this.getProductShipmentByPO(spp) : Promise.resolve([]);
+            var getProductShipment = spp.length > 0 ? this.getProductShipmentByPO(spp, (valid && valid.buyerId ? valid.buyerId : '')) : Promise.resolve([]);
             var getUom = uom.length > 0 ? this.uomManager.collection.find({ "unit": { "$in": uom }}).toArray() : Promise.resolve([]);
             var getConstruction = construction.length > 0 ? this.materialConstructionManager.collection.find({ "code": { "$in": construction }}).toArray() : Promise.resolve([]);
             var getBuyer = valid.buyerId && ObjectId.isValid(valid.buyerId) ? this.buyerManager.getSingleByIdOrDefault(new ObjectId(valid.buyerId)) : Promise.resolve(null);
@@ -163,14 +173,14 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                             errors["date"] = i18n.__("Tidak boleh lebih dari tanggal hari ini", i18n.__("FPReturFromBuyerDoc.date._:Date")); //nomor Beacukai harus diisi
                     }
 
-                    if(!valid.spk || valid.spk === "")
-                        errors["spk"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.spk._:Spk")); //nomor Beacukai harus diisi
+                    // if(!valid.spk || valid.spk === "")
+                    //     errors["spk"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.spk._:Spk")); //nomor Beacukai harus diisi
                         
-                    if(!valid.coverLetter || valid.coverLetter === "")
-                        errors["coverLetter"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.coverLetter._:CoverLetter")); //nomor Beacukai harus diisi
+                    // if(!valid.coverLetter || valid.coverLetter === "")
+                    //     errors["coverLetter"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.coverLetter._:CoverLetter")); //nomor Beacukai harus diisi
                         
-                    if(!valid.codeProduct || valid.codeProduct === "")
-                        errors["codeProduct"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.codeProduct._:CodeProduct")); //nomor Beacukai harus diisi
+                    // if(!valid.codeProduct || valid.codeProduct === "")
+                    //     errors["codeProduct"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.codeProduct._:CodeProduct")); //nomor Beacukai harus diisi
                     
                     if(valid.details && valid.details.length > 0){
                         var detailErrors = [];
@@ -180,6 +190,9 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                 detailError["productionOrderNo"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.details.productionOrderNo._:ProductionOrderNo"));
                             else{
                                 var productionOrderExist = _spp.find(productionOrder => productionOrder.orderNo === detail.productionOrderNo);
+                                // var shipmentExist = _shipment.find(shipment => shipment.code === detail.shipmentCode);
+                                // if(!shipmentExist)
+                                //     detailError["productionOrderNo"] = i18n.__("Data Surat Perintah Produksi tidak ditemukan", i18n.__("FPReturFromBuyerDoc.details.productionOrderNo._:ProductionOrderNo"));
                                 if(!productionOrderExist)
                                     detailError["productionOrderNo"] = i18n.__("Data Surat Perintah Produksi tidak ditemukan", i18n.__("FPReturFromBuyerDoc.details.productionOrderNo._:ProductionOrderNo"));
                             }
@@ -190,6 +203,8 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                 detailError["dataItems"] = i18n.__("Data Produk harus diisi minimal 1", i18n.__("FPReturFromBuyerDoc.details.dataItems._:DataItems"));
                             if(detail.items && detail.items.length === 0 && detail.newProducts && detail.newProducts.length === 0)
                                 detailError["dataItems"] = i18n.__("Data Produk harus diisi minimal 1", i18n.__("FPReturFromBuyerDoc.details.dataItems._:DataItems"));
+                            // if(detail.items && detail.items.length > 0 && detail.newProducts && detail.newProducts.length === 0)
+                            //     detailError["dataItems"] = i18n.__("Data Produk Baru harus diisi minimal 1", i18n.__("FPReturFromBuyerDoc.details.dataItems._:DataItems"));
                             else{
                                 if(detail.items && detail.items.length > 0){
                                     var itemErrors = [];
@@ -206,13 +221,13 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                             else if(item.length === 0)
                                                 itemError["length"] = i18n.__("Harus lebih dari 0", i18n.__("FPReturFromBuyerDoc.details.items.length._:Length"));
                                                 
-                                            if(!item.weight || item.weight === "")
-                                                itemError["weight"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.details.items.weight._:Weight"));
-                                            else if(item.length === 0)
-                                                itemError["weight"] = i18n.__("Harus lebih dari 0", i18n.__("FPReturFromBuyerDoc.details.items.weight._:Weight"));
+                                            // if(!item.weight || item.weight === "")
+                                            //     itemError["weight"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.details.items.weight._:Weight"));
+                                            // else if(item.length === 0)
+                                            //     itemError["weight"] = i18n.__("Harus lebih dari 0", i18n.__("FPReturFromBuyerDoc.details.items.weight._:Weight"));
                                             
                                             var productExist = _product.find(data => data.code === item.productCode);
-                                            var productShipment = _ProductShipment.find(data => data._id.productionOrderNo === detail.productionOrderNo && data._id.productCode === item.productCode);
+                                            var productShipment = _ProductShipment.find(data => data._id.productionOrderNo === detail.productionOrderNo && data._id.productCode === item.productCode && data._id.buyerId.toString() === (_buyer ? _buyer._id.toString() : ''));
                                             if(!productExist)
                                                 itemError["productName"] = i18n.__("Data Produk tidak ditemukan", i18n.__("FPReturFromBuyerDoc.details.items.productName._:ProductName"));
                                             else if(!productShipment && !item.hasNewProduct)
@@ -239,11 +254,11 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                         else if(newProduct.length === 0)
                                             newProductError["length"] = i18n.__("Harus lebih dari 0", i18n.__("FPReturFromBuyerDoc.details.newProducts.length._:Length"));
                                             
-                                        if(!newProduct.weight || newProduct.weight === "")
-                                            newProductError["weight"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.details.newProducts.weight._:Weight"));
-                                        else if(newProduct.length === 0)
-                                            newProductError["weight"] = i18n.__("Harus lebih dari 0", i18n.__("FPReturFromBuyerDoc.details.newProducts.weight._:Weight"));
-                                        //
+                                        // if(!newProduct.weight || newProduct.weight === "")
+                                        //     newProductError["weight"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.details.newProducts.weight._:Weight"));
+                                        // else if(newProduct.length === 0)
+                                        //     newProductError["weight"] = i18n.__("Harus lebih dari 0", i18n.__("FPReturFromBuyerDoc.details.newProducts.weight._:Weight"));
+                                        // //
 
                                         if(!newProduct.productName || newProduct.productName === "")
                                             newProductError["productName"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.details.newProducts.productName._:ProductName"));
@@ -324,7 +339,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                         buyerId: _buyer._id,
                                         buyerName: _buyer.name,
                                         buyerAddress: _buyer.address,
-                                        colorName: dataProduct.colorWay,
+                                        colorName: productionOrderExist.details[0].colorTemplate,
                                         construction: constructionExist.name,
                                         lot: dataProduct.lot,
                                         grade: dataProduct.grade,
@@ -362,6 +377,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                         item.productDescription = productExist.description;
                                         item.uomId = uomExist._id;
                                         item.uom = uomExist.unit;
+                                        item.weight = item.weight && item.weight !== "" ? item.weight : 0;
                                         var docItem = new FPReturFromBuyerDocItem(item);
                                         docItem._createdDate = dateNow;
                                         docItem.stamp(this.user.username, "manager");
@@ -380,12 +396,12 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                             designNumber:productExist.properties.designNumber,
                                             designCode:productExist.properties.designCode,
                                             remark:item.remark,
-                                            colorWay:item.colorWay,
+                                            colorWay:productExist.properties.colorName,
                                             returQuantity:item.returQuantity,
                                             uomId:uomExist._id,
                                             uom:uomExist.unit,
                                             length:item.length,
-                                            weight:item.weight,
+                                            weight:item.weight && item.weight !== 0 ? item.weight : 0,
                                             hasNewProduct:true
                                         });
                                         docItem._createdDate = dateNow;
@@ -480,7 +496,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
             .then(results => id);
     }
 
-    getProductShipmentByPO(productionOrders){
+    getProductShipmentByPO(productionOrders, buyer){
         return new Promise((resolve, reject) => {
                 this.shipmentDocManager.collection.aggregate([{
                         "$unwind" : "$details"
@@ -492,17 +508,20 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                 "$in" : productionOrders
                             },
                             "isVoid" : false,
-                            "_deleted" : false
+                            "_deleted" : false,
+                            "buyerId" : buyer && ObjectId.isValid(buyer) ? (new ObjectId(buyer)) : ""
                         }
                     },{
                         "$project" : {
+                            "buyerCode" : 1,
+                            "buyerId" : 1,
                             "porductionOrderId" : "$details.productionOrderId",
                             "productionOrderNo" : "$details.productionOrderNo",
                             "productId" : "$details.items.productId",
                             "productCode" : "$details.items.productCode",
                             "productName" : "$details.items.productName",
                             "designCode" : "$details.items.designCode",
-                            "designName" : "$details.items.designName",
+                            "designNumber" : "$details.items.designNumber",
                             "colorWay" : "$details.items.colorType",
                             "uomId" : "$details.items.uomId",
                             "uom" : "$details.items.uomUnit"
@@ -516,10 +535,12 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                 "productCode" : "$productCode",
                                 "productName" : "$productName",
                                 "designCode" : "$designCode",
-                                "designName" : "$designName",
+                                "designNumber" : "$designNumber",
                                 "colorWay" : "$colorWay",
                                 "uomId" : "$uomId",
-                                "uom" : "$uom"
+                                "uom" : "$uom",
+                                "buyerCode" : "$buyerCode",
+                                "buyerId" : "$buyerId"
                             }
                         }
                     }])
@@ -545,8 +566,8 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                 {"isVoid" : false},
                 {
                     "date": {
-                        "$gte": (query && query.filter && query.filter.dateFrom  ? (new Date(query.filter.dateFrom)) : (new Date(dateBefore))),
-                        "$lte": (query && query.filter && query.filter.dateTo ? (new Date(query.dateTo + "T23:59")) : date)
+                        "$gte": (query && query.filter && query.filter.dateFrom  ? (new Date(query.filter.dateFrom)) : (new Date("1900-01-01"))),
+                        "$lte": (query && query.filter && query.filter.dateTo ? (new Date(query.filter.dateTo + "T23:59")) : date)
                     }
                 }];
             if(query && query.filter){
@@ -554,7 +575,10 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                     _query.push({"code" : query.filter.code});
                 }
                 if(query.filter.buyer){
-                    _query.push({"buyer.code" : query.filter.code});
+                    _query.push({"buyer.code" : query.filter.buyer});
+                }
+                if(query.filter.destination){
+                    _query.push({"destination" : query.filter.destination});
                 }
                 if(query.filter.productionOrderNo){
                     _query.push({"details.productionOrderNo" : query.filter.productionOrderNo});
@@ -571,6 +595,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                     "buyer" : "$buyer.name",
                     "spk" : 1,
                     "coverLetter" : 1,
+                    "codeProduct" : 1,
                     "productCode" : "$details.items.productCode",
                     "productName" : "$details.items.productName",
                     "productDescription" : "$details.items.productDescription",
@@ -585,24 +610,24 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
             ];
             var limit = 0;
             var skip = 0;
-            var getCount = this.collection.aggregate(_aggregate).toArray().length;
+            var getCount = this.collection.aggregate(_aggregate).toArray();
             if(!isExcel){
-                limit = query && query.size ? query.size : 25;
-                skip = query && query.page ? ((query.page - 1) * limit) : 0;
+                limit = query && query.size && query.size !== "" ? Number(query.size) : 4;
+                skip = query && query.page && query.page !== "" ? ((Number(query.page) - 1) * limit) : 0;
                 _aggregate.push({"$skip" : skip});
                 _aggregate.push({"$limit" : limit});
             }
             var getData = this.collection.aggregate(_aggregate).toArray();
             Promise.all([getCount, getData])
                 .then(results => {
-                    var count = results[0];
+                    var count = results[0].length;
                     var docs = results[1];
                     var result = {
                         data: docs,
                         count: docs.length,
                         size: limit,
                         total: count,
-                        page: skip + 1,
+                        page: query && query.page && query.page !== "" ? Number(query.page) : 1,
                         filter: query && query.filter ? query.filter : null,
                         order : query.order
                     }
@@ -623,7 +648,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
 
             var index = 0;
             var dateFormat = "DD/MM/YYYY";
-            var query = dataReport.filter;
+            var query = dataReport.info ? dataReport.info.filter : dataReport.filter;
             for(var data of dataReport.data){
                 index++;
                 var item = {};
@@ -634,15 +659,15 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                 item["Buyer"] = data.buyer ? data.buyer : '';
                 item["No Spk"] = data.spk ? data.spk : '';
                 item["No Surat Pengantar"] = data.coverLetter ? data.coverLetter : '';
+                item["Kode Barang"] = data.codeProduct ? data.codeProduct : '';
                 item["No Order"] = data.orderNo ? data.orderNo : '';
-                item["Kode Barang"] = data.productCode ? data.productCode : '';
                 item["Nama Barang"] = data.productName ? data.productName : '';
-                item["Ket. Produk"] = data.productDescription ? data.productDescription : '';
-                item["Ket. Barang"] = data.remark ? data.remark : '';
+                item["Ket Produk"] = data.productDescription ? data.productDescription : '';
+                item["Keterangan"] = data.remark ? data.remark : '';
                 item["Jumlah Retur"] = data.returQuantity ? data.returQuantity : 0;
                 item["Satuan"] = data.uom ? data.uom : '';
-                item["Panjang (Meter)"] = data.length ? (data.length * data.returQuantity) : 0;
-                item["Berat (Kg)"] = data.weight ? (data.weight * data.returQuantity) : 0;
+                item["Panjang (Meter)"] = data.length ? (data.length * data.returQuantity).toFixed(2) : 0;
+                item["Berat (Kg)"] = data.weight ? (data.weight * data.returQuantity).toFixed(2) : 0;
                 
                 xls.data.push(item);
             }
@@ -654,11 +679,11 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
             xls.options["Buyer"] = "string";
             xls.options["No Spk"] = "string";
             xls.options["No Surat Pengantar"] = "string";
-            xls.options["No Order"] = "string";
             xls.options["Kode Barang"] = "string";
+            xls.options["No Order"] = "string";
             xls.options["Nama Barang"] = "string";
-            xls.options["Ket. Produk"] = "string";
-            xls.options["Ket. Barang"] = "string";
+            xls.options["Ket Produk"] = "string";
+            xls.options["Keterangan"] = "string";
             xls.options["Jumlah Retur"] = "number";
             xls.options["Satuan"] = "string";
             xls.options["Panjang (Meter)"] = "number";
@@ -668,10 +693,10 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                 xls.name = `Retur Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
             }
             else if(query && !query.dateFrom && query.dateTo){
-                xls.name = `Retur Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                xls.name = `Retur Report sampai tanggal ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
             }
             else if(query && query.dateFrom && !query.dateTo){
-                xls.name = `Retur Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+                xls.name = `Retur Report dari tanggal ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
             }
             else
                 xls.name = `Retur Report.xlsx`;
