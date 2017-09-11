@@ -223,9 +223,9 @@ if (unitPaymentCorrection.correctionType === "Jumlah") {
 
 if (unitPaymentCorrection.correctionType === "Jumlah") {
        var _jumlah = (items.length > 0 ? items : [initialValue])
-          .map(item => item.priceTotal)
+          .map(item => item.priceTotal * -1)
            .reduce(function (prev, curr, index, arr) {
-               return (prev + curr) * -1;
+               return prev + curr;
            }, 0);
     } else {
        var _jumlah = (items.length > 0 ? items : [initialValue])
