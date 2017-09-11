@@ -497,7 +497,7 @@ module.exports = function (pox, offset) {
     ];
 
     var dd = {
-        pageSize: 'A5',
+        pageSize: 'A4',
         pageOrientation: 'portrait',
         pageMargins: 20,
         content: [].concat(header, attention, opening, table, footer, signature),
