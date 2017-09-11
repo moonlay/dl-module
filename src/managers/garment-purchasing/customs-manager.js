@@ -320,8 +320,8 @@ module.exports = class CustomsManager extends BaseManager {
             this.collection.singleOrDefault({ "_id": new ObjectId(data._id) })
                 .then(customs => {
                     var updateDeliveryOrder = [];
-                    for (var data of customs.deliveryOrders) {
-                        var job = this.deliveryOrderManager.getSingleByIdOrDefault(data._id)
+                    for (var _deliveryOrder of customs.deliveryOrders) {
+                        var job = this.deliveryOrderManager.getSingleByIdOrDefault(_deliveryOrder._id)
                             .then((deliveryOrder) => {
                                 delete deliveryOrder.customsId;
                                 delete deliveryOrder.customsNo;
