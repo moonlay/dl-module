@@ -106,6 +106,7 @@ describe('#dl-module', function (done) {
     test('@GARMENT PURCHASING/INVOICE NOTE', './garment-purchasing/invoice-note');
     test('@GARMENT PURCHASING/PURCHASE PRICE CORRECTION', './garment-purchasing/purchase-price-correction');
     test('@GARMENT PURCHASING/UNIT RECEIPT NOTE', './garment-purchasing/unit-receipt-note');
+    test('@GARMENT PURCHASING/INTERN NOTE', './garment-purchasing/intern-note');
     test('@GARMENT PURCHASING/PURCHASE QUANTITY CORRECTION', './garment-purchasing/purchase-quantity-correction');
 
     //Sales

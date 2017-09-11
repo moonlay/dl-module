@@ -68,7 +68,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                     valid.date = '';
                 }
                 else if (new Date(valid.date) > now) {
-                    errors["date"] = i18n.__("InvoiceNote.date.isGreater:%s is greater than today", i18n.__("DeliveryOrder.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
+                    errors["date"] = i18n.__("InvoiceNote.date.isGreater:%s is greater than today", i18n.__("InvoiceNote.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
                 }
 
                 if (!valid.supplierId || valid.supplierId.toString() === "") {
@@ -279,6 +279,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         if (invoiceNote.isPayTax && invoiceNote.useVat) {
             invoiceNote.vatInvoiceNo = generateCode("vatInvoiceNo");
         }
+        invoiceNote.hasInternNote = false;
         return Promise.resolve(invoiceNote);
     }
 
@@ -399,14 +400,14 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
     _createIndexes() {
         var dateIndex = {
-            name: `ix_${map.purchasing.collection.InvoiceNote}_date`,
+            name: `ix_${map.garmentPurchasing.collection.GarmentInvoiceNote}_date`,
             key: {
                 date: -1
             }
         };
 
         var noIndex = {
-            name: `ix_${map.purchasing.collection.InvoiceNote}_no`,
+            name: `ix_${map.garmentPurchasing.collection.GarmentInvoiceNote}_no`,
             key: {
                 no: 1
             },
