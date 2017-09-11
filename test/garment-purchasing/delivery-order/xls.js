@@ -56,7 +56,7 @@ it('#03. should success when create report', function (done) {
     info.supplierId = createdData.supplierId.toString();
     info.dateFrom = createdData._createdDate.toISOString().split("T", "1").toString();
     info.dateTo = createdData._createdDate.toISOString().split("T", "1").toString();
-    info.offset=7;
+    info.offset=0;
     info.user="unit-test";
 
     instanceManager.getMonitoringDO(info)
@@ -70,6 +70,8 @@ it('#03. should success when create report', function (done) {
             done(e);
         });
 });
+
+
 
 
 it('#04. should success when get data for Excel Report', function (done) {
