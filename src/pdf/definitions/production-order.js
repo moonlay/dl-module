@@ -6,7 +6,7 @@ module.exports = function (productionOrder) {
 
     var lampStandards = [].concat.apply([], productionOrder.lampStandards);
 
-    var iso = "FM-PJ-00-03-021";
+    var iso = "FM-PJ-00-03-021/R1";
 
     var locale = global.config.locale; 
 
