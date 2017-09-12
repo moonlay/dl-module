@@ -4,7 +4,7 @@ var instanceManager = null;
 var should = require("should");
 var sqlHelper = require("../../../sql-helper");
 
-const dataUtil = [
+const DATA_UTIL = [
     {
         "_stamp": "8d48155f457f180",
         "_type": "fabric-quality-control",
