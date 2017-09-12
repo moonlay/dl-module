@@ -418,16 +418,16 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
                     var EndDate=moment(dateTo).format('YYYY-MM-DD');
                    
-                        var _dateFrom = new Date(dateFrom);
-                        var _dateTo = new Date(EndDate + "T23:59");
-                        _dateFrom.setHours(_dateFrom.getHours() - offset);
-                        _dateTo.setHours(_dateTo.getHours() - offset);
-                        Object.assign(query, {
-                            date: {
-                                "$gte": (!query || !dateFrom ? (new Date(dateBefore)) : (new Date(_dateFrom))),
-                                "$lte": (!query || dateTo=="undefined" || !dateTo ? date : (new Date(_dateTo)))
-                            }
-                        });
+                    var _dateFrom = new Date(dateFrom);
+                    var _dateTo = new Date(EndDate + "T23:59");
+                    _dateFrom.setHours(_dateFrom.getHours() - offset);
+                    _dateTo.setHours(_dateTo.getHours() - offset);
+                    Object.assign(query, {
+                        date: {
+                            "$gte": (!query || dateFrom=="undefined"  || !dateFrom ? (new Date(1900, 1, 1)) : (new Date(_dateFrom))),
+                            "$lte": (!query || dateTo=="undefined"  || !dateTo ? date : (new Date(_dateTo)))
+                        }
+                    });
                     
                     if (createdBy !== undefined && createdBy !== "") {
                         Object.assign(query, {
