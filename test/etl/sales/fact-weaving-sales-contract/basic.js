@@ -67,6 +67,26 @@ it("#02. should success when transforming data", function (done) {
         });
 });
 
+it("#03. should success when convert quantity data", function (done) {
+    instanceManager.orderQuantiyConvertion("test", 2)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#04. should success when join string data", function (done) {
+    instanceManager.joinConstructionString("test", "tests", "test", "test")
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 // it("#03. should error when load empty data", function (done) {
 //     instanceManager.load({})
 //         .then(id => {
@@ -82,7 +102,7 @@ it("#02. should success when transforming data", function (done) {
 //         });
 // });
 
-it("#04. should error when insert empty data", function (done) {
+it("#05. should error when insert empty data", function (done) {
     instanceManager.insertQuery(this.sql, "")
         .then((id) => {
             done("should error when create with empty data");
