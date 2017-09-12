@@ -4,7 +4,8 @@ var options = {
     util: require("../../data-util/garment-purchasing/customs-data-util"),
     validator: require("dl-models").validator.garmentPurchasing.customs,
     createDuplicate: false,
-    keys: []
+    keys:[]
+    // keys: ["refNo","no","customsDate","validateDate","supplierId"]
 };
 
 var basicTest = require("../../basic-test-factory");

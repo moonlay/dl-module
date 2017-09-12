@@ -166,7 +166,7 @@ module.exports = function (data, offset) {
         }
         else {
             pricePerUnit = item.pricePerUnit - fulfillment.pricePerDealUnit;
-            priceTotal = item.priceTotal - (fulfillment.pricePerDealUnit * fulfillment.qty);
+            priceTotal = item.priceTotal - (fulfillment.pricePerDealUnit * fulfillment.quantity);
         }
 
         if(data.correctionType === "Harga Total") {
