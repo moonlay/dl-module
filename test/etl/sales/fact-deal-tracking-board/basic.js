@@ -31,3 +31,41 @@ it("#01. should success when create etl fact deal tracking board", function (don
             done(e);
         });
 });
+
+it("#02. should success when transforming data for fact-deal-tracking-board", function (done) {
+    var data = [
+        {
+            deleted: false,
+            id: "012345",
+            code: "X123456",
+            createdDate: new Date(),
+            createdBy: "Unit Test",
+            title: "Title",
+            currencyCode: "IDR",
+            currencyRate: "1",
+            currencySymbol: "Rp"
+        }
+    ];
+    instanceManager.transform(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#03. should error when insert empty data", function (done) {
+    instanceManager.insertQuery(this.sql, "")
+        .then((id) => {
+            done("should error when create with empty data");
+        })
+        .catch((e) => {
+            try {                
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});

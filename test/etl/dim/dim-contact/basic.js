@@ -31,3 +31,42 @@ it("#01. should success when create etl dim contact", function (done) {
             done(e);
         });
 });
+
+it("#02. should success when transforming data for dim-contact", function (done) {
+    var data = [
+        {
+            deleted: false,
+            code: "X123456",
+            firstName: "First Name",
+            lastName: "Last Name",
+            email: "email@moonlay.com",
+            phoneNumber: "123456",
+            companyCode: "X123456",
+            companyName: "Company Name",
+            jobTitle: "Job Title",
+            information: "Information"
+        }
+    ];
+    instanceManager.transform(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#03. should error when insert empty data", function (done) {
+    instanceManager.insertQuery(this.sql, "")
+        .then((id) => {
+            done("should error when create with empty data");
+        })
+        .catch((e) => {
+            try {                
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});

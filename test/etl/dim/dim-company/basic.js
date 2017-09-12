@@ -31,3 +31,41 @@ it("#01. should success when create etl dim company", function (done) {
             done(e);
         });
 });
+
+
+it("#02. should success when transforming data for dim-company", function (done) {
+    var data = [
+        {
+            deleted: false,
+            code: "X123456",
+            name: "Name",
+            website: "Website",
+            industry: "Industry",
+            phoneNumber: "123456",
+            city: "Jakarta",
+            information: "Information"
+        }
+    ];
+    instanceManager.transform(data)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#03. should error when insert empty data", function (done) {
+    instanceManager.insertQuery(this.sql, "")
+        .then((id) => {
+            done("should error when create with empty data");
+        })
+        .catch((e) => {
+            try {                
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});
