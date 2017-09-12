@@ -108,7 +108,7 @@ it("#01. should success when create etl fact-fabric-quality-control", function (
 });
 
 it("#02. should success when transforming data", function (done) {
-    instanceManager.transform(dataUtil)
+    instanceManager.transform(DATA_UTIL)
         .then(() => {
             done();
         })

@@ -107,7 +107,7 @@ it("#01. should success when create etl fact-fp-packing-receipt", function (done
 });
 
 it("#02. should success when transforming data", function (done) {
-    instanceManager.transform(data)
+    instanceManager.transform(DATA_UTIL)
         .then(() => {
             done();
         })
