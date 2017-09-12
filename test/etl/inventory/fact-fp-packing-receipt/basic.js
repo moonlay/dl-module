@@ -69,7 +69,6 @@ const DATA_UTIL = [
                 "weight": 13,
                 "remark": "aassdd",
                 "notes": "asd2",
-                "uomId": ObjectId("58662db1f28e81002db4b24c")
             }
         ],
         "packingUom": "ROLL",
