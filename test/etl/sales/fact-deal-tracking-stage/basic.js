@@ -41,7 +41,13 @@ it("#02. should success when transforming data for fact-deal-tracking-stage", fu
             _createdDate: new Date(),
             _createdBy: "Unit Test",
             boardId: "012345",
-            name: "Name"
+            name: "Name",
+            deals: [
+                {
+                    stageId: "12345",
+                    dealId: "12345"
+                }
+            ]
         }
     ];
     instanceManager.transform(data)

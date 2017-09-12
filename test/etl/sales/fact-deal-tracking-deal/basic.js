@@ -48,7 +48,8 @@ it("#02. should success when transforming data for fact-deal-tracking-deal", fun
             },
             contact: {
                 code: "X123456",
-                name: "Contact Name"
+                firstName: "First Name",
+                lastName: "Last Name"
             },
             closeDate: new Date(),
             description: "Description"
