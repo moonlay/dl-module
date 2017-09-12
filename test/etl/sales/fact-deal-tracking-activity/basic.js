@@ -35,20 +35,24 @@ it("#01. should success when create etl fact activity tracking deal", function (
 it("#02. should success when transforming data for fact-deal-tracking-activity", function (done) {
     var data = [
         {
-            deleted: false,
-            id: "012345",
+            _deleted: false,
+            _id: "012345",
             code: "X123456",
-            createdDate: new Date(),
-            createdBy: "Unit Test",
+            _createdDate: new Date(),
+            _createdBy: "Unit Test",
             dealId: "012345",
             type: "ADD",
-            notes: "Notes",
-            title: "Title",
-            dueDate: new Date(),
-            status: false,
-            sourceStageId: "X123456",
-            targetStageId: "X123456",
-            assignedTo: "Username"
+            field : {
+                notes: "Notes",
+                title: "Title",
+                dueDate: new Date(),
+                status: false,
+                sourceStageId: "X123456",
+                targetStageId: "X123456",
+                assignedTo: {
+                    username: "Username"
+                }
+            }
         }
     ];
     instanceManager.transform(data)

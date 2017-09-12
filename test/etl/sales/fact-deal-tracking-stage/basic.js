@@ -35,11 +35,11 @@ it("#01. should success when create etl fact deal tracking stage", function (don
 it("#02. should success when transforming data for fact-deal-tracking-stage", function (done) {
     var data = [
         {
-            deleted: false,
-            id: "012345",
+            _deleted: false,
+            _id: "012345",
             code: "X123456",
-            createdDate: new Date(),
-            createdBy: "Unit Test",
+            _createdDate: new Date(),
+            _createdBy: "Unit Test",
             boardId: "012345",
             name: "Name"
         }

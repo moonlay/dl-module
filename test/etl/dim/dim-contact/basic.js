@@ -41,8 +41,10 @@ it("#02. should success when transforming data for dim-contact", function (done)
             lastName: "Last Name",
             email: "email@moonlay.com",
             phoneNumber: "123456",
-            companyCode: "X123456",
-            companyName: "Company Name",
+            company: {
+                code: "X123456",
+                name: "Company Name"
+            },
             jobTitle: "Job Title",
             information: "Information"
         }
