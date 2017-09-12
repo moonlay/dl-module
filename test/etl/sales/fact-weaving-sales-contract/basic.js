@@ -55,8 +55,18 @@ it("#02. should success when transforming data", function (done) {
             uom: {
                 unit: "mtr"
             },
-            orderQuantity: 1
-        }
+            orderQuantity: 1,
+            material: {
+                name: "test"
+            },
+            materialConstruction: {
+                name: "test"
+            },
+            yarnMaterial: {
+                name: "test"
+            },
+            materialWidth: 1
+        },
     ];
     instanceManager.transform(data)
         .then(() => {
