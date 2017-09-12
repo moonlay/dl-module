@@ -407,89 +407,6 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    getDataPRMonitoringAll(unitId, categoryId, budgetId, PRNo, dateFrom, dateTo, state, offset, createdBy) {
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                return new Promise((resolve, reject) => {
-                    var query = Object.assign({});
-
-                    if (state !== -1 && state !== undefined) {
-                        Object.assign(query, {
-                            "status.value": state
-                        });
-                    }
-
-                    if (unitId !== "undefined" && unitId !== "" && unitId !== undefined) {
-                        Object.assign(query, {
-                            unitId: new ObjectId(unitId)
-                        });
-                    }
-                    if (categoryId !== "undefined" && categoryId !== "" && categoryId !== undefined) {
-                        Object.assign(query, {
-                            categoryId: new ObjectId(categoryId)
-                        });
-                    }
-                    if (budgetId !== "undefined" && budgetId !== "" && budgetId !== undefined) {
-                        Object.assign(query, {
-                            budgetId: new ObjectId(budgetId)
-                        });
-                    }
-                    if (PRNo !== "undefined" && PRNo !== "" && PRNo !== undefined) {
-                        Object.assign(query, {
-                            "no": PRNo
-                        });
-                    }
-                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateFrom !== undefined && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null" && dateTo !== undefined) {
-                        var _dateFrom = new Date(dateFrom);
-                        var _dateTo = new Date(dateTo);
-                        _dateFrom.setHours(_dateFrom.getHours() - offset);
-                        _dateTo.setHours(_dateTo.getHours() - offset);
-                        Object.assign(query, {
-                            date: {
-                                $gte: _dateFrom,
-                                $lte: _dateTo
-                            }
-                        });
-                    }
-                    query = Object.assign(query, {
-                        _deleted: false,
-                        isPosted: true
-                    });
-
-                    var fieldPoEks = map.purchasing.collection.PurchaseOrderExternal;
-                    this.collection.aggregate(
-                        
-                        {
-                            $match:query
-                        },
-                        {
-                            $lookup : {
-                                from : fieldPoEks,
-                                localField : "no",
-                                foreignField : "items.refNo",
-                                as : "poEks"
-                            }
-                        },
-                        {
-                            $unwind : "$poEks"
-                        },
-                        {
-                            $project :  {
-                                "poEks" : "$poEks.expectedDeliveryDate"
-                            }
-                        }
-                        
-                        ).toArray()
-                        .then((purchaseRequests) => {
-                            resolve(purchaseRequests);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                });
-            });
-    }
-
     getDataPRMonitoringAllUser(unitId, categoryId, budgetId, PRNo, dateFrom, dateTo, state, offset) {
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -539,13 +456,37 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         isPosted: true
                     });
 
-                    this.collection.find(query).toArray()
+                    var fieldPoEks = map.purchasing.collection.PurchaseOrderExternal;
+                    this.collection.aggregate(
+                        
+                        {
+                            $match:query
+                        },
+                        {
+                            $lookup : {
+                                from : fieldPoEks,
+                                localField : "no",
+                                foreignField : "items.refNo",
+                                as : "poEks"
+                            }
+                        },
+                        {
+                            $unwind : "$poEks"
+                        },
+                        {
+                            $project :  {
+                                "poEks" : "$poEks.expectedDeliveryDate"
+                            }
+                        }
+                        
+                        ).toArray()
                         .then((purchaseRequests) => {
                             resolve(purchaseRequests);
                         })
                         .catch(e => {
                             reject(e);
                         });
+                    
                 });
             });
     }
