@@ -9,6 +9,7 @@ var BaseManager = require("module-toolkit").BaseManager;
 var SupplierManager = require("../master/garment-supplier-manager");
 var CurrencyManager = require("../master/currency-manager");
 var DeliveryOrderManager = require("./delivery-order-manager");
+var generateCode = require('../../utils/code-generator');
 var i18n = require("dl-i18n");
 var moment = require('moment');
 
@@ -46,9 +47,9 @@ module.exports = class CustomsManager extends BaseManager {
             };
 
             var filterDeliveryOrder = {
-                "deliveryOrders" : {
+                "deliveryOrders": {
                     "$elemMatch": {
-                        "no" : {
+                        "no": {
                             "$regex": regex
                         }
                     }
@@ -82,101 +83,102 @@ module.exports = class CustomsManager extends BaseManager {
                     '$ne': valid._id ? new ObjectId(valid._id) : ""
                 },
                 no: valid.no ? valid.no : "",
-                customsDate : valid.customsDate && valid.customsDate !== "" ? (new Date(valid.customsDate)) : (new Date("1900-01-01")),
-                validateDate : valid.validateDate && valid.validateDate !== "" ? (new Date(valid.validateDate)) : (new Date("1900-01-01")),
-                supplierId : valid.supplierId && ObjectId.isValid(valid.supplierId) ? (new ObjectId(valid.supplierId)) : '',
-                _deleted : false
+                refNo: valid.refNo ? valid.refNo : "",
+                customsDate: valid.customsDate && valid.customsDate !== "" ? (new Date(valid.customsDate)) : (new Date("1900-01-01")),
+                validateDate: valid.validateDate && valid.validateDate !== "" ? (new Date(valid.validateDate)) : (new Date("1900-01-01")),
+                supplierId: valid.supplierId && ObjectId.isValid(valid.supplierId) ? (new ObjectId(valid.supplierId)) : '',
+                _deleted: false
             });
             var getSupplier = valid.supplierId && ObjectId.isValid(valid.supplierId) ? this.supplierManager.getSingleByIdOrDefault(new ObjectId(valid.supplierId)) : Promise.resolve(null);
             var getCurrency = valid.currencyId && ObjectId.isValid(valid.currencyId) ? this.currencyManager.getSingleByIdOrDefault(new ObjectId(valid.currencyId)) : Promise.resolve(null);
             var getDeliveryOrders = []
-            if(valid && valid.deliveryOrders){
-                for(var item of valid.deliveryOrders){
+            if (valid && valid.deliveryOrders) {
+                for (var item of valid.deliveryOrders) {
                     var deliveryOrder = Promise.resolve(null);
-                    if(item){
+                    if (item) {
                         deliveryOrder = ObjectId.isValid(item._id) ? this.deliveryOrderManager.getSingleByIdOrDefault(new ObjectId(item._id)) : Promise.resolve(null);
                     }
                     getDeliveryOrders.push(deliveryOrder);
                 }
             }
             Promise.all([getCustoms, getSupplier, getCurrency].concat(getDeliveryOrders))
-                .then(results=>{
+                .then(results => {
                     var _customs = results[0];
                     var _supplier = results[1];
                     var _currency = results[2];
                     var _item = results.slice(3, results.length);
 
-                    if(!valid.no || valid.no === "")
+                    if (!valid.no || valid.no === "")
                         errors["no"] = i18n.__("Harus diisi", i18n.__("Customs.no._:No")); //nomor Beacukai harus diisi
-                    else if(_customs)
+                    else if (_customs)
                         errors["no"] = i18n.__("No Beacukai dengan supplier, tanggal beacukai dan tanggal validasi yang sama sudah ada", i18n.__("Customs.no._:No"));
 
-                    if(!valid.customsDate || valid.customsDate === "")
+                    if (!valid.customsDate || valid.customsDate === "")
                         errors["customsDate"] = i18n.__("Harus diisi", i18n.__("Customs.customsDate._:CustomsDate")); //tanggal Beacukai harus diisi
-                    else{
+                    else {
                         var customsDate = new Date(valid.customsDate);
-                        if(customsDate > dateNow)
+                        if (customsDate > dateNow)
                             errors["customsDate"] = i18n.__("Tidak boleh lebih dari tanggal hari ini", i18n.__("Customs.customsDate._:CustomsDate")); //tanggal Beacukai tidak boleh lebih dari tanggal hari ini
                     }
 
-                    if(!valid.packaging || valid.packaging === "")
+                    if (!valid.packaging || valid.packaging === "")
                         errors["packaging"] = i18n.__("Harus diisi", i18n.__("Customs.packaging._:Packaging"));
 
-                    if(!valid.amountOfPackaging || valid.amountOfPackaging === "" || valid.amountOfPackaging < 1)
+                    if (!valid.amountOfPackaging || valid.amountOfPackaging === "" || valid.amountOfPackaging < 1)
                         errors["amountOfPackaging"] = i18n.__("Harus diisi lebih dari 0", i18n.__("Customs.amountOfPackaging._:AmountOfPackaging"));
 
-                    if(!valid.bruto || valid.bruto === "" || valid.bruto < 1)
+                    if (!valid.bruto || valid.bruto === "" || valid.bruto < 1)
                         errors["bruto"] = i18n.__("Harus diisi lebih dari 0", i18n.__("Customs.bruto._:Bruto"));
 
-                    if(!valid.netto || valid.netto === "" || valid.netto < 1)
+                    if (!valid.netto || valid.netto === "" || valid.netto < 1)
                         errors["netto"] = i18n.__("Harus diisi lebih dari 0", i18n.__("Customs.netto._:Netto"));
-                    else{
-                        if(valid.bruto && valid.bruto !== "" && valid.bruto < valid.netto)
+                    else {
+                        if (valid.bruto && valid.bruto !== "" && valid.bruto < valid.netto)
                             errors["netto"] = i18n.__("Harus kurang dari atau sama dengan nilai bruto", i18n.__("Customs.netto._:Netto"));
                     }
 
-                    if(!valid.customsType || valid.customsType === "")
+                    if (!valid.customsType || valid.customsType === "")
                         errors["customsType"] = i18n.__("Harus diisi", i18n.__("Customs.customsType._:CustomsType")); //tanggal Beacukai harus diisi
 
-                    if(!valid.validateDate || valid.validateDate === "")
+                    if (!valid.validateDate || valid.validateDate === "")
                         errors["validateDate"] = i18n.__("Harus diisi", i18n.__("Customs.validateDate._:ValidateDate")); //tanggal Beacukai harus diisi
-                    else{
+                    else {
                         var validateDate = new Date(valid.validateDate);
-                        if(validateDate > dateNow)
+                        if (validateDate > dateNow)
                             errors["validateDate"] = i18n.__("Tidak boleh lebih dari tanggal hari ini", i18n.__("Customs.validateDate._:ValidateDate")); //tanggal validasi tidak boleh lebih dari tanggal hari ini
-                        if(valid.customsDate){
+                        if (valid.customsDate) {
                             var customsDate = new Date(valid.customsDate);
-                            if(validateDate<customsDate)
+                            if (validateDate < customsDate)
                                 errors["validateDate"] = i18n.__("Tidak boleh kurang dari tanggal Bea Cukai", i18n.__("Customs.validateDate._:ValidateDate")); //tanggal validasi tidak boleh kurang dari tanggal Bea Cukai
                         }
                     }
 
-                    if(!valid.supplierId || valid.supplierId === "")
+                    if (!valid.supplierId || valid.supplierId === "")
                         errors["supplier"] = i18n.__("Harus diisi", i18n.__("Customs.supplier._:Supplier")); //supplier harus diisi
-                    if(!_supplier)
+                    if (!_supplier)
                         errors["supplier"] = i18n.__("Data Supplier tidak ditemukan", i18n.__("Customs.supplier._:Supplier")); //supplier harus diisi
 
-                    if(!valid.currencyId || valid.currencyId === "")
+                    if (!valid.currencyId || valid.currencyId === "")
                         errors["currency"] = i18n.__("Harus diisi", i18n.__("Customs.currency._:Currency")); //currency harus diisi
-                    if(!_currency)
+                    if (!_currency)
                         errors["currency"] = i18n.__("Data mata uang tidak ditemukan", i18n.__("Customs.currency._:Currency")); //currency harus diisi
-                    
-                    if(!valid.deliveryOrders || (valid.deliveryOrder && valid.deliveryOrder.length <= 0))
+
+                    if (!valid.deliveryOrders || (valid.deliveryOrder && valid.deliveryOrder.length <= 0))
                         errors["deliveryOrders"] = i18n.__("Surat Jalan harus dipilih minimal 1", i18n.__("Customs.deliveryOrders._:DeliveryOrders")); //Surat Jalan harus dipilih
-                    else{
-                        if(_supplier){
+                    else {
+                        if (_supplier) {
                             var itemErrors = [];
-                            for(var item of valid.deliveryOrders){
+                            for (var item of valid.deliveryOrders) {
                                 var itemError = {};
-                                if(item){
+                                if (item) {
                                     function searchItem(params) {
                                         return !params || params === "" ? null : params.no === item.no && params.supplier.code === _supplier.code;
                                     }
                                     var dOrder = _item.find(searchItem)
-                                    if(!dOrder){
+                                    if (!dOrder) {
                                         itemError["no"] = i18n.__("Surat Jalan tidak ditemukan", i18n.__("Customs.deliveryOrders.no._:No")); //Surat Jalan harus dipilih
                                         itemError["dOrderNumber"] = i18n.__(`${item.no}`, i18n.__("Customs.deliveryOrders.dOrderNumber._:DOrderNumber"));
-                                    }else if(!dOrder.useCustoms){
+                                    } else if (!dOrder.useCustoms) {
                                         itemError["no"] = i18n.__("Surat Jalan tidak dikenakan bea cukai", i18n.__("Customs.deliveryOrders.no._:No")); //Surat Jalan harus dipilih
                                         itemError["dOrderNumber"] = i18n.__(`${item.no}`, i18n.__("Customs.deliveryOrders.dOrderNumber._:DOrderNumber"));
                                     }
@@ -197,11 +199,11 @@ module.exports = class CustomsManager extends BaseManager {
                         return Promise.reject(new ValidationError("data does not pass validation", errors));
                     }
 
-                    if(_supplier){
+                    if (_supplier) {
                         valid.supplierId = _supplier._id;
                         valid.supplier = _supplier;
                     }
-                    if(_currency){
+                    if (_currency) {
                         valid.currencyId = _currency._id;
                         valid.currency = _currency;
                     }
@@ -222,19 +224,24 @@ module.exports = class CustomsManager extends BaseManager {
 
     _beforeInsert(data) {
         data._createdDate = new Date();
+        data.refNo = generateCode();
         return Promise.resolve(data);
     }
-    
+
     _afterInsert(id) {
         return new Promise((resolve, reject) => {
-            this.collection.singleOrDefault({"_id" : new ObjectId(id)})
+            this.collection.singleOrDefault({ "_id": new ObjectId(id) })
                 .then(customs => {
                     var updateDeliveryOrder = [];
-                    for(var data of customs.deliveryOrders){
-                        data.customsId = customs._id;
-                        data.customsNo = customs.no;
-                        data.hasCustoms = true;
-                        updateDeliveryOrder.push(this.deliveryOrderManager.update(data));
+                    for (var _deliveryOrder of customs.deliveryOrders) {
+                        var job = this.deliveryOrderManager.getSingleByIdOrDefault(_deliveryOrder._id)
+                            .then((deliveryOrder) => {
+                                deliveryOrder.customsId = customs._id;
+                                deliveryOrder.customsNo = customs.no;
+                                deliveryOrder.hasCustoms = true;
+                                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
+                            })
+                        updateDeliveryOrder.push(job);
                     }
                     Promise.all(updateDeliveryOrder)
                         .then(data => {
@@ -249,17 +256,21 @@ module.exports = class CustomsManager extends BaseManager {
                 })
         });
     }
-    
+
     _beforeUpdate(data) {
         return new Promise((resolve, reject) => {
-            this.collection.singleOrDefault({"_id" : new ObjectId(data._id)})
+            this.collection.singleOrDefault({ "_id": new ObjectId(data._id) })
                 .then(customs => {
                     var updateDeliveryOrder = [];
-                    for(var dOrder of customs.deliveryOrders){
-                        delete dOrder.customsId;
-                        delete dOrder.customsNo;
-                        dOrder.hasCustoms = false;
-                        updateDeliveryOrder.push(this.deliveryOrderManager.update(dOrder));
+                    for (var _deliveryOrder of customs.deliveryOrders) {
+                        var job = this.deliveryOrderManager.getSingleByIdOrDefault(_deliveryOrder._id)
+                            .then((deliveryOrder) => {
+                                delete deliveryOrder.customsId;
+                                delete deliveryOrder.customsNo;
+                                deliveryOrder.hasCustoms = false;
+                                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
+                            })
+                        updateDeliveryOrder.push(job);
                     }
                     Promise.all(updateDeliveryOrder)
                         .then(id => {
@@ -274,17 +285,21 @@ module.exports = class CustomsManager extends BaseManager {
                 })
         });
     }
-    
+
     _afterUpdate(id) {
         return new Promise((resolve, reject) => {
-            this.collection.singleOrDefault({"_id" : new ObjectId(id)})
+            this.collection.singleOrDefault({ "_id": new ObjectId(id) })
                 .then(customs => {
                     var updateDeliveryOrder = [];
-                    for(var data of customs.deliveryOrders){
-                        data.customsId = customs._id;
-                        data.customsNo = customs.no;
-                        data.hasCustoms = true;
-                        updateDeliveryOrder.push(this.deliveryOrderManager.update(data));
+                    for (var _deliveryOrder of customs.deliveryOrders) {
+                        var job = this.deliveryOrderManager.getSingleByIdOrDefault(_deliveryOrder._id)
+                            .then((deliveryOrder) => {
+                                deliveryOrder.customsId = customs._id;
+                                deliveryOrder.customsNo = customs.no;
+                                deliveryOrder.hasCustoms = true;
+                                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
+                            })
+                        updateDeliveryOrder.push(job);
                     }
                     Promise.all(updateDeliveryOrder)
                         .then(data => {
@@ -302,14 +317,18 @@ module.exports = class CustomsManager extends BaseManager {
 
     delete(data) {
         return new Promise((resolve, reject) => {
-            this.collection.singleOrDefault({"_id" : new ObjectId(data._id)})
+            this.collection.singleOrDefault({ "_id": new ObjectId(data._id) })
                 .then(customs => {
                     var updateDeliveryOrder = [];
-                    for(var dOrder of customs.deliveryOrders){
-                        delete dOrder.customsId;
-                        delete dOrder.customsNo;
-                        dOrder.hasCustoms = false;
-                        updateDeliveryOrder.push(this.deliveryOrderManager.update(dOrder));
+                    for (var _deliveryOrder of customs.deliveryOrders) {
+                        var job = this.deliveryOrderManager.getSingleByIdOrDefault(_deliveryOrder._id)
+                            .then((deliveryOrder) => {
+                                delete deliveryOrder.customsId;
+                                delete deliveryOrder.customsNo;
+                                deliveryOrder.hasCustoms = false;
+                                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
+                            })
+                        updateDeliveryOrder.push(job);
                     }
                     Promise.all(updateDeliveryOrder)
                         .then(id => {
@@ -332,7 +351,7 @@ module.exports = class CustomsManager extends BaseManager {
         });
     }
 
-    getCustomsReport(query){
+    getCustomsReport(query) {
         return new Promise((resolve, reject) => {
             var deletedQuery = {
                 _deleted: false
@@ -348,51 +367,57 @@ module.exports = class CustomsManager extends BaseManager {
                 }
             };
             var customsNoQuery = {};
-            if(query.no){
+            if (query.no) {
                 customsNoQuery = {
-                    "no" : query.no
+                    "no": query.no
                 }
             }
             var supplierQuery = {};
-            if(query.supplier){
+            if (query.supplier) {
                 supplierQuery = {
-                    "supplierId" : new ObjectId(query.supplier)
+                    "supplierId": new ObjectId(query.supplier)
                 };
             }
             var customsTypeQuery = {};
-            if(query.customsType){
+            if (query.customsType) {
                 customsTypeQuery = {
-                    "customsType" : query.customsType
+                    "customsType": query.customsType
                 };
             }
             var Query = { "$and": [dateQuery, deletedQuery, supplierQuery, customsTypeQuery, customsNoQuery] };
             this.collection
                 .aggregate([
-                    {"$match" : Query }
-                    ,{"$unwind" : "$deliveryOrders"}
-                    ,{"$unwind" : "$deliveryOrders.items"}
-                    ,{"$unwind" : "$deliveryOrders.items.fulfillments"}
-                    ,{"$project" : {
-                        "no" : 1,
-                        "customsType" : 1,
-                        "customsDate" : 1,
-                        "supplier" : "$supplier.name",
-                        "productCode" : "$deliveryOrders.items.fulfillments.product.code",
-                        "productName" : "$deliveryOrders.items.fulfillments.product.name",
-                        "quantity" : "$deliveryOrders.items.fulfillments.deliveredQuantity",
-                        "price" : "$deliveryOrders.items.fulfillments.pricePerDealUnit",
-                        "uom" : "$deliveryOrders.items.fulfillments.purchaseOrderUom.unit",
-                        "currency" : "$currency.code"
-                    }},
-                    {"$group" : {
-                        "_id" : {"no" : "$no", "customsType" : "$customsType", "customsDate" : "$customsDate", "supplier" : "$supplier", "productCode" : "$productCode", "productName" : "$productName", "uom" : "$uom", "currency" : "$currency"},
-                        "quantity" : {"$sum" : "$quantity"},
-                        "price" : {"$sum" : {"$multiply":["$quantity","$price"]}}
-                    }},
-                    {"$sort" : {
-                        "_id.customsDate" : 1,
-                        "_id.supplier" : 1
-                    }}
+                    { "$match": Query }
+                    , { "$unwind": "$deliveryOrders" }
+                    , { "$unwind": "$deliveryOrders.items" }
+                    , { "$unwind": "$deliveryOrders.items.fulfillments" }
+                    , {
+                        "$project": {
+                            "no": 1,
+                            "customsType": 1,
+                            "customsDate": 1,
+                            "supplier": "$supplier.name",
+                            "productCode": "$deliveryOrders.items.fulfillments.product.code",
+                            "productName": "$deliveryOrders.items.fulfillments.product.name",
+                            "quantity": "$deliveryOrders.items.fulfillments.deliveredQuantity",
+                            "price": "$deliveryOrders.items.fulfillments.pricePerDealUnit",
+                            "uom": "$deliveryOrders.items.fulfillments.purchaseOrderUom.unit",
+                            "currency": "$currency.code"
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": { "no": "$no", "customsType": "$customsType", "customsDate": "$customsDate", "supplier": "$supplier", "productCode": "$productCode", "productName": "$productName", "uom": "$uom", "currency": "$currency" },
+                            "quantity": { "$sum": "$quantity" },
+                            "price": { "$sum": { "$multiply": ["$quantity", "$price"] } }
+                        }
+                    },
+                    {
+                        "$sort": {
+                            "_id.customsDate": 1,
+                            "_id.supplier": 1
+                        }
+                    }
                 ])
                 .toArray()
                 .then(results => {
@@ -404,7 +429,7 @@ module.exports = class CustomsManager extends BaseManager {
         });
     }
 
-    getCustomsReportXls(dataReport, query){
+    getCustomsReportXls(dataReport, query) {
         return new Promise((resolve, reject) => {
             var xls = {};
             xls.data = [];
@@ -414,7 +439,7 @@ module.exports = class CustomsManager extends BaseManager {
             var index = 0;
             var dateFormat = "DD/MM/YYYY";
 
-            for(var data of dataReport.data){
+            for (var data of dataReport.data) {
                 index++;
                 var item = {};
                 item["No"] = index;
@@ -428,7 +453,7 @@ module.exports = class CustomsManager extends BaseManager {
                 item["Satuan"] = data._id.uom ? data._id.uom : '';
                 item["Nilai Barang"] = data.price ? data.price : '';
                 item["Mata Uang"] = data._id.currency ? data._id.currency : '';
-                
+
                 xls.data.push(item);
             }
 
@@ -444,18 +469,18 @@ module.exports = class CustomsManager extends BaseManager {
             xls.options["Nilai Barang"] = "number";
             xls.options["Mata Uang"] = "string";
 
-            if(query.dateFrom && query.dateTo){
+            if (query.dateFrom && query.dateTo) {
                 xls.name = `Bea Cukai Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
             }
-            else if(!query.dateFrom && query.dateTo){
+            else if (!query.dateFrom && query.dateTo) {
                 xls.name = `Bea Cukai Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
             }
-            else if(query.dateFrom && !query.dateTo){
+            else if (query.dateFrom && !query.dateTo) {
                 xls.name = `Bea Cukai Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
             }
             else
                 xls.name = `Bea Cukai Report.xlsx`;
-            
+
             resolve(xls);
         });
     }
@@ -469,8 +494,9 @@ module.exports = class CustomsManager extends BaseManager {
         };
 
         var noIndex = {
-            name: `ix_${map.garmentPurchasing.collection.Customs}_no_customsDate_validateDate_supplierId`,
+            name: `ix_${map.garmentPurchasing.collection.Customs}_refno_no_customsDate_validateDate_supplierId`,
             key: {
+                refNo: 1,
                 no: 1,
                 customsDate: 1,
                 validateDate: 1,
