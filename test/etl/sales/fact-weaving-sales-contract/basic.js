@@ -65,7 +65,7 @@ it("#02. should success when transforming data", function (done) {
             yarnMaterial: {
                 name: "test"
             },
-            materialWidth: 0
+            materialWidth: 1
         },
     ];
     instanceManager.transform(data)
