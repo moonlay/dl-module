@@ -24,6 +24,8 @@ describe('#dl-module', function (done) {
     test('@ETL/DIM-ORDER-TYPE', './etl/dim/dim-order-type');
     test('@ETL/DIM-PRODUCT', './etl/dim/dim-product');
     test('@ETL/DIM-STORAGE', './etl/dim/dim-storage');
+    test('@ETL/DIM-COMPANY', './etl/dim/dim-company');
+    test('@ETL/DIM-CONTACT', './etl/dim/dim-contact');
     test('@ETL/FACT-TOTAL-HUTANG', './etl/purchasing/fact-total-hutang');
     test('@ETL/FACT-PURCHASING', './etl/purchasing/fact-purchasing');
     test('@ETL/FACT-MONITORING-EVENT', './etl/production/fact-monitoring-event');
@@ -40,6 +42,11 @@ describe('#dl-module', function (done) {
     test('@ETL/garment-purchase-request', './etl/garment/garment-purchase-request');
     test('@ETL/FACT-FP-PACKING-RECEIPT', './etl/inventory/fact-fp-packing-receipt');
     test('@ETL/FACT-FP-SHIPMENT-DOCUMENT', './etl/inventory/fact-fp-shipment-document');
+    test('@ETL/FACT-DEAL-TRACKING-BOARD', './etl/sales/fact-deal-tracking-board');
+    test('@ETL/FACT-DEAL-TRACKING-STAGE', './etl/sales/fact-deal-tracking-stage');
+    test('@ETL/FACT-DEAL-TRACKING-DEAL', './etl/sales/fact-deal-tracking-deal');
+    test('@ETL/FACT-DEAL-TRACKING-ACTIVITY', './etl/sales/fact-deal-tracking-activity');
+
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
     test('@MASTER/BUDGET', './master/budget');
@@ -66,7 +73,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/PROCESS-TYPE', './master/process-type');
     test('@MASTER/COLOR-TYPE', './master/color-type');
     test('@MASTER/INSTRUCTION', './master/instruction');
-
+    
     // test('@MASTER/MONITORING-EVENT-TYPE', './master/monitoring-event-type');
     test('@MASTER/STEP', './master/step');
     //test('@MASTER/MACHINE-TYPE', './master/machine-type');
@@ -84,6 +91,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/CONTACT', './master/contact');
     test('@MASTER/BAD OUTPUT REASON', './master/bad-output-reason');
     test('@MASTER/FINISHING PRINTING DURATION ESTIMATION', './master/fp-duration-estimation');
+    test('@MASTER/DEAL TRACKING REASON', './master/deal-tracking-reason');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
