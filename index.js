@@ -45,7 +45,8 @@ module.exports = {
             CompanyManager: require('./src/managers/master/company-manager'),
             ContactManager: require('./src/managers/master/contact-manager'),
             BadOutputReasonManager: require('./src/managers/master/bad-output-reason-manager'),
-            FPDurationEstimationManager: require('./src/managers/master/fp-duration-estimation-manager')
+            FPDurationEstimationManager: require('./src/managers/master/fp-duration-estimation-manager'),
+            DealTrackingReasonManager: require('./src/managers/master/deal-tracking-reason-manager')
         },
         inventory: {
             finishingPrinting: {
@@ -150,7 +151,8 @@ module.exports = {
                 company: require('./test/data-util/master/company-data-util'),
                 contact: require('./test/data-util/master/contact-data-util'),
                 badOutputReason: require('./test/data-util/master/bad-output-reason-data-util'),
-                fpDurationEstimation: require('./test/data-util/master/fp-duration-estimation-data-util')
+                fpDurationEstimation: require('./test/data-util/master/fp-duration-estimation-data-util'),
+                dealTrackingReason: require('./test/data-util/master/deal-tracking-reason-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util"),
@@ -219,7 +221,8 @@ module.exports = {
             dimUnit: require("./src/etl/dim/dim-unit-etl-manager"),
             dimMachine: require("./src/etl/dim/dim-machine-etl-manager"),
             dimStorage: require("./src/etl/dim/dim-storage-etl-manager"),
-            dimProduct: require("./src/etl/dim/dim-product-etl-manager")
+            dimProduct: require("./src/etl/dim/dim-product-etl-manager"),
+            dimCompany: require("./src/etl/dim/dim-company-etl-manager")
         },
         inventory: {
             factPackingReceipt: require("./src/etl/inventory/fact-fp-packing-receipt-etl-manager"),
@@ -242,7 +245,11 @@ module.exports = {
             factWeavingSalesContract: require("./src/etl/sales/fact-weaving-sales-contract-etl-manager"),
             factFinishingPrintingSalesContract: require("./src/etl/sales/fact-finishing-printing-sales-contract-etl-manager"),
             factSpinningSalesContract: require("./src/etl/sales/fact-spinning-sales-contract-etl-manager"),
-            factProductionOrderStatus: require("./src/etl/sales/fact-production-order-status-etl-manager")
+            factProductionOrderStatus: require("./src/etl/sales/fact-production-order-status-etl-manager"),
+            factDealTrackingBoard: require("./src/etl/sales/fact-deal-tracking-board-etl-manager"),
+            factDealTrackingStage: require("./src/etl/sales/fact-deal-tracking-stage-etl-manager"),
+            factDealTrackingDeal: require("./src/etl/sales/fact-deal-tracking-deal-etl-manager"),
+            factDealTrackingActivity: require("./src/etl/sales/fact-deal-tracking-activity-etl-manager")            
         },
         garment: {
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
