@@ -218,6 +218,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         var _prItem = _purchaseRequest.items.find((item) => { item.product._id.toString() === poItem.product._id.toString() && item.id_po.toString() === poItem.id_po.toString() })
                         if (_prItem) {
                             poItem.product = _prItem.product;
+                            poItem.productId = new ObjectId(_prItem.product._id);
                             poItem.defaultUom = _prItem.uom;
                             poItem.category = _prItem.category;
                             poItem.categoryId = new ObjectId(_prItem.category._id);
@@ -490,6 +491,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 var jobs = [];
                 for (var _purchaseRequest of listPurchaseRequest) {
                     var purchaseRequest = purchaseRequests.find((pr) => pr._id.toString() === _purchaseRequest._id.toString());
+                    var prItems = purchaseRequest.items.find((item) => item.product._id.toString() === _purchaseRequest.items.productId.toString() && item.id_po.toString() === _purchaseRequest.items.id_po.toString())
+
                     var purchaseOrder = {}
                     purchaseOrder.no = generateCode(_purchaseRequest.items.id_po.toString());
                     purchaseOrder.status = poStatusEnum.CREATED;
@@ -514,7 +517,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     purchaseOrder.remark = purchaseRequest.remark;
 
                     var _items = [];
-                    var prItems = purchaseRequest.items.find((item) => item.product._id.toString() === _purchaseRequest.items.productId.toString() && item.id_po.toString() === _purchaseRequest.items.id_po.toString())
                     if (prItems) {
                         var _item = {};
                         _item.refNo = prItems.refNo;
@@ -586,6 +588,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                 })
                             })
                     })
+            })
+            .catch(e => {
+                reject(e);
             });
     }
 
@@ -1821,8 +1826,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         } else {
             var _defaultFilter = {
                 $and: [{ _createdBy: { $ne: "dev2" } },
-                    { _createdBy: { $ne: "dev" } },
-                    { _deleted: false }]
+                { _createdBy: { $ne: "dev" } },
+                { _deleted: false }]
             };
         }
 
