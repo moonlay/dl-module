@@ -6,7 +6,7 @@ function test(name, path) {
 
 
 describe('#dl-module', function (done) {
-    this.timeout(60 * 60000);
+    this.timeout(2 * 60000);
 
     // Auth
     test('@AUTH/ACCOUNT', './auth/account');
