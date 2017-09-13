@@ -206,24 +206,28 @@ it("#09. should error when create new data with same no, supplier, customs date,
         .then((data) => {
             customsManager.create(data)
                 .then((id1) => {
-                    customsManager.create(data)
-                        .then((id2) => {
-                            done("should error when create new data with same no, supplier, customs date, validation date");
+                    customsManager.getSingleByIdOrDefault(id1)
+                        .then((data2) => {
+                            delete data2._id;
+                            customsManager.create(data2)
+                                .then((id2) => {
+                                    done("should error when create new data with same no, supplier, customs date, validation date");
+                                })
+                                .catch((e) => {
+                                    e.name.should.equal("ValidationError");
+                                    e.should.have.property("errors");
+                                    e.errors.should.instanceof(Object);
+                                    e.errors.should.have.property('no');
+                                    done();
+                                });
                         })
                         .catch((e) => {
-                            e.name.should.equal("ValidationError");
-                            e.should.have.property("errors");
-                            e.errors.should.instanceof(Object);
-                            e.errors.should.have.property('no');
-                            done();
+                            done(e);
                         });
                 })
                 .catch((e) => {
                     done(e);
                 });
-        })
-        .catch((e) => {
-            done(e);
         });
 });
 

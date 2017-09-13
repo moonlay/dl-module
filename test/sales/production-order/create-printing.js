@@ -122,6 +122,8 @@ it("#05. should error when create new data without RUN,RUNWidth,designNumber,des
                 data.processTypeId=createdDataProcessTypeId;
                 data.orderType=createdDataOrderType;
                 data.orderTypeId=createdDataOrderTypeId;
+                data.designCode="";
+                data.designNumber="";
                 manager.create(data)
                 .then((id) => {
                     done("Should not be able to create new data without RUN,RUNWidth,designNumber,designCode");

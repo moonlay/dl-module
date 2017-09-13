@@ -963,11 +963,16 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             var supplierFilter = {};
             var dateFromFilter = {};
             var dateToFilter = {};
+            var userFilter = {};
             var query = {};
 
-            var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
-            var now = new Date();
+            // var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+            // var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+            var date = new Date();
+            var dateString = moment(date).format('YYYY-MM-DD');
+            var dateNow = new Date(dateString);
+            var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            
 
             if (info.no && info.no != '') {
                 doNoFilter = { "items.purchaseOrderExternalNo": info.no };
@@ -977,14 +982,24 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 supplierFilter = { "supplierId": new ObjectId(info.supplierId) };
             }
 
+            if (info.user && info.user != '') {
+                userFilter = { "_createdBy": info.user };
+            }
+            
+            var _dateFrom = new Date(info.dateFrom);
+            var _dateTo = new Date(info.dateTo + "T23:59");
+            _dateFrom.setHours(_dateFrom.getHours() - info.offset);
+            _dateTo.setHours(_dateTo.getHours() - info.offset);
             var filterDate = {
                 "supplierDoDate": {
-                    $gte: new Date(dateFrom),
-                    $lte: new Date(dateTo)
+                    "$gte": (!info || !info.dateFrom ? (new Date(1900, 1, 1)) : (new Date(_dateFrom))),
+                    "$lte": (!info || !info.dateTo ? date : (new Date(_dateTo)))
                 }
             };
 
-            query = { '$and': [_defaultFilter,  doNoFilter, supplierFilter, filterDate] };
+            query = { '$and': [_defaultFilter,  doNoFilter, supplierFilter, filterDate, userFilter] };
+
+            
 
             return this.collection
                     .aggregate([
@@ -1039,8 +1054,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             index += 1;
             data["No"] = index;
             data["Nomor Surat Jalan"] = _data.no? _data.no : "";
-            data["Tanggal Surat Jalan"] = _data.doDate ? moment(new Date(_data.doDate)).format(dateFormat) : '';
-            data["Tanggal Tiba"] = _data.arrivedDate ? moment(new Date(_data.arrivedDate)).format(dateFormat) : '';
+            data["Tanggal Surat Jalan"] = _data.doDate ? moment(new Date(_data.doDate)).add(query.offset, 'h').format(dateFormat) : '';
+            data["Tanggal Tiba"] = _data.arrivedDate ? moment(new Date(_data.arrivedDate)).add(query.offset, 'h').format(dateFormat) : '';
             data["Supplier"] = _data.supplier ? _data.supplier : '';
             data["Jenis Supplier"] = _data.supplierType ? "Import" : "Lokal";
             data["Pengiriman"] = _data.shipmentType ? _data.shipmentType : '';

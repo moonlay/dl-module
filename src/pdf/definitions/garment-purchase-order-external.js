@@ -9,6 +9,8 @@ module.exports = function (pox, offset) {
             productProperties: poItem.product.properties,
             productDesc: poItem.product.description,
             prNo: poItem.prNo,
+            prRefNo: poItem.prRefNo,
+            artikel: poItem.artikel,
             quantity: poItem.dealQuantity,
             uom: poItem.dealUom.unit,
             price: poItem.pricePerDealUnit,
@@ -129,6 +131,9 @@ module.exports = function (pox, offset) {
         text: 'NAMA DAN JENIS BARANG',
         style: ['size08', 'bold', 'center']
     }, {
+        text: 'ARTIKEL',
+        style: ['size08', 'bold', 'center']
+    }, {
         text: 'JUMLAH',
         style: ['size08', 'bold', 'center']
     }, {
@@ -144,10 +149,13 @@ module.exports = function (pox, offset) {
         tbody = items.map(function (item) {
             return [{
                 stack: [item.productCode, item.productName, `COMPOSITION: ${item.productDesc}`, `KONSTRUKSI: ${item.productProperties[0]}`, `YARN: ${item.productProperties[1]}`, `LEBAR: ${item.productProperties[2]}`, "QUALITY : EXPORT QUALITY", `DESIGN/COLOUR : ${item.colors.join(', ')}`, `Keterangan : ${item.remark}`, {
-                    text: item.prNo,
+                    text: `${item.prNo} - ${item.prRefNo}`,
                     style: 'bold'
                 }],
                 style: ['size08']
+            }, {
+                text: item.artikel,
+                style: ['size08', 'left']
             }, {
                 text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
                 style: ['size08', 'center']
@@ -177,10 +185,13 @@ module.exports = function (pox, offset) {
         tbody = items.map(function (item) {
             return [{
                 stack: [`${item.productCode} - ${item.productName}`, item.productDesc, item.remark, {
-                    text: item.prNo,
+                    text: `${item.prNo} - ${item.prRefNo}`,
                     style: 'bold'
                 }],
                 style: ['size08']
+            }, {
+                text: item.artikel,
+                style: ['size08', 'left']
             }, {
                 text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
                 style: ['size08', 'center']
@@ -211,8 +222,8 @@ module.exports = function (pox, offset) {
         [{
             text: "tidak ada barang",
             style: ['size08', 'center'],
-            colSpan: 4
-        }, "", "", ""]
+            colSpan: 5
+        }, "", "", "", ""]
     ];
     var initialValue = {
         price: 0,
@@ -231,8 +242,8 @@ module.exports = function (pox, offset) {
         [{
             text: 'Jumlah',
             style: ['size08', 'bold', 'right'],
-            colSpan: 3
-        }, "", "", {
+            colSpan: 4
+        }, "", "", "", {
             columns: [{
                 width: '20%',
                 text: currency
@@ -246,8 +257,8 @@ module.exports = function (pox, offset) {
         [{
             text: 'PPN 10%',
             style: ['size08', 'bold', 'right'],
-            colSpan: 3
-        }, null, null, {
+            colSpan: 4
+        }, null, null, null, {
             columns: [{
                 width: '20%',
                 text: currency
@@ -261,8 +272,8 @@ module.exports = function (pox, offset) {
         [{
             text: 'Grand Total',
             style: ['size08', 'bold', 'right'],
-            colSpan: 3
-        }, null, null, {
+            colSpan: 4
+        }, null, null, null, {
             columns: [{
                 width: '20%',
                 text: currency
@@ -277,7 +288,7 @@ module.exports = function (pox, offset) {
 
     var table = [{
         table: {
-            widths: ['*', '15%', '20%', '25%'],
+            widths: ['*','25%', '10%', '15%', '15%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot)
         }
@@ -497,7 +508,7 @@ module.exports = function (pox, offset) {
     ];
 
     var dd = {
-        pageSize: 'A5',
+        pageSize: 'A4',
         pageOrientation: 'portrait',
         pageMargins: 20,
         content: [].concat(header, attention, opening, table, footer, signature),
