@@ -52,7 +52,8 @@ it("#02. should success when transforming data for fact-deal-tracking-deal", fun
                 lastName: "Last Name"
             },
             closeDate: new Date(),
-            description: "Description"
+            description: "Description",
+            reason: "Reason"
         }
     ];
     instanceManager.transform(data)
