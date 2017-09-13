@@ -112,8 +112,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
             orderNo: valid.orderNo
         });
 
+        var uomQuery={
+            "unit":"MTR"
+        };
+        //var getUom =this.UomManager.getSingleByQueryOrDefault(uomQuery);
+
         var getBuyer = ObjectId.isValid(valid.buyerId) ? this.BuyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
-        var getUom = valid.uom && ObjectId.isValid(valid.uomId) ? this.UomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
+        var getUom = valid.uom && ObjectId.isValid(valid.uomId) ? this.UomManager.getSingleByIdOrDefault(valid.uomId) : this.UomManager.getSingleByQueryOrDefault(uomQuery);
+        
         var getProduct = ObjectId.isValid(valid.materialId) ? this.ProductManager.getSingleByIdOrDefault(valid.materialId) : Promise.resolve(null);
         var getProcessType = ObjectId.isValid(valid.processTypeId) ? this.ProcessTypeManager.getSingleByIdOrDefault(valid.processTypeId) : Promise.resolve(null);
         var getOrderType = ObjectId.isValid(valid.orderTypeId) ? this.OrderTypeManager.getSingleByIdOrDefault(valid.orderTypeId) : Promise.resolve(null);
@@ -272,12 +278,13 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if (!valid.orderQuantity || valid.orderQuantity === 0)
                     errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.isRequired:%s is required", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh kosong";
                 else {
-                    if(valid.remainingQuantity!=undefined){
-                        valid.remainingQuantity+=valid.beforeQuantity;
-                        if(valid.orderQuantity>valid.remainingQuantity){
-                            errors["orderQuantity"] =i18n.__("ProductionOrder.orderQuantity.isRequired:%s should not be more than SC remaining quantity", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity"));
-                        }
-                    }
+                    //validasi remainingQuantity SC
+                    // if(valid.remainingQuantity!=undefined){
+                    //     valid.remainingQuantity+=valid.beforeQuantity;
+                    //     if(valid.orderQuantity>valid.remainingQuantity){
+                    //         errors["orderQuantity"] =i18n.__("ProductionOrder.orderQuantity.isRequired:%s should not be more than SC remaining quantity", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity"));
+                    //     }
+                    // }
                     var totalqty = 0;
                     if (valid.details.length > 0) {
                         for (var i of valid.details) {
@@ -291,9 +298,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     
                 }
 
-                if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
-                    errors["shippingQuantityTolerance"] = i18n.__("ProductionOrder.shippingQuantityTolerance.isRequired:%s is required", i18n.__("ProductionOrder.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
-                else if (valid.shippingQuantityTolerance > 100) {
+                if (valid.shippingQuantityTolerance > 100) {
                     errors["shippingQuantityTolerance"] = i18n.__("ProductionOrder.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("ProductionOrder.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
 

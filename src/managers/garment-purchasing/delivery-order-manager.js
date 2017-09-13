@@ -992,7 +992,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             _dateTo.setHours(_dateTo.getHours() - info.offset);
             var filterDate = {
                 "supplierDoDate": {
-                    "$gte": (!info || !info.dateFrom ? (new Date(dateBefore)) : (new Date(_dateFrom))),
+                    "$gte": (!info || !info.dateFrom ? (new Date(1900, 1, 1)) : (new Date(_dateFrom))),
                     "$lte": (!info || !info.dateTo ? date : (new Date(_dateTo)))
                 }
             };
