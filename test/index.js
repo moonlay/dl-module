@@ -108,6 +108,7 @@ describe('#dl-module', function (done) {
     test('@GARMENT PURCHASING/UNIT RECEIPT NOTE', './garment-purchasing/unit-receipt-note');
     test('@GARMENT PURCHASING/INTERN NOTE', './garment-purchasing/intern-note');
     test('@GARMENT PURCHASING/PURCHASE QUANTITY CORRECTION', './garment-purchasing/purchase-quantity-correction');
+    test('@GARMENT PURCHASING/garment currency', './garment-purchasing/garment-currency');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
