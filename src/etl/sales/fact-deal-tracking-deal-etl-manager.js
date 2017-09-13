@@ -21,6 +21,7 @@ const SELECT = {
     amount: 1,
     "company.code": 1,
     "company.name": 1,
+    "company.city": 1,
     "contact.code": 1,
     "contact.firstName": 1,
     "contact.lastName": 1,
@@ -104,6 +105,7 @@ module.exports = class FactDealTrackingDealEtlManager extends BaseManager {
                 amount: `'${item.amount}'`,
                 companyCode: item.company ? `'${item.company.code.replace(/'/g, '"')}'` : null,
                 companyName: item.company ? `'${item.company.name.replace(/'/g, '"')}'` : null,
+                companyCity: item.company ? `'${item.company.city.replace(/'/g, '"')}'` : null,
                 contactCode: item.contact ? `'${item.contact.code.replace(/'/g, '"')}'` : null,
                 contactName: item.contact ? `'${item.contact.firstName.replace(/'/g, '"')} ${item.contact.lastName.replace(/'/g, '"')}'` : null,
                 closeDate: item.closeDate ? `'${moment(item.closeDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
@@ -139,19 +141,19 @@ module.exports = class FactDealTrackingDealEtlManager extends BaseManager {
 
                         var command = [];
 
-                        var sqlQuery = 'INSERT INTO [DL_Fact_Deal_Tracking_Deal_Temp](deleted, id, code, createdDate, createdBy, name, amount, companyCode, companyName, contactCode, contactName, closeDate, description, reason) ';
+                        var sqlQuery = 'INSERT INTO [DL_Fact_Deal_Tracking_Deal_Temp](deleted, id, code, createdDate, createdBy, name, amount, companyCode, companyName, contactCode, contactName, closeDate, description, reason, companyCity) ';
                         
                         var count = 1;
                         for (var item of data) {
                             if (item) {
-                                var values = `${item.deleted}, ${item.id}, ${item.code}, ${item.createdDate}, ${item.createdBy}, ${item.name}, ${item.amount}, ${item.companyCode}, ${item.companyName}, ${item.contactCode}, ${item.contactName}, ${item.closeDate}, ${item.description}, ${item.reason}`;
+                                var values = `${item.deleted}, ${item.id}, ${item.code}, ${item.createdDate}, ${item.createdBy}, ${item.name}, ${item.amount}, ${item.companyCode}, ${item.companyName}, ${item.contactCode}, ${item.contactName}, ${item.closeDate}, ${item.description}, ${item.reason}, ${item.companyCity}`;
                                 var queryString = `\nSELECT ${values} UNION ALL `;
                                 
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 4000 === 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                                     command.push(this.insertQuery(request, sqlQuery));
-                                    sqlQuery = "INSERT INTO [DL_Fact_Deal_Tracking_Deal_Temp](deleted, id, code, createdDate, createdBy, name, amount, companyCode, companyName, contactCode, contactName, closeDate, description, reason) ";
+                                    sqlQuery = "INSERT INTO [DL_Fact_Deal_Tracking_Deal_Temp](deleted, id, code, createdDate, createdBy, name, amount, companyCode, companyName, contactCode, contactName, closeDate, description, reason, companyCity) ";
                                 }
                                 console.log(`add data to query  : ${count}`);
                                 count++;

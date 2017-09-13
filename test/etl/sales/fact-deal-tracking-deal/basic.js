@@ -44,7 +44,8 @@ it("#02. should success when transforming data for fact-deal-tracking-deal", fun
             amount: "10000",
             company : {
                 code: "X123456",
-                name: "Company Name"
+                name: "Company Name",
+                city: "Company City"
             },
             contact: {
                 code: "X123456",
@@ -53,7 +54,7 @@ it("#02. should success when transforming data for fact-deal-tracking-deal", fun
             },
             closeDate: new Date(),
             description: "Description",
-            reason: "Reason"
+            reason: "Reason",
         }
     ];
     instanceManager.transform(data)
