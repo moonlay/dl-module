@@ -468,9 +468,9 @@ module.exports = class InvoiceNoteManager extends BaseManager {
     getMonitoringInvoice(info){
         return new Promise((resolve, reject) => {
             var _defaultFilter = {
-                _deleted: false,
-                _createdBy:info.user
+                _deleted: false
             };
+            var userFilter={};
             var invoiceNumberFilter = {};
             var supplierFilter = {};
             var dateFromFilter = {};
@@ -480,6 +480,10 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
             var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
             var now = new Date();
+
+            if (info.user && info.user != '') {
+                userFilter = { "_createdBy": info.user };
+            }
 
             if (info.no && info.no != '') {
                 invoiceNumberFilter = { "no": info.no };
@@ -496,7 +500,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                 }
             };
 
-            query = { '$and': [_defaultFilter, invoiceNumberFilter, supplierFilter, filterDate] };
+            query = { '$and': [_defaultFilter,userFilter, invoiceNumberFilter, supplierFilter, filterDate] };
 
             return this.collection
                     .aggregate([
