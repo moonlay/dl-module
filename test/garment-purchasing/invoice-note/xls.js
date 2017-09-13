@@ -57,7 +57,7 @@ it('#03. should success when create report', function (done) {
     info.dateFrom = createdData._createdDate.toISOString().split("T", "1").toString();
     info.dateTo = createdData._createdDate.toISOString().split("T", "1").toString();
 
-    instanceManager.getMonitoringDO(info)
+    instanceManager.getMonitoringInvoice(info)
         .then(result => {
             resultForExcelTest.data = result;
             var invoice = result;
