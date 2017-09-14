@@ -35,6 +35,7 @@ module.exports = class InternNoteManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
+            _deleted: false,
             no: valid.no || ""
         });
 
