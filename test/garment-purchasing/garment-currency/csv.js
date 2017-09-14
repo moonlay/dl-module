@@ -23,7 +23,7 @@ before('#00. connect db', function (done) {
 
 var createdData = {};
 it("#01. should success when create data csv", function (done) {
-    dataUtil.getNewData()
+    dataUtil.getNewDataTest()
         .then((data) => {
             data.should.instanceof(Array);
             data.length.should.not.equal(0);
