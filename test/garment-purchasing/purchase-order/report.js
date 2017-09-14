@@ -53,11 +53,11 @@ it(`#02. should success when get created data with id`, function (done) {
 var resultForExcelTest = {};
 it('#03. should success when create report', function (done) {
     var info = {};
-    info.test="test";
+    info.filter = { _createdBy: createdData._createdBy };
     info.no = createdData._id;
     info.buyer = createdData.buyerId;
-    info.category=createdData.items[0].categoryId;
-    info.unit=createdData.unitId;
+    info.category = createdData.items[0].categoryId;
+    info.unit = createdData.unitId;
     info.dateFrom = createdData.date;
     info.dateTo = createdData.date.toISOString().split("T", "1").toString();
 
