@@ -218,8 +218,8 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                             item.productId = deliveryOrderFulfillment.productId;
                             item.product = deliveryOrderFulfillment.product;
                             item.purchaseOrderUom = deliveryOrderFulfillment.purchaseOrderUom;
-                            item.purchaseOrderQuantity = Number(deliveryOrderFulfillment.purchaseOrderQuantity);
-                            item.deliveredQuantity = Number(deliveryOrderFulfillment.deliveredQuantity);
+                            item.purchaseOrderQuantity = Number(item.purchaseOrderQuantity);
+                            item.deliveredQuantity = Number(item.deliveredQuantity);
                         }
 
                     }
