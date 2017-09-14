@@ -1007,7 +1007,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         ,{"$unwind" : "$items.fulfillments"}
                         ,{"$match" : query }
                         ,{"$project" : {
-                            "no" : 1,
+                            "_updatedDate" : -1,
+                            "no" : "$no",
                             "doDate":"$supplierDoDate",
                             "arrivedDate":"$date",
                             "supplier" : "$supplier.name",
