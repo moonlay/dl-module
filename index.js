@@ -222,7 +222,8 @@ module.exports = {
             dimMachine: require("./src/etl/dim/dim-machine-etl-manager"),
             dimStorage: require("./src/etl/dim/dim-storage-etl-manager"),
             dimProduct: require("./src/etl/dim/dim-product-etl-manager"),
-            dimCompany: require("./src/etl/dim/dim-company-etl-manager")
+            dimCompany: require("./src/etl/dim/dim-company-etl-manager"),
+            dimContact: require("./src/etl/dim/dim-contact-etl-manager")
         },
         inventory: {
             factPackingReceipt: require("./src/etl/inventory/fact-fp-packing-receipt-etl-manager"),
