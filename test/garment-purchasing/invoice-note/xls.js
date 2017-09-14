@@ -1,17 +1,16 @@
-require("should");
-var dataUtil = require("../../data-util/garment-purchasing/purchase-order-data-util");
+var should = require('should');
 var helper = require("../../helper");
-var validatePO = require("dl-models").validator.garmentPurchasing.garmentPurchaseOrder;
-var moment = require('moment');
-
-var Manager = require("../../../src/managers/garment-purchasing/purchase-order-manager");
-var manager = null;
+var DataUtil = require("../../data-util/garment-purchasing/invoice-note-data-util");
+var ObjectId = require("mongodb").ObjectId;
+var validate = require("dl-models").validator.garmentPurchasing.garmentInvoiceNote;
+var InvoiceNoteManager = require("../../../src/managers/garment-purchasing/invoice-note-manager");
+var instanceManager = null;
 
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            manager = new Manager(db, {
+            instanceManager = new InvoiceNoteManager(db, {
                 username: 'dev'
             });
             done();
@@ -23,8 +22,8 @@ before('#00. connect db', function (done) {
 
 var createdId;
 it("#01. should success when create new data", function (done) {
-    dataUtil.getNewData()
-        .then((data) => manager.create(data))
+    DataUtil.getNewData()
+        .then((data) => instanceManager.create(data))
         .then((id) => {
             id.should.be.Object();
             createdId = id;
@@ -37,10 +36,10 @@ it("#01. should success when create new data", function (done) {
 
 var createdData;
 it(`#02. should success when get created data with id`, function (done) {
-    manager.getSingleById(createdId)
+    instanceManager.getSingleById(createdId)
         .then((data) => {
             data.should.instanceof(Object);
-            validatePO(data);
+            validate(data);
             createdData = data;
             done();
         })
@@ -53,20 +52,17 @@ it(`#02. should success when get created data with id`, function (done) {
 var resultForExcelTest = {};
 it('#03. should success when create report', function (done) {
     var info = {};
-    info.filter = { _createdBy: createdData._createdBy };
-    info.no = createdData._id;
-    info.buyer = createdData.buyerId;
-    info.category = createdData.items[0].categoryId;
-    info.unit = createdData.unitId;
-    info.dateFrom = createdData.date;
-    info.dateTo = createdData.date.toISOString().split("T", "1").toString();
+    info.no = createdData.no;
+    info.supplierId = createdData.supplierId.toString();
+    info.dateFrom = createdData._createdDate.toISOString().split("T", "1").toString();
+    info.dateTo = createdData._createdDate.toISOString().split("T", "1").toString();
 
-    manager.getReport(info)
+    instanceManager.getMonitoringInvoice(info)
         .then(result => {
-            resultForExcelTest = result;
-            var POdata = result.data;
-            POdata.should.instanceof(Array);
-            POdata.length.should.not.equal(0);
+            resultForExcelTest.data = result;
+            var invoice = result;
+            invoice.should.instanceof(Array);
+            invoice.length.should.not.equal(0);
             done();
         }).catch(e => {
             done(e);
@@ -74,10 +70,12 @@ it('#03. should success when create report', function (done) {
 });
 
 
+
+
 it('#04. should success when get data for Excel Report', function (done) {
     var query = {};
 
-    manager.getXls(resultForExcelTest, query)
+    instanceManager.getXls(resultForExcelTest, query)
         .then(xlsData => {
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
@@ -90,7 +88,7 @@ it('#04. should success when get data for Excel Report', function (done) {
 
 
 it("#05. should success when destroy all unit test data", function (done) {
-    manager.destroy(createdData._id)
+    instanceManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();
             result.should.equal(true);
