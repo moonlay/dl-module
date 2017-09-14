@@ -1819,19 +1819,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
 
     getReport(info) {
-        if (info.test == "test") {
-            var _defaultFilter = {
-                _deleted: false
-            }
-        } else {
-            var _defaultFilter = {
-                $and: [{ _createdBy: { $ne: "dev2" } },
-                { _createdBy: { $ne: "dev" } },
-                { _deleted: false }]
-            };
+
+        var _defaultFilter = {
+            $and: [{ _deleted: false },
+                { _createdBy: info.filter._createdBy }]
         }
-
-
+        
         var noFilter = {};
         var categoryFilter = {};
         var unitFilter = {};

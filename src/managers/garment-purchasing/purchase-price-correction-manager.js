@@ -344,4 +344,175 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
 
         });
     }
+
+      getPurchasePriceCorrectionReport(query,user) {
+        return new Promise((resolve, reject) => {
+         
+            var deletedQuery = { _deleted: false };
+            var correctionTypeQuery = { correctionType: {$regex: /Harga/} };
+            var userQuery = {_createdBy : user.username};
+            
+
+            var date = new Date();
+            var dateString = moment(date).format('YYYY-MM-DD');
+            var dateNow = new Date(dateString);
+            var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            var dateQuery = {
+                "date": {
+                    "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
+                    "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
+                }
+            };
+        
+          var noQuery = {};
+            if (query.no ){
+                noQuery = {
+                    "no" : (query.no)
+                };
+            }
+
+            var supplierQuery = {};
+            if (query.supplier){
+                supplierQuery = {
+                    "deliveryOrder.supplier.code" : (query.supplier)
+                };
+            }
+     
+     
+            var Query = { "$and": [userQuery,dateQuery, deletedQuery, supplierQuery,noQuery,correctionTypeQuery] };
+            this.collection
+                .aggregate([
+      
+                     {"$unwind" : "$deliveryOrder"}
+                    ,{"$unwind" : "$deliveryOrder.items"}
+                    ,{"$unwind" : "$items"}
+                    ,{"$unwind" : "$deliveryOrder.items.fulfillments"}
+                    ,{ $match : Query }
+                    
+                    ,{"$project" : {
+                        "no" : "$no",
+                        "date" : 1,
+                        "correctionType" : "$correctionType",
+                        "currrencyCode" : "$currency.code",
+                        "deliveryorderNo" :"$deliveryOrder.no",
+                        "supplier" :"$deliveryOrder.supplier.name",
+                        "noPOEks":"$items.purchaseOrderExternalNo",
+                        "noPR":"$items.purchaseRequestNo",
+                        "itemCode":"$items.product.code",
+                        "itemName":"$items.product.name",
+                        "qty":"$items.quantity",
+                        "unitCode" :"$items.uom.unit",
+                        "pricePerUnit":"$items.pricePerUnit",
+                        "priceTotal" :"$items.priceTotal",
+                        "currencyCode" :"$items.currency.code",
+                         "deliveredQty" :"$deliveryOrder.items.fulfillments.deliveredQuantity",
+                        "fulfillments" :"$deliveryOrder.items.fulfillments",
+                        "itemsProdId" :"$items.purchaseOrderInternalId",
+                        "fulProdId" :"$deliveryOrder.items.fulfillments.purchaseOrderId"
+                        
+                 }   
+                    },
+                  
+                    {"$sort" : {
+                        "date" : 1,
+                    }},
+                    
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+    getPurchasePriceCorrectionReportXls(dataReport,query) {
+
+        return new Promise((resolve, reject) => {
+            var xls = {};
+            xls.data = [];
+            xls.options = [];
+            xls.name = '';
+
+            var dateFormat = "DD/MM/YYYY";
+           
+            for(var data of dataReport.data){
+                 var item = {};
+                 
+                item["No"] = data.index;
+                item["No Koreksi Harga"] = data.no;
+                item["Tanggal Koreksi Harga"] = data.date ? moment(data.date).format(dateFormat) : '';
+                item["Jenis Koreksi"] = data.correctionType ? data.correctionType : '';
+                item["Surat Jalan"] = data.deliveryorderNo ? data.deliveryorderNo : '';
+                item["Supplier"] = data.supplier ? data.supplier : '';
+                item["Nomor PO Eksternal"] = data.noPOEks ? data.noPOEks : '';
+                item["No PR"] = data.noPR ? data.noPR : '';
+                item["Kode Barang"] = data.itemCode ? data.itemCode : '';
+                item["Nama Barang"] = data.itemName ? data.itemName : '';
+                var correction=data.fulfillments.corrections ? data.fulfillments.corrections :data.fulfillments.correction;
+                if(!correction.length)
+                        {
+                            item["Jumlah Awal"] = data.fulfillments.deliveredQuantity;
+                        }else 
+                        {
+                            item["Jumlah Awal"]  = correction[correction.length -1].correctionQuantity;
+
+                        }
+                        if(!correction.length)
+                        {
+                            item["Harga Satuan Awal"] = pr.fulfillments.pricePerDealUnit;
+                        }else 
+                        {
+                           item["Harga Satuan Awal"] = correction[correction.length -1].correctionPricePerUnit;
+                        }
+                         if(!correction.length)
+                        {
+                            item["Harga Total Awal"] = pr.fulfillments.pricePerDealUnit;
+                        }else 
+                        {
+                            item["Harga Total Awal"] = correction[correction.length -1].correctionPriceTotal;
+                        }
+                item["Jumlah Akhir"] = data.qty ? data.qty : '';
+                item["Satuan"] = data.unitCode ? data.unitCode : '';
+                item["Harga Satuan Akhir"] = data.pricePerUnit ? data.pricePerUnit : '';
+                item["Harga Total Akhir"] = data.priceTotal ? data.priceTotal : '';
+                item["Mata Uang"] = data.currrencyCode ? data.currrencyCode : '';
+                xls.data.push(item);
+           
+            }
+             
+            xls.options["No Bon Terima Unit"] = "string";
+            xls.options["No Koreksi Harga"] = "string";
+            xls.options["Tanggal Koreksi Harga"] = "string";
+            xls.options["Jenis Koreksi"] = "string";
+            xls.options["Surat Jalan"] = "string";
+            xls.options["Supplier"]="string";
+            xls.options["Nomor PO Eksternal"] = "string";
+            xls.options["No PR"] = "string";
+            xls.options["Kode Barang"] = "string";
+            xls.options["Nama Barang"] = "string";
+            xls.options["Jumlah Awal"] = "number";
+            xls.options["Harga Satuan Awal"] = "number";
+            xls.options["Harga Total Awal"] = "number";
+            xls.options["Jumlah Akhir"] = "number";
+            xls.options["Harga Satuan Akhir"] = "number";
+            xls.options["Harga Total Akhir"] = "number";
+            xls.options["Mata Uang"] = "string";
+
+            if(query.dateFrom && query.dateTo){
+                xls.name = `Purchase Price Correction Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            }
+            else if(!query.dateFrom && query.dateTo){
+                xls.name = `Purchase Price Correction Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            }
+            else if(query.dateFrom && !query.dateTo){
+                xls.name = `Purchase Price Correction Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+            }
+            else
+                xls.name = `Purchase Price Correction Report.xlsx`;
+            
+            resolve(xls);
+        });
+    }
 }
