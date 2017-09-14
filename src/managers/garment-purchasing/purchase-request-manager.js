@@ -11,6 +11,7 @@ var CategoryManager = require("../master/garment-category-manager");
 var ProductManager = require("../master/garment-product-manager");
 var i18n = require("dl-i18n");
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
+var moment = require('moment');
 
 module.exports = class PurchaseRequestManager extends BaseManager {
     constructor(db, user) {
@@ -411,18 +412,23 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                             "no": PRNo
                         });
                     }
-                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateFrom !== undefined && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null" && dateTo !== undefined) {
-                        var _dateFrom = new Date(dateFrom);
-                        var _dateTo = new Date(dateTo);
-                        _dateFrom.setHours(_dateFrom.getHours() - offset);
-                        _dateTo.setHours(_dateTo.getHours() - offset);
-                        Object.assign(query, {
-                            date: {
-                                $gte: _dateFrom,
-                                $lte: _dateTo
-                            }
-                        });
-                    }
+                    var date = new Date();
+                    var dateString = moment(date).format('YYYY-MM-DD');
+                    var dateNow = new Date(dateString);
+                    var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+                    var EndDate=moment(dateTo).format('YYYY-MM-DD');
+                   
+                    var _dateFrom = new Date(dateFrom);
+                    var _dateTo = new Date(EndDate + "T23:59");
+                    _dateFrom.setHours(_dateFrom.getHours() - offset);
+                    _dateTo.setHours(_dateTo.getHours() - offset);
+                    Object.assign(query, {
+                        date: {
+                            "$gte": (!query || dateFrom=="undefined"  || !dateFrom ? (new Date(1900, 1, 1)) : (new Date(_dateFrom))),
+                            "$lte": (!query || dateTo=="undefined"  || !dateTo ? date : (new Date(_dateTo)))
+                        }
+                    });
+                    
                     if (createdBy !== undefined && createdBy !== "") {
                         Object.assign(query, {
                             _createdBy: createdBy
