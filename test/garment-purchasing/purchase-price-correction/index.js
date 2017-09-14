@@ -4,4 +4,9 @@ describe("BASIC CRUD SCENARIOS", function() {
 
 describe("GENERATE PDF SCENARIOS", function() {
     require("./pdf");
+});
+
+describe("REPORT SCENARIOS", function() {
+    require("./report");
 }); 
+ 
