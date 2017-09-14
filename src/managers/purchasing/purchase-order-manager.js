@@ -652,72 +652,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
 
-getDataPOStaff(startdate, enddate, offset) {
+getDataPOStaff(startdate , enddate , divisi , offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
             qryMatch["$and"] = [
                 { "_deleted": false },
                 { "purchaseOrderExternal.isPosted": true }];
-    var dates = {
-                $divide: [{
-                    $subtract: [{
-                        $subtract: [
-                            { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] },
-                            {
-                                "$add": [
-                                    { "$millisecond": "$purchaseOrderExternal.expectedDeliveryDate" },
-                                    {
-                                        "$multiply": [
-                                            { "$second": "$purchaseOrderExternal.expectedDeliveryDate" },
-                                            1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$minute": "$purchaseOrderExternal.expectedDeliveryDate" },
-                                            60, 1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$hour": { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] } },
-                                            60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    }, {
-                            $subtract: [
-                                { "$add": ["$items.fulfillments.deliveryOrderDate", 60 * 60 * 1000 * offset] },
-                                {
-                                    "$add": [
-                                        { "$millisecond": "$items.fulfillments.deliveryOrderDate" },
-                                        {
-                                            "$multiply": [
-                                                { "$second": "$items.fulfillments.deliveryOrderDate" },
-                                                1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$minute": "$items.fulfillments.deliveryOrderDate" },
-                                                60, 1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$hour": { "$add": ["$items.fulfillments.deliveryOrderDate", 60 * 60 * 1000 * offset] } },
-                                                60, 60, 1000
-                                            ]
-                                        }
-                                    ]
-                                }]
-                        }]
-                }, 86400000]
-            };
-         
-
+    
 
             if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
                 var validStartDate = new Date(startdate);
@@ -727,12 +668,25 @@ getDataPOStaff(startdate, enddate, offset) {
 
                 qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.expectedDeliveryDate": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
                     })
             }
+
+               if (divisi !== ""  ) {
+                qryMatch["$and"].push({
+                    //"unit.division.name":divisi
+             "unit.division._id": new ObjectId(divisi)    
+             })
+                
+                
+
+            }
+
+                    
+        
             this.collection.aggregate(
                 [{
                     $match: qryMatch
@@ -742,17 +696,14 @@ getDataPOStaff(startdate, enddate, offset) {
                     { $unwind: "$items.fulfillments" },
                     {
                         $group: {
-                           _id:{_id:"$author",namee:"$_createdBy",noprr:"$purchaseOrderExternal.no"},
-                           "selisih": { $first: dates },
-                            "tgltarget": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$purchaseOrderExternal.expectedDeliveryDate" } }},
-                           "tgldatang": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$items.fulfillments.deliveryOrderDate" } }},
-                             
-                        }
+                           _id:{_id:"$author",namee:"$_createdBy",noprr:"$purchaseRequest.no"},                      
+                    "division": { $first: "$unit.division._id"},   
+                     }
                     },
                     {
             $group: {
                            _id:{name:"$_id.namee"},
-                        "isi": { $push: { no: "$_id.no" ,tglt: "$tgltarget",tgld: "$tgldatang" } },
+                           "div": { $first: "$division"},
                    "count":{$sum:1}}
     },
                     { $sort : { "_id.name" : 1 } }]
@@ -763,6 +714,7 @@ getDataPOStaff(startdate, enddate, offset) {
                 });
         });
     }
+
 
 
 
@@ -817,7 +769,7 @@ getDataPOStaff(startdate, enddate, offset) {
     }
 
 
-getDataPODetailStaff(startdate, enddate, staff, offset) {
+getDataPODetailStaff(startdate, enddate, staff,divisi, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
 
@@ -893,7 +845,7 @@ getDataPODetailStaff(startdate, enddate, staff, offset) {
                 validEndDate.setHours(validEndDate.getHours() - offset);
   qryMatch["$and"].push(
                     {
-                        "date": {
+                        "purchaseOrderExternal.expectedDeliveryDate": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
@@ -912,6 +864,16 @@ getDataPODetailStaff(startdate, enddate, staff, offset) {
 
             }
 
+               if (divisi!=="") {
+                qryMatch["$and"].push({
+            "unit.division._id": new ObjectId(divisi)    
+             })
+                
+                
+
+            }
+
+
             this.collection.aggregate(
                 [
                     {
@@ -923,8 +885,10 @@ getDataPODetailStaff(startdate, enddate, staff, offset) {
                     { $unwind: "$items.fulfillments" },
                     {
                         $group: {
-                           _id:{_id:"$author",name:"$purchaseOrderExternal.no"},
+                           _id:{_id:"$author",name:"$purchaseRequest.no"},
                            "user": { $first: "$_createdBy"},
+                           "divisi": { $first: "$unit.division.name"},
+                           "unit": { $first: "$unit.name"},
                            "selisih": { $first: dates },
                             "tgltarget": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$purchaseOrderExternal.expectedDeliveryDate" } }},
                            "tgldatang": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$items.fulfillments.deliveryOrderDate" } }},
@@ -932,7 +896,7 @@ getDataPODetailStaff(startdate, enddate, staff, offset) {
                         }
                     },
                  
-                      { $sort : { "purchaseRequest.date" : 1 } }
+                      { $sort : { "tgltarget" : 1 } }
                     ]
     
             )
