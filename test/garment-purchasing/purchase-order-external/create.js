@@ -1,6 +1,7 @@
 require("should");
 var helper = require("../../helper");
 
+var purchaseRequestDataUtil = require("../../data-util/garment-purchasing/purchase-request-data-util");
 var purchaseOrderDataUtil = require("../../data-util/garment-purchasing/purchase-order-data-util");
 var PurchaseOrderManager = require("../../../src/managers/garment-purchasing/purchase-order-manager");
 var purchaseOrderManager = null;
@@ -116,4 +117,123 @@ it('#05. should success when generate pdf purchase-order-external', function (do
         .catch(e => {
             done(e);
         });
+});
+
+it('#06. should success when create new purchase-order-external with splitted purchase-orders', function (done) {
+    purchaseRequestDataUtil.getNewTestData()
+        .then((res) => {
+            return purchaseOrderManager.purchaseRequestManager.getPurchaseRequestByTag()
+        })
+        .then(data => {
+            data.should.be.instanceof(Array);
+            return purchaseOrderManager.createMultiple(data)
+        })
+        .then(listId => {
+            return purchaseOrderManager.getSingleById(listId[0])
+        })
+        .then(poInternal => {
+            var purchaseOrder = Object.assign({}, poInternal);
+
+            poInternal.items.map((item) => {
+                item.defaultQuantity = item.defaultQuantity / 2;
+            })
+            poInternal.sourcePurchaseOrderId = purchaseOrder._id
+            poInternal.sourcePurchaseOrder = Object.assign({}, purchaseOrder);
+            return purchaseOrderManager.split(poInternal)
+        })
+        .then((id) => {
+            return purchaseOrderManager.getSingleById(id);
+        })
+        .then((poInternal) => {
+            purchaseOrderExternalDataUtil.getNew([poInternal])
+                .then(poe => {
+                    purchaseOrderExternal = poe;
+                    validatePO(purchaseOrderExternal);
+
+                    return purchaseOrderManager.collection.find({
+                        "no": poInternal.sourcePurchaseOrder.no,
+                        "purchaseRequest.no": poInternal.purchaseRequest.no,
+                        "items.refNo": poInternal.items[0].refNo,
+                        "items.product.code": poInternal.items[0].product.code,
+                        _deleted: false,
+                        isClosed: false
+                    }).toArray()
+                })
+                .then((listPOInternal) => {
+                    purchaseOrderExternalDataUtil.getNew(listPOInternal)
+                        .then(poe => {
+                            purchaseOrderExternal = poe;
+                            validatePO(purchaseOrderExternal);
+                            done();
+                        })
+                        .catch(e => {
+                            done(e);
+                        });
+                })
+        })
+});
+
+it('#07. should error when create new purchase-order-external with deal price grater than budget price', function (done) {
+    purchaseRequestDataUtil.getNewTestData()
+        .then((res) => {
+            return purchaseOrderManager.purchaseRequestManager.getPurchaseRequestByTag()
+        })
+        .then(data => {
+            data.should.be.instanceof(Array);
+            return purchaseOrderManager.createMultiple(data)
+        })
+        .then(listId => {
+            return purchaseOrderManager.getSingleById(listId[0])
+        })
+        .then(poInternal => {
+            var purchaseOrder = Object.assign({}, poInternal);
+
+            poInternal.items.map((item) => {
+                item.defaultQuantity = item.defaultQuantity / 2;
+            })
+            poInternal.sourcePurchaseOrderId = purchaseOrder._id
+            poInternal.sourcePurchaseOrder = Object.assign({}, purchaseOrder);
+            return purchaseOrderManager.split(poInternal)
+        })
+        .then((id) => {
+            return purchaseOrderManager.getSingleById(id);
+        })
+        .then((poInternal) => {
+            purchaseOrderExternalDataUtil.getNew([poInternal])
+                .then(poe => {
+                    purchaseOrderExternal = poe;
+                    validatePO(purchaseOrderExternal);
+
+                    return purchaseOrderManager.collection.find({
+                        "no": poInternal.sourcePurchaseOrder.no,
+                        "purchaseRequest.no": poInternal.purchaseRequest.no,
+                        "items.refNo": poInternal.items[0].refNo,
+                        "items.product.code": poInternal.items[0].product.code,
+                        _deleted: false,
+                        isClosed: false
+                    }).toArray()
+                })
+                .then((listPOInternal) => {
+                    for (var poInternal of listPOInternal) {
+                        for (var item of poInternal.items) {
+                            item.budgetPrice = item.budgetPrice * 2
+                        }
+                    }
+                    purchaseOrderExternalDataUtil.getNew(listPOInternal)
+                        .then((id) => {
+                            done("should error when create new purchase-order-external with deal price grater than budget price");
+                        })
+                        .catch((e) => {
+                            try {
+                                e.name.should.equal("ValidationError");
+                                e.should.have.property("errors");
+                                e.errors.should.instanceof(Object);
+                                done();
+                            }
+                            catch (ex) {
+                                done(e);
+                            }
+                        });
+                })
+        })
 });

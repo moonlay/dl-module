@@ -191,7 +191,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                 var poExternalItem = _poExternal.items.find((item) => item.poId.toString() === doFulfillment.purchaseOrderId.toString() && item.product._id.toString() === doFulfillment.product._id.toString())
                                 if (Object.getOwnPropertyNames(doFulfillment).length === 0) {
                                     fulfillmentError["purchaseOrderId"] = i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId.isRequired:%s is required", i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId._:PurchaseOrderInternal"));
-                                } else if (poExternalItem.isClosed) {
+                                } else if (poExternalItem.isClosed && !ObjectId.isValid(valid._id)) {
                                     fulfillmentError["purchaseOrderId"] = i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId.isRequired:%s is closed", i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId._:PurchaseOrderExternal"));
                                 }
                                 if (!doFulfillment.deliveredQuantity || doFulfillment.deliveredQuantity === 0) {
@@ -972,7 +972,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             var dateString = moment(date).format('YYYY-MM-DD');
             var dateNow = new Date(dateString);
             var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
-            
+
 
             if (info.no && info.no != '') {
                 doNoFilter = { "items.purchaseOrderExternalNo": info.no };
@@ -985,7 +985,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             if (info.user && info.user != '') {
                 userFilter = { "_createdBy": info.user };
             }
-            
+
             var _dateFrom = new Date(info.dateFrom);
             var _dateTo = new Date(info.dateTo + "T23:59");
             _dateFrom.setHours(_dateFrom.getHours() - info.offset);
@@ -997,46 +997,50 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 }
             };
 
-            query = { '$and': [_defaultFilter,  doNoFilter, supplierFilter, filterDate, userFilter] };
+            query = { '$and': [_defaultFilter, doNoFilter, supplierFilter, filterDate, userFilter] };
 
-            
+
 
             return this.collection
-                    .aggregate([
-                        {"$unwind" : "$items"}
-                        ,{"$unwind" : "$items.fulfillments"}
-                        ,{"$match" : query }
-                        ,{"$project" : {
-                            "no" : 1,
-                            "doDate":"$supplierDoDate",
-                            "arrivedDate":"$date",
-                            "supplier" : "$supplier.name",
-                            "supplierType":"$supplier.import",
-                            "shipmentType":"$shipmentType",
-                            "shipmentNo":"$shipmentNo",
-                            "customs":"$useCustoms",
-                            "poEksNo":"$items.purchaseOrderExternalNo",
-                            "prNo":"$items.fulfillments.purchaseRequestNo",
-                            "productCode" : "$items.fulfillments.product.code",
-                            "productName" : "$items.fulfillments.product.name",
-                            "qty" : "$items.fulfillments.purchaseOrderQuantity",
-                            "delivered" : "$items.fulfillments.deliveredQuantity",
-                            "price" : "$items.fulfillments.pricePerDealUnit",
-                            "uom" : "$items.fulfillments.purchaseOrderUom.unit",
-                            "currency" : "$items.fulfillments.currency.description",
-                            "remark":"$items.fulfillments.remark"
-                        }},
-                        {"$sort" : {
-                            "_updatedDate" : -1
-                        }}
-                    ])
-                    .toArray()
-                    .then(results => {
-                        resolve(results);
-                    })
-                    .catch(e => {
-                        reject(e);
-                    });
+                .aggregate([
+                    { "$unwind": "$items" }
+                    , { "$unwind": "$items.fulfillments" }
+                    , { "$match": query }
+                    , {
+                        "$project": {
+                            "no": 1,
+                            "doDate": "$supplierDoDate",
+                            "arrivedDate": "$date",
+                            "supplier": "$supplier.name",
+                            "supplierType": "$supplier.import",
+                            "shipmentType": "$shipmentType",
+                            "shipmentNo": "$shipmentNo",
+                            "customs": "$useCustoms",
+                            "poEksNo": "$items.purchaseOrderExternalNo",
+                            "prNo": "$items.fulfillments.purchaseRequestNo",
+                            "productCode": "$items.fulfillments.product.code",
+                            "productName": "$items.fulfillments.product.name",
+                            "qty": "$items.fulfillments.purchaseOrderQuantity",
+                            "delivered": "$items.fulfillments.deliveredQuantity",
+                            "price": "$items.fulfillments.pricePerDealUnit",
+                            "uom": "$items.fulfillments.purchaseOrderUom.unit",
+                            "currency": "$items.fulfillments.currency.description",
+                            "remark": "$items.fulfillments.remark"
+                        }
+                    },
+                    {
+                        "$sort": {
+                            "_updatedDate": -1
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
         });
     }
 
@@ -1049,28 +1053,28 @@ module.exports = class DeliveryOrderManager extends BaseManager {
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
 
-        for(var _data of result.data){
+        for (var _data of result.data) {
             var data = {};
             index += 1;
             data["No"] = index;
-            data["Nomor Surat Jalan"] = _data.no? _data.no : "";
+            data["Nomor Surat Jalan"] = _data.no ? _data.no : "";
             data["Tanggal Surat Jalan"] = _data.doDate ? moment(new Date(_data.doDate)).add(query.offset, 'h').format(dateFormat) : '';
             data["Tanggal Tiba"] = _data.arrivedDate ? moment(new Date(_data.arrivedDate)).add(query.offset, 'h').format(dateFormat) : '';
             data["Supplier"] = _data.supplier ? _data.supplier : '';
             data["Jenis Supplier"] = _data.supplierType ? "Import" : "Lokal";
             data["Pengiriman"] = _data.shipmentType ? _data.shipmentType : '';
             data["Nomor BL"] = _data.shipmentNo ? _data.shipmentNo : '';
-            data["Dikenakan Bea Cukai"] =_data.customs ? "Ya" : "Tidak";
-            data["Nomor PO Eksternal"] =_data.poEksNo;
-            data["Nomor PR"] =_data.prNo;
+            data["Dikenakan Bea Cukai"] = _data.customs ? "Ya" : "Tidak";
+            data["Nomor PO Eksternal"] = _data.poEksNo;
+            data["Nomor PR"] = _data.prNo;
             data["Kode Barang"] = _data.productCode;
             data["Nama Barang"] = _data.productName;
-            data["Jumlah Dipesan"] =_data.qty;
-            data["Jumlah Diterima"] =_data.delivered;
-            data["Satuan"] =_data.uom;
-            data["Harga"] =_data.price * _data.delivered;
-            data["Mata Uang"] =_data.currency;
-            data["Keterangan"] =_data.remark? _data.remark : '';
+            data["Jumlah Dipesan"] = _data.qty;
+            data["Jumlah Diterima"] = _data.delivered;
+            data["Satuan"] = _data.uom;
+            data["Harga"] = _data.price * _data.delivered;
+            data["Mata Uang"] = _data.currency;
+            data["Keterangan"] = _data.remark ? _data.remark : '';
 
             xls.options["No"] = "number";
             xls.options["Nomor Surat Jalan"] = "string";
