@@ -11,8 +11,8 @@ var dateBefore;
 var supplier;
 var no;
 var user = {username :"unit-test"};
-
-require("should");
+var dataUtil= require("../../data-util/garment-purchasing/purchase-price-correction-data-util");
+var should = require("should");
 
 
 before('#00. connect db', function (done) {
