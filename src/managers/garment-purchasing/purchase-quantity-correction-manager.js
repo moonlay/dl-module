@@ -449,7 +449,7 @@ getPurchaseQuantityCorrectionReport(query,user) {
                 });
         });
     }
-    getPurchaseQuantityCorrectionReportXls(dataReport,query) {
+  getPurchaseQuantityCorrectionReportXls(dataReport,query) {
 
         return new Promise((resolve, reject) => {
             var xls = {};
@@ -467,7 +467,7 @@ getPurchaseQuantityCorrectionReport(query,user) {
                  {
                 item["No"] = index;
                 item["No Koreksi Harga"] = data.no;
-                item["Tanggal Koreksi Harga"] = data.date ? moment(data.date).format(dateFormat) : '';
+                item["Tanggal Koreksi Harga"] = data.date ? moment(new Date(data.date)).add(query.offset, 'h').format(dateFormat) : '';
                 item["Jenis Koreksi"] = data.correctionType ? data.correctionType : '';
                 item["Surat Jalan"] = data.deliveryorderNo ? data.deliveryorderNo : '';
                 item["Supplier"] = data.supplier ? data.supplier : '';
@@ -527,16 +527,16 @@ getPurchaseQuantityCorrectionReport(query,user) {
             xls.options["Mata Uang"] = "string";
 
             if(query.dateFrom && query.dateTo){
-                xls.name = `Purchase Quantity Correction Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                xls.name = `Purchase Price Correction Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
             }
             else if(!query.dateFrom && query.dateTo){
                 xls.name = `Purchase Price Correction Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
             }
             else if(query.dateFrom && !query.dateTo){
-                xls.name = `Purchase Quantity Correction Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+                xls.name = `Purchase Price Correction Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
             }
             else
-                xls.name = `Purchase Quantity Correction Report.xlsx`;
+                xls.name = `Purchase Price Correction Report.xlsx`;
             
             resolve(xls);
         });
