@@ -884,14 +884,14 @@ getDataPODetailStaff(startdate, enddate, staff,divisi, offset) {
                     }, 
                     { $unwind: "$items.fulfillments" },
                     {
-                       $group: {
+                        $group: {
                            _id:{_id:"$author",name:"$purchaseRequest.no"},
                            "user": { $first: "$_createdBy"},
                            "divisi": { $first: "$unit.division.name"},
                            "unit": { $first: "$unit.name"},
-                           "selisih": { $first: dates },
-                           "nmbarang": { $first: "$items.product.name" },
+                        "nmbarang": { $first: "$items.product.name" },
                            "nmsupp": { $first: "$purchaseOrderExternal.supplier.name" },
+                           "selisih": { $first: dates },
                             "tgltarget": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$purchaseOrderExternal.expectedDeliveryDate" } }},
                            "tgldatang": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$items.fulfillments.deliveryOrderDate" } }},
                             "tgpr": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$_createdDate" } }},    
