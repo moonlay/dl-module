@@ -498,4 +498,147 @@ module.exports = class InternNoteManager extends BaseManager {
                 });
         });
     }
+
+    getDataMonitoring(info){
+        return new Promise((resolve, reject) => {
+            var _defaultFilter = {
+                _deleted: false
+            };
+            var userFilter={};
+            var internNoteFilter = {};
+            var supplierFilter = {};
+            var currencyFilter = {};
+            var dateFromFilter = {};
+            var dateToFilter = {};
+            var query = {};
+
+            var dateFrom = info.dateFrom ? (new Date(info.dateFrom).setHours((new Date(info.dateFrom)).getHours() - info.offset)) : (new Date(1900, 1, 1));
+            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59").setHours((new Date(info.dateTo+ "T23:59")).getHours() - info.offset)) : (new Date());
+            var now = new Date();
+
+            if (info.user && info.user != '') {
+                userFilter = { "_createdBy": info.user };
+            }
+
+            if (info.no && info.no != '') {
+                internNoteFilter = { "no": info.no };
+            }
+
+            if (info.supplierId && info.supplierId != '') {
+                supplierFilter = { "supplierId": new ObjectId(info.supplierId) };
+            }
+
+            if (info.currencyId && info.currencyId != '') {
+                currencyFilter = { "currency._id": new ObjectId(info.currencyId) };
+            }
+
+            var filterDate = {
+                "date": {
+                    $gte: new Date(dateFrom),
+                    $lte: new Date(dateTo)
+                }
+            };
+
+            query = { '$and': [_defaultFilter,userFilter, internNoteFilter, supplierFilter, filterDate, currencyFilter] };
+
+            return this.collection
+                    .aggregate([
+                        {"$unwind" : "$items"}
+                        ,{"$unwind" : "$items.items"}
+                        ,{"$unwind" : "$items.items.items"}
+                        ,{"$match" : query }
+                        ,{"$project" : {
+                            "_updatedDate" : 1,
+                            "no" : "$no",
+                            "date":"$date",
+                            "supplier":"$supplier.name",
+                            "currency" : "$currency.code",
+                            "paymentMethod":"$paymentMethod",
+                            "paymentType":"$paymentType",
+                            "dueDate":"$dueDate",
+                            "invoiceNo":"$items.no",
+                            "invoiceDate":"$items.date",
+                            "productCode" : "$items.items.items.product.code",
+                            "productName" : "$items.items.items.product.name",
+                            "qty":"$items.items.items.deliveredQuantity",
+                            "uom":"$items.items.items.purchaseOrderUom.unit",
+                            "price":"$items.items.items.pricePerDealUnit"
+                        }},
+                        {"$sort" : {
+                            "_updatedDate" : -1
+                        }}
+                    ])
+                    .toArray()
+                    .then(results => {
+                        resolve(results);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    });
+        });
+    }
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var _data of result.data) {
+            var data = {};
+            index += 1;
+            data["No"] = index;
+            data["Nomor Nota Intern"] = _data.no ? _data.no : '';
+            data["Tanggal Nota Intern"] = _data.date ? moment(new Date(_data.date)).add(query.offset, 'h').format(dateFormat) : '';
+            data["Mata Uang"] = _data.currency;
+            data["Supplier"] = _data.supplier;
+            data["Term Pembayaran"] = _data.paymentMethod;
+            data["Tipe Pembayaran"] = _data.paymentType;
+            data["Tanggal Jatuh Tempo"] = _data.dueDate ? moment(new Date(_data.dueDate)).add(query.offset, 'h').format(dateFormat) : '';
+            data["Nomor Invoice"] = _data.invoiceNo ? _data.invoiceNo : '';
+            data["Tanggal Invoice"] = _data.invoiceDate ? moment(new Date(_data.invoiceDate)).add(query.offset, 'h').format(dateFormat) : '';
+            data["Kode Barang"] =_data.productCode;
+            data["Nama Barang"] =_data.productName;
+            data["Jumlah"] =_data.qty;
+            data["Satuan"] =_data.uom;
+            data["Harga Satuan"] =_data.price;
+            data["Harga Total"] =_data.price * _data.qty;
+
+            xls.options["No"] = "number";
+            xls.options["Nomor Nota Intern"] = "string";
+            xls.options["Tanggal Nota Intern"] = "string";
+            xls.options["Mata Uang"] = "string";
+            xls.options["Supplier"] = "string";
+            xls.options["Term Pembayaran"] = "string";
+            xls.options["Tipe Pembayaran"] = "string";
+            xls.options["Tanggal Jatuh Tempo"] = "string";
+            xls.options["Nomor Invoice"] = "string";
+            xls.options["Tanggal Invoice"] = "string";
+            xls.options["Kode Barang"] = "string";
+            xls.options["Nama Barang"] = "string";
+            xls.options["Jumlah"] = "number";
+            xls.options["Satuan"] = "string";
+            xls.options["Harga Satuan"] = "number";
+            xls.options["Harga Total"] = "number";
+
+            xls.data.push(data);
+        }
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Nota Intern ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Nota Intern ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Nota Intern ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Nota Intern.xlsx`;
+
+        return Promise.resolve(xls);
+    }
 }
