@@ -214,6 +214,6 @@ module.exports = class GarmentCurrencyManager extends BaseManager {
             unique: false
         }
 
-        return this.collection.createIndexes([dateIndex, codeIndex]);
+        return this.collection.createIndexes([dateIndex,codeIndex]);
     }
 }
