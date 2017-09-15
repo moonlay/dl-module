@@ -56,6 +56,7 @@ it('#03. should success when create report', function (done) {
     info.supplierId = createdData.supplierId.toString();
     info.dateFrom = createdData._createdDate.toISOString().split("T", "1").toString();
     info.dateTo = createdData._createdDate.toISOString().split("T", "1").toString();
+    info.offset=0;
 
     instanceManager.getMonitoringInvoice(info)
         .then(result => {

@@ -1002,45 +1002,42 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
 
             return this.collection
-                .aggregate([
-                    { "$unwind": "$items" }
-                    , { "$unwind": "$items.fulfillments" }
-                    , { "$match": query }
-                    , {
-                        "$project": {
-                            "no": 1,
-                            "doDate": "$supplierDoDate",
-                            "arrivedDate": "$date",
-                            "supplier": "$supplier.name",
-                            "supplierType": "$supplier.import",
-                            "shipmentType": "$shipmentType",
-                            "shipmentNo": "$shipmentNo",
-                            "customs": "$useCustoms",
-                            "poEksNo": "$items.purchaseOrderExternalNo",
-                            "prNo": "$items.fulfillments.purchaseRequestNo",
-                            "productCode": "$items.fulfillments.product.code",
-                            "productName": "$items.fulfillments.product.name",
-                            "qty": "$items.fulfillments.purchaseOrderQuantity",
-                            "delivered": "$items.fulfillments.deliveredQuantity",
-                            "price": "$items.fulfillments.pricePerDealUnit",
-                            "uom": "$items.fulfillments.purchaseOrderUom.unit",
-                            "currency": "$items.fulfillments.currency.description",
-                            "remark": "$items.fulfillments.remark"
-                        }
-                    },
-                    {
-                        "$sort": {
-                            "_updatedDate": -1
-                        }
-                    }
-                ])
-                .toArray()
-                .then(results => {
-                    resolve(results);
-                })
-                .catch(e => {
-                    reject(e);
-                });
+                    .aggregate([
+                        {"$unwind" : "$items"}
+                        ,{"$unwind" : "$items.fulfillments"}
+                        ,{"$match" : query }
+                        ,{"$project" : {
+                            "_updatedDate" : -1,
+                            "no" : "$no",
+                            "doDate":"$supplierDoDate",
+                            "arrivedDate":"$date",
+                            "supplier" : "$supplier.name",
+                            "supplierType":"$supplier.import",
+                            "shipmentType":"$shipmentType",
+                            "shipmentNo":"$shipmentNo",
+                            "customs":"$useCustoms",
+                            "poEksNo":"$items.purchaseOrderExternalNo",
+                            "prNo":"$items.fulfillments.purchaseRequestNo",
+                            "productCode" : "$items.fulfillments.product.code",
+                            "productName" : "$items.fulfillments.product.name",
+                            "qty" : "$items.fulfillments.purchaseOrderQuantity",
+                            "delivered" : "$items.fulfillments.deliveredQuantity",
+                            "price" : "$items.fulfillments.pricePerDealUnit",
+                            "uom" : "$items.fulfillments.purchaseOrderUom.unit",
+                            "currency" : "$items.fulfillments.currency.description",
+                            "remark":"$items.fulfillments.remark"
+                        }},
+                        {"$sort" : {
+                            "_updatedDate" : -1
+                        }}
+                    ])
+                    .toArray()
+                    .then(results => {
+                        resolve(results);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    });
         });
     }
 
