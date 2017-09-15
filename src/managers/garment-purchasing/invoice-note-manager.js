@@ -477,8 +477,8 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             var dateToFilter = {};
             var query = {};
 
-            var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+            var dateFrom = info.dateFrom ? (new Date(info.dateFrom).setHours((new Date(info.dateFrom)).getHours() - info.offset)) : (new Date(1900, 1, 1));
+            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59").setHours((new Date(info.dateTo+ "T23:59")).getHours() - info.offset)) : (new Date());
             var now = new Date();
 
             if (info.user && info.user != '') {
