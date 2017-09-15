@@ -28,7 +28,21 @@ before('#00. connect db', function (done) {
         })
 });
 
-it("#01. should success when get report with parameter no", function (done) {
+var createdId;
+it("#01. should success when create new data", function (done) {
+        dataUtil.getNewData()
+            .then((data) => purchasePriceCorrectionManager.create(data))
+            .then((id) => {
+                id.should.be.Object();
+                createdId = id;
+                done();
+            })
+            .catch((e) => {
+                done(e);
+            });
+    });
+
+it("#02. should success when get report with parameter no", function (done) {
     purchasePriceCorrectionManager.getPurchasePriceCorrectionReport({"no" : no},user)
         .then((data) => {
             data.should.instanceof(Array);
@@ -39,7 +53,7 @@ it("#01. should success when get report with parameter no", function (done) {
         });
 });
 
-it("#02. should success when get report with parameter supplier", function (done) {
+it("#03. should success when get report with parameter supplier", function (done) {
     purchasePriceCorrectionManager.getPurchasePriceCorrectionReport({"supplier" : supplier},user)
         .then((data) => {
             data.should.instanceof(Array);
@@ -50,7 +64,7 @@ it("#02. should success when get report with parameter supplier", function (done
         });
 });
 
-it("#03. should success when get report with parameter dateFrom", function (done) {
+it("#04. should success when get report with parameter dateFrom", function (done) {
     purchasePriceCorrectionManager.getPurchasePriceCorrectionReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD')},user)
         .then((data) => {
             data.should.instanceof(Array);
@@ -73,7 +87,7 @@ it("#03. should success when get report with parameter dateFrom", function (done
             done(e);
         });
 });
-it("#04. should success when get report with parameter dateFrom and dateTo", function (done) {
+it("#05. should success when get report with parameter dateFrom and dateTo", function (done) {
     purchasePriceCorrectionManager.getPurchasePriceCorrectionReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')},user)
         .then((data) => {
             data.should.instanceof(Array);
@@ -97,7 +111,7 @@ it("#04. should success when get report with parameter dateFrom and dateTo", fun
         });
 });
 
-it("#05. should success when get report with no parameter and get excel", function (done) {
+it("#06. should success when get report with no parameter and get excel", function (done) {
     purchasePriceCorrectionManager.getPurchasePriceCorrectionReport({},user)
         .then((data) => {
            
