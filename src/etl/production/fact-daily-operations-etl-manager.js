@@ -16,6 +16,7 @@ const selectedFields = {
     "goodOutput": 1,
     "input": 1,
     "shift": 1,
+    "action": 1,
     "timeInput": 1,
     "timeOutput": 1,
     "kanban.code": 1,
@@ -27,6 +28,12 @@ const selectedFields = {
     "kanban.cart.instruction.code": 1,
     "kanban.cart.instruction.name": 1,
     "kanban.productionOrder.orderType.name": 1,
+    "kanban.productionOrder.orderNo": 1,
+    "badOutputReasons.precentage": 1,
+    "badOutputReasons.description": 1,
+    "badOutputReasons.badOutputReason.code": 1,
+    "badOutputReasons.badOutputReason.reason": 1,
+    "kanban.productionOrder.salesContractNo": 1,
     "kanban.selectedProductionOrderDetail.colorRequest": 1,
     "kanban.selectedProductionOrderDetail.colorTemplate": 1,
     "kanban.selectedProductionOrderDetail.uom.unit": 1,
@@ -41,7 +48,7 @@ const selectedFields = {
     "type": 1,
     "stepId": 1,
     "step.process": 1,
-    "step.proccessArea": 1
+    "step.processArea": 1
 };
 
 // internal deps 
@@ -199,11 +206,39 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                 type: item.type ? `'${item.type}'` : null,
                 stepProcessId: item.stepId ? `'${item.stepId}'` : null,
                 stepProcess: item.step && item.step.process ? `'${item.step.process}'` : null,
-                processArea: item.step && item.step.proccessArea ? `'${item.step.proccessArea}'` : null
+                processArea: item.step && item.step.processArea ? `'${item.step.processArea}'` : null,
+                productionOrderNo: item.kanban.productionOrder && item.kanban.productionOrder.orderNo ? `'${item.kanban.productionOrder.orderNo}'` : null,
+                salesContractNo: item.kanban.productionOrder && item.kanban.productionOrder.salesContractNo ? `'${item.kanban.productionOrder.salesContractNo}'` : null,
+                action: item.action ? `'${item.action.replace(/'/g, '"')}'` : null
             }
-
         });
-        return Promise.resolve([].concat.apply([], result));
+
+        var badOutputReasons = data.map((item) => {
+            if (item.badOutputReasons) {
+                var reason = item.badOutputReasons.map((reasonObj) => {
+                    return {
+                        dailyOperationCode: `'${item.code}'`,
+                        badOutputReasonCode: reasonObj.badOutputReason ? `'${reasonObj.badOutputReason.code}'` : null,
+                        reason: reasonObj.badOutputReason ? `'${reasonObj.badOutputReason.reason.replace(/'/g, '"')}'` : null,
+                        percentage: reasonObj.precentage ? `${reasonObj.precentage}` : 0,
+                        description: reasonObj.description ? `'${reasonObj.description.replace(/'/g, '"')}'` : null,
+                    };
+                })
+
+                return reason;
+            }
+        });
+
+        badOutputReasons = badOutputReasons.filter(function (element) {
+            return element !== undefined;
+        });
+
+        var dailyOperationData = {
+            results: [].concat.apply([], result),
+            badOutputReasons: [].concat.apply([], badOutputReasons)
+        };
+
+        return Promise.resolve(dailyOperationData);
     };
 
     insertQuery(sql, query) {
@@ -235,9 +270,9 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
                         var count = 1;
 
-                        for (var item of data) {
+                        for (var item of data.results) {
                             if (item) {
-                                var queryString = `\nSELECT ${item._deleted}, ${item.badOutput}, ${item.badOutputDescription}, ${item.code}, ${item.inputDate}, ${item.outputDate}, ${item.goodOutput}, ${item.input}, ${item.shift}, ${item.inputTime}, ${item.outputTime}, ${item.kanbanCode}, ${item.kanbanGrade}, ${item.kanbanCartCartNumber}, ${item.kanbanCartCode}, ${item.kanbanCartPcs}, ${item.kanbanCartQty}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.orderType}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.machineCode}, ${item.machineCondition}, ${item.machineManufacture}, ${item.machineMonthlyCapacity}, ${item.machineName}, ${item.machineProcess}, ${item.machineYear}, ${item.inputQuantityConvertion}, ${item.goodOutputQuantityConvertion}, ${item.badOutputQuantityConvertion}, ${item.failedOutputQuantityConvertion}, ${item.outputQuantity}, ${item.inputOutputDiff}, ${item.status}, ${item.type}, ${item.stepProcessId}, ${item.stepProcess}, ${item.processArea} UNION ALL `;
+                                var queryString = `\nSELECT ${item._deleted}, ${item.badOutput}, ${item.badOutputDescription}, ${item.code}, ${item.inputDate}, ${item.outputDate}, ${item.goodOutput}, ${item.input}, ${item.shift}, ${item.inputTime}, ${item.outputTime}, ${item.kanbanCode}, ${item.kanbanGrade}, ${item.kanbanCartCartNumber}, ${item.kanbanCartCode}, ${item.kanbanCartPcs}, ${item.kanbanCartQty}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.orderType}, ${item.selectedProductionOrderDetailCode}, ${item.selectedProductionOrderDetailColorRequest}, ${item.selectedProductionOrderDetailColorTemplate}, ${item.machineCode}, ${item.machineCondition}, ${item.machineManufacture}, ${item.machineMonthlyCapacity}, ${item.machineName}, ${item.machineProcess}, ${item.machineYear}, ${item.inputQuantityConvertion}, ${item.goodOutputQuantityConvertion}, ${item.badOutputQuantityConvertion}, ${item.failedOutputQuantityConvertion}, ${item.outputQuantity}, ${item.inputOutputDiff}, ${item.status}, ${item.type}, ${item.stepProcessId}, ${item.stepProcess}, ${item.processArea}, ${item.productionOrderNo}, ${item.salesContractNo}, ${item.action} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 500 === 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
@@ -254,12 +289,37 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
                         }
 
+                        if (data.badOutputReasons && data.badOutputReasons.length > 0) {
+                            var sqlQueryReason = 'INSERT INTO [DL_Fact_Daily_Operation_Reason_Temp](dailyOperationCode, badOutputReasonCode, reason, percentage, description) ';
+
+                            var countReason = 1;
+
+                            for (var item of data.badOutputReasons) {
+                                if (item) {
+                                    var queryString = `\nSELECT ${item.dailyOperationCode}, ${item.badOutputReasonCode}, ${item.reason}, ${item.percentage}, ${item.description} UNION ALL `;
+                                    sqlQueryReason = sqlQueryReason.concat(queryString);
+                                    if (countReason % 1000 === 0) {
+                                        sqlQueryReason = sqlQueryReason.substring(0, sqlQueryReason.length - 10);
+                                        command.push(this.insertQuery(request, sqlQueryReason));
+                                        sqlQueryReason = "INSERT INTO [DL_Fact_Daily_Operation_Reason_Temp](dailyOperationCode, badOutputReasonCode, reason, percentage, description) ";
+                                    }
+                                    console.log(`add data to query  : ${countReason}`);
+                                    countReason++;
+                                }
+                            }
+
+                            if (sqlQueryReason != "") {
+                                sqlQueryReason = sqlQueryReason.substring(0, sqlQueryReason.length - 10);
+                                command.push(this.insertQuery(request, `${sqlQueryReason}`));
+                            }
+                        }
+
                         this.sql.multiple = true;
 
                         // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\daily.txt";
+                        // var path = "C:\\Users\\jacky.rusly\\Desktop\\daily.txt";
 
-                        // fs.writeFile(path, sqlQuery, function (error) {
+                        // fs.writeFile(path, sqlQueryReason, function (error) {
                         //     if (error) {
                         //         console.log("write error:  " + error.message);
                         //     } else {
