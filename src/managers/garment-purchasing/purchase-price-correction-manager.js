@@ -418,7 +418,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                     },
                   
                     {"$sort" : {
-                        "date" : 1,
+                        "date" : -1,
                     }},
                     
                 ])
