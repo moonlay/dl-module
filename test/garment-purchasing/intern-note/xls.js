@@ -3,7 +3,7 @@ var helper = require("../../helper");
 var InternNoteManager = require("../../../src/managers/garment-purchasing/intern-note-manager");
 var internNoteManager = null;
 var DataUtil = require("../../data-util/garment-purchasing/intern-note-data-util");
-var validate = require("dl-models").validator.garmentPurchasing.interNote;
+var validate = require("dl-models").validator.garmentPurchasing.garmentInterNote;
 var instanceManager = null;
 
 
