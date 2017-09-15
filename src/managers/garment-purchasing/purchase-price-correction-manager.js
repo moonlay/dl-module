@@ -449,7 +449,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                  {
                 item["No"] = index;
                 item["No Koreksi Harga"] = data.no;
-                item["Tanggal Koreksi Harga"] = data.date ? moment(data.date).format(dateFormat) : '';
+                item["Tanggal Koreksi Harga"] = data.date ? moment(new Date(data.date)).add(query.offset, 'h').format(dateFormat) : '';
                 item["Jenis Koreksi"] = data.correctionType ? data.correctionType : '';
                 item["Surat Jalan"] = data.deliveryorderNo ? data.deliveryorderNo : '';
                 item["Supplier"] = data.supplier ? data.supplier : '';

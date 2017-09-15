@@ -9,3 +9,7 @@ describe("VALIDATION SCENARIOS", function() {
 describe("REPORT SCENARIOS", function() {
     require("./report");
 });
+
+describe("PDF SCENARIOS", function() {
+    require("./pdf");
+});
