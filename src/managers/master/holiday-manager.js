@@ -63,7 +63,7 @@ module.exports = class HolidayManager extends BaseManager {
             code: valid.code
         });
 
-        var getDivision = valid.disivion && ObjectId.isValid(valid.division._id) ? this.divisionManager.getSingleByIdOrDefault(valid.division._id) : Promise.resolve(null);
+        var getDivision = valid.division && ObjectId.isValid(valid.division._id) ? this.divisionManager.getSingleByIdOrDefault(valid.division._id) : Promise.resolve(null);
         // 2. begin: Validation.
         return Promise.all([getHolidayPromise, getDivision])
             .then((results) => {
@@ -227,16 +227,16 @@ module.exports = class HolidayManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, codeIndex]);
     }
 
-    getHolidayByDivision(key, tag) {
+    getHolidayByDivision(key, filter) {
         return new Promise((resolve, reject) => {
             var regex = new RegExp(key, "i");
-            var regex2 = new RegExp(tag, "i");
+            var regex2 = new RegExp(filter, "i");
             this.collection.aggregate(
                 [{
                     $match: {
                         $and: [{
                             $and: [{
-                                "description": regex2
+                                "division.name": regex2
                             }, {
                                     "_deleted": false
                                 }]

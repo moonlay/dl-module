@@ -36,12 +36,12 @@ it(`#01. should success when get created new data`, function (done) {
             });
 });
 
-it(`#02. should success when get holiday by name from created data`, function (done) {
+it(`#02. should success when get holiday by division or name from created data`, function (done) {
     var key=createdData.name;
-    var filter=createdData.name;
-    holidayManager.getHolidayByName(key,filter).then(
+    var filter=createdData.division.name;
+    holidayManager.getHolidayByDivision(key,filter).then(
         holidays => {
-            holiday.should.instanceof(Array);
+            holidays.should.instanceof(Array);
             done();
         }).catch(e => {
             done(e);
