@@ -165,7 +165,7 @@ module.exports = function (pox, offset) {
                     text: `${currency}`
                 }, {
                     width: '*',
-                    text: `${parseFloat(item.price).toLocaleString(locale, locale.currency)}`,
+                    text: `${parseFloat(item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
                     style: ['right']
                 }],
                 style: ['size08']
@@ -175,7 +175,7 @@ module.exports = function (pox, offset) {
                     text: `${currency}`
                 }, {
                     width: '*',
-                    text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
+                    text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
                     style: ['right']
                 }],
                 style: ['size08']
@@ -201,7 +201,7 @@ module.exports = function (pox, offset) {
                     text: `${currency}`
                 }, {
                     width: '*',
-                    text: `${parseFloat(item.price).toLocaleString(locale, locale.currency)}`,
+                    text: `${parseFloat(item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
                     style: ['right']
                 }],
                 style: ['size08']
@@ -211,7 +211,7 @@ module.exports = function (pox, offset) {
                     text: `${currency}`
                 }, {
                     width: '*',
-                    text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
+                    text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
                     style: ['right']
                 }],
                 style: ['size08']
@@ -249,7 +249,7 @@ module.exports = function (pox, offset) {
                 text: currency
             }, {
                 width: '*',
-                text: parseFloat(sum).toLocaleString(locale, locale.currency),
+                text: parseFloat(sum).toLocaleString(locale, locale.currencyNotaItern2),
                 style: ['right']
             }],
             style: ['size08']
@@ -264,7 +264,7 @@ module.exports = function (pox, offset) {
                 text: currency
             }, {
                 width: '*',
-                text: parseFloat(vat).toLocaleString(locale, locale.currency),
+                text: parseFloat(vat).toLocaleString(locale, locale.currencyNotaItern2),
                 style: ['right']
             }],
             style: ['size08']
@@ -279,7 +279,7 @@ module.exports = function (pox, offset) {
                 text: currency
             }, {
                 width: '*',
-                text: parseFloat(sum + vat).toLocaleString(locale, locale.currency),
+                text: parseFloat(sum + vat).toLocaleString(locale, locale.currencyNotaItern2),
                 style: ['bold', 'right']
             }],
             style: ['size09']

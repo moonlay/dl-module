@@ -183,11 +183,11 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                 if (valid.useVat) {
                     valid.vat = _vat;
                 } else {
-                    valid.vatDate = "";
+                    valid.vatDate = null
                 }
 
                 if (!valid.useIncomeTax) {
-                    valid.incomeTaxDate = "";
+                    valid.incomeTaxDate = null;
                 }
 
                 if (valid.isPayTax && valid.useIncomeTax) {
