@@ -52,7 +52,8 @@ it(`#02. should success when get created data with id`, function (done) {
 var resultForExcelTest = {};
 it('#03. should success when create report', function (done) {
     var info = {};
-    info.no = createdData.items[0].purchaseOrderExternalNo;
+    info.no=createdData.no;
+    info.poEksNo = createdData.items[0].purchaseOrderExternalNo;
     info.supplierId = createdData.supplierId.toString();
     info.dateFrom = createdData._createdDate.toISOString().split("T", "1").toString();
     info.dateTo = createdData._createdDate.toISOString().split("T", "1").toString();
