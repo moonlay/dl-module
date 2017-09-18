@@ -127,7 +127,7 @@ module.exports = class GarmentCurrencyManager extends BaseManager {
                             errorMessage = "";
 
                             if (!(masterCurrency.data.find(o => o.code == data[i]["code"]))) {
-                                errorMessage = errorMessage + "Mata Uang tidak terdaftar dalam master Mata Uang ";
+                                errorMessage = errorMessage + "Mata Uang tidak terdaftar dalam master Mata Uang,";
                             }
 
                             if (data[i]["code"] === "" || data[i]["code"] === undefined) {
