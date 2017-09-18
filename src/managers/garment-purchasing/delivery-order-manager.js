@@ -960,6 +960,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 _deleted: false
             };
             var doNoFilter = {};
+            var poEksFilter = {};
             var supplierFilter = {};
             var dateFromFilter = {};
             var dateToFilter = {};
@@ -975,7 +976,11 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
 
             if (info.no && info.no != '') {
-                doNoFilter = { "items.purchaseOrderExternalNo": info.no };
+                doNoFilter = { "no": info.no };
+            }
+
+            if (info.poEksNo && info.poEksNo != '') {
+                poEksFilter = { "items.purchaseOrderExternalNo": info.poEksNo };
             }
 
             if (info.supplierId && info.supplierId != '') {
@@ -997,7 +1002,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 }
             };
 
-            query = { '$and': [_defaultFilter, doNoFilter, supplierFilter, filterDate, userFilter] };
+            query = { '$and': [_defaultFilter, doNoFilter, supplierFilter, filterDate, userFilter, poEksFilter] };
 
 
 
@@ -1040,6 +1045,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     });
         });
     }
+
 
     getXls(result, query) {
         var xls = {};
