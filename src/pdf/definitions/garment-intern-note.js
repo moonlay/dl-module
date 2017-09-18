@@ -15,7 +15,8 @@ module.exports = function (data, offset) {
                     uom: item.purchaseOrderUom.unit,
                     unit: item.unit,
                     price: item.pricePerDealUnit,
-                    priceTotal: item.pricePerDealUnit * item.deliveredQuantity
+                    priceTotal: item.pricePerDealUnit * item.deliveredQuantity,
+                    correction: item.correction.correctionPriceTotal || 0
                 }
             });
             _items = [].concat.apply([], _items);
@@ -257,6 +258,10 @@ module.exports = function (data, offset) {
         .reduce(function (prev, curr, index, arr) {
             return prev + curr;
         }, 0);
+    var sumKoreksi = items.map(item => item.correction)
+        .reduce(function (prev, curr, index, arr) {
+            return prev + curr;
+        }, 0);
     var sumByCurrency = sum * data.currency.rate;
     var incomeTaxTotal = useIncomeTax ? sumByCurrency * 0.1 : 0;
     var vatTotal = useVat ? sumByCurrency * vatRate / 100 : 0;
@@ -415,7 +420,7 @@ module.exports = function (data, offset) {
                                 },
                                 {
                                     width: '*',
-                                    text: parseFloat(sum).toLocaleString(locale, locale.currency)
+                                    text: parseFloat(sumKoreksi).toLocaleString(locale, locale.currency)
                                 }
                             ]
                         },
