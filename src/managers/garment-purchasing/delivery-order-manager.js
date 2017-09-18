@@ -960,6 +960,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 _deleted: false
             };
             var doNoFilter = {};
+            var poEksFilter = {};
             var supplierFilter = {};
             var dateFromFilter = {};
             var dateToFilter = {};
@@ -975,7 +976,11 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
 
             if (info.no && info.no != '') {
-                doNoFilter = { "items.purchaseOrderExternalNo": info.no };
+                doNoFilter = { "no": info.no };
+            }
+
+            if (info.poEksNo && info.poEksNo != '') {
+                poEksFilter = { "items.purchaseOrderExternalNo": info.poEksNo };
             }
 
             if (info.supplierId && info.supplierId != '') {
@@ -997,52 +1002,50 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 }
             };
 
-            query = { '$and': [_defaultFilter, doNoFilter, supplierFilter, filterDate, userFilter] };
+            query = { '$and': [_defaultFilter, doNoFilter, supplierFilter, filterDate, userFilter, poEksFilter] };
 
 
 
             return this.collection
-                .aggregate([
-                    { "$unwind": "$items" }
-                    , { "$unwind": "$items.fulfillments" }
-                    , { "$match": query }
-                    , {
-                        "$project": {
-                            "no": 1,
-                            "doDate": "$supplierDoDate",
-                            "arrivedDate": "$date",
-                            "supplier": "$supplier.name",
-                            "supplierType": "$supplier.import",
-                            "shipmentType": "$shipmentType",
-                            "shipmentNo": "$shipmentNo",
-                            "customs": "$useCustoms",
-                            "poEksNo": "$items.purchaseOrderExternalNo",
-                            "prNo": "$items.fulfillments.purchaseRequestNo",
-                            "productCode": "$items.fulfillments.product.code",
-                            "productName": "$items.fulfillments.product.name",
-                            "qty": "$items.fulfillments.purchaseOrderQuantity",
-                            "delivered": "$items.fulfillments.deliveredQuantity",
-                            "price": "$items.fulfillments.pricePerDealUnit",
-                            "uom": "$items.fulfillments.purchaseOrderUom.unit",
-                            "currency": "$items.fulfillments.currency.description",
-                            "remark": "$items.fulfillments.remark"
-                        }
-                    },
-                    {
-                        "$sort": {
-                            "_updatedDate": -1
-                        }
-                    }
-                ])
-                .toArray()
-                .then(results => {
-                    resolve(results);
-                })
-                .catch(e => {
-                    reject(e);
-                });
+                    .aggregate([
+                        {"$unwind" : "$items"}
+                        ,{"$unwind" : "$items.fulfillments"}
+                        ,{"$match" : query }
+                        ,{"$project" : {
+                            "_updatedDate" : -1,
+                            "no" : "$no",
+                            "doDate":"$supplierDoDate",
+                            "arrivedDate":"$date",
+                            "supplier" : "$supplier.name",
+                            "supplierType":"$supplier.import",
+                            "shipmentType":"$shipmentType",
+                            "shipmentNo":"$shipmentNo",
+                            "customs":"$useCustoms",
+                            "poEksNo":"$items.purchaseOrderExternalNo",
+                            "prNo":"$items.fulfillments.purchaseRequestNo",
+                            "productCode" : "$items.fulfillments.product.code",
+                            "productName" : "$items.fulfillments.product.name",
+                            "qty" : "$items.fulfillments.purchaseOrderQuantity",
+                            "delivered" : "$items.fulfillments.deliveredQuantity",
+                            "price" : "$items.fulfillments.pricePerDealUnit",
+                            "uom" : "$items.fulfillments.purchaseOrderUom.unit",
+                            "currency" : "$items.fulfillments.currency.description",
+                            "remark":"$items.fulfillments.remark"
+                        }},
+                        {"$sort" : {
+                            "_updatedDate" : -1
+                        }}
+                    ])
+                    .toArray()
+                    .then(results => {
+                        resolve(results);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    });
         });
     }
+
 
     getXls(result, query) {
         var xls = {};

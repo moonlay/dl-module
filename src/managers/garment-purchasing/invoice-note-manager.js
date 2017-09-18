@@ -477,8 +477,8 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             var dateToFilter = {};
             var query = {};
 
-            var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+            var dateFrom = info.dateFrom ? (new Date(info.dateFrom).setHours((new Date(info.dateFrom)).getHours() - info.offset)) : (new Date(1900, 1, 1));
+            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59").setHours((new Date(info.dateTo+ "T23:59")).getHours() - info.offset)) : (new Date());
             var now = new Date();
 
             if (info.user && info.user != '') {
@@ -508,7 +508,8 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                         ,{"$unwind" : "$items.items"}
                         ,{"$match" : query }
                         ,{"$project" : {
-                            "no" : 1,
+                            "_updatedDate" : 1,
+                            "no" : "$no",
                             "date":"$date",
                             "supplier":"$supplier.name",
                             "currency" : "$currency.code",
@@ -558,16 +559,16 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             index += 1;
             data["No"] = index;
             data["No Invoice"] = _data.no ? _data.no : '';
-            data["Tanggal Nota Invoice"] = _data.date ? moment(new Date(_data.date)).format(dateFormat) : '';
+            data["Tanggal Nota Invoice"] = _data.date ? moment(new Date(_data.date)).add(query.offset, 'h').format(dateFormat) : '';
             data["Supplier"] = _data.supplier;
             data["Mata Uang"] = _data.currency;
             data["Dikenakan PPN"] = _data.tax ? 'Ya' : 'Tidak';
             data["Nomor PPN"] = _data.taxNo;
-            data["Tanggal PPN"] = _data.taxDate ? moment(new Date(_data.taxDate)).format(dateFormat) : '';
+            data["Tanggal PPN"] = _data.taxDate ? moment(new Date(_data.taxDate)).add(query.offset, 'h').format(dateFormat) : '';
             data["Dikenakan PPH"] = _data.vat ? 'Ya' : 'Tidak';
             data["Jenis PPH"] = _data.vatName + ' ' + _data.vatRate;
             data["Nomor PPH"] = _data.vatNo;
-            data["Tanggal PPH"] = _data.vatNo ? moment(new Date(_data.vatNo)).format(dateFormat) : '';
+            data["Tanggal PPH"] = _data.vatDate ? moment(new Date(_data.vatDate)).add(query.offset, 'h').format(dateFormat) : '';
             data["Pajak Dibayar"] = _data.payTax ? 'Ya' : 'Tidak';
             data["Nomor Surat Jalan"] =_data.doNo;
             data["Nomor PO Eksternal"] =_data.poEksNo;

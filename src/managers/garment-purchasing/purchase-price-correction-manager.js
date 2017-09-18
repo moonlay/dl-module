@@ -345,7 +345,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
         });
     }
 
-      getPurchasePriceCorrectionReport(query,user) {
+    getPurchasePriceCorrectionReport(query,user) {
         return new Promise((resolve, reject) => {
          
             var deletedQuery = { _deleted: false };
@@ -357,10 +357,14 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
             var dateString = moment(date).format('YYYY-MM-DD');
             var dateNow = new Date(dateString);
             var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            var _dateFrom = new Date(query.dateFrom);
+            var _dateTo = new Date(query.dateTo + "T23:59");
+            _dateFrom.setHours(_dateFrom.getHours() - query.offset);
+            _dateTo.setHours(_dateTo.getHours() - query.offset);
             var dateQuery = {
                 "date": {
-                    "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
-                    "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
+                    "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(_dateFrom))),
+                    "$lte": (!query || !query.dateTo ? date : (new Date(_dateTo)))
                 }
             };
         
@@ -405,7 +409,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                         "pricePerUnit":"$items.pricePerUnit",
                         "priceTotal" :"$items.priceTotal",
                         "currencyCode" :"$items.currency.code",
-                         "deliveredQty" :"$deliveryOrder.items.fulfillments.deliveredQuantity",
+                        "deliveredQty" :"$deliveryOrder.items.fulfillments.deliveredQuantity",
                         "fulfillments" :"$deliveryOrder.items.fulfillments",
                         "itemsProdId" :"$items.purchaseOrderInternalId",
                         "fulProdId" :"$deliveryOrder.items.fulfillments.purchaseOrderId"
@@ -414,7 +418,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                     },
                   
                     {"$sort" : {
-                        "date" : 1,
+                        "date" : -1,
                     }},
                     
                 ])
@@ -436,13 +440,16 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
             xls.name = '';
 
             var dateFormat = "DD/MM/YYYY";
-           
+            var index=1;
             for(var data of dataReport.data){
                  var item = {};
-                 
-                item["No"] = data.index;
+                 var a= (data.itemsProdId).toString();
+                 var b= new ObjectId(data.fulProdId);
+                 if(data.itemsProdId.toString() ===  data.fulProdId)
+                 {
+                item["No"] = index;
                 item["No Koreksi Harga"] = data.no;
-                item["Tanggal Koreksi Harga"] = data.date ? moment(data.date).format(dateFormat) : '';
+                item["Tanggal Koreksi Harga"] = data.date ? moment(new Date(data.date)).add(query.offset, 'h').format(dateFormat) : '';
                 item["Jenis Koreksi"] = data.correctionType ? data.correctionType : '';
                 item["Surat Jalan"] = data.deliveryorderNo ? data.deliveryorderNo : '';
                 item["Supplier"] = data.supplier ? data.supplier : '';
@@ -461,14 +468,14 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                         }
                         if(!correction.length)
                         {
-                            item["Harga Satuan Awal"] = pr.fulfillments.pricePerDealUnit;
+                            item["Harga Satuan Awal"] = data.fulfillments.pricePerDealUnit;
                         }else 
                         {
                            item["Harga Satuan Awal"] = correction[correction.length -1].correctionPricePerUnit;
                         }
                          if(!correction.length)
                         {
-                            item["Harga Total Awal"] = pr.fulfillments.pricePerDealUnit;
+                            item["Harga Total Awal"] = data.fulfillments.pricePerDealUnit * data.fulfillments.deliveredQuantity;
                         }else 
                         {
                             item["Harga Total Awal"] = correction[correction.length -1].correctionPriceTotal;
@@ -477,9 +484,10 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                 item["Satuan"] = data.unitCode ? data.unitCode : '';
                 item["Harga Satuan Akhir"] = data.pricePerUnit ? data.pricePerUnit : '';
                 item["Harga Total Akhir"] = data.priceTotal ? data.priceTotal : '';
-                item["Mata Uang"] = data.currrencyCode ? data.currrencyCode : '';
+                item["Mata Uang"] = data.currencyCode ? data.currencyCode : '';
                 xls.data.push(item);
-           
+                index ++;
+                 }
             }
              
             xls.options["No Bon Terima Unit"] = "string";
