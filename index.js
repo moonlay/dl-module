@@ -80,6 +80,7 @@ module.exports = {
             UnitReceiptNoteManager: require('./src/managers/garment-purchasing/unit-receipt-note-manager'),
             InternNoteManager: require('./src/managers/garment-purchasing/intern-note-manager'),
             PurchaseQuantityCorrectionManager: require('./src/managers/garment-purchasing/purchase-quantity-correction-manager'),
+            GarmentCurrencyManager:require('./src/managers/garment-purchasing/garment-currency-manager'),
         },
         production: {
             spinning: {
@@ -222,7 +223,8 @@ module.exports = {
             dimMachine: require("./src/etl/dim/dim-machine-etl-manager"),
             dimStorage: require("./src/etl/dim/dim-storage-etl-manager"),
             dimProduct: require("./src/etl/dim/dim-product-etl-manager"),
-            dimCompany: require("./src/etl/dim/dim-company-etl-manager")
+            dimCompany: require("./src/etl/dim/dim-company-etl-manager"),
+            dimContact: require("./src/etl/dim/dim-contact-etl-manager")
         },
         inventory: {
             factPackingReceipt: require("./src/etl/inventory/fact-fp-packing-receipt-etl-manager"),
@@ -253,6 +255,7 @@ module.exports = {
         },
         garment: {
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
+            factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager"),
         }
     }
 }

@@ -464,4 +464,160 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
         });
     }
+
+    getMonitoringInvoice(info){
+        return new Promise((resolve, reject) => {
+            var _defaultFilter = {
+                _deleted: false
+            };
+            var userFilter={};
+            var invoiceNumberFilter = {};
+            var supplierFilter = {};
+            var dateFromFilter = {};
+            var dateToFilter = {};
+            var query = {};
+
+            var dateFrom = info.dateFrom ? (new Date(info.dateFrom).setHours((new Date(info.dateFrom)).getHours() - info.offset)) : (new Date(1900, 1, 1));
+            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59").setHours((new Date(info.dateTo+ "T23:59")).getHours() - info.offset)) : (new Date());
+            var now = new Date();
+
+            if (info.user && info.user != '') {
+                userFilter = { "_createdBy": info.user };
+            }
+
+            if (info.no && info.no != '') {
+                invoiceNumberFilter = { "no": info.no };
+            }
+
+            if (info.supplierId && info.supplierId != '') {
+                supplierFilter = { "supplierId": new ObjectId(info.supplierId) };
+            }
+
+            var filterDate = {
+                "date": {
+                    $gte: new Date(dateFrom),
+                    $lte: new Date(dateTo)
+                }
+            };
+
+            query = { '$and': [_defaultFilter,userFilter, invoiceNumberFilter, supplierFilter, filterDate] };
+
+            return this.collection
+                    .aggregate([
+                        {"$unwind" : "$items"}
+                        ,{"$unwind" : "$items.items"}
+                        ,{"$match" : query }
+                        ,{"$project" : {
+                            "_updatedDate" : 1,
+                            "no" : "$no",
+                            "date":"$date",
+                            "supplier":"$supplier.name",
+                            "currency" : "$currency.code",
+                            "tax":"$useIncomeTax",
+                            "taxNo":"$incomeTaxNo",
+                            "taxDate":"$incomeTaxDate",
+                            "vat":"$useVat",
+                            "vatName":"$vat.name",
+                            "vatRate":"$vat.rate",
+                            "vatNo" : "$vatNo",
+                            "vatDate" : "$vatDate",
+                            "payTax" : "$isPayTax",
+                            "doNo" : "$items.deliveryOrderNo",
+                            "poEksNo" : "$items.items.purchaseOrderExternalNo",
+                            "prNo" : "$items.items.purchaseRequestNo",
+                            "productCode" : "$items.items.product.code",
+                            "productName" : "$items.items.product.name",
+                            "qty":"$items.items.deliveredQuantity",
+                            "uom":"$items.items.purchaseOrderUom.unit",
+                            "price":"$items.items.pricePerDealUnit"
+                        }},
+                        {"$sort" : {
+                            "_updatedDate" : -1
+                        }}
+                    ])
+                    .toArray()
+                    .then(results => {
+                        resolve(results);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    });
+        });
+    }
+
+    getXls(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var _data of result.data) {
+            var data = {};
+            index += 1;
+            data["No"] = index;
+            data["No Invoice"] = _data.no ? _data.no : '';
+            data["Tanggal Nota Invoice"] = _data.date ? moment(new Date(_data.date)).add(query.offset, 'h').format(dateFormat) : '';
+            data["Supplier"] = _data.supplier;
+            data["Mata Uang"] = _data.currency;
+            data["Dikenakan PPN"] = _data.tax ? 'Ya' : 'Tidak';
+            data["Nomor PPN"] = _data.taxNo;
+            data["Tanggal PPN"] = _data.taxDate ? moment(new Date(_data.taxDate)).add(query.offset, 'h').format(dateFormat) : '';
+            data["Dikenakan PPH"] = _data.vat ? 'Ya' : 'Tidak';
+            data["Jenis PPH"] = _data.vatName + ' ' + _data.vatRate;
+            data["Nomor PPH"] = _data.vatNo;
+            data["Tanggal PPH"] = _data.vatDate ? moment(new Date(_data.vatDate)).add(query.offset, 'h').format(dateFormat) : '';
+            data["Pajak Dibayar"] = _data.payTax ? 'Ya' : 'Tidak';
+            data["Nomor Surat Jalan"] =_data.doNo;
+            data["Nomor PO Eksternal"] =_data.poEksNo;
+            data["Nomor PR"] =_data.prNo;
+            data["Kode Barang"] =_data.productCode;
+            data["Nama Barang"] =_data.productName;
+            data["Jumlah"] =_data.qty;
+            data["Satuan"] =_data.uom;
+            data["Harga Satuan"] =_data.price;
+            data["Harga Total"] =_data.price * _data.qty;
+
+            xls.options["No"] = "number";
+            xls.options["No Invoice"] = "string";
+            xls.options["Tanggal Nota Invoice"] = "string";
+            xls.options["Supplier"] = "string";
+            xls.options["Mata Uang"] = "string";
+            xls.options["Dikenakan PPN"] = "string";
+            xls.options["Nomor PPN"] = "string";
+            xls.options["Tanggal PPN"] = "string";
+            xls.options["Dikenakan PPH"] = "string";
+            xls.options["Jenis PPH"] = "string";
+            xls.options["Nomor PPH"] = "string";
+            xls.options["Tanggal PPH"] = "string";
+            xls.options["Pajak Dibayar"] = "string";
+            xls.options["Nomor Surat Jalan"] = "string";
+            xls.options["Nomor PO Eksternal"] = "string";
+            xls.options["Nomor PR"] = "string";
+            xls.options["Kode Barang"] = "string";
+            xls.options["Nama Barang"] = "string";
+            xls.options["Jumlah"] = "number";
+            xls.options["Satuan"] = "string";
+            xls.options["Harga Satuan"] = "number";
+            xls.options["Harga Total"] = "number";
+
+            xls.data.push(data);
+        }
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Nota Invoice ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Nota Invoice ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Nota Invoice ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Nota Invoice.xlsx`;
+
+        return Promise.resolve(xls);
+    }
 };
