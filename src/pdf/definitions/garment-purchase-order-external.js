@@ -161,7 +161,7 @@ module.exports = function (pox, offset) {
                 style: ['size08', 'center']
             }, {
                 columns: [{
-                    width: '20%',
+                    width: '25%',
                     text: `${currency}`
                 }, {
                     width: '*',
@@ -171,7 +171,7 @@ module.exports = function (pox, offset) {
                 style: ['size08']
             }, {
                 columns: [{
-                    width: '20%',
+                    width: '25%',
                     text: `${currency}`
                 }, {
                     width: '*',
@@ -197,7 +197,7 @@ module.exports = function (pox, offset) {
                 style: ['size08', 'center']
             }, {
                 columns: [{
-                    width: '20%',
+                    width: '25%',
                     text: `${currency}`
                 }, {
                     width: '*',
@@ -207,7 +207,7 @@ module.exports = function (pox, offset) {
                 style: ['size08']
             }, {
                 columns: [{
-                    width: '20%',
+                    width: '25%',
                     text: `${currency}`
                 }, {
                     width: '*',
@@ -245,7 +245,7 @@ module.exports = function (pox, offset) {
             colSpan: 4
         }, "", "", "", {
             columns: [{
-                width: '20%',
+                width: '25%',
                 text: currency
             }, {
                 width: '*',
@@ -260,7 +260,7 @@ module.exports = function (pox, offset) {
             colSpan: 4
         }, null, null, null, {
             columns: [{
-                width: '20%',
+                width: '25%',
                 text: currency
             }, {
                 width: '*',
@@ -275,7 +275,7 @@ module.exports = function (pox, offset) {
             colSpan: 4
         }, null, null, null, {
             columns: [{
-                width: '20%',
+                width: '25%',
                 text: currency
             }, {
                 width: '*',
