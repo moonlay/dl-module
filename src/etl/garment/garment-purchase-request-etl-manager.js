@@ -622,6 +622,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     load(dataArr) {
         return new Promise((resolve, reject) => {
 
+            var failed = [];
             var processed = [];
             var roNoArr = dataArr.nomorRo;
             var dataTemp = [];
@@ -658,9 +659,20 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     processed.push(this.collection.updateOne({ "roNo": data.roNo }, { $set: data }, { upsert: true }));
                 }
 
+                // var dataProcessed = {
+                //     processed: processed,
+                //     // failed: MigratedFalse
+                // };
+
+
                 Promise.all(processed).then((processed) => {
-                    resolve(processed);
+                    var dataProcessed = {};
+                    dataProcessed.processed = processed;
+                    dataProcessed.MigratedFalse = MigratedFalse;
+                    resolve(dataProcessed);
+
                 })
+
 
             });
 
