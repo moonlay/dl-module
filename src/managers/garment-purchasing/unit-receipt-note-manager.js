@@ -831,7 +831,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             unique: true
         }
 
-        return this.collection.createIndexes([dateIndex, noIndex]);
+        var createdDateIndex = {
+            name: `ix_${map.garmentPurchasing.collection.GarmentUnitReceiptNote}__createdDate`,
+            key: {
+                _createdDate: -1
+            }
+        }
+        return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
 
     /*getAllData(filter) {
@@ -891,12 +897,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         }
         return newArr;
     }
-    getUnitReceiptReport(query,user) {
+    getUnitReceiptReport(query, user) {
         return new Promise((resolve, reject) => {
-         
+
             var deletedQuery = { _deleted: false };
-            var userQuery = {_createdBy : user.username};
-            
+            var userQuery = { _createdBy: user.username };
+
 
             var date = new Date();
             var dateString = moment(date).format('YYYY-MM-DD');
@@ -908,59 +914,63 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
                 }
             };
-        
-          var noQuery = {};
-            if (query.no ){
+
+            var noQuery = {};
+            if (query.no) {
                 noQuery = {
-                    "no" : (query.no)
+                    "no": (query.no)
                 };
             }
-        
-           var purchaseRequestQuery = {};
-              if (query.pr ){
+
+            var purchaseRequestQuery = {};
+            if (query.pr) {
                 purchaseRequestQuery = {
-                     "items.purchaseRequestNo" : (query.pr)
+                    "items.purchaseRequestNo": (query.pr)
                 };
             }
-          
+
             var unitQuery = {};
-            if (query.unit){
+            if (query.unit) {
                 unitQuery = {
-                    "unit.code" : (query.unit)
+                    "unit.code": (query.unit)
                 };
             }
 
             var supplierQuery = {};
-            if (query.supplier){
+            if (query.supplier) {
                 supplierQuery = {
-                    "supplier.code" : (query.supplier)
+                    "supplier.code": (query.supplier)
                 };
             }
-          
 
-           var Query = { "$and": [userQuery,dateQuery, deletedQuery, supplierQuery, unitQuery, purchaseRequestQuery,noQuery] };
+
+            var Query = { "$and": [userQuery, dateQuery, deletedQuery, supplierQuery, unitQuery, purchaseRequestQuery, noQuery] };
             this.collection
                 .aggregate([
-                    {"$unwind" : "$items"}
-                    ,{"$unwind" : "$items.product"}
-                    , {"$match" : Query }
-                    ,{"$project" : {
-                        "no" : "$no",
-                        "date" : 1,
-                        "unit" : "$unit.name",
-                        "supplier" : "$supplier.name",
-                        "deliveryorderNo" :"$deliveryOrderNo",
-                        "purchaseRequestNo" : "$items.purchaseRequestNo",
-                        "productCode" : "$items.product.code",
-                        "productName" : "$items.product.name",
-                        "quantity" : "$items.deliveredQuantity",
-                        "unitCode" : "$items.deliveredUom.unit",
-                        "remark" : "$items.remark",
-                    }},
-                   
-                    {"$sort" : {
-                        "date" : 1,
-                    }}
+                    { "$unwind": "$items" }
+                    , { "$unwind": "$items.product" }
+                    , { "$match": Query }
+                    , {
+                        "$project": {
+                            "no": "$no",
+                            "date": 1,
+                            "unit": "$unit.name",
+                            "supplier": "$supplier.name",
+                            "deliveryorderNo": "$deliveryOrderNo",
+                            "purchaseRequestNo": "$items.purchaseRequestNo",
+                            "productCode": "$items.product.code",
+                            "productName": "$items.product.name",
+                            "quantity": "$items.deliveredQuantity",
+                            "unitCode": "$items.deliveredUom.unit",
+                            "remark": "$items.remark",
+                        }
+                    },
+
+                    {
+                        "$sort": {
+                            "date": 1,
+                        }
+                    }
                 ])
                 .toArray()
                 .then(results => {
@@ -971,7 +981,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 });
         });
     }
-    getUnitReceiptReportXls(dataReport,query) {
+    getUnitReceiptReportXls(dataReport, query) {
 
         return new Promise((resolve, reject) => {
             var xls = {};
@@ -980,9 +990,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             xls.name = '';
 
             var dateFormat = "DD/MM/YYYY";
-           
-            for(var data of dataReport.data){
-                 var item = {};
+
+            for (var data of dataReport.data) {
+                var item = {};
                 item["No Bon Terima Unit"] = data.no;
                 item["Tanggal Bon Terima Unit"] = data.date ? moment(data.date).format(dateFormat) : '';
                 item["Unit"] = data.unit ? data.unit : '';
@@ -995,7 +1005,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 item["Satuan"] = data.unitCode ? data.unitCode : '';
                 item["Keterangan"] = data.remark ? data.remark : '';
                 xls.data.push(item);
-           
+
             }
 
             xls.options["No Bon Terima Unit"] = "string";
@@ -1003,25 +1013,25 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             xls.options["Unit"] = "string";
             xls.options["Supplier"] = "string";
             xls.options["Surat Jalan"] = "string";
-            xls.options["No PR"]="string";
+            xls.options["No PR"] = "string";
             xls.options["Kode Barang"] = "string";
             xls.options["Nama Barang"] = "string";
             xls.options["Jumlah"] = "number";
             xls.options["Satuan"] = "string";
             xls.options["Keterangan"] = "string";
 
-            if(query.dateFrom && query.dateTo){
+            if (query.dateFrom && query.dateTo) {
                 xls.name = `Unit Receipt Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
             }
-            else if(!query.dateFrom && query.dateTo){
+            else if (!query.dateFrom && query.dateTo) {
                 xls.name = `Unit Receipt Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
             }
-            else if(query.dateFrom && !query.dateTo){
+            else if (query.dateFrom && !query.dateTo) {
                 xls.name = `Unit Receipt Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
             }
             else
                 xls.name = `Unit Receipt Report.xlsx`;
-            
+
             resolve(xls);
         });
     }
