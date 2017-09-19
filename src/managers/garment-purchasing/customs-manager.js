@@ -505,6 +505,13 @@ module.exports = class CustomsManager extends BaseManager {
             unique: true
         };
 
-        return this.collection.createIndexes([dateIndex, noIndex]);
+        var createdDateIndex = {
+            name: `ix_${map.garmentPurchasing.collection.Customs}__createdDate`,
+            key: {
+                _createdDate: -1
+            }
+        };
+
+        return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
 }

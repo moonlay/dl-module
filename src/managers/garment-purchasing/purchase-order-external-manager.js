@@ -330,7 +330,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                 var itemError = {};
                                                 var po = _poInternals.find((poInternal) => poInternal._id.toString() == items.poId.toString());
                                                 var poItem = po.items.find((item) => item.product._id.toString() === items.product._id.toString());
-                                                
+
                                                 var pr = purchaseRequestList.find((pr) => pr.no.toString() == items.prNo.toString());
                                                 var prItem = pr.items.find((item) => item.product.code.toString() === items.product.code.toString() && item.refNo === items.prRefNo)
                                                 var fixBudget = prItem.quantity * prItem.budgetPrice;
@@ -832,7 +832,14 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             unique: true
         }
 
-        return this.collection.createIndexes([dateIndex, noIndex]);
+        var createdDateIndex = {
+            name: `ix_${map.purchasing.collection.PurchaseOrderExternal}__createdDate`,
+            key: {
+                _createdDate: -1
+            }
+        }
+
+        return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
 
     unpost(poExternalId) {
