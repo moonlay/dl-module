@@ -153,7 +153,9 @@ module.exports = class SupplierManager extends BaseManager {
                                 data[i]["import"] = false;
                             }
                             var valid = new Supplier(data[i]);
+                            var now = new Date();
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)

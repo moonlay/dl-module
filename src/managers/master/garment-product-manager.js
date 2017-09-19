@@ -215,10 +215,12 @@ module.exports = class GarmentProductManager extends BaseManager {
                                         var jobs = [];
                                         for (var prd of data) {
                                             var valid = new Product(prd);
+                                            var now = new Date();
                                             valid.currency.rate = Number(valid.currency.rate);
                                             valid.price = Number(valid.price);
                                             valid.uomId = new ObjectId(valid.uom._id);
                                             valid.stamp(this.user.username, 'manager');
+                                            valid._createdDate = now;
                                             var job = this.collection.insert(valid)
                                                 .then(id => {
                                                     return this.getSingleById(id)
