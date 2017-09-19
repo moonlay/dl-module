@@ -414,7 +414,13 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             unique: true
         };
 
-        return this.collection.createIndexes([dateIndex, noIndex]);
+        var createdDateIndex = {
+            name: `ix_${map.garmentPurchasing.collection.GarmentInvoiceNote}__createdDate`,
+            key: {
+                date: -1
+            }
+        };
+        return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
 
     pdfVat(id, offset) {
@@ -465,12 +471,12 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         });
     }
 
-    getMonitoringInvoice(info){
+    getMonitoringInvoice(info) {
         return new Promise((resolve, reject) => {
             var _defaultFilter = {
                 _deleted: false
             };
-            var userFilter={};
+            var userFilter = {};
             var invoiceNumberFilter = {};
             var supplierFilter = {};
             var dateFromFilter = {};
@@ -478,7 +484,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             var query = {};
 
             var dateFrom = info.dateFrom ? (new Date(info.dateFrom).setHours((new Date(info.dateFrom)).getHours() - info.offset)) : (new Date(1900, 1, 1));
-            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59").setHours((new Date(info.dateTo+ "T23:59")).getHours() - info.offset)) : (new Date());
+            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59").setHours((new Date(info.dateTo + "T23:59")).getHours() - info.offset)) : (new Date());
             var now = new Date();
 
             if (info.user && info.user != '') {
@@ -500,48 +506,52 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                 }
             };
 
-            query = { '$and': [_defaultFilter,userFilter, invoiceNumberFilter, supplierFilter, filterDate] };
+            query = { '$and': [_defaultFilter, userFilter, invoiceNumberFilter, supplierFilter, filterDate] };
 
             return this.collection
-                    .aggregate([
-                        {"$unwind" : "$items"}
-                        ,{"$unwind" : "$items.items"}
-                        ,{"$match" : query }
-                        ,{"$project" : {
-                            "_updatedDate" : 1,
-                            "no" : "$no",
-                            "date":"$date",
-                            "supplier":"$supplier.name",
-                            "currency" : "$currency.code",
-                            "tax":"$useIncomeTax",
-                            "taxNo":"$incomeTaxNo",
-                            "taxDate":"$incomeTaxDate",
-                            "vat":"$useVat",
-                            "vatName":"$vat.name",
-                            "vatRate":"$vat.rate",
-                            "vatNo" : "$vatNo",
-                            "vatDate" : "$vatDate",
-                            "payTax" : "$isPayTax",
-                            "doNo" : "$items.deliveryOrderNo",
-                            "poEksNo" : "$items.items.purchaseOrderExternalNo",
-                            "prNo" : "$items.items.purchaseRequestNo",
-                            "productCode" : "$items.items.product.code",
-                            "productName" : "$items.items.product.name",
-                            "qty":"$items.items.deliveredQuantity",
-                            "uom":"$items.items.purchaseOrderUom.unit",
-                            "price":"$items.items.pricePerDealUnit"
-                        }},
-                        {"$sort" : {
-                            "_updatedDate" : -1
-                        }}
-                    ])
-                    .toArray()
-                    .then(results => {
-                        resolve(results);
-                    })
-                    .catch(e => {
-                        reject(e);
-                    });
+                .aggregate([
+                    { "$unwind": "$items" }
+                    , { "$unwind": "$items.items" }
+                    , { "$match": query }
+                    , {
+                        "$project": {
+                            "_updatedDate": 1,
+                            "no": "$no",
+                            "date": "$date",
+                            "supplier": "$supplier.name",
+                            "currency": "$currency.code",
+                            "tax": "$useIncomeTax",
+                            "taxNo": "$incomeTaxNo",
+                            "taxDate": "$incomeTaxDate",
+                            "vat": "$useVat",
+                            "vatName": "$vat.name",
+                            "vatRate": "$vat.rate",
+                            "vatNo": "$vatNo",
+                            "vatDate": "$vatDate",
+                            "payTax": "$isPayTax",
+                            "doNo": "$items.deliveryOrderNo",
+                            "poEksNo": "$items.items.purchaseOrderExternalNo",
+                            "prNo": "$items.items.purchaseRequestNo",
+                            "productCode": "$items.items.product.code",
+                            "productName": "$items.items.product.name",
+                            "qty": "$items.items.deliveredQuantity",
+                            "uom": "$items.items.purchaseOrderUom.unit",
+                            "price": "$items.items.pricePerDealUnit"
+                        }
+                    },
+                    {
+                        "$sort": {
+                            "_updatedDate": -1
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
         });
     }
 
@@ -570,15 +580,15 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             data["Nomor PPH"] = _data.vatNo;
             data["Tanggal PPH"] = _data.vatDate ? moment(new Date(_data.vatDate)).add(query.offset, 'h').format(dateFormat) : '';
             data["Pajak Dibayar"] = _data.payTax ? 'Ya' : 'Tidak';
-            data["Nomor Surat Jalan"] =_data.doNo;
-            data["Nomor PO Eksternal"] =_data.poEksNo;
-            data["Nomor PR"] =_data.prNo;
-            data["Kode Barang"] =_data.productCode;
-            data["Nama Barang"] =_data.productName;
-            data["Jumlah"] =_data.qty;
-            data["Satuan"] =_data.uom;
-            data["Harga Satuan"] =_data.price;
-            data["Harga Total"] =_data.price * _data.qty;
+            data["Nomor Surat Jalan"] = _data.doNo;
+            data["Nomor PO Eksternal"] = _data.poEksNo;
+            data["Nomor PR"] = _data.prNo;
+            data["Kode Barang"] = _data.productCode;
+            data["Nama Barang"] = _data.productName;
+            data["Jumlah"] = _data.qty;
+            data["Satuan"] = _data.uom;
+            data["Harga Satuan"] = _data.price;
+            data["Harga Total"] = _data.price * _data.qty;
 
             xls.options["No"] = "number";
             xls.options["No Invoice"] = "string";

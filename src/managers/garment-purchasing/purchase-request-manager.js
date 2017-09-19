@@ -378,7 +378,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    getDataPRMonitoring(unitId, categoryId,buyerId, PRNo, dateFrom, dateTo, state, offset, createdBy) {//all user or by user (createdBy)
+    getDataPRMonitoring(unitId, categoryId, buyerId, PRNo, dateFrom, dateTo, state, offset, createdBy) {//all user or by user (createdBy)
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -416,19 +416,19 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     var dateString = moment(date).format('YYYY-MM-DD');
                     var dateNow = new Date(dateString);
                     var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
-                    var EndDate=moment(dateTo).format('YYYY-MM-DD');
-                   
+                    var EndDate = moment(dateTo).format('YYYY-MM-DD');
+
                     var _dateFrom = new Date(dateFrom);
                     var _dateTo = new Date(EndDate + "T23:59");
                     _dateFrom.setHours(_dateFrom.getHours() - offset);
                     _dateTo.setHours(_dateTo.getHours() - offset);
                     Object.assign(query, {
                         date: {
-                            "$gte": (!query || dateFrom=="undefined"  || !dateFrom ? (new Date(1900, 1, 1)) : (new Date(_dateFrom))),
-                            "$lte": (!query || dateTo=="undefined"  || !dateTo ? date : (new Date(_dateTo)))
+                            "$gte": (!query || dateFrom == "undefined" || !dateFrom ? (new Date(1900, 1, 1)) : (new Date(_dateFrom))),
+                            "$lte": (!query || dateTo == "undefined" || !dateTo ? date : (new Date(_dateTo)))
                         }
                     });
-                    
+
                     if (createdBy !== undefined && createdBy !== "") {
                         Object.assign(query, {
                             _createdBy: createdBy
@@ -440,42 +440,46 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     });
 
                     return this.collection
-                    .aggregate([
-                        {"$unwind" : "$items"}
-                        ,{"$match" : query }
-                        ,{"$project" : {
-                            "prDate":"$date",
-                            "shipmentDate":"$shipmentDate",
-                            "roNo" : "$roNo",
-                            "buyer":"$buyer.name",
-                            "artikel":"$artikel",
-                            "prNo":"$no",
-                            "refNo":"$items.refNo",
-                            "productName":"$items.product.name",
-                            "division":"$unit.division.name",
-                            "unit":"$unit.name",
-                            "category" : "$items.category.name",
-                            "productCode" : "$items.product.code",
-                            "productQty" : "$items.quantity",
-                            "productUom" : "$items.product.uom.unit",
-                            "expected" : "$expectedDeliveryDate",
-                            "remark":"$items.remark",
-                            "status":"$status",
-                            "deliveryOrderNos":"$items.deliveryOrderNos"
-                        }},
-                        {"$sort" : {
-                            "_updatedDate" : -1
-                        }}
-                    ])
-                    .toArray()
-                    .then(results => {
-                        resolve(results);
-                    })
-                    .catch(e => {
-                        reject(e);
-                    });
+                        .aggregate([
+                            { "$unwind": "$items" }
+                            , { "$match": query }
+                            , {
+                                "$project": {
+                                    "prDate": "$date",
+                                    "shipmentDate": "$shipmentDate",
+                                    "roNo": "$roNo",
+                                    "buyer": "$buyer.name",
+                                    "artikel": "$artikel",
+                                    "prNo": "$no",
+                                    "refNo": "$items.refNo",
+                                    "productName": "$items.product.name",
+                                    "division": "$unit.division.name",
+                                    "unit": "$unit.name",
+                                    "category": "$items.category.name",
+                                    "productCode": "$items.product.code",
+                                    "productQty": "$items.quantity",
+                                    "productUom": "$items.product.uom.unit",
+                                    "expected": "$expectedDeliveryDate",
+                                    "remark": "$items.remark",
+                                    "status": "$status",
+                                    "deliveryOrderNos": "$items.deliveryOrderNos"
+                                }
+                            },
+                            {
+                                "$sort": {
+                                    "_updatedDate": -1
+                                }
+                            }
+                        ])
+                        .toArray()
+                        .then(results => {
+                            resolve(results);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
                 });
-        });
+            });
     }
 
     _createIndexes() {
@@ -494,7 +498,14 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             unique: true
         };
 
-        return this.collection.createIndexes([dateIndex, noIndex]);
+        var createdDateIndex = {
+            name: `ix_${map.garmentPurchasing.collection.GarmentPurchaseRequest}__createdDate`,
+            key: {
+                date: -1
+            }
+        };
+
+        return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
 
     updateCollectionPR(purchaseRequest) {

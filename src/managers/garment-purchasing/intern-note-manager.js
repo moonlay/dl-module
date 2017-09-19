@@ -380,7 +380,14 @@ module.exports = class InternNoteManager extends BaseManager {
             unique: true
         };
 
-        return this.collection.createIndexes([dateIndex, noIndex]);
+        var createdDateIndex = {
+            name: `ix_${map.garmentPurchasing.collection.GarmentInternNote}__createdDate`,
+            key: {
+                date: -1
+            }
+        };
+
+        return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
 
     pdf(id, offset) {
