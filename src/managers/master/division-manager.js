@@ -132,8 +132,10 @@ module.exports = class DivisionManager extends BaseManager {
                         var newDivision = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Division(data[i]);
+                            var now = new Date();
                             valid.code = generateCode();
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)

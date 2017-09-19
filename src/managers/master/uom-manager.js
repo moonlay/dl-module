@@ -124,7 +124,9 @@ module.exports = class UomManager extends BaseManager {
                         var newUOM = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Uom(data[i]);
+                            var now = new Date();
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
