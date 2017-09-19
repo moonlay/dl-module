@@ -835,7 +835,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         var createdDateIndex = {
             name: `ix_${map.purchasing.collection.PurchaseOrderExternal}__createdDate`,
             key: {
-                date: -1
+                _createdDate: -1
             }
         }
 

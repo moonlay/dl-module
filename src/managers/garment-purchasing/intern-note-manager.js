@@ -383,7 +383,7 @@ module.exports = class InternNoteManager extends BaseManager {
         var createdDateIndex = {
             name: `ix_${map.garmentPurchasing.collection.GarmentInternNote}__createdDate`,
             key: {
-                date: -1
+                _createdDate: -1
             }
         };
 

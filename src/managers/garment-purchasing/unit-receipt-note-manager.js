@@ -834,7 +834,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         var createdDateIndex = {
             name: `ix_${map.garmentPurchasing.collection.GarmentUnitReceiptNote}__createdDate`,
             key: {
-                date: -1
+                _createdDate: -1
             }
         }
         return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);

@@ -508,7 +508,7 @@ module.exports = class CustomsManager extends BaseManager {
         var createdDateIndex = {
             name: `ix_${map.garmentPurchasing.collection.Customs}__createdDate`,
             key: {
-                date: -1
+                _createdDate: -1
             }
         };
 

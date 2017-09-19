@@ -52,7 +52,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
         var createdDateIndex = {
             name: `ix_${map.garmentPurchasing.collection.GarmentPurchaseCorrection}__createdDate`,
             key: {
-                date: -1
+                _createdDate: -1
             }
         }
 

@@ -417,7 +417,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         var createdDateIndex = {
             name: `ix_${map.garmentPurchasing.collection.GarmentInvoiceNote}__createdDate`,
             key: {
-                date: -1
+                _createdDate: -1
             }
         };
         return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);

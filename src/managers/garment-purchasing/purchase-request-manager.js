@@ -501,7 +501,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         var createdDateIndex = {
             name: `ix_${map.garmentPurchasing.collection.GarmentPurchaseRequest}__createdDate`,
             key: {
-                date: -1
+                _createdDate: -1
             }
         };
 
