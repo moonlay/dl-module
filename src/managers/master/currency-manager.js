@@ -160,8 +160,10 @@ module.exports = class CurrencyManager extends BaseManager {
                         var newCurrency = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Currency(data[i]);
+                            var now = new Date();
                             valid.rate = Number(valid.rate);
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
