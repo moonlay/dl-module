@@ -60,7 +60,7 @@ it("#03. should success when load all data", function (done) {
     instanceManager.load(transfrom)
         .then((result) => {
 
-            var data = result;
+            var data = result.processed;
             data.should.instanceof(Array);
             data.length.should.not.equal(0);
             done();
