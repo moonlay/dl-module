@@ -16,7 +16,7 @@ module.exports = function (data, offset) {
                     unit: item.unit,
                     price: item.pricePerDealUnit,
                     priceTotal: item.pricePerDealUnit * item.deliveredQuantity,
-                    correction: item.correction.correctionPriceTotal || 0
+                    correction: item.correction
                 }
             });
             _items = [].concat.apply([], _items);
@@ -265,7 +265,7 @@ module.exports = function (data, offset) {
     var sumByCurrency = sum * data.currency.rate;
     var incomeTaxTotal = useIncomeTax ? sumByCurrency * 0.1 : 0;
     var vatTotal = useVat ? sumByCurrency * vatRate / 100 : 0;
-    var sumTotal = sumByCurrency - vatTotal + incomeTaxTotal;
+    var sumTotal = sumByCurrency - vatTotal + incomeTaxTotal + sumKoreksi;
 
     var subFooter = [
         {

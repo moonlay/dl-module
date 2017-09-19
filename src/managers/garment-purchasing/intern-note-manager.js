@@ -387,7 +387,6 @@ module.exports = class InternNoteManager extends BaseManager {
         return new Promise((resolve, reject) => {
             this.getSingleById(id)
                 .then(internNote => {
-
                     var listDOid = internNote.items.map(invoiceNote => {
                         var invoiceItem = invoiceNote.items.map(dataItem => {
                             return dataItem.deliveryOrderId.toString()
@@ -418,7 +417,7 @@ module.exports = class InternNoteManager extends BaseManager {
                                             doPOid: fulfillment.purchaseOrderId,
                                             doPRid: fulfillment.purchaseRequestId,
                                             doProductid: fulfillment.product._id,
-                                            doCorrection: fulfillment.correction || {},
+                                            doCorrection: correction || {},
                                         }
                                     });
                                     _items = [].concat.apply([], _items);
@@ -465,10 +464,13 @@ module.exports = class InternNoteManager extends BaseManager {
                                                     cItem.doId.toString() == dataItem.deliveryOrderId.toString() &&
                                                     cItem.doNo == dataItem.deliveryOrderNo &&
                                                     cItem.doPRid.toString() == item.purchaseRequestId.toString() &&
-                                                    cItem.doProductid.toString() == item.product.toString() &&
+                                                    cItem.doProductid.toString() == item.product._id.toString() &&
                                                     cItem.doPOid.toString() == item.purchaseOrderId.toString());
-
-                                                item.correction = correction ? correction.doCorrection : {};
+                                                if (correction) {
+                                                    item.correction = correction.doCorrection.correctionPriceTotal - (item.pricePerDealUnit * item.deliveredQuantity)
+                                                } else {
+                                                    item.correction = 0;
+                                                }
                                                 item.unit = pr.unit.code || "";
                                             });
                                         })
@@ -500,12 +502,12 @@ module.exports = class InternNoteManager extends BaseManager {
         });
     }
 
-    getDataMonitoring(info){
+    getDataMonitoring(info) {
         return new Promise((resolve, reject) => {
             var _defaultFilter = {
                 _deleted: false
             };
-            var userFilter={};
+            var userFilter = {};
             var internNoteFilter = {};
             var supplierFilter = {};
             var currencyFilter = {};
@@ -514,7 +516,7 @@ module.exports = class InternNoteManager extends BaseManager {
             var query = {};
 
             var dateFrom = info.dateFrom ? (new Date(info.dateFrom).setHours((new Date(info.dateFrom)).getHours() - info.offset)) : (new Date(1900, 1, 1));
-            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59").setHours((new Date(info.dateTo+ "T23:59")).getHours() - info.offset)) : (new Date());
+            var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59").setHours((new Date(info.dateTo + "T23:59")).getHours() - info.offset)) : (new Date());
             var now = new Date();
 
             if (info.user && info.user != '') {
@@ -540,42 +542,46 @@ module.exports = class InternNoteManager extends BaseManager {
                 }
             };
 
-            query = { '$and': [_defaultFilter,userFilter, internNoteFilter, supplierFilter, filterDate, currencyFilter] };
+            query = { '$and': [_defaultFilter, userFilter, internNoteFilter, supplierFilter, filterDate, currencyFilter] };
 
             return this.collection
-                    .aggregate([
-                        {"$unwind" : "$items"}
-                        ,{"$unwind" : "$items.items"}
-                        ,{"$unwind" : "$items.items.items"}
-                        ,{"$match" : query }
-                        ,{"$project" : {
-                            "_updatedDate" : 1,
-                            "no" : "$no",
-                            "date":"$date",
-                            "supplier":"$supplier.name",
-                            "currency" : "$currency.code",
-                            "paymentMethod":"$paymentMethod",
-                            "paymentType":"$paymentType",
-                            "dueDate":"$dueDate",
-                            "invoiceNo":"$items.no",
-                            "invoiceDate":"$items.date",
-                            "productCode" : "$items.items.items.product.code",
-                            "productName" : "$items.items.items.product.name",
-                            "qty":"$items.items.items.deliveredQuantity",
-                            "uom":"$items.items.items.purchaseOrderUom.unit",
-                            "price":"$items.items.items.pricePerDealUnit"
-                        }},
-                        {"$sort" : {
-                            "_updatedDate" : -1
-                        }}
-                    ])
-                    .toArray()
-                    .then(results => {
-                        resolve(results);
-                    })
-                    .catch(e => {
-                        reject(e);
-                    });
+                .aggregate([
+                    { "$unwind": "$items" }
+                    , { "$unwind": "$items.items" }
+                    , { "$unwind": "$items.items.items" }
+                    , { "$match": query }
+                    , {
+                        "$project": {
+                            "_updatedDate": 1,
+                            "no": "$no",
+                            "date": "$date",
+                            "supplier": "$supplier.name",
+                            "currency": "$currency.code",
+                            "paymentMethod": "$paymentMethod",
+                            "paymentType": "$paymentType",
+                            "dueDate": "$dueDate",
+                            "invoiceNo": "$items.no",
+                            "invoiceDate": "$items.date",
+                            "productCode": "$items.items.items.product.code",
+                            "productName": "$items.items.items.product.name",
+                            "qty": "$items.items.items.deliveredQuantity",
+                            "uom": "$items.items.items.purchaseOrderUom.unit",
+                            "price": "$items.items.items.pricePerDealUnit"
+                        }
+                    },
+                    {
+                        "$sort": {
+                            "_updatedDate": -1
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
         });
     }
 
@@ -601,12 +607,12 @@ module.exports = class InternNoteManager extends BaseManager {
             data["Tanggal Jatuh Tempo"] = _data.dueDate ? moment(new Date(_data.dueDate)).add(query.offset, 'h').format(dateFormat) : '';
             data["Nomor Invoice"] = _data.invoiceNo ? _data.invoiceNo : '';
             data["Tanggal Invoice"] = _data.invoiceDate ? moment(new Date(_data.invoiceDate)).add(query.offset, 'h').format(dateFormat) : '';
-            data["Kode Barang"] =_data.productCode;
-            data["Nama Barang"] =_data.productName;
-            data["Jumlah"] =_data.qty;
-            data["Satuan"] =_data.uom;
-            data["Harga Satuan"] =_data.price;
-            data["Harga Total"] =_data.price * _data.qty;
+            data["Kode Barang"] = _data.productCode;
+            data["Nama Barang"] = _data.productName;
+            data["Jumlah"] = _data.qty;
+            data["Satuan"] = _data.uom;
+            data["Harga Satuan"] = _data.price;
+            data["Harga Total"] = _data.price * _data.qty;
 
             xls.options["No"] = "number";
             xls.options["Nomor Nota Intern"] = "string";
