@@ -10,11 +10,15 @@ var Currency = DLModels.garmentPurchasing.GarmentCurrency;
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 
+var CurrencyManager = require('../master/currency-manager');
+
 module.exports = class GarmentCurrencyManager extends BaseManager {
 
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentPurchasing.collection.GarmentCurrency);
+        this.master = new CurrencyManager(db, user);
+
     }
 
     _getQuery(paging) {
@@ -76,9 +80,9 @@ module.exports = class GarmentCurrencyManager extends BaseManager {
 
                 if (!valid.code || valid.code == '')
                     errors["code"] = i18n.__("Currency.code.isRequired:%s is required", i18n.__("Currency.code._:Code")); //"Kode mata uang Tidak Boleh Kosong";
-                else if (_currency) {
-                    errors["code"] = i18n.__("Currency.code.isExists:%s is already exists", i18n.__("Currency.code._:Code")); //"Kode mata uang sudah terdaftar";
-                }
+                // else if (_currency) {
+                //     errors["code"] = i18n.__("Currency.code.isExists:%s is already exists", i18n.__("Currency.code._:Code")); //"Kode mata uang sudah terdaftar";
+                // }
 
                 if (!valid.rate || valid.rate == 0)
                     errors["rate"] = i18n.__("Currency.rate.isRequired:%s is required", i18n.__("Currency.rate._:Rate")); //"Rate mata uang Tidak Boleh Kosong";
@@ -102,76 +106,95 @@ module.exports = class GarmentCurrencyManager extends BaseManager {
     insert(dataFile) {
         return new Promise((resolve, reject) => {
             var currency;
-            this.getCurrency()
-                .then(results => {
-                    currency = results.data;
-                    var data = [];
-                    if (dataFile.data != "") {
-                        for (var i = 1; i < dataFile.data.length; i++) {
-                            data.push({
-                                "date": new Date(dataFile.date),
-                                "code": dataFile.data[i][0].trim(),
-                                "rate": dataFile.data[i][1].trim(),
+            this.master.getCurrency().then(result => {
+                var masterCurrency = result;
+                this.getCurrency()
+                    .then(results => {
+                        currency = results.data;
+                        var data = [];
+                        if (dataFile.data != "") {
+                            for (var i = 1; i < dataFile.data.length; i++) {
+                                data.push({
+                                    "date": new Date(dataFile.date),
+                                    "code": dataFile.data[i][0].trim(),
+                                    "rate": dataFile.data[i][1].trim(),
 
-                            });
-                        }
-                    }
-                    var dataError = [], errorMessage;
-                    for (var i = 0; i < data.length; i++) {
-                        errorMessage = "";
-                        if (data[i]["code"] === "" || data[i]["code"] === undefined) {
-                            errorMessage = errorMessage + "Mata Uang tidak boleh kosong, ";
-                        }
-
-                        if (data[i]["rate"] === "" || data[i]["rate"] === undefined) {
-                            errorMessage = errorMessage + "Kurs tidak boleh kosong, ";
-                        } else if (isNaN(data[i]["rate"])) {
-                            errorMessage = errorMessage + "Kurs harus numerik, ";
-                        }
-                        else {
-                            var rateTemp = (data[i]["rate"]).toString().split(".");
-                            if (rateTemp[1] === undefined) {
-                            } else if (rateTemp[1].length > 2) {
-                                errorMessage = errorMessage + "Kurs maksimal memiliki 2 digit dibelakang koma, ";
-                            }
-                        }
-
-                        for (var j = 0; j < currency.length; j++) {
-                            if (currency[j]["code"] === data[i]["code"]) {
-                                errorMessage = errorMessage + "Mata Uang tidak boleh duplikat, ";
-                            }
-                        }
-                        if (errorMessage !== "") {
-                            dataError.push({ "Mata Uang": data[i]["code"], "Kurs": data[i]["rate"], "Error": errorMessage });
-                        }
-                    }
-                    if (dataError.length === 0) {
-                        var newCurrency = [];
-                        for (var i = 0; i < data.length; i++) {
-                            var valid = new Currency(data[i]);
-                            valid.date = valid.date;
-                            valid.code = valid.code;
-                            valid.rate = Number(valid.rate);
-                            valid.stamp(this.user.username, 'manager');
-                            this.collection.insert(valid)
-                                .then(id => {
-                                    this.getSingleById(id)
-                                        .then(resultItem => {
-                                            newCurrency.push(resultItem)
-                                            resolve(newCurrency);
-                                        })
-                                        .catch(e => {
-                                            reject(e);
-                                        });
-                                })
-                                .catch(e => {
-                                    reject(e);
                                 });
+                            }
                         }
-                    } else {
-                        resolve(dataError);
-                    }
-                })
+                        var dataError = [], errorMessage;
+                        for (var i = 0; i < data.length; i++) {
+                            errorMessage = "";
+
+                            if (!(masterCurrency.data.find(o => o.code == data[i]["code"]))) {
+                                errorMessage = errorMessage + "Mata Uang tidak terdaftar dalam master Mata Uang,";
+                            }
+
+                            if (data[i]["code"] === "" || data[i]["code"] === undefined) {
+                                errorMessage = errorMessage + "Mata Uang tidak boleh kosong, ";
+                            }
+
+                            if (data[i]["date"] === "" || data[i]["date"] === undefined || data[i]["date"].toString() == "Invalid Date") {
+                                errorMessage = errorMessage + "Tanggal tidak boleh kosong, ";
+                            }
+
+                            if (data[i]["date"] > new Date()) {
+                                errorMessage = errorMessage + "Tanggal tidak boleh lebih dari tanggal hari ini, ";
+                            }
+
+                            if (data[i]["rate"] === "" || data[i]["rate"] === undefined) {
+                                errorMessage = errorMessage + "Kurs tidak boleh kosong, ";
+                            } else if (isNaN(data[i]["rate"])) {
+                                errorMessage = errorMessage + "Kurs harus numerik, ";
+                            }
+                            else {
+                                var rateTemp = (data[i]["rate"]).toString().split(".");
+                                if (rateTemp[1] === undefined) {
+                                } else if (rateTemp[1].length > 4) {
+                                    errorMessage = errorMessage + "Kurs maksimal memiliki 4 digit dibelakang koma, ";
+                                }
+                            }
+
+                            for (var j = 0; j < currency.length; j++) {
+
+                                if (currency[j]["code"] === data[i]["code"] && currency[j]["date"].toString() === data[i]["date"].toString()) {
+                                    errorMessage = errorMessage + "Mata Uang dan Tanggal tidak boleh duplikat, ";
+                                }
+                            }
+                            if (errorMessage !== "") {
+                                dataError.push({ "Mata Uang": data[i]["code"], "Kurs": data[i]["rate"], "Tangga": data[i]["date"], "Error": errorMessage });
+                            }
+                        }
+                        if (dataError.length === 0) {
+                            var newCurrency = [];
+                            for (var i = 0; i < data.length; i++) {
+                                var valid = new Currency(data[i]);
+                                valid.date = valid.date;
+                                valid.code = valid.code;
+                                valid.rate = Number(valid.rate);
+                                valid.stamp(this.user.username, 'manager');
+                                this.collection.insert(valid)
+                                    .then(id => {
+                                        this.getSingleById(id)
+                                            .then(resultItem => {
+                                                newCurrency.push(resultItem)
+                                                resolve(newCurrency);
+                                            })
+                                            .catch(e => {
+                                                reject(e);
+                                            });
+                                    })
+                                    .catch(e => {
+                                        reject(e);
+                                    });
+                            }
+                        } else {
+                            resolve(dataError);
+                        }
+                    })
+
+            })
+
         })
     }
 
@@ -188,9 +211,9 @@ module.exports = class GarmentCurrencyManager extends BaseManager {
             key: {
                 code: 1
             },
-            unique: true
+            unique: false
         }
 
-        return this.collection.createIndexes([dateIndex, codeIndex]);
+        return this.collection.createIndexes([dateIndex,codeIndex]);
     }
 }

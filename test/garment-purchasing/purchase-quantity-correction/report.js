@@ -2,23 +2,23 @@
 
 var helper = require("../../helper");
 var validatorPurchasing = require('dl-models').validator.purchasing;
-var PurchasePriceCorrectionManager = require("../../../src/managers/garment-purchasing/purchase-price-correction-manager");
-var purchasePriceCorrectionManager = null;
-var PurchasePriceCorrection = require('../../data-util/garment-purchasing/purchase-price-correction-data-util');
+var PurchaseQuantityCorrectionManager = require("../../../src/managers/garment-purchasing/purchase-quantity-correction-manager");
+var purchaseQuantityCorrectionManager = null;
+var PurchaseQuantityCorrection = require('../../data-util/garment-purchasing/purchase-quantity-correction-data-util');
 var moment = require('moment');
 var dateNow;
 var dateBefore;
 var supplier;
 var no;
 var user = {username :"unit-test"};
-var dataUtil= require("../../data-util/garment-purchasing/purchase-price-correction-data-util");
+var dataUtil= require("../../data-util/garment-purchasing/purchase-quantity-correction-data-util");
 var should = require("should");
 
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            purchasePriceCorrectionManager = new PurchasePriceCorrectionManager(db, {
+            purchaseQuantityCorrectionManager = new PurchaseQuantityCorrectionManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -31,7 +31,7 @@ before('#00. connect db', function (done) {
 var createdId;
 it("#01. should success when create new data", function (done) {
         dataUtil.getNewData()
-            .then((data) => purchasePriceCorrectionManager.create(data))
+            .then((data) => purchaseQuantityCorrectionManager.create(data))
             .then((id) => {
                 id.should.be.Object();
                 createdId = id;
@@ -43,7 +43,7 @@ it("#01. should success when create new data", function (done) {
     });
 
 it("#02. should success when get report with parameter no", function (done) {
-    purchasePriceCorrectionManager.getPurchasePriceCorrectionReport({"no" : no},user)
+    purchaseQuantityCorrectionManager.getPurchaseQuantityCorrectionReport({"no" : no},user)
         .then((data) => {
             data.should.instanceof(Array);
             done();
@@ -54,7 +54,7 @@ it("#02. should success when get report with parameter no", function (done) {
 });
 
 it("#03. should success when get report with parameter supplier", function (done) {
-    purchasePriceCorrectionManager.getPurchasePriceCorrectionReport({"supplier" : supplier},user)
+    purchaseQuantityCorrectionManager.getPurchaseQuantityCorrectionReport({"supplier" : supplier},user)
         .then((data) => {
             data.should.instanceof(Array);
             done();
@@ -65,13 +65,13 @@ it("#03. should success when get report with parameter supplier", function (done
 });
 
 it("#04. should success when get report with parameter dateFrom", function (done) {
-    purchasePriceCorrectionManager.getPurchasePriceCorrectionReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD')},user)
+    purchaseQuantityCorrectionManager.getPurchaseQuantityCorrectionReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD')},user)
         .then((data) => {
             data.should.instanceof(Array);
             var result = {
                 data : data
             };
-            purchasePriceCorrectionManager.getPurchasePriceCorrectionReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD')})
+            purchaseQuantityCorrectionManager.getPurchaseQuantityCorrectionReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD')})
                 .then(xls => {
                     xls.should.instanceof(Object);
                     xls.should.have.property('data');
@@ -88,13 +88,13 @@ it("#04. should success when get report with parameter dateFrom", function (done
         });
 });
 it("#05. should success when get report with parameter dateFrom and dateTo", function (done) {
-    purchasePriceCorrectionManager.getPurchasePriceCorrectionReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')},user)
+    purchaseQuantityCorrectionManager.getPurchaseQuantityCorrectionReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')},user)
         .then((data) => {
             data.should.instanceof(Array);
             var result = {
                 data : data
             };
-            purchasePriceCorrectionManager.getPurchasePriceCorrectionReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')})
+            purchaseQuantityCorrectionManager.getPurchaseQuantityCorrectionReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')})
                 .then(xls => {
                     xls.should.instanceof(Object);
                     xls.should.have.property('data');
@@ -112,14 +112,14 @@ it("#05. should success when get report with parameter dateFrom and dateTo", fun
 });
 
 it("#06. should success when get report with no parameter and get excel", function (done) {
-    purchasePriceCorrectionManager.getPurchasePriceCorrectionReport({},user)
+    purchaseQuantityCorrectionManager.getPurchaseQuantityCorrectionReport({},user)
         .then((data) => {
            
             data.should.instanceof(Array);
             var result = {
                 data : data
             };
-            purchasePriceCorrectionManager.getPurchasePriceCorrectionReportXls(result, {})
+            purchaseQuantityCorrectionManager.getPurchaseQuantityCorrectionReportXls(result, {})
                 .then(xls => {
                     xls.should.instanceof(Object);
                     xls.should.have.property('data');

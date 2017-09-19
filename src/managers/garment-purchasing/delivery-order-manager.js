@@ -904,8 +904,14 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             },
             unique: true
         }
+        var createdDateIndex = {
+            name: `ix_${map.purchasing.collection.DeliveryOrder}__createdDate`,
+            key: {
+                _createdDate: -1
+            }
+        }
 
-        return this.collection.createIndexes([dateIndex, refNoIndex]);
+        return this.collection.createIndexes([dateIndex, refNoIndex, createdDateIndex]);
     }
 
     /*getAllData(filter) {
@@ -960,6 +966,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 _deleted: false
             };
             var doNoFilter = {};
+            var poEksFilter = {};
             var supplierFilter = {};
             var dateFromFilter = {};
             var dateToFilter = {};
@@ -975,7 +982,11 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
 
             if (info.no && info.no != '') {
-                doNoFilter = { "items.purchaseOrderExternalNo": info.no };
+                doNoFilter = { "no": info.no };
+            }
+
+            if (info.poEksNo && info.poEksNo != '') {
+                poEksFilter = { "items.purchaseOrderExternalNo": info.poEksNo };
             }
 
             if (info.supplierId && info.supplierId != '') {
@@ -997,7 +1008,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 }
             };
 
-            query = { '$and': [_defaultFilter, doNoFilter, supplierFilter, filterDate, userFilter] };
+            query = { '$and': [_defaultFilter, doNoFilter, supplierFilter, filterDate, userFilter, poEksFilter] };
 
 
 
@@ -1008,7 +1019,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                     , { "$match": query }
                     , {
                         "$project": {
-                            "no": 1,
+                            "_updatedDate": -1,
+                            "no": "$no",
                             "doDate": "$supplierDoDate",
                             "arrivedDate": "$date",
                             "supplier": "$supplier.name",
@@ -1043,6 +1055,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 });
         });
     }
+
 
     getXls(result, query) {
         var xls = {};
