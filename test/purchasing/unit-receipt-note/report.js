@@ -31,14 +31,14 @@ it('#01. should success get data when parameter null', function (done) {
         });
 });
 
-it('#02. should success get data when parameter dateFrom and dateTo', function (done) {
+it('#02. should success get data when parameter unitId, dateFrom and dateTo', function (done) {
+    var unitId= "";
     var dateTo=new Date();
     var dateFrom = new Date();
-    dateFrom.setHours(dateFrom.getHours() - offset);
-    dateTo.setHours(dateTo.getHours() - offset);
+    
     dateFrom.setDate(dateFrom.getDate() - 1);
 
-    unitReceiptNoteManager.getUnitReceiptWithoutSpb(dateFrom,dateTo,offset)
+    unitReceiptNoteManager.getUnitReceiptWithoutSpb(unitId,dateFrom,dateTo)
       .then(data => {
         data.should.instanceof(Array);
         done();
