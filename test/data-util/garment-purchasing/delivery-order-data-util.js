@@ -56,6 +56,9 @@ class DeliveryOrderDataUtil {
                             items: [{
                                 purchaseOrderExternalId: poEks._id,
                                 purchaseOrderExternalNo: poEks.no,
+                                paymentMethod: poEks.paymentMethod,
+                                paymentType: poEks.paymentType,
+                                paymentDueDays: poEks.paymentDueDays,
                                 fulfillments: poExt
                             }]
                         };
