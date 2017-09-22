@@ -171,9 +171,9 @@ module.exports = function (data, offset) {
         }
     }];
 
-    var footer = ['\n\n\n\n\n',{
+    var footer = ['\n\n\n\n\n', {
         table: {
-            widths: ['25%', '25%', '25%', '25%'],
+            widths: ['33%', '33%', '33%'],
             body: [
                 [
                     {
@@ -185,42 +185,32 @@ module.exports = function (data, offset) {
                     }, {
                         text: 'Verifikasi',
                         style: ['size08', 'bold', 'center']
-                    }, {
-                        text: 'Keuangan',
-                        style: ['size08', 'bold', 'center']
                     }
                 ],
                 [
                     {
-                        stack:[ '\n\n\n\n',
+                        stack: ['\n\n\n\n',
                             {
                                 text: '(Nama & Tanggal)',
                                 style: ['size08', 'center']
                             }
                         ]
-                    },{
-                        stack:[ '\n\n\n\n',
+                    }, {
+                        stack: ['\n\n\n\n',
                             {
                                 text: '(Nama & Tanggal)',
                                 style: ['size08', 'center']
                             }
                         ]
-                    },{
-                        stack:[ '\n\n\n\n',
-                            {
-                                text: '(Nama & Tanggal)',
-                                style: ['size08', 'center']
-                            }
-                        ]
-                    },{
-                        stack:[ '\n\n\n\n',
+                    }, {
+                        stack: ['\n\n\n\n',
                             {
                                 text: '(Nama & Tanggal)',
                                 style: ['size08', 'center']
                             }
                         ]
                     }
-                ] 
+                ]
             ]
         }
     }];

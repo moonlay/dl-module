@@ -72,7 +72,7 @@ class PurchaseOrderExternalDataUtil {
                             vat: vat,
                             useVat: vat != undefined,
                             vatRate: vat.rate,
-                            useIncomeTax: false,
+                            useIncomeTax: true,
                             category:category,
                             categoryId:category._id,
                             date: new Date(),
