@@ -195,6 +195,10 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                     fulfillmentError["purchaseOrderId"] = i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId.isRequired:%s is closed", i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId._:PurchaseOrderExternal"));
                                 }
 
+                                if (!doFulfillment.deliveredQuantity || doFulfillment.deliveredQuantity === 0) {
+                                    fulfillmentError["deliveredQuantity"] = i18n.__("DeliveryOrder.items.fulfillments.deliveredQuantity.isRequired:%s is required or not 0", i18n.__("DeliveryOrder.items.fulfillments.deliveredQuantity._:DeliveredQuantity"));
+                                }
+
                                 if (!doFulfillment.quantityConversion || doFulfillment.quantityConversion === 0) {
                                     fulfillmentError["quantityConversion"] = i18n.__("DeliveryOrder.items.fulfillments.quantityConversion.isRequired:%s is required or not 0", i18n.__("DeliveryOrder.items.fulfillments.quantityConversion._:Quantity Conversion"));
                                 }
