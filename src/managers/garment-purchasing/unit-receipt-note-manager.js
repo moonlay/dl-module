@@ -131,10 +131,43 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                 _deliveredQuantities = [].concat.apply([], _deliveredQuantities);
                                 _deliveredQuantities = this.cleanUp(_deliveredQuantities);
                                 var _deliveredQuantity = _deliveredQuantities[0] || 0;
-                                if (item.deliveredQuantity <= 0)
+                                if (item.deliveredQuantity <= 0) {
                                     itemError["deliveredQuantity"] = i18n.__("UnitReceiptNote.items.deliveredQuantity.isRequired:%s is required", i18n.__("UnitReceiptNote.items.deliveredQuantity._:Delivered Quantity")); //Jumlah barang tidak boleh kosong";
-                                else if (item.deliveredQuantity > _deliveredQuantity)
+                                } else if (item.deliveredQuantity > _deliveredQuantity) {
                                     itemError["deliveredQuantity"] = i18n.__("UnitReceiptNote.items.deliveredQuantity.isRequired:%s must not be greater than delivered quantity on delivery order", i18n.__("UnitReceiptNote.items.deliveredQuantity._:Delivered Quantity")); //Jumlah barang tidak boleh kosong";
+                                }
+
+                                if (!item.quantityConversion || item.quantityConversion === 0) {
+                                    itemError["quantityConversion"] = i18n.__("UnitReceiptNote.items.quantityConversion.isRequired:%s is required or not 0", i18n.__("UnitReceiptNote.items.quantityConversion._:Quantity Conversion")); //"Jumlah barang diterima tidak boleh kosong";
+                                }
+
+                                if (!item.quantityConversion || item.quantityConversion === 0) {
+                                    itemError["quantityConversion"] = i18n.__("UnitReceiptNote.items.quantityConversion.isRequired:%s is required or not 0", i18n.__("UnitReceiptNote.items.quantityConversion._:Quantity Conversion"));
+                                }
+
+                                if (!item.uomConversion || !item.uomConversion.unit || item.uomConversion.unit === "") {
+                                    itemError["uomConversion"] = i18n.__("UnitReceiptNote.items.uomConversion.isRequired:%s is required", i18n.__("UnitReceiptNote.items.uomConversion._:Uom Conversion"));
+                                }
+                                if (Object.getOwnPropertyNames(item.uomConversion).length > 0 && Object.getOwnPropertyNames(item.deliveredUom).length > 0) {
+                                    if (item.uomConversion.unit.toString() === item.deliveredUom.unit.toString()) {
+                                        if (item.conversion !== 1) {
+                                            itemError["conversion"] = i18n.__("UnitReceiptNote.items.conversion.isRequired:%s must be 1", i18n.__("UnitReceiptNote.items.conversion._:Conversion"));
+                                        }
+                                    } else {
+                                        if (item.conversion === 1) {
+                                            itemError["conversion"] = i18n.__("UnitReceiptNote.items.conversion.isRequired:%s must not be 1", i18n.__("UnitReceiptNote.items.conversion._:Conversion"));
+                                        }
+                                    }
+                                } else {
+                                    itemError["uomConversion"] = i18n.__("UnitReceiptNote.items.uomConversion.isRequired:%s is required", i18n.__("UnitReceiptNote.items.uomConversion._:Uom Conversion"));
+                                }
+                                if (item.buyer) {
+                                    if (!item.buyer._id)
+                                        itemError["buyer"] = i18n.__("UnitReceiptNote.items.buyer.isRequired:%s is required", i18n.__("UnitReceiptNote.items.buyer._:Buyer"));
+                                }
+                                else if (!item.buyer)
+                                    itemError["buyer"] = i18n.__("UnitReceiptNote.items.buyer.isRequired:%s is required", i18n.__("UnitReceiptNote.items.buyer._:Buyer"));
+
                                 itemErrors.push(itemError);
                             }
                             for (var itemError of itemErrors) {

@@ -59,29 +59,6 @@ before('#00. connect db', function (done) {
         });
 });
 
-it('#01. should success when create new invoice note with useIncomeTax = false and useVat = false ', function (done) {
-    invoiceNoteDataUtil.getNewData()
-        .then((data) => {
-            data.useIncomeTax = false;
-            data.incomeTaxDate = "";
-            data.incomeTaxNo = "";
-            data.useVat = false;
-            data.vatDate = "";
-            data.vatNo = "";
-            data.vat = {};
-            data.isPayTax = false;
-            return invoiceNoteManager.create(data)
-        })
-        .then((id) => {
-            id.should.be.Object();
-            createdId = id;
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-
 it('#02. should error when create new invoice note ', function (done) {
     invoiceNoteDataUtil.getNewData()
         .then((data) => {
@@ -127,5 +104,60 @@ it('#03. should error when create new invoice note with deliveredQuantity = 0', 
             catch (ex) {
                 done(e);
             }
+        });
+});
+
+var createdData;
+var createdId;
+it('#04. should success when create new invoice note', function (done) {
+    invoiceNoteDataUtil.getNewTestData()
+        .then((data) => {
+            createdData = data;
+            createdId = data._id;
+            done()
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#05. should success when delete data`, function (done) {
+    invoiceNoteManager.delete(createdData)
+        .then((id) => {
+            id.toString().should.equal(createdId.toString());
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+
+it(`#06. should _deleted=true`, function (done) {
+    invoiceNoteManager.getSingleByQuery({
+        _id: createdId
+    })
+        .then((data) => {
+            validate(data);
+            data._deleted.should.be.Boolean();
+            data._deleted.should.equal(true);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#07. should success when create deleted data", function (done) {
+    delete createdData._id;
+    delete createdData.refNo;
+    invoiceNoteManager.create(createdData)
+        .then((id) => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
         });
 });

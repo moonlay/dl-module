@@ -3,6 +3,7 @@ var helper = require('../../helper');
 var InvoiceNoteManager = require('../../../src/managers/garment-purchasing/invoice-note-manager');
 var codeGenerator = require('../../../src/utils/code-generator');
 
+var vat = require('../master/vat-data-util');
 var supplierDataUtil = require('../master/garment-supplier-data-util');
 var currencyDataUtil = require('../master/currency-data-util');
 var vatDataUtil = require('../master/vat-data-util');
@@ -24,6 +25,9 @@ class InvoiceNoteDataUtil {
                                 return {
                                     purchaseOrderExternalId: doItem.purchaseOrderExternalId,
                                     purchaseOrderExternalNo: doItem.purchaseOrderExternalNo,
+                                    paymentMethod: doItem.paymentMethod,
+                                    paymentType: doItem.paymentType,
+                                    paymentDueDays: doItem.paymentDueDays,
                                     purchaseOrderId: doFulfillment.purchaseOrderId,
                                     purchaseOrderNo: doFulfillment.purchaseOrderNo,
                                     purchaseRequestId: doFulfillment.purchaseRequestId,
@@ -76,16 +80,20 @@ class InvoiceNoteDataUtil {
         return helper
             .getManager(InvoiceNoteManager)
             .then(manager => {
-                return Promise.all([supplierDataUtil.getTestData(), currencyDataUtil.getTestData(), deliveryOderDataUtil.getNewTestData()])
+                return Promise.all([supplierDataUtil.getTestData(), currencyDataUtil.getTestData(), vat.getTestData(),deliveryOderDataUtil.getNewTestData()])
                     .then(results => {
                         var dataSupplier = results[0];
                         var dataCurrency = results[1];
-                        var deliveryOder = results[2];
+                        var vat = results[2];
+                        var deliveryOder = results[3];
                         var items = deliveryOder.items.map(doItem => {
                             var fulfillment = doItem.fulfillments.map(doFulfillment => {
                                 return {
                                     purchaseOrderExternalId: doItem.purchaseOrderExternalId,
                                     purchaseOrderExternalNo: doItem.purchaseOrderExternalNo,
+                                    paymentMethod: doItem.paymentMethod,
+                                    paymentType: doItem.paymentType,
+                                    paymentDueDays: doItem.paymentDueDays,
                                     purchaseOrderId: doFulfillment.purchaseOrderId,
                                     purchaseOrderNo: doFulfillment.purchaseOrderNo,
                                     purchaseRequestId: doFulfillment.purchaseRequestId,
@@ -113,17 +121,18 @@ class InvoiceNoteDataUtil {
 
                         var data = {
                             no: `UT/IN/${codeGenerator()}`,
+                            refNo: `REF/NO/UT/NI/${codeGenerator()}`,
                             date: new Date(),
                             supplierId: dataSupplier._id,
                             supplier: dataSupplier,
                             currency: dataCurrency,
                             useIncomeTax: false,
-                            incomeTaxNo: "",
-                            incomeTaxDate:"",
-                            vatNo: "",
-                            vatDate: "",
-                            useVat: false,
-                            vat: {},
+                            incomeTaxNo: `UT/PPN/${codeGenerator()}`,
+                            incomeTaxDate: new Date(),
+                            vatNo: `UT/PPH/${codeGenerator()}`,
+                            vatDate: new Date(),
+                            useVat: true,
+                            vat: vat,
                             isPayTax: false,
                             hasInternNote: false,
                             remark: 'Unit Test Invoice Note',

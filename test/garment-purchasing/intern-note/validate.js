@@ -91,23 +91,7 @@ it("#03. should error when create new data with no exist data currency", functio
         });
 });
 
-it("#04. should error when create new data with no exist data payment method", function (done) {
-    var data = Object.assign({}, interNoteData);
-    data.paymentMethod = "";
-    internNoteManager.create(data)
-        .then((id) => {
-            done("should error when create new data with no exist data currency");
-        })
-        .catch((e) => {
-            e.name.should.equal("ValidationError");
-            e.should.have.property("errors");
-            e.errors.should.instanceof(Object);
-            e.errors.should.have.property('paymentMethod');
-            done();
-        });
-});
-
-it("#05. should error when create new data with date more than this day", function (done) {
+it("#04. should error when create new data with date more than this day", function (done) {
     var data = Object.assign({}, interNoteData);
     data.date = moment(dateAfter).format('YYYY-MM-DD');
     internNoteManager.create(data)
@@ -123,40 +107,7 @@ it("#05. should error when create new data with date more than this day", functi
         });
 });
 
-it("#06. should error when create new data with due date less than this day", function (done) {
-    var data = Object.assign({}, interNoteData);
-    data.dueDate = moment(dateBefore).format('YYYY-MM-DD');
-    internNoteManager.create(data)
-        .then((id) => {
-            done("should error when create new data with validation date more than this day");
-        })
-        .catch((e) => {
-            e.name.should.equal("ValidationError");
-            e.should.have.property("errors");
-            e.errors.should.instanceof(Object);
-            e.errors.should.have.property('dueDate');
-            done();
-        });
-});
-
-it("#07. should error when create new data with due date less than date", function (done) {
-    var data = Object.assign({}, interNoteData);
-    var date = new Date();
-    data.dueDate = moment(dateBefore).format('YYYY-MM-DD');
-    internNoteManager.create(data)
-        .then((id) => {
-            done("should error when create new data with validation date less than customs date");
-        })
-        .catch((e) => {
-            e.name.should.equal("ValidationError");
-            e.should.have.property("errors");
-            e.errors.should.instanceof(Object);
-            e.errors.should.have.property('dueDate');
-            done();
-        });
-});
-
-it("#08. should error when create new data with no exist data invoice note", function (done) {
+it("#05. should error when create new data with no exist data invoice note", function (done) {
     var data = Object.assign({}, interNoteData);
     var tamp = [];
     for (var varitem of data.items) {
@@ -178,7 +129,7 @@ it("#08. should error when create new data with no exist data invoice note", fun
         });
 });
 
-it("#09. should error when create new data with different useIncomeTax on items", function (done) {
+it("#06. should error when create new data with different useIncomeTax on items", function (done) {
     var data = Object.assign({}, interNoteData);
     invoiceNoteDataUtil.getNewData2()
         .then((invoiceNote) => {
@@ -201,7 +152,7 @@ it("#09. should error when create new data with different useIncomeTax on items"
 });
 
 var createdId = {}
-it("#10. should success when create new data", function (done) {
+it("#7. should success when create new data", function (done) {
     var data = Object.assign({}, interNoteData);
     interNoteDataUtil.getNewTestData()
         .then((data) => {
@@ -214,7 +165,7 @@ it("#10. should success when create new data", function (done) {
         });
 });
 
-it('#11. should success when generate pdf intern note', function (done) {
+it('#8. should success when generate pdf intern note', function (done) {
     internNoteManager.pdf(createdId, 7)
         .then(results => {
             done();
