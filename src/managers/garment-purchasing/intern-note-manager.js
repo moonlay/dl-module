@@ -474,7 +474,11 @@ module.exports = class InternNoteManager extends BaseManager {
                                                     cItem.doProductid.toString() == item.product._id.toString() &&
                                                     cItem.doPOid.toString() == item.purchaseOrderId.toString());
                                                 if (correction) {
-                                                    item.correction = correction.doCorrection.correctionPriceTotal - (item.pricePerDealUnit * item.deliveredQuantity)
+                                                    if (Object.getOwnPropertyNames(correction.doCorrection).length > 0) {
+                                                        item.correction = correction.doCorrection.correctionPriceTotal - (item.pricePerDealUnit * item.deliveredQuantity)
+                                                    } else {
+                                                        item.correction = 0;
+                                                    }
                                                 } else {
                                                     item.correction = 0;
                                                 }
