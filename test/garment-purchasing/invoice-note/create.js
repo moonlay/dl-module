@@ -59,28 +59,6 @@ before('#00. connect db', function (done) {
         });
 });
 
-it('#01. should success when create new invoice note with useIncomeTax = false and useVat = false ', function (done) {
-    invoiceNoteDataUtil.getNewData()
-        .then((data) => {
-            data.useIncomeTax = false;
-            data.incomeTaxDate = "";
-            data.incomeTaxNo = "";
-            data.useVat = false;
-            data.vatDate = "";
-            data.vatNo = "";
-            data.vat = {};
-            data.isPayTax = false;
-            return invoiceNoteManager.create(data)
-        })
-        .then((id) => {
-            id.should.be.Object();
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-
 it('#02. should error when create new invoice note ', function (done) {
     invoiceNoteDataUtil.getNewData()
         .then((data) => {
