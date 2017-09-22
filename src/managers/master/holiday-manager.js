@@ -176,8 +176,10 @@ module.exports = class HolidayManager extends BaseManager {
                                         var newHoliday = [];
                                         for (var i = 0; i < data.length; i++) {
                                              var valid = new Holiday(data[i]);
+                                             var now = new Date()
                                              valid.code = generateCode();
                                              valid.stamp(this.user.username, 'manager');
+                                             valid._createdDate = now;
                                                 for (var j = 0; j < division.length; j++) {
                                                     if (data[i]["division"] == division[j]["name"]) {
                                                         valid.divisionId = new ObjectId(division[j]["_id"]);

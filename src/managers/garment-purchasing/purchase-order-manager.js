@@ -1182,8 +1182,14 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             },
             unique: true
         };
+        var createdDateIndex = {
+            name: `ix_${map.purchasing.collection.PurchaseOrder}__createdDate`,
+            key: {
+                _createdDate: -1
+            }
+        };
 
-        return this.collection.createIndexes([dateIndex, noIndex]);
+        return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
 
     /*selectDateById(id) {
@@ -1822,9 +1828,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
         var _defaultFilter = {
             $and: [{ _deleted: false },
-                { _createdBy: info.filter._createdBy }]
+            { _createdBy: info.filter._createdBy }]
         }
-        
+
         var noFilter = {};
         var categoryFilter = {};
         var unitFilter = {};

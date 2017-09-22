@@ -139,7 +139,9 @@ module.exports = class VatManager extends BaseManager {
                         var newVat = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Vat(data[i]);
+                            var now = new Date();
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
