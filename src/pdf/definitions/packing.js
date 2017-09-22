@@ -124,15 +124,19 @@ module.exports = function (packing, offset) {
         style: 'tableHeader'
     },
     {
-        text: 'Jumlah (PCS)',
-        style: 'tableHeader'
-    },
-    {
-        text: 'Berat (Kg)',
+        text: `Jumlah (${packing.packingUom})`,
         style: 'tableHeader'
     },
     {
         text: 'Panjang (Meter)',
+        style: 'tableHeader'
+    },
+    {
+        text: 'Panjang Total (Meter)',
+        style: 'tableHeader'
+    },
+    {
+        text: 'Berat Total (Kg)',
         style: 'tableHeader'
     },
     {
@@ -147,6 +151,7 @@ module.exports = function (packing, offset) {
     var totalJumlah = 0;
     var totalBerat = 0;
     var totalPanjang = 0;
+    var totalPanjangTotal = 0;
 
     var tbody = items.map(function (item, index) {
 
@@ -159,6 +164,7 @@ module.exports = function (packing, offset) {
         totalJumlah += item.quantity;
         totalBerat += item.weight;
         totalPanjang += item.length;
+        totalPanjangTotal += item.length * item.quantity;
 
         return [{
             text: (index + 1).toString() || '',
@@ -174,11 +180,15 @@ module.exports = function (packing, offset) {
             style: ['size08', 'center']
         },
         {
-            text: item.weight,
+            text: item.length,
             style: ['size08', 'center']
         },
         {
-            text: item.length,
+            text: (item.length * item.quantity).toFixed(2),
+            style: ['size08', 'center']
+        },
+        {
+            text: (item.weight * item.quantity).toFixed(2),
             style: ['size08', 'center']
         },
         {
@@ -199,10 +209,13 @@ module.exports = function (packing, offset) {
         text: totalJumlah.toFixed(2),
         style: ['size08', 'center']
     }, {
-        text: totalBerat.toFixed(2),
+        text: totalPanjang.toFixed(2),
         style: ['size08', 'center']
     }, {
-        text: totalPanjang.toFixed(2),
+        text: totalPanjangTotal.toFixed(2),
+        style: ['size08', 'center']
+    }, {
+        text: totalBerat.toFixed(2),
         style: ['size08', 'center']
     }, "",]];
 
@@ -211,12 +224,12 @@ module.exports = function (packing, offset) {
             text: "tidak ada barang",
             style: ['size08', 'center'],
             colSpan: 6
-        }, "", "", "", "", ""]
+        }, "", "", "", "", "", ""]
     ];
 
     var table = [{
         table: {
-            widths: ['5%', '35%', '10%', '10%', '10%', '30%'],
+            widths: ['5%', '35%', '10%', '10%', '10%', '10%', '20%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot),
         }
