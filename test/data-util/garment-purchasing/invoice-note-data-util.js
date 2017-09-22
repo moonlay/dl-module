@@ -3,6 +3,7 @@ var helper = require('../../helper');
 var InvoiceNoteManager = require('../../../src/managers/garment-purchasing/invoice-note-manager');
 var codeGenerator = require('../../../src/utils/code-generator');
 
+var vat = require('../master/vat-data-util');
 var supplierDataUtil = require('../master/garment-supplier-data-util');
 var currencyDataUtil = require('../master/currency-data-util');
 var vatDataUtil = require('../master/vat-data-util');
@@ -76,11 +77,12 @@ class InvoiceNoteDataUtil {
         return helper
             .getManager(InvoiceNoteManager)
             .then(manager => {
-                return Promise.all([supplierDataUtil.getTestData(), currencyDataUtil.getTestData(), deliveryOderDataUtil.getNewTestData()])
+                return Promise.all([supplierDataUtil.getTestData(), currencyDataUtil.getTestData(), vat.getTestData(),deliveryOderDataUtil.getNewTestData()])
                     .then(results => {
                         var dataSupplier = results[0];
                         var dataCurrency = results[1];
-                        var deliveryOder = results[2];
+                        var vat = results[2];
+                        var deliveryOder = results[3];
                         var items = deliveryOder.items.map(doItem => {
                             var fulfillment = doItem.fulfillments.map(doFulfillment => {
                                 return {
@@ -124,10 +126,10 @@ class InvoiceNoteDataUtil {
                             useIncomeTax: false,
                             incomeTaxNo: "",
                             incomeTaxDate: "",
-                            vatNo: "",
-                            vatDate: "",
-                            useVat: false,
-                            vat: {},
+                            vatNo: "VAT/TEST",
+                            vatDate: new Date(),
+                            useVat: true,
+                            vat: vat,
                             isPayTax: false,
                             hasInternNote: false,
                             remark: 'Unit Test Invoice Note',
