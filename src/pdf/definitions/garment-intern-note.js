@@ -27,6 +27,15 @@ module.exports = function (data, offset) {
     });
     items = [].concat.apply([], items);
 
+    var dueDate, paymentMethod;
+    var inv = data.items[0];
+    var invItem = inv.items[0];
+    var _item = invItem.items[0];
+
+    dueDate = new Date(invItem.deliveryOrderSupplierDoDate);
+    dueDate.setDate(dueDate.getDate() + _item.paymentDueDays);
+    paymentMethod = _item.paymentMethod;
+
     var useIncomeTax = data.items
         .map((item) => item.useIncomeTax)
         .reduce((prev, curr, index) => {
@@ -164,7 +173,7 @@ module.exports = function (data, offset) {
                                 style: ['size06']
                             }, {
                                 width: '*',
-                                text: `${moment(data.dueDate).add(offset, 'h').format("DD MMM YYYY")}`,
+                                text: `${moment(dueDate).add(offset, 'h').format("DD MMM YYYY")}`,
                                 style: ['size06']
                             }]
                         }
