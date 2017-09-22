@@ -30,6 +30,9 @@ class DeliveryOrderDataUtil {
                                 purchaseOrderUom: poeItem.dealUom,
                                 deliveredQuantity: poeItem.dealQuantity - 1,
                                 pricePerDealUnit: poeItem.pricePerDealUnit,
+                                quantityConversion: poeItem.dealQuantity - 1,
+                                uomConversion: poeItem.dealUom,
+                                conversion: 1,
                                 currency: poEks.currency,
                                 realizationQuantity: [],
                                 remark: ''
@@ -82,6 +85,10 @@ class DeliveryOrderDataUtil {
                                 purchaseOrderQuantity: poeItem.dealQuantity,
                                 purchaseOrderUom: poeItem.dealUom,
                                 deliveredQuantity: poeItem.dealQuantity - 1,
+                                pricePerDealUnit: poeItem.pricePerDealUnit,
+                                quantityConversion: poeItem.dealQuantity - 1,
+                                uomConversion: poeItem.dealUom,
+                                conversion: 1,
                                 currency: poEks.currency,
                                 realizationQuantity: [],
                                 remark: ''
