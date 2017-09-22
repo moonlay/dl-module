@@ -113,6 +113,7 @@ class InvoiceNoteDataUtil {
 
                         var data = {
                             no: `UT/IN/${codeGenerator()}`,
+                            refNo: `REF/NO/UT/NI/${codeGenerator()}`,
                             date: new Date(),
                             supplierId: dataSupplier._id,
                             supplier: dataSupplier,
