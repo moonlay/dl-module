@@ -86,6 +86,9 @@ class InvoiceNoteDataUtil {
                                 return {
                                     purchaseOrderExternalId: doItem.purchaseOrderExternalId,
                                     purchaseOrderExternalNo: doItem.purchaseOrderExternalNo,
+                                    paymentMethod: doItem.paymentMethod,
+                                    paymentType: doItem.paymentType,
+                                    paymentDueDays: doItem.paymentDueDays,
                                     purchaseOrderId: doFulfillment.purchaseOrderId,
                                     purchaseOrderNo: doFulfillment.purchaseOrderNo,
                                     purchaseRequestId: doFulfillment.purchaseRequestId,
@@ -120,7 +123,7 @@ class InvoiceNoteDataUtil {
                             currency: dataCurrency,
                             useIncomeTax: false,
                             incomeTaxNo: "",
-                            incomeTaxDate:"",
+                            incomeTaxDate: "",
                             vatNo: "",
                             vatDate: "",
                             useVat: false,

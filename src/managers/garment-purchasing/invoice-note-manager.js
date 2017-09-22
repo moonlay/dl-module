@@ -262,6 +262,10 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                                     item.purchaseOrderExternalId = deliveryOrderItem.purchaseOrderExternalId;
                                     item.purchaseOrderExternalNo = deliveryOrderItem.purchaseOrderExternalNo;
 
+                                    item.paymentMethod = deliveryOrderItem.paymentMethod;
+                                    item.paymentType = deliveryOrderItem.paymentType;
+                                    item.paymentDueDays = deliveryOrderItem.paymentDueDays;
+
                                     item.purchaseOrderId = deliveryOrderFulfillment.purchaseOrderId;
                                     item.purchaseOrderNo = deliveryOrderFulfillment.purchaseOrderNo;
 

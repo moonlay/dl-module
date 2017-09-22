@@ -264,7 +264,10 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         if (poExternal) {
                             item.purchaseOrderExternalNo = poExternal.no;
                             item.purchaseOrderExternalId = new ObjectId(poExternal._id);
-
+                            item.paymentMethod= poExternal.paymentMethod;
+                            item.paymentType= poExternal.paymentType;
+                            item.paymentDueDays= poExternal.paymentDueDays;
+                            
                             for (var fulfillment of item.fulfillments) {
                                 var poInternal = poExternal.items.find(poInternal => fulfillment.purchaseOrderId.toString() === poInternal.poId.toString() && fulfillment.product._id.toString() === poInternal.product._id.toString())
                                 if (poInternal) {
