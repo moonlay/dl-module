@@ -33,7 +33,17 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            no: valid.no || ""
+            no: valid.no || "",
+            _deleted: false
+        });
+        var getInvoiceNotePromise = this.collection.singleOrDefault({
+            "$and": [{
+                _id: {
+                    '$ne': new ObjectId(valid._id)
+                }
+            }, {
+                "refNo": valid.refNo
+            }]
         });
 
         var getDeliveryOrder = [];
@@ -46,191 +56,239 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         } else {
             getDeliveryOrder.push(Promise.resolve(null));
         }
+
+        var listPOExternals = [];
+        if (valid.items) {
+            listPOExternals = valid.items.map((niItem) => {
+                return niItem.items.map((item) => {
+                    return item.purchaseOrderExternalId
+                })
+            })
+        }
+        listPOExternals = [].concat.apply([], listPOExternals);
+        listPOExternals = listPOExternals.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+        var getPOExternalId = [];
+        for (var poEksId of listPOExternals) {
+            if (ObjectId.isValid(poEksId)) {
+                getPOExternalId.push(this.deliveryOrderManager.purchaseOrderExternalManager.getSingleByIdOrDefault(poEksId, ["vat", "useVat", "useIncomeTax", "_id", "no"]));
+            }
+        }
+
         var getCurrency = valid.currency && ObjectId.isValid(valid.currency._id) ? this.currencyManager.getSingleByIdOrDefault(valid.currency._id) : Promise.resolve(null);
         var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
         var getVat = valid.vat && ObjectId.isValid(valid.vat._id) ? this.vatManager.getSingleByIdOrDefault(valid.vat._id) : Promise.resolve(null);
 
-        return Promise.all([getInvoiceNote, getCurrency, getSupplier, getVat].concat(getDeliveryOrder))
-            .then(results => {
-                var _invoiceNote = results[0];
-                var _currency = results[1];
-                var _supplier = results[2];
-                var _vat = results[3];
-                var _deliveryOrders = results.slice(4, results.length);
-                var now = new Date();
+        return Promise.all(getPOExternalId)
+            .then((listPOExternal) => {
+                return Promise.all([getInvoiceNote, getCurrency, getSupplier, getVat, getInvoiceNotePromise].concat(getDeliveryOrder))
+                    .then(results => {
+                        var _invoiceNote = results[0];
+                        var _currency = results[1];
+                        var _supplier = results[2];
+                        var _vat = results[3];
+                        var _invoiceNoteByRefno = results[4];
+                        var _deliveryOrders = results.slice(5, results.length);
+                        var now = new Date();
+                        var useIncomeTax = listPOExternal
+                            .map((poEks) => { return poEks.useIncomeTax })
+                            .reduce((prev, curr, index) => {
+                                return prev && curr
+                            }, true);
 
-                if (_invoiceNote) {
-                    errors["no"] = i18n.__("InvoiceNote.no.isExist:%s is exist", i18n.__("InvoiceNote.no._:No"));
-                }
+                        var useVat = listPOExternal
+                            .map((poEks) => { return poEks.useVat })
+                            .reduce((prev, curr, index) => {
+                                return prev && curr
+                            }, true);
 
-                if (!valid.date || valid.date === "") {
-                    errors["date"] = i18n.__("InvoiceNote.date.isRequired:%s is required", i18n.__("InvoiceNote.date._:Date"));
-                    valid.date = '';
-                }
-                else if (new Date(valid.date) > now) {
-                    errors["date"] = i18n.__("InvoiceNote.date.isGreater:%s is greater than today", i18n.__("InvoiceNote.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
-                }
-
-                if (!valid.supplierId || valid.supplierId.toString() === "") {
-                    errors["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
-                }
-                else if (valid.supplier) {
-                    if (!valid.supplier._id) {
-                        errors["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
-                    }
-                }
-                else if (!_supplier) {
-                    errors["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
-                }
-
-                if (!valid.currency) {
-                    errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
-                }
-                else if (valid.currency) {
-                    if (!valid.currency._id) {
-                        errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
-                    }
-                }
-                else if (!_currency) {
-                    errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
-                }
-
-                if (valid.useIncomeTax) {
-                    if (!valid.incomeTaxNo || valid.incomeTaxNo == '') {
-                        errors["incomeTaxNo"] = i18n.__("InvoiceNote.incomeTaxNo.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxNo._:Nomor Faktur Pajak (PPn)"));
-                    }
-
-                    if (!valid.incomeTaxDate || valid.incomeTaxDate == '') {
-                        errors["incomeTaxDate"] = i18n.__("InvoiceNote.incomeTaxDate.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxDate._:Tanggal Faktur Pajak (PPn)"));
-                        valid.incomeTaxDate = "";
-                    }
-                }
-                if (valid.useVat) {
-                    if (valid.vat) {
-                        if (!valid.vat._id) {
-                            errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
+                        if (_invoiceNote) {
+                            errors["no"] = i18n.__("InvoiceNote.no.isExist:%s is exist", i18n.__("InvoiceNote.no._:No"));
                         }
-                    } else {
-                        errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
-                    }
+                        if (_invoiceNoteByRefno) {
+                            errors["refNo"] = i18n.__("InvoiceNote.refNo.isExist:%s is exist", i18n.__("InvoiceNote.refNo._:No"));
+                        }
 
-                    if (!valid.vatNo || valid.vatNo == '') {
-                        errors["vatNo"] = i18n.__("InvoiceNote.vatNo.isRequired:%s is required", i18n.__("InvoiceNote.vatNo._:Nomor Faktur Pajak (PPh)"));
-                    }
+                        if (!valid.date || valid.date === "") {
+                            errors["date"] = i18n.__("InvoiceNote.date.isRequired:%s is required", i18n.__("InvoiceNote.date._:Date"));
+                            valid.date = '';
+                        }
+                        else if (new Date(valid.date) > now) {
+                            errors["date"] = i18n.__("InvoiceNote.date.isGreater:%s is greater than today", i18n.__("InvoiceNote.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
+                        }
 
-                    if (!valid.vatDate || valid.vatDate == '' || valid.vatDate === "undefined") {
-                        errors["vatDate"] = i18n.__("InvoiceNote.vatDate.isRequired:%s is required", i18n.__("InvoiceNote.vatDate._:Tanggal Faktur Pajak (PPh)"));
-                        valid.vatDate = "";
-                    }
-                }
+                        if (!valid.supplierId || valid.supplierId.toString() === "") {
+                            errors["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
+                        }
+                        else if (valid.supplier) {
+                            if (!valid.supplier._id) {
+                                errors["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
+                            }
+                        }
+                        else if (!_supplier) {
+                            errors["supplierId"] = i18n.__("InvoiceNote.supplier.name.isRequired:%s is required", i18n.__("InvoiceNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
+                        }
 
-                valid.items = valid.items || [];
-                if (valid.items) {
-                    if (valid.items.length <= 0) {
-                        errors["items"] = [{ "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }]
-                    } else {
-                        var errItems = []
-                        for (var item of valid.items) {
-                            if (item.deliveryOrderId) {
-                                var errItem = {};
-                                var _deliveryOrder = _deliveryOrders.find(deliveryOrder => deliveryOrder._id.toString() === item.deliveryOrderId.toString());
-                                if (!_deliveryOrder) {
-                                    errItem = { "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }
+                        if (!valid.currency) {
+                            errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
+                        }
+                        else if (valid.currency) {
+                            if (!valid.currency._id) {
+                                errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
+                            }
+                        }
+                        else if (!_currency) {
+                            errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
+                        }
+
+                        if (valid.useIncomeTax !== useIncomeTax) {
+                            errors["useIncomeTax"] = i18n.__("InvoiceNote.useIncomeTax.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useIncomeTax._:Using PPn"));
+                        }
+                        else if (valid.useIncomeTax) {
+                            if (!valid.incomeTaxNo || valid.incomeTaxNo == '') {
+                                errors["incomeTaxNo"] = i18n.__("InvoiceNote.incomeTaxNo.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxNo._:Nomor Faktur Pajak (PPn)"));
+                            }
+
+                            if (!valid.incomeTaxDate || valid.incomeTaxDate == '') {
+                                errors["incomeTaxDate"] = i18n.__("InvoiceNote.incomeTaxDate.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxDate._:Tanggal Faktur Pajak (PPn)"));
+                                valid.incomeTaxDate = "";
+                            }
+                        }
+                        if (valid.useVat !== useVat) {
+                            errors["useVat"] = i18n.__("InvoiceNote.useVat.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useVat._:Using PPh"));
+                        }
+                        else if (valid.useVat) {
+                            if (valid.vat) {
+                                if (!valid.vat._id) {
+                                    errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
                                 }
-                            } else if (!item.deliveryOrderId) {
-                                errItem = { "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }
                             } else {
-                                errItem = {}
+                                errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
                             }
-                            var fulfillmentErrors = [];
-                            for (var fulfillmentItems of item.items || []) {
-                                var fulfillmentError = {};
 
-                                if (!fulfillmentItems.deliveredQuantity || fulfillmentItems.deliveredQuantity === 0) {
-                                    fulfillmentError["deliveredQuantity"] = i18n.__("InvoiceNote.items.items.deliveredQuantity.isRequired:%s is required or not 0", i18n.__("InvoiceNote.items.items.deliveredQuantity._:DeliveredQuantity")); //"Jumlah barang diterima tidak boleh kosong";
+                            if (!valid.vatNo || valid.vatNo == '') {
+                                errors["vatNo"] = i18n.__("InvoiceNote.vatNo.isRequired:%s is required", i18n.__("InvoiceNote.vatNo._:Nomor Faktur Pajak (PPh)"));
+                            }
+
+                            if (!valid.vatDate || valid.vatDate == '' || valid.vatDate === "undefined") {
+                                errors["vatDate"] = i18n.__("InvoiceNote.vatDate.isRequired:%s is required", i18n.__("InvoiceNote.vatDate._:Tanggal Faktur Pajak (PPh)"));
+                                valid.vatDate = "";
+                            }
+                        }
+
+                        valid.items = valid.items || [];
+                        if (valid.items) {
+                            if (valid.items.length <= 0) {
+                                errors["items"] = [{ "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }]
+                            } else {
+                                var errItems = []
+                                for (var item of valid.items) {
+                                    if (item.deliveryOrderId) {
+                                        var errItem = {};
+                                        var _deliveryOrder = _deliveryOrders.find(deliveryOrder => deliveryOrder._id.toString() === item.deliveryOrderId.toString());
+                                        if (!_deliveryOrder) {
+                                            errItem = { "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }
+                                        }
+                                    } else if (!item.deliveryOrderId) {
+                                        errItem = { "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }
+                                    } else {
+                                        errItem = {}
+                                    }
+                                    var fulfillmentErrors = [];
+                                    for (var fulfillmentItems of item.items || []) {
+                                        var fulfillmentError = {};
+
+                                        if (!fulfillmentItems.deliveredQuantity || fulfillmentItems.deliveredQuantity === 0) {
+                                            fulfillmentError["deliveredQuantity"] = i18n.__("InvoiceNote.items.items.deliveredQuantity.isRequired:%s is required or not 0", i18n.__("InvoiceNote.items.items.deliveredQuantity._:DeliveredQuantity")); //"Jumlah barang diterima tidak boleh kosong";
+                                        }
+                                        fulfillmentErrors.push(fulfillmentError);
+                                    }
+                                    for (var fulfillmentError of fulfillmentErrors) {
+                                        if (Object.getOwnPropertyNames(fulfillmentError).length > 0) {
+                                            errItem.items = fulfillmentErrors;
+                                            break;
+                                        }
+                                    }
+                                    errItems.push(errItem);
                                 }
-                                fulfillmentErrors.push(fulfillmentError);
-                            }
-                            for (var fulfillmentError of fulfillmentErrors) {
-                                if (Object.getOwnPropertyNames(fulfillmentError).length > 0) {
-                                    errItem.items = fulfillmentErrors;
-                                    break;
+                                for (var errItem of errItems) {
+                                    if (Object.getOwnPropertyNames(errItem).length > 0) {
+                                        errors.items = errItems;
+                                        break;
+                                    }
                                 }
                             }
-                            errItems.push(errItem);
                         }
-                        for (var errItem of errItems) {
-                            if (Object.getOwnPropertyNames(errItem).length > 0) {
-                                errors.items = errItems;
-                                break;
+                        else {
+                            errors["items"] = [{ "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }]
+                        }
+
+                        if (Object.getOwnPropertyNames(errors).length > 0) {
+                            var ValidationError = require('module-toolkit').ValidationError;
+                            return Promise.reject(new ValidationError('data does not pass validation', errors));
+                        }
+
+                        valid.supplier = _supplier;
+                        valid.supplierId = valid.supplier._id;
+                        valid.currency = _currency;
+
+                        if (valid.useVat) {
+                            valid.vat = _vat;
+                        } else {
+                            valid.vatDate = null
+                        }
+
+                        if (!valid.useIncomeTax) {
+                            valid.incomeTaxDate = null;
+                        }
+
+                        if (valid.isPayTax && valid.useIncomeTax) {
+                            valid.incomeTaxInvoiceNo = "";
+                        }
+                        if (valid.isPayTax && valid.useVat) {
+                            valid.vatInvoiceNo = "";
+                        }
+
+                        for (var invoiceItem of valid.items) {
+                            var validDo = _deliveryOrders.find(deliveryOrder => deliveryOrder._id.toString() === invoiceItem.deliveryOrderId.toString());
+                            for (var item of invoiceItem.items) {
+                                var deliveryOrderItem = validDo.items.find(doItem => doItem.purchaseOrderExternalId.toString() === item.purchaseOrderExternalId.toString());
+                                var deliveryOrderFulfillment = deliveryOrderItem.fulfillments.find(doFulfillment => doFulfillment.purchaseOrderId.toString() === item.purchaseOrderId.toString());
+                                if (deliveryOrderFulfillment) {
+                                    invoiceItem.deliveryOrderId = validDo._id;
+                                    invoiceItem.deliveryOrderNo = validDo.no;
+
+                                    item.purchaseOrderExternalId = deliveryOrderItem.purchaseOrderExternalId;
+                                    item.purchaseOrderExternalNo = deliveryOrderItem.purchaseOrderExternalNo;
+
+                                    item.paymentMethod = deliveryOrderItem.paymentMethod;
+                                    item.paymentType = deliveryOrderItem.paymentType;
+                                    item.paymentDueDays = deliveryOrderItem.paymentDueDays;
+
+                                    item.purchaseOrderId = deliveryOrderFulfillment.purchaseOrderId;
+                                    item.purchaseOrderNo = deliveryOrderFulfillment.purchaseOrderNo;
+
+                                    item.purchaseRequestId = deliveryOrderFulfillment.purchaseRequestId;
+                                    item.purchaseRequestNo = deliveryOrderFulfillment.purchaseRequestNo;
+
+                                    item.productId = deliveryOrderFulfillment.productId;
+                                    item.product = deliveryOrderFulfillment.product;
+                                    item.purchaseOrderUom = deliveryOrderFulfillment.purchaseOrderUom;
+                                    item.purchaseOrderQuantity = Number(item.purchaseOrderQuantity);
+                                    item.deliveredQuantity = Number(item.deliveredQuantity);
+                                }
+
                             }
                         }
-                    }
-                }
-                else {
-                    errors["items"] = [{ "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }]
-                }
 
-                if (Object.getOwnPropertyNames(errors).length > 0) {
-                    var ValidationError = require('module-toolkit').ValidationError;
-                    return Promise.reject(new ValidationError('data does not pass validation', errors));
-                }
-
-                valid.supplier = _supplier;
-                valid.supplierId = valid.supplier._id;
-                valid.currency = _currency;
-
-                if (valid.useVat) {
-                    valid.vat = _vat;
-                } else {
-                    valid.vatDate = null
-                }
-
-                if (!valid.useIncomeTax) {
-                    valid.incomeTaxDate = null;
-                }
-
-                if (valid.isPayTax && valid.useIncomeTax) {
-                    valid.incomeTaxInvoiceNo = "";
-                }
-                if (valid.isPayTax && valid.useVat) {
-                    valid.vatInvoiceNo = "";
-                }
-
-                for (var invoiceItem of valid.items) {
-                    var validDo = _deliveryOrders.find(deliveryOrder => deliveryOrder._id.toString() === invoiceItem.deliveryOrderId.toString());
-                    for (var item of invoiceItem.items) {
-                        var deliveryOrderItem = validDo.items.find(doItem => doItem.purchaseOrderExternalId.toString() === item.purchaseOrderExternalId.toString());
-                        var deliveryOrderFulfillment = deliveryOrderItem.fulfillments.find(doFulfillment => doFulfillment.purchaseOrderId.toString() === item.purchaseOrderId.toString());
-                        if (deliveryOrderFulfillment) {
-                            invoiceItem.deliveryOrderId = validDo._id;
-                            invoiceItem.deliveryOrderNo = validDo.no;
-
-                            item.purchaseOrderExternalId = deliveryOrderItem.purchaseOrderExternalId;
-                            item.purchaseOrderExternalNo = deliveryOrderItem.purchaseOrderExternalNo;
-
-                            item.purchaseOrderId = deliveryOrderFulfillment.purchaseOrderId;
-                            item.purchaseOrderNo = deliveryOrderFulfillment.purchaseOrderNo;
-
-                            item.purchaseRequestId = deliveryOrderFulfillment.purchaseRequestId;
-                            item.purchaseRequestNo = deliveryOrderFulfillment.purchaseRequestNo;
-
-                            item.productId = deliveryOrderFulfillment.productId;
-                            item.product = deliveryOrderFulfillment.product;
-                            item.purchaseOrderUom = deliveryOrderFulfillment.purchaseOrderUom;
-                            item.purchaseOrderQuantity = Number(item.purchaseOrderQuantity);
-                            item.deliveredQuantity = Number(item.deliveredQuantity);
+                        if (!valid.stamp) {
+                            valid = new InvoiceNote(valid);
                         }
 
-                    }
-                }
-
-                if (!valid.stamp) {
-                    valid = new InvoiceNote(valid);
-                }
-
-                valid.stamp(this.user.username, 'manager');
-                return Promise.resolve(valid);
+                        valid.stamp(this.user.username, 'manager');
+                        return Promise.resolve(valid);
+                    })
             });
     }
 
@@ -273,6 +331,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
     }
 
     _beforeInsert(invoiceNote) {
+        invoiceNote.refNo = generateCode();
         if (invoiceNote.isPayTax && invoiceNote.useIncomeTax) {
             invoiceNote.incomeTaxInvoiceNo = generateCode("incomeTaxInvoiceNo");
         }
@@ -406,12 +465,19 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             }
         };
 
+        var refNoIndex = {
+            name: `ix_${map.garmentPurchasing.collection.GarmentInvoiceNote}_refNo`,
+            key: {
+                refNo: 1
+            },
+            unique: true
+        }
+
         var noIndex = {
             name: `ix_${map.garmentPurchasing.collection.GarmentInvoiceNote}_no`,
             key: {
                 no: 1
-            },
-            unique: true
+            }
         };
 
         var createdDateIndex = {
@@ -420,7 +486,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                 _createdDate: -1
             }
         };
-        return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
+        return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex, refNoIndex]);
     }
 
     pdfVat(id, offset) {
