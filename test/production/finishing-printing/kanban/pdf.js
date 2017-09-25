@@ -35,14 +35,15 @@ it("#01. should success when create new data", function (done) {
 });
 
 it('#02. should success when create pdf', function (done) {
-    var query = {};
-
-    kanbanManager.pdf(createdId, 7)
-        .then(pdfData => {
-            done();
-        }).catch(e => {
-            done(e);
-        });
+    kanbanManager.getSingleById(createdId)
+        .then((data) => {
+            kanbanManager.pdf(data, 7)
+                .then(pdfData => {
+                    done();
+                }).catch(e => {
+                    done(e);
+                });
+        })
 });
 
 it("#03. should success when destroy all unit test data", function (done) {
