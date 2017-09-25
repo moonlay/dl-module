@@ -306,7 +306,7 @@ module.exports = function (pox, offset) {
                         stack: [':', ':']
                     }, {
                         width: '*',
-                        stack: [`Ditanggung ${pox.freightCostBy}`, `${pox.paymentMethod}, ${pox.paymentDueDays} hari setelah terima barang`]
+                        stack: [`Ditanggung ${pox.freightCostBy}`, `${pox.paymentType}, ${pox.paymentDueDays} hari setelah terima barang`]
                     }]
                 }, {
                     width: '20%',
