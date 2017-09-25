@@ -789,25 +789,25 @@ var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
                 $divide: [{
                     $subtract: [{
                         $subtract: [
-                            { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] },
+                            { "$add": [aaaa, 60 * 60 * 1000 * offset] },
                             {
                                 "$add": [
-                                    { "$millisecond": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                    { "$millisecond": aaaa },
                                     {
                                         "$multiply": [
-                                            { "$second": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                            { "$second": aaaa },
                                             1000
                                         ]
                                     },
                                     {
                                         "$multiply": [
-                                            { "$minute": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                            { "$minute": aaaa },
                                             60, 1000
                                         ]
                                     },
                                     {
                                         "$multiply": [
-                                            { "$hour": { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] } },
+                                            { "$hour": { "$add": [aaaa, 60 * 60 * 1000 * offset] } },
                                             60, 60, 1000
                                         ]
                                     }
@@ -816,25 +816,25 @@ var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
                         ]
                     }, {
                             $subtract: [
-                                { "$add": [aaaa, 60 * 60 * 1000 * offset] },
+                                { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] },
                                 {
                                     "$add": [
-                                        { "$millisecond": aaaa },
+                                        { "$millisecond": "$purchaseOrderExternal.expectedDeliveryDate" },
                                         {
                                             "$multiply": [
-                                                { "$second": aaaa },
+                                                { "$second": "$purchaseOrderExternal.expectedDeliveryDate" },
                                                 1000
                                             ]
                                         },
                                         {
                                             "$multiply": [
-                                                { "$minute": aaaa },
+                                                { "$minute": "$purchaseOrderExternal.expectedDeliveryDate" },
                                                 60, 1000
                                             ]
                                         },
                                         {
                                             "$multiply": [
-                                                { "$hour": { "$add": [aaaa, 60 * 60 * 1000 * offset] } },
+                                                { "$hour": { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] } },
                                                 60, 60, 1000
                                             ]
                                         }
