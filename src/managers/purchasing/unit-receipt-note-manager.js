@@ -860,41 +860,64 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    getUnitReceiptWithoutSpb(_dateFrom, _dateTo) {
-        return new Promise((resolve, reject) => {
+    getUnitReceiptWithoutSpb(_unitId,_dateFrom, _dateTo, offset) 
+    {
+        return new Promise((resolve, reject) => 
+        {
             var query = Object.assign({});                      
             var deleted = { _deleted: false };
             var bayar = {isPaid: false};
-            
-                     
-            if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
+
+            if (_unitId !== "undefined" && _unitId !== "") {
+                var unitId = { unitId: new ObjectId(_unitId) };
+                Object.assign(query, unitId);
+            }
+                                
+            if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "")
+            {
                 var dateFrom = new Date(_dateFrom);
                 var dateTo = new Date(_dateTo);
-               
+                dateFrom.setHours(dateFrom.getHours() - offset);
+                dateTo.setHours(dateTo.getHours() - offset);
+
                 var date = {
-                    date: {
-                        $gte: dateFrom,
-                        $lte: dateTo
-                    }
-                };
-                Object.assign(query, date);
+                            date: {
+                                $gte: dateFrom,
+                                $lte: dateTo
+                            }
+                           };
+                            Object.assign(query, date);
             }
             
             Object.assign(query, deleted);
             Object.assign(query, bayar);
+
+            var doColl = map.purchasing.collection.DeliveryOrder; 
             
-                     
-            this.collection
-                .where(query)
-                .execute()
-                .then(result => {
-                    resolve(result.data);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
+            this.collection.aggregate(
+                {$match: query},
+                {
+                    $lookup : {
+                                from: doColl, 
+                                localField: "deliveryOrder.no",
+                                foreignField: "no",
+                                as: "jeneng"
+                              }
+                    
+                },{
+                    $unwind:"$jeneng"
+                }
+                ,{
+                    $project:{
+                                "nama": "$jeneng._createdBy"
+      
+                             }
+                  }
+                    ).toArray().then(product=>{
+                    resolve(product);
+                });        
+            });
+        }
 
     _createIndexes() {
         var dateIndex = {

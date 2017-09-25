@@ -217,6 +217,7 @@ module.exports = class ProductManager extends BaseManager {
                                         var newProduct = [];
                                         for (var i = 0; i < data.length; i++) {
                                             var valid = new Product(data[i]);
+                                            var now = new Date();
                                             for (var c = 0; c < currency.length; c++) {
                                                 for (var j = 0; j < uom.length; j++) {
                                                     if (data[i]["uom"] == uom[j]["unit"] && data[i]["currency"] == currency[c]["code"]) {
@@ -226,6 +227,7 @@ module.exports = class ProductManager extends BaseManager {
                                                         valid.uomId = new ObjectId(uom[j]["_id"]);
                                                         valid.uom = uom[j];
                                                         valid.stamp(this.user.username, 'manager');
+                                                        valid._createdDate = now;
                                                         this.collection.insert(valid)
                                                             .then(id => {
                                                                 this.getSingleById(id)

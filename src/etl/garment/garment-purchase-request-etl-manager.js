@@ -53,8 +53,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return query;
     }
 
-    run(table1, table2) {
-        var startedDate = new Date()
+    run(o, table1, table2) {
+        var startedDate = new Date();
 
         this.migrationLog.insert({
             code: "sql-gpr",
@@ -62,38 +62,72 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             start: startedDate,
         })
 
-
         return new Promise((resolve, reject) => {
+            var date = o;
             this.getTimeStamp().then((result) => {
                 var dateStamp;
-                if (result.length != 0) {
-                    var year = result[0].start.getFullYear();
-                    var month = result[0].start.getMonth() + 1;
-                    var day = result[0].start.getDate();
+                if (date.trim() == "latest") {
+                    if (result.length != 0) {
+                        var year = result[0].start.getFullYear();
+                        var month = result[0].start.getMonth() + 1;
+                        var day = result[0].start.getDate();
 
-                    if (month < 10) {
-                        month = "0" + month;
-                    }
-                    if (day < 10) {
-                        day = "0" + day;
-                    }
+                        if (month < 10) {
+                            month = "0" + month;
+                        }
+                        if (day < 10) {
+                            day = "0" + day;
+                        }
 
-                    dateStamp = [year, month, day].join('-');
-                } else if (result.length == 0) {
+                        dateStamp = [year, month, day].join('-');
+                    } else if (result.length == 0) {
 
-                    var year = new Date().getFullYear();
-                    var month = new Date().getMonth() + 1;
-                    var day = new Date().getDate();
+                        var year = new Date().getFullYear();
+                        var month = new Date().getMonth() + 1;
+                        var day = new Date().getDate();
 
-                    if (month < 10) {
-                        month = "0" + month;
+                        if (month < 10) {
+                            month = "0" + month;
+                        }
+                        if (day < 10) {
+                            day = "0" + day;
+                        }
+                        dateStamp = [year, month, day].join('-');
                     }
-                    if (day < 10) {
-                        day = "0" + day;
+                } else {
+                    var monthOpt = ["latest",
+                        "january", "february", "march",
+                        "april", "may", "june",
+                        "july", "august", "september",
+                        "october", "november", "december"];
+                    var tempYear = new Date().getFullYear().toString();
+
+                    if (date == monthOpt[1].trim()) {
+                        dateStamp = tempYear + "-01%%";
+                    } else if (date == monthOpt[2].trim()) {
+                        dateStamp = tempYear + "-02%%";
+                    } else if (date == monthOpt[3].trim()) {
+                        dateStamp = tempYear + "-03%%";
+                    } else if (date == monthOpt[4].trim()) {
+                        dateStamp = tempYear + "-04%%";
+                    } else if (date == monthOpt[5].trim()) {
+                        dateStamp = tempYear + "-05%%";
+                    } else if (date == monthOpt[6].trim()) {
+                        dateStamp = tempYear + "-06%%";
+                    } else if (date == monthOpt[7].trim()) {
+                        dateStamp = tempYear + "-07%%";
+                    } else if (date == monthOpt[8].trim()) {
+                        dateStamp = tempYear + "-08%%";
+                    } else if (date == monthOpt[9].trim()) {
+                        dateStamp = tempYear + "-09%%";
+                    } else if (date == monthOpt[10].trim()) {
+                        dateStamp = tempYear + "-10%%";
+                    } else if (date == monthOpt[11].trim()) {
+                        dateStamp = tempYear + "-11%%";
+                    } else if (date == monthOpt[12].trim()) {
+                        dateStamp = tempYear + "-12%%";
                     }
-                    dateStamp = [year, month, day].join('-');
                 }
-
 
                 this.getRowNumber(table1, table2, dateStamp)
                     .then((data) => {
@@ -182,8 +216,13 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     transaction.begin((err) => {
 
                         var request = this.sql.transactionRequest(transaction);
+                        var sqlQuery;
 
-                        var sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                        if (tgl.includes("%%")) {
+                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                        } else {
+                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                        }
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
@@ -208,13 +247,20 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         var request = this.sql.transactionRequest(transaction);
                         var sqlQuery;
 
-
-                        if (table1 == "Budget" && table2 == "POrder") {
-                            sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
+                        if (tgl.includes("%%")) {
+                            if (table1 == "Budget" && table2 == "POrder") {
+                                sqlQuery = "exec garment_purchase_request_period " + page + "," + pageSize + ",'" + tgl + "' ";
+                            }
+                            // else {
+                            //     sqlQuery = "exec garment_purchase_request1 " + page + "," + pageSize + ",'" + tgl + "' ";
+                            // }
                         } else {
-                            sqlQuery = "exec garment_purchase_request1 " + page + "," + pageSize + ",'" + tgl + "' ";
+                            if (table1 == "Budget" && table2 == "POrder") {
+                                sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
+                            } else {
+                                sqlQuery = "exec garment_purchase_request1 " + page + "," + pageSize + ",'" + tgl + "' ";
+                            }
                         }
-
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
@@ -622,6 +668,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     load(dataArr) {
         return new Promise((resolve, reject) => {
 
+            var failed = [];
             var processed = [];
             var roNoArr = dataArr.nomorRo;
             var dataTemp = [];
@@ -659,8 +706,13 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 }
 
                 Promise.all(processed).then((processed) => {
-                    resolve(processed);
+                    var dataProcessed = {};
+                    dataProcessed.processed = processed;
+                    dataProcessed.MigratedFalse = MigratedFalse;
+                    resolve(dataProcessed);
+
                 })
+
 
             });
 
