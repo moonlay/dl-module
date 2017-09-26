@@ -86,7 +86,41 @@ it('#03. should success when generate pdf purchase-order-external', function (do
         });
 });
 
-it('#04. should success when update purchase-order-external', function (done) {
+it('#03.(2) should success when generate pdf purchase-order-external non fabric', function (done) {
+    purchaseOrderExternal.category.code = "AA";
+    purchaseOrderExternalManager.pdf(purchaseOrderExternal._id, 7)
+        .then(results => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#04. should success when generate pdf purchase-order-external english ver', function (done) {
+    purchaseOrderExternal.supplier.import = true;
+    purchaseOrderExternalManager.pdf(purchaseOrderExternal._id, 7)
+        .then(results => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#04.(2) should success when generate pdf purchase-order-external english ver non fabric', function (done) {
+    purchaseOrderExternal.category.code = "AA"
+    purchaseOrderExternal.supplier.import = false;
+    purchaseOrderExternalManager.pdf(purchaseOrderExternal._id, 7)
+        .then(results => {
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#05. should success when update purchase-order-external', function (done) {
     purchaseOrderExternal.items.splice(0, 1);
     purchaseOrderExternalManager.update(purchaseOrderExternal)
         .then((id) => {
