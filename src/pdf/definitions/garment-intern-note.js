@@ -5,6 +5,8 @@ module.exports = function (data, offset) {
     var items = data.items.map(invoiceNote => {
         var invoiceItem = invoiceNote.items.map(dataItem => {
             var _items = dataItem.items.map(item => {
+                dueDate = new Date(dataItem.deliveryOrderSupplierDoDate);
+                dueDate.setDate(dueDate.getDate() + item.paymentDueDays);
                 return {
                     deliveryOrderNo: dataItem.deliveryOrderNo,
                     date: dataItem.deliveryOrderDate,
@@ -16,7 +18,9 @@ module.exports = function (data, offset) {
                     unit: item.unit,
                     price: item.pricePerDealUnit,
                     priceTotal: item.pricePerDealUnit * item.deliveredQuantity,
-                    correction: item.correction
+                    correction: item.correction,
+                    dueDate: dueDate,
+                    paymentMethod: item.paymentMethod
                 }
             });
             _items = [].concat.apply([], _items);
@@ -28,13 +32,12 @@ module.exports = function (data, offset) {
     items = [].concat.apply([], items);
 
     var dueDate, paymentMethod;
-    var inv = data.items[0];
-    var invItem = inv.items[0];
-    var _item = invItem.items[0];
 
-    dueDate = new Date(invItem.deliveryOrderSupplierDoDate);
-    dueDate.setDate(dueDate.getDate() + _item.paymentDueDays);
-    paymentMethod = _item.paymentMethod;
+    var dueDates = items.map(item => {
+        return item.dueDate
+    })
+    dueDate = Math.max.apply(null, dueDates);
+    paymentMethod = items[0].paymentMethod;
 
     var useIncomeTax = data.items
         .map((item) => item.useIncomeTax)

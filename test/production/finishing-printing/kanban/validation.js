@@ -119,7 +119,7 @@ it('#04. should error when create new data with non existent productionOrder, in
         .then(kanban => {
 
             kanban.productionOrderId = 'randomId';
-            kanban.instructionId = 'randomId';
+            // kanban.instructionId = 'randomId';
 
             kanbanManager.create(kanban)
                 .then(id => {
@@ -128,7 +128,7 @@ it('#04. should error when create new data with non existent productionOrder, in
                 .catch(e => {
                     try {
                         e.errors.should.have.property('productionOrder');
-                        e.errors.should.have.property('instruction');
+                        // e.errors.should.have.property('instruction');
                         done();
                     }
                     catch (ex) {
