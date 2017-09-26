@@ -13,8 +13,9 @@ var PackingReceiptModel = Models.inventory.finishingPrinting.PackingReceipt;
 class PackingReceiptDataUtil {
     getNewData() {
         return Promise.all([PackingDataUtil.getNewTestData(), StorageDataUtil.getPackingTestData()])
-            .then((result) => {
-                var packing = result[0];
+            .then((results) => {
+                var packing = results[0];
+                var storage = results[1];
 
                 var packingItems = packing.items.map((packingItem) => {
                     return {
@@ -29,6 +30,7 @@ class PackingReceiptDataUtil {
                     code: codeGenerator(),
                     packingId: packing._id,
                     packingCode: packing.code,
+                    storageName: storage.name,
                     date: new Date(),
                     accepted: true,
                     remark: "UT packing receipt",
