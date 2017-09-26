@@ -194,13 +194,38 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                 } else if (poExternalItem.isClosed && !ObjectId.isValid(valid._id)) {
                                     fulfillmentError["purchaseOrderId"] = i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId.isRequired:%s is closed", i18n.__("DeliveryOrder.items.fulfillments.purchaseOrderId._:PurchaseOrderExternal"));
                                 }
+
                                 if (!doFulfillment.deliveredQuantity || doFulfillment.deliveredQuantity === 0) {
-                                    fulfillmentError["deliveredQuantity"] = i18n.__("DeliveryOrder.items.fulfillments.deliveredQuantity.isRequired:%s is required or not 0", i18n.__("DeliveryOrder.items.fulfillments.deliveredQuantity._:DeliveredQuantity")); //"Jumlah barang diterima tidak boleh kosong";
+                                    fulfillmentError["deliveredQuantity"] = i18n.__("DeliveryOrder.items.fulfillments.deliveredQuantity.isRequired:%s is required or not 0", i18n.__("DeliveryOrder.items.fulfillments.deliveredQuantity._:DeliveredQuantity"));
+                                }
+
+                                if (!doFulfillment.quantityConversion || doFulfillment.quantityConversion === 0) {
+                                    fulfillmentError["quantityConversion"] = i18n.__("DeliveryOrder.items.fulfillments.quantityConversion.isRequired:%s is required or not 0", i18n.__("DeliveryOrder.items.fulfillments.quantityConversion._:Quantity Conversion"));
+                                }
+
+                                if (!doFulfillment.uomConversion || !doFulfillment.uomConversion.unit || doFulfillment.uomConversion.unit === "") {
+                                    fulfillmentError["uomConversion"] = i18n.__("DeliveryOrder.items.fulfillments.uomConversion.isRequired:%s is required", i18n.__("DeliveryOrder.items.fulfillments.uomConversion._:Uom Conversion"));
+                                }
+
+                                if (Object.getOwnPropertyNames(doFulfillment.uomConversion).length > 0 && Object.getOwnPropertyNames(doFulfillment.purchaseOrderUom).length > 0) {
+                                    if (doFulfillment.uomConversion.unit.toString() === doFulfillment.purchaseOrderUom.unit.toString()) {
+                                        if (doFulfillment.conversion !== 1) {
+                                            fulfillmentError["conversion"] = i18n.__("DeliveryOrder.items.fulfillments.conversion.isRequired:%s must be 1", i18n.__("DeliveryOrder.items.fulfillments.conversion._:Conversion"));
+                                        }
+                                    } else {
+                                        if (doFulfillment.conversion === 1) {
+                                            fulfillmentError["conversion"] = i18n.__("DeliveryOrder.items.fulfillments.conversion.isRequired:%s must not be 1", i18n.__("DeliveryOrder.items.fulfillments.conversion._:Conversion"));
+                                        }
+                                    }
+                                }else{
+                                    fulfillmentError["uomConversion"] = i18n.__("DeliveryOrder.items.fulfillments.uomConversion.isRequired:%s is required", i18n.__("DeliveryOrder.items.fulfillments.uomConversion._:Uom Conversion"));
                                 }
 
                                 if (currencies.length > 1) {
                                     fulfillmentError["currency"] = i18n.__("DeliveryOrder.items.fulfillments.currency.isMultilpe:%s is multiple type", i18n.__("DeliveryOrder.items.fulfillments.currency._:Currency"));
                                 }
+
+
                                 fulfillmentErrors.push(fulfillmentError);
                             }
                             for (var fulfillmentError of fulfillmentErrors) {
@@ -243,7 +268,10 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         if (poExternal) {
                             item.purchaseOrderExternalNo = poExternal.no;
                             item.purchaseOrderExternalId = new ObjectId(poExternal._id);
-
+                            item.paymentMethod= poExternal.paymentMethod;
+                            item.paymentType= poExternal.paymentType;
+                            item.paymentDueDays= poExternal.paymentDueDays;
+                            
                             for (var fulfillment of item.fulfillments) {
                                 var poInternal = poExternal.items.find(poInternal => fulfillment.purchaseOrderId.toString() === poInternal.poId.toString() && fulfillment.product._id.toString() === poInternal.product._id.toString())
                                 if (poInternal) {

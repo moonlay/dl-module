@@ -6,6 +6,6 @@ describe("VALIDATE SCENARIOS", function() {
     require("./validate");
 });
 
-describe("VALIDATE SCENARIOS", function() {
+describe("REPORT SCENARIOS", function() {
     require("./xls");
 });

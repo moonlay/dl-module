@@ -705,12 +705,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     processed.push(this.collection.updateOne({ "roNo": data.roNo }, { $set: data }, { upsert: true }));
                 }
 
-                // var dataProcessed = {
-                //     processed: processed,
-                //     // failed: MigratedFalse
-                // };
-
-
                 Promise.all(processed).then((processed) => {
                     var dataProcessed = {};
                     dataProcessed.processed = processed;

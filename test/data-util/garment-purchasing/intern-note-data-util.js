@@ -25,11 +25,9 @@ class InternNoteDataUtil {
                         var data = {
                             no: `UT/IN/${codeGenerator()}`,
                             date: dateNow,
-                            dueDate: dateAfter,
                             supplierId: dataSupplier._id,
                             supplier: dataSupplier,
                             currency: dataCurrency,
-                            paymentMethod: 'SAMPLE',
                             remark: 'Unit Test Intern Note',
                             items: [invoiceNote]
                         };

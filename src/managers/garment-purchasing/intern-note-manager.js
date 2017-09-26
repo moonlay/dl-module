@@ -52,6 +52,38 @@ module.exports = class InternNoteManager extends BaseManager {
         var getCurrency = valid.currency && ObjectId.isValid(valid.currency._id) ? this.currencyManager.getSingleByIdOrDefault(valid.currency._id) : Promise.resolve(null);
         var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
 
+        var listDueDate = [];
+        var listPaymentMethod = [];
+        var listPaymentType = [];
+        if (valid.items) {
+            for (var inv of valid.items) {
+                for (var invItem of inv.items) {
+                    for (var item of invItem.items) {
+                        var _dueDate = new Date(invItem.deliveryOrderSupplierDoDate);
+                        _dueDate.setDate(_dueDate.getDate() + item.paymentDueDays);
+                        listDueDate.push(moment(_dueDate).format("DD MMM YYYY"));
+                        listPaymentMethod.push(item.paymentMethod);
+                        listPaymentType.push(item.paymentType);
+                    }
+                }
+            }
+        }
+
+        listPaymentType = [].concat.apply([], listPaymentType);
+        listPaymentType = listPaymentType.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+        
+        listPaymentMethod = [].concat.apply([], listPaymentMethod);
+        listPaymentMethod = listPaymentMethod.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+
+        listDueDate = [].concat.apply([], listDueDate);
+        listDueDate = listDueDate.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+
         return Promise.all([getInternNote, getCurrency, getSupplier].concat(getInvoiceNotes))
             .then(results => {
                 var _invoiceNote = results[0];
@@ -75,15 +107,6 @@ module.exports = class InternNoteManager extends BaseManager {
                     errors["date"] = i18n.__("InternNote.date.isGreaterDueDate:%s is greater than due date", i18n.__("DeliveryOrder.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
                 }
 
-                if (!valid.dueDate || valid.dueDate === "") {
-                    errors["dueDate"] = i18n.__("InternNote.dueDate.isRequired:%s is required", i18n.__("InternNote.dueDate._:Date"));
-                    valid.dueDate = '';
-                }
-                else if (new Date(valid.dueDate) < now) {
-                    errors["dueDate"] = i18n.__("InternNote.dueDate.isLess:%s is less than today", i18n.__("DeliveryOrder.dueDate._:Due Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
-                }
-
-
                 if (!valid.supplierId || valid.supplierId.toString() === "") {
                     errors["supplierId"] = i18n.__("InternNote.supplier.name.isRequired:%s is required", i18n.__("InternNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
                 }
@@ -106,9 +129,6 @@ module.exports = class InternNoteManager extends BaseManager {
                 }
                 else if (!_currency) {
                     errors["currency"] = i18n.__("InternNote.currency.isRequired:%s is required", i18n.__("InternNote.currency._:Currency")); //"Currency tidak boleh kosong";
-                }
-                if (!valid.paymentMethod || valid.paymentMethod == '') {
-                    errors["paymentMethod"] = i18n.__("InternNote.paymentMethod.isRequired:%s is required", i18n.__("InternNote.paymentMethod._:Payment Method"));
                 }
 
                 valid.items = valid.items || [];
@@ -163,6 +183,12 @@ module.exports = class InternNoteManager extends BaseManager {
                                 } else {
                                     if (itemUseVat[0] && itemVatType.length > 1) {
                                         errItem = { "InvoiceNoteId": i18n.__("InternNote.InvoiceNoteId.differentVatType:%s must same with all items", i18n.__("InternNote.InvoiceNoteId._:Vat Type")) }
+                                    }
+                                    else if (listPaymentType.length > 1) {
+                                        errItem = { "InvoiceNoteId": i18n.__("InternNote.InvoiceNoteId.differentDueDate:%s must same with all items", i18n.__("InternNote.InvoiceNoteId._:Payment Type")) }
+                                    }
+                                    else if (listPaymentMethod.length > 1) {
+                                        errItem = { "InvoiceNoteId": i18n.__("InternNote.InvoiceNoteId.differentPaymentMethod:%s must same with all items", i18n.__("InternNote.InvoiceNoteId._:Payment Method")) }
                                     }
                                 }
                             }
@@ -474,7 +500,11 @@ module.exports = class InternNoteManager extends BaseManager {
                                                     cItem.doProductid.toString() == item.product._id.toString() &&
                                                     cItem.doPOid.toString() == item.purchaseOrderId.toString());
                                                 if (correction) {
-                                                    item.correction = correction.doCorrection.correctionPriceTotal - (item.pricePerDealUnit * item.deliveredQuantity)
+                                                    if (Object.getOwnPropertyNames(correction.doCorrection).length > 0) {
+                                                        item.correction = correction.doCorrection.correctionPriceTotal - (item.pricePerDealUnit * item.deliveredQuantity)
+                                                    } else {
+                                                        item.correction = 0;
+                                                    }
                                                 } else {
                                                     item.correction = 0;
                                                 }
