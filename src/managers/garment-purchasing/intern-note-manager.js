@@ -54,6 +54,7 @@ module.exports = class InternNoteManager extends BaseManager {
 
         var listDueDate = [];
         var listPaymentMethod = [];
+        var listPaymentType = [];
         if (valid.items) {
             for (var inv of valid.items) {
                 for (var invItem of inv.items) {
@@ -62,10 +63,17 @@ module.exports = class InternNoteManager extends BaseManager {
                         _dueDate.setDate(_dueDate.getDate() + item.paymentDueDays);
                         listDueDate.push(moment(_dueDate).format("DD MMM YYYY"));
                         listPaymentMethod.push(item.paymentMethod);
+                        listPaymentType.push(item.paymentType);
                     }
                 }
             }
         }
+
+        listPaymentType = [].concat.apply([], listPaymentType);
+        listPaymentType = listPaymentType.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+        
         listPaymentMethod = [].concat.apply([], listPaymentMethod);
         listPaymentMethod = listPaymentMethod.filter(function (elem, index, self) {
             return index == self.indexOf(elem);
@@ -176,8 +184,8 @@ module.exports = class InternNoteManager extends BaseManager {
                                     if (itemUseVat[0] && itemVatType.length > 1) {
                                         errItem = { "InvoiceNoteId": i18n.__("InternNote.InvoiceNoteId.differentVatType:%s must same with all items", i18n.__("InternNote.InvoiceNoteId._:Vat Type")) }
                                     }
-                                    else if (listDueDate.length > 1) {
-                                        errItem = { "InvoiceNoteId": i18n.__("InternNote.InvoiceNoteId.differentDueDate:%s must same with all items", i18n.__("InternNote.InvoiceNoteId._:Due Date")) }
+                                    else if (listPaymentType.length > 1) {
+                                        errItem = { "InvoiceNoteId": i18n.__("InternNote.InvoiceNoteId.differentDueDate:%s must same with all items", i18n.__("InternNote.InvoiceNoteId._:Payment Type")) }
                                     }
                                     else if (listPaymentMethod.length > 1) {
                                         errItem = { "InvoiceNoteId": i18n.__("InternNote.InvoiceNoteId.differentPaymentMethod:%s must same with all items", i18n.__("InternNote.InvoiceNoteId._:Payment Method")) }

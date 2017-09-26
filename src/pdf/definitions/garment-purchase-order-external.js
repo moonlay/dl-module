@@ -445,6 +445,7 @@ module.exports = function (pox, offset) {
                     }, {
                         width: '*',
                         stack: [`${pox.freightCostBy.trim() == "Penjual" ? "Seller" : "Buyer"}`, `${pox.paymentType}`]
+
                     }]
             }, {
                     width: '20%',
@@ -651,7 +652,7 @@ module.exports = function (pox, offset) {
     ];
 
     if (pox.category.code === "FAB") {
-        footer.concat(stdQ)
+        footer = footer.concat(stdQ)
     }
     var signatureText = pox.supplier.import == true ? ['\n\n\n',
         {
