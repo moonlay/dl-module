@@ -288,7 +288,7 @@ module.exports = function (pox, offset) {
 
     var table = [{
         table: {
-            widths: ['*','25%', '10%', '15%', '15%'],
+            widths: ['25%', '22%', '13%', '15%', '25%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot)
         }
