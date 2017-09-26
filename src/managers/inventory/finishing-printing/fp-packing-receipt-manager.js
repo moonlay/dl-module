@@ -91,15 +91,17 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
         var getDbPackingReceipt = this.collection.singleOrDefault({
             _id: new ObjectId(valid._id)
         });
+
         var getDuplicatePackingReceipt = this.collection.singleOrDefault({
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
             code: valid.code
         });
+        
         var getPacking = valid.packingId && ObjectId.isValid(valid.packingId) ? this.packingManager.getSingleByIdOrDefault(valid.packingId) : Promise.resolve(null);
 
-        var getStorage = valid.items ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
+        var getStorage = valid.storageName ? this.storageManager.collection.find({ name: valid.storageName }).toArray() : Promise.resolve([]);
 
         valid.items = valid.items instanceof Array ? valid.items : [];
         var products = valid.items.map((item) => item.product ? item.product : null);
@@ -161,7 +163,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
 
                 //Inventory Document Validation
                 valid.storageId = _storages.length > 0 ? new ObjectId(_storages[0]._id) : null;
-                valid.referenceType = "Penerimaan Packing Gudang Jadi";
+                valid.referenceType = `Penerimaan Packing ${valid.storageName}`;
                 valid.type = "IN";
 
                 for (var i = 0; i < valid.items.length; i++) {
