@@ -693,7 +693,8 @@ getDataPOStaff(startdate , enddate , divisi , offset) {
                 }, {
                         $unwind: "$items"
                     }, 
-                    { $unwind: "$items.fulfillments" },
+                   // { $unwind: "$items.fulfillments" },
+                    { $unwind:{ path: "$items.fulfillments", preserveNullAndEmptyArrays: true }  },
                     {
                         $group: {
                            _id:{_id:"$author",namee:"$_createdBy",noprr:"$purchaseRequest.no"},                      
@@ -778,29 +779,35 @@ getDataPODetailStaff(startdate, enddate, staff,divisi, offset) {
                 { "purchaseOrderExternal.isPosted": true }];
 
 
+ var bbbb = new Date();
+bbbb.setHours(bbbb.getHours() - offset);
+                
+var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
+//{"$sum" : { $ifNull: [ "$items.fulfillments.deliveryOrderDate", 0 ] }}
+
  var dates = {
                 $divide: [{
                     $subtract: [{
                         $subtract: [
-                            { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] },
+                            { "$add": [aaaa, 60 * 60 * 1000 * offset] },
                             {
                                 "$add": [
-                                    { "$millisecond": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                    { "$millisecond": aaaa },
                                     {
                                         "$multiply": [
-                                            { "$second": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                            { "$second": aaaa },
                                             1000
                                         ]
                                     },
                                     {
                                         "$multiply": [
-                                            { "$minute": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                            { "$minute": aaaa },
                                             60, 1000
                                         ]
                                     },
                                     {
                                         "$multiply": [
-                                            { "$hour": { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] } },
+                                            { "$hour": { "$add": [aaaa, 60 * 60 * 1000 * offset] } },
                                             60, 60, 1000
                                         ]
                                     }
@@ -809,25 +816,25 @@ getDataPODetailStaff(startdate, enddate, staff,divisi, offset) {
                         ]
                     }, {
                             $subtract: [
-                                { "$add": ["$items.fulfillments.deliveryOrderDate", 60 * 60 * 1000 * offset] },
+                                { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] },
                                 {
                                     "$add": [
-                                        { "$millisecond": "$items.fulfillments.deliveryOrderDate" },
+                                        { "$millisecond": "$purchaseOrderExternal.expectedDeliveryDate" },
                                         {
                                             "$multiply": [
-                                                { "$second": "$items.fulfillments.deliveryOrderDate" },
+                                                { "$second": "$purchaseOrderExternal.expectedDeliveryDate" },
                                                 1000
                                             ]
                                         },
                                         {
                                             "$multiply": [
-                                                { "$minute": "$items.fulfillments.deliveryOrderDate" },
+                                                { "$minute": "$purchaseOrderExternal.expectedDeliveryDate" },
                                                 60, 1000
                                             ]
                                         },
                                         {
                                             "$multiply": [
-                                                { "$hour": { "$add": ["$items.fulfillments.deliveryOrderDate", 60 * 60 * 1000 * offset] } },
+                                                { "$hour": { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] } },
                                                 60, 60, 1000
                                             ]
                                         }
@@ -836,7 +843,66 @@ getDataPODetailStaff(startdate, enddate, staff,divisi, offset) {
                         }]
                 }, 86400000]
             };
-         
+        
+
+ var dates2 = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$purchaseOrderExternal.date", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$purchaseOrderExternal.date" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$purchaseOrderExternal.date" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$purchaseOrderExternal.date" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$purchaseOrderExternal.date", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                            $subtract: [
+                                { "$add": ["$_createdDate", 60 * 60 * 1000 * offset] },
+                                {
+                                    "$add": [
+                                        { "$millisecond": "$_createdDate" },
+                                        {
+                                            "$multiply": [
+                                                { "$second": "$_createdDate" },
+                                                1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$minute": "$_createdDate" },
+                                                60, 1000
+                                            ]
+                                        },
+                                        {
+                                            "$multiply": [
+                                                { "$hour": { "$add": ["$_createdDate", 60 * 60 * 1000 * offset] } },
+                                                60, 60, 1000
+                                            ]
+                                        }
+                                    ]
+                                }]
+                        }]
+                }, 86400000]
+            };
 
             if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
                 var validStartDate = new Date(startdate);
@@ -882,18 +948,22 @@ getDataPODetailStaff(startdate, enddate, staff,divisi, offset) {
                  {
                         $unwind: "$items"
                     }, 
-                    { $unwind: "$items.fulfillments" },
+                    //{ $unwind: "$items.fulfillments" },
+                    { $unwind:{ path: "$items.fulfillments", preserveNullAndEmptyArrays: true }  },
                     {
                         $group: {
                            _id:{_id:"$author",name:"$purchaseRequest.no"},
                            "user": { $first: "$_createdBy"},
                            "divisi": { $first: "$unit.division.name"},
                            "unit": { $first: "$unit.name"},
-                        "nmbarang": { $first: "$items.product.name" },
-                           "nmsupp": { $first: "$purchaseOrderExternal.supplier.name" },
                            "selisih": { $first: dates },
+                           "selisih2": { $first: dates2 },
+                           "nmbarang": { $first: "$items.product.name" },
+                           "nmsupp": { $first: "$purchaseOrderExternal.supplier.name" },
                             "tgltarget": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$purchaseOrderExternal.expectedDeliveryDate" } }},
                            "tgldatang": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$items.fulfillments.deliveryOrderDate" } }},
+                           "tglpoint": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$_createdDate" } }},
+                           "tglpoeks": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$purchaseOrderExternal.date" } }},
                             "tgpr": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$_createdDate" } }},    
                         }
                     },

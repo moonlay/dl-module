@@ -75,17 +75,17 @@ module.exports = class KanbanManager extends BaseManager {
         var getUom = this.uomManager.collection.find({ unit: "MTR" }).toArray();
         var getProductionOrder = valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(new ObjectId(valid.productionOrderId)) : Promise.resolve(null);
         var getProductionOrderDetail = (valid.selectedProductionOrderDetail && valid.selectedProductionOrderDetail.code) ? this.productionOrderManager.getSingleProductionOrderDetail(valid.selectedProductionOrderDetail.code) : Promise.resolve(null);
-        var getInstruction = valid.instructionId && ObjectId.isValid(valid.instructionId) ? this.instructionManager.getSingleByIdOrDefault(new ObjectId(valid.instructionId)) : Promise.resolve(null);
+        // var getInstruction = valid.instructionId && ObjectId.isValid(valid.instructionId) ? this.instructionManager.getSingleByIdOrDefault(new ObjectId(valid.instructionId)) : Promise.resolve(null);
         var getKanban = valid._id && ObjectId.isValid(valid._id) ? this.getSingleById(valid._id) : Promise.resolve(null);
 
-        return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getInstruction, getKanban, getUom])
+        // return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getInstruction, getKanban, getUom])
+        return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getKanban, getUom])            
             .then(results => {
                 var _kanbanDuplicate = results[0];
                 var _productionOrder = results[1];
                 var _productionOrderDetail = results[2];
-                var _instruction = results[3];
-                var _kanban = results[4];
-                var uom = results[5];
+                var _kanban = results[3];
+                var uom = results[4];
                 var _uom = uom[0];
                 if (_kanban)
                     _kanban.currentStepIndex = _kanban.currentStepIndex || 0; // old kanban data does not have currentStepIndex
@@ -145,8 +145,8 @@ module.exports = class KanbanManager extends BaseManager {
 
                         if (!valid.instruction)
                             errors["instruction"] = i18n.__("Kanban.instruction.isRequired:%s is required", i18n.__("Kanban.instruction._:Instruction")); //"Instruction harus diisi";
-                        else if (!_instruction)
-                            errors["instruction"] = i18n.__("Kanban.instruction.notFound:%s not found", i18n.__("Kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
+                        // else if (!_instruction)
+                        //     errors["instruction"] = i18n.__("Kanban.instruction.notFound:%s not found", i18n.__("Kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
                         else {
                             var stepsError = [];
                             var hasError = false;
@@ -185,9 +185,9 @@ module.exports = class KanbanManager extends BaseManager {
                             return Promise.reject(new ValidationError('data does not pass validation', errors));
                         }
 
-                        if (_instruction) {
-                            valid.instructionId = _instruction._id;
-                            valid.instruction._id = _instruction._id;
+                        if (valid.instruction) {
+                            valid.instructionId = ObjectId.isValid(valid.instruction._id) ? new ObjectId(valid.instruction._id) : valid.instruction._id;
+                            valid.instruction._id = valid.instructionId;
                             for (var a of valid.instruction.steps) {
                                 a._id = new ObjectId(a._id);
                             }
