@@ -142,38 +142,40 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                             errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
                         }
 
-                        if (valid.useIncomeTax !== useIncomeTax) {
-                            errors["useIncomeTax"] = i18n.__("InvoiceNote.useIncomeTax.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useIncomeTax._:Using PPn"));
-                        }
-                        else if (valid.useIncomeTax) {
-                            if (!valid.incomeTaxNo || valid.incomeTaxNo == '') {
-                                errors["incomeTaxNo"] = i18n.__("InvoiceNote.incomeTaxNo.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxNo._:Nomor Faktur Pajak (PPn)"));
+                        if (listPOExternal.length > 0) {
+                            if (valid.useIncomeTax !== useIncomeTax) {
+                                errors["useIncomeTax"] = i18n.__("InvoiceNote.useIncomeTax.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useIncomeTax._:Using PPn"));
                             }
+                            else if (valid.useIncomeTax) {
+                                if (!valid.incomeTaxNo || valid.incomeTaxNo == '') {
+                                    errors["incomeTaxNo"] = i18n.__("InvoiceNote.incomeTaxNo.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxNo._:Nomor Faktur Pajak (PPn)"));
+                                }
 
-                            if (!valid.incomeTaxDate || valid.incomeTaxDate == '') {
-                                errors["incomeTaxDate"] = i18n.__("InvoiceNote.incomeTaxDate.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxDate._:Tanggal Faktur Pajak (PPn)"));
-                                valid.incomeTaxDate = "";
+                                if (!valid.incomeTaxDate || valid.incomeTaxDate == '') {
+                                    errors["incomeTaxDate"] = i18n.__("InvoiceNote.incomeTaxDate.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxDate._:Tanggal Faktur Pajak (PPn)"));
+                                    valid.incomeTaxDate = "";
+                                }
                             }
-                        }
-                        if (valid.useVat !== useVat) {
-                            errors["useVat"] = i18n.__("InvoiceNote.useVat.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useVat._:Using PPh"));
-                        }
-                        else if (valid.useVat) {
-                            if (valid.vat) {
-                                if (!valid.vat._id) {
+                            if (valid.useVat !== useVat) {
+                                errors["useVat"] = i18n.__("InvoiceNote.useVat.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useVat._:Using PPh"));
+                            }
+                            else if (valid.useVat) {
+                                if (valid.vat) {
+                                    if (!valid.vat._id) {
+                                        errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
+                                    }
+                                } else {
                                     errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
                                 }
-                            } else {
-                                errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
-                            }
 
-                            if (!valid.vatNo || valid.vatNo == '') {
-                                errors["vatNo"] = i18n.__("InvoiceNote.vatNo.isRequired:%s is required", i18n.__("InvoiceNote.vatNo._:Nomor Faktur Pajak (PPh)"));
-                            }
+                                if (!valid.vatNo || valid.vatNo == '') {
+                                    errors["vatNo"] = i18n.__("InvoiceNote.vatNo.isRequired:%s is required", i18n.__("InvoiceNote.vatNo._:Nomor Faktur Pajak (PPh)"));
+                                }
 
-                            if (!valid.vatDate || valid.vatDate == '' || valid.vatDate === "undefined") {
-                                errors["vatDate"] = i18n.__("InvoiceNote.vatDate.isRequired:%s is required", i18n.__("InvoiceNote.vatDate._:Tanggal Faktur Pajak (PPh)"));
-                                valid.vatDate = "";
+                                if (!valid.vatDate || valid.vatDate == '' || valid.vatDate === "undefined") {
+                                    errors["vatDate"] = i18n.__("InvoiceNote.vatDate.isRequired:%s is required", i18n.__("InvoiceNote.vatDate._:Tanggal Faktur Pajak (PPh)"));
+                                    valid.vatDate = "";
+                                }
                             }
                         }
 
