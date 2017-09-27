@@ -13,3 +13,7 @@ describe("MONITORING SCENARIOS", function() {
 describe("PDF SCENARIOS", function() {
     require("./pdf");
 });
+
+describe("VISUALIZATION SCENARIOS", function() {
+    require("./visualization");
+});
