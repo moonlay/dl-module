@@ -41,6 +41,7 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-INVENTORY-SUMMARY', './etl/inventory/fact-inventory-summary');
     test('@ETL/garment-purchase-request', './etl/garment/garment-purchase-request');
     test('@ETL/FACT-GARMENT-PURCHASING', './etl/garment/purchasing/fact-purchasing');
+    test('@ETL/FACT-GARMENT-TOTAL-HUTANG', './etl/garment/purchasing/fact-total-hutang');
     test('@ETL/FACT-FP-PACKING-RECEIPT', './etl/inventory/fact-fp-packing-receipt');
     test('@ETL/FACT-FP-SHIPMENT-DOCUMENT', './etl/inventory/fact-fp-shipment-document');
     test('@ETL/FACT-DEAL-TRACKING-BOARD', './etl/sales/fact-deal-tracking-board');
@@ -74,7 +75,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/PROCESS-TYPE', './master/process-type');
     test('@MASTER/COLOR-TYPE', './master/color-type');
     test('@MASTER/INSTRUCTION', './master/instruction');
-    
+
     // test('@MASTER/MONITORING-EVENT-TYPE', './master/monitoring-event-type');
     test('@MASTER/STEP', './master/step');
     //test('@MASTER/MACHINE-TYPE', './master/machine-type');
