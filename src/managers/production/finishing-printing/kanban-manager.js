@@ -17,6 +17,7 @@ module.exports = class KanbanManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.production.finishingPrinting.collection.Kanban);
+        this.dailyOperationCollection = this.db.use(map.production.finishingPrinting.collection.DailyOperation);
         this.instructionManager = new InstructionManager(db, user);
         this.productionOrderManager = new ProductionOrderManager(db, user);
         this.uomManager = new UomManager(db, user);
@@ -79,7 +80,7 @@ module.exports = class KanbanManager extends BaseManager {
         var getKanban = valid._id && ObjectId.isValid(valid._id) ? this.getSingleById(valid._id) : Promise.resolve(null);
 
         // return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getInstruction, getKanban, getUom])
-        return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getKanban, getUom])            
+        return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getKanban, getUom])
             .then(results => {
                 var _kanbanDuplicate = results[0];
                 var _productionOrder = results[1];
@@ -143,7 +144,7 @@ module.exports = class KanbanManager extends BaseManager {
                         if (!valid.grade || valid.grade == '')
                             errors["grade"] = i18n.__("Kanban.grade.isRequired:%s is required", i18n.__("Kanban.grade._:Grade")); //"Grade harus diisi";   
 
-                        if (!valid.instruction)
+                        if (!valid.instruction || valid.instruction == '' || valid.instruction.steps.length === 0)
                             errors["instruction"] = i18n.__("Kanban.instruction.isRequired:%s is required", i18n.__("Kanban.instruction._:Instruction")); //"Instruction harus diisi";
                         // else if (!_instruction)
                         //     errors["instruction"] = i18n.__("Kanban.instruction.notFound:%s not found", i18n.__("Kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
@@ -373,5 +374,42 @@ module.exports = class KanbanManager extends BaseManager {
         };
 
         return this.collection.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: data });
+    }
+
+    readVisualization(paging) {
+        return this.read(paging)
+            .then((result) => {
+                var joinDailyOperations = result.data.map((kanban) => {
+                    var kanbanCurrentStepId = kanban.instruction && kanban.instruction.steps.length > 0 && kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)]._id ? kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)]._id : null;
+
+                    var getDailyOperations = this.dailyOperationCollection.find({
+                        "kanban.code": kanban.code,
+                        "step._id": kanbanCurrentStepId,
+                        _deleted: false,
+                        type: "input"
+                    }, {
+                            "machine.name": 1,
+                            "input": 1
+                        }).limit(1).toArray();
+
+                    return getDailyOperations.then((dailyOperations) => {
+                        var arr = dailyOperations.map((dailyOperation) => {
+                            kanban.dailyOperationMachine = dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null;
+                            kanban.dateInput = dailyOperation.dateInput ? dailyOperation.dateInput : null;
+                            kanban.timeInput = dailyOperation.timeInput ? dailyOperation.timeInput : null;
+                            kanban.inputQuantity = dailyOperation.input ? dailyOperation.input : null;
+                            return kanban;
+                        });
+
+                        return Promise.resolve(arr);
+                    });
+                });
+
+                return Promise.all(joinDailyOperations)
+                    .then(((joinDailyOperation) => {
+                        result.data = [].concat.apply([], joinDailyOperation);
+                        return result;
+                    }));
+            });
     }
 };
