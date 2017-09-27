@@ -7,6 +7,7 @@ var map = DLModels.map;
 var Storage = DLModels.master.Storage;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
+var CodeGenerator = require('../../utils/code-generator');
 
 module.exports = class StorageManager extends BaseManager {
     constructor(db, user) {
@@ -40,6 +41,12 @@ module.exports = class StorageManager extends BaseManager {
         return query;
     }
 
+    _beforeInsert(storage) {
+        storage.code = CodeGenerator();
+        storage._active = true;
+        return Promise.resolve(storage);
+    }
+
     _validate(storage) {
         var errors = {};
         var valid = storage;
@@ -55,14 +62,12 @@ module.exports = class StorageManager extends BaseManager {
             .then(results => {
                 var _module = results[0];
 
-                if (!valid.code || valid.code == "")
-                    errors["code"] = i18n.__("Storage.code.isRequired:%s is required", i18n.__("Storage.code._:Code")); // "Kode harus diisi";
-                else if (_module) {
+                if (_module) {
                     errors["code"] = i18n.__("Storage.code.isExists:%s is already exists", i18n.__("Storage.code._:Code")); //"Kode sudah ada";
                 }
                 if (!valid.name || valid.name == '')
                     errors["name"] = i18n.__("Storage.name.isRequired:%s is required", i18n.__("Storage.name._:Name")); //"Nama Harus diisi";
-   
+
 
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -76,7 +81,7 @@ module.exports = class StorageManager extends BaseManager {
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
             });
-    } 
+    }
 
     _createIndexes() {
         var dateIndex = {
