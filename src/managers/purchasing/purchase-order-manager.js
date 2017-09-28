@@ -960,11 +960,11 @@ var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
                            "selisih2": { $first: dates2 },
                            "nmbarang": { $first: "$items.product.name" },
                            "nmsupp": { $first: "$purchaseOrderExternal.supplier.name" },
-                            "tgltarget": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$purchaseOrderExternal.expectedDeliveryDate" } }},
-                           "tgldatang": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$items.fulfillments.deliveryOrderDate" } }},
-                           "tglpoint": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$_createdDate" } }},
-                           "tglpoeks": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$purchaseOrderExternal.date" } }},
-                            "tgpr": { $first: { $dateToString: { format: "%d-%m-%Y", date: "$_createdDate" } }},    
+                             "tgltarget": { $first: "$purchaseOrderExternal.expectedDeliveryDate" },
+                            "tgldatang": { $first:  "$items.fulfillments.deliveryOrderDate" },
+                            "tglpoint": { $first:  "$_createdDate" },
+                            "tglpoeks": { $first:  "$purchaseOrderExternal.date" },
+                            "tgpr": { $first:  "$purchaseRequest._createdDate" },   
                         }
                     },
                  
