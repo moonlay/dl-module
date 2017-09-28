@@ -380,6 +380,7 @@ module.exports = class KanbanManager extends BaseManager {
         return this.read(paging)
             .then((result) => {
                 var joinDailyOperations = result.data.map((kanban) => {
+                    kanban.currentStepIndex = Math.floor(kanban.currentStepIndex);
                     var kanbanCurrentStepId = kanban.instruction && kanban.instruction.steps.length > 0 && kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)]._id ? kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)]._id : null;
 
                     var getDailyOperations = this.dailyOperationCollection.find({
@@ -389,15 +390,22 @@ module.exports = class KanbanManager extends BaseManager {
                         type: "input"
                     }, {
                             "machine.name": 1,
-                            "input": 1
+                            "input": 1,
+                            "step.process": 1,
+                            "step.processArea": 1,
+                            "step.deadline": 1
                         }).limit(1).toArray();
 
                     return getDailyOperations.then((dailyOperations) => {
                         var arr = dailyOperations.map((dailyOperation) => {
                             kanban.dailyOperationMachine = dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null;
-                            kanban.dateInput = dailyOperation.dateInput ? dailyOperation.dateInput : null;
-                            kanban.timeInput = dailyOperation.timeInput ? dailyOperation.timeInput : null;
                             kanban.inputQuantity = dailyOperation.input ? dailyOperation.input : null;
+                            kanban.process = dailyOperation.step ? dailyOperation.step.process : null;
+                            kanban.processArea = dailyOperation.step ? dailyOperation.step.processArea : null;
+                            kanban.deadline = dailyOperation.step ? dailyOperation.step.deadline : null;
+                            
+                            delete kanban.instruction;
+                            
                             return kanban;
                         });
 
