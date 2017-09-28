@@ -47,7 +47,7 @@ it(`#02. should success when get created new data 2`, function (done) {
         });
 });
 
-it(`#02. should success when get holiday by id`, function (done) {
+it(`#03. should success when get holiday by id`, function (done) {
     var query = {};
     var jobs = [];
 

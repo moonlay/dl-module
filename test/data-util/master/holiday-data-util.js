@@ -15,7 +15,7 @@ class HolidayDataUtil {
 
     getNewData() {
 
-        return Promise.all([uom.getTestData(), currency.getTestData()])
+        return Promise.all([division.getTestData()])
             .then((results) => {
                 var division = results[0];
                
@@ -53,4 +53,4 @@ class HolidayDataUtil {
     }
 
 }
-module.exports = new ProductDataUtil();
+module.exports = new HolidayDataUtil();
