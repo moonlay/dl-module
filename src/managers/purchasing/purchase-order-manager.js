@@ -950,7 +950,7 @@ var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
                     }, 
                     //{ $unwind: "$items.fulfillments" },
                     { $unwind:{ path: "$items.fulfillments", preserveNullAndEmptyArrays: true }  },
-                    {
+                     {
                         $group: {
                            _id:{_id:"$author",name:"$purchaseRequest.no"},
                            "user": { $first: "$_createdBy"},
