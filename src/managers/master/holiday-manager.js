@@ -1,19 +1,16 @@
 'use strict'
 
-// external deps 
 var ObjectId = require("mongodb").ObjectId;
-var DivisionManager = require('./division-manager');
-var BaseManager = require('module-toolkit').BaseManager;
-var i18n = require('dl-i18n');
-var assert = require('assert');
-
-// internal deps
 require('mongodb-toolkit');
+
 var DLModels = require('dl-models');
-var generateCode = require("../../utils/code-generator");
 var map = DLModels.map;
 var Holiday = DLModels.master.Holiday;
+var BaseManager = require('module-toolkit').BaseManager;
+var i18n = require('dl-i18n');
+// var assert = require('assert');
 var DivisionManager = require('./division-manager');
+var generateCode = require("../../utils/code-generator");
 
 module.exports = class HolidayManager extends BaseManager {
     constructor(db, user) {
@@ -28,13 +25,12 @@ module.exports = class HolidayManager extends BaseManager {
         },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
-
             query = {};
 
         if (paging.keyword) {
             var keyRegex = new RegExp(paging.keyword, "i");
-            var divisionFilter = {
-                'division.name': {
+            var codeFilter = {
+                'code': {
                     '$regex': keyRegex
                 }
             };
@@ -51,10 +47,19 @@ module.exports = class HolidayManager extends BaseManager {
         return query;
     }
 
+    _beforeInsert(data) {
+       data.code = generateCode();
+          if (data.holidays){
+            for (var holiday of data.holidays){
+                holiday.code = generateCode();
+            }
+        }        
+        return Promise.resolve(data);
+    }
+
     _validate(holiday) {
         var errors = {};
         var valid = holiday;
-
         // 1. begin: Declare promises.
         var getHolidayPromise = this.collection.singleOrDefault({
             _id: {
@@ -63,17 +68,15 @@ module.exports = class HolidayManager extends BaseManager {
             code: valid.code
         });
 
-        var getDivision = valid.division && ObjectId.isValid(valid.division._id) ? this.divisionManager.getSingleByIdOrDefault(valid.division._id) : Promise.resolve(null);
+        var getDivision = valid.division && ObjectId.isValid(valid.division._id) ? this.DivisionManager.getSingleByIdOrDefault(valid.division._id) : Promise.resolve(null);
         // 2. begin: Validation.
         return Promise.all([getHolidayPromise, getDivision])
             .then((results) => {
                 var _module = results[0];
                 var _division = results[1];
 
-                if (!valid.code || valid.code == '')
-                    errors["code"] = i18n.__("Holiday.code.isRequired:%s is required", i18n.__("Holiday.code._:Code")); // "Kode tidak boleh kosong.";
-                else if (_module) {
-                    errors["code"] = i18n.__("Holiday.code.isExists:%s is already exists", i18n.__("Holiday.code._:Code")); // "Kode sudah terdaftar.";
+                if (_module) {
+                    errors["code"] = i18n.__("Holiday.code.isExists:%s is already exists", i18n.__("Holiday.code._:Code")); //"Code sudah ada";
                 }
 
                 if (!valid.date || valid.date == "" || valid.date == "undefined")
@@ -119,8 +122,8 @@ module.exports = class HolidayManager extends BaseManager {
             this.collection
                 .where(query)
                 .execute()
-                .then(holiday => {
-                    resolve(holiday);
+                .then(holidays => {
+                    resolve(holidays);
                 })
                 .catch(e => {
                     reject(e);
@@ -133,7 +136,7 @@ module.exports = class HolidayManager extends BaseManager {
             var holiday, division;
             this.getHoliday()
                 .then(results => {
-                    this.divisionManager.getDivision()
+                    this.DivisionManager.getDivision()
                         .then(divisions => {                            
                                     holiday = results.data;
                                     division = divisions.name;
@@ -167,7 +170,18 @@ module.exports = class HolidayManager extends BaseManager {
                                         if (data[i]["description"] === "" || data[i]["description"] === undefined) {
                                             errorMessage = errorMessage + "Keterangan tidak boleh kosong, ";
                                         }
-                                   
+
+                                        var flagDivision = false;
+                                        for (var j = 0; j < division.length; j++) {
+                                            if (division[j]["name"] === data[i]["division"]) {
+                                                flagDivision = true;
+                                                break;
+                                            }
+                                        }
+                                        if (flagDivision === false) {
+                                            errorMessage = errorMessage + "Division tidak terdaftar di Master Divisi, ";
+                                        }
+                                        
                                         if (errorMessage !== "") {
                                             dataError.push({"date": data[i]["date"], "name": data[i]["name"], "division": data[i]["division"], "description": data[i]["description"], "Error": errorMessage });
                                         }
@@ -176,10 +190,8 @@ module.exports = class HolidayManager extends BaseManager {
                                         var newHoliday = [];
                                         for (var i = 0; i < data.length; i++) {
                                              var valid = new Holiday(data[i]);
-                                             var now = new Date()
                                              valid.code = generateCode();
                                              valid.stamp(this.user.username, 'manager');
-                                             valid._createdDate = now;
                                                 for (var j = 0; j < division.length; j++) {
                                                     if (data[i]["division"] == division[j]["name"]) {
                                                         valid.divisionId = new ObjectId(division[j]["_id"]);
@@ -238,7 +250,7 @@ module.exports = class HolidayManager extends BaseManager {
                     $match: {
                         $and: [{
                             $and: [{
-                                "division.name": regex2
+                                "code": regex2
                             }, {
                                     "_deleted": false
                                 }]
@@ -290,4 +302,5 @@ module.exports = class HolidayManager extends BaseManager {
                     .execute();
             });
     }
+
 };
