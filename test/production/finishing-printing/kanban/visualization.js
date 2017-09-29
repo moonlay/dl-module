@@ -1,15 +1,18 @@
 require("should");
-var Kanban = require("../../../data-util/production/finishing-printing/kanban-data-util");
+var DailyOperation = require("../../../data-util/production/finishing-printing/daily-operation-data-util");
 var helper = require("../../../helper");
-var validate = require("dl-models").validator.production.finishingPrinting.kanban;
-var moment = require('moment');
 
+var DailyOperationManager = require("../../../../src/managers/production/finishing-printing/daily-operation-manager");
+var dailyOperationManager = null;
 var KanbanManager = require("../../../../src/managers/production/finishing-printing/kanban-manager");
 var kanbanManager = null;
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then((db) => {
+            dailyOperationManager = new DailyOperationManager(db, {
+                username: 'dev'
+            });
             kanbanManager = new KanbanManager(db, {
                 username: 'dev'
             });
@@ -21,9 +24,13 @@ before('#00. connect db', function (done) {
 });
 
 var createdId;
+var kanbanId;
 it("#01. should success when create new data", function (done) {
-    Kanban.getNewData()
-        .then((data) => kanbanManager.create(data))
+    DailyOperation.getNewData()
+        .then((data) => {
+            kanbanId = data.kanbanId;
+            return dailyOperationManager.create(data)
+        })
         .then((id) => {
             id.should.be.Object();
             createdId = id;
@@ -35,23 +42,23 @@ it("#01. should success when create new data", function (done) {
 });
 
 it("#02. should success when read visualization data", function (done) {
-        kanbanManager.readVisualization({
-            filter: {
-                _id: createdId
-            }
+    kanbanManager.readVisualization({
+        filter: {
+            _id: kanbanId
+        }
+    })
+        .then((documents) => {
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            done();
         })
-            .then((documents) => {
-                documents.should.have.property("data");
-                documents.data.should.be.instanceof(Array);
-                done();
-            })
-            .catch((e) => {
-                done(e);
-            });
-    });
+        .catch((e) => {
+            done(e);
+        });
+});
 
 it("#03. should success when destroy all unit test data", function (done) {
-    kanbanManager.destroy(createdId)
+    dailyOperationManager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();
             result.should.equal(true);
