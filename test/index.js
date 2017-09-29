@@ -88,7 +88,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/TERM OF PAYMENT', './master/term-of-payment');
     test('@MASTER/DESIGN-MOTIVE', './master/design-motive');
     test('@MASTER/STORAGE', './master/storage');
-    // test('@MASTER/HOLIDAY', './master/holiday');
+    test('@MASTER/HOLIDAY', './master/holiday');
     test('@MASTER/COMPANY', './master/company');
     test('@MASTER/CONTACT', './master/contact');
     test('@MASTER/BAD OUTPUT REASON', './master/bad-output-reason');

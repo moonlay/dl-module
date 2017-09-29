@@ -42,7 +42,7 @@ class HolidayDataUtil {
     getTestData() {
         return this.getNewData()
             .then((data) => {
-                data.code = "XX93AX5Q";
+                data.code = "UT/LBR/01";
                 data.date = ISODate("2017-09-16");
                 data.name = "HARI LIBUR UNTUK UNIT TEST";
                 data.division = "DIVISI UNIT TEST";
