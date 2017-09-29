@@ -648,34 +648,19 @@ module.exports = class InternNoteManager extends BaseManager {
                             }
 
                             var listKurs = listDO.map(_do => {
-                                var _listDO = _do.items.map(doItem => {
-                                    var _items = doItem.fulfillments.map(fulfillment => {
-                                        var correction = fulfillment.corrections ? fulfillment.corrections[fulfillment.corrections.length - 1] : {};
-                                        return {
-                                            doNo: _do.no,
-                                            productId: fulfillment.product._id,
-                                            date: _do.supplierDoDate,
-                                            code: fulfillment.currency.code,
-                                            rate: fulfillment.currency.rate
-                                        }
-                                    });
-                                    _items = [].concat.apply([], _items);
-                                    return _items;
-                                })
-                                _listDO = [].concat.apply([], _listDO);
-                                return _listDO;
+                                return {
+                                    doNo: _do.no,
+                                    date: _do.supplierDoDate
+                                }
                             });
                             listKurs = [].concat.apply([], listKurs);
-                            listKurs = listKurs.filter(function (elem, index, self) {
-                                return index == self.indexOf(elem);
-                            })
 
                             var getListKurs = [];
                             for (var currency of listKurs) {
                                 getListKurs.push(this.kursManager.collection.aggregate([
                                     {
                                         $match:
-                                        { "_deleted": false, "code": currency.code, "date": { $lte: currency.date } }
+                                        { "_deleted": false, "code": internNote.currency.code, "date": { $lte: currency.date } }
                                     },
                                     {
                                         $project: {
@@ -690,17 +675,20 @@ module.exports = class InternNoteManager extends BaseManager {
                                 .then((result) => {
                                     result = [].concat.apply([], result);
                                     for (var data of result) {
-                                        var kurs = listKurs.find(_kurs => _kurs.code === data.code && _kurs.date >= data.date)
+                                        var kurs = listKurs.find(_kurs => _kurs.date >= data.date)
                                         if (kurs) {
-                                            kurs = Object.assign(kurs, { kurs: data.rate });
+                                            kurs = Object.assign(kurs, { rate: data.rate });
                                         }
                                     }
+                                    listKurs = listKurs.sort(function (a, b) {
+                                        return new Date(a.date) - new Date(b.date);
+                                    });
                                     Promise.all(getListPR)
                                         .then((listPR) => {
                                             internNote.items.map(invoiceNote => {
                                                 invoiceNote.items.map(dataItem => {
                                                     dataItem.items.map(item => {
-                                                        var kurs = listKurs.find((kurs) => kurs.doNo === dataItem.deliveryOrderNo && kurs.productId.toString() === item.product._id.toString())
+                                                        var kurs = listKurs.find((_kurs) => _kurs.doNo === dataItem.deliveryOrderNo)
                                                         var pr = listPR.find((PR) => PR._id.toString() === item.purchaseRequestId.toString())
                                                         var correction = listCorretion.find((cItem) =>
                                                             cItem.doId.toString() == dataItem.deliveryOrderId.toString() &&
@@ -717,7 +705,7 @@ module.exports = class InternNoteManager extends BaseManager {
                                                         } else {
                                                             item.correction = 0;
                                                         }
-                                                        item.kurs = { code: kurs.code, rate: kurs.kurs|| kurs.rate }
+                                                        item.kursRate = kurs.kurs || internNote.currency.rate
                                                         item.unit = pr.unit.code || "";
                                                     });
                                                 })

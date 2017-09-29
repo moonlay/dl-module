@@ -21,7 +21,7 @@ module.exports = function (data, offset) {
                     correction: item.correction,
                     dueDate: dueDate,
                     paymentMethod: item.paymentMethod,
-                    currRate: item.kurs.rate,
+                    currRate: item.kursRate,
                 }
             });
             _items = [].concat.apply([], _items);
