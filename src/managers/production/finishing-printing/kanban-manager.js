@@ -17,6 +17,7 @@ module.exports = class KanbanManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.production.finishingPrinting.collection.Kanban);
+        this.dailyOperationCollection = this.db.use(map.production.finishingPrinting.collection.DailyOperation);
         this.instructionManager = new InstructionManager(db, user);
         this.productionOrderManager = new ProductionOrderManager(db, user);
         this.uomManager = new UomManager(db, user);
@@ -75,17 +76,17 @@ module.exports = class KanbanManager extends BaseManager {
         var getUom = this.uomManager.collection.find({ unit: "MTR" }).toArray();
         var getProductionOrder = valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(new ObjectId(valid.productionOrderId)) : Promise.resolve(null);
         var getProductionOrderDetail = (valid.selectedProductionOrderDetail && valid.selectedProductionOrderDetail.code) ? this.productionOrderManager.getSingleProductionOrderDetail(valid.selectedProductionOrderDetail.code) : Promise.resolve(null);
-        var getInstruction = valid.instructionId && ObjectId.isValid(valid.instructionId) ? this.instructionManager.getSingleByIdOrDefault(new ObjectId(valid.instructionId)) : Promise.resolve(null);
+        // var getInstruction = valid.instructionId && ObjectId.isValid(valid.instructionId) ? this.instructionManager.getSingleByIdOrDefault(new ObjectId(valid.instructionId)) : Promise.resolve(null);
         var getKanban = valid._id && ObjectId.isValid(valid._id) ? this.getSingleById(valid._id) : Promise.resolve(null);
 
-        return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getInstruction, getKanban, getUom])
+        // return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getInstruction, getKanban, getUom])
+        return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getKanban, getUom])
             .then(results => {
                 var _kanbanDuplicate = results[0];
                 var _productionOrder = results[1];
                 var _productionOrderDetail = results[2];
-                var _instruction = results[3];
-                var _kanban = results[4];
-                var uom = results[5];
+                var _kanban = results[3];
+                var uom = results[4];
                 var _uom = uom[0];
                 if (_kanban)
                     _kanban.currentStepIndex = _kanban.currentStepIndex || 0; // old kanban data does not have currentStepIndex
@@ -143,10 +144,10 @@ module.exports = class KanbanManager extends BaseManager {
                         if (!valid.grade || valid.grade == '')
                             errors["grade"] = i18n.__("Kanban.grade.isRequired:%s is required", i18n.__("Kanban.grade._:Grade")); //"Grade harus diisi";   
 
-                        if (!valid.instruction)
+                        if (!valid.instruction || valid.instruction == '' || valid.instruction.steps.length === 0)
                             errors["instruction"] = i18n.__("Kanban.instruction.isRequired:%s is required", i18n.__("Kanban.instruction._:Instruction")); //"Instruction harus diisi";
-                        else if (!_instruction)
-                            errors["instruction"] = i18n.__("Kanban.instruction.notFound:%s not found", i18n.__("Kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
+                        // else if (!_instruction)
+                        //     errors["instruction"] = i18n.__("Kanban.instruction.notFound:%s not found", i18n.__("Kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
                         else {
                             var stepsError = [];
                             var hasError = false;
@@ -185,9 +186,9 @@ module.exports = class KanbanManager extends BaseManager {
                             return Promise.reject(new ValidationError('data does not pass validation', errors));
                         }
 
-                        if (_instruction) {
-                            valid.instructionId = _instruction._id;
-                            valid.instruction._id = _instruction._id;
+                        if (valid.instruction) {
+                            valid.instructionId = ObjectId.isValid(valid.instruction._id) ? new ObjectId(valid.instruction._id) : valid.instruction._id;
+                            valid.instruction._id = valid.instructionId;
                             for (var a of valid.instruction.steps) {
                                 a._id = new ObjectId(a._id);
                             }
@@ -373,5 +374,50 @@ module.exports = class KanbanManager extends BaseManager {
         };
 
         return this.collection.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: data });
+    }
+
+    readVisualization(paging) {
+        return this.read(paging)
+            .then((result) => {
+                var joinDailyOperations = result.data.map((kanban) => {
+                    kanban.currentStepIndex = Math.floor(kanban.currentStepIndex);
+                    var kanbanCurrentStepId = kanban.instruction && kanban.instruction.steps.length > 0 && kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)]._id ? kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)]._id : null;
+
+                    var getDailyOperations = this.dailyOperationCollection.find({
+                        "kanban.code": kanban.code,
+                        "step._id": kanbanCurrentStepId,
+                        _deleted: false,
+                        type: "input"
+                    }, {
+                            "machine.name": 1,
+                            "input": 1,
+                            "step.process": 1,
+                            "step.processArea": 1,
+                            "step.deadline": 1
+                        }).limit(1).toArray();
+
+                    return getDailyOperations.then((dailyOperations) => {
+                        var arr = dailyOperations.map((dailyOperation) => {
+                            kanban.dailyOperationMachine = dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null;
+                            kanban.inputQuantity = dailyOperation.input ? dailyOperation.input : null;
+                            kanban.process = dailyOperation.step ? dailyOperation.step.process : null;
+                            kanban.processArea = dailyOperation.step ? dailyOperation.step.processArea : null;
+                            kanban.deadline = dailyOperation.step ? dailyOperation.step.deadline : null;
+                            
+                            delete kanban.instruction;
+                            
+                            return kanban;
+                        });
+
+                        return Promise.resolve(arr);
+                    });
+                });
+
+                return Promise.all(joinDailyOperations)
+                    .then(((joinDailyOperation) => {
+                        result.data = [].concat.apply([], joinDailyOperation);
+                        return result;
+                    }));
+            });
     }
 };
