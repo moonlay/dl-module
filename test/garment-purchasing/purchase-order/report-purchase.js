@@ -26,7 +26,7 @@ var createdData;
 it("#01. should success when create new data", function (done) {
     dataUtil.getNewTestData()
         .then((data) => {
-            manager.getSingleByIdOrDefault(data.items[0].purchaseOrderInternalId)
+            manager.getSingleByIdOrDefault(data.items[0].items[0].items[0].purchaseOrderId)
                 .then((purchaseOrderInternal) => {
                     createdData = purchaseOrderInternal;
                     done();
