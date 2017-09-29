@@ -84,9 +84,9 @@ module.exports = class PackingManager extends BaseManager {
     }
 
     _afterInsert(id) {
-
         return this.getSingleById(id)
             .then((packing) => {
+                var packingItems = packing.items;
                 return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
                     .then((productionOrder) => {
                         var query = {
@@ -95,7 +95,7 @@ module.exports = class PackingManager extends BaseManager {
                         };
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
-                                var getProduct = packing.items.map((item) => {
+                                var getProduct = packingItems.map((item) => {
                                     var productName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
                                     query = {
                                         _deleted: false,
@@ -106,61 +106,53 @@ module.exports = class PackingManager extends BaseManager {
                                 });
                                 return Promise.all(getProduct)
                                     .then((products) => {
-                                        for (var product of products) {
-                                            if (product) {
-                                                var dataPackingProduct = products
-                                                return Promise.all(dataPackingProduct)
-                                            } else {
-
-
-                                                var createPackingProduct = packing.items.map((item) => {
-                                                    var pName = item.remark !== "" || item.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}/${item.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
-                                                    var packingProduct = {
-                                                        code: generateCode(),
-                                                        currency: {},
-                                                        description: "",
-                                                        name: pName,
-                                                        price: 0,
-                                                        properties: {
-                                                            productionOrderId: productionOrder._id,
-                                                            productionOrderNo: productionOrder.orderNo,
-                                                            designCode: productionOrder.designCode ? productionOrder.designCode : "",
-                                                            designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
-                                                            orderType: productionOrder.orderType,
-                                                            buyerId: packing.buyerId,
-                                                            buyerName: packing.buyerName,
-                                                            buyerAddress: packing.buyerAddress,
-                                                            colorName: packing.colorName,
-                                                            construction: packing.construction,
-                                                            lot: item.lot,
-                                                            grade: item.grade,
-                                                            weight: item.weight,
-                                                            length: item.length
-                                                        },
-                                                        tags: `sales contract #${productionOrder.salesContractNo}`,
-                                                        uom: uom,
-                                                        uomId: uom._id
-
-                                                    };
-                                                    return this.productManager.create(packingProduct);
-                                                })
-                                                return Promise.all(createPackingProduct)
+                                        var index = 0
+                                        var createPackingProducts = [];
+                                        for (var packingItem of packingItems) {
+                                            var productNameComposition = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                            var product = products.find((product) => product !== null && product.name.toString() === productNameComposition.toString())
+                                            if (!product) {
+                                                var packingProduct = {
+                                                    code: generateCode(index++),
+                                                    currency: {},
+                                                    description: "",
+                                                    name: productNameComposition,
+                                                    price: 0,
+                                                    properties: {
+                                                        productionOrderId: productionOrder._id,
+                                                        productionOrderNo: productionOrder.orderNo,
+                                                        designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                        designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
+                                                        orderType: productionOrder.orderType,
+                                                        buyerId: packing.buyerId,
+                                                        buyerName: packing.buyerName,
+                                                        buyerAddress: packing.buyerAddress,
+                                                        colorName: packing.colorName,
+                                                        construction: packing.construction,
+                                                        lot: packingItem.lot,
+                                                        grade: packingItem.grade,
+                                                        weight: packingItem.weight,
+                                                        length: packingItem.length
+                                                    },
+                                                    tags: `sales contract #${productionOrder.salesContractNo}`,
+                                                    uom: uom,
+                                                    uomId: uom._id
+                                                };
+                                                createPackingProducts.push(this.productManager.create(packingProduct))
                                             }
                                         }
+                                        return Promise.all(createPackingProducts)
                                     })
-
-                                    .then(results => id);
+                                    .then((results) => id);
                             })
                     })
             })
-
-
     }
 
     _afterUpdate(id) {
-
         return this.getSingleById(id)
             .then((packing) => {
+                var packingItems = packing.items;
                 return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
                     .then((productionOrder) => {
                         var query = {
@@ -169,8 +161,8 @@ module.exports = class PackingManager extends BaseManager {
                         };
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
-                                var getProduct = packing.items.map((item) => {
-                                    var productName = item.remark !== "" || item.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}/${item.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
+                                var getProduct = packingItems.map((item) => {
+                                    var productName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -180,54 +172,47 @@ module.exports = class PackingManager extends BaseManager {
                                 });
                                 return Promise.all(getProduct)
                                     .then((products) => {
-                                        for (var product of products) {
-                                            if (product) {
-                                                var dataPackingProduct = products
-                                                return Promise.all(dataPackingProduct)
-                                            } else {
-
-
-                                                var createPackingProduct = packing.items.map((item) => {
-                                                    var pName = item.remark !== "" || item.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}/${item.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
-                                                    var packingProduct = {
-                                                        code: generateCode(),
-                                                        currency: {},
-                                                        description: "",
-                                                        name: pName,
-                                                        price: 0,
-                                                        properties: {
-                                                            productionOrderId: productionOrder._id,
-                                                            productionOrderNo: productionOrder.orderNo,
-                                                            orderType: productionOrder.orderType,
-                                                            designCode: productionOrder.designCode ? productionOrder.designCode : "",
-                                                            designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
-                                                            buyerId: packing.buyerId,
-                                                            buyerName: packing.buyerName,
-                                                            buyerAddress: packing.buyerAddress,
-                                                            colorName: packing.colorName,
-                                                            construction: packing.construction,
-                                                            lot: item.lot,
-                                                            grade: item.grade,
-                                                            weight: item.weight,
-                                                            length: item.length
-                                                        },
-                                                        tags: `sales contract #${productionOrder.salesContractNo}`,
-                                                        uom: uom,
-                                                        uomId: uom._id
-
-                                                    };
-                                                    return this.productManager.create(packingProduct);
-                                                })
-                                                return Promise.all(createPackingProduct)
+                                        var index = 0
+                                        var createPackingProducts = [];
+                                        for (var packingItem of packingItems) {
+                                            var productNameComposition = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                            var product = products.find((product) => product !== null && product.name.toString() === productNameComposition.toString())
+                                            if (!product) {
+                                                var packingProduct = {
+                                                    code: generateCode(index++),
+                                                    currency: {},
+                                                    description: "",
+                                                    name: productNameComposition,
+                                                    price: 0,
+                                                    properties: {
+                                                        productionOrderId: productionOrder._id,
+                                                        productionOrderNo: productionOrder.orderNo,
+                                                        designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                        designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
+                                                        orderType: productionOrder.orderType,
+                                                        buyerId: packing.buyerId,
+                                                        buyerName: packing.buyerName,
+                                                        buyerAddress: packing.buyerAddress,
+                                                        colorName: packing.colorName,
+                                                        construction: packing.construction,
+                                                        lot: packingItem.lot,
+                                                        grade: packingItem.grade,
+                                                        weight: packingItem.weight,
+                                                        length: packingItem.length
+                                                    },
+                                                    tags: `sales contract #${productionOrder.salesContractNo}`,
+                                                    uom: uom,
+                                                    uomId: uom._id
+                                                };
+                                                createPackingProducts.push(this.productManager.create(packingProduct))
                                             }
                                         }
+                                        return Promise.all(createPackingProducts)
                                     })
-
-                                    .then(results => id);
+                                    .then((results) => id);
                             })
                     })
             })
-
     }
 
 
