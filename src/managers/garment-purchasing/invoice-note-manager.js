@@ -345,118 +345,194 @@ module.exports = class InvoiceNoteManager extends BaseManager {
     }
 
     _afterInsert(id) {
-        return this.getSingleById(id, ["items.deliveryOrderId"])
-            .then((InvoiceNote) => {
-                var getDeliveryOrder = [];
-                InvoiceNote.items = InvoiceNote.items || [];
-                var doIds = InvoiceNote.items.map((item) => { return item.deliveryOrderId })
-                doIds = doIds.filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                })
-                for (var doId of doIds) {
-                    if (ObjectId.isValid(doId)) {
-                        getDeliveryOrder.push(this.deliveryOrderManager.getSingleByIdOrDefault(doId));
-                    }
-                }
-                return Promise.all(getDeliveryOrder)
-                    .then((deliveryOrders) => {
-                        var updateDeliveryOrderPromise = [];
-
-                        for (var deliveryOrder of deliveryOrders) {
-                            deliveryOrder.hasInvoice = true;
-                            updateDeliveryOrderPromise.push(this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder))
-                        }
-                        return Promise.all(updateDeliveryOrderPromise)
-                    })
-                    .then((result) => Promise.resolve(InvoiceNote._id));
+        return this.getSingleById(id)
+            .then((customs) => this.getRealization(customs))
+            .then((realizations) => this.updateDeliveryOrder(realizations))
+            .then((realizations) => this.updatePurchaseOrder(realizations))
+            .then(() => {
+                return Promise.resolve(id)
             })
     }
 
-    _beforeUpdate(newInvoiceNote) {
-        return this.getSingleById(newInvoiceNote._id)
-            .then((oldInvoiceNote) => {
-                var getDeliveryOrder = [];
-                var oldItems = oldInvoiceNote.items.map((item) => { return item.deliveryOrderId })
-                oldItems = oldItems.filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                })
-
-                var newItems = newInvoiceNote.items.map((item) => { return item.deliveryOrderId })
-                newItems = newItems.filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                })
-
-                var updateDeliveryOrderPromise = [];
-
-                for (var oldItem of oldItems) {
-                    var item = newItems.find(newItem => newItem.toString() === oldItem.toString())
-                    if (!item) {
-                        updateDeliveryOrderPromise.push(this.deliveryOrderManager.getSingleByIdOrDefault(oldItem).then((deliveryOrder) => {
-                            deliveryOrder.hasInvoice = false;
-                            return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
-                        }));
-                    }
-                }
-
-                for (var newItem of newItems) {
-                    var item = oldItems.find(oldItem => newItem.toString() === oldItem.toString())
-                    if (!item) {
-                        updateDeliveryOrderPromise.push(this.deliveryOrderManager.getSingleByIdOrDefault(newItem).then((deliveryOrder) => {
-                            deliveryOrder.hasInvoice = true;
-                            return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
-                        }));
-                    }
-                }
-                if (updateDeliveryOrderPromise.length == 0) {
-                    updateDeliveryOrderPromise.push(Promise.resolve(null));
-                }
-                return Promise.all(updateDeliveryOrderPromise)
-                    .then((result) => {
-                        return Promise.resolve(newInvoiceNote);
-                    })
+    _beforeUpdate(data) {
+        return this.getSingleById(data._id)
+            .then((customs) => this.getRealization(customs))
+            .then((realizations) => this.updateDeliveryOrderDeleteInvoiceNote(realizations))
+            .then((realizations) => this.updatePurchaseOrderDeleteInvoiceNote(realizations))
+            .then(() => {
+                return Promise.resolve(data)
             })
-
     }
 
-    delete(invoiceNote) {
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                return this._validate(invoiceNote)
-                    .then(validData => {
-                        // validData._deleted = true;
-                        return this.collection
-                            .updateOne({
-                                _id: validData._id
-                            }, {
-                                $set: { "_deleted": true }
-                            })
-                            .then((result) => Promise.resolve(validData._id))
-                            .then((InvoiceNoteId) => {
-                                var getDeliveryOrder = [];
-                                invoiceNote.items = invoiceNote.items || [];
-                                var doIds = invoiceNote.items.map((item) => { return item.deliveryOrderId })
-                                doIds = doIds.filter(function (elem, index, self) {
-                                    return index == self.indexOf(elem);
-                                })
-                                for (var doId of doIds) {
-                                    if (ObjectId.isValid(doId)) {
-                                        getDeliveryOrder.push(this.deliveryOrderManager.getSingleByIdOrDefault(doId));
-                                    }
-                                }
-                                return Promise.all(getDeliveryOrder)
-                                    .then((deliveryOrders) => {
-                                        var updatedeliveryOrderPromise = [];
+    _afterUpdate(id) {
+        return this.getSingleById(id)
+            .then((customs) => this.getRealization(customs))
+            .then((realizations) => this.updateDeliveryOrder(realizations))
+            .then((realizations) => this.updatePurchaseOrder(realizations))
+            .then(() => {
+                return Promise.resolve(id)
+            })
+    }
 
-                                        for (var deliveryOrder of deliveryOrders) {
-                                            deliveryOrder.hasInvoice = false;
-                                            updatedeliveryOrderPromise.push(this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder))
-                                        }
-                                        return Promise.all(updatedeliveryOrderPromise)
-                                    })
-                                    .then((result) => Promise.resolve(invoiceNote._id));
+    delete(data) {
+        return this._pre(data)
+            .then((validData) => {
+                validData._deleted = true;
+                return this.collection.update(validData)
+                    .then((id) => {
+                        var query = {
+                            _id: ObjectId.isValid(id) ? new ObjectId(id) : {}
+                        };
+                        return this.getSingleByQuery(query)
+                            .then((customs) => this.getRealization(customs))
+                            .then((realizations) => this.updateDeliveryOrderDeleteInvoiceNote(realizations))
+                            .then((realizations) => this.updatePurchaseOrderDeleteInvoiceNote(realizations))
+                            .then(() => {
+                                return Promise.resolve(data._id)
                             })
                     })
+            });
+    }
+
+    getRealization(invoiceNote) {
+        var realizations = invoiceNote.items.map((invItem) => {
+            return invItem.items.map((item) => {
+                return {
+                    no: invoiceNote.no,
+                    date: invoiceNote.date,
+                    incomeTaxNo: invoiceNote.incomeTaxNo,
+                    incomeTaxDate: invoiceNote.incomeTaxDate,
+                    useIncomeTax: invoiceNote.useIncomeTax,
+                    vatNo: invoiceNote.vatNo,
+                    vatDate: invoiceNote.vatDate,
+                    useVat: invoiceNote.useVat,
+                    vat: invoiceNote.vat,
+                    deliveryOrderNo: invItem.deliveryOrderNo,
+                    deliveryOrderId: invItem.deliveryOrderId,
+                    purchaseOrderId: item.purchaseOrderId,
+                    productId: item.productId,
+                }
             })
+        })
+        realizations = [].concat.apply([], realizations);
+        return Promise.resolve(realizations);
+    }
+
+    updateDeliveryOrder(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.deliveryOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+
+        var jobs = [];
+        map.forEach((realizations, deliveryOrderId) => {
+            var job = this.deliveryOrderManager.getSingleById(deliveryOrderId)
+                .then((deliveryOrder) => {
+                    deliveryOrder.hasInvoice = true;
+                    return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updateDeliveryOrderDeleteInvoiceNote(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.deliveryOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+
+        var jobs = [];
+        map.forEach((realizations, deliveryOrderId) => {
+            var job = this.deliveryOrderManager.getSingleById(deliveryOrderId)
+                .then((deliveryOrder) => {
+                    deliveryOrder.hasInvoice = false;
+                    return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updatePurchaseOrder(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.purchaseOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+        var jobs = [];
+        map.forEach((realizations, purchaseOrderId) => {
+            var job = this.deliveryOrderManager.purchaseOrderManager.getSingleById(purchaseOrderId)
+                .then((purchaseOrder) => {
+                    var realization = realizations.find(_realization => _realization.purchaseOrderId.toString() === purchaseOrder._id.toString())
+                    var item = purchaseOrder.items.find(_item => _item.product._id.toString() === realization.productId.toString());
+                    var fulfillment = item.fulfillments.find(_fulfillment => _fulfillment.deliveryOrderNo === realization.deliveryOrderNo);
+
+                    var invoice = {
+                        invoiceNo: realization.no,
+                        invoiceDate: realization.date,
+                        invoiceIncomeTaxNo: realization.incomeTaxNo,
+                        invoiceIncomeTaxDate: realization.incomeTaxDate,
+                        invoiceUseIncomeTax: realization.useIncomeTax,
+                        invoiceVatNo: realization.vatNo,
+                        invoiceVatDate: realization.vatDate,
+                        invoiceUseVat: realization.useVat,
+                        invoiceVat: realization.vat,
+                    };
+                    fulfillment = Object.assign(fulfillment, invoice);
+
+                    return this.deliveryOrderManager.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updatePurchaseOrderDeleteInvoiceNote(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.purchaseOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+        var jobs = [];
+        map.forEach((realizations, purchaseOrderId) => {
+            var job = this.deliveryOrderManager.purchaseOrderManager.getSingleById(purchaseOrderId)
+                .then((purchaseOrder) => {
+                    var realization = realizations.find(_realization => _realization.purchaseOrderId.toString() === purchaseOrder._id.toString())
+                    var item = purchaseOrder.items.find(item => item.product._id.toString() === realization.productId.toString());
+                    var fulfillment = item.fulfillments.find(fulfillment => fulfillment.deliveryOrderNo === realization.deliveryOrderNo);
+                    delete fulfillment.invoiceNo;
+                    delete fulfillment.invoiceDate;
+                    delete fulfillment.invoiceIncomeTaxNo;
+                    delete fulfillment.invoiceIncomeTaxDate;
+                    delete fulfillment.invoiceUseIncomeTax;
+                    delete fulfillment.invoiceVatNo;
+                    delete fulfillment.invoiceVatDate;
+                    delete fulfillment.invoiceUseVat;
+                    delete fulfillment.invoiceVat;
+                    return this.deliveryOrderManager.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
     }
 
     _createIndexes() {
