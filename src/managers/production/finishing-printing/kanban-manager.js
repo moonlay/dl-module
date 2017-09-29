@@ -394,7 +394,7 @@ module.exports = class KanbanManager extends BaseManager {
                             "step.process": 1,
                             "step.processArea": 1,
                             "step.deadline": 1
-                        }).limit(1).toArray();
+                        }).toArray();
 
                     return getDailyOperations.then((dailyOperations) => {
                         var arr = dailyOperations.map((dailyOperation) => {
@@ -403,7 +403,7 @@ module.exports = class KanbanManager extends BaseManager {
                             kanban.process = dailyOperation.step ? dailyOperation.step.process : null;
                             kanban.processArea = dailyOperation.step ? dailyOperation.step.processArea : null;
                             kanban.deadline = dailyOperation.step ? dailyOperation.step.deadline : null;
-                            
+                            kanban.stepsLength = kanban.instruction && kanban.instruction.steps ? kanban.instruction.steps.length : 0;
                             delete kanban.instruction;
                             
                             return kanban;
