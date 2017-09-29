@@ -130,6 +130,7 @@ module.exports = {
                 machine: require("./test/data-util/master/machine-data-util"),
                 machineType: require("./test/data-util/master/machine-type-data-util"),
                 product: require("./test/data-util/master/product-data-util"),
+                holiday: require("./test/data-util/master/holiday-data-util"),
                 supplier: require("./test/data-util/master/supplier-data-util"),
                 threadSpecification: require("./test/data-util/master/thread-specification-data-util"),
                 unit: require("./test/data-util/master/unit-data-util"),
