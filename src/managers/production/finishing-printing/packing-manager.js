@@ -95,8 +95,8 @@ module.exports = class PackingManager extends BaseManager {
                         };
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
-                                var getProduct = packingItems.map((item) => {
-                                    var productName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
+                                var getProduct = packingItems.map((packingItem) => {
+                                    var productName = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -106,14 +106,14 @@ module.exports = class PackingManager extends BaseManager {
                                 });
                                 return Promise.all(getProduct)
                                     .then((products) => {
-                                        var index = 0
+                                        var index = 0;
                                         var createPackingProducts = [];
                                         for (var packingItem of packingItems) {
                                             var productNameComposition = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                             var product = products.find((product) => product !== null && product.name.toString() === productNameComposition.toString())
                                             if (!product) {
                                                 var packingProduct = {
-                                                    code: generateCode(index++),
+                                                    code: generateCode(productNameComposition + index++),
                                                     currency: {},
                                                     description: "",
                                                     name: productNameComposition,
@@ -143,7 +143,7 @@ module.exports = class PackingManager extends BaseManager {
                                         }
                                         return Promise.all(createPackingProducts)
                                     })
-                                    .then((results) => id);
+                                    .then((results) => id)
                             })
                     })
             })
@@ -161,8 +161,8 @@ module.exports = class PackingManager extends BaseManager {
                         };
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
-                                var getProduct = packingItems.map((item) => {
-                                    var productName = `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}`;
+                                var getProduct = packingItems.map((packingItem) => {
+                                    var productName = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -172,14 +172,14 @@ module.exports = class PackingManager extends BaseManager {
                                 });
                                 return Promise.all(getProduct)
                                     .then((products) => {
-                                        var index = 0
+                                        var index = 0;
                                         var createPackingProducts = [];
                                         for (var packingItem of packingItems) {
                                             var productNameComposition = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                             var product = products.find((product) => product !== null && product.name.toString() === productNameComposition.toString())
                                             if (!product) {
                                                 var packingProduct = {
-                                                    code: generateCode(index++),
+                                                    code: generateCode(productNameComposition + index++),
                                                     currency: {},
                                                     description: "",
                                                     name: productNameComposition,
@@ -209,13 +209,11 @@ module.exports = class PackingManager extends BaseManager {
                                         }
                                         return Promise.all(createPackingProducts)
                                     })
-                                    .then((results) => id);
+                                    .then((results) => id)
                             })
                     })
             })
     }
-
-
 
     _validate(fabricQualityControl) {
         var errors = {};
