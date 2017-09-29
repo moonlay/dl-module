@@ -106,11 +106,12 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             });
             var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
             var getPoExternal = [];
-            for (var doItem of valid.items || [])
+            for (var doItem of valid.items || []) {
                 if (doItem.hasOwnProperty("purchaseOrderExternalId")) {
                     if (ObjectId.isValid(doItem.purchaseOrderExternalId))
                         getPoExternal.push(this.purchaseOrderExternalManager.getSingleByIdOrDefault(doItem.purchaseOrderExternalId));
                 }
+            }
             valid.items = valid.items || [];
             var currencies = valid.items.map((doItem) => {
                 return doItem.fulfillments.map((fulfillment) => {
@@ -217,7 +218,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                             fulfillmentError["conversion"] = i18n.__("DeliveryOrder.items.fulfillments.conversion.isRequired:%s must not be 1", i18n.__("DeliveryOrder.items.fulfillments.conversion._:Conversion"));
                                         }
                                     }
-                                }else{
+                                } else {
                                     fulfillmentError["uomConversion"] = i18n.__("DeliveryOrder.items.fulfillments.uomConversion.isRequired:%s is required", i18n.__("DeliveryOrder.items.fulfillments.uomConversion._:Uom Conversion"));
                                 }
 
@@ -268,10 +269,10 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         if (poExternal) {
                             item.purchaseOrderExternalNo = poExternal.no;
                             item.purchaseOrderExternalId = new ObjectId(poExternal._id);
-                            item.paymentMethod= poExternal.paymentMethod;
-                            item.paymentType= poExternal.paymentType;
-                            item.paymentDueDays= poExternal.paymentDueDays;
-                            
+                            item.paymentMethod = poExternal.paymentMethod;
+                            item.paymentType = poExternal.paymentType;
+                            item.paymentDueDays = poExternal.paymentDueDays;
+
                             for (var fulfillment of item.fulfillments) {
                                 var poInternal = poExternal.items.find(poInternal => fulfillment.purchaseOrderId.toString() === poInternal.poId.toString() && fulfillment.product._id.toString() === poInternal.product._id.toString())
                                 if (poInternal) {
@@ -404,6 +405,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             var deliveryOrder = realization.deliveryOrder;
                             var fulfillment = {
                                 deliveryOrderNo: deliveryOrder.no,
+                                deliveryOrderUseCustoms: deliveryOrder.useCustoms,
                                 deliveryOrderDeliveredQuantity: Number(realization.deliveredQuantity),
                                 deliveryOrderDate: deliveryOrder.date,
                                 supplierDoDate: deliveryOrder.supplierDoDate
@@ -605,12 +607,14 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                         if (item) {
                                             var index = poItem.fulfillments.indexOf(item);
                                             poItem.fulfillments[index].deliveryOrderNo = deliveryOrder.no;
+                                            poItem.fulfillments[index].deliveryOrderUseCustoms = deliveryOrder.useCustoms;
                                             poItem.fulfillments[index].deliveryOrderDeliveredQuantity = Number(realization.deliveredQuantity);
                                             poItem.fulfillments[index].deliveryOrderDate = deliveryOrder.date;
                                             poItem.fulfillments[index].supplierDoDate = deliveryOrder.supplierDoDate;
                                         } else {
                                             var fulfillment = {
                                                 deliveryOrderNo: deliveryOrder.no,
+                                                deliveryOrderUseCustoms: deliveryOrder.useCustoms,
                                                 deliveryOrderDeliveredQuantity: Number(realization.deliveredQuantity),
                                                 deliveryOrderDate: deliveryOrder.date,
                                                 supplierDoDate: deliveryOrder.supplierDoDate
