@@ -1,5 +1,5 @@
 require("should");
-var dataUtil = require("../../data-util/garment-purchasing/purchase-price-correction-data-util");
+var dataUtil = require("../../data-util/garment-purchasing/purchase-quantity-correction-data-util");
 var helper = require("../../helper");
 var validatePO = require("dl-models").validator.garmentPurchasing.garmentPurchaseOrder;
 var moment = require('moment');
