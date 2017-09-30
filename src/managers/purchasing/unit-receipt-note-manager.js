@@ -13,6 +13,8 @@ var SupplierManager = require('../master/supplier-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
+var StorageManager = require('../master/storage-manager');
+var TextileInventoryDocumentManager = require('../inventory-textile/textile-inventory-document-manager');
 
 module.exports = class UnitReceiptNoteManager extends BaseManager {
     constructor(db, user) {
@@ -22,6 +24,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
         this.unitManager = new UnitManager(db, user);
         this.supplierManager = new SupplierManager(db, user);
+        this.storageManager = new StorageManager(db, user);
+        this.textileInventoryDocumentManager = new TextileInventoryDocumentManager(db,user);
         this.deliveryOrderFields = [
             "no",
             "refNo",
@@ -324,18 +328,105 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return this.getSingleById(id)
             .then((unitReceiptNote) => this.updatePurchaseOrder(unitReceiptNote))
             .then((unitReceiptNote) => this.updateDeliveryOrder(unitReceiptNote))
-            .then(() => {
-                return this.syncItems(id);
+            .then((unitReceiptNote) => {
+                return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
+                .then(storage=>{
+                    var items=[];
+                    for(var a of unitReceiptNote.items){
+                        var item={
+                            productId:a.product._id.toString(),
+                            quantity:a.deliveredQuantity,
+                            uomId:a.deliveredUom._id,
+                            remark:a.remark
+                        };
+                        items.push(item);
+                    }
+                    var doc={
+                        date:unitReceiptNote.date,
+                        referenceNo: unitReceiptNote.no,
+                        referenceType:"Bon Terima Unit Garment",
+                        type:"IN",
+                        storageId:storage._id,
+                        remark:unitReceiptNote.remark,
+                        items:items
+                    }
+                
+                    return this.textileInventoryDocumentManager.create(doc)
+                    .then( ()=> { 
+                        return this.syncItems(id);
+                    });
+                })
+                
             })
+    }
+
+    _beforeUpdate(data){
+        return this.getSingleById(data._id)
+            .then(unitReceiptNote => {
+                return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
+                .then(storage=>{
+                    var items=[];
+                    for(var a of unitReceiptNote.items){
+                        var item={
+                            productId:a.product._id.toString(),
+                            quantity:a.deliveredQuantity,
+                            uomId:a.deliveredUom._id,
+                            remark:a.remark
+                        };
+                        items.push(item);
+                    }
+                    var doc={
+                        date:unitReceiptNote.date,
+                        referenceNo: unitReceiptNote.no,
+                        referenceType:"Bon Terima Unit Garment",
+                        type:"OUT",
+                        storageId:storage._id,
+                        remark:unitReceiptNote.remark,
+                        items:items
+                    }
+                
+                    return this.textileInventoryDocumentManager.create(doc)
+                    .then( (id)=> { 
+                        return Promise.resolve(data);
+                    });
+                })
+            });
     }
 
     _afterUpdate(id) {
         return this.getSingleById(id)
             .then((unitReceiptNote) => this.updatePurchaseOrderUpdateUnitReceiptNote(unitReceiptNote))
             .then((unitReceiptNote) => this.updateDeliveryOrderUpdateUnitReceiptNote(unitReceiptNote))
-            .then(() => {
-                return this.syncItems(id);
+            .then((unitReceiptNote) => {
+                return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
+                .then(storage=>{
+                    var items=[];
+                    for(var a of unitReceiptNote.items){
+                        var item={
+                            productId:a.product._id.toString(),
+                            quantity:a.deliveredQuantity,
+                            uomId:a.deliveredUom._id,
+                            remark:a.remark
+                        };
+                        items.push(item);
+                    }
+                    var doc={
+                        date:unitReceiptNote.date,
+                        referenceNo: unitReceiptNote.no,
+                        referenceType:"Bon Terima Unit Garment",
+                        type:"IN",
+                        storageId:storage._id,
+                        remark:unitReceiptNote.remark,
+                        items:items
+                    }
+                
+                    return this.textileInventoryDocumentManager.create(doc)
+                    .then( ()=> { 
+                        return this.syncItems(id);
+                    });
+                })
             })
+                
     }
 
     updatePurchaseOrder(unitReceiptNote) {
@@ -770,8 +861,34 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         return this.getSingleByQuery(query)
                             .then((unitReceiptNote) => this.updatePurchaseOrderDeleteUnitReceiptNote(unitReceiptNote))
                             .then((unitReceiptNote) => this.updateDeliveryOrderDeleteUnitReceiptNote(unitReceiptNote))
-                            .then(() => {
-                                return this.syncItems(id);
+                            .then((unitReceiptNote) => {
+                                return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
+                                .then(storage=>{
+                                    var items=[];
+                                    for(var a of unitReceiptNote.items){
+                                        var item={
+                                            productId:a.product._id.toString(),
+                                            quantity:a.deliveredQuantity,
+                                            uomId:a.deliveredUom._id,
+                                            remark:a.remark
+                                        };
+                                        items.push(item);
+                                    }
+                                    var doc={
+                                        date:unitReceiptNote.date,
+                                        referenceNo: unitReceiptNote.no,
+                                        referenceType:"Bon Terima Unit Garment",
+                                        type:"OUT",
+                                        storageId:storage._id,
+                                        remark:unitReceiptNote.remark,
+                                        items:items
+                                    }
+                                
+                                    return this.textileInventoryDocumentManager.create(doc)
+                                    .then( ()=> { 
+                                        return this.syncItems(id);
+                                    });
+                                })
                             })
                     })
             });
