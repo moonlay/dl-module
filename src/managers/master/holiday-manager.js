@@ -8,7 +8,7 @@ var map = DLModels.map;
 var Holiday = DLModels.master.Holiday;
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
-// var assert = require('assert');
+ var assert = require('assert');
 var DivisionManager = require('./division-manager');
 var generateCode = require("../../utils/code-generator");
 
