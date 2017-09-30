@@ -265,7 +265,7 @@ module.exports = {
         },
         garment: {
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
-            factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager"),
+            factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager")
         }
     }
 }

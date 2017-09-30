@@ -751,103 +751,6 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    /*getUnitReceiptNotes(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, offset, createdBy) {
-        return new Promise((resolve, reject) => {
-            var query = Object.assign({});
-
-            var deleted = { _deleted: false };
-
-            if (_no !== "undefined" && _no !== "") {
-                var no = { no: _no };
-                Object.assign(query, no);
-            }
-            if (_unitId !== "undefined" && _unitId !== "") {
-                var unitId = { unitId: new ObjectId(_unitId) };
-                Object.assign(query, unitId);
-            }
-            if (_categoryId !== "undefined" && _categoryId !== "") {
-                var categoryId = {
-                    "items": {
-                        $elemMatch: {
-                            "purchaseOrder.categoryId": new ObjectId(_categoryId)
-                        }
-                    }
-                };
-                Object.assign(query, categoryId);
-            }
-            if (_supplierId !== "undefined" && _supplierId !== "") {
-                var supplierId = { supplierId: new ObjectId(_supplierId) };
-                Object.assign(query, supplierId);
-            }
-            if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
-                var dateFrom = new Date(_dateFrom);
-                var dateTo = new Date(_dateTo);
-                dateFrom.setHours(dateFrom.getHours() - offset);
-                dateTo.setHours(dateTo.getHours() - offset);
-
-                var date = {
-                    date: {
-                        $gte: dateFrom,
-                        $lte: dateTo
-                    }
-                };
-                Object.assign(query, date);
-            }
-            if (createdBy !== undefined && createdBy !== "") {
-                Object.assign(query, {
-                    _createdBy: createdBy
-                });
-            }
-            Object.assign(query, deleted);
-
-            this.collection
-                .where(query)
-                .execute()
-                .then(result => {
-                    resolve(result.data);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }*/
-
-    /*getUnitReceiptWithoutSpb(_dateFrom, _dateTo) {
-        return new Promise((resolve, reject) => {
-            var query = Object.assign({});
-            var deleted = { _deleted: false };
-            var bayar = { isPaid: false };
-
-
-            if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
-                var dateFrom = new Date(_dateFrom);
-                var dateTo = new Date(_dateTo);
-
-                var date = {
-                    date: {
-                        $gte: dateFrom,
-                        $lte: dateTo
-                    }
-                };
-                Object.assign(query, date);
-            }
-
-            Object.assign(query, deleted);
-            Object.assign(query, bayar);
-
-
-            this.collection
-                .where(query)
-                .execute()
-                .then(result => {
-                    resolve(result.data);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }*/
-
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.garmentPurchasing.collection.GarmentUnitReceiptNote}_date`,
@@ -872,40 +775,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         }
         return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
-
-    /*getAllData(filter) {
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                return new Promise((resolve, reject) => {
-                    var query = Object.assign({});
-                    query = Object.assign(query, filter);
-                    query = Object.assign(query, {
-                        _deleted: false
-                    });
-
-                    var _select = ["no",
-                        "date",
-                        "unit",
-                        "supplier",
-                        "deliveryOrder.no",
-                        "remark",
-                        "_createdBy",
-                        "items.product",
-                        "items.deliveredQuantity",
-                        "items.deliveredUom",
-                        "items.remark"];
-
-                    this.collection.where(query).select(_select).execute()
-                        .then((results) => {
-                            resolve(results.data);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                });
-            });
-    }*/
-
+    
     updateCollectionUnitReceiptNote(unitReceiptNote) {
         if (!unitReceiptNote.stamp) {
             unitReceiptNote = new UnitReceiptNote(unitReceiptNote);
@@ -930,6 +800,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         }
         return newArr;
     }
+
     getUnitReceiptReport(query, user) {
         return new Promise((resolve, reject) => {
 
@@ -1014,6 +885,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 });
         });
     }
+    
     getUnitReceiptReportXls(dataReport, query) {
 
         return new Promise((resolve, reject) => {
