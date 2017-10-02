@@ -770,7 +770,7 @@ module.exports = function (pox, offset) {
                         },
                         {
                             width: '80%',
-                            stack: pox.qualityStandard.pieceLength
+                            text: pox.qualityStandard.pieceLength
                         }
                     ]
                 }
