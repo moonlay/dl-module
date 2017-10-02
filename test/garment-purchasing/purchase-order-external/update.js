@@ -28,6 +28,7 @@ before('#00. connect db', function (done) {
             Promise.all([get2newPurchaseOrder])
                 .then(results => {
                     purchaseOrders = results[0];
+                    done()
                 })
                 .catch(e => {
                     done(e);
