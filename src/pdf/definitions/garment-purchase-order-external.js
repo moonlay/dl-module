@@ -32,7 +32,7 @@ module.exports = function (pox, offset) {
 
     items = [].concat.apply([], items);
 
-    var iso = pox.category.code === "FABRIC" ? "FM-00-PJ-02-004" : "FM-PB-00-06-009/R1";
+    var iso = pox.category === "FABRIC" ? "FM-00-PJ-02-004" : "FM-PB-00-06-009/R1";
     var number = pox.no;
     var currency = pox.currency.code;
     var supplier = pox.supplier.name;
@@ -357,14 +357,14 @@ module.exports = function (pox, offset) {
         }, 0);
 
     var incomeTaxValue = pox.useIncomeTax ? sum * 0.1 : 0;
-    var vatValue = pox.useVat ? sum * pox.rate / 100 : 0;
+    var vatValue = pox.useVat ? sum * pox.vat.rate / 100 : 0;
 
 
     var tfootTextImport = [
         [{
             text: 'TOTAL QUANTITY',
             style: ['size08', 'bold', 'right'],
-        },null, {
+        }, null, {
             text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
             style: ['size08', 'right']
         }, {
@@ -455,7 +455,7 @@ module.exports = function (pox, offset) {
         [{
             text: 'Total Jumlah',
             style: ['size08', 'bold', 'right'],
-        },null, {
+        }, null, {
             text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
             style: ['size08', 'right']
         }, {
@@ -778,7 +778,7 @@ module.exports = function (pox, offset) {
         }
     ];
 
-    if (pox.category.code === "FABRIC") {
+    if (pox.category === "FABRIC") {
         footer = footer.concat(stdQ)
     }
     var signatureText = pox.supplier.import == true ? ['\n\n\n',
