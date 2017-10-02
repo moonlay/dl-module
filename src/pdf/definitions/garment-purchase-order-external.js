@@ -364,9 +364,9 @@ module.exports = function (pox, offset) {
         [{
             text: 'TOTAL QUANTITY',
             style: ['size08', 'bold', 'right'],
-        }, {
+        },null, {
             text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
-            style: ['size08', 'bold', 'right']
+            style: ['size08', 'right']
         }, {
             text: 'TOTAL',
             style: ['size08', 'bold', 'right'],
@@ -380,14 +380,14 @@ module.exports = function (pox, offset) {
                 style: ['right']
             }],
             style: ['size08']
-        }],
+        }]
     ];
 
     var tfootTextLocalUseVat = [
         [{
             text: 'Total Jumlah',
             style: ['size08', 'bold', 'right'],
-        }, {
+        }, null, {
             text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
             style: ['size08', 'right']
         }, {
@@ -455,7 +455,7 @@ module.exports = function (pox, offset) {
         [{
             text: 'Total Jumlah',
             style: ['size08', 'bold', 'right'],
-        }, {
+        },null, {
             text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
             style: ['size08', 'right']
         }, {
