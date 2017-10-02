@@ -358,6 +358,7 @@ module.exports = function (pox, offset) {
 
     var incomeTaxValue = pox.useIncomeTax ? sum * 0.1 : 0;
     var vatValue = pox.useVat ? sum * pox.vat.rate / 100 : 0;
+    var vatName = pox.vat ? `${pox.vat.name} ${pox.vat.name}` : 0;
 
 
     var tfootTextImport = [
@@ -420,7 +421,7 @@ module.exports = function (pox, offset) {
             style: ['size08']
         }],
         [{
-            text: `PPH ${pox.vat.name} ${pox.vat.rate}`,
+            text: `PPH ${vatName}`,
             style: ['size08', 'bold', 'right'],
             colSpan: 4
         }, null, null, null, {
