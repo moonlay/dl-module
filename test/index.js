@@ -119,6 +119,11 @@ describe('#dl-module', function (done) {
     test('@GARMENT PURCHASING/PURCHASE QUANTITY CORRECTION', './garment-purchasing/purchase-quantity-correction');
     test('@GARMENT PURCHASING/garment currency', './garment-purchasing/garment-currency');
 
+     //Inventory-Textile
+    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-SUMMARY', './inventory-textile/textile-inventory-summary');
+    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-MOVEMENT', './inventory-textile/textile-inventory-movement');
+    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-DOCUMENT', './inventory-textile/textile-inventory-document');
+
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
     test('@SALES/FINISHING PRINTING SALES CONTRACT', './sales/finishing-printing-sales-contract');
@@ -150,8 +155,5 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
     test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
 
-    //Inventory-Textile
-    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-SUMMARY', './inventory-textile/textile-inventory-summary');
-    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-MOVEMENT', './inventory-textile/textile-inventory-movement');
-    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-DOCUMENT', './inventory-textile/textile-inventory-document');
+   
 });
