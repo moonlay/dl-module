@@ -149,10 +149,10 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                     else if (!valid.deliveryOrder)
                         errors["deliveryOrderId"] = i18n.__("PurchaseQuantityCorrection.deliveryOrder.isRequired:%s is required", i18n.__("PurchaseQuantityCorrection.deliveryOrder._:Delivery Order"));
 
-                    if (!valid.date || valid.date == '')
-                        errors["date"] = i18n.__("PurchaseQuantityCorrection.date.isRequired:%s is required", i18n.__("PurchaseQuantityCorrection.date._:Correction Date"));
-                    if (new Date(valid.date) > now)
-                        errors["date"] = i18n.__("PurchaseQuantityCorrection.date.isGreater:%s is greater than now", i18n.__("PurchaseQuantityCorrection.date._:Correction Date"));
+                    // if (!valid.date || valid.date == '')
+                    //     errors["date"] = i18n.__("PurchaseQuantityCorrection.date.isRequired:%s is required", i18n.__("PurchaseQuantityCorrection.date._:Correction Date"));
+                    // if (new Date(valid.date) > now)
+                    //     errors["date"] = i18n.__("PurchaseQuantityCorrection.date.isGreater:%s is greater than now", i18n.__("PurchaseQuantityCorrection.date._:Correction Date"));
 
                     if (valid.items && !ObjectId.isValid(valid._id)) {
                         if (valid.items.length > 0) {
@@ -222,6 +222,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
 
     _beforeInsert(purchaseQuantityCorrection) {
         purchaseQuantityCorrection.no = generateCode();
+        purchaseQuantityCorrection.date = new Date();
         return Promise.resolve(purchaseQuantityCorrection);
     }
 

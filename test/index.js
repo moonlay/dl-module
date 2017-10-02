@@ -74,7 +74,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/PROCESS-TYPE', './master/process-type');
     test('@MASTER/COLOR-TYPE', './master/color-type');
     test('@MASTER/INSTRUCTION', './master/instruction');
-    
+
     // test('@MASTER/MONITORING-EVENT-TYPE', './master/monitoring-event-type');
     test('@MASTER/STEP', './master/step');
     //test('@MASTER/MACHINE-TYPE', './master/machine-type');
@@ -88,6 +88,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/TERM OF PAYMENT', './master/term-of-payment');
     test('@MASTER/DESIGN-MOTIVE', './master/design-motive');
     test('@MASTER/STORAGE', './master/storage');
+    test('@MASTER/HOLIDAY', './master/holiday');    
     test('@MASTER/COMPANY', './master/company');
     test('@MASTER/CONTACT', './master/contact');
     test('@MASTER/BAD OUTPUT REASON', './master/bad-output-reason');
