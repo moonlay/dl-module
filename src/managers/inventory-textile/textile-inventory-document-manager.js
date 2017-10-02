@@ -193,11 +193,11 @@ module.exports = class TextileInventoryDocumentManager extends BaseManager {
                         else if (!_uoms.find(uom => uom._id.toString() === item.uomId.toString()))
                             itemsError["uomId"] = i18n.__("TextileInventoryDocument.items.uomId.isNotExist:%s is not exist", i18n.__("TextileInventoryDocument.items.uomId._:UOM"));
 
-                        if (!itemsError.productId && !itemsError.uomId) {
-                            var dup = valid.items.find((test, idx) => item.productId.toString() === test.productId.toString() && item.uomId.toString() === test.uomId.toString() && index != idx);
-                            if (dup)
-                                itemsError["productId"] = i18n.__("TextileInventoryDocument.items.productId.isDuplicate:%s is duplicate", i18n.__("TextileInventoryDocument.items.productId._:Product"));
-                        }
+                        // if (!itemsError.productId && !itemsError.uomId) {
+                        //     var dup = valid.items.find((test, idx) => item.productId.toString() === test.productId.toString() && item.uomId.toString() === test.uomId.toString() && index != idx);
+                        //     if (dup)
+                        //         itemsError["productId"] = i18n.__("TextileInventoryDocument.items.productId.isDuplicate:%s is duplicate", i18n.__("TextileInventoryDocument.items.productId._:Product"));
+                        // }
 
                         if (item.quantity === 0)
                             itemsError["quantity"] = i18n.__("TextileInventoryDocument.items.quantity.isRequired:%s is required", i18n.__("TextileInventoryDocument.items.quantity._:Quantity"));

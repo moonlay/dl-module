@@ -14,7 +14,7 @@ var TextileInventoryMovementModel = Models.inventoryTextile.TextileInventoryMove
 
 class TextileInventoryDocumentDataUtil {
     getNewData() {
-        return Promise.all([productDataUtil.getTestData(), productDataUtil.getTestData2(), storageDataUtil.getTextileInventoryTestData(), uomDataUtil.getTestData()])
+        return Promise.all([productDataUtil.getTestData(), productDataUtil.getTestData2(), storageDataUtil.getTestData(), uomDataUtil.getTestData()])
             .then(result => {
                 var product = result[0];
                 var product2 = result[1];
