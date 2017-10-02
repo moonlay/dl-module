@@ -64,6 +64,7 @@ it('#03. should success when create report', function (done) {
     info.shiftIm = createdData.shiftIm;
     info.dateFrom = moment(createdData.dateIm).format("YYYY-MM-DD");
     info.dateTo = moment(createdData.dateIm).format("YYYY-MM-DD");
+    info.select = ["code", "kanbanCode", "cartNo", "productionOrderType", "productionOrderNo", "dateIm", "shiftIm", "operatorIm", "machineNoIm", "construction", "buyer", "color", "orderQuantity", "packingInstruction", "fabricGradeTests.pcsNo", "fabricGradeTests.initLength", "fabricGradeTests.width", "fabricGradeTests.finalScore", "fabricGradeTests.grade", "fabricGradeTests.avalLength", "fabricGradeTests.sampleLength"];
 
     fabricQualityControlManager.getReport(info)
         .then(result => {
