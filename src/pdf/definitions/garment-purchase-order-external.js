@@ -364,7 +364,7 @@ module.exports = function (pox, offset) {
         [{
             text: 'TOTAL QUANTITY',
             style: ['size08', 'bold', 'right'],
-        }, null, {
+        },null, {
             text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
             style: ['size08', 'right']
         }, {
@@ -455,7 +455,7 @@ module.exports = function (pox, offset) {
         [{
             text: 'Total Jumlah',
             style: ['size08', 'bold', 'right'],
-        }, null, {
+        },null, {
             text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
             style: ['size08', 'right']
         }, {
@@ -629,13 +629,13 @@ module.exports = function (pox, offset) {
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
+                                            width: '20%',
                                             text: 'Shrinkage test untuk'
                                         }, {
                                             width: '2%',
                                             text: ''
                                         }, {
-                                            width: '68%',
+                                            width: '*',
                                             text: pox.qualityStandard.shrinkage
                                         }
                                     ]
@@ -643,22 +643,22 @@ module.exports = function (pox, offset) {
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
+                                            width: '20%',
                                             text: 'Rubbing test'
                                         }, {
                                             width: '2%',
                                             text: ':'
                                         }, {
-                                            width: '68%',
+                                            width: '*',
                                             columns: [
                                                 {
-                                                    width: '30%',
+                                                    width: '20%',
                                                     text: 'Wet Rubbing'
                                                 }, {
                                                     width: '2%',
                                                     text: ':'
                                                 }, {
-                                                    width: '68%',
+                                                    width: '*',
                                                     text: pox.qualityStandard.wetRubbing
                                                 }
                                             ]
@@ -668,22 +668,22 @@ module.exports = function (pox, offset) {
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
+                                            width: '20%',
                                             text: ' '
                                         }, {
                                             width: '2%',
                                             text: ' '
                                         }, {
-                                            width: '68%',
+                                            width: '*',
                                             columns: [
                                                 {
-                                                    width: '30%',
+                                                    width: '20%',
                                                     text: 'Dry Rubbing'
                                                 }, {
                                                     width: '2%',
                                                     text: ':'
                                                 }, {
-                                                    width: '68%',
+                                                    width: '*',
                                                     text: pox.qualityStandard.dryRubbing
                                                 }
                                             ]
@@ -693,13 +693,13 @@ module.exports = function (pox, offset) {
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
+                                            width: '20%',
                                             text: 'Washing test'
                                         }, {
                                             width: '2%',
                                             text: ':'
                                         }, {
-                                            width: '68%',
+                                            width: '*',
                                             text: pox.qualityStandard.washing
                                         }
                                     ]
@@ -707,22 +707,22 @@ module.exports = function (pox, offset) {
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
+                                            width: '20%',
                                             text: 'Perspiration test'
                                         }, {
                                             width: '2%',
                                             text: ':'
                                         }, {
-                                            width: '68%',
+                                            width: '*',
                                             columns: [
                                                 {
-                                                    width: '30%',
+                                                    width: '20%',
                                                     text: 'Dark'
                                                 }, {
                                                     width: '2%',
                                                     text: ':'
                                                 }, {
-                                                    width: '68%',
+                                                    width: '*',
                                                     text: pox.qualityStandard.darkPerspiration
                                                 }
                                             ]
@@ -732,22 +732,22 @@ module.exports = function (pox, offset) {
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
+                                            width: '20%',
                                             text: ' '
                                         }, {
                                             width: '2%',
                                             text: ' '
                                         }, {
-                                            width: '68%',
+                                            width: '*',
                                             columns: [
                                                 {
-                                                    width: '30%',
+                                                    width: '20%',
                                                     text: 'Light/Med'
                                                 }, {
                                                     width: '2%',
                                                     text: ':'
                                                 }, {
-                                                    width: '68%',
+                                                    width: '*',
                                                     text: pox.qualityStandard.lightMedPerspiration
                                                 }
                                             ]
