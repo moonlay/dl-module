@@ -335,25 +335,25 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                     qualityStandardError["shrinkage"] = i18n.__("PurchaseOrderExternal.qualityStandard.shrinkage.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.shrinkage._:Shrinkage"));
                                                 }
                                                 if ((valid.qualityStandard.wetRubbing || "").toString() === "") {
-                                                    qualityStandardError["wetRubbing"] = i18n.__("PurchaseOrderExternal.qualityStandard.wetRubbing.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.wetRubbing._:Shrinkage"));
+                                                    qualityStandardError["wetRubbing"] = i18n.__("PurchaseOrderExternal.qualityStandard.wetRubbing.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.wetRubbing._:Wet Rubbing"));
                                                 }
                                                 if ((valid.qualityStandard.dryRubbing || "").toString() === "") {
-                                                    qualityStandardError["dryRubbing"] = i18n.__("PurchaseOrderExternal.qualityStandard.dryRubbing.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.dryRubbing._:Shrinkage"));
+                                                    qualityStandardError["dryRubbing"] = i18n.__("PurchaseOrderExternal.qualityStandard.dryRubbing.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.dryRubbing._:Dry Rubbing"));
                                                 }
                                                 if ((valid.qualityStandard.washing || "").toString() === "") {
-                                                    qualityStandardError["washing"] = i18n.__("PurchaseOrderExternal.qualityStandard.washing.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.washing._:Shrinkage"));
+                                                    qualityStandardError["washing"] = i18n.__("PurchaseOrderExternal.qualityStandard.washing.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.washing._:Washing"));
                                                 }
                                                 if ((valid.qualityStandard.darkPerspiration || "").toString() === "") {
-                                                    qualityStandardError["darkPerspiration"] = i18n.__("PurchaseOrderExternal.qualityStandard.darkPerspiration.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.darkPerspiration._:Shrinkage"));
+                                                    qualityStandardError["darkPerspiration"] = i18n.__("PurchaseOrderExternal.qualityStandard.darkPerspiration.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.darkPerspiration._:Dark Perspiration"));
                                                 }
                                                 if ((valid.qualityStandard.lightMedPerspiration || "").toString() === "") {
-                                                    qualityStandardError["lightMedPerspiration"] = i18n.__("PurchaseOrderExternal.qualityStandard.lightMedPerspiration.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.lightMedPerspiration._:Shrinkage"));
+                                                    qualityStandardError["lightMedPerspiration"] = i18n.__("PurchaseOrderExternal.qualityStandard.lightMedPerspiration.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.lightMedPerspiration._:Light/Med Perspoiration"));
                                                 }
                                                 if ((valid.qualityStandard.pieceLength || "").toString() === "") {
                                                     qualityStandardError["pieceLength"] = i18n.__("PurchaseOrderExternal.qualityStandard.pieceLength.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.pieceLength._:Shrinkage"));
                                                 }
                                                 if ((valid.qualityStandard.qualityStandardType || "").toString() === "") {
-                                                    qualityStandardError["qualityStandardType"] = i18n.__("PurchaseOrderExternal.qualityStandard.qualityStandardType.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.qualityStandardType._:Shrinkage"));
+                                                    qualityStandardError["qualityStandardType"] = i18n.__("PurchaseOrderExternal.qualityStandard.qualityStandardType.isRequired:%s is required", i18n.__("PurchaseOrderExternal.qualityStandard.qualityStandardType._:Quality Standard Type"));
                                                 }
                                                 if (Object.getOwnPropertyNames(qualityStandardError).length > 0) {
                                                     error.qualityStandard = qualityStandardError;
