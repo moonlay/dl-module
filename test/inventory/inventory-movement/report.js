@@ -53,9 +53,29 @@ it(`#02. should success when get created data with id`, function (done) {
         });
 });
 
+it('#03. should success when create report', function (done) {
+    var info = {};
+    info.storageId = createdData.storageId;
+    info.type = createdData.type;
+    info.productId = createdData.productId;
+    info.shiftIm = createdData.shiftIm;
+    info.dateFrom = moment("1970-01-01").format("YYYY-MM-DD");
+    info.dateTo = moment().format("YYYY-MM-DD");
+
+    inventoryMovementManager.getMovementReport(info)
+        .then(result => {
+            var inventoryMovement = result.data;
+            inventoryMovement.should.instanceof(Array);
+            inventoryMovement.length.should.not.equal(0);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
 
 var resultForExcelTest = {};
-it("#03. should success when read data", function (done) {
+it("#04. should success when read data", function (done) {
     inventoryMovementManager.read({
         filter: {
             _id: createdId
@@ -73,8 +93,9 @@ it("#03. should success when read data", function (done) {
         });
 });
 
+
 var filter = {};
-it('#04. should success when get data for Excel Report', function (done) {
+it('#05. should success when get data for Excel Report', function (done) {
     inventoryMovementManager.getXls(resultForExcelTest, filter)
         .then(xlsData => {
             xlsData.should.have.property('data');
@@ -87,7 +108,7 @@ it('#04. should success when get data for Excel Report', function (done) {
 });
 
 
-it("#05. should success when destroy all unit test data", function (done) {
+it("#06. should success when destroy all unit test data", function (done) {
     inventoryMovementManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();
