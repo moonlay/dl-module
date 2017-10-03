@@ -199,7 +199,7 @@ module.exports = function (data, offset) {
             text: 'Tgl. Surat Jalan',
             style: ['size06', 'bold', 'center']
         }, {
-            text: 'Plan PO',
+            text: 'Nomor referensi PO',
             style: ['size06', 'bold', 'center']
         }, {
             text: 'Keterangan Barang',
