@@ -6,6 +6,7 @@ var assert = require('assert');
 var map = DLModels.map;
 var i18n = require('dl-i18n');
 var PurchaseOrderManager = require('./purchase-order-manager');
+var PurchaseOrderExternalManager = require('./purchase-order-external-manager');
 var DeliveryOrderManager = require('./delivery-order-manager');
 var PurchaseQuantityCorrection = DLModels.garmentPurchasing.GarmentPurchaseCorrection;
 var BaseManager = require('module-toolkit').BaseManager;
@@ -30,6 +31,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
         super(db, user);
         this.collection = this.db.use(map.garmentPurchasing.collection.GarmentPurchaseCorrection);
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
+        this.purchaseOrderExternalManager = new PurchaseOrderExternalManager(db, user);
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
     }
 
@@ -233,6 +235,9 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
             .then((purchaseQuantityCorrection) => {
                 return this.updatePOInternal(purchaseQuantityCorrection);
             })
+            .then((purchaseQuantityCorrection) => {
+                return this.updatePOExternal(purchaseQuantityCorrection);
+            })
             .then(() => {
                 return Promise.resolve(id);
             });
@@ -349,6 +354,26 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 });
             jobs.push(job);
         })
+
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(purchaseQuantityCorrection);
+        })
+    }
+
+    updatePOExternal(purchaseQuantityCorrection) {
+        var listPurchaseOrderExternalId = purchaseQuantityCorrection.items.map((item) => {
+            return item.purchaseOrderExternalId
+        });
+        listPurchaseOrderExternalId = [].concat.apply([], listPurchaseOrderExternalId);
+        var jobs = [];
+        for (var purchaseOrderExternalId of listPurchaseOrderExternalId) {
+            var job = this.purchaseOrderExternalManager.getSingleById(purchaseOrderExternalId)
+                .then((purchaseOrderExternal) => {
+                    purchaseOrderExternal.isClosed = false;
+                    return this.purchaseOrderExternalManager.update(purchaseOrderExternal);
+                })
+            jobs.push(job);
+        }
 
         return Promise.all(jobs).then((results) => {
             return Promise.resolve(purchaseQuantityCorrection);
