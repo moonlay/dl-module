@@ -60,6 +60,11 @@ module.exports = {
             InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
             InventoryMovementManager: require("./src/managers/inventory/inventory-movement-manager")
         },
+        inventoryTextile: {
+            TextileInventoryDocumentManager: require("./src/managers/inventory-textile/textile-inventory-document-manager"),
+            TextileInventorySummaryManager: require("./src/managers/inventory-textile/textile-inventory-summary-manager"),
+            TextileInventoryMovementManager: require("./src/managers/inventory-textile/textile-inventory-movement-manager")
+        },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
             PurchaseOrderExternalManager: require('./src/managers/purchasing/purchase-order-external-manager'),
@@ -190,6 +195,11 @@ module.exports = {
                 inventoryDocument: require('./test/data-util/inventory/inventory-document-data-util'),
                 inventoryMovement: require('./test/data-util/inventory/inventory-movement-data-util'),
                 inventorySummary: require('./test/data-util/inventory/inventory-summary-data-util')
+            },
+            inventoryTextile: {
+                textileInventoryDocument: require('./test/data-util/inventory-textile/textile-inventory-document-data-util'),
+                textileInventoryMovement: require('./test/data-util/inventory-textile/textile-inventory-movement-data-util'),
+                textileInventorySummary: require('./test/data-util/inventory-textile/textile-inventory-summary-data-util')
             },
             production: {
                 dailyOperation: require('./test/data-util/production/finishing-printing/daily-operation-data-util'),
