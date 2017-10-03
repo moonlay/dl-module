@@ -95,6 +95,11 @@ describe('#dl-module', function (done) {
     test('@MASTER/FINISHING PRINTING DURATION ESTIMATION', './master/fp-duration-estimation');
     test('@MASTER/DEAL TRACKING REASON', './master/deal-tracking-reason');
 
+    //Inventory-Textile
+    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-SUMMARY', './inventory-textile/textile-inventory-summary');
+    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-MOVEMENT', './inventory-textile/textile-inventory-movement');
+    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-DOCUMENT', './inventory-textile/textile-inventory-document');
+
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
     test('@PURCHASING/PURCHASE ORDER', './purchasing/purchase-order');
@@ -150,4 +155,6 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
     test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
+
+    
 });
