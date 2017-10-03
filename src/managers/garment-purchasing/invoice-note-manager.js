@@ -102,22 +102,25 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                             .reduce((prev, curr, index) => {
                                 return prev && curr
                             }, true);
-
-                        var currencies = _deliveryOrders.map((deliveryOrder) => {
-                            var _deliveryOrder = deliveryOrder.items.map((doItem) => {
-                                var _doItem = doItem.fulfillments.map((fulfillment) => {
-                                    return fulfillment.currency.code
+                        _deliveryOrders = this.cleanUp(_deliveryOrders);
+                        var currencies = [];
+                        if (_deliveryOrders) {
+                            currencies = _deliveryOrders.map((deliveryOrder) => {
+                                var _deliveryOrder = deliveryOrder.items.map((doItem) => {
+                                    var _doItem = doItem.fulfillments.map((fulfillment) => {
+                                        return fulfillment.currency.code
+                                    })
+                                    _doItem = [].concat.apply([], _doItem);
+                                    return _doItem;
                                 })
-                                _doItem = [].concat.apply([], _doItem);
-                                return _doItem;
+                                _deliveryOrder = [].concat.apply([], _deliveryOrder);
+                                return _deliveryOrder;
                             })
-                            _deliveryOrder = [].concat.apply([], _deliveryOrder);
-                            return _deliveryOrder;
-                        })
-                        currencies = [].concat.apply([], currencies);
-                        currencies = currencies.filter(function (elem, index, self) {
-                            return index == self.indexOf(elem);
-                        })
+                            currencies = [].concat.apply([], currencies);
+                            currencies = currencies.filter(function (elem, index, self) {
+                                return index == self.indexOf(elem);
+                            })
+                        }
 
                         if (_invoiceNote) {
                             errors["no"] = i18n.__("InvoiceNote.no.isExist:%s is exist", i18n.__("InvoiceNote.no._:No"));
@@ -795,5 +798,14 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             xls.name = `Invoice.xlsx`;
 
         return Promise.resolve(xls);
+    }
+    cleanUp(input) {
+        var newArr = [];
+        for (var i = 0; i < input.length; i++) {
+            if (input[i]) {
+                newArr.push(input[i]);
+            }
+        }
+        return newArr;
     }
 };
