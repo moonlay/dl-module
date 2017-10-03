@@ -29,7 +29,8 @@ class CategoryDataUtil {
         var data = {
             code: "UT/CATEGORY/01",
             name: "Category 01",
-            codeRequirement: ""
+            codeRequirement: "",
+
         };
         return this.getSert(data);
     }
