@@ -281,7 +281,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return query;
     }
 
-    getPurchaseOrderByTag(user, categoryId, keyword, shipmentDateFrom, shipmentDateTo) {
+    // getPurchaseOrderByTag(user, categoryId, keyword, shipmentDateFrom, shipmentDateTo) {        
+    getPurchaseOrderByTag(user, keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -289,7 +290,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
                     var query = Object.assign({});
                     var queryCategory = {
-                        "items.categoryId": new ObjectId(categoryId),
+                        // "items.categoryId": new ObjectId(categoryId),
                         "items.isPosted": false,
                         "items.isClosed": false
                     };

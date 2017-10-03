@@ -22,6 +22,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(Map.inventory.collection.InventoryMovement);
+        this.inventoryDocumentCollection = this.db.use(Map.inventory.collection.InventoryDocument);
 
         this.inventorySummaryManager = new InventorySummaryManager(db, user);
         this.storageManager = new StorageManager(db, user);
@@ -56,7 +57,8 @@ module.exports = class InventoryMovementManager extends BaseManager {
     }
 
     _beforeInsert(data) {
-        data.code = generateCode();
+        if (!data.code)
+            data.code = generateCode();
 
         return Promise.resolve(data);
     }
@@ -71,13 +73,13 @@ module.exports = class InventoryMovementManager extends BaseManager {
                         uomId: inventoryMovement.uomId
                     }
                 }, {
-                        "$group": {
-                            _id: null,
-                            quantity: {
-                                '$sum': '$quantity'
-                            }
+                    "$group": {
+                        _id: null,
+                        quantity: {
+                            '$sum': '$quantity'
                         }
-                    }]).toArray().then(results => results[0]);
+                    }
+                }]).toArray().then(results => results[0]);
 
                 var getSummary = this.inventorySummaryManager.getSert(inventoryMovement.productId, inventoryMovement.storageId, inventoryMovement.uomId);
 
@@ -163,7 +165,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
                 } else {
                     valid.after = _dbInventorySummary.quantity + valid.quantity;
                 }
-                
+
                 if (!valid.stamp) {
                     valid = new InventoryMovementModel(valid);
                 }
@@ -204,6 +206,19 @@ module.exports = class InventoryMovementManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, productIndex, storageIndex, uomIndex]);
     }
 
+    getReferenceNo(query) {
+        return this.inventoryDocumentCollection.find({
+            _deleted: false,
+            date: query
+        }, { "referenceNo": 1 }).toArray()
+            .then((data) => {
+                var referenceNumbers = data.map((inventoryDocument) => {
+                    return inventoryDocument.referenceNo;
+                })
+                return Promise.resolve(referenceNumbers)
+            })
+    }
+
     getMovementReport(info) {
         var _defaultFilter = {
             _deleted: false
@@ -225,28 +240,32 @@ module.exports = class InventoryMovementManager extends BaseManager {
         if (info.productId)
             filterMovement.productId = new ObjectId(info.productId);
 
-        filterMovement.date = {
+        var dateQuery = {
             $gte: dateFrom,
             $lte: dateTo
         }
 
-        query = { '$and': [_defaultFilter, filterMovement] };
-
-        var data = this._createIndexes()
-            .then((createIndexResults) => {
-                return !info.xls ?
-                    this.collection
-                        .where(query)
-                        .order(order)
-                        .execute() :
-                    this.collection
-                        .where(query)
-                        .page(info.page, info.size)
-                        .order(order)
-                        .execute();
-            });
-
-        return Promise.resolve(data);
+        return this.getReferenceNo(dateQuery)
+            .then((referenceNumbers) => {
+                filterMovement.referenceNo = {
+                    $in: referenceNumbers
+                };
+                var data = this._createIndexes()
+                    .then((createIndexResults) => {
+                        query = { '$and': [_defaultFilter, filterMovement] };
+                        return !info.xls ?
+                            this.collection
+                                .where(query)
+                                .order(order)
+                                .execute() :
+                            this.collection
+                                .where(query)
+                                .page(info.page, info.size)
+                                .order(order)
+                                .execute();
+                    });
+                return Promise.resolve(data);
+            })
     }
 
     getXls(result, filter) {
@@ -264,6 +283,8 @@ module.exports = class InventoryMovementManager extends BaseManager {
             var item = {};
             item["No"] = index;
             item["Storage"] = movement.storageName ? movement.storageName : '';
+            item["Nomor Referensi"] = movement.referenceType ? movement.referenceNo : '';
+            item["Tipe Referensi"] = movement.referenceType ? movement.referenceType : '';
             item["Tanggal"] = movement.date ? moment(movement.date).format(dateFormat) : '';
             item["Nama Barang"] = movement.productName ? movement.productName : '';
             item["UOM"] = movement.uom ? movement.uom : '';
@@ -277,6 +298,8 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
         xls.options["No"] = "number";
         xls.options["Storage"] = "string";
+        xls.options["Nomor Referensi"] = "string";
+        xls.options["Tipe Referensi"] = "string";
         xls.options["Tanggal"] = "string";
         xls.options["Nama Barang"] = "string";
         xls.options["UOM"] = "string";
