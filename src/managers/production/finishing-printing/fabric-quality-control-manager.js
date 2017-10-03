@@ -334,6 +334,7 @@ module.exports = class FabricQualityControlManager extends BaseManager {
             .then((createIndexResults) => {
                 return this.collection
                     .where(query)
+                    .select(info.select)
                     .execute();
             });
     }
