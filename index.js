@@ -42,6 +42,7 @@ module.exports = {
             TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager'),
             DesignMotiveManager: require('./src/managers/master/design-motive-manager'),
             StorageManager: require('./src/managers/master/storage-manager'),
+            HolidayManager: require('./src/managers/master/holiday-manager'),
             CompanyManager: require('./src/managers/master/company-manager'),
             ContactManager: require('./src/managers/master/contact-manager'),
             BadOutputReasonManager: require('./src/managers/master/bad-output-reason-manager'),
@@ -255,7 +256,7 @@ module.exports = {
         },
         garment: {
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
-            factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager"),
+            factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager")
         }
     }
 }
