@@ -103,6 +103,21 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                                 return prev && curr
                             }, true);
 
+                        var currencies = _deliveryOrders.map((deliveryOrder) => {
+                                var _doItem = doItem.fulfillments.map((fulfillment) => {
+                                    return fulfillment.currency.code
+                                })
+                                _doItem = [].concat.apply([], _doItem);
+                                return _doItem;
+                            })
+                            _deliveryOrder = [].concat.apply([], _deliveryOrder);
+                            return _deliveryOrder;
+                        })
+                        currencies = [].concat.apply([], currencies);
+                        currencies = currencies.filter(function (elem, index, self) {
+                            return index == self.indexOf(elem);
+                        })
+
                         if (_invoiceNote) {
                             errors["no"] = i18n.__("InvoiceNote.no.isExist:%s is exist", i18n.__("InvoiceNote.no._:No"));
                         }
@@ -136,6 +151,12 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                         else if (valid.currency) {
                             if (!valid.currency._id) {
                                 errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
+                            }
+                            else if (currencies.length > 1) {
+                                errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s cannot multiple type", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
+                            }
+                            else if ((currencies[0] || "") !== valid.currency.code) {
+                                errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s cannot different type", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
                             }
                         }
                         else if (!_currency) {
@@ -713,7 +734,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             index += 1;
             data["No"] = index;
             data["No Invoice"] = _data.no ? _data.no : '';
-            data["Tanggal Nota Invoice"] = _data.date ? moment(new Date(_data.date)).add(query.offset, 'h').format(dateFormat) : '';
+            data["Tanggal Invoice"] = _data.date ? moment(new Date(_data.date)).add(query.offset, 'h').format(dateFormat) : '';
             data["Supplier"] = _data.supplier;
             data["Mata Uang"] = _data.currency;
             data["Dikenakan PPN"] = _data.tax ? 'Ya' : 'Tidak';
@@ -736,7 +757,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
             xls.options["No"] = "number";
             xls.options["No Invoice"] = "string";
-            xls.options["Tanggal Nota Invoice"] = "string";
+            xls.options["Tanggal Invoice"] = "string";
             xls.options["Supplier"] = "string";
             xls.options["Mata Uang"] = "string";
             xls.options["Dikenakan PPN"] = "string";
@@ -761,16 +782,16 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         }
 
         if (query.dateFrom && query.dateTo) {
-            xls.name = `Nota Invoice ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            xls.name = `Invoice ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
         else if (!query.dateFrom && query.dateTo) {
-            xls.name = `Nota Invoice ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            xls.name = `Invoice ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
         else if (query.dateFrom && !query.dateTo) {
-            xls.name = `Nota Invoice ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+            xls.name = `Invoice ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
         }
         else
-            xls.name = `Nota Invoice.xlsx`;
+            xls.name = `Invoice.xlsx`;
 
         return Promise.resolve(xls);
     }
