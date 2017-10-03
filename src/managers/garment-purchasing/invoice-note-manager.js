@@ -104,6 +104,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                             }, true);
 
                         var currencies = _deliveryOrders.map((deliveryOrder) => {
+                            var _deliveryOrder = deliveryOrder.items.map((doItem) => {
                                 var _doItem = doItem.fulfillments.map((fulfillment) => {
                                     return fulfillment.currency.code
                                 })
