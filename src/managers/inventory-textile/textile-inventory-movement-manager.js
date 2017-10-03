@@ -96,26 +96,21 @@ module.exports = class TextileInventoryMovementManager extends BaseManager {
         var errors = {};
         var valid = inventoryMovement;
 
-        //var getInventorySummary = this.textileInventorySummaryManager.getSert(valid.productId, valid.storageId, valid.uomId)
-        var getDbInventorySummary = this.textileInventorySummaryManager.getSingleByQueryOrDefault({
-            productId: new ObjectId(valid.productId),
-            storageId: new ObjectId(valid.storageId),
-            uomId: new ObjectId(valid.uomId)
-        });
+        var getInventorySummary = this.textileInventorySummaryManager.getSert(valid.productId, valid.storageId, valid.uomId)
 
         var getProduct = valid.productId && ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(valid.productId) : Promise.resolve(null);
         var getStorage = valid.storageId && ObjectId.isValid(valid.storageId) ? this.storageManager.getSingleByIdOrDefault(valid.storageId) : Promise.resolve(null);
         var getUom = valid.uomId && ObjectId.isValid(valid.uomId) ? this.uomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
 
-        return Promise.all([ getDbInventorySummary,getProduct, getStorage, getUom])
+        return Promise.all([getInventorySummary, getProduct, getStorage, getUom])
             .then(results => {
                 var _dbInventorySummary = results[0];
                 var _product = results[1];
                 var _storage = results[2];
                 var _uom = results[3];
 
-                 if (_dbInventorySummary)
-                     valid.code = _dbInventorySummary.code; // prevent code changes.
+                if (_dbInventorySummary)
+                    valid.code = _dbInventorySummary.code; // prevent code changes.
 
                 if (!valid.referenceNo || valid.referenceNo === '')
                     errors["referenceNo"] = i18n.__("TextileInventoryMovement.referenceNo.isRequired:%s is required", i18n.__("TextileInventoryMovement.referenceNo._:Reference No"));

@@ -331,16 +331,36 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             .then((unitReceiptNote) => {
                 return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
                 .then(storage=>{
-                    var items=[];
-                    for(var a of unitReceiptNote.items){
-                        var item={
-                            productId:a.product._id.toString(),
-                            quantity:a.deliveredQuantity,
-                            uomId:a.deliveredUom._id,
-                            remark:a.remark
+                    var temp = {};
+                    var obj = null;
+                    for(var i=0; i < unitReceiptNote.items.length; i++) {
+                        obj={
+                            productId:unitReceiptNote.items[i].product._id.toString(),
+                            quantity:unitReceiptNote.items[i].deliveredQuantity,
+                            uomId:unitReceiptNote.items[i].deliveredUom._id,
+                            remark:unitReceiptNote.items[i].remark
                         };
-                        items.push(item);
+                        //obj=unitReceiptNote.items[i];
+
+                        if(!temp[obj.productId] && !temp[obj.uomId]) {
+                            temp[obj.productId] = obj;
+                        } else {
+                            temp[obj.productId].quantity += obj.quantity;
+                        }
                     }
+                    var result = [];
+                    for (var prop in temp)
+                        result.push(temp[prop]);
+                    // var items=[];
+                    // for(var a of unitReceiptNote.items){
+                    //     var item={
+                    //         productId:a.product._id.toString(),
+                    //         quantity:a.deliveredQuantity,
+                    //         uomId:a.deliveredUom._id,
+                    //         remark:a.remark
+                    //     };
+                    //     items.push(item);
+                    // }
                     var doc={
                         date:unitReceiptNote.date,
                         referenceNo: unitReceiptNote.no,
@@ -348,7 +368,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         type:"IN",
                         storageId:storage._id,
                         remark:unitReceiptNote.remark,
-                        items:items
+                        items:result
                     }
                 
                     return this.textileInventoryDocumentManager.create(doc)
@@ -365,16 +385,27 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             .then(unitReceiptNote => {
                 return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
                 .then(storage=>{
-                    var items=[];
-                    for(var a of unitReceiptNote.items){
-                        var item={
-                            productId:a.product._id.toString(),
-                            quantity:a.deliveredQuantity,
-                            uomId:a.deliveredUom._id,
-                            remark:a.remark
+                    var temp = {};
+                    var obj = null;
+                    for(var i=0; i < unitReceiptNote.items.length; i++) {
+                        obj={
+                            productId:unitReceiptNote.items[i].product._id.toString(),
+                            quantity:unitReceiptNote.items[i].deliveredQuantity,
+                            uomId:unitReceiptNote.items[i].deliveredUom._id,
+                            remark:unitReceiptNote.items[i].remark
                         };
-                        items.push(item);
+                        //obj=unitReceiptNote.items[i];
+
+                        if(!temp[obj.productId] && !temp[obj.uomId]) {
+                            temp[obj.productId] = obj;
+                        } else {
+                            temp[obj.productId].quantity += obj.quantity;
+                        }
                     }
+                    var items = [];
+                    for (var prop in temp)
+                        items.push(temp[prop]);
+                        
                     var doc={
                         date:unitReceiptNote.date,
                         referenceNo: unitReceiptNote.no,
@@ -400,16 +431,27 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             .then((unitReceiptNote) => {
                 return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
                 .then(storage=>{
-                    var items=[];
-                    for(var a of unitReceiptNote.items){
-                        var item={
-                            productId:a.product._id.toString(),
-                            quantity:a.deliveredQuantity,
-                            uomId:a.deliveredUom._id,
-                            remark:a.remark
+                    var temp = {};
+                    var obj = null;
+                    for(var i=0; i < unitReceiptNote.items.length; i++) {
+                        obj={
+                            productId:unitReceiptNote.items[i].product._id.toString(),
+                            quantity:unitReceiptNote.items[i].deliveredQuantity,
+                            uomId:unitReceiptNote.items[i].deliveredUom._id,
+                            remark:unitReceiptNote.items[i].remark
                         };
-                        items.push(item);
+                        //obj=unitReceiptNote.items[i];
+
+                        if(!temp[obj.productId] && !temp[obj.uomId]) {
+                            temp[obj.productId] = obj;
+                        } else {
+                            temp[obj.productId].quantity += obj.quantity;
+                        }
                     }
+                    var items = [];
+                    for (var prop in temp)
+                        items.push(temp[prop]);
+
                     var doc={
                         date:unitReceiptNote.date,
                         referenceNo: unitReceiptNote.no,
