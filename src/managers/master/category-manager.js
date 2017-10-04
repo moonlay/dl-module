@@ -109,6 +109,7 @@ module.exports = class CategoryManager extends BaseManager {
                                 "code": dataFile[i][0].trim(),
                                 "name": dataFile[i][1].trim(),
                                 "codeRequirement": dataFile[i][2].trim(),
+                                
                             });
                         }
                     }
