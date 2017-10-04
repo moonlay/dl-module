@@ -197,8 +197,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     valid.date = new Date(valid.date);
 
                     for (var item of valid.items) {
-                        // var _purchaseOrder = _purchaseOrderList.find((poInternal) => poInternal._id.toString() === item.purchaseOrderId.toString())
-                        // var _purchaseOrderItem = _purchaseOrder.items.find((item) => item.product._id.toString() === item.product._id.toString())
+                        var _purchaseOrder = _purchaseOrderList.find((poInternal) => poInternal._id.toString() === item.purchaseOrderId.toString())
+                        var _purchaseOrderItem = _purchaseOrder.items.find((item) => item.product._id.toString() === item.product._id.toString())
                         // item.product = _purchaseOrderItem.product;
                         // item.deliveredUom = _purchaseOrderItem.dealUom;
                         // item.currency = _purchaseOrderItem.currency;
@@ -206,6 +206,10 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         // item.categoryId = new ObjectId(item.categoryId);
                         // item.purchaseOrderId = new ObjectId(item.purchaseOrderId);
                         // item.purchaseRequestId = new ObjectId(item.purchaseRequestId);
+
+                        item.purchaseOrderNo = _purchaseOrder.no,
+                            item.purchaseRequestNo = _purchaseOrder.purchaseRequest.no,
+                            item.purchaseRequestRefNo = _purchaseOrderItem.refNo;
                         item.deliveredQuantity = Number(item.deliveredQuantity);
                         item.purchaseOrderQuantity = Number(item.purchaseOrderQuantity);
                         item.pricePerDealUnit = Number(item.pricePerDealUnit);
@@ -717,7 +721,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             })
                             var getPurchaseOrder = _listPurchaseOrderIds.map((purchaseOrderId) => {
                                 if (ObjectId.isValid(purchaseOrderId)) {
-                                    return this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrderId, ["_id", "no", "artikel", "roNo", "items.refNo"])
+                                    return this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrderId, ["_id", "no", "artikel", "roNo"])
                                 } else {
                                     return Promise.resolve(null)
                                 }
@@ -729,7 +733,6 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                         var purchaseOrder = listPurchaseOrder.find((po) => item.purchaseOrderId.toString() === po._id.toString());
                                         item.artikel = purchaseOrder.artikel;
                                         item.roNo = purchaseOrder.roNo;
-                                        item.refNo = purchaseOrder.items[0].refNo;
                                     });
                                     var getDefinition = require('../../pdf/definitions/garment-unit-receipt-note');
                                     var definition = getDefinition(unitReceiptNote, offset);
@@ -775,7 +778,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         }
         return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
-    
+
     updateCollectionUnitReceiptNote(unitReceiptNote) {
         if (!unitReceiptNote.stamp) {
             unitReceiptNote = new UnitReceiptNote(unitReceiptNote);
@@ -885,7 +888,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 });
         });
     }
-    
+
     getUnitReceiptReportXls(dataReport, query) {
 
         return new Promise((resolve, reject) => {
