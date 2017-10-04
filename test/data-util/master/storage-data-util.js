@@ -31,7 +31,14 @@ class StorageDataUtil {
                 return this.getSert(data);
             });
     }
-
+ getGarmentInventTestData() {
+        var data = {
+            code: 'UT/GudangGarment',
+            name: 'Gudang Garment',
+            description: ''
+        };
+        return this.getSert(data);
+    }
     getTestData() {
         var data = {
             code: 'UT/STO/01',
