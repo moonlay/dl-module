@@ -13,11 +13,12 @@ var GarmentInventoryMovementModel = Models.garmentInventory.GarmentInventoryMove
 
 class GarmentInventoryDocumentDataUtil {
     getNewData() {
-        return Promise.all([ productDataUtil.getTestData(), storageDataUtil.getTestData(),uomDataUtil.getTestData()])
+        return Promise.all([ productDataUtil.getTestData(), storageDataUtil.getGarmentInventTestData(),uomDataUtil.getTestData()])
             .then(result => {
                 var product = result[0];
                 
                 var storage = result[1];
+                
                 var uom = result [2];
 
                 var code = codeGenerator()
