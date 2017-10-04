@@ -206,6 +206,13 @@ module.exports = class GarmentCurrencyManager extends BaseManager {
             }
         }
 
+        var date2Index = {
+            name: `ix_${map.master.collection.Currency}__date`,
+            key: {
+                date: -1
+            }
+        }
+
         var codeIndex = {
             name: `ix_${map.master.collection.Currency}_code`,
             key: {
@@ -214,6 +221,6 @@ module.exports = class GarmentCurrencyManager extends BaseManager {
             unique: false
         }
 
-        return this.collection.createIndexes([dateIndex,codeIndex]);
+        return this.collection.createIndexes([dateIndex, codeIndex, date2Index]);
     }
 }

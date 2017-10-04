@@ -20,7 +20,8 @@ module.exports = function (data, offset) {
                     priceTotal: item.pricePerDealUnit * item.deliveredQuantity,
                     correction: item.correction,
                     dueDate: dueDate,
-                    paymentMethod: item.paymentMethod
+                    paymentMethod: item.paymentMethod,
+                    currRate: item.kursRate,
                 }
             });
             _items = [].concat.apply([], _items);
@@ -198,7 +199,7 @@ module.exports = function (data, offset) {
             text: 'Tgl. Surat Jalan',
             style: ['size06', 'bold', 'center']
         }, {
-            text: 'Plan PO',
+            text: 'Nomor referensi PR',
             style: ['size06', 'bold', 'center']
         }, {
             text: 'Keterangan Barang',
@@ -274,7 +275,11 @@ module.exports = function (data, offset) {
         .reduce(function (prev, curr, index, arr) {
             return prev + curr;
         }, 0);
-    var sumByCurrency = sum * data.currency.rate;
+
+    var sumByCurrency = items.map(item => item.priceTotal * item.currRate)
+        .reduce(function (prev, curr, index, arr) {
+            return prev + curr;
+        }, 0);
     var incomeTaxTotal = useIncomeTax ? sumByCurrency * 0.1 : 0;
     var vatTotal = useVat ? sumByCurrency * vatRate / 100 : 0;
     var sumTotal = sumByCurrency - vatTotal + incomeTaxTotal + sumKoreksi;
