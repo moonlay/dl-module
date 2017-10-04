@@ -595,7 +595,7 @@ module.exports = class InternNoteManager extends BaseManager {
                     var getListDO = [];
                     for (var doID of listDOid) {
                         if (ObjectId.isValid(doID)) {
-                            getListDO.push(this.deliveryOrderManager.getSingleByIdOrDefault(doID, ["_id", "no", "supplierDoDate", "items.fulfillments.purchaseOrderId", "items.fulfillments.purchaseRequestId", "items.fulfillments.product._id", "items.fulfillments.corrections", "items.fulfillments.currency"]));
+                            getListDO.push(this.deliveryOrderManager.getSingleByIdOrDefault(doID, ["_id", "no", "supplierDoDate", "items.fulfillments.purchaseOrderId", "items.fulfillments.purchaseRequestId", "items.fulfillments.purchaseRequestRefNo", "items.fulfillments.product._id", "items.fulfillments.corrections", "items.fulfillments.currency"]));
                         }
                     }
                     Promise.all(getListDO)
@@ -609,6 +609,7 @@ module.exports = class InternNoteManager extends BaseManager {
                                             doNo: _do.no,
                                             doPOid: fulfillment.purchaseOrderId,
                                             doPRid: fulfillment.purchaseRequestId,
+                                            doPRRefno: fulfillment.purchaseRequestRefNo,
                                             doProductid: fulfillment.product._id,
                                             doCorrection: correction || {},
                                         }
@@ -701,6 +702,10 @@ module.exports = class InternNoteManager extends BaseManager {
                                                                 item.correction = correction.doCorrection.correctionPriceTotal - (item.pricePerDealUnit * item.deliveredQuantity)
                                                             } else {
                                                                 item.correction = 0;
+                                                            }
+
+                                                            if (!item.purchaseRequestRefNo) {
+                                                                item.purchaseRequestRefNo = correction.doPRRefno;
                                                             }
                                                         } else {
                                                             item.correction = 0;
