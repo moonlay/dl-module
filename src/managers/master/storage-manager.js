@@ -42,9 +42,7 @@ module.exports = class StorageManager extends BaseManager {
     }
 
     _beforeInsert(storage) {
-        if(!storage.code){
-            storage.code = CodeGenerator();
-        }
+        storage.code = CodeGenerator();
         storage._active = true;
         return Promise.resolve(storage);
     }
