@@ -149,4 +149,9 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
     test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
+
+    //inventoryGarment
+    test('@INVENTORY/GARMENT-INVENTORY-SUMMARY', './inventory-garment/garment-inventory-summary');
+    test('@INVENTORY/GARMENT-INVENTORY-MOVEMENT', './inventory-garment/garment-inventory-movement');
+    test('@INVENTORY/GARMENT-INVENTORY-DOCUMENT', './inventory-garment/garment-inventory-document');
 });
