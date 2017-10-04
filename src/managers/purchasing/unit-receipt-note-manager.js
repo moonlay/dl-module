@@ -332,20 +332,28 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
                 .then(storage=>{
                     var temp = {};
-                    var obj = null;
+                    var index=0;
+                    var obj=null;
                     for(var i=0; i < unitReceiptNote.items.length; i++) {
+                        index=i;
                         obj={
                             productId:unitReceiptNote.items[i].product._id.toString(),
                             quantity:unitReceiptNote.items[i].deliveredQuantity,
                             uomId:unitReceiptNote.items[i].deliveredUom._id,
-                            remark:unitReceiptNote.items[i].remark
+                            remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
                         };
                         //obj=unitReceiptNote.items[i];
-
-                        if(!temp[obj.productId] && !temp[obj.uomId]) {
-                            temp[obj.productId] = obj;
+                        var dup = unitReceiptNote.items.find((test, idx) => 
+                        obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                        if(!dup) {
+                            temp[obj.productId+obj.uomId.toString()] = obj;
                         } else {
-                            temp[obj.productId].quantity += obj.quantity;
+                            if(!temp[obj.productId+obj.uomId.toString()]) {
+                                temp[obj.productId+obj.uomId.toString()] = obj;
+                            } else {
+                                temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
+                            }
                         }
                     }
                     var result = [];
@@ -386,20 +394,28 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
                 .then(storage=>{
                     var temp = {};
-                    var obj = null;
+                    var index=0;
+                    var obj=null;
                     for(var i=0; i < unitReceiptNote.items.length; i++) {
+                        index=i;
                         obj={
                             productId:unitReceiptNote.items[i].product._id.toString(),
                             quantity:unitReceiptNote.items[i].deliveredQuantity,
                             uomId:unitReceiptNote.items[i].deliveredUom._id,
-                            remark:unitReceiptNote.items[i].remark
+                            remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
                         };
                         //obj=unitReceiptNote.items[i];
-
-                        if(!temp[obj.productId] && !temp[obj.uomId]) {
-                            temp[obj.productId] = obj;
+                        var dup = unitReceiptNote.items.find((test, idx) => 
+                        obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                        if(!dup) {
+                            temp[obj.productId+obj.uomId.toString()] = obj;
                         } else {
-                            temp[obj.productId].quantity += obj.quantity;
+                            if(!temp[obj.productId+obj.uomId.toString()]) {
+                                temp[obj.productId+obj.uomId.toString()] = obj;
+                            } else {
+                                temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
+                            }
                         }
                     }
                     var items = [];
@@ -432,20 +448,28 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
                 .then(storage=>{
                     var temp = {};
-                    var obj = null;
+                    var index=0;
+                    var obj=null;
                     for(var i=0; i < unitReceiptNote.items.length; i++) {
+                        index=i;
                         obj={
                             productId:unitReceiptNote.items[i].product._id.toString(),
                             quantity:unitReceiptNote.items[i].deliveredQuantity,
                             uomId:unitReceiptNote.items[i].deliveredUom._id,
-                            remark:unitReceiptNote.items[i].remark
+                            remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
                         };
                         //obj=unitReceiptNote.items[i];
-
-                        if(!temp[obj.productId] && !temp[obj.uomId]) {
-                            temp[obj.productId] = obj;
+                        var dup = unitReceiptNote.items.find((test, idx) => 
+                        obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                        if(!dup) {
+                            temp[obj.productId+obj.uomId.toString()] = obj;
                         } else {
-                            temp[obj.productId].quantity += obj.quantity;
+                            if(!temp[obj.productId+obj.uomId.toString()]) {
+                                temp[obj.productId+obj.uomId.toString()] = obj;
+                            } else {
+                                temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
+                            }
                         }
                     }
                     var items = [];
@@ -907,20 +931,28 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                 return this.storageManager.getSingleByQueryOrDefault({name:"Gudang Pembelian Textile"})
                                 .then(storage=>{
                                     var temp = {};
-                                    var obj = null;
+                                    var index=0;
+                                    var obj=null;
                                     for(var i=0; i < unitReceiptNote.items.length; i++) {
+                                        index=i;
                                         obj={
                                             productId:unitReceiptNote.items[i].product._id.toString(),
                                             quantity:unitReceiptNote.items[i].deliveredQuantity,
                                             uomId:unitReceiptNote.items[i].deliveredUom._id,
-                                            remark:unitReceiptNote.items[i].remark
+                                            remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
                                         };
                                         //obj=unitReceiptNote.items[i];
-
-                                        if(!temp[obj.productId] && !temp[obj.uomId]) {
-                                            temp[obj.productId] = obj;
+                                        var dup = unitReceiptNote.items.find((test, idx) => 
+                                        obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                                        if(!dup) {
+                                            temp[obj.productId+obj.uomId.toString()] = obj;
                                         } else {
-                                            temp[obj.productId].quantity += obj.quantity;
+                                            if(!temp[obj.productId+obj.uomId.toString()]) {
+                                                temp[obj.productId+obj.uomId.toString()] = obj;
+                                            } else {
+                                                temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                                temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
+                                            }
                                         }
                                     }
                                     var items = [];
