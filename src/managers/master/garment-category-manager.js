@@ -10,11 +10,14 @@ var Category = DLModels.master.Category;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 
+var UomManager = require('./uom-manager');
+
 module.exports = class CategoryManager extends BaseManager {
 
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use("garment-categories");
+        this.uomManager = new UomManager(db, user);
     }
 
     _getQuery(paging) {
@@ -99,16 +102,19 @@ module.exports = class CategoryManager extends BaseManager {
     insert(dataFile) {
         return new Promise((resolve, reject) => {
             var category;
-            this.getCategory()
-                .then(results => {
+            var uom;
+            this.uomManager.getUOM().then((uomResult) => {
+                this.getCategory().then(results => {
                     category = results.data;
+                    uom = uomResult;
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
                             data.push({
                                 "code": dataFile[i][0].trim(),
                                 "name": dataFile[i][1].trim(),
-                                "codeRequirement": dataFile[i][2].trim()
+                                "codeRequirement": dataFile[i][2].trim(),
+                                "uom": dataFile[i][3].trim(),
                             });
                         }
                     }
@@ -121,6 +127,14 @@ module.exports = class CategoryManager extends BaseManager {
                         if (data[i]["name"] === "" || data[i]["name"] === undefined) {
                             errorMessage = errorMessage + "Nama tidak boleh kosong, ";
                         }
+                        if (data[i]["uom"] === "" || data[i]["uom"] === undefined) {
+                            errorMessage = errorMessage + "uom tidak boleh kosong, ";
+                        }
+
+                        if (!(uom.data.find(o => o.unit.toLowerCase() == data[i]["uom"].toLowerCase()))) {
+                            errorMessage = errorMessage + "UOM tidak terdaftar dalam master UOM,";
+                        }
+
                         for (var j = 0; j < category.length; j++) {
                             if (category[j]["code"] === data[i]["code"]) {
                                 errorMessage = errorMessage + "Kode tidak boleh duplikat, ";
@@ -130,7 +144,7 @@ module.exports = class CategoryManager extends BaseManager {
                             }
                         }
                         if (errorMessage !== "") {
-                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "codeRequirement": data[i]["codeRequirement"], "Error": errorMessage });
+                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "codeRequirement": data[i]["codeRequirement"], "Error": errorMessage });
                         }
                     }
                     if (dataError.length === 0) {
@@ -138,8 +152,11 @@ module.exports = class CategoryManager extends BaseManager {
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Category(data[i]);
                             var now = new Date();
+                            var uomData = (uom.data.find(o => o.unit.toLowerCase() == data[i]["uom"].toLowerCase()))
                             j += 1;
                             valid.stamp(this.user.username, 'manager');
+                            valid.uomId = uomData._id;
+                            valid.uom = uomData;
                             valid._createdDate = now
                             this.collection.insert(valid)
                                 .then(id => {
@@ -160,6 +177,8 @@ module.exports = class CategoryManager extends BaseManager {
                         resolve(dataError);
                     }
                 })
+            })
+
         })
     }
 
