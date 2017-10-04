@@ -38,7 +38,7 @@ it(`#01. should success when get created new data`, function (done) {
 
 it(`#02. should success when get holiday by division or name from created data`, function (done) {
     var key=createdData.name;
-    var filter=createdData.division.name;
+    var filter=createdData.code;
     holidayManager.getHolidayByDivision(key,filter).then(
         holidays => {
             holidays.should.instanceof(Array);

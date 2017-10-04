@@ -398,15 +398,30 @@ module.exports = class KanbanManager extends BaseManager {
 
                     return getDailyOperations.then((dailyOperations) => {
                         var arr = dailyOperations.map((dailyOperation) => {
-                            kanban.dailyOperationMachine = dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null;
-                            kanban.inputQuantity = dailyOperation.input ? dailyOperation.input : null;
-                            kanban.process = dailyOperation.step ? dailyOperation.step.process : null;
-                            kanban.processArea = dailyOperation.step ? dailyOperation.step.processArea : null;
-                            kanban.deadline = dailyOperation.step ? dailyOperation.step.deadline : null;
-                            kanban.stepsLength = kanban.instruction && kanban.instruction.steps ? kanban.instruction.steps.length : 0;
-                            delete kanban.instruction;
+                            var obj = {
+                                code: kanban.code,
+                                dailyOperationMachine: dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null,
+                                inputQuantity: dailyOperation.input ? dailyOperation.input : null,
+                                process: dailyOperation.step ? dailyOperation.step.process : null,
+                                processArea: dailyOperation.step ? dailyOperation.step.processArea : null,
+                                deadline: dailyOperation.step ? dailyOperation.step.deadline : null,
+                                stepsLength: kanban.instruction && kanban.instruction.steps ? kanban.instruction.steps.length : 0,
+                                currentStepIndex: kanban.currentStepIndex,
+                                cart: {
+                                    cartNumber: kanban.cart ? kanban.cart.cartNumber : null
+                                },
+                                productionOrder: {
+                                    orderNo: kanban.productionOrder ? kanban.productionOrder.orderNo : null,
+                                    salesContractNo: kanban.productionOrder ? kanban.productionOrder.salesContractNo : null,
+                                    deliveryDate: kanban.productionOrder ? kanban.productionOrder.deliveryDate : null,
+                                    buyer: {
+                                        name: kanban.productionOrder && kanban.productionOrder.buyer ? kanban.productionOrder.buyer.name : null
+                                    },
+                                    orderQuantity: kanban.productionOrder ? kanban.productionOrder.orderQuantity : null,
+                                }
+                            };
                             
-                            return kanban;
+                            return obj;
                         });
 
                         return Promise.resolve(arr);
