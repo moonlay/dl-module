@@ -282,18 +282,28 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
     // getPurchaseOrderByTag(user, categoryId, keyword, shipmentDateFrom, shipmentDateTo) {        
-    getPurchaseOrderByTag(user, keyword, shipmentDateFrom, shipmentDateTo) {
+    getPurchaseOrderByTag(user, category, keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
                     var keywords = [];
 
                     var query = Object.assign({});
-                    var queryCategory = {
-                        // "items.categoryId": new ObjectId(categoryId),
-                        "items.isPosted": false,
-                        "items.isClosed": false
-                    };
+                    var queryCategory = Object.assign({});
+
+                    if (category === "FABRIC") {
+                        queryCategory = {
+                            "items.category.code": "FAB",
+                            "items.isPosted": false,
+                            "items.isClosed": false
+                        };
+                    } else {
+                        queryCategory = {
+                            "items.category.code": { "$ne": "FAB" },
+                            "items.isPosted": false,
+                            "items.isClosed": false
+                        };
+                    }
                     query = Object.assign(query, {
                         _deleted: false,
                         isClosed: false,

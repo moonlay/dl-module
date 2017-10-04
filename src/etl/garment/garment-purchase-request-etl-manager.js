@@ -53,7 +53,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return query;
     }
 
-    run(o, table1, table2) {
+    run(o, t1, t2) {
         var startedDate = new Date();
 
         this.migrationLog.insert({
@@ -64,6 +64,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
         return new Promise((resolve, reject) => {
             var date = o;
+            var table1 = t1;
+            var table2 = t2;
             this.getTimeStamp().then((result) => {
                 var dateStamp;
                 if (date.trim() == "latest") {
@@ -258,7 +260,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             if (table1 == "Budget" && table2 == "POrder") {
                                 sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
                             } else {
-                                sqlQuery = "exec garment_purchase_request1 " + page + "," + pageSize + ",'" + tgl + "' ";
+                                sqlQuery = "garment_purchase_request_period " + page + "," + pageSize + ",'" + tgl + "' ";
                             }
                         }
 
@@ -477,7 +479,28 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             var category = (_category.find(o => o.code.trim() == data.Cat.trim())) ? (_category.find(o => o.code.trim() == data.Cat.trim())) : (categoryNotFound.find(o => o == data.Cat.trim())) ? true : categoryNotFound.push(data.Cat.trim());
 
                             //getting items
-                            var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
+                            var remarkTemp = [];
+                            if (data.Ketr.trim() != "") {
+                                remarkTemp.push(data.Ketr.trim());
+                            }
+                            if (data.Kett.trim() != "") {
+                                remarkTemp.push(data.Kett.trim());
+                            }
+                            if (data.Kett2.trim() != "") {
+                                remarkTemp.push(data.Kett2.trim());
+                            }
+                            if (data.Kett3.trim() != "") {
+                                remarkTemp.push(data.Kett3.trim());
+                            }
+                            if (data.Kett4.trim() != "") {
+                                remarkTemp.push(data.Kett4.trim());
+                            }
+                            if (data.Kett5.trim() != "") {
+                                remarkTemp.push(data.Kett5.trim());
+                            }
+                            // var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
+                            var remark = remarkTemp.toString();
+
 
                             var Colors = [];
                             if (data.Clr1.trim() != "") {
