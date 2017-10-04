@@ -280,7 +280,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                     fulfillment.purchaseOrderUom = poInternal.dealUom;
                                     fulfillment.productId = new ObjectId(poInternal.productId);
                                     fulfillment.purchaseOrderId = new ObjectId(poInternal.poId);
-                                    fulfillment.purchaseOrderNo = poInternal.No;
+                                    fulfillment.purchaseOrderNo = poInternal.poNo;
                                 }
                                 fulfillment.deliveredQuantity = Number(fulfillment.deliveredQuantity);
                                 fulfillment.purchaseOrderQuantity = Number(fulfillment.purchaseOrderQuantity);
