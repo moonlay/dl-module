@@ -53,7 +53,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return query;
     }
 
-    run(o, table1, table2) {
+    run(o, t1, t2) {
         var startedDate = new Date();
 
         this.migrationLog.insert({
@@ -64,6 +64,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
         return new Promise((resolve, reject) => {
             var date = o;
+            var table1 = t1;
+            var table2 = t2;
             this.getTimeStamp().then((result) => {
                 var dateStamp;
                 if (date.trim() == "latest") {
