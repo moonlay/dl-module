@@ -302,6 +302,7 @@ module.exports = class InternNoteManager extends BaseManager {
 
     _beforeInsert(internNote) {
         internNote.no = generateCode("internNote");
+        internNote.date = new Date();
         return Promise.resolve(internNote);
     }
 
