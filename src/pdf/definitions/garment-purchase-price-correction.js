@@ -214,7 +214,7 @@ module.exports = function (data, offset) {
             text: fulfillment.pricePerDealUnit.toFixed(4),
             style: ['size08', 'right']
         }, {
-            text: item.quantity,
+            text: "-",
             style: ['size08', 'right']
         }, {
             text: pricePerUnit === "-" ? pricePerUnit : pricePerUnit.toFixed(4),

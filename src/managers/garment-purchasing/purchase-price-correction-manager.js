@@ -59,10 +59,10 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                     if (_garmentPurchaseCorrection)
                         errors["no"] = i18n.__("garmentPurchaseCorrection.no.isExists:%s is already exists", i18n.__("garmentPurchaseCorrection.no._:No"));
 
-                    if (!valid.date || valid.date == '')
-                        errors["date"] = i18n.__("garmentPurchaseCorrection.date.isRequired:%s is required", i18n.__("garmentPurchaseCorrection.date._:Correction Date"));
-                    else if (new Date(valid.date) > new Date())
-                        errors["date"] = i18n.__("garmentPurchaseCorrection.date.mustBeLessEqual:%s must be less than or equals today's", i18n.__("garmentPurchaseCorrection.date._:Correction Date"));
+                    // if (!valid.date || valid.date == '')
+                    //     errors["date"] = i18n.__("garmentPurchaseCorrection.date.isRequired:%s is required", i18n.__("garmentPurchaseCorrection.date._:Correction Date"));
+                    // else if (new Date(valid.date) > new Date())
+                    //     errors["date"] = i18n.__("garmentPurchaseCorrection.date.mustBeLessEqual:%s must be less than or equals today's", i18n.__("garmentPurchaseCorrection.date._:Correction Date"));
 
                     if (!valid.deliveryOrder || valid.deliveryOrder == '')
                         errors["deliveryOrder"] = i18n.__("garmentPurchaseCorrection.deliveryOrder.isRequired:%s is required", i18n.__("garmentPurchaseCorrection.deliveryOrder._:Delivery Order"));
@@ -167,6 +167,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
 
     _beforeInsert(garmentPurchaseCorrection) {
         garmentPurchaseCorrection.no = generateCode();
+        garmentPurchaseCorrection.date = new Date();
         return Promise.resolve(garmentPurchaseCorrection);
     }
 
