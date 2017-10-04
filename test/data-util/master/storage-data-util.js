@@ -49,14 +49,5 @@ class StorageDataUtil {
         };
         return this.getSert(data);
     }
-
-    getTextileInventoryTestData() {
-        var data = {
-            code: 'UT/GudangTextile',
-            name: 'Gudang Pembelian Textile',
-            description: ''
-        };
-        return this.getSert(data);
-    }
 }
 module.exports = new StorageDataUtil();
