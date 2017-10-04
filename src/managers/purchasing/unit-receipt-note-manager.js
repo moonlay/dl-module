@@ -799,8 +799,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
                     .then((results) => {
                         return Promise.resolve(unitReceiptNote);
-                    })
-            })
+                    });
+            });
     }
 
     updateDeliveryOrderDeleteUnitReceiptNote(unitReceiptNote) {
@@ -857,8 +857,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
                     .then((results) => {
                         return Promise.resolve(unitReceiptNote);
-                    })
-            })
+                    });
+            });
     }
 
     syncItems(id) {
@@ -886,9 +886,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                         $set: unitReceiptNote
                                     })
                                     .then((result) => Promise.resolve(unitReceiptNote._id));
-                            })
-                    })
-            })
+                            });
+                    });
+            });
     }
 
     delete(unitReceiptNote) {
@@ -941,9 +941,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                     .then( ()=> { 
                                         return this.syncItems(id);
                                     });
-                                })
-                            })
-                    })
+                                });
+                            });
+                    });
             });
     }
 
