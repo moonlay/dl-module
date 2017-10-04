@@ -320,13 +320,26 @@ module.exports = class KanbanManager extends BaseManager {
                     "productionOrder.processTypeId": (new ObjectId(query.processTypeId))
                 };
             }
+			     var prosesQuery = {};
+            if (query.proses != '' && query.proses != undefined) {
+              if(query.proses=="Ya"){
+                   prosesQuery = {
+                    "isReprocess": true
+                };
+              }else{
+                    prosesQuery = {
+                    "isReprocess": { $ne: true }
+                };
+              }
+               
+            }
             var date = {
                 "_createdDate": {
                     "$gte": (!query || !query.sdate ? (new Date("1900-01-01")) : (new Date(`${query.sdate} 00:00:00`))),
                     "$lte": (!query || !query.edate ? (new Date()) : (new Date(`${query.edate} 23:59:59`)))
                 }
             };
-            var Query = { "$and": [date, processTypeQuery, orderTypeQuery, orderQuery, deletedQuery] };
+            var Query = { "$and": [date, processTypeQuery, orderTypeQuery, orderQuery, deletedQuery,prosesQuery] };
             this.collection
                 .aggregate([
                     { $match: Query },
@@ -347,6 +360,7 @@ module.exports = class KanbanManager extends BaseManager {
                             "length": "$cart.qty",
                             "pcs": "$cart.pcs",
                             "uom": "$productionOrder.uom.unit",
+                            "isReprocess": "$isReprocess",
                             "isComplete": 1,
                             "currentStepIndex": 1,
                             "steps": "$instruction.steps"
