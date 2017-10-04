@@ -12,11 +12,10 @@ class InternNoteDataUtil {
         return helper
             .getManager(InternNoteManager)
             .then(manager => {
-                return Promise.all([supplierDataUtil.getTestData(), currencyDataUtil.getTestData(), invoiceNoteDataUtil.getNewTestData()])
+                return Promise.all([invoiceNoteDataUtil.getNewTestData(), currencyDataUtil.getTestData()])
                     .then(results => {
-                        var dataSupplier = results[0];
+                        var invoiceNote = results[0];
                         var dataCurrency = results[1];
-                        var invoiceNote = results[2];
 
                         var dateNow = new Date();
                         var dateAfter = new Date();
@@ -25,8 +24,8 @@ class InternNoteDataUtil {
                         var data = {
                             no: `UT/IN/${codeGenerator()}`,
                             date: dateNow,
-                            supplierId: dataSupplier._id,
-                            supplier: dataSupplier,
+                            supplierId: invoiceNote.supplier._id,
+                            supplier: invoiceNote.supplier,
                             currency: dataCurrency,
                             remark: 'Unit Test Intern Note',
                             items: [invoiceNote]

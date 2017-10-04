@@ -876,6 +876,7 @@ _beforeUpdate(data){
         });
     }
 
+
     /*getUnitReceiptNotes(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, offset, createdBy) {
         return new Promise((resolve, reject) => {
             var query = Object.assign({});
@@ -971,6 +972,7 @@ _beforeUpdate(data){
         });
     }*/
 
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.garmentPurchasing.collection.GarmentUnitReceiptNote}_date`,
@@ -995,40 +997,7 @@ _beforeUpdate(data){
         }
         return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
-
-    /*getAllData(filter) {
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                return new Promise((resolve, reject) => {
-                    var query = Object.assign({});
-                    query = Object.assign(query, filter);
-                    query = Object.assign(query, {
-                        _deleted: false
-                    });
-
-                    var _select = ["no",
-                        "date",
-                        "unit",
-                        "supplier",
-                        "deliveryOrder.no",
-                        "remark",
-                        "_createdBy",
-                        "items.product",
-                        "items.deliveredQuantity",
-                        "items.deliveredUom",
-                        "items.remark"];
-
-                    this.collection.where(query).select(_select).execute()
-                        .then((results) => {
-                            resolve(results.data);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                });
-            });
-    }*/
-
+    
     updateCollectionUnitReceiptNote(unitReceiptNote) {
         if (!unitReceiptNote.stamp) {
             unitReceiptNote = new UnitReceiptNote(unitReceiptNote);
@@ -1053,6 +1022,7 @@ _beforeUpdate(data){
         }
         return newArr;
     }
+
     getUnitReceiptReport(query, user) {
         return new Promise((resolve, reject) => {
 
@@ -1135,6 +1105,7 @@ _beforeUpdate(data){
                 });
         });
     }
+    
     getUnitReceiptReportXls(dataReport, query) {
 
         return new Promise((resolve, reject) => {

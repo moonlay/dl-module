@@ -1,8 +1,6 @@
 'use strict'
 var helper = require("../../helper");
-var InventoryMovementManager = require("../../../src/managers/inventory/inventory-movement-manager");
-
-var inventoryDocumentDataUtil = require("./inventory-document-data-util");
+var TextileInventoryMovementManager = require("../../../src/managers/inventory-textile/textile-inventory-movement-manager");
 var productDataUtil = require('../master/product-data-util');
 var storageDataUtil = require('../master/storage-data-util');
 var uomDataUtil = require('../master/uom-data-util');
@@ -11,27 +9,26 @@ var codeGenerator = require('../../../src/utils/code-generator');
 
 var Models = require("dl-models");
 var Map = Models.map;
-var InventoryMovementModel = Models.inventory.InventoryMovement;
+var TextileInventoryMovementModel = Models.inventoryTextile.TextileInventoryMovement;
 
 
-class InventoryMovementDataUtil {
+class TextileInventoryMovementDataUtil {
     getNewData() {
-        return Promise.all([productDataUtil.getTestData(), storageDataUtil.getTestData(), uomDataUtil.getTestData(), inventoryDocumentDataUtil.getNewTestData()])
+        return Promise.all([productDataUtil.getTestData(), storageDataUtil.getTestData(), uomDataUtil.getTestData()])
             .then(result => {
                 var product = result[0];
                 var storage = result[1];
                 var uom = result[2];
-                var inventoryDocument = result[3];
-                var code = codeGenerator()
+                var code =codeGenerator() 
                 var data = {
                     code: code,
-                    referenceNo: inventoryDocument.referenceNo,
-                    referenceType: inventoryDocument.referenceType,
-                    date: new Date(),
+                    referenceNo:`RFNO-${code}`,
+                    referenceType:'unit-test-doc',
+                    date:new Date(),
                     productId: product._id,
                     storageId: storage._id,
                     uomId: uom._id,
-                    quantity: 1000
+                    quantity: 1000 
                 };
 
                 return data;
@@ -40,7 +37,7 @@ class InventoryMovementDataUtil {
 
     getNewTestData() {
         return helper
-            .getManager(InventoryMovementManager)
+            .getManager(TextileInventoryMovementManager)
             .then((manager) => {
                 return this.getNewData().then((data) => {
                     return manager.create(data)
@@ -51,4 +48,4 @@ class InventoryMovementDataUtil {
             });
     }
 }
-module.exports = new InventoryMovementDataUtil();
+module.exports = new TextileInventoryMovementDataUtil();

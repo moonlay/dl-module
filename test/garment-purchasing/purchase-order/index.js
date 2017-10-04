@@ -6,6 +6,10 @@ describe("SPLIT SCENARIOS", function() {
     require("./split");
 });
 
-describe("report SCENARIOS", function () {
+describe("REPORT SCENARIOS", function () {
     require("./report");
+});
+
+describe("REPORT PURCHASE SCENARIOS", function () {
+    require("./report-purchase");
 });

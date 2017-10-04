@@ -74,7 +74,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/PROCESS-TYPE', './master/process-type');
     test('@MASTER/COLOR-TYPE', './master/color-type');
     test('@MASTER/INSTRUCTION', './master/instruction');
-    
+
     // test('@MASTER/MONITORING-EVENT-TYPE', './master/monitoring-event-type');
     test('@MASTER/STEP', './master/step');
     //test('@MASTER/MACHINE-TYPE', './master/machine-type');
@@ -88,11 +88,17 @@ describe('#dl-module', function (done) {
     test('@MASTER/TERM OF PAYMENT', './master/term-of-payment');
     test('@MASTER/DESIGN-MOTIVE', './master/design-motive');
     test('@MASTER/STORAGE', './master/storage');
+    test('@MASTER/HOLIDAY', './master/holiday');    
     test('@MASTER/COMPANY', './master/company');
     test('@MASTER/CONTACT', './master/contact');
     test('@MASTER/BAD OUTPUT REASON', './master/bad-output-reason');
     test('@MASTER/FINISHING PRINTING DURATION ESTIMATION', './master/fp-duration-estimation');
     test('@MASTER/DEAL TRACKING REASON', './master/deal-tracking-reason');
+
+    //Inventory-Textile
+    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-SUMMARY', './inventory-textile/textile-inventory-summary');
+    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-MOVEMENT', './inventory-textile/textile-inventory-movement');
+    test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-DOCUMENT', './inventory-textile/textile-inventory-document');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
@@ -150,8 +156,13 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
     test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
 
+<<<<<<< HEAD
     //inventoryGarment
     test('@INVENTORY/GARMENT-INVENTORY-SUMMARY', './inventory-garment/garment-inventory-summary');
     test('@INVENTORY/GARMENT-INVENTORY-MOVEMENT', './inventory-garment/garment-inventory-movement');
     test('@INVENTORY/GARMENT-INVENTORY-DOCUMENT', './inventory-garment/garment-inventory-document');
 });
+=======
+    
+});
+>>>>>>> 3e0041ccb522f7b43b5fdfab9abaf0037ebdabde
