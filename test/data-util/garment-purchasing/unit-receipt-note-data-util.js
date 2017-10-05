@@ -11,11 +11,10 @@ class UnitReceiptNoteDataUtil {
         return helper
             .getManager(UnitReceiptNoteManager)
             .then(manager => {
-                return Promise.all([unit.getTestData(), supplier.getTestData(), deliveryOrder.getNewTestData()])
+                return Promise.all([unit.getTestData(), deliveryOrder.getNewTestData()])
                     .then(results => {
                         var dataUnit = results[0];
-                        var dataSupplier = results[1];
-                        var dataDeliveryOrder = results[2];
+                        var dataDeliveryOrder = results[1];
 
                         var poCollection = dataDeliveryOrder.items.map(doItem => {
                             var item = doItem.fulfillments.map(fulfillment => {
@@ -73,9 +72,10 @@ class UnitReceiptNoteDataUtil {
                                                     category: poItem.category,
                                                     categoryId: poItem.category._id,
                                                     purchaseOrderId: fulfillment.purchaseOrderId,
-                                                    purchaseOrder: fulfillment.purchaseOrder,
+                                                    purchaseOrderNo: fulfillment.purchaseOrderNo,
                                                     purchaseRequestId: fulfillment.purchaseRequestId,
                                                     purchaseRequestNo: fulfillment.purchaseRequestNo,
+                                                    purchaseRequestRefNo: fulfillment.purchaseRequestRefNo,
                                                     buyer: purchaseRequest.buyer,
                                                     buyerId: purchaseRequest.buyer._id,
                                                     remark: ''
@@ -91,8 +91,8 @@ class UnitReceiptNoteDataUtil {
                                             unitId: dataUnit._id,
                                             unit: dataUnit,
                                             date: new Date(),
-                                            supplierId: dataSupplier._id,
-                                            supplier: dataSupplier,
+                                            supplierId: dataDeliveryOrder.supplier._id,
+                                            supplier: dataDeliveryOrder.supplier,
                                             deliveryOrderId: dataDeliveryOrder._id,
                                             deliveryOrderNo: dataDeliveryOrder.no,
                                             remark: 'Unit Test',

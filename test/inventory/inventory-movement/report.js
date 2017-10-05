@@ -1,6 +1,7 @@
 require("should");
 var InventoryMovement = require("../../data-util/inventory/inventory-movement-data-util");
 var helper = require("../../helper");
+var moment = require("moment");
 var validate = require("dl-models").validator.inventory.inventoryMovement;
 
 var InventoryMovementManager = require("../../../src/managers/inventory/inventory-movement-manager");
@@ -53,10 +54,9 @@ it(`#02. should success when get created data with id`, function (done) {
         });
 });
 
-
 var resultForExcelTest = {};
 it("#03. should success when read data", function (done) {
-    inventoryMovementManager.read({
+    inventoryMovementManager.getMovementReport({
         filter: {
             _id: createdId
         }
@@ -85,7 +85,6 @@ it('#04. should success when get data for Excel Report', function (done) {
             done(e);
         });
 });
-
 
 it("#05. should success when destroy all unit test data", function (done) {
     inventoryMovementManager.destroy(createdData._id)

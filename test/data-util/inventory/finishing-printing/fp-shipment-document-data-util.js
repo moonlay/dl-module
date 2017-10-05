@@ -6,7 +6,6 @@ var ShipmentDocumentManager = require("../../../../src/managers/inventory/finish
 //Data Util
 var ProductionOrderDataUtil = require("../../sales/production-order-data-util");
 var BuyerDataUtil = require("../../master/buyer-data-util");
-var StorageDataUtil = require('../../master/storage-data-util');
 var InventoryDocumentDataUtil = require('../inventory-document-data-util');
 
 var codeGenerator = require('../../../../src/utils/code-generator');
@@ -19,12 +18,11 @@ var FPShipmentDocumentModels = Models.inventory.finishingPrinting.FPShipmentDocu
 
 class FPShipmentDocumentDataUtil {
     getNewData() {
-        return Promise.all([ProductionOrderDataUtil.getNewTestData(), BuyerDataUtil.getTestData(), StorageDataUtil.getPackingTestData(), InventoryDocumentDataUtil.getPackingNewTestData()])
+        return Promise.all([ProductionOrderDataUtil.getNewTestData(), BuyerDataUtil.getTestData(), InventoryDocumentDataUtil.getPackingNewTestData()])
             .then((results) => {
                 var productionOrder1 = results[0];
                 var buyer = results[1];
-                var storage = results[2];
-                var inventoryDocument = results[3];
+                var inventoryDocument = results[2];
 
                 var data = {
                     code: codeGenerator(),

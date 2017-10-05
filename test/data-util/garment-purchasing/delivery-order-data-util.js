@@ -14,16 +14,16 @@ class DeliveryOrderDataUtil {
         return helper
             .getManager(DeliveryOrderManager)
             .then(manager => {
-                return Promise.all([supplier.getTestData(), getPoe])
+                return Promise.all([getPoe])
                     .then(results => {
-                        var poEks = results[1];
-                        var dataSupplier = results[0];
+                        var poEks = results[0];
                         var poExt = poEks.items.map(poeItem => {
                             return {
                                 purchaseOrderId: poeItem.poId,
                                 purchaseOrderNo: poeItem.poNo,
                                 purchaseRequestId: poeItem.prId,
                                 purchaseRequestNo: poeItem.prNo,
+                                purchaseRequestRefNo: poeItem.prRefNo,
                                 productId: poeItem.productId,
                                 product: poeItem.product,
                                 purchaseOrderQuantity: poeItem.dealQuantity,
@@ -46,10 +46,10 @@ class DeliveryOrderDataUtil {
                             refNo: `REF/NO/UT/DO/${codeGenerator()}`,
                             date: new Date(),
                             supplierDoDate: new Date(),
-                            supplierId: dataSupplier._id,
+                            supplierId: poEks.supplier._id,
                             shipmentType: "By Air",
                             shipmentNo: `SHIPMENT/NO/UT/DO/${codeGenerator()}`,
-                            supplier: dataSupplier,
+                            supplier: poEks.supplier,
                             isPosted: false,
                             useCustoms: true,
                             remark: 'Unit Test Delivery Order',
@@ -73,16 +73,16 @@ class DeliveryOrderDataUtil {
         return helper
             .getManager(DeliveryOrderManager)
             .then(manager => {
-                return Promise.all([supplier.getTestData(), getPoe])
+                return Promise.all([getPoe])
                     .then(results => {
-                        var poEks = results[1];
-                        var dataSupplier = results[0];
+                        var poEks = results[0];
                         var poExt = poEks.items.map(poeItem => {
                             return {
                                 purchaseOrderId: poeItem.poId,
                                 purchaseOrderNo: poeItem.poNo,
                                 purchaseRequestId: poeItem.prId,
                                 purchaseRequestNo: poeItem.prNo,
+                                purchaseRequestRefNo: poeItem.prRefNo,
                                 productId: poeItem.productId,
                                 product: poeItem.product,
                                 purchaseOrderQuantity: poeItem.dealQuantity,
@@ -105,8 +105,8 @@ class DeliveryOrderDataUtil {
                             refNo: `REF/NO/UT/DO/${codeGenerator()}`,
                             date: new Date(),
                             supplierDoDate: new Date(),
-                            supplierId: dataSupplier._id,
-                            supplier: dataSupplier,
+                            supplierId: poEks.supplier._id,
+                            supplier: poEks.supplier,
                             shipmentType: "By Air",
                             shipmentNo: `SHIPMENT/NO/UT/DO/${codeGenerator()}`,
                             isPosted: false,

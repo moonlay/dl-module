@@ -15,13 +15,18 @@ var InvoiceNoteManager = require('./invoice-note-manager');
 var CurrencyManager = require('../master/currency-manager');
 var SupplierManager = require('../master/garment-supplier-manager');
 var PurchaseRequestManager = require('./purchase-request-manager');
+var PurchaseOrderManager = require('./purchase-order-manager');
 var DeliveryOrderManager = require('./delivery-order-manager');
+var KursManager = require('./garment-currency-manager');
+var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 
 module.exports = class InternNoteManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentPurchasing.collection.GarmentInternNote);
+        this.kursManager = new KursManager(db, user);
         this.purchaseRequestManager = new PurchaseRequestManager(db, user);
+        this.purchaseOrderManager = new PurchaseOrderManager(db, user);
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
         this.invoiceNoteManager = new InvoiceNoteManager(db, user);
         this.currencyManager = new CurrencyManager(db, user);
@@ -73,7 +78,7 @@ module.exports = class InternNoteManager extends BaseManager {
         listPaymentType = listPaymentType.filter(function (elem, index, self) {
             return index == self.indexOf(elem);
         })
-        
+
         listPaymentMethod = [].concat.apply([], listPaymentMethod);
         listPaymentMethod = listPaymentMethod.filter(function (elem, index, self) {
             return index == self.indexOf(elem);
@@ -269,124 +274,280 @@ module.exports = class InternNoteManager extends BaseManager {
         return query;
     }
 
+    getRealization(internNote) {
+        var realizations = internNote.items.map((invoiceNote) => {
+            var internNoteItems = invoiceNote.items.map((invItem) => {
+                return invItem.items.map((item) => {
+                    return {
+                        no: internNote.no,
+                        date: internNote.date,
+                        invoiceNoteId: invoiceNote._id,
+                        deliveryOrderNo: invItem.deliveryOrderNo,
+                        deliveryOrderId: invItem.deliveryOrderId,
+                        deliveryOrderSupplierDoDate: invItem.deliveryOrderSupplierDoDate,
+                        purchaseOrderId: item.purchaseOrderId,
+                        productId: item.productId,
+                        deliveredQuantity: item.deliveredQuantity,
+                        pricePerDealUnit: item.pricePerDealUnit,
+                        paymentDueDays: item.paymentDueDays
+                    }
+                })
+            })
+            internNoteItems = [].concat.apply([], internNoteItems);
+            return internNoteItems
+        })
+        realizations = [].concat.apply([], realizations);
+        return Promise.resolve(realizations);
+    }
+
     _beforeInsert(internNote) {
         internNote.no = generateCode("internNote");
+        internNote.date = new Date();
         return Promise.resolve(internNote);
     }
 
     _afterInsert(id) {
-        return this.getSingleById(id, ["items._id"])
-            .then((InternNote) => {
-                var getInvoiceNotes = [];
-                InternNote.items = InternNote.items || [];
-                var invoiceNoteIds = InternNote.items.map((item) => { return item._id.toString() })
-                invoiceNoteIds = invoiceNoteIds.filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                })
-                for (var invoiceNoteId of invoiceNoteIds) {
-                    if (ObjectId.isValid(invoiceNoteId)) {
-                        getInvoiceNotes.push(this.invoiceNoteManager.getSingleByIdOrDefault(invoiceNoteId, ["_id", "hasInternNote"]));
-                    }
-                }
-                return Promise.all(getInvoiceNotes)
-                    .then((invoiceNotes) => {
-                        var updateInvoiceNotePromise = [];
-                        for (var invoiceNote of invoiceNotes) {
-                            updateInvoiceNotePromise.push(this.invoiceNoteManager.collection.updateOne({
-                                _id: invoiceNote._id
-                            }, {
-                                    $set: { "hasInternNote": true }
-                                }))
-                        }
-                        return Promise.all(updateInvoiceNotePromise)
-                    })
-                    .then((result) => Promise.resolve(InternNote._id));
+        return this.getSingleById(id)
+            .then((internNote) => this.getRealization(internNote))
+            .then((realizations) => this.updateInvoiceNote(realizations))
+            .then((realizations) => this.updatePurchaseOrder(realizations))
+            .then(() => {
+                return Promise.resolve(id)
             })
     }
 
-    _beforeUpdate(newInterNote) {
-        return this.getSingleById(newInterNote._id)
-            .then((oldInternNote) => {
-                var getInvoiceNote = [];
-                var oldItems = oldInternNote.items.map((item) => { return item._id.toString() })
-                oldItems = oldItems.filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                })
-
-                var newItems = newInterNote.items.map((item) => { return item._id.toString() })
-                newItems = newItems.filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                })
-
-                var updateInvoiceNotePromise = [];
-
-                for (var oldItem of oldItems) {
-                    var item = newItems.find(newItem => newItem.toString() === oldItem.toString())
-                    if (!item) {
-                        updateInvoiceNotePromise.push(this.invoiceNoteManager.getSingleByIdOrDefault(oldItem, ["_id", "hasInternNote"]).then((invoiceNote) => {
-                            return this.invoiceNoteManager.collection.updateOne({ _id: invoiceNote._id }, { $set: { "hasInternNote": false } });
-                        }));
-                    }
-                }
-
-                for (var newItem of newItems) {
-                    var item = oldItems.find(oldItem => newItem.toString() === oldItem.toString())
-                    if (!item) {
-                        updateInvoiceNotePromise.push(this.invoiceNoteManager.getSingleByIdOrDefault(oldItem, ["_id", "hasInternNote"]).then((invoiceNote) => {
-                            return this.invoiceNoteManager.collection.updateOne({ _id: invoiceNote._id }, { $set: { "hasInternNote": true } });
-                        }));
-                    }
-                }
-                if (updateInvoiceNotePromise.length == 0) {
-                    updateInvoiceNotePromise.push(Promise.resolve(null));
-                }
-                return Promise.all(updateInvoiceNotePromise)
-                    .then((result) => {
-                        return Promise.resolve(newInterNote);
-                    })
+    _beforeUpdate(data) {
+        return this.getSingleById(data._id)
+            .then((internNote) => this.getRealization(internNote))
+            .then((realizations) => this.updateInvoiceNoteDeleteInterNote(realizations))
+            .then((realizations) => this.updatePurchaseOrderDeleteInterNote(realizations))
+            .then(() => {
+                return Promise.resolve(data)
             })
-
     }
 
-    delete(InternNote) {
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                return this._validate(InternNote)
-                    .then(validData => {
-                        return this.collection
-                            .updateOne({
-                                _id: validData._id
-                            }, {
-                                $set: { "_deleted": true }
+    _afterUpdate(id) {
+        return this.getSingleById(id)
+            .then((internNote) => this.getRealization(internNote))
+            .then((realizations) => this.updateInvoiceNote(realizations))
+            .then((realizations) => this.updatePurchaseOrder(realizations))
+            .then(() => {
+                return Promise.resolve(id)
+            })
+    }
+
+    delete(data) {
+        return this._pre(data)
+            .then((validData) => {
+                validData._deleted = true;
+                return this.collection.update(validData)
+                    .then((id) => {
+                        var query = {
+                            _id: ObjectId.isValid(id) ? new ObjectId(id) : {}
+                        };
+                        return this.getSingleByQuery(query)
+                            .then((internNote) => this.getRealization(internNote))
+                            .then((realizations) => this.updateInvoiceNoteDeleteInterNote(realizations))
+                            .then((realizations) => this.updatePurchaseOrderDeleteInterNote(realizations))
+                            .then(() => {
+                                return Promise.resolve(data._id)
                             })
-                            .then((result) => Promise.resolve(validData._id))
-                            .then((InternNoteId) => {
-                                var getInvoiceNotes = [];
-                                InternNote.items = InternNote.items || [];
-                                var invoiceNoteIds = InternNote.items.map((item) => { return item._id.toString() })
-                                invoiceNoteIds = invoiceNoteIds.filter(function (elem, index, self) {
-                                    return index == self.indexOf(elem);
+                    })
+            });
+    }
+
+    updateInvoiceNote(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.invoiceNoteId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+
+        var jobs = [];
+        map.forEach((realizations, invoiceNoteId) => {
+            var job = this.invoiceNoteManager.getSingleById(invoiceNoteId)
+                .then((invoiceNote) => {
+                    return this.invoiceNoteManager.collection.updateOne({
+                        _id: invoiceNote._id
+                    }, {
+                            $set: { "hasInternNote": true }
+                        });
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updateInvoiceNoteDeleteInterNote(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.invoiceNoteId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+
+        var jobs = [];
+        map.forEach((realizations, invoiceNoteId) => {
+            var job = this.invoiceNoteManager.getSingleById(invoiceNoteId)
+                .then((invoiceNote) => {
+                    return this.invoiceNoteManager.collection.updateOne({
+                        _id: invoiceNote._id
+                    }, {
+                            $set: { "hasInternNote": true }
+                        });
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updatePurchaseOrder(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.purchaseOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+        var jobs = [];
+        map.forEach((realizations, purchaseOrderId) => {
+            var job = this.purchaseOrderManager.getSingleById(purchaseOrderId)
+                .then((purchaseOrder) => {
+                    var realization = realizations.find(_realization => _realization.purchaseOrderId.toString() === purchaseOrder._id.toString())
+                    var item = purchaseOrder.items.find(_item => _item.product._id.toString() === realization.productId.toString());
+                    var fulfillment = item.fulfillments.find(_fulfillment => _fulfillment.deliveryOrderNo === realization.deliveryOrderNo);
+
+                    var dueDate = new Date(realization.deliveryOrderSupplierDoDate);
+                    dueDate.setDate(dueDate.getDate() + realization.paymentDueDays);
+                    var internNote = {
+                        interNoteNo: realization.no,
+                        interNoteDate: realization.date,
+                        interNotePrice: realization.pricePerDealUnit,
+                        interNoteQuantity: realization.deliveredQuantity,
+                        interNoteDueDate: dueDate
+                    };
+                    fulfillment = Object.assign(fulfillment, internNote);
+
+                    var isFull = purchaseOrder.items
+                        .map((item) => {
+                            return item.fulfillments
+                                .map((fulfillment) => fulfillment.hasOwnProperty("interNoteNo"))
+                                .reduce((prev, curr, index) => {
+                                    return prev && curr
+                                }, true);
+                        })
+                        .reduce((prev, curr, index) => {
+                            return prev && curr
+                        }, true);
+
+                    var isRealized = purchaseOrder.items
+                        .map((poItem) => poItem.realizationQuantity === poItem.dealQuantity)
+                        .reduce((prev, curr, index) => {
+                            return prev && curr
+                        }, true);
+
+                    var totalReceived = purchaseOrder.items
+                        .map(poItem => {
+                            var total = poItem.fulfillments
+                                .map(fulfillment => fulfillment.unitReceiptNoteDeliveredQuantity)
+                                .reduce((prev, curr, index) => {
+                                    return prev + curr;
+                                }, 0);
+                            return total;
+                        })
+                        .reduce((prev, curr, index) => {
+                            return prev + curr;
+                        }, 0);
+
+                    var totalDealQuantity = purchaseOrder.items
+                        .map(poItem => poItem.dealQuantity)
+                        .reduce((prev, curr, index) => {
+                            return prev + curr;
+                        }, 0);
+
+                    if (isFull && purchaseOrder.isClosed && isRealized && totalReceived === totalDealQuantity) {
+                        purchaseOrder.status = poStatusEnum.COMPLETE;
+                    } else if (isFull && purchaseOrder.isClosed && !isRealized && totalReceived !== totalDealQuantity) {
+                        purchaseOrder.status = poStatusEnum.PREMATURE;
+                    } else {
+                        purchaseOrder.status = poStatusEnum.PAYMENT;
+                    }
+
+                    return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updatePurchaseOrderDeleteInterNote(realizations) {
+        var deliveryOrderIds = realizations.map((realization) => {
+            return realization.deliveryOrderId
+        })
+        deliveryOrderIds = [].concat.apply([], deliveryOrderIds);
+        deliveryOrderIds = deliveryOrderIds.filter(function (elem, index, self) {
+            return index == self.indexOf(elem);
+        })
+
+        var getDeliveryOrder = [];
+        for (var deliveryOrderId of deliveryOrderIds) {
+            getDeliveryOrder.push(this.deliveryOrderManager.getSingleByIdOrDefault(deliveryOrderId, ["no", "isClosed"]));
+        }
+
+        Promise.all(getDeliveryOrder)
+            .then((deliveryOrders) => {
+                var map = new Map();
+                for (var realization of realizations) {
+                    var key = realization.purchaseOrderId.toString();
+                    if (!map.has(key))
+                        map.set(key, [])
+                    map.get(key).push(realization);
+                }
+                var jobs = [];
+                map.forEach((realizations, purchaseOrderId) => {
+                    var job = this.purchaseOrderManager.getSingleById(purchaseOrderId)
+                        .then((purchaseOrder) => {
+                            var realization = realizations.find(_realization => _realization.purchaseOrderId.toString() === purchaseOrder._id.toString())
+                            var deliveryOrder = deliveryOrders.find(_deliveryOrder => _deliveryOrder.no === realization.deliveryOrderNo)
+                            var item = purchaseOrder.items.find(item => item.product._id.toString() === realization.productId.toString());
+                            var fulfillment = item.fulfillments.find(fulfillment => fulfillment.deliveryOrderNo === realization.deliveryOrderNo);
+                            delete fulfillment.interNoteNo;
+                            delete fulfillment.interNoteDate;
+                            delete fulfillment.interNotePrice;
+                            delete fulfillment.interNoteQuantity;
+                            delete fulfillment.interNoteDueDate;
+
+                            var poStatus = purchaseOrder.items
+                                .map((item) => {
+                                    return item.fulfillments
+                                        .map((fulfillment) => fulfillment.hasOwnProperty("unitReceiptNoteNo"))
+                                        .reduce((prev, curr, index) => {
+                                            return prev || curr
+                                        }, false);
                                 })
-                                for (var invoiceNote of invoiceNoteIds) {
-                                    if (ObjectId.isValid(invoiceNote)) {
-                                        getInvoiceNotes.push(this.invoiceNoteManager.getSingleByIdOrDefault(invoiceNote));
-                                    }
-                                }
-                                return Promise.all(getInvoiceNotes)
-                                    .then((invoiceNotes) => {
-                                        var updateInvoiceNotePromise = [];
-                                        for (var invoiceNote of invoiceNotes) {
-                                            updateInvoiceNotePromise.push(this.invoiceNoteManager.collection.updateOne({
-                                                _id: invoiceNote._id
-                                            }, {
-                                                    $set: { "hasInternNote": false }
-                                                }))
-                                        }
-                                        return Promise.all(updateInvoiceNotePromise)
-                                    })
-                                    .then((result) => Promise.resolve(InternNote._id));
-                            })
-                    })
+                                .reduce((prev, curr, index) => {
+                                    return prev || curr
+                                }, false);
+                            if (purchaseOrder.status.value <= 7) {
+                                purchaseOrder.status = poStatus ? poStatusEnum.RECEIVING : (deliveryOrder.isClosed ? poStatusEnum.ARRIVED : poStatusEnum.ARRIVING);
+                            }
+
+                            return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                        })
+                    jobs.push(job);
+                });
+                return Promise.all(jobs).then((results) => {
+                    return Promise.resolve(realizations);
+                })
             })
     }
 
@@ -435,7 +596,7 @@ module.exports = class InternNoteManager extends BaseManager {
                     var getListDO = [];
                     for (var doID of listDOid) {
                         if (ObjectId.isValid(doID)) {
-                            getListDO.push(this.deliveryOrderManager.getSingleByIdOrDefault(doID, ["_id", "no", "items.fulfillments.purchaseOrderId", "items.fulfillments.purchaseRequestId", "items.fulfillments.product._id", "items.fulfillments.corrections"]));
+                            getListDO.push(this.deliveryOrderManager.getSingleByIdOrDefault(doID, ["_id", "no", "supplierDoDate", "items.fulfillments.purchaseOrderId", "items.fulfillments.purchaseRequestId", "items.fulfillments.purchaseRequestRefNo", "items.fulfillments.product._id", "items.fulfillments.corrections", "items.fulfillments.currency"]));
                         }
                     }
                     Promise.all(getListDO)
@@ -449,6 +610,7 @@ module.exports = class InternNoteManager extends BaseManager {
                                             doNo: _do.no,
                                             doPOid: fulfillment.purchaseOrderId,
                                             doPRid: fulfillment.purchaseRequestId,
+                                            doPRRefno: fulfillment.purchaseRequestRefNo,
                                             doProductid: fulfillment.product._id,
                                             doCorrection: correction || {},
                                         }
@@ -487,39 +649,85 @@ module.exports = class InternNoteManager extends BaseManager {
                                 }
                             }
 
-                            Promise.all(getListPR)
-                                .then((listPR) => {
-                                    internNote.items.map(invoiceNote => {
-                                        invoiceNote.items.map(dataItem => {
-                                            dataItem.items.map(item => {
-                                                var pr = listPR.find((PR) => PR._id.toString() === item.purchaseRequestId.toString())
-                                                var correction = listCorretion.find((cItem) =>
-                                                    cItem.doId.toString() == dataItem.deliveryOrderId.toString() &&
-                                                    cItem.doNo == dataItem.deliveryOrderNo &&
-                                                    cItem.doPRid.toString() == item.purchaseRequestId.toString() &&
-                                                    cItem.doProductid.toString() == item.product._id.toString() &&
-                                                    cItem.doPOid.toString() == item.purchaseOrderId.toString());
-                                                if (correction) {
-                                                    if (Object.getOwnPropertyNames(correction.doCorrection).length > 0) {
-                                                        item.correction = correction.doCorrection.correctionPriceTotal - (item.pricePerDealUnit * item.deliveredQuantity)
-                                                    } else {
-                                                        item.correction = 0;
-                                                    }
-                                                } else {
-                                                    item.correction = 0;
-                                                }
-                                                item.unit = pr.unit.code || "";
-                                            });
-                                        })
+                            var listKurs = listDO.map(_do => {
+                                return {
+                                    doNo: _do.no,
+                                    date: _do.supplierDoDate
+                                }
+                            });
+                            listKurs = [].concat.apply([], listKurs);
+
+                            var getListKurs = [];
+                            for (var currency of listKurs) {
+                                getListKurs.push(this.kursManager.collection.aggregate([
+                                    {
+                                        $match:
+                                        { "_deleted": false, "code": internNote.currency.code, "date": { $lte: currency.date } }
+                                    },
+                                    {
+                                        $project: {
+                                            "code": 1, "rate": 1, "date": 1
+                                        }
+                                    },
+                                    { $sort: { date: -1 } },
+                                    { $limit: 1 }])
+                                    .toArray())
+                            }
+                            Promise.all(getListKurs)
+                                .then((result) => {
+                                    result = [].concat.apply([], result);
+                                    for (var data of result) {
+                                        var kurs = listKurs.find(_kurs => _kurs.date >= data.date)
+                                        if (kurs) {
+                                            kurs = Object.assign(kurs, { rate: data.rate });
+                                        }
+                                    }
+                                    listKurs = listKurs.sort(function (a, b) {
+                                        return new Date(a.date) - new Date(b.date);
                                     });
+                                    Promise.all(getListPR)
+                                        .then((listPR) => {
+                                            internNote.items.map(invoiceNote => {
+                                                invoiceNote.items.map(dataItem => {
+                                                    dataItem.items.map(item => {
+                                                        var kurs = listKurs.find((_kurs) => _kurs.doNo === dataItem.deliveryOrderNo)
+                                                        var pr = listPR.find((PR) => PR._id.toString() === item.purchaseRequestId.toString())
+                                                        var correction = listCorretion.find((cItem) =>
+                                                            cItem.doId.toString() == dataItem.deliveryOrderId.toString() &&
+                                                            cItem.doNo == dataItem.deliveryOrderNo &&
+                                                            cItem.doPRid.toString() == item.purchaseRequestId.toString() &&
+                                                            cItem.doProductid.toString() == item.product._id.toString() &&
+                                                            cItem.doPOid.toString() == item.purchaseOrderId.toString());
+                                                        if (correction) {
+                                                            if (Object.getOwnPropertyNames(correction.doCorrection).length > 0) {
+                                                                item.correction = correction.doCorrection.correctionPriceTotal - (item.pricePerDealUnit * item.deliveredQuantity)
+                                                            } else {
+                                                                item.correction = 0;
+                                                            }
 
-                                    var getDefinition = require('../../pdf/definitions/garment-intern-note');
-                                    var definition = getDefinition(internNote, offset);
+                                                            if (!item.purchaseRequestRefNo) {
+                                                                item.purchaseRequestRefNo = correction.doPRRefno;
+                                                            }
+                                                        } else {
+                                                            item.correction = 0;
+                                                        }
+                                                        item.kursRate = kurs.kurs || internNote.currency.rate
+                                                        item.unit = pr.unit.code || "";
+                                                    });
+                                                })
+                                            });
 
-                                    var generatePdf = require('../../pdf/pdf-generator');
-                                    generatePdf(definition)
-                                        .then(binary => {
-                                            resolve(binary);
+                                            var getDefinition = require('../../pdf/definitions/garment-intern-note');
+                                            var definition = getDefinition(internNote, offset);
+
+                                            var generatePdf = require('../../pdf/pdf-generator');
+                                            generatePdf(definition)
+                                                .then(binary => {
+                                                    resolve(binary);
+                                                })
+                                                .catch(e => {
+                                                    reject(e);
+                                                });
                                         })
                                         .catch(e => {
                                             reject(e);
@@ -594,8 +802,8 @@ module.exports = class InternNoteManager extends BaseManager {
                             "date": "$date",
                             "supplier": "$supplier.name",
                             "currency": "$currency.code",
-                            "paymentMethod": "$paymentMethod",
-                            "paymentType": "$paymentType",
+                            "paymentMethod": "$items.items.items.paymentMethod",
+                            "paymentType": "$items.items.items.paymentType",
                             "dueDate": "$dueDate",
                             "invoiceNo": "$items.no",
                             "invoiceDate": "$items.date",

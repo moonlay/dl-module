@@ -102,6 +102,25 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                             .reduce((prev, curr, index) => {
                                 return prev && curr
                             }, true);
+                        _deliveryOrders = this.cleanUp(_deliveryOrders);
+                        var currencies = [];
+                        if (_deliveryOrders) {
+                            currencies = _deliveryOrders.map((deliveryOrder) => {
+                                var _deliveryOrder = deliveryOrder.items.map((doItem) => {
+                                    var _doItem = doItem.fulfillments.map((fulfillment) => {
+                                        return fulfillment.currency.code
+                                    })
+                                    _doItem = [].concat.apply([], _doItem);
+                                    return _doItem;
+                                })
+                                _deliveryOrder = [].concat.apply([], _deliveryOrder);
+                                return _deliveryOrder;
+                            })
+                            currencies = [].concat.apply([], currencies);
+                            currencies = currencies.filter(function (elem, index, self) {
+                                return index == self.indexOf(elem);
+                            })
+                        }
 
                         if (_invoiceNote) {
                             errors["no"] = i18n.__("InvoiceNote.no.isExist:%s is exist", i18n.__("InvoiceNote.no._:No"));
@@ -137,43 +156,51 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                             if (!valid.currency._id) {
                                 errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
                             }
+                            else if (currencies.length > 1) {
+                                errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s cannot multiple type", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
+                            }
+                            else if ((currencies[0] || "") !== valid.currency.code) {
+                                errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s cannot different type", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
+                            }
                         }
                         else if (!_currency) {
                             errors["currency"] = i18n.__("InvoiceNote.currency.isRequired:%s is required", i18n.__("InvoiceNote.currency._:Currency")); //"Currency tidak boleh kosong";
                         }
 
-                        if (valid.useIncomeTax !== useIncomeTax) {
-                            errors["useIncomeTax"] = i18n.__("InvoiceNote.useIncomeTax.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useIncomeTax._:Using PPn"));
-                        }
-                        else if (valid.useIncomeTax) {
-                            if (!valid.incomeTaxNo || valid.incomeTaxNo == '') {
-                                errors["incomeTaxNo"] = i18n.__("InvoiceNote.incomeTaxNo.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxNo._:Nomor Faktur Pajak (PPn)"));
+                        if (listPOExternal.length > 0) {
+                            if (valid.useIncomeTax !== useIncomeTax) {
+                                errors["useIncomeTax"] = i18n.__("InvoiceNote.useIncomeTax.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useIncomeTax._:Using PPn"));
                             }
+                            else if (valid.useIncomeTax) {
+                                if (!valid.incomeTaxNo || valid.incomeTaxNo == '') {
+                                    errors["incomeTaxNo"] = i18n.__("InvoiceNote.incomeTaxNo.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxNo._:Nomor Faktur Pajak (PPn)"));
+                                }
 
-                            if (!valid.incomeTaxDate || valid.incomeTaxDate == '') {
-                                errors["incomeTaxDate"] = i18n.__("InvoiceNote.incomeTaxDate.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxDate._:Tanggal Faktur Pajak (PPn)"));
-                                valid.incomeTaxDate = "";
+                                if (!valid.incomeTaxDate || valid.incomeTaxDate == '') {
+                                    errors["incomeTaxDate"] = i18n.__("InvoiceNote.incomeTaxDate.isRequired:%s is required", i18n.__("InvoiceNote.incomeTaxDate._:Tanggal Faktur Pajak (PPn)"));
+                                    valid.incomeTaxDate = "";
+                                }
                             }
-                        }
-                        if (valid.useVat !== useVat) {
-                            errors["useVat"] = i18n.__("InvoiceNote.useVat.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useVat._:Using PPh"));
-                        }
-                        else if (valid.useVat) {
-                            if (valid.vat) {
-                                if (!valid.vat._id) {
+                            if (valid.useVat !== useVat) {
+                                errors["useVat"] = i18n.__("InvoiceNote.useVat.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useVat._:Using PPh"));
+                            }
+                            else if (valid.useVat) {
+                                if (valid.vat) {
+                                    if (!valid.vat._id) {
+                                        errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
+                                    }
+                                } else {
                                     errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
                                 }
-                            } else {
-                                errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
-                            }
 
-                            if (!valid.vatNo || valid.vatNo == '') {
-                                errors["vatNo"] = i18n.__("InvoiceNote.vatNo.isRequired:%s is required", i18n.__("InvoiceNote.vatNo._:Nomor Faktur Pajak (PPh)"));
-                            }
+                                if (!valid.vatNo || valid.vatNo == '') {
+                                    errors["vatNo"] = i18n.__("InvoiceNote.vatNo.isRequired:%s is required", i18n.__("InvoiceNote.vatNo._:Nomor Faktur Pajak (PPh)"));
+                                }
 
-                            if (!valid.vatDate || valid.vatDate == '' || valid.vatDate === "undefined") {
-                                errors["vatDate"] = i18n.__("InvoiceNote.vatDate.isRequired:%s is required", i18n.__("InvoiceNote.vatDate._:Tanggal Faktur Pajak (PPh)"));
-                                valid.vatDate = "";
+                                if (!valid.vatDate || valid.vatDate == '' || valid.vatDate === "undefined") {
+                                    errors["vatDate"] = i18n.__("InvoiceNote.vatDate.isRequired:%s is required", i18n.__("InvoiceNote.vatDate._:Tanggal Faktur Pajak (PPh)"));
+                                    valid.vatDate = "";
+                                }
                             }
                         }
 
@@ -271,6 +298,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
                                     item.purchaseRequestId = deliveryOrderFulfillment.purchaseRequestId;
                                     item.purchaseRequestNo = deliveryOrderFulfillment.purchaseRequestNo;
+                                    item.purchaseRequestRefNo = deliveryOrderFulfillment.purchaseRequestRefNo;
 
                                     item.productId = deliveryOrderFulfillment.productId;
                                     item.product = deliveryOrderFulfillment.product;
@@ -343,118 +371,194 @@ module.exports = class InvoiceNoteManager extends BaseManager {
     }
 
     _afterInsert(id) {
-        return this.getSingleById(id, ["items.deliveryOrderId"])
-            .then((InvoiceNote) => {
-                var getDeliveryOrder = [];
-                InvoiceNote.items = InvoiceNote.items || [];
-                var doIds = InvoiceNote.items.map((item) => { return item.deliveryOrderId })
-                doIds = doIds.filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                })
-                for (var doId of doIds) {
-                    if (ObjectId.isValid(doId)) {
-                        getDeliveryOrder.push(this.deliveryOrderManager.getSingleByIdOrDefault(doId));
-                    }
-                }
-                return Promise.all(getDeliveryOrder)
-                    .then((deliveryOrders) => {
-                        var updateDeliveryOrderPromise = [];
-
-                        for (var deliveryOrder of deliveryOrders) {
-                            deliveryOrder.hasInvoice = true;
-                            updateDeliveryOrderPromise.push(this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder))
-                        }
-                        return Promise.all(updateDeliveryOrderPromise)
-                    })
-                    .then((result) => Promise.resolve(InvoiceNote._id));
+        return this.getSingleById(id)
+            .then((customs) => this.getRealization(customs))
+            .then((realizations) => this.updateDeliveryOrder(realizations))
+            .then((realizations) => this.updatePurchaseOrder(realizations))
+            .then(() => {
+                return Promise.resolve(id)
             })
     }
 
-    _beforeUpdate(newInvoiceNote) {
-        return this.getSingleById(newInvoiceNote._id)
-            .then((oldInvoiceNote) => {
-                var getDeliveryOrder = [];
-                var oldItems = oldInvoiceNote.items.map((item) => { return item.deliveryOrderId })
-                oldItems = oldItems.filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                })
-
-                var newItems = newInvoiceNote.items.map((item) => { return item.deliveryOrderId })
-                newItems = newItems.filter(function (elem, index, self) {
-                    return index == self.indexOf(elem);
-                })
-
-                var updateDeliveryOrderPromise = [];
-
-                for (var oldItem of oldItems) {
-                    var item = newItems.find(newItem => newItem.toString() === oldItem.toString())
-                    if (!item) {
-                        updateDeliveryOrderPromise.push(this.deliveryOrderManager.getSingleByIdOrDefault(oldItem).then((deliveryOrder) => {
-                            deliveryOrder.hasInvoice = false;
-                            return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
-                        }));
-                    }
-                }
-
-                for (var newItem of newItems) {
-                    var item = oldItems.find(oldItem => newItem.toString() === oldItem.toString())
-                    if (!item) {
-                        updateDeliveryOrderPromise.push(this.deliveryOrderManager.getSingleByIdOrDefault(newItem).then((deliveryOrder) => {
-                            deliveryOrder.hasInvoice = true;
-                            return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
-                        }));
-                    }
-                }
-                if (updateDeliveryOrderPromise.length == 0) {
-                    updateDeliveryOrderPromise.push(Promise.resolve(null));
-                }
-                return Promise.all(updateDeliveryOrderPromise)
-                    .then((result) => {
-                        return Promise.resolve(newInvoiceNote);
-                    })
+    _beforeUpdate(data) {
+        return this.getSingleById(data._id)
+            .then((customs) => this.getRealization(customs))
+            .then((realizations) => this.updateDeliveryOrderDeleteInvoiceNote(realizations))
+            .then((realizations) => this.updatePurchaseOrderDeleteInvoiceNote(realizations))
+            .then(() => {
+                return Promise.resolve(data)
             })
-
     }
 
-    delete(invoiceNote) {
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                return this._validate(invoiceNote)
-                    .then(validData => {
-                        // validData._deleted = true;
-                        return this.collection
-                            .updateOne({
-                                _id: validData._id
-                            }, {
-                                $set: { "_deleted": true }
-                            })
-                            .then((result) => Promise.resolve(validData._id))
-                            .then((InvoiceNoteId) => {
-                                var getDeliveryOrder = [];
-                                invoiceNote.items = invoiceNote.items || [];
-                                var doIds = invoiceNote.items.map((item) => { return item.deliveryOrderId })
-                                doIds = doIds.filter(function (elem, index, self) {
-                                    return index == self.indexOf(elem);
-                                })
-                                for (var doId of doIds) {
-                                    if (ObjectId.isValid(doId)) {
-                                        getDeliveryOrder.push(this.deliveryOrderManager.getSingleByIdOrDefault(doId));
-                                    }
-                                }
-                                return Promise.all(getDeliveryOrder)
-                                    .then((deliveryOrders) => {
-                                        var updatedeliveryOrderPromise = [];
+    _afterUpdate(id) {
+        return this.getSingleById(id)
+            .then((customs) => this.getRealization(customs))
+            .then((realizations) => this.updateDeliveryOrder(realizations))
+            .then((realizations) => this.updatePurchaseOrder(realizations))
+            .then(() => {
+                return Promise.resolve(id)
+            })
+    }
 
-                                        for (var deliveryOrder of deliveryOrders) {
-                                            deliveryOrder.hasInvoice = false;
-                                            updatedeliveryOrderPromise.push(this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder))
-                                        }
-                                        return Promise.all(updatedeliveryOrderPromise)
-                                    })
-                                    .then((result) => Promise.resolve(invoiceNote._id));
+    delete(data) {
+        return this._pre(data)
+            .then((validData) => {
+                validData._deleted = true;
+                return this.collection.update(validData)
+                    .then((id) => {
+                        var query = {
+                            _id: ObjectId.isValid(id) ? new ObjectId(id) : {}
+                        };
+                        return this.getSingleByQuery(query)
+                            .then((customs) => this.getRealization(customs))
+                            .then((realizations) => this.updateDeliveryOrderDeleteInvoiceNote(realizations))
+                            .then((realizations) => this.updatePurchaseOrderDeleteInvoiceNote(realizations))
+                            .then(() => {
+                                return Promise.resolve(data._id)
                             })
                     })
+            });
+    }
+
+    getRealization(invoiceNote) {
+        var realizations = invoiceNote.items.map((invItem) => {
+            return invItem.items.map((item) => {
+                return {
+                    no: invoiceNote.no,
+                    date: invoiceNote.date,
+                    incomeTaxNo: invoiceNote.incomeTaxNo,
+                    incomeTaxDate: invoiceNote.incomeTaxDate,
+                    useIncomeTax: invoiceNote.useIncomeTax,
+                    vatNo: invoiceNote.vatNo,
+                    vatDate: invoiceNote.vatDate,
+                    useVat: invoiceNote.useVat,
+                    vat: invoiceNote.vat,
+                    deliveryOrderNo: invItem.deliveryOrderNo,
+                    deliveryOrderId: invItem.deliveryOrderId,
+                    purchaseOrderId: item.purchaseOrderId,
+                    productId: item.productId,
+                }
             })
+        })
+        realizations = [].concat.apply([], realizations);
+        return Promise.resolve(realizations);
+    }
+
+    updateDeliveryOrder(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.deliveryOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+
+        var jobs = [];
+        map.forEach((realizations, deliveryOrderId) => {
+            var job = this.deliveryOrderManager.getSingleById(deliveryOrderId)
+                .then((deliveryOrder) => {
+                    deliveryOrder.hasInvoice = true;
+                    return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updateDeliveryOrderDeleteInvoiceNote(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.deliveryOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+
+        var jobs = [];
+        map.forEach((realizations, deliveryOrderId) => {
+            var job = this.deliveryOrderManager.getSingleById(deliveryOrderId)
+                .then((deliveryOrder) => {
+                    deliveryOrder.hasInvoice = false;
+                    return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updatePurchaseOrder(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.purchaseOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+        var jobs = [];
+        map.forEach((realizations, purchaseOrderId) => {
+            var job = this.deliveryOrderManager.purchaseOrderManager.getSingleById(purchaseOrderId)
+                .then((purchaseOrder) => {
+                    var realization = realizations.find(_realization => _realization.purchaseOrderId.toString() === purchaseOrder._id.toString())
+                    var item = purchaseOrder.items.find(_item => _item.product._id.toString() === realization.productId.toString());
+                    var fulfillment = item.fulfillments.find(_fulfillment => _fulfillment.deliveryOrderNo === realization.deliveryOrderNo);
+
+                    var invoice = {
+                        invoiceNo: realization.no,
+                        invoiceDate: realization.date,
+                        invoiceIncomeTaxNo: realization.incomeTaxNo,
+                        invoiceIncomeTaxDate: realization.incomeTaxDate,
+                        invoiceUseIncomeTax: realization.useIncomeTax,
+                        invoiceVatNo: realization.vatNo,
+                        invoiceVatDate: realization.vatDate,
+                        invoiceUseVat: realization.useVat,
+                        invoiceVat: realization.vat,
+                    };
+                    fulfillment = Object.assign(fulfillment, invoice);
+
+                    return this.deliveryOrderManager.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updatePurchaseOrderDeleteInvoiceNote(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.purchaseOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+        var jobs = [];
+        map.forEach((realizations, purchaseOrderId) => {
+            var job = this.deliveryOrderManager.purchaseOrderManager.getSingleById(purchaseOrderId)
+                .then((purchaseOrder) => {
+                    var realization = realizations.find(_realization => _realization.purchaseOrderId.toString() === purchaseOrder._id.toString())
+                    var item = purchaseOrder.items.find(item => item.product._id.toString() === realization.productId.toString());
+                    var fulfillment = item.fulfillments.find(fulfillment => fulfillment.deliveryOrderNo === realization.deliveryOrderNo);
+                    delete fulfillment.invoiceNo;
+                    delete fulfillment.invoiceDate;
+                    delete fulfillment.invoiceIncomeTaxNo;
+                    delete fulfillment.invoiceIncomeTaxDate;
+                    delete fulfillment.invoiceUseIncomeTax;
+                    delete fulfillment.invoiceVatNo;
+                    delete fulfillment.invoiceVatDate;
+                    delete fulfillment.invoiceUseVat;
+                    delete fulfillment.invoiceVat;
+                    return this.deliveryOrderManager.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
     }
 
     _createIndexes() {
@@ -635,7 +739,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             index += 1;
             data["No"] = index;
             data["No Invoice"] = _data.no ? _data.no : '';
-            data["Tanggal Nota Invoice"] = _data.date ? moment(new Date(_data.date)).add(query.offset, 'h').format(dateFormat) : '';
+            data["Tanggal Invoice"] = _data.date ? moment(new Date(_data.date)).add(query.offset, 'h').format(dateFormat) : '';
             data["Supplier"] = _data.supplier;
             data["Mata Uang"] = _data.currency;
             data["Dikenakan PPN"] = _data.tax ? 'Ya' : 'Tidak';
@@ -658,7 +762,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
             xls.options["No"] = "number";
             xls.options["No Invoice"] = "string";
-            xls.options["Tanggal Nota Invoice"] = "string";
+            xls.options["Tanggal Invoice"] = "string";
             xls.options["Supplier"] = "string";
             xls.options["Mata Uang"] = "string";
             xls.options["Dikenakan PPN"] = "string";
@@ -683,17 +787,26 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         }
 
         if (query.dateFrom && query.dateTo) {
-            xls.name = `Nota Invoice ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            xls.name = `Invoice ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
         else if (!query.dateFrom && query.dateTo) {
-            xls.name = `Nota Invoice ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            xls.name = `Invoice ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
         else if (query.dateFrom && !query.dateTo) {
-            xls.name = `Nota Invoice ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+            xls.name = `Invoice ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
         }
         else
-            xls.name = `Nota Invoice.xlsx`;
+            xls.name = `Invoice.xlsx`;
 
         return Promise.resolve(xls);
+    }
+    cleanUp(input) {
+        var newArr = [];
+        for (var i = 0; i < input.length; i++) {
+            if (input[i]) {
+                newArr.push(input[i]);
+            }
+        }
+        return newArr;
     }
 };

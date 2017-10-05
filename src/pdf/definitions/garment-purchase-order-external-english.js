@@ -1,7 +1,18 @@
 var global = require('../../global');
 
 module.exports = function (pox, offset) {
-
+    if (!pox.qualityStandard) {
+        pox.qualityStandard = {
+            shrinkage: '-',
+            wetRubbing: '-',
+            dryRubbing: '-',
+            washing: '-',
+            darkPerspiration: '-',
+            lightMedPerspiration: '-',
+            pieceLength: '-',
+            qualityStandardType: '-'
+        }
+    }
     var items = pox.items.map(poItem => {
         return {
             productName: poItem.product.name,
@@ -21,7 +32,7 @@ module.exports = function (pox, offset) {
 
     items = [].concat.apply([], items);
 
-    var iso = pox.category.code === "FAB" ? "FM-00-PJ-02-004" : "FM-PB-00-06-009/R1";
+    var iso = pox.category === "FABRIC" ? "FM-00-PJ-02-004" : "FM-PB-00-06-009/R1";
     var number = pox.no;
     var currency = pox.currency.code;
     var supplier = pox.supplier.name;
@@ -33,10 +44,11 @@ module.exports = function (pox, offset) {
     var moment = require('moment');
     // moment.locale(locale.name);
 
-    var header = [{
-        text: 'PT. DAN LIRIS',
-        style: 'bold'
-    }, {
+    var header = [
+        {
+            text: 'PT. DAN LIRIS',
+            style: 'bold'
+        }, {
             columns: [{
                 width: '50%',
                 stack: [
@@ -71,10 +83,8 @@ module.exports = function (pox, offset) {
         '\n'
     ];
 
-
     var attentionTextSupplier = `${supplier}\n Attn. ${supplierAtt}`;
 
-    var attentionText = "";
     var attention = [{
         columns: [{
             width: '15%',
@@ -82,18 +92,11 @@ module.exports = function (pox, offset) {
             style: ['size08']
         }, {
                 width: '*',
-                // text: `${supplier}\n Attn. ${supplierAtt}\n Telp. ${supplierTel}`,
                 text: attentionTextSupplier,
                 style: ['size08']
             }, {
                 width: '35%',
-                stack: [
-                    `Sukoharjo, ${moment(pox.date).add(offset, 'h').add(offset, 'h').format("MMMM Do YYYY")} `, {
-
-                        text: attentionText,
-                        style: ['size07']
-                    }
-                ],
+                text: `Sukoharjo, ${moment(pox.date).add(offset, 'h').add(offset, 'h').format("MMMM Do YYYY")} `,
                 style: ['size08']
             }]
     }];
@@ -140,7 +143,7 @@ module.exports = function (pox, offset) {
 
     var tbodyText = [];
 
-    if (pox.category.code === "FAB") {
+    if (pox.category === "FABRIC") {
         tbodyText = items.map(function (item) {
             return [{
                 stack: [item.productCode, item.productName, `COMPOSITION: ${item.productDesc}`, `CONTRUCTION: ${item.productProperties[0]}`, `YARN: ${item.productProperties[1]}`, `FINISH WIDTH: ${item.productProperties[2]}`, "QUALITY : EXPORT QUALITY", `DESIGN/COLOUR : ${item.colors.join(', ')}`, `Remark : ${item.remark}`, {
@@ -170,7 +173,7 @@ module.exports = function (pox, offset) {
                         text: `${currency}`
                     }, {
                             width: '*',
-                            text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
+                            text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
                             style: ['right']
                         }],
                     style: ['size08']
@@ -206,7 +209,7 @@ module.exports = function (pox, offset) {
                         text: `${currency}`
                     }, {
                             width: '*',
-                            text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
+                            text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
                             style: ['right']
                         }],
                     style: ['size08']
@@ -233,30 +236,45 @@ module.exports = function (pox, offset) {
             return prev + curr;
         }, 0);
 
-    var vat = pox.useIncomeTax ? sum * 0.1 : 0;
+    var totalQuantity = (items.length > 0 ? items : [initialValue])
+        .map(item => item.quantity)
+        .reduce(function (prev, curr, index, arr) {
+            return prev + curr;
+        }, 0);
 
-    var tfootText = [
+    var incomeTaxValue = pox.useIncomeTax ? sum * 0.1 : 0;
+    var vatValue = pox.useVat ? sum * pox.vat.rate / 100 : 0;
+    var vatName = pox.vat ? `${pox.vat.name} ${pox.vat.name}` : 0;
+
+
+    var tfootTextImport = [
         [{
-            text: 'TOTAL',
+            text: 'TOTAL QUANTITY',
             style: ['size08', 'bold', 'right'],
-            colSpan: 4
-        }, "", "", "", {
+        }, null, {
+                text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
+                style: ['size08', 'right']
+            }, {
+                text: 'TOTAL',
+                style: ['size08', 'bold', 'right'],
+            }, {
                 columns: [{
                     width: '25%',
                     text: currency
                 }, {
                         width: '*',
-                        text: parseFloat(sum).toLocaleString(locale, locale.currencyNotaItern2),
+                        text: parseFloat(sum).toLocaleString(locale, locale.currency),
                         style: ['right']
                     }],
                 style: ['size08']
-            }],
+            }]
     ];
 
-    var tfoot = tfootText;
+    var tfoot = tfootTextImport;
+
     var table = [{
         table: {
-            widths: ['*', '25%', '10%', '15%', '15%'],
+            widths: ['25%', '22%', '13%', '15%', '25%'],
             headerRows: 1,
             body: [].concat([thead], tbodyText, tfoot)
         }
@@ -275,6 +293,7 @@ module.exports = function (pox, offset) {
                     }, {
                         width: '*',
                         stack: [`${pox.freightCostBy.trim() == "Penjual" ? "Seller" : "Buyer"}`, `${pox.paymentType}`]
+
                     }]
             }, {
                     width: '20%',
@@ -297,7 +316,7 @@ module.exports = function (pox, offset) {
                 }]
         }],
         style: ['size08']
-    }]
+    }];
 
     var footer = footerText;
 
@@ -309,7 +328,7 @@ module.exports = function (pox, offset) {
                     columns: [
                         {
                             width: '18%',
-                            text: 'Standar Quality'
+                            text: 'Quality Standard'
                         },
                         {
                             width: '2%',
@@ -317,7 +336,7 @@ module.exports = function (pox, offset) {
                         },
                         {
                             width: '80%',
-                            text: 'Jls; AATC; ISO'
+                            text: pox.qualityStandard.qualityStandardType
                         }
                     ]
                 },
@@ -337,84 +356,128 @@ module.exports = function (pox, offset) {
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
-                                            text: 'Shringkage test '
+                                            width: '20%',
+                                            text: 'Shrinkage test'
                                         }, {
                                             width: '2%',
-                                            text: ' '
+                                            text: ''
                                         }, {
-                                            width: '68%',
-                                            text: '..................................................................................%'
+                                            width: '*',
+                                            text: pox.qualityStandard.shrinkage
                                         }
                                     ]
                                 },
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
+                                            width: '20%',
                                             text: 'Rubbing test'
                                         }, {
                                             width: '2%',
                                             text: ':'
                                         }, {
-                                            width: '68%',
-                                            text: 'WET Rubbing ...........................................................%'
+                                            width: '*',
+                                            columns: [
+                                                {
+                                                    width: '20%',
+                                                    text: 'Wet Rubbing'
+                                                }, {
+                                                    width: '2%',
+                                                    text: ':'
+                                                }, {
+                                                    width: '*',
+                                                    text: pox.qualityStandard.wetRubbing
+                                                }
+                                            ]
                                         }
                                     ]
                                 },
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
+                                            width: '20%',
                                             text: ' '
                                         }, {
                                             width: '2%',
                                             text: ' '
                                         }, {
-                                            width: '68%',
-                                            text: 'DRY Rubbing ...........................................................%'
+                                            width: '*',
+                                            columns: [
+                                                {
+                                                    width: '20%',
+                                                    text: 'Dry Rubbing'
+                                                }, {
+                                                    width: '2%',
+                                                    text: ':'
+                                                }, {
+                                                    width: '*',
+                                                    text: pox.qualityStandard.dryRubbing
+                                                }
+                                            ]
                                         }
                                     ]
                                 },
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
+                                            width: '20%',
                                             text: 'Washing test'
                                         }, {
                                             width: '2%',
                                             text: ':'
                                         }, {
-                                            width: '68%',
-                                            text: '..................................................................................%'
+                                            width: '*',
+                                            text: pox.qualityStandard.washing
                                         }
                                     ]
                                 },
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
-                                            text: 'Prespiration test'
+                                            width: '20%',
+                                            text: 'Perspiration test'
                                         }, {
                                             width: '2%',
                                             text: ':'
                                         }, {
-                                            width: '68%',
-                                            text: 'Dark .........................................................................%'
+                                            width: '*',
+                                            columns: [
+                                                {
+                                                    width: '20%',
+                                                    text: 'Dark'
+                                                }, {
+                                                    width: '2%',
+                                                    text: ':'
+                                                }, {
+                                                    width: '*',
+                                                    text: pox.qualityStandard.darkPerspiration
+                                                }
+                                            ]
                                         }
                                     ]
                                 },
                                 {
                                     columns: [
                                         {
-                                            width: '30%',
+                                            width: '20%',
                                             text: ' '
                                         }, {
                                             width: '2%',
                                             text: ' '
                                         }, {
-                                            width: '68%',
-                                            text: 'Light/Med ................................................................%'
+                                            width: '*',
+                                            columns: [
+                                                {
+                                                    width: '20%',
+                                                    text: 'Light/Med'
+                                                }, {
+                                                    width: '2%',
+                                                    text: ':'
+                                                }, {
+                                                    width: '*',
+                                                    text: pox.qualityStandard.lightMedPerspiration
+                                                }
+                                            ]
                                         }
                                     ]
                                 }
@@ -434,7 +497,7 @@ module.exports = function (pox, offset) {
                         },
                         {
                             width: '80%',
-                            stack: ['60 yards up 20%', '120 yards up to 80%']
+                            text: pox.qualityStandard.pieceLength
                         }
                     ]
                 }
@@ -442,8 +505,8 @@ module.exports = function (pox, offset) {
         }
     ];
 
-    if (pox.category.code === "FAB") {
-        footer.concat(stdQ)
+    if (pox.category === "FABRIC") {
+        footer = footer.concat(stdQ)
     }
     var signatureText = ['\n\n\n',
         {
@@ -472,7 +535,7 @@ module.exports = function (pox, offset) {
             ],
             style: ['size08']
         }
-    ]
+    ];
 
     var signature = signatureText;
 

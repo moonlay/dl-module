@@ -90,10 +90,10 @@ it("#05. should success when read data", function (done) {
         });
 });
 
-it('#06. should success when get data by keyword', function (done) {
+it('#06. should success when get data by keyword using FABRIC Category', function (done) {
     var shipmentDate = new Date();
     var moment = require('moment');
-    purchaseOrderManager.getPurchaseOrderByTag('dev', categoryId, "#Test Unit #buyer 01", moment(shipmentDate).format("YYYY-MM-DD"), moment(shipmentDate).format("YYYY-MM-DD"))
+    purchaseOrderManager.getPurchaseOrderByTag('dev', "FABRIC", "#Test Unit #buyer 01", moment(shipmentDate).format("YYYY-MM-DD"), moment(shipmentDate).format("YYYY-MM-DD"))
         .then(data => {
             data.should.be.instanceof(Array);
             done();
@@ -103,7 +103,20 @@ it('#06. should success when get data by keyword', function (done) {
         });
 });
 
-it(`#07. should success when delete data`, function (done) {
+it('#07. should success when get data by keyword using Other Category', function (done) {
+    var shipmentDate = new Date();
+    var moment = require('moment');
+    purchaseOrderManager.getPurchaseOrderByTag('dev', "ACCESORIES", "#Test Unit #buyer 01", moment(shipmentDate).format("YYYY-MM-DD"), moment(shipmentDate).format("YYYY-MM-DD"))
+        .then(data => {
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it(`#08. should success when delete data`, function (done) {
     purchaseOrderManager.delete(createdData)
         .then((id) => {
             id.toString().should.equal(createdId.toString());
@@ -115,7 +128,7 @@ it(`#07. should success when delete data`, function (done) {
 });
 
 
-it(`#08. should _deleted=true`, function (done) {
+it(`#09. should _deleted=true`, function (done) {
     purchaseOrderManager.getSingleByQuery({
         _id: createdId
     })
@@ -130,7 +143,7 @@ it(`#08. should _deleted=true`, function (done) {
         });
 });
 
-it("#09 should error when create with empty data", function (done) {
+it("#10. should error when create with empty data", function (done) {
     purchaseOrderManager.create({})
         .then((id) => {
             done("Should not be able to create with empty data");

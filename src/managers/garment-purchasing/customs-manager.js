@@ -229,126 +229,177 @@ module.exports = class CustomsManager extends BaseManager {
     }
 
     _afterInsert(id) {
-        return new Promise((resolve, reject) => {
-            this.collection.singleOrDefault({ "_id": new ObjectId(id) })
-                .then(customs => {
-                    var updateDeliveryOrder = [];
-                    for (var _deliveryOrder of customs.deliveryOrders) {
-                        var job = this.deliveryOrderManager.getSingleByIdOrDefault(_deliveryOrder._id)
-                            .then((deliveryOrder) => {
-                                deliveryOrder.customsId = customs._id;
-                                deliveryOrder.customsNo = customs.no;
-                                deliveryOrder.hasCustoms = true;
-                                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
-                            })
-                        updateDeliveryOrder.push(job);
-                    }
-                    Promise.all(updateDeliveryOrder)
-                        .then(data => {
-                            resolve(id);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        })
-                })
-                .catch(e => {
-                    reject(e);
-                })
-        });
+        return this.getSingleById(id)
+            .then((customs) => this.getRealization(customs))
+            .then((realizations) => this.updateDeliveryOrder(realizations))
+            .then((realizations) => this.updatePurchaseOrder(realizations))
+            .then(() => {
+                return Promise.resolve(id)
+            })
     }
 
     _beforeUpdate(data) {
-        return new Promise((resolve, reject) => {
-            this.collection.singleOrDefault({ "_id": new ObjectId(data._id) })
-                .then(customs => {
-                    var updateDeliveryOrder = [];
-                    for (var _deliveryOrder of customs.deliveryOrders) {
-                        var job = this.deliveryOrderManager.getSingleByIdOrDefault(_deliveryOrder._id)
-                            .then((deliveryOrder) => {
-                                delete deliveryOrder.customsId;
-                                delete deliveryOrder.customsNo;
-                                deliveryOrder.hasCustoms = false;
-                                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
-                            })
-                        updateDeliveryOrder.push(job);
-                    }
-                    Promise.all(updateDeliveryOrder)
-                        .then(id => {
-                            resolve(data);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        })
-                })
-                .catch(e => {
-                    reject(e);
-                })
-        });
+        return this.getSingleById(data._id)
+            .then((customs) => this.getRealization(customs))
+            .then((realizations) => this.updateDeliveryOrderDeleteCustoms(realizations))
+            .then((realizations) => this.updatePurchaseOrderDeleteCustoms(realizations))
+            .then(() => {
+                return Promise.resolve(data)
+            })
     }
 
     _afterUpdate(id) {
-        return new Promise((resolve, reject) => {
-            this.collection.singleOrDefault({ "_id": new ObjectId(id) })
-                .then(customs => {
-                    var updateDeliveryOrder = [];
-                    for (var _deliveryOrder of customs.deliveryOrders) {
-                        var job = this.deliveryOrderManager.getSingleByIdOrDefault(_deliveryOrder._id)
-                            .then((deliveryOrder) => {
-                                deliveryOrder.customsId = customs._id;
-                                deliveryOrder.customsNo = customs.no;
-                                deliveryOrder.hasCustoms = true;
-                                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
-                            })
-                        updateDeliveryOrder.push(job);
-                    }
-                    Promise.all(updateDeliveryOrder)
-                        .then(data => {
-                            resolve(id);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        })
-                })
-                .catch(e => {
-                    reject(e);
-                })
-        });
+        return this.getSingleById(id)
+            .then((customs) => this.getRealization(customs))
+            .then((realizations) => this.updateDeliveryOrder(realizations))
+            .then((realizations) => this.updatePurchaseOrder(realizations))
+            .then(() => {
+                return Promise.resolve(id)
+            })
     }
 
     delete(data) {
-        return new Promise((resolve, reject) => {
-            this.collection.singleOrDefault({ "_id": new ObjectId(data._id) })
-                .then(customs => {
-                    var updateDeliveryOrder = [];
-                    for (var _deliveryOrder of customs.deliveryOrders) {
-                        var job = this.deliveryOrderManager.getSingleByIdOrDefault(_deliveryOrder._id)
-                            .then((deliveryOrder) => {
-                                delete deliveryOrder.customsId;
-                                delete deliveryOrder.customsNo;
-                                deliveryOrder.hasCustoms = false;
-                                return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder)
+        return this._pre(data)
+            .then((validData) => {
+                validData._deleted = true;
+                return this.collection.update(validData)
+                    .then((id) => {
+                        var query = {
+                            _id: ObjectId.isValid(id) ? new ObjectId(id) : {}
+                        };
+                        return this.getSingleByQuery(query)
+                            .then((customs) => this.getRealization(customs))
+                            .then((realizations) => this.updateDeliveryOrderDeleteCustoms(realizations))
+                            .then((realizations) => this.updatePurchaseOrderDeleteCustoms(realizations))
+                            .then(() => {
+                                return Promise.resolve(data._id)
                             })
-                        updateDeliveryOrder.push(job);
+                    })
+            });
+    }
+
+    getRealization(customs) {
+        var customsRealizations = customs.deliveryOrders.map((deliveryOrder) => {
+            var realizations = deliveryOrder.items.map((doItem) => {
+                return doItem.fulfillments.map((fulfillment) => {
+                    return {
+                        customsNo: customs.no,
+                        customsDate: customs.customsDate,
+                        customsId: customs._id,
+                        deliveryOrderNo: deliveryOrder.no,
+                        deliveryOrderId: deliveryOrder._id,
+                        purchaseOrderId: fulfillment.purchaseOrderId,
+                        productId: fulfillment.productId
                     }
-                    Promise.all(updateDeliveryOrder)
-                        .then(id => {
-                            data._deleted = true;
-                            this.collection.update(data)
-                                .then(id => {
-                                    resolve(id);
-                                })
-                                .catch(e => {
-                                    reject(e);
-                                })
-                        })
-                        .catch(e => {
-                            reject(e);
-                        })
                 })
-                .catch(e => {
-                    reject(e);
+            })
+            realizations = [].concat.apply([], realizations);
+            return realizations;
+        })
+        customsRealizations = [].concat.apply([], customsRealizations);
+        return Promise.resolve(customsRealizations);
+    }
+
+    updateDeliveryOrder(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.deliveryOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+
+        var jobs = [];
+        map.forEach((realizations, deliveryOrderId) => {
+            var job = this.deliveryOrderManager.getSingleById(deliveryOrderId)
+                .then((deliveryOrder) => {
+                    deliveryOrder.customsId = realizations[0].customsId;
+                    deliveryOrder.customsNo = realizations[0].customsNo;
+                    deliveryOrder.hasCustoms = true;
+                    return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder);
                 })
+            jobs.push(job);
         });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updateDeliveryOrderDeleteCustoms(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.deliveryOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+
+        var jobs = [];
+        map.forEach((realizations, deliveryOrderId) => {
+            var job = this.deliveryOrderManager.getSingleById(deliveryOrderId)
+                .then((deliveryOrder) => {
+                    deliveryOrder.customsId = null;
+                    deliveryOrder.customsNo = null;
+                    deliveryOrder.hasCustoms = false;
+                    return this.deliveryOrderManager.updateCollectionDeliveryOrder(deliveryOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updatePurchaseOrder(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.purchaseOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+        var jobs = [];
+        map.forEach((realizations, purchaseOrderId) => {
+            var job = this.deliveryOrderManager.purchaseOrderManager.getSingleById(purchaseOrderId)
+                .then((purchaseOrder) => {
+                    var realization = realizations.find(_realization => _realization.purchaseOrderId.toString() === purchaseOrder._id.toString())
+                    var item = purchaseOrder.items.find(item => item.product._id.toString() === realization.productId.toString());
+                    var fulfillment = item.fulfillments.find(fulfillment => fulfillment.deliveryOrderNo === realization.deliveryOrderNo);
+                    fulfillment.customsNo = realization.customsNo;
+                    fulfillment.customsDate = realization.customsDate;
+                    return this.deliveryOrderManager.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
+    }
+
+    updatePurchaseOrderDeleteCustoms(realizations) {
+        var map = new Map();
+        for (var realization of realizations) {
+            var key = realization.purchaseOrderId.toString();
+            if (!map.has(key))
+                map.set(key, [])
+            map.get(key).push(realization);
+        }
+        var jobs = [];
+        map.forEach((realizations, purchaseOrderId) => {
+            var job = this.deliveryOrderManager.purchaseOrderManager.getSingleById(purchaseOrderId)
+                .then((purchaseOrder) => {
+                    var realization = realizations.find(_realization => _realization.purchaseOrderId.toString() === purchaseOrder._id.toString())
+                    var item = purchaseOrder.items.find(item => item.product._id.toString() === realization.productId.toString());
+                    var fulfillment = item.fulfillments.find(fulfillment => fulfillment.deliveryOrderNo === realization.deliveryOrderNo);
+                    delete fulfillment.customsNo;
+                    delete fulfillment.customsDate;
+                    return this.deliveryOrderManager.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
+                })
+            jobs.push(job);
+        });
+        return Promise.all(jobs).then((results) => {
+            return Promise.resolve(realizations);
+        })
     }
 
     getCustomsReport(query) {

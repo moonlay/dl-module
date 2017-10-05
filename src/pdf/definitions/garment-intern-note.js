@@ -10,7 +10,7 @@ module.exports = function (data, offset) {
                 return {
                     deliveryOrderNo: dataItem.deliveryOrderNo,
                     date: dataItem.deliveryOrderDate,
-                    purchaseRequestNo: item.purchaseRequestNo,
+                    purchaseRequestRefNo: item.purchaseRequestRefNo,
                     product: item.product.name,
                     productDesc: item.product.description,
                     quantity: item.deliveredQuantity,
@@ -20,7 +20,8 @@ module.exports = function (data, offset) {
                     priceTotal: item.pricePerDealUnit * item.deliveredQuantity,
                     correction: item.correction,
                     dueDate: dueDate,
-                    paymentMethod: item.paymentMethod
+                    paymentMethod: item.paymentMethod,
+                    currRate: item.kursRate,
                 }
             });
             _items = [].concat.apply([], _items);
@@ -198,7 +199,7 @@ module.exports = function (data, offset) {
             text: 'Tgl. Surat Jalan',
             style: ['size06', 'bold', 'center']
         }, {
-            text: 'Plan PO',
+            text: 'Nomor referensi PR',
             style: ['size06', 'bold', 'center']
         }, {
             text: 'Keterangan Barang',
@@ -226,7 +227,7 @@ module.exports = function (data, offset) {
             text: `${moment(item.date).add(offset, 'h').format("DD MMM YYYY")}`,
             style: ['size06', 'left']
         }, {
-            text: item.purchaseRequestNo,
+            text: item.purchaseRequestRefNo,
             style: ['size06', 'left']
         }, {
             text: `${item.product};${item.productDesc}`,
@@ -274,7 +275,11 @@ module.exports = function (data, offset) {
         .reduce(function (prev, curr, index, arr) {
             return prev + curr;
         }, 0);
-    var sumByCurrency = sum * data.currency.rate;
+
+    var sumByCurrency = items.map(item => item.priceTotal * item.currRate)
+        .reduce(function (prev, curr, index, arr) {
+            return prev + curr;
+        }, 0);
     var incomeTaxTotal = useIncomeTax ? sumByCurrency * 0.1 : 0;
     var vatTotal = useVat ? sumByCurrency * vatRate / 100 : 0;
     var sumTotal = sumByCurrency - vatTotal + incomeTaxTotal + sumKoreksi;

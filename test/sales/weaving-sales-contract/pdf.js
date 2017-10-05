@@ -1,7 +1,7 @@
 require("should");
 var WeavingSalesContract = require("../../data-util/sales/weaving-sales-contract-data-util");
 var helper = require("../../helper");
-var validate = require("dl-models").validator.garmentPurchasing.garmentPurchaseCorrection;
+var validate = require("dl-models").validator.sales.weavingSalesContract;
 var moment = require('moment');
 
 var WeavingSalesContractManager = require("../../../src/managers/sales/weaving-sales-contract-manager");
