@@ -91,21 +91,21 @@ it("#03. should error when create new data with no exist data currency", functio
         });
 });
 
-it("#04. should error when create new data with date more than this day", function (done) {
-    var data = Object.assign({}, interNoteData);
-    data.date = moment(dateAfter).format('YYYY-MM-DD');
-    internNoteManager.create(data)
-        .then((id) => {
-            done("should error when create new data with customs date more than this day");
-        })
-        .catch((e) => {
-            e.name.should.equal("ValidationError");
-            e.should.have.property("errors");
-            e.errors.should.instanceof(Object);
-            e.errors.should.have.property('date');
-            done();
-        });
-});
+// it("#04. should error when create new data with date more than this day", function (done) {
+//     var data = Object.assign({}, interNoteData);
+//     data.date = moment(dateAfter).format('YYYY-MM-DD');
+//     internNoteManager.create(data)
+//         .then((id) => {
+//             done("should error when create new data with customs date more than this day");
+//         })
+//         .catch((e) => {
+//             e.name.should.equal("ValidationError");
+//             e.should.have.property("errors");
+//             e.errors.should.instanceof(Object);
+//             e.errors.should.have.property('date');
+//             done();
+//         });
+// });
 
 it("#05. should error when create new data with no exist data invoice note", function (done) {
     var data = Object.assign({}, interNoteData);
