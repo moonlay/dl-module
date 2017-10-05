@@ -35,15 +35,12 @@ it("#01. should success when create new data", function (done) {
 });
 
 it('#02. should success when create pdf', function (done) {
-    poExternalManager.getSingleById(createdId)
-        .then((data) => {
-            poExternalManager.pdf(data, 7)
-                .then(pdfData => {
-                    done();
-                }).catch(e => {
-                    done(e);
-                });
-        })
+    poExternalManager.pdf(createdId, 7)
+        .then(pdfData => {
+            done();
+        }).catch(e => {
+            done(e);
+        });
 });
 
 it("#03. should success when destroy all unit test data", function (done) {
