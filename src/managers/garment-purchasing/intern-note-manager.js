@@ -101,16 +101,16 @@ module.exports = class InternNoteManager extends BaseManager {
                     errors["no"] = i18n.__("InternNote.no.isExist:%s is exist", i18n.__("InternNote.no._:No"));
                 }
 
-                if (!valid.date || valid.date === "") {
-                    errors["date"] = i18n.__("InternNote.date.isRequired:%s is required", i18n.__("InternNote.date._:Date"));
-                    valid.date = '';
-                }
-                else if (new Date(valid.date) > now) {
-                    errors["date"] = i18n.__("InternNote.date.isGreater:%s is greater than today", i18n.__("DeliveryOrder.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
-                }
-                else if (new Date(valid.date) > valid.dueDate) {
-                    errors["date"] = i18n.__("InternNote.date.isGreaterDueDate:%s is greater than due date", i18n.__("DeliveryOrder.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
-                }
+                // if (!valid.date || valid.date === "") {
+                //     errors["date"] = i18n.__("InternNote.date.isRequired:%s is required", i18n.__("InternNote.date._:Date"));
+                //     valid.date = '';
+                // }
+                // else if (new Date(valid.date) > now) {
+                //     errors["date"] = i18n.__("InternNote.date.isGreater:%s is greater than today", i18n.__("DeliveryOrder.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
+                // }
+                // else if (new Date(valid.date) > valid.dueDate) {
+                //     errors["date"] = i18n.__("InternNote.date.isGreaterDueDate:%s is greater than due date", i18n.__("DeliveryOrder.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
+                // }
 
                 if (!valid.supplierId || valid.supplierId.toString() === "") {
                     errors["supplierId"] = i18n.__("InternNote.supplier.name.isRequired:%s is required", i18n.__("InternNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
@@ -610,7 +610,7 @@ module.exports = class InternNoteManager extends BaseManager {
                                             doNo: _do.no,
                                             doPOid: fulfillment.purchaseOrderId,
                                             doPRid: fulfillment.purchaseRequestId,
-                                            doPRRefno: fulfillment.purchaseRequestRefNo,
+                                            doPRRefno: fulfillment.purchaseRequestRefNo || "",
                                             doProductid: fulfillment.product._id,
                                             doCorrection: correction || {},
                                         }
