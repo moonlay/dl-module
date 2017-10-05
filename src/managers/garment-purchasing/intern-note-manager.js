@@ -404,7 +404,7 @@ module.exports = class InternNoteManager extends BaseManager {
                     return this.invoiceNoteManager.collection.updateOne({
                         _id: invoiceNote._id
                     }, {
-                            $set: { "hasInternNote": true }
+                            $set: { "hasInternNote": false }
                         });
                 })
             jobs.push(job);
