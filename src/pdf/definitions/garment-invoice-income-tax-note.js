@@ -108,7 +108,7 @@ module.exports = function (data, offset) {
             text: 'Nama Barang',
             style: ['size08', 'bold', 'center']
         }, {
-            text: 'Sub Total Pph',
+            text: 'Sub Total Ppn',
             style: ['size08', 'bold', 'center']
         }
     ];
