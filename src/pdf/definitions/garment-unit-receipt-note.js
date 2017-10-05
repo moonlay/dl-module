@@ -178,7 +178,7 @@ module.exports = function (unitReceiptNote, offset) {
             text: item.deliveredUom.unit,
             style: ['size06', 'center']
         }, {
-            text: `${item.refNo};${item.roNo};${item.artikel};${item.remark}` || '',
+            text: `${item.purchaseRequestRefNo};${item.roNo};${item.artikel};${item.remark}` || '',
             style: ['size06', 'left']
         }];
     });

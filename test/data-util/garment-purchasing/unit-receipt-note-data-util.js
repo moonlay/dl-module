@@ -72,9 +72,10 @@ class UnitReceiptNoteDataUtil {
                                                     category: poItem.category,
                                                     categoryId: poItem.category._id,
                                                     purchaseOrderId: fulfillment.purchaseOrderId,
-                                                    purchaseOrder: fulfillment.purchaseOrder,
+                                                    purchaseOrderNo: fulfillment.purchaseOrderNo,
                                                     purchaseRequestId: fulfillment.purchaseRequestId,
                                                     purchaseRequestNo: fulfillment.purchaseRequestNo,
+                                                    purchaseRequestRefNo: fulfillment.purchaseRequestRefNo,
                                                     buyer: purchaseRequest.buyer,
                                                     buyerId: purchaseRequest.buyer._id,
                                                     remark: ''

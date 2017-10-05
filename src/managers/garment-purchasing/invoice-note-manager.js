@@ -298,6 +298,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
                                     item.purchaseRequestId = deliveryOrderFulfillment.purchaseRequestId;
                                     item.purchaseRequestNo = deliveryOrderFulfillment.purchaseRequestNo;
+                                    item.purchaseRequestRefNo = deliveryOrderFulfillment.purchaseRequestRefNo;
 
                                     item.productId = deliveryOrderFulfillment.productId;
                                     item.product = deliveryOrderFulfillment.product;
