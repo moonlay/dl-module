@@ -307,12 +307,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             var key = item.purchaseOrderId.toString();
             if (!map.has(key))
                 map.set(key, [])
-            var item = {
+            var _item = {
                 productId: item.product._id,
                 deliveredQuantity: item.deliveredQuantity,
                 deliveredUom: item.deliveredUom
             };
-            map.get(key).push(item);
+            map.get(key).push(_item);
         }
 
         var jobs = [];
@@ -378,12 +378,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             var key = item.purchaseOrderId.toString();
             if (!map.has(key))
                 map.set(key, [])
-            var item = {
+            var _item = {
                 productId: item.product._id,
                 deliveredQuantity: item.deliveredQuantity,
                 deliveredUom: item.deliveredUom
             };
-            map.get(key).push(item);
+            map.get(key).push(_item);
         }
 
         var jobs = [];
@@ -440,15 +440,14 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             var key = item.purchaseOrderId.toString();
             if (!map.has(key))
                 map.set(key, [])
-            var item = {
+            var _item = {
                 productId: item.product._id,
                 deliveredQuantity: item.deliveredQuantity,
                 deliveredUom: item.deliveredUom
             };
-            map.get(key).push(item);
+            map.get(key).push(_item);
         }
-
-        this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId, ["isClosed"])
+        return this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId, ["isClosed"])
             .then((deliveryOrder) => {
                 var jobs = [];
                 map.forEach((items, purchaseOrderId) => {
@@ -502,9 +501,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     jobs.push(job);
                 })
 
-                return Promise.all(jobs).then((results) => {
-                    return Promise.resolve(unitReceiptNote);
-                })
+                return Promise.all(jobs)
+                    .then((results) => {
+                        return Promise.resolve(unitReceiptNote);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    })
 
             })
     }
@@ -950,7 +953,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
     }
 
     updateInternNote(unitReceiptNote) {
-        return this.deliveryOrderManager.getSingleByIdOrDefault(unitReceiptNote.deliveryOrderId, ["no","items.fulfillments.purchaseOrderId"])
+        return this.deliveryOrderManager.getSingleByIdOrDefault(unitReceiptNote.deliveryOrderId, ["no", "items.fulfillments.purchaseOrderId"])
             .then((deliveryOrder) => {
                 var listPurchaseOrderIds = [];
                 for (var item of deliveryOrder.items) {
@@ -966,7 +969,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 var getPOjobs = []
 
                 for (var purchaseOrderId of listPurchaseOrderIds) {
-                    getPOjobs.push(this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrderId, ["no","items.fulfillments"]))
+                    getPOjobs.push(this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrderId, ["no", "items.fulfillments"]))
                 }
                 return Promise.all(getPOjobs)
                     .then(listPurchaseOrders => {
