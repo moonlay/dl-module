@@ -5,13 +5,14 @@ var codeGenerator = require('../../../src/utils/code-generator');
 var unit = require("../master/unit-data-util");
 var supplier = require('../master/garment-supplier-data-util');
 var deliveryOrder = require('../garment-purchasing/delivery-order-data-util');
+var storageDataUtil = require('../master/storage-data-util');
 
 class UnitReceiptNoteDataUtil {
     getNewData() {
         return helper
             .getManager(UnitReceiptNoteManager)
             .then(manager => {
-                return Promise.all([unit.getTestData(), deliveryOrder.getNewTestData()])
+                return Promise.all([unit.getTestData(), deliveryOrder.getNewTestData(),storageDataUtil.getGarmentInventTestData()])
                     .then(results => {
                         var dataUnit = results[0];
                         var dataDeliveryOrder = results[1];

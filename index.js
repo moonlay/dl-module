@@ -60,10 +60,19 @@ module.exports = {
             InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
             InventoryMovementManager: require("./src/managers/inventory/inventory-movement-manager")
         },
+
+        garmentInventory :{
+
+            GarmentInventoryDocumentManager: require("./src/managers/inventory-garment/garment-inventory-document-manager"),
+            GarmentInventorySummaryManager: require("./src/managers/inventory-garment/garment-inventory-summary-manager"),
+            GarmentInventoryMovementManager: require("./src/managers/inventory-garment/garment-inventory-movement-manager")
+        },
+
         inventoryTextile: {
             TextileInventoryDocumentManager: require("./src/managers/inventory-textile/textile-inventory-document-manager"),
             TextileInventorySummaryManager: require("./src/managers/inventory-textile/textile-inventory-summary-manager"),
             TextileInventoryMovementManager: require("./src/managers/inventory-textile/textile-inventory-movement-manager")
+
         },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
