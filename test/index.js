@@ -24,8 +24,10 @@ describe('#dl-module', function (done) {
     test('@ETL/DIM-ORDER-TYPE', './etl/dim/dim-order-type');
     test('@ETL/DIM-PRODUCT', './etl/dim/dim-product');
     test('@ETL/DIM-STORAGE', './etl/dim/dim-storage');
+    test('@ETL/DIM-STAFF', './etl/dim/dim-staff');
     test('@ETL/DIM-COMPANY', './etl/dim/dim-company');
     test('@ETL/DIM-CONTACT', './etl/dim/dim-contact');
+    test('@ETL/DIM-DURATION-ESTIMATION', './etl/dim/dim-duration-estimation');
     test('@ETL/FACT-TOTAL-HUTANG', './etl/purchasing/fact-total-hutang');
     test('@ETL/FACT-PURCHASING', './etl/purchasing/fact-purchasing');
     test('@ETL/FACT-MONITORING-EVENT', './etl/production/fact-monitoring-event');
@@ -99,7 +101,7 @@ describe('#dl-module', function (done) {
     test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-SUMMARY', './inventory-textile/textile-inventory-summary');
     test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-MOVEMENT', './inventory-textile/textile-inventory-movement');
     test('@INVENTORY-TEXTILE/TEXTILE-INVENTORY-DOCUMENT', './inventory-textile/textile-inventory-document');
-
+    
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
     test('@PURCHASING/PURCHASE ORDER', './purchasing/purchase-order');
