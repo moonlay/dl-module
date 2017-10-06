@@ -41,5 +41,19 @@ class SupplierDataUtil {
         };
         return this.getSert(data);
     }
+
+    getTestData2() {
+        var data = {
+            code: 'UT/GRMNT/SUP/02',
+            name: 'Supplier 02',
+            address: '7270 Colonial 2St. Hollis, NY 11423, USA',
+            contact: 'Mrs. Smi2th',
+            PIC: 'Mr. Smit2h',
+            NPWP: 'N9TT-9G0A2-B7FQ-RANC',
+            serialNumber: 'US-XY2RKCS',
+            import: true,
+        };
+        return this.getSert(data);
+    }
 }
 module.exports = new SupplierDataUtil();
