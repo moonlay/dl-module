@@ -48,10 +48,13 @@ class PurchaseOrderExternalDataUtil {
                                     defaultUom: item.defaultUom,
                                     dealQuantity: Number(item.defaultQuantity),
                                     dealUom: item.defaultUom,
+                                    dealConversion: 1,
+                                    quantityConversion: poeItem.dealQuantity * 1,
+                                    uomConversion: item.category.uom || poeItem.dealUom,
+                                    conversion: 1,
                                     budgetPrice: Number(item.budgetPrice),
                                     priceBeforeTax: Number(item.budgetPrice),
                                     pricePerDealUnit: Number(item.budgetPrice),
-                                    conversion: 1,
                                     useIncomeTax: false
                                 }
                             })
