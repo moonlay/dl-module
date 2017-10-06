@@ -351,6 +351,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                             fulfillment.corrections.push(_correction);
                         }
                     }
+                    purchaseOrder.isClosed = false;
                     return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 });
             jobs.push(job);
@@ -371,6 +372,12 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
             var job = this.purchaseOrderExternalManager.getSingleById(purchaseOrderExternalId)
                 .then((purchaseOrderExternal) => {
                     purchaseOrderExternal.isClosed = false;
+                    for (var poeItem of purchaseOrderExternal.items) {
+                        var item = purchaseQuantityCorrection.items.find((correctionItem) => correctionItem.purchaseOrderInternalNo === poeItem.poNo)
+                        if (item) {
+                            poeItem.isClosed = false;
+                        }
+                    }
                     return this.purchaseOrderExternalManager.update(purchaseOrderExternal);
                 })
             jobs.push(job);
