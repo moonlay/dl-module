@@ -112,7 +112,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         var doDate = new Date(_deliveryOrder.date);
                         var validDate = new Date(valid.date);
                         if (validDate < doDate)
-                            errors["date"] = i18n.__("UnitReceiptNote.date.isGreater:%s is less than delivery order date", i18n.__("UnitReceiptNote.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
+                            errors["date"] = i18n.__("UnitReceiptNote.date.isGreaterDO:%s is less than delivery order date", i18n.__("UnitReceiptNote.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
                     }
                     if (valid.items) {
                         if (valid.items.length <= 0) {

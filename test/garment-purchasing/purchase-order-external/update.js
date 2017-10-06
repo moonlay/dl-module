@@ -15,36 +15,7 @@ before('#00. connect db', function (done) {
             purchaseOrderExternalManager = new PurchaseOrderExternalManager(db, {
                 username: 'unit-test'
             });
-
-            var get2newPurchaseOrder = new Promise((resolve, reject) => {
-                purchaseOrderDataUtil.getNewTestData()
-                    .then(po1 => {
-                        purchaseOrderDataUtil.getNewTestData()
-                            .then(po2 => {
-                                resolve([po1, po2])
-                            })
-                    })
-            })
-
-            var get2newPurchaseOrder2 = new Promise((resolve, reject) => {
-                purchaseOrderDataUtil.getNewTestData()
-                    .then(po1 => {
-                        purchaseOrderDataUtil.getNewTestData()
-                            .then(po2 => {
-                                resolve([po1, po2])
-                            })
-                    })
-            })
-
-            Promise.all([get2newPurchaseOrder, get2newPurchaseOrder2])
-                .then(results => {
-                    purchaseOrders = results[0];
-                    purchaseOrders2 = results[1];
-                    done()
-                })
-                .catch(e => {
-                    done(e);
-                });
+            done();
         })
         .catch(e => {
             done(e);
@@ -52,7 +23,7 @@ before('#00. connect db', function (done) {
 });
 
 it('#01. should success when create new purchase-order-external with purchase-orders', function (done) {
-    purchaseOrderExternalDataUtil.getNew(purchaseOrders)
+    purchaseOrderExternalDataUtil.getNew()
         .then(poe => {
             purchaseOrderExternal = poe;
             validatePO(purchaseOrderExternal);
@@ -65,7 +36,7 @@ it('#01. should success when create new purchase-order-external with purchase-or
 
 var purchaseOrderExternal2;
 it('#01. (2) should success when create new purchase-order-external with purchase-orders', function (done) {
-    purchaseOrderExternalDataUtil.getNew2(purchaseOrders2)
+    purchaseOrderExternalDataUtil.getNew2()
         .then(poe => {
             purchaseOrderExternal2 = poe;
             validatePO(purchaseOrderExternal2);
