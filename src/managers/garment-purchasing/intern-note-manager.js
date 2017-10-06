@@ -101,16 +101,16 @@ module.exports = class InternNoteManager extends BaseManager {
                     errors["no"] = i18n.__("InternNote.no.isExist:%s is exist", i18n.__("InternNote.no._:No"));
                 }
 
-                if (!valid.date || valid.date === "") {
-                    errors["date"] = i18n.__("InternNote.date.isRequired:%s is required", i18n.__("InternNote.date._:Date"));
-                    valid.date = '';
-                }
-                else if (new Date(valid.date) > now) {
-                    errors["date"] = i18n.__("InternNote.date.isGreater:%s is greater than today", i18n.__("DeliveryOrder.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
-                }
-                else if (new Date(valid.date) > valid.dueDate) {
-                    errors["date"] = i18n.__("InternNote.date.isGreaterDueDate:%s is greater than due date", i18n.__("DeliveryOrder.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
-                }
+                // if (!valid.date || valid.date === "") {
+                //     errors["date"] = i18n.__("InternNote.date.isRequired:%s is required", i18n.__("InternNote.date._:Date"));
+                //     valid.date = '';
+                // }
+                // else if (new Date(valid.date) > now) {
+                //     errors["date"] = i18n.__("InternNote.date.isGreater:%s is greater than today", i18n.__("DeliveryOrder.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
+                // }
+                // else if (new Date(valid.date) > valid.dueDate) {
+                //     errors["date"] = i18n.__("InternNote.date.isGreaterDueDate:%s is greater than due date", i18n.__("DeliveryOrder.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
+                // }
 
                 if (!valid.supplierId || valid.supplierId.toString() === "") {
                     errors["supplierId"] = i18n.__("InternNote.supplier.name.isRequired:%s is required", i18n.__("InternNote.supplier.name._:Name")); //"Nama Supplier tidak boleh kosong";
@@ -318,9 +318,12 @@ module.exports = class InternNoteManager extends BaseManager {
 
     _beforeUpdate(data) {
         return this.getSingleById(data._id)
-            .then((internNote) => this.getRealization(internNote))
-            .then((realizations) => this.updateInvoiceNoteDeleteInterNote(realizations))
-            .then((realizations) => this.updatePurchaseOrderDeleteInterNote(realizations))
+            .then((internNote) => {
+                return this.getRealization(internNote)
+                    .then((realizations) => this.updateInvoiceNoteDeleteInterNote(realizations))
+                    .then((realizations) => this.updatePurchaseOrderDeleteInterNote(realizations))
+                    .then((realizations) => this.updateStatusNI(internNote))
+            })
             .then(() => {
                 return Promise.resolve(data)
             })
@@ -328,9 +331,12 @@ module.exports = class InternNoteManager extends BaseManager {
 
     _afterUpdate(id) {
         return this.getSingleById(id)
-            .then((internNote) => this.getRealization(internNote))
-            .then((realizations) => this.updateInvoiceNote(realizations))
-            .then((realizations) => this.updatePurchaseOrder(realizations))
+            .then((internNote) => {
+                return this.getRealization(internNote)
+                    .then((realizations) => this.updateInvoiceNote(realizations))
+                    .then((realizations) => this.updatePurchaseOrder(realizations))
+                    .then((realizations) => this.updateStatusNI(internNote))
+            })
             .then(() => {
                 return Promise.resolve(id)
             })
@@ -398,7 +404,7 @@ module.exports = class InternNoteManager extends BaseManager {
                     return this.invoiceNoteManager.collection.updateOne({
                         _id: invoiceNote._id
                     }, {
-                            $set: { "hasInternNote": true }
+                            $set: { "hasInternNote": false }
                         });
                 })
             jobs.push(job);
@@ -610,7 +616,7 @@ module.exports = class InternNoteManager extends BaseManager {
                                             doNo: _do.no,
                                             doPOid: fulfillment.purchaseOrderId,
                                             doPRid: fulfillment.purchaseRequestId,
-                                            doPRRefno: fulfillment.purchaseRequestRefNo,
+                                            doPRRefno: fulfillment.purchaseRequestRefNo || "",
                                             doProductid: fulfillment.product._id,
                                             doCorrection: correction || {},
                                         }
@@ -892,5 +898,49 @@ module.exports = class InternNoteManager extends BaseManager {
             xls.name = `Nota Intern.xlsx`;
 
         return Promise.resolve(xls);
+    }
+
+    updateStatusNI(internNote) {
+        var getDeliveryOrder = internNote.items.map((invoiceNote) => {
+            var invoiceNotes = invoiceNote.items.map((invoiceItem) => {
+                var listId = invoiceItem.items
+                    .map(item => {
+                        return this.deliveryOrderManager.getSingleByIdOrDefault(invoiceItem.deliveryOrderId)
+                    })
+                return listId;
+            })
+            invoiceNotes = [].concat.apply([], invoiceNotes);
+            return invoiceNotes;
+        })
+        getDeliveryOrder = [].concat.apply([], getDeliveryOrder);
+        return Promise.all(getDeliveryOrder)
+            .then((deliveryOrders) => {
+                var listStatus = [];
+                for (var invoiceNote of internNote.items) {
+                    for (var invoiceItem of invoiceNote.items) {
+                        for (var item of invoiceItem.items) {
+                            var _do = deliveryOrders.find((deliveryOrder) => deliveryOrder.no === invoiceItem.deliveryOrderNo);
+                            var _doItem = _do.items.find((_item) => _item.purchaseOrderExternalNo === item.purchaseOrderExternalNo);
+                            var _doFulfillment = _doItem.fulfillments.find((_fulfillment) => _fulfillment.product._id.toString() === item.product._id.toString() && _fulfillment.purchaseOrderNo === item.purchaseOrderNo)
+                            listStatus.push(_doFulfillment ? (_doFulfillment.realizationQuantity.length > 0 ? true : false) : false);
+                        }
+                    }
+                }
+                internNote.hasUnitReceiptNote = listStatus.map((item) => item)
+                    .reduce((prev, curr, index) => {
+                        return prev && curr
+                    }, true);
+
+                if (!internNote.stamp) {
+                    internNote = new InternNote(internNote);
+                }
+
+                internNote.stamp(this.user.username, 'manager');
+                return this.collection.updateOne({
+                    _id: internNote._id
+                }, {
+                        $set: internNote
+                    })
+            })
     }
 }

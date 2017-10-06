@@ -800,6 +800,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
         return Promise.resolve(xls);
     }
+
     cleanUp(input) {
         var newArr = [];
         for (var i = 0; i < input.length; i++) {
@@ -809,4 +810,5 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         }
         return newArr;
     }
+
 };
