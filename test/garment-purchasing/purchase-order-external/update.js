@@ -111,7 +111,7 @@ it('#04. should success when generate pdf purchase-order-external non fabric', f
         });
 });
 
-it('#04.(2) should success when generate pdf purchase-order-external english', function (done) {
+it('#04.(2) should success when generate pdf purchase-order-external english ver', function (done) {
     purchaseOrderExternalManager.pdf(purchaseOrderExternal2._id, 7)
         .then(results => {
             done();
