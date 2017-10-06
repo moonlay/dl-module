@@ -128,10 +128,13 @@ class PurchaseOrderExternalDataUtil {
                                     defaultUom: item.defaultUom,
                                     dealQuantity: Number(item.defaultQuantity),
                                     dealUom: item.defaultUom,
+                                    dealConversion: 1,
+                                    quantityConversion: Number(item.defaultQuantity) * 1,
+                                    uomConversion: item.category.uom || item.dealUom,
+                                    conversion: 1,
                                     budgetPrice: Number(item.budgetPrice),
                                     priceBeforeTax: Number(item.budgetPrice),
                                     pricePerDealUnit: Number(item.budgetPrice),
-                                    conversion: 1,
                                     useIncomeTax: false
                                 }
                             })
