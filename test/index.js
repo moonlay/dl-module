@@ -26,6 +26,7 @@ describe('#dl-module', function (done) {
     test('@ETL/DIM-STORAGE', './etl/dim/dim-storage');
     test('@ETL/DIM-COMPANY', './etl/dim/dim-company');
     test('@ETL/DIM-CONTACT', './etl/dim/dim-contact');
+    test('@ETL/DIM-DURATION-ESTIMATION', './etl/dim/dim-duration-estimation');
     test('@ETL/FACT-TOTAL-HUTANG', './etl/purchasing/fact-total-hutang');
     test('@ETL/FACT-PURCHASING', './etl/purchasing/fact-purchasing');
     test('@ETL/FACT-MONITORING-EVENT', './etl/production/fact-monitoring-event');
