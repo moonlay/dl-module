@@ -59,7 +59,6 @@ const PO_INTERNAL_FIELDS = {
     "unit.code": 1,
     "unit.name": 1,
     "unit.division.code": 1,
-    "unit.division.code": 1,
     "date": 1,
     "expectedDeliveryDate": 1,
     "shipmentDate": 1,
@@ -118,8 +117,11 @@ const PO_INTERNAL_FIELDS = {
     "items.fulfillments.unitReceiptNoteDate": 1,
     "items.fulfillments.unitReceiptNoteDeliveredQuantity": 1,
     "items.fulfillments.unitReceiptNoteDeliveredUom.unit": 1,
-    "items.status.name": 1,
-    "items.status.label": 1,
+    "items.fulfillments.interNoteNo": 1,
+    "items.fulfillments.interNoteDate": 1,
+    "items.fulfillments.interNotePrice": 1,
+    "items.fulfillments.interNoteQuantity": 1,
+    "items.fulfillments.interNoteDueDate": 1
 };
 
 const DESCRIPTION = "Fact Pembelian Garment from MongoDB to Azure DWH";
@@ -363,7 +365,11 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                                 unitPaymentOrderDate: poFulfillment.interNoteDate ? `'${moment(poFulfillment.interNoteDate).add(7, "h").format('L')}'` : null, //Tanggal SPB
                                 purchaseOrderDays: poFulfillment.interNoteDate ? `${poDays}` : null, //Jumlah Selisih Hari UPO-PO Internal
                                 purchaseOrderDaysRange: poFulfillment.interNoteDate ? `'${this.getRangeMonth(poDays)}'` : null, //Selisih Hari UPO-PO Internal
-                                invoicePrice: poFulfillment.interNoteDate ? `'${poItem.pricePerDealUnit}'` : null //Harga Sesuai Invoice
+                                invoicePrice: poFulfillment.interNotePrice ? `'${poFulfillment.interNotePrice}'` : null, //Harga Sesuai Invoice
+                                unitPaymentOrderPrice: poFulfillment.interNotePrice ? `'${poFulfillment.interNotePrice}'` : null,
+                                unitPaymentOrderQuantity: poFulfillment.interNoteQuantity ? `'${poFulfillment.interNoteQuantity}'` : null,
+                                unitPaymentOrderDueDate: poFulfillment.interNoteDueDate ? `'${moment(poFulfillment.interNoteDueDate).add(7, "h").format('L')}'` : null,
+                                unitReceiptNoteDeliveredQuantity: poFulfillment.unitReceiptNoteDeliveredQuantity ? `'${poFulfillment.unitReceiptNoteDeliveredQuantity}'` : null
                             };
                         });
                     } else if (poItem.fulfillments.length === 0) {
@@ -430,7 +436,11 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                             unitPaymentOrderDate: null, //Tanggal SPB
                             purchaseOrderDays: null, //Jumlah Selisih Hari UPO-PO Internal
                             purchaseOrderDaysRange: null, //Selisih Hari UPO-PO Internal
-                            invoicePrice: null //Harga Sesuai Invoice
+                            invoicePrice: null, //Harga Sesuai Invoice,
+                            unitPaymentOrderPrice: null,
+                            unitPaymentOrderQuantity: null,
+                            unitPaymentOrderDueDate: null,
+                            unitReceiptNoteDeliveredQuantity: null
                         }
                     }
                 });
@@ -499,7 +509,11 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                         unitPaymentOrderDate: null, //Tanggal SPB
                         purchaseOrderDays: null, //Jumlah Selisih Hari UPO-PO Internal
                         purchaseOrderDaysRange: null, //Selisih Hari UPO-PO Internal
-                        invoicePrice: null //Harga Sesuai Invoice
+                        invoicePrice: null, //Harga Sesuai Invoice
+                        unitPaymentOrderPrice: null,
+                        unitPaymentOrderQuantity: null,
+                        unitPaymentOrderDueDate: null,
+                        unitReceiptNoteDeliveredQuantity: null
                     };
                 });
                 return [].concat.apply([], results);
@@ -539,7 +553,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `\nSELECT ${item.purchaseRequestNo}, ${item.purchaseRequestDate}, ${item.expectedPRDeliveryDate}, ${item.unitCode}, ${item.unitName}, ${item.divisionCode}, ${item.divisionName}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType}, ${item.productCode}, ${item.productName}, ${item.purchaseRequestDays}, ${item.purchaseRequestDaysRange}, ${item.prPurchaseOrderExternalDays}, ${item.prPurchaseOrderExternalDaysRange}, ${item.deletedPR}, ${item.purchaseOrderNo}, ${item.purchaseOrderDate}, ${item.purchaseOrderExternalDays}, ${item.purchaseOrderExternalDaysRange}, ${item.purchasingStaffName}, ${item.prNoAtPo}, ${item.deletedPO}, ${item.purchaseOrderExternalNo}, ${item.purchaseOrderExternalDate}, ${item.deliveryOrderDays}, ${item.deliveryOrderDaysRange}, ${item.supplierCode}, ${item.supplierName}, ${item.currencyCode}, ${item.currencySymbol}, ${item.paymentMethod}, ${item.currencyRate}, ${item.purchaseQuantity}, ${item.uom}, ${item.pricePerUnit}, ${item.totalPrice}, ${item.expectedDeliveryDate}, ${item.prNoAtPoExt}, ${item.deliveryOrderNo}, ${item.deliveryOrderDate}, ${item.unitReceiptNoteDays}, ${item.unitReceiptNoteDaysRange}, ${item.status}, ${item.prNoAtDo}, ${item.unitReceiptNoteNo}, ${item.unitReceiptNoteDate}, ${item.unitPaymentOrderDays}, ${item.unitPaymentOrderDaysRange},${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate}, ${item.purchaseOrderDays}, ${item.purchaseOrderDaysRange}, ${item.invoicePrice} UNION ALL `;
+                                var queryString = `\nSELECT ${item.purchaseRequestNo}, ${item.purchaseRequestDate}, ${item.expectedPRDeliveryDate}, ${item.unitCode}, ${item.unitName}, ${item.divisionCode}, ${item.divisionName}, ${item.categoryCode}, ${item.categoryName}, ${item.categoryType}, ${item.productCode}, ${item.productName}, ${item.purchaseRequestDays}, ${item.purchaseRequestDaysRange}, ${item.prPurchaseOrderExternalDays}, ${item.prPurchaseOrderExternalDaysRange}, ${item.deletedPR}, ${item.purchaseOrderNo}, ${item.purchaseOrderDate}, ${item.purchaseOrderExternalDays}, ${item.purchaseOrderExternalDaysRange}, ${item.purchasingStaffName}, ${item.prNoAtPo}, ${item.deletedPO}, ${item.purchaseOrderExternalNo}, ${item.purchaseOrderExternalDate}, ${item.deliveryOrderDays}, ${item.deliveryOrderDaysRange}, ${item.supplierCode}, ${item.supplierName}, ${item.currencyCode}, ${item.currencySymbol}, ${item.paymentMethod}, ${item.currencyRate}, ${item.purchaseQuantity}, ${item.uom}, ${item.pricePerUnit}, ${item.totalPrice}, ${item.expectedDeliveryDate}, ${item.prNoAtPoExt}, ${item.deliveryOrderNo}, ${item.deliveryOrderDate}, ${item.unitReceiptNoteDays}, ${item.unitReceiptNoteDaysRange}, ${item.status}, ${item.prNoAtDo}, ${item.unitReceiptNoteNo}, ${item.unitReceiptNoteDate}, ${item.unitPaymentOrderDays}, ${item.unitPaymentOrderDaysRange},${item.unitPaymentOrderNo}, ${item.unitPaymentOrderDate}, ${item.purchaseOrderDays}, ${item.purchaseOrderDaysRange}, ${item.invoicePrice}, ${item.unitPaymentOrderPrice}, ${item.unitPaymentOrderQuantity}, ${item.unitPaymentOrderDueDate}, ${item.unitReceiptNoteDeliveredQuantity} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);

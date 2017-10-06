@@ -6,12 +6,20 @@ var unit = require("../master/unit-data-util");
 var supplier = require('../master/garment-supplier-data-util');
 var deliveryOrder = require('../garment-purchasing/delivery-order-data-util');
 
+var getNewDeliveryOrder = function () {
+    return deliveryOrder.getNewTestData()
+        .then((datadeliveryOrder) => {
+            return Promise.resolve(datadeliveryOrder);
+        });
+};
+
 class UnitReceiptNoteDataUtil {
-    getNewData() {
+    getNewData(dataDeliveryOrder) {
         return helper
             .getManager(UnitReceiptNoteManager)
             .then(manager => {
-                return Promise.all([unit.getTestData(), deliveryOrder.getNewTestData()])
+                var getDeliveryOrder = dataDeliveryOrder ? dataDeliveryOrder : getNewDeliveryOrder();
+                return Promise.all([unit.getTestData(), getDeliveryOrder])
                     .then(results => {
                         var dataUnit = results[0];
                         var dataDeliveryOrder = results[1];
@@ -87,7 +95,7 @@ class UnitReceiptNoteDataUtil {
 
                                         doItems = [].concat.apply([], doItems);
                                         var data = {
-                                            no: `UT/URN/${codeGenerator()}`,
+                                            no: `UT/URN/${codeGenerator(dataDeliveryOrder.no)}`,
                                             unitId: dataUnit._id,
                                             unit: dataUnit,
                                             date: new Date(),
@@ -107,11 +115,11 @@ class UnitReceiptNoteDataUtil {
             })
     }
 
-    getNewTestData() {
+    getNewTestData(dataDeliveryOrder) {
         return helper
             .getManager(UnitReceiptNoteManager)
             .then((manager) => {
-                return this.getNewData().then((data) => {
+                return this.getNewData(dataDeliveryOrder).then((data) => {
                     return manager.create(data)
                         .then((id) => manager.getSingleById(id));
                 });
