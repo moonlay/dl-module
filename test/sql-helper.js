@@ -10,7 +10,7 @@ var config = {
     },
     connectionTimeout: 120 * 60 * 1000,
     requestTimeout: 1000000
-};
+}; 
 
 module.exports = {
     getConnection: function () {
