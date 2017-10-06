@@ -86,20 +86,9 @@ it('#04. should success when generate pdf purchase-order-external non fabric', f
         });
 });
 
-it('#05. should success when generate pdf purchase-order-external english ver', function (done) {
-    purchaseOrderExternal.supplier.import = true;
-    purchaseOrderExternalManager.pdf(purchaseOrderExternal._id, 7)
-        .then(results => {
-            done();
-        })
-        .catch(e => {
-            done(e);
-        });
-});
 
-it('#06. should success when generate pdf purchase-order-external english ver non fabric', function (done) {
+it('#05. should success when generate pdf purchase-order-external english ver non fabric', function (done) {
     purchaseOrderExternal.category = "ACCESSORIES"
-    purchaseOrderExternal.supplier.import = false;
     purchaseOrderExternalManager.pdf(purchaseOrderExternal._id, 7)
         .then(results => {
             done();
@@ -109,7 +98,7 @@ it('#06. should success when generate pdf purchase-order-external english ver no
         });
 });
 
-it('#07. should success when update purchase-order-external', function (done) {
+it('#06. should success when update purchase-order-external', function (done) {
     purchaseOrderExternal.items.splice(0, 1);
     purchaseOrderExternalManager.update(purchaseOrderExternal)
         .then((id) => {
