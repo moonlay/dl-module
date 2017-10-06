@@ -163,8 +163,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     '$ne': new ObjectId(valid._id)
                 }
             }, {
-                "no": valid.no
-            }]
+                    "no": valid.no
+                }]
         });
         var getCurrency = valid.currency && ObjectId.isValid(valid.currency._id) ? this.currencyManager.getSingleByIdOrDefault(valid.currency._id) : Promise.resolve(null);
         var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
@@ -836,7 +836,13 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 item.colors = _prItem.colors || []
                                 item.artikel = _pr.artikel;
                             }
-                            var getDefinition = require('../../pdf/definitions/garment-purchase-order-external');
+
+                            var getDefinition;
+                            if (pox.supplier.import == true) {
+                                getDefinition = require('../../pdf/definitions/garment-purchase-order-external-english');
+                            } else {
+                                getDefinition = require('../../pdf/definitions/garment-purchase-order-external');
+                            }
                             var definition = getDefinition(pox, offset);
 
                             var generatePdf = require('../../pdf/pdf-generator');
