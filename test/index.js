@@ -24,6 +24,7 @@ describe('#dl-module', function (done) {
     test('@ETL/DIM-ORDER-TYPE', './etl/dim/dim-order-type');
     test('@ETL/DIM-PRODUCT', './etl/dim/dim-product');
     test('@ETL/DIM-STORAGE', './etl/dim/dim-storage');
+    test('@ETL/DIM-STAFF', './etl/dim/dim-staff');
     test('@ETL/DIM-COMPANY', './etl/dim/dim-company');
     test('@ETL/DIM-CONTACT', './etl/dim/dim-contact');
     test('@ETL/FACT-TOTAL-HUTANG', './etl/purchasing/fact-total-hutang');
