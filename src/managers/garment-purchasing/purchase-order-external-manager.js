@@ -418,9 +418,6 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                     else {
                                                         items.priceBeforeTax = items.priceBeforeTax;
                                                     }
-                                                    if (!items.dealConversion || items.dealConversion === "") {
-                                                        itemError["dealConversion"] = i18n.__("PurchaseOrderExternal.items.dealConversion.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.dealConversion._:Conversion")); //"Konversi tidak boleh kosong";
-                                                    }
                                                     if (!items.conversion || items.conversion === "") {
                                                         itemError["conversion"] = i18n.__("PurchaseOrderExternal.items.conversion.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.conversion._:Conversion")); //"Konversi tidak boleh kosong";
                                                     }
@@ -465,7 +462,6 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                             _item.category = poInternal.items[0].category;
                                             _item.categoryId = poInternal.items[0].category._id;
                                             _item.dealQuantity = Number(_item.dealQuantity);
-                                            _item.dealConversion = Number(_item.dealConversion||_item.conversion);
                                             _item.defaultQuantity = Number(_item.defaultQuantity);
                                             _item.priceBeforeTax = Number(_item.priceBeforeTax);
                                             _item.pricePerDealUnit = _item.useIncomeTax ? (100 * _item.priceBeforeTax) / 110 : _item.priceBeforeTax;
@@ -528,7 +524,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     poItem.priceBeforeTax = Number(poExtItem.priceBeforeTax);
                     poItem.dealQuantity = Number(poExtItem.dealQuantity);
                     poItem.dealUom = poExtItem.dealUom;
-                    poItem.conversion = Number(poExtItem.dealConversion || poExtItem.conversion);
+                    poItem.conversion = Number(poExtItem.conversion);
                     poItem.isClosed = true;
                     poItem.status = poStatusEnum.PROCESSING;
                 }
@@ -642,7 +638,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 poItem.priceBeforeTax = Number(newItem.priceBeforeTax);
                                 poItem.dealQuantity = Number(newItem.dealQuantity);
                                 poItem.dealUom = newItem.dealUom;
-                                poItem.conversion = Number(newItem.dealConversion||newItem.conversion);
+                                poItem.conversion = Number(newItem.conversion);
                                 poItem.isClosed = true;
                                 poItem.status = poStatusEnum.PROCESSING;
                             }
@@ -789,7 +785,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                             poItem.dealUom = item.dealUom;
                                                             poItem.priceBeforeTax = Number(item.priceBeforeTax);
                                                             poItem.pricePerDealUnit = item.useIncomeTax ? (100 * item.priceBeforeTax) / 110 : item.priceBeforeTax;
-                                                            poItem.conversion = Number(item.dealConversion||item.conversion)
+                                                            poItem.conversion = Number(item.conversion)
                                                             poItem.currency = purchaseOrderExternal.currency;
                                                             poItem.currencyRate = Number(purchaseOrderExternal.currencyRate);
                                                             poItem.isPosted = true
