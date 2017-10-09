@@ -214,6 +214,7 @@ module.exports = {
     etl: {
         dim: {
             dimCategory: require("./src/etl/dim/dim-category-etl-manager"),
+            dimStaff: require("./src/etl/dim/dim-staff-etl-manager"),
             dimDivision: require("./src/etl/dim/dim-division-etl-manager"),
             dimBuyer: require("./src/etl/dim/dim-buyer-etl-manager"),
             dimOrderType: require("./src/etl/dim/dim-order-type-etl-manager"),
