@@ -8,11 +8,13 @@ var Storage = DLModels.master.Storage;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var CodeGenerator = require('../../utils/code-generator');
+var UnitManager = require('./unit-manager');
 
 module.exports = class StorageManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.master.collection.Storage);
+        this.unitManager = new UnitManager(db, user);
     }
 
     _getQuery(paging) {
@@ -59,17 +61,23 @@ module.exports = class StorageManager extends BaseManager {
             },
             code: valid.code
         });
+
+        var getUnit = valid.unit && ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(valid.unit._id) : Promise.resolve(null);
         // 2. begin: Validation.
-        return Promise.all([getBuyerPromise])
+        return Promise.all([getBuyerPromise, getUnit])
             .then(results => {
                 var _module = results[0];
+                var _unit=results[1];
 
                 if (_module) {
                     errors["code"] = i18n.__("Storage.code.isExists:%s is already exists", i18n.__("Storage.code._:Code")); //"Kode sudah ada";
                 }
                 if (!valid.name || valid.name == '')
                     errors["name"] = i18n.__("Storage.name.isRequired:%s is required", i18n.__("Storage.name._:Name")); //"Nama Harus diisi";
-
+                
+                if(!_unit){
+                     errors["unit"] = i18n.__("Storage.unit.isRequired:%s is required", i18n.__("Storage.unit._:Unit")); //"unit Harus diisi";
+                }
 
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -79,6 +87,11 @@ module.exports = class StorageManager extends BaseManager {
                 if (!valid.tempo || valid.tempo == '')
                     valid.tempo = 0;
 
+                if(_unit){
+                    valid.unit=_unit;
+                    valid.unitId=new ObjectId(_unit._id);
+                }
+                
                 valid = new Storage(valid);
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
