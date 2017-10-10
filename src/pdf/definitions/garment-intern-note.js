@@ -180,7 +180,21 @@ module.exports = function (data, offset) {
                                 text: `${moment(dueDate).add(offset, 'h').format("DD MMM YYYY")}`,
                                 style: ['size06']
                             }]
-                        }
+                        },{
+                            columns: [{
+                                width: '25%',
+                                text: 'Term Pembayaran',
+                                style: ['size06']
+                            }, {
+                                width: '2%',
+                                text: ':',
+                                style: ['size06']
+                            }, {
+                                width: '*',
+                                text: paymentMethod,
+                                style: ['size06']
+                            }]
+                        },
                     ]
                 }
             ]
