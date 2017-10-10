@@ -351,7 +351,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                             fulfillment.corrections.push(_correction);
                         }
                     }
-                    purchaseOrder.isClosed = false;
+                    // purchaseOrder.isClosed = false;
                     return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 });
             jobs.push(job);
