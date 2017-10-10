@@ -26,7 +26,7 @@ class StorageDataUtil {
                     name : `name[${code}]`,
                     description : `storage description [${code}]`,
                     unit:_unit,
-                    initId:_unit._id
+                    unitId:_unit._id
                 }
 
                 return Promise.resolve(data);
