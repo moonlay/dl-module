@@ -804,12 +804,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
         if (info.state && info.state !== -1) {
             Object.assign(query, {
-                "status.value": state
+                "status.value": info.state
             });
         }
         if (info.user && info.user !== "") {
             Object.assign(query, {
-                _createdBy: new ObjectId(info.user)
+                _createdBy: info.user
             });
         }
         if (info.unitId && info.unitId !== "") {

@@ -281,6 +281,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                     fulfillment.productId = new ObjectId(poInternal.productId);
                                     fulfillment.purchaseOrderId = new ObjectId(poInternal.poId);
                                     fulfillment.purchaseOrderNo = poInternal.poNo;
+                                    fulfillment.roNo = poInternal.roNo;
+                                    fulfillment.purchaseRequestRefNo = poInternal.prRefNo;
                                 }
                                 fulfillment.deliveredQuantity = Number(fulfillment.deliveredQuantity);
                                 fulfillment.purchaseOrderQuantity = Number(fulfillment.purchaseOrderQuantity);
@@ -1062,6 +1064,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             "customs": "$useCustoms",
                             "poEksNo": "$items.purchaseOrderExternalNo",
                             "prNo": "$items.fulfillments.purchaseRequestNo",
+                            "prRefNo": "$items.fulfillments.purchaseRequestRefNo",
+                            "roNo": "$items.fulfillments.roNo",
                             "productCode": "$items.fulfillments.product.code",
                             "productName": "$items.fulfillments.product.name",
                             "qty": "$items.fulfillments.purchaseOrderQuantity",
@@ -1112,6 +1116,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             data["Dikenakan Bea Cukai"] = _data.customs ? "Ya" : "Tidak";
             data["Nomor PO Eksternal"] = _data.poEksNo;
             data["Nomor PR"] = _data.prNo;
+            data["Nomor RO"] = _data.roNo;
+            data["Nomor Referensi PR"] = _data.prRefNo;
             data["Kode Barang"] = _data.productCode;
             data["Nama Barang"] = _data.productName;
             data["Jumlah Dipesan"] = _data.qty;
@@ -1132,6 +1138,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             xls.options["Dikenakan Bea Cukai"] = "string";
             xls.options["Nomor PO Eksternal"] = "string";
             xls.options["Nomor PR"] = "string";
+            xls.options["Nomor RO"] = "string";
+            xls.options["Nomor Referensi PR"] = "string";
             xls.options["Kode Barang"] = "string";
             xls.options["Nama Barang"] = "string";
             xls.options["Jumlah Dipesan"] = "number";

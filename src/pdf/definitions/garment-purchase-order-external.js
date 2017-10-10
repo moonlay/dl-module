@@ -462,7 +462,7 @@ module.exports = function (pox, offset) {
                                             text: 'Shrinkage test'
                                         }, {
                                             width: '2%',
-                                            text: ''
+                                            text: ':'
                                         }, {
                                             width: '*',
                                             text: pox.qualityStandard.shrinkage
