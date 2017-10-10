@@ -84,6 +84,7 @@ class UnitReceiptNoteDataUtil {
                                                     purchaseRequestId: fulfillment.purchaseRequestId,
                                                     purchaseRequestNo: fulfillment.purchaseRequestNo,
                                                     purchaseRequestRefNo: fulfillment.purchaseRequestRefNo,
+                                                    roNo: fulfillment.roNo,
                                                     buyer: purchaseRequest.buyer,
                                                     buyerId: purchaseRequest.buyer._id,
                                                     remark: ''
