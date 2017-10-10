@@ -153,7 +153,7 @@ module.exports = function (data, offset) {
                     stack: [
                         {
                             columns: [{
-                                width: '25%',
+                                width: '28%',
                                 text: 'Tgl. Nota Intern',
                                 style: ['size06']
                             }, {
@@ -168,7 +168,7 @@ module.exports = function (data, offset) {
                         },
                         {
                             columns: [{
-                                width: '25%',
+                                width: '28%',
                                 text: 'Tgl. Jatuh Tempo',
                                 style: ['size06']
                             }, {
@@ -182,7 +182,7 @@ module.exports = function (data, offset) {
                             }]
                         },{
                             columns: [{
-                                width: '25%',
+                                width: '28%',
                                 text: 'Term Pembayaran',
                                 style: ['size06']
                             }, {
