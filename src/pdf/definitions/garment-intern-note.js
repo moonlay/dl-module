@@ -10,7 +10,7 @@ module.exports = function (data, offset) {
                 return {
                     deliveryOrderNo: dataItem.deliveryOrderNo,
                     date: dataItem.deliveryOrderDate,
-                    purchaseRequestNo: item.purchaseRequestNo,
+                    purchaseRequestRefNo: item.purchaseRequestRefNo,
                     product: item.product.name,
                     productDesc: item.product.description,
                     quantity: item.deliveredQuantity,
@@ -227,7 +227,7 @@ module.exports = function (data, offset) {
             text: `${moment(item.date).add(offset, 'h').format("DD MMM YYYY")}`,
             style: ['size06', 'left']
         }, {
-            text: item.purchaseRequestNo,
+            text: item.purchaseRequestRefNo,
             style: ['size06', 'left']
         }, {
             text: `${item.product};${item.productDesc}`,

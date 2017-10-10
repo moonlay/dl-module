@@ -42,7 +42,6 @@ module.exports = {
             TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager'),
             DesignMotiveManager: require('./src/managers/master/design-motive-manager'),
             StorageManager: require('./src/managers/master/storage-manager'),
-            HolidayManager: require('./src/managers/master/holiday-manager'),
             CompanyManager: require('./src/managers/master/company-manager'),
             ContactManager: require('./src/managers/master/contact-manager'),
             BadOutputReasonManager: require('./src/managers/master/bad-output-reason-manager'),
@@ -59,11 +58,6 @@ module.exports = {
             InventoryDocumentManager: require("./src/managers/inventory/inventory-document-manager"),
             InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
             InventoryMovementManager: require("./src/managers/inventory/inventory-movement-manager")
-        },
-        inventoryTextile: {
-            TextileInventoryDocumentManager: require("./src/managers/inventory-textile/textile-inventory-document-manager"),
-            TextileInventorySummaryManager: require("./src/managers/inventory-textile/textile-inventory-summary-manager"),
-            TextileInventoryMovementManager: require("./src/managers/inventory-textile/textile-inventory-movement-manager")
         },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
@@ -196,11 +190,6 @@ module.exports = {
                 inventoryMovement: require('./test/data-util/inventory/inventory-movement-data-util'),
                 inventorySummary: require('./test/data-util/inventory/inventory-summary-data-util')
             },
-            inventoryTextile: {
-                textileInventoryDocument: require('./test/data-util/inventory-textile/textile-inventory-document-data-util'),
-                textileInventoryMovement: require('./test/data-util/inventory-textile/textile-inventory-movement-data-util'),
-                textileInventorySummary: require('./test/data-util/inventory-textile/textile-inventory-summary-data-util')
-            },
             production: {
                 dailyOperation: require('./test/data-util/production/finishing-printing/daily-operation-data-util'),
                 monitoringEvent: require('./test/data-util/production/finishing-printing/monitoring-event-data-util'),
@@ -266,7 +255,7 @@ module.exports = {
         },
         garment: {
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
-            factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager")
+            factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager"),
         }
     }
 }

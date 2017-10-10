@@ -48,6 +48,7 @@ it('#01. should success when create 20 kanban data', function (done) {
     query.edate='';
     query.processTypeId='';
     query.orderTypeId='';
+    query.proses='';
     kanbanManager.getDataReport(query)
     .then(kanban => {
         for(var a of kanban){

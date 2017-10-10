@@ -8,6 +8,7 @@ var i18n = require('dl-i18n');
 var UnitReceiptNote = DLModels.garmentPurchasing.GarmentUnitReceiptNote;
 var PurchaseOrderManager = require('./purchase-order-manager');
 var DeliveryOrderManager = require('./delivery-order-manager');
+var InternNoteManager = require('./intern-note-manager');
 var UnitManager = require('../master/unit-manager');
 var SupplierManager = require('../master/garment-supplier-manager');
 var BaseManager = require('module-toolkit').BaseManager;
@@ -21,6 +22,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         this.collection = this.db.use(map.garmentPurchasing.collection.GarmentUnitReceiptNote);
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
+        this.internNoteManager = new InternNoteManager(db, user);
         this.unitManager = new UnitManager(db, user);
         this.supplierManager = new SupplierManager(db, user);
     }
@@ -110,7 +112,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         var doDate = new Date(_deliveryOrder.date);
                         var validDate = new Date(valid.date);
                         if (validDate < doDate)
-                            errors["date"] = i18n.__("UnitReceiptNote.date.isGreater:%s is less than delivery order date", i18n.__("UnitReceiptNote.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
+                            errors["date"] = i18n.__("UnitReceiptNote.date.isGreaterDO:%s is less than delivery order date", i18n.__("UnitReceiptNote.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
                     }
                     if (valid.items) {
                         if (valid.items.length <= 0) {
@@ -197,8 +199,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     valid.date = new Date(valid.date);
 
                     for (var item of valid.items) {
-                        // var _purchaseOrder = _purchaseOrderList.find((poInternal) => poInternal._id.toString() === item.purchaseOrderId.toString())
-                        // var _purchaseOrderItem = _purchaseOrder.items.find((item) => item.product._id.toString() === item.product._id.toString())
+                        var _purchaseOrder = _purchaseOrderList.find((poInternal) => poInternal._id.toString() === item.purchaseOrderId.toString())
+                        var _purchaseOrderItem = _purchaseOrder.items.find((item) => item.product._id.toString() === item.product._id.toString())
                         // item.product = _purchaseOrderItem.product;
                         // item.deliveredUom = _purchaseOrderItem.dealUom;
                         // item.currency = _purchaseOrderItem.currency;
@@ -206,6 +208,10 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         // item.categoryId = new ObjectId(item.categoryId);
                         // item.purchaseOrderId = new ObjectId(item.purchaseOrderId);
                         // item.purchaseRequestId = new ObjectId(item.purchaseRequestId);
+
+                        item.purchaseOrderNo = _purchaseOrder.no,
+                            item.purchaseRequestNo = _purchaseOrder.purchaseRequest.no,
+                            item.purchaseRequestRefNo = _purchaseOrderItem.refNo;
                         item.deliveredQuantity = Number(item.deliveredQuantity);
                         item.purchaseOrderQuantity = Number(item.purchaseOrderQuantity);
                         item.pricePerDealUnit = Number(item.pricePerDealUnit);
@@ -279,6 +285,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return this.getSingleById(id)
             .then((unitReceiptNote) => this.updatePurchaseOrder(unitReceiptNote))
             .then((unitReceiptNote) => this.updateDeliveryOrder(unitReceiptNote))
+            .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
             .then(() => {
                 return id;
             })
@@ -288,6 +295,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return this.getSingleById(id)
             .then((unitReceiptNote) => this.updatePurchaseOrderUpdateUnitReceiptNote(unitReceiptNote))
             .then((unitReceiptNote) => this.updateDeliveryOrderUpdateUnitReceiptNote(unitReceiptNote))
+            .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
             .then(() => {
                 return id;
             })
@@ -299,12 +307,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             var key = item.purchaseOrderId.toString();
             if (!map.has(key))
                 map.set(key, [])
-            var item = {
+            var _item = {
                 productId: item.product._id,
                 deliveredQuantity: item.deliveredQuantity,
                 deliveredUom: item.deliveredUom
             };
-            map.get(key).push(item);
+            map.get(key).push(_item);
         }
 
         var jobs = [];
@@ -370,12 +378,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             var key = item.purchaseOrderId.toString();
             if (!map.has(key))
                 map.set(key, [])
-            var item = {
+            var _item = {
                 productId: item.product._id,
                 deliveredQuantity: item.deliveredQuantity,
                 deliveredUom: item.deliveredUom
             };
-            map.get(key).push(item);
+            map.get(key).push(_item);
         }
 
         var jobs = [];
@@ -432,15 +440,14 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             var key = item.purchaseOrderId.toString();
             if (!map.has(key))
                 map.set(key, [])
-            var item = {
+            var _item = {
                 productId: item.product._id,
                 deliveredQuantity: item.deliveredQuantity,
                 deliveredUom: item.deliveredUom
             };
-            map.get(key).push(item);
+            map.get(key).push(_item);
         }
-
-        this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId, ["isClosed"])
+        return this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId, ["isClosed"])
             .then((deliveryOrder) => {
                 var jobs = [];
                 map.forEach((items, purchaseOrderId) => {
@@ -494,9 +501,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     jobs.push(job);
                 })
 
-                return Promise.all(jobs).then((results) => {
-                    return Promise.resolve(unitReceiptNote);
-                })
+                return Promise.all(jobs)
+                    .then((results) => {
+                        return Promise.resolve(unitReceiptNote);
+                    })
+                    .catch(e => {
+                        reject(e);
+                    })
 
             })
     }
@@ -694,6 +705,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         return this.getSingleByQuery(query)
                             .then((unitReceiptNote) => this.updateDeliveryOrderDeleteUnitReceiptNote(unitReceiptNote))
                             .then((unitReceiptNote) => this.updatePurchaseOrderDeleteUnitReceiptNote(unitReceiptNote))
+                            .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
                             .then(() => {
                                 return unitReceiptNote._id;
                             })
@@ -717,7 +729,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             })
                             var getPurchaseOrder = _listPurchaseOrderIds.map((purchaseOrderId) => {
                                 if (ObjectId.isValid(purchaseOrderId)) {
-                                    return this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrderId, ["_id", "no", "artikel", "roNo", "items.refNo"])
+                                    return this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrderId, ["_id", "no", "artikel", "roNo"])
                                 } else {
                                     return Promise.resolve(null)
                                 }
@@ -729,7 +741,6 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                         var purchaseOrder = listPurchaseOrder.find((po) => item.purchaseOrderId.toString() === po._id.toString());
                                         item.artikel = purchaseOrder.artikel;
                                         item.roNo = purchaseOrder.roNo;
-                                        item.refNo = purchaseOrder.items[0].refNo;
                                     });
                                     var getDefinition = require('../../pdf/definitions/garment-unit-receipt-note');
                                     var definition = getDefinition(unitReceiptNote, offset);
@@ -775,7 +786,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         }
         return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
-    
+
     updateCollectionUnitReceiptNote(unitReceiptNote) {
         if (!unitReceiptNote.stamp) {
             unitReceiptNote = new UnitReceiptNote(unitReceiptNote);
@@ -885,7 +896,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 });
         });
     }
-    
+
     getUnitReceiptReportXls(dataReport, query) {
 
         return new Promise((resolve, reject) => {
@@ -939,5 +950,65 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
 
             resolve(xls);
         });
+    }
+
+    updateInternNote(unitReceiptNote) {
+        return this.deliveryOrderManager.getSingleByIdOrDefault(unitReceiptNote.deliveryOrderId, ["no", "items.fulfillments.purchaseOrderId"])
+            .then((deliveryOrder) => {
+                var listPurchaseOrderIds = [];
+                for (var item of deliveryOrder.items) {
+                    for (var fulfillment of item.fulfillments) {
+                        listPurchaseOrderIds.push(fulfillment.purchaseOrderId.toString())
+                    }
+                }
+                listPurchaseOrderIds = [].concat.apply([], listPurchaseOrderIds);
+                listPurchaseOrderIds = listPurchaseOrderIds.filter(function (elem, index, self) {
+                    return index == self.indexOf(elem);
+                })
+
+                var getPOjobs = []
+
+                for (var purchaseOrderId of listPurchaseOrderIds) {
+                    getPOjobs.push(this.purchaseOrderManager.getSingleByIdOrDefault(purchaseOrderId, ["no", "items.fulfillments"]))
+                }
+                return Promise.all(getPOjobs)
+                    .then(listPurchaseOrders => {
+                        var listNI = [];
+
+                        for (var purchaseOrder of listPurchaseOrders) {
+                            for (var poItem of purchaseOrder.items) {
+                                for (var poFulfillment of poItem.fulfillments) {
+                                    if (poFulfillment.deliveryOrderNo) {
+                                        if (poFulfillment.deliveryOrderNo === deliveryOrder.no) {
+                                            if (poFulfillment.interNoteNo) {
+                                                listNI.push(poFulfillment.interNoteNo)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        listNI = listNI.filter(function (elem, index, self) {
+                            return index == self.indexOf(elem);
+                        })
+
+                        var getNIJobs = [];
+                        for (var ni of listNI) {
+                            getNIJobs.push(this.internNoteManager.getSingleByQueryOrDefault({ "no": ni }))
+                        }
+
+                        return Promise.all(getNIJobs)
+                    })
+                    .then((listInternNotes) => {
+                        var jobs = [];
+                        for (var interNote of listInternNotes) {
+                            jobs.push(this.internNoteManager.updateStatusNI(interNote));
+                        }
+                        return Promise.all(jobs)
+                    })
+                    .catch(e => {
+                        reject(e);
+                    })
+            })
     }
 };

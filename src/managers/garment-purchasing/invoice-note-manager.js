@@ -298,6 +298,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
                                     item.purchaseRequestId = deliveryOrderFulfillment.purchaseRequestId;
                                     item.purchaseRequestNo = deliveryOrderFulfillment.purchaseRequestNo;
+                                    item.purchaseRequestRefNo = deliveryOrderFulfillment.purchaseRequestRefNo;
 
                                     item.productId = deliveryOrderFulfillment.productId;
                                     item.product = deliveryOrderFulfillment.product;
@@ -799,6 +800,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
 
         return Promise.resolve(xls);
     }
+
     cleanUp(input) {
         var newArr = [];
         for (var i = 0; i < input.length; i++) {
@@ -808,4 +810,5 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         }
         return newArr;
     }
+
 };
