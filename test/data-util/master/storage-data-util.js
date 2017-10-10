@@ -43,7 +43,7 @@ class StorageDataUtil {
     getTestData() {
          return this.getNewData()
             .then((data) => {
-                data.code = "PRD-UT-01";
+                data.code = "Storage-UT-01";
                 data.name = "Storage Unit Test 01";
 
                 data.description = "Product untuk unit test";
