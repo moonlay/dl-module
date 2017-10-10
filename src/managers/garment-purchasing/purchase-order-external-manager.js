@@ -368,7 +368,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                 var po = _poInternals.find((poInternal) => poInternal._id.toString() == items.poId.toString());
                                                 var poItem = po.items.find((item) => item.product._id.toString() === items.product._id.toString());
 
-                                                var pr = purchaseRequestList.find((pr) => pr.no.toString() == items.prNo.toString());
+                                                var pr = purchaseRequestList.find((pr) => pr._id.toString() == items.prId.toString());
                                                 var prItem = pr.items.find((item) => item.product.code.toString() === items.product.code.toString() && item.refNo === items.prRefNo)
                                                 var fixBudget = prItem.quantity * prItem.budgetPrice;
                                                 var budgetUsed = listBudget.find((budget) => budget.prNo == items.prNo && budget.prRefNo == items.prRefNo && budget.product == items.product.code);
