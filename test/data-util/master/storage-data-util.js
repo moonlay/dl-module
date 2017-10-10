@@ -41,11 +41,12 @@ class StorageDataUtil {
     }
 
     getTestData() {
-         return this.getNewData()
+         return unit.getTestData()
             .then((data) => {
                 data.code = "Storage-UT-01";
                 data.name = "Storage Unit Test 01";
-
+                data.unitId=data._id;
+                data.unit=data;
                 data.description = "Product untuk unit test";
 
                 return this.getSert(data);
@@ -53,24 +54,28 @@ class StorageDataUtil {
     }
 
     getPackingTestData() {
-        return this.getNewData()
+        return unit.getTestData()
             .then((data) => {
                 data = {
-                    code: 'UT/GudangJadi',
-                    name: 'Gudang Jadi Finishing Printing',
-                    description: ''
+                    code: 'UT/GudangJadi01',
+                    name: 'Gudang Jadi Finishing Printing01',
+                    description: '',
+                    unitId:data._id,
+                    unit:data
                 };
                 return this.getSert(data);
          });
     }
 
     getTextileInventoryTestData() {
-        return this.getNewData()
+        return unit.getTestData()
             .then((data) => {
                 var data = {
                     code: 'UT/GudangTextile01',
                     name: 'Gudang Pembelian Textile',
-                    description: ''
+                    description: '',
+                    unitId:data._id,
+                    unit:data
                 };
                 return this.getSert(data);
             });
