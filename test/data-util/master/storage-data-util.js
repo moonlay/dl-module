@@ -1,6 +1,7 @@
 "use strict";
 var _getSert = require("../getsert");
 var generateCode = require("../../../src/utils/code-generator");
+var unit = require("./unit-data-util");
 
 class StorageDataUtil {
     getSert(input) {
@@ -13,16 +14,23 @@ class StorageDataUtil {
     }
 
     getNewData() {
-        var Model = require('dl-models').master.Storage;
-        var data = new Model();
+        return Promise.all([unit.getTestData()])
+            .then((results) => {
+                var _unit= results[0];
+                var Model = require('dl-models').master.Storage;
 
-        var code = generateCode();
+                var code = generateCode();
+                
+                var data ={
+                    code : code,
+                    name : `name[${code}]`,
+                    description : `storage description [${code}]`,
+                    unit:_unit,
+                    initId:_unit._id
+                }
 
-        data.code = code;
-        data.name = `name[${code}]`;
-        data.description = `storage description [${code}]`;
-
-        return Promise.resolve(data);
+                return Promise.resolve(data);
+            });
     }
 
     getRandomTestData() {
@@ -33,30 +41,39 @@ class StorageDataUtil {
     }
 
     getTestData() {
-        var data = {
-            code: 'UT/STO/01',
-            name: 'Storage Unit Test',
-            description: ''
-        };
-        return this.getSert(data);
+         return this.getNewData()
+            .then((data) => {
+                data.code = "PRD-UT-01";
+                data.name = "Storage Unit Test 01";
+
+                data.description = "Product untuk unit test";
+
+                return this.getSert(data);
+            });
     }
 
     getPackingTestData() {
-        var data = {
-            code: 'UT/GudangJadi',
-            name: 'Gudang Jadi Finishing Printing',
-            description: ''
-        };
-        return this.getSert(data);
+        return this.getNewData()
+            .then((data) => {
+                data = {
+                    code: 'UT/GudangJadi',
+                    name: 'Gudang Jadi Finishing Printing',
+                    description: ''
+                };
+                return this.getSert(data);
+         });
     }
 
     getTextileInventoryTestData() {
-        var data = {
-            code: 'UT/GudangTextile',
-            name: 'Gudang Pembelian Textile',
-            description: ''
-        };
-        return this.getSert(data);
+        return this.getNewData()
+            .then((data) => {
+                var data = {
+                    code: 'UT/GudangTextile01',
+                    name: 'Gudang Pembelian Textile',
+                    description: ''
+                };
+                return this.getSert(data);
+            });
     }
 }
 module.exports = new StorageDataUtil();
