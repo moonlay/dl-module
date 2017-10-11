@@ -58,3 +58,28 @@ it('#02. should success when create new data with storage', function (done) {
             done(e);
         });
 });
+
+it('#03. should error when create new data isInventory=true without storage', function (done) {
+    unitReceiptNote.getNewData()
+        .then(data => {
+
+            data.isInventory=true;
+
+            unitReceiptNoteManager.create(data)
+                .then(id => {
+                    done("should error when create new data isInventory=true without storage");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('storage');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
