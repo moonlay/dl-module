@@ -30,8 +30,10 @@ var storageData;
 var storageDataId;
 it('#01. should success when create new data', function (done) {
     storage.getNewData()
-        .then(data => {
-            storageData = data;
+        .then((data) => storageManager.create(data))
+        .then((id) => {
+            id.should.be.Object();
+            storageDataId = id;
             done();
         })
         .catch((e) => {
@@ -43,12 +45,12 @@ var createdData;
 it('#02. should success when create new data with storage', function (done) {
     unitReceiptNote.getNewData()
         .then((data) => {
-            data.storageId=storageData._id;
+            data.storageId=storageDataId;
             data.isInventory=true;
             unitReceiptNoteManager.create(data)
             .then((id) => {
                 id.should.be.Object();
-                createdId = id;
+                var createdId = id;
                 done();
             })
         })
