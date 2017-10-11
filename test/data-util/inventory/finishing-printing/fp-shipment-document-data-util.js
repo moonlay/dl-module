@@ -32,7 +32,12 @@ class FPShipmentDocumentDataUtil {
                     deliveryReference: "UT/Ref-01",
 
                     productIdentity: "UT/ID-1",
-
+                    storageId: inventoryDocument._id,
+                    storage: {
+                        _id: inventoryDocument.storageId,
+                        code: inventoryDocument.storageCode,
+                        name: inventoryDocument.storageName
+                    },
                     buyerId: buyer._id,
                     buyerCode: buyer.code,
                     buyerName: buyer.name,
