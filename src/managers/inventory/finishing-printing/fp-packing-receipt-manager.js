@@ -101,22 +101,23 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
 
         var getPacking = valid.packingId && ObjectId.isValid(valid.packingId) ? this.packingManager.getSingleByIdOrDefault(valid.packingId) : Promise.resolve(null);
 
-        var storageName = valid.storageName ? valid.storageName : null;
-        var storageId = valid.storageId ? new ObjectId(valid.storageId) : null;
+        // var storageName = valid.storageName ? valid.storageName : null;
+        // var storageId = valid.storageId ? new ObjectId(valid.storageId) : null;
 
-        var getStorage = valid.storageName || valid.storageId ? this.storageManager.collection.find({ "$or": [{ "name": storageName }, { "_id": storageId }] }).toArray() : Promise.resolve([]);
+        // var getStorage = valid.storageName || valid.storageId ? this.storageManager.collection.find({ "$or": [{ "name": storageName }, { "_id": storageId }] }).toArray() : Promise.resolve([]);
 
         valid.items = valid.items instanceof Array ? valid.items : [];
         var products = valid.items.map((item) => item.product ? item.product : null);
         var getProducts = products.length > 0 ? this.productManager.collection.find({ name: { "$in": products } }).toArray() : Promise.resolve([]);
 
-        return Promise.all([getDbPackingReceipt, getDuplicatePackingReceipt, getPacking, getStorage, getProducts])
+        // return Promise.all([getDbPackingReceipt, getDuplicatePackingReceipt, getPacking, getStorage, getProducts])
+        return Promise.all([getDbPackingReceipt, getDuplicatePackingReceipt, getPacking, getProducts])        
             .then((results) => {
                 var _dbPackingReceipt = results[0];
                 var _duplicatePackingReceipt = results[1];
                 var _packing = results[2];
-                var _storage = results[3].length > 0 ? results[3][0] : null;
-                var _products = results[4];
+                // var _storage = results[3].length > 0 ? results[3][0] : null;
+                var _products = results[3];
 
                 if (_dbPackingReceipt)
                     valid.code = _dbPackingReceipt.code; // prevent code changes.
@@ -128,6 +129,9 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                     errors["packingId"] = i18n.__("PackingReceipt.packingId.isRequired:%s is required", i18n.__("PackingReceipt.packingId._:Packing")); //"Grade harus diisi";   
                 else if (!_packing)
                     errors["packingId"] = i18n.__("PackingReceipt.packingId: %s not found", i18n.__("PackingReceipt.KanbanId._:Packing"));
+
+                if (!valid.storage || valid.storage === '')
+                errors["storage"] = i18n.__("PackingReceipt.storage.isRequired:%s is required", i18n.__("PackingReceipt.storage._:Storage")); //"Gudang harus diisi";  
 
                 if (!valid.date)
                     errors["date"] = i18n.__("PackingReceipt.date.isRequired:%s is required", i18n.__("PackingReceipt.date._:Date")); //"Grade harus diisi";
@@ -165,8 +169,8 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 valid.packingCode = _packing.code;
 
                 //Inventory Document Validation
-                valid.storageId = _storage ? new ObjectId(_storage._id) : null;
-                valid.referenceType = `Penerimaan Packing ${_storage ? _storage.name : null}`;
+                valid.storageId = valid.storage && ObjectId.isValid(valid.storage._id) ? new ObjectId(valid.storage._id) : null
+                valid.referenceType = `Penerimaan Packing ${valid.storage ? valid.storage.name : null}`;
                 valid.type = "IN";
 
                 for (var i = 0; i < valid.items.length; i++) {
