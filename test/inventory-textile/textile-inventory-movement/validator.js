@@ -29,7 +29,7 @@ it('#01. should error when create new data without productId, uomId, storageId, 
             data.referenceNo="";
             data.referenceType="";
 
-            inventoryDocumentManager.create(data)
+            manager.create(data)
                 .then(id => {
                     done("should error when create new data without productId, uomId, storageId, referenceNo, referenceType");
                 })
