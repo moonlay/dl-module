@@ -150,4 +150,9 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
     test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
+
+    //Textile Inventory
+    test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-SUMMARY', './inventory-textile/textile-inventory-summary');
+    test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-MOVEMENT', './inventory-textile/textile-inventory-movement');
+    test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-DOCUMENT', './inventory-textile/textile-inventory-document');
 });
