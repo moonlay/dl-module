@@ -51,3 +51,32 @@ it('#01. should error when create new data without productId, storageId', functi
             done(e);
         });
 });
+
+it('#02. should error when create new data without referenceNo, referenceType', function (done) {
+    dataUtil.getNewData()
+        .then(data => {
+            
+            
+            data.referenceNo="";
+            data.referenceType="";
+
+            manager.create(data)
+                .then(id => {
+                    done("should error when create new data without referenceNo,  referenceType");
+                })
+                .catch(e => {
+                    try {
+                        
+                        e.errors.should.have.property('referenceType');
+                        e.errors.should.have.property('referenceNo');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
