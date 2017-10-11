@@ -58,7 +58,7 @@ class StorageDataUtil {
             .then((data) => {
                 data = {
                     code: 'UT/GudangJadi01',
-                    name: 'Gudang Jadi Finishing Printing01',
+                    name: 'Gudang Jadi Finishing Printing',
                     description: '',
                     unitId:data._id,
                     unit:data
