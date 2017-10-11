@@ -25,7 +25,7 @@
     "dl-models": "https://github.com/danliris/dl-models",
     "hashids": "^1.1.0",
     "module-toolkit": "git+https://github.com/pinkgorilla/module-toolkit.git",
-    "moment": "2.14.1",
+    "moment": "2.17.1",
     "mongo-factory": "^1.0.0",
     "mongodb": "^2.2.5",
     "mongodb-toolkit": "git+https://github.com/pinkgorilla/mongodb-toolkit.git",
