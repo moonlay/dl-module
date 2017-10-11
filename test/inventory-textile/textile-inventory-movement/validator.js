@@ -23,9 +23,9 @@ it('#01. should error when create new data without productId, uomId, storageId, 
     dataUtil.getNewData()
         .then(data => {
             
-            data.storageId={};
-            data.productId={};
-            data.uomId={};
+            data.storageId="";
+            data.productId="";
+            data.uomId="";
             data.referenceNo="";
             data.referenceType="";
 
