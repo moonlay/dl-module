@@ -19,27 +19,27 @@ before('#00. connect db', function (done) {
         })
 });
 
-it('#01. should error when create new data without productId, uomId, storageId, referenceNo, referenceType', function (done) {
+it('#01. should error when create new data without productId, storageId', function (done) {
     dataUtil.getNewData()
         .then(data => {
             
-            data.storageId="";
-            data.productId="";
-            data.uomId="";
-            data.referenceNo="";
-            data.referenceType="";
+            data.storageId=null;
+            data.productId=null;
+            //data.uomId=null;
+            //data.referenceNo="";
+            //data.referenceType="";
 
             manager.create(data)
                 .then(id => {
-                    done("should error when create new data without productId, uomId, storageId, referenceNo, referenceType");
+                    done("should error when create new data without productId,  storageId");
                 })
                 .catch(e => {
                     try {
                         e.errors.should.have.property('storageId');
                         e.errors.should.have.property('productId');
-                        e.errors.should.have.property('uomId');
-                        e.errors.should.have.property('referenceType');
-                        e.errors.should.have.property('referenceNo');
+                        //e.errors.should.have.property('uomId');
+                        //e.errors.should.have.property('referenceType');
+                        //e.errors.should.have.property('referenceNo');
                         done();
                     }
                     catch (ex) {
