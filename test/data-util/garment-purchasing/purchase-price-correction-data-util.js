@@ -24,6 +24,7 @@ class PurchasePriceCorrectionDataUtil {
                                     purchaseOrderInternal: {},
                                     purchaseRequestId: fulfillment.purchaseRequestId,
                                     purchaseRequestNo: fulfillment.purchaseRequestNo,
+                                    roNo: fulfillment.roNo,
                                     productId: fulfillment.productId,
                                     product: fulfillment.product,
                                     quantity: fulfillment.deliveredQuantity,
@@ -38,7 +39,7 @@ class PurchasePriceCorrectionDataUtil {
                                 itemsPurchasePriceCorrection.push(obj);
                             }
                         }
-                        
+
                         var data = {
                             no: `UT/PPC/${codeGenerator()}`,
                             date: new Date(),
