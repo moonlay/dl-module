@@ -1062,7 +1062,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    getUnitReceiptWithoutSpb(_unitId,_dateFrom, _dateTo, offset) 
+    getUnitReceiptWithoutSpb(_unitId, staffName, _dateFrom, _dateTo, offset) 
     {
         return new Promise((resolve, reject) => 
         {
@@ -1074,6 +1074,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 var unitId = { unitId: new ObjectId(_unitId) };
                 Object.assign(query, unitId);
             }
+
+            if (staffName !== undefined && staffName !== "") {
+                        Object.assign(query, {
+                            _createdBy: staffName
+                        });
+                    }
                                 
             if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "")
             {
