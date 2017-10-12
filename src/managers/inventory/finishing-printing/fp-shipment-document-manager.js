@@ -123,7 +123,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
         // var getStorage = valid.details ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
 
-        var getInventorySummary = products.length != 0 ? this.inventorySummaryManager.collection.find({ "productCode": { "$in": products }, "quantity": { "$gt": 0 }, storageName: "Gudang Jadi Finishing Printing" }, { "productCode": 1, "quantity": 1, "uom": 1 }).toArray() : Promise.resolve([]);
+        var getInventorySummary = products.length != 0 ? this.inventorySummaryManager.collection.find({ "productCode": { "$in": products }, "quantity": { "$gt": 0 }, storageCode: valid.storage ? valid.storage.code : "" }, { "productCode": 1, "quantity": 1, "uom": 1 }).toArray() : Promise.resolve([]);
         
         // return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getStorage, getInventorySummary])
         return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getInventorySummary])        
@@ -157,6 +157,11 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 if (!valid.deliveryCode || valid.deliveryCode === "")
                     errors["deliveryCode"] = i18n.__("ShipmentDocument.deliveryCode.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryCode._:DO No"));
 
+                if (!valid.deliveryDate || valid.deliveryDate === "")
+                    errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
+                else if(new Date(valid.deliveryDate) > new Date())
+                    errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.lessThanToday:%s must be less than or equal today's date", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
+                
                 if (valid.details.length > 0) {
                     var detailErrors = [];
                     for (var i = 0; i < valid.details.length; i++) {
@@ -203,6 +208,9 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                             break;
                         }
                     }
+                }
+                else {
+                    errors["detail"] = i18n.__("ShipmentDocument.detail.isRequired:%s is required", i18n.__("ShipmentDocument.detail._:Detail")); //"Detail harus diisi";  
                 }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -424,4 +432,3 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
         return Promise.resolve(xls);
     }
 };
-5
