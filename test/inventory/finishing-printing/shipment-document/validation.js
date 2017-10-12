@@ -63,3 +63,15 @@ it("#02. should error when create with item quantity greater than stock", functi
             }
         });
 });
+
+it("#03. should success when search with keyword", function (done) {
+    manager.read({ keyword: "Moonlay Technologies" })
+        .then((e) => {
+            e.should.have.property("data");
+            e.data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

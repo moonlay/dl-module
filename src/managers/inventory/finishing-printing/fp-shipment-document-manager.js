@@ -123,7 +123,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
         // var getStorage = valid.details ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
 
-        var getInventorySummary = products.length != 0 ? this.inventorySummaryManager.collection.find({ "productCode": { "$in": products }, "quantity": { "$gt": 0 }, storageName: "Gudang Jadi Finishing Printing" }, { "productCode": 1, "quantity": 1, "uom": 1 }).toArray() : Promise.resolve([]);
+        var getInventorySummary = products.length != 0 ? this.inventorySummaryManager.collection.find({ "productCode": { "$in": products }, "quantity": { "$gt": 0 }, storageCode: valid.storage ? valid.storage.code : "" }, { "productCode": 1, "quantity": 1, "uom": 1 }).toArray() : Promise.resolve([]);
         
         // return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getStorage, getInventorySummary])
         return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getInventorySummary])        
@@ -203,6 +203,9 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                             break;
                         }
                     }
+                }
+                else {
+                    errors["detail"] = i18n.__("ShipmentDocument.detail.isRequired:%s is required", i18n.__("ShipmentDocument.detail._:Detail")); //"Detail harus diisi";  
                 }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -424,4 +427,3 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
         return Promise.resolve(xls);
     }
 };
-5
