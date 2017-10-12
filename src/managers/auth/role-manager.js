@@ -51,12 +51,12 @@ module.exports = class RoleManager extends BaseManager {
         return this.getSingleById(roleId)
             .then((role) => {
                 return this.accountManager.collection.find({
-                        roles: {
-                            "$elemMatch": {
-                                _id: roleId
-                            }
+                    roles: {
+                        "$elemMatch": {
+                            _id: roleId
                         }
-                    }).toArray()
+                    }
+                }).toArray()
                     .then((accounts) => {
                         var updateAccounts = accounts.map((account) => {
                             account.roles = account.roles || [];
@@ -64,6 +64,7 @@ module.exports = class RoleManager extends BaseManager {
                             var index = account.roles.indexOf(targetRole);
                             if (index >= 0) {
                                 account.roles[index] = role;
+                                account.password = "";
                                 return this.accountManager.update(account);
                             }
                             else
@@ -88,14 +89,14 @@ module.exports = class RoleManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                    code: valid.code
-                }]
+                        code: valid.code
+                    }]
             });
             valid.permissions = valid.permissions instanceof Array ? valid.permissions : [];
             var getUnits = valid.permissions.map((permission) => {
-                    return this.unitManager.getSingleByIdOrDefault(permission.unitId);
-                })
-                // 2. begin: Validation.
+                return this.unitManager.getSingleByIdOrDefault(permission.unitId);
+            })
+            // 2. begin: Validation.
             Promise.all([getDuplicateRole].concat(getUnits))
                 .then(results => {
                     var _duplicateRole = results[0];
