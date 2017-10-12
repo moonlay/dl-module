@@ -6,3 +6,7 @@ describe("CREATE SCENARIOS", function() {
     require("./create");
 });
 
+describe("UPLOAD SCENARIOS", function() {
+    require("./upload");
+});
+
