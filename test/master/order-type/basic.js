@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.OrderType,
     util: require("../../data-util/master/order-type-data-util"),
     validator: require("dl-models").validator.master.orderType,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

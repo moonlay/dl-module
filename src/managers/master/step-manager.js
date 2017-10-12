@@ -42,7 +42,8 @@ module.exports = class StepManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            process: valid.process
+            process: valid.process,
+            _deleted: false
         });
         // 2. begin: Validation.
         return Promise.all([getProcessPromise])
@@ -128,8 +129,7 @@ module.exports = class StepManager extends BaseManager {
             name: `ix_${map.master.collection.Step}_process`,
             key: {
                 process: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

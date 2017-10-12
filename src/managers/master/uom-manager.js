@@ -46,6 +46,7 @@ module.exports = class UomManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
+            _deleted: false,
             unit: valid.unit
         }) : Promise.resolve(null);
 
@@ -89,8 +90,6 @@ module.exports = class UomManager extends BaseManager {
                 });
         });
     }
-
-
 
     insert(dataFile) {
         return new Promise((resolve, reject) => {
@@ -162,8 +161,7 @@ module.exports = class UomManager extends BaseManager {
             name: `ix_${map.master.collection.uom}_unit`,
             key: {
                 unit: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, unitIndex]);
