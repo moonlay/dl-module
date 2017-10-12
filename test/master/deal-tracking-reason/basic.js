@@ -4,7 +4,7 @@ var options = {
     util: require("../../data-util/master/deal-tracking-reason-data-util"),
     validator: require("dl-models").validator.master.dealTrackingReason,
     createDuplicate: false,
-    keys: [false]
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");
