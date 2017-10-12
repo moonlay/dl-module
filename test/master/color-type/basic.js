@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.ColorType,
     util: require("../../data-util/master/color-type-data-util"),
     validator: require("dl-models").validator.master.colorType,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

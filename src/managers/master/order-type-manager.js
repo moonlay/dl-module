@@ -52,7 +52,8 @@ module.exports = class OrderTypeManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         // 2. begin: Validation.

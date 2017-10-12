@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.DealTrackingReason,
     util: require("../../data-util/master/deal-tracking-reason-data-util"),
     validator: require("dl-models").validator.master.dealTrackingReason,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: [false]
 };
 
 var basicTest = require("../../basic-test-factory");

@@ -58,7 +58,8 @@ module.exports = class LotMachineManager extends BaseManager {
                 '$ne': new ObjectId(valid._id)
             },
             productId: new ObjectId(valid.productId),
-            machineId: new ObjectId(valid.machineId)
+            machineId: new ObjectId(valid.machineId),
+            _deleted: false
         });
 
         var getProduct = ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(new ObjectId(valid.productId)) : Promise.resolve(null);
@@ -130,8 +131,7 @@ module.exports = class LotMachineManager extends BaseManager {
             key: {
                 productId: 1,
                 machineId: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

@@ -51,7 +51,8 @@ module.exports = class ThreadSpecificationManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            productId: new ObjectId(valid.productId)
+            productId: new ObjectId(valid.productId),
+            _deleted: false
         });
 
         var getProduct = valid.productId && ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(valid.productId) : Promise.resolve(null);
@@ -91,8 +92,7 @@ module.exports = class ThreadSpecificationManager extends BaseManager {
             name: `ix_${map.master.collection.ThreadSpecification}_productId`,
             key: {
                 productId: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
