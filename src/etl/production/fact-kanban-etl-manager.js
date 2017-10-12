@@ -26,7 +26,9 @@ const SELECTED_FIELDS = {
     "instruction.steps.machine.name": 1,
     "instruction.steps.machine.monthlyCapacity": 1,
     "instruction.steps.deadline": 1,
-    "currentQty": 1
+    "currentQty": 1,
+    "productionOrder.processType.name": 1,
+    "productionOrder.orderType.name": 1
 }
 
 // internal deps 
@@ -174,7 +176,9 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
                         isComplete: `'${kanban.isComplete}'`,
                         stepsLength: `${kanban.instruction.steps.length}`,
                         stepIndex: index++,
-                        salesContractNo: kanban.productionOrder && kanban.productionOrder.salesContractNo ? `'${kanban.productionOrder.salesContractNo}'` : null
+                        salesContractNo: kanban.productionOrder && kanban.productionOrder.salesContractNo ? `'${kanban.productionOrder.salesContractNo}'` : null,
+                        processType: kanban.productionOrder && kanban.productionOrder.processType && kanban.productionOrder.processType.name ? `'${kanban.productionOrder.processType.name}'` : null,
+                        orderType: kanban.productionOrder && kanban.productionOrder.orderType && kanban.productionOrder.orderType.name ? `'${kanban.productionOrder.orderType.name}'` : null,
                     }
                 });
                 return [].concat.apply([], kanbanData);
@@ -214,7 +218,7 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `\nSELECT ${item.deleted}, ${item.kanbanCode}, ${item.kanbanDate}, ${item.productionOrderNo}, ${item.kanbanGrade}, ${item.kanbanCartNumber}, ${item.kanbanCartQuantity}, ${item.kanbanInstructionId}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.kanbanStepsId}, ${item.kanbanStepsCode}, ${item.kanbanStepsName}, ${item.machineCode}, ${item.machineName}, ${item.machineMonthlyCapacity}, ${item.deadline}, ${item.currentStepIndex}, ${item.processArea}, ${item.isComplete}, ${item.stepsLength}, ${item.stepIndex}, ${item.salesContractNo} UNION ALL `;
+                                var queryString = `\nSELECT ${item.deleted}, ${item.kanbanCode}, ${item.kanbanDate}, ${item.productionOrderNo}, ${item.kanbanGrade}, ${item.kanbanCartNumber}, ${item.kanbanCartQuantity}, ${item.kanbanInstructionId}, ${item.kanbanInstructionCode}, ${item.kanbanInstructionName}, ${item.kanbanStepsId}, ${item.kanbanStepsCode}, ${item.kanbanStepsName}, ${item.machineCode}, ${item.machineName}, ${item.machineMonthlyCapacity}, ${item.deadline}, ${item.currentStepIndex}, ${item.processArea}, ${item.isComplete}, ${item.stepsLength}, ${item.stepIndex}, ${item.salesContractNo}, ${item.processType}, ${item.orderType} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);

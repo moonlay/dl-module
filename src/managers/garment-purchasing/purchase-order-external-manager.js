@@ -163,8 +163,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     '$ne': new ObjectId(valid._id)
                 }
             }, {
-                "no": valid.no
-            }]
+                    "no": valid.no
+                }]
         });
         var getCurrency = valid.currency && ObjectId.isValid(valid.currency._id) ? this.currencyManager.getSingleByIdOrDefault(valid.currency._id) : Promise.resolve(null);
         var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
@@ -368,7 +368,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                 var po = _poInternals.find((poInternal) => poInternal._id.toString() == items.poId.toString());
                                                 var poItem = po.items.find((item) => item.product._id.toString() === items.product._id.toString());
 
-                                                var pr = purchaseRequestList.find((pr) => pr.no.toString() == items.prNo.toString());
+                                                var pr = purchaseRequestList.find((pr) => pr._id.toString() == items.prId.toString());
                                                 var prItem = pr.items.find((item) => item.product.code.toString() === items.product.code.toString() && item.refNo === items.prRefNo)
                                                 var fixBudget = prItem.quantity * prItem.budgetPrice;
                                                 var budgetUsed = listBudget.find((budget) => budget.prNo == items.prNo && budget.prRefNo == items.prRefNo && budget.product == items.product.code);
@@ -467,6 +467,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                             _item.pricePerDealUnit = _item.useIncomeTax ? (100 * _item.priceBeforeTax) / 110 : _item.priceBeforeTax;
                                             _item.budgetPrice = Number(_item.budgetPrice);
                                             _item.conversion = Number(_item.conversion);
+                                            _item.uomConversion = poInternal.items[0].category.uom || _item.dealUom;
+                                            _item.quantityConversion = _item.dealQuantity * _item.conversion;
                                             items.push(_item);
                                         }
                                         valid.items = items;
@@ -836,7 +838,13 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 item.colors = _prItem.colors || []
                                 item.artikel = _pr.artikel;
                             }
-                            var getDefinition = require('../../pdf/definitions/garment-purchase-order-external');
+
+                            var getDefinition;
+                            if (pox.supplier.import == true) {
+                                getDefinition = require('../../pdf/definitions/garment-purchase-order-external-english');
+                            } else {
+                                getDefinition = require('../../pdf/definitions/garment-purchase-order-external');
+                            }
                             var definition = getDefinition(pox, offset);
 
                             var generatePdf = require('../../pdf/pdf-generator');

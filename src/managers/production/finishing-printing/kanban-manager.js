@@ -395,51 +395,54 @@ module.exports = class KanbanManager extends BaseManager {
             .then((result) => {
                 var joinDailyOperations = result.data.map((kanban) => {
                     kanban.currentStepIndex = Math.floor(kanban.currentStepIndex);
-                    var kanbanCurrentStepId = kanban.instruction && kanban.instruction.steps.length > 0 && kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)]._id ? kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)]._id : null;
+                    var currentStep = kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)];
+                    var kanbanCurrentStepId = kanban.instruction && kanban.instruction.steps.length > 0 && currentStep && currentStep._id ? currentStep._id : null;
 
-                    var getDailyOperations = this.dailyOperationCollection.find({
-                        "kanban.code": kanban.code,
-                        "step._id": kanbanCurrentStepId,
-                        _deleted: false,
-                        type: "input"
-                    }, {
-                            "machine.name": 1,
-                            "input": 1,
-                            "step.process": 1,
-                            "step.processArea": 1,
-                            "step.deadline": 1
-                        }).toArray();
+                    if (ObjectId.isValid(kanbanCurrentStepId)) {
+                        var getDailyOperations = this.dailyOperationCollection.find({
+                            "kanban.code": kanban.code,
+                            "step._id": kanbanCurrentStepId,
+                            _deleted: false,
+                            type: "input"
+                        }, {
+                                "machine.name": 1,
+                                "input": 1,
+                                "step.process": 1,
+                                "step.processArea": 1,
+                                "step.deadline": 1
+                            }).toArray();
 
-                    return getDailyOperations.then((dailyOperations) => {
-                        var arr = dailyOperations.map((dailyOperation) => {
-                            var obj = {
-                                code: kanban.code,
-                                dailyOperationMachine: dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null,
-                                inputQuantity: dailyOperation.input ? dailyOperation.input : null,
-                                process: dailyOperation.step ? dailyOperation.step.process : null,
-                                processArea: dailyOperation.step ? dailyOperation.step.processArea : null,
-                                deadline: dailyOperation.step ? dailyOperation.step.deadline : null,
-                                stepsLength: kanban.instruction && kanban.instruction.steps ? kanban.instruction.steps.length : 0,
-                                currentStepIndex: kanban.currentStepIndex,
-                                cart: {
-                                    cartNumber: kanban.cart ? kanban.cart.cartNumber : null
-                                },
-                                productionOrder: {
-                                    orderNo: kanban.productionOrder ? kanban.productionOrder.orderNo : null,
-                                    salesContractNo: kanban.productionOrder ? kanban.productionOrder.salesContractNo : null,
-                                    deliveryDate: kanban.productionOrder ? kanban.productionOrder.deliveryDate : null,
-                                    buyer: {
-                                        name: kanban.productionOrder && kanban.productionOrder.buyer ? kanban.productionOrder.buyer.name : null
+                        return getDailyOperations.then((dailyOperations) => {
+                            var arr = dailyOperations.map((dailyOperation) => {
+                                var obj = {
+                                    code: kanban.code,
+                                    dailyOperationMachine: dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null,
+                                    inputQuantity: dailyOperation.input ? dailyOperation.input : null,
+                                    process: dailyOperation.step ? dailyOperation.step.process : null,
+                                    processArea: dailyOperation.step ? dailyOperation.step.processArea : null,
+                                    deadline: dailyOperation.step ? dailyOperation.step.deadline : null,
+                                    stepsLength: kanban.instruction && kanban.instruction.steps ? kanban.instruction.steps.length : 0,
+                                    currentStepIndex: kanban.currentStepIndex,
+                                    cart: {
+                                        cartNumber: kanban.cart ? kanban.cart.cartNumber : null
                                     },
-                                    orderQuantity: kanban.productionOrder ? kanban.productionOrder.orderQuantity : null,
-                                }
-                            };
-                            
-                            return obj;
-                        });
+                                    productionOrder: {
+                                        orderNo: kanban.productionOrder ? kanban.productionOrder.orderNo : null,
+                                        salesContractNo: kanban.productionOrder ? kanban.productionOrder.salesContractNo : null,
+                                        deliveryDate: kanban.productionOrder ? kanban.productionOrder.deliveryDate : null,
+                                        buyer: {
+                                            name: kanban.productionOrder && kanban.productionOrder.buyer ? kanban.productionOrder.buyer.name : null
+                                        },
+                                        orderQuantity: kanban.productionOrder ? kanban.productionOrder.orderQuantity : null,
+                                    }
+                                };
 
-                        return Promise.resolve(arr);
-                    });
+                                return obj;
+                            });
+
+                            return Promise.resolve(arr);
+                        });
+                    }
                 });
 
                 return Promise.all(joinDailyOperations)

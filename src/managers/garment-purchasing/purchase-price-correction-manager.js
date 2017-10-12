@@ -404,6 +404,8 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                             "supplier": "$deliveryOrder.supplier.name",
                             "noPOEks": "$items.purchaseOrderExternalNo",
                             "noPR": "$items.purchaseRequestNo",
+                            "noRefPR": "$items.purchaseRequestRefNo",
+                            "noRO": "$items.roNo",
                             "itemCode": "$items.product.code",
                             "itemName": "$items.product.name",
                             "qty": "$items.quantity",
@@ -458,6 +460,8 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                     item["Supplier"] = data.supplier ? data.supplier : '';
                     item["Nomor PO Eksternal"] = data.noPOEks ? data.noPOEks : '';
                     item["No PR"] = data.noPR ? data.noPR : '';
+                    item["No Ref PR"] = data.noRefPR ? data.noRefPR : '';
+                    item["No RO"] = data.noRO ? data.noRO: '';
                     item["Kode Barang"] = data.itemCode ? data.itemCode : '';
                     item["Nama Barang"] = data.itemName ? data.itemName : '';
                     var correction = data.fulfillments.corrections ? data.fulfillments.corrections : data.fulfillments.correction;
@@ -495,6 +499,8 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
             xls.options["Supplier"] = "string";
             xls.options["Nomor PO Eksternal"] = "string";
             xls.options["No PR"] = "string";
+            xls.options["No Ref PR"] = "string";
+            xls.options["No RO"] = "string";
             xls.options["Kode Barang"] = "string";
             xls.options["Nama Barang"] = "string";
             xls.options["Jumlah Awal"] = "number";

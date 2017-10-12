@@ -24,6 +24,7 @@ class PurchaseQuantityCorrectionDataUtil {
                                     purchaseOrderInternal: {},
                                     purchaseRequestId: fulfillment.purchaseRequestId,
                                     purchaseRequestNo: fulfillment.purchaseRequestNo,
+                                    roNo: fulfillment.roNo,
                                     productId: fulfillment.productId,
                                     product: fulfillment.product,
                                     quantity: fulfillment.deliveredQuantity + 1,
