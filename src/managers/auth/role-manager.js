@@ -64,7 +64,7 @@ module.exports = class RoleManager extends BaseManager {
                             var index = account.roles.indexOf(targetRole);
                             if (index >= 0) {
                                 account.roles[index] = role;
-                                account.updatedRoleStatus = true;
+                                account.password = "";
                                 return this.accountManager.update(account);
                             }
                             else

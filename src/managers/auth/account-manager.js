@@ -37,10 +37,9 @@ module.exports = class AccountManager extends BaseManager {
 
     update(account) {
         return new Promise((resolve, reject) => {
-            var status = account.updatedRoleStatus ? account.updatedRoleStatus : false;
             this._validate(account)
                 .then(validAccount => {
-                    if (validAccount.password && validAccount.password.length > 0 && status == false)
+                    if (validAccount.password && validAccount.password.length > 0)
                         validAccount.password = sha1(validAccount.password);
                     else
                         delete validAccount.password;
