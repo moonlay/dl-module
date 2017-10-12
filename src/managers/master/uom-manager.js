@@ -46,7 +46,7 @@ module.exports = class UomManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            unit: {"$regex": valid.unit, "$options": "i"}
+            unit: valid.unit
         }) : Promise.resolve(null);
 
 
