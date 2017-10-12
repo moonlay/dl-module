@@ -37,9 +37,10 @@ module.exports = class AccountManager extends BaseManager {
 
     update(account) {
         return new Promise((resolve, reject) => {
+            var status = account.updatedRoleStatus ? account.updatedRoleStatus : false;
             this._validate(account)
                 .then(validAccount => {
-                    if (validAccount.password && validAccount.password.length > 0)
+                    if (validAccount.password && validAccount.password.length > 0 && status == false)
                         validAccount.password = sha1(validAccount.password);
                     else
                         delete validAccount.password;
@@ -50,24 +51,6 @@ module.exports = class AccountManager extends BaseManager {
                         .catch(e => {
                             reject(e);
                         });
-
-                    // var q = {
-                    //     username: validAccount.username
-                    // };
-                    // this.getSingleByQuery(q)
-                    //     .then(dbAccount => {
-                    //         validAccount.password = validAccount.password.length < 1 ? dbAccount.password : sha1(validAccount.password);
-                    //         this.collection.update(validAccount)
-                    //             .then(id => {
-                    //                 resolve(id);
-                    //             })
-                    //             .catch(e => {
-                    //                 reject(e);
-                    //             });
-                    //     })
-                    //     .catch(e => {
-                    //         reject(e);
-                    //     });
                 })
                 .catch(e => {
                     reject(e);
@@ -132,9 +115,9 @@ module.exports = class AccountManager extends BaseManager {
         var _default = {
             _deleted: false
         },
-        pagingFilter = paging.filter || {},
-        keywordFilter = {},
-        query = {};
+            pagingFilter = paging.filter || {},
+            keywordFilter = {},
+            query = {};
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
@@ -149,10 +132,10 @@ module.exports = class AccountManager extends BaseManager {
                         '$regex': regex
                     }
                 }, {
-                    'profile.lastname': {
-                        '$regex': regex
-                    }
-                }]
+                        'profile.lastname': {
+                            '$regex': regex
+                        }
+                    }]
             };
             keywordFilter["$or"] = [filterUsername, filterName]
         }
@@ -165,17 +148,17 @@ module.exports = class AccountManager extends BaseManager {
         return new Promise((resolve, reject) => {
             var valid = account;
             // 1. begin: Declare promises.
-            var getAccountPromise = valid && valid.username ? this.collection.firstOrDefault({
+            var getAccountPromise = this.collection.firstOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                    username:{ 
-                        $regex: new RegExp("^" + valid.username.trim() + "$", "i")
-                    }
-                }]
-            }) : Promise.resolve(null);
+                        username: {
+                            '$regex': new RegExp((valid.username || '').trim(), "i")
+                        }
+                    }]
+            });
             valid.roles = valid.roles instanceof Array ? valid.roles : [];
             var roleIds = valid.roles.map((r) => new ObjectId(r._id));
             var getRoles = this.roleCollection.find({
@@ -238,7 +221,7 @@ module.exports = class AccountManager extends BaseManager {
                         var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
-                    
+
                     account.roles = _roles;
                     valid = new Account(account);
                     valid.stamp(this.user.username, 'manager');
