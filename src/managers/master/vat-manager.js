@@ -47,7 +47,8 @@ module.exports = class VatManager extends BaseManager {
                 '$ne': new ObjectId(valid._id)
             },
             name: valid.name,
-            rate: valid.rate
+            rate: valid.rate,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -177,8 +178,7 @@ module.exports = class VatManager extends BaseManager {
             key: {
                 name: 1,
                 rate: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, nameRateIndex]);

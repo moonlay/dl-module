@@ -90,7 +90,8 @@ module.exports = class MachineManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
         var getStep = [];
         for(var dataStep of valid.steps || []){
@@ -365,8 +366,7 @@ module.exports = class MachineManager extends BaseManager {
             name: `ix_${map.master.collection.Machine}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

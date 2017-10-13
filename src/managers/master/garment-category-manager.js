@@ -54,7 +54,8 @@ module.exports = class CategoryManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -194,8 +195,7 @@ module.exports = class CategoryManager extends BaseManager {
             name: `ix_${map.master.collection.Category}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         }
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

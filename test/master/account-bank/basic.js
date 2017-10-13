@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.AccountBank,
     util: require("../../data-util/master/account-bank-data-util"),
     validator: require("dl-models").validator.master.accountBank,
-    createDuplicate: true,
-    keys: ["accountNumber", "bankName"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

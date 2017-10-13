@@ -55,7 +55,8 @@ module.exports = class TermOfPaymentManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         return Promise.all([getTermOfPaymentPromise])
@@ -91,8 +92,7 @@ module.exports = class TermOfPaymentManager extends BaseManager {
             name: `ix_${map.master.collection.TermOfPayment}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.LotMachint,
     util: require("../../data-util/master/lot-machine-data-util"),
     validator: require("dl-models").validator.master.lotMachine,
-    createDuplicate: true,
-    keys: ["productId", "machineId"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");
