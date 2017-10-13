@@ -22,7 +22,6 @@ module.exports = class GarmentInventoryMovementManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(Map.garmentInventory.collection.GarmentInventoryMovement);
-
         this.garmentInventorySummaryManager = new GarmentInventorySummaryManager(db, user);
         this.storageManager = new StorageManager(db, user);
         this.productManager = new GarmentProductManager(db, user);
@@ -87,6 +86,7 @@ module.exports = class GarmentInventoryMovementManager extends BaseManager {
                         var sum = results[0];
                         var summary = results[1];
                         summary.quantity = sum.quantity;
+                        summary.remark = garmentInventoryMovement.remark;
                         return this.garmentInventorySummaryManager.update(summary)
                     })
                     .then(sumId => id)

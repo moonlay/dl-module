@@ -55,7 +55,8 @@ module.exports = class DealTrackingReasonManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
         // 2. begin: Validation.
         return Promise.all([getDealTrackingReasonPromise])
@@ -95,8 +96,7 @@ module.exports = class DealTrackingReasonManager extends BaseManager {
             name: `ix_${map.master.collection.DealTrackingReason}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

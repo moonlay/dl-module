@@ -162,7 +162,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
 
                             for (var item of valid.items) {
                                 var itemError = {};
-                                if (item.quantity <= 0) {
+                                if (item.quantity < 0) {
                                     itemError["quantity"] = i18n.__("PurchaseQuantityCorrection.items.quantity.isRequired:%s is required", i18n.__("PurchaseQuantityCorrection.items.quantity._:Quantity"));
                                 }
 
