@@ -109,6 +109,54 @@ class PackingDataUtil {
             })
     }
 
+    getNewDuplicateLotTestData() {
+        return Promise.all([productionOrderDataUtil.getNewTestData()])
+        .then(result => {
+            var productionOrder = result[0];
+
+
+            var data = {
+                code: codeGenerator(),
+                pointSystem: 10,
+                productionOrderId: productionOrder._id,
+                productionOrderNo: productionOrder.orderNo,
+
+                date: new Date(),
+
+                //buyer
+                buyerId: productionOrder.buyer._id,
+
+                //material construction
+                materialConstructionFinishId: productionOrder.materialConstruction._id,
+
+                //material width
+                materialWidthFinish: "test",
+
+                packingUom: "PCS",
+                colorCode: productionOrder.details[0].code,
+                items: [{
+                    lot: "a",
+                    grade: "b",
+                    weight: 0,
+                    length: 0,
+                    quantity: 1,
+                    remark: ""
+                },
+                    {
+                        lot: "a",
+                        grade: "b",
+                        weight: 0,
+                        length: 0,
+                        quantity: 1,
+                        remark: ""
+                    }
+                ]
+            };
+
+            return data;
+        })
+    }
+
     getNewTestData() {
         return helper
             .getManager(PackingManager)
