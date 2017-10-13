@@ -138,7 +138,7 @@ class PackingDataUtil {
                     lot: "a",
                     grade: "b",
                     weight: 0,
-                    length: 0,
+                    length: 1,
                     quantity: 1,
                     remark: ""
                 },
@@ -146,7 +146,7 @@ class PackingDataUtil {
                         lot: "a",
                         grade: "b",
                         weight: 0,
-                        length: 0,
+                        length: 1,
                         quantity: 1,
                         remark: ""
                     }
