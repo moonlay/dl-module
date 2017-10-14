@@ -242,6 +242,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             valid.storageCode=_storage.code;
                         }
                     }
+                    else{
+                        valid.storageId=null;
+                        valid.storageName="";
+                        valid.storageCode="";
+                    }
 
                     for (var item of valid.items) {
                         for (var _po of _purchaseOrderList) {
