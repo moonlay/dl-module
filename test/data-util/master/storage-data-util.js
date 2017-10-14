@@ -40,12 +40,17 @@ class StorageDataUtil {
             });
     }
  getGarmentInventTestData() {
-        var data = {
-            code: 'UT/GudangGarment',
-            name: 'Gudang Garment',
-            description: ''
-        };
-        return this.getSert(data);
+         return unit.getTestData()
+            .then((data) => {
+                var data = {
+                    code: 'UT/GudangGarment',
+                    name: 'Gudang Pembelian Garment',
+                    description: '',
+                    unitId:data._id,
+                    unit:data
+                };
+                return this.getSert(data);
+            });
     }
     getTestData() {
          return unit.getTestData()
