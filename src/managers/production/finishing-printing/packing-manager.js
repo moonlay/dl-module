@@ -293,6 +293,14 @@ module.exports = class PackingManager extends BaseManager {
 
                         if (!item.grade || item.grade.trim() === "")
                             itemsError["grade"] = i18n.__("Packing.items.grade.isRequired:%s is required", i18n.__("Packing.items.grade._:Grade"));
+                        else {
+                            var dup = valid.items.find((test, idx) => (item.lot === test.lot && item.grade === test.grade && item.length === test.length) && index != idx);
+                            if (dup) {
+                                itemsError["lot"] = i18n.__("Packing.items.lot.isDuplicate:%s is duplicate", i18n.__("Packing.items.lot._:Lot"));
+                                itemsError["grade"] = i18n.__("Packing.items.grade.isDuplicate:%s is duplicate", i18n.__("Packing.items.grade._:Grade"));
+                                itemsError["length"] = i18n.__("Packing.items.length.isDuplicate:%s is duplicate", i18n.__("Packing.items.length._:Length"));
+                            }
+                        }
                         itemsErrors.push(itemsError);
                     })
 
