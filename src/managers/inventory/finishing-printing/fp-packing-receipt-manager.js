@@ -79,6 +79,30 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
         return query;
     }
 
+    _pre(data) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return this.checkUncreatedProducts(data);
+            })
+            .then(() => {
+                return this._validate(data)
+            })
+    }
+
+    checkUncreatedProducts(data) {
+        data.items = data.items || [];
+        var createProducts = data.items.length > 0 ? data.items.map((item) => { //checking for uncreated products
+            return this.productManager.collection.find({ name: item.product }).toArray()
+                .then((products) => {
+                    return products
+                })
+        }) : [];
+        return Promise.all(createProducts)
+            .then((results) => {
+                return Promise.resolve(data)
+            })
+    }
+
     _beforeInsert(data) {
         data.code = generateCode();
         return Promise.resolve(data);
@@ -111,7 +135,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
         var getProducts = products.length > 0 ? this.productManager.collection.find({ name: { "$in": products } }).toArray() : Promise.resolve([]);
 
         // return Promise.all([getDbPackingReceipt, getDuplicatePackingReceipt, getPacking, getStorage, getProducts])
-        return Promise.all([getDbPackingReceipt, getDuplicatePackingReceipt, getPacking, getProducts])        
+        return Promise.all([getDbPackingReceipt, getDuplicatePackingReceipt, getPacking, getProducts])
             .then((results) => {
                 var _dbPackingReceipt = results[0];
                 var _duplicatePackingReceipt = results[1];
@@ -131,7 +155,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                     errors["packingId"] = i18n.__("PackingReceipt.packingId: %s not found", i18n.__("PackingReceipt.KanbanId._:Packing"));
 
                 if (!valid.storage || valid.storage === '')
-                errors["storage"] = i18n.__("PackingReceipt.storage.isRequired:%s is required", i18n.__("PackingReceipt.storage._:Storage")); //"Gudang harus diisi";  
+                    errors["storage"] = i18n.__("PackingReceipt.storage.isRequired:%s is required", i18n.__("PackingReceipt.storage._:Storage")); //"Gudang harus diisi";  
 
                 if (!valid.date)
                     errors["date"] = i18n.__("PackingReceipt.date.isRequired:%s is required", i18n.__("PackingReceipt.date._:Date")); //"Grade harus diisi";
@@ -174,8 +198,9 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 valid.type = "IN";
 
                 for (var i = 0; i < valid.items.length; i++) {
-                    valid.items[i].uomId = _products[i].uomId;
-                    valid.items[i].productId = _products[i]._id;
+                    var product = _products.find((_product) => _product.name.toString().toLowerCase() === valid.items[i].product.toString().toLowerCase())
+                    valid.items[i].uomId = product.uomId;
+                    valid.items[i].productId = product._id;
                 }
 
                 valid.buyer = _packing.buyerName;
