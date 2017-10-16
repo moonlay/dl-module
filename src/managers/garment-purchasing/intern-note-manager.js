@@ -805,6 +805,8 @@ module.exports = class InternNoteManager extends BaseManager {
                         "$project": {
                             "_updatedDate": 1,
                             "no": "$no",
+                            "purchaseRequestRefNo": "$items.items.items.purchaseRequestRefNo",
+                            "roNo": "$items.items.items.roNo",
                             "date": "$date",
                             "supplier": "$supplier.name",
                             "currency": "$currency.code",
@@ -859,6 +861,8 @@ module.exports = class InternNoteManager extends BaseManager {
             data["Nomor Invoice"] = _data.invoiceNo ? _data.invoiceNo : '';
             data["Tanggal Invoice"] = _data.invoiceDate ? moment(new Date(_data.invoiceDate)).add(query.offset, 'h').format(dateFormat) : '';
             data["Kode Barang"] = _data.productCode;
+            data["No Ref PR"] = _data.purchaseRequestRefNo;
+            data["No RO"] = _data.roNo;
             data["Nama Barang"] = _data.productName;
             data["Jumlah"] = _data.qty;
             data["Satuan"] = _data.uom;
@@ -875,6 +879,8 @@ module.exports = class InternNoteManager extends BaseManager {
             xls.options["Tanggal Jatuh Tempo"] = "string";
             xls.options["Nomor Invoice"] = "string";
             xls.options["Tanggal Invoice"] = "string";
+            xls.options["Nomor Ref PR"] = "string";
+            xls.options["Nomor RO"] = "string";
             xls.options["Kode Barang"] = "string";
             xls.options["Nama Barang"] = "string";
             xls.options["Jumlah"] = "number";

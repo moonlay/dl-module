@@ -459,10 +459,10 @@ module.exports = function (pox, offset) {
                                     columns: [
                                         {
                                             width: '20%',
-                                            text: 'Shrinkage test untuk'
+                                            text: 'Shrinkage test'
                                         }, {
                                             width: '2%',
-                                            text: ''
+                                            text: ':'
                                         }, {
                                             width: '*',
                                             text: pox.qualityStandard.shrinkage

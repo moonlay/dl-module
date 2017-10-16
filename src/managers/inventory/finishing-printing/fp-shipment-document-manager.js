@@ -121,17 +121,18 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
         var getBuyer = valid.buyerId && ObjectId.isValid(valid.buyerId) ? this.buyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
 
-        var getStorage = valid.details ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
+        // var getStorage = valid.details ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
 
-        var getInventorySummary = products.length != 0 ? this.inventorySummaryManager.collection.find({ "productCode": { "$in": products }, "quantity": { "$gt": 0 }, storageName: "Gudang Jadi Finishing Printing" }, { "productCode": 1, "quantity": 1, "uom": 1 }).toArray() : Promise.resolve([]);
+        var getInventorySummary = products.length != 0 ? this.inventorySummaryManager.collection.find({ "productCode": { "$in": products }, "quantity": { "$gt": 0 }, storageCode: valid.storage ? valid.storage.code : "" }, { "productCode": 1, "quantity": 1, "uom": 1 }).toArray() : Promise.resolve([]);
         
-        return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getStorage, getInventorySummary])
+        // return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getStorage, getInventorySummary])
+        return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getInventorySummary])        
             .then((results) => {
                 var _dbShipmentDocument = results[0];
                 var _duplicateShipmentDocument = results[1];
                 var _buyer = results[2];
-                var _storages = results[3];
-                var _products = results[4];
+                // var _storages = results[3];
+                var _products = results[3];
 
                 if (_dbShipmentDocument)
                     valid.code = _dbShipmentDocument.code; // prevent code changes.
@@ -147,12 +148,20 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 if (!valid.shipmentNumber || valid.shipmentNumber === "")
                     errors["shipmentNumber"] = i18n.__("ShipmentDocument.shipmentNumber.isRequired:%s is required", i18n.__("ShipmentDocument.shipmentNumber._:NO."));
 
+                if (!valid.storage || valid.storage === '')
+                    errors["storage"] = i18n.__("ShipmentDocument.storage.isRequired:%s is required", i18n.__("ShipmentDocument.storage._:Storage")); //"Gudang harus diisi";  
+                    
                 if (!valid.productIdentity || valid.productIdentity === "")
                     errors["productIdentity"] = i18n.__("ShipmentDocument.productIdentity.isRequired:%s is required", i18n.__("ShipmentDocument.productIdentity._:Kode Produk"));
 
                 if (!valid.deliveryCode || valid.deliveryCode === "")
                     errors["deliveryCode"] = i18n.__("ShipmentDocument.deliveryCode.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryCode._:DO No"));
 
+                if (!valid.deliveryDate || valid.deliveryDate === "")
+                    errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
+                else if(new Date(valid.deliveryDate) > new Date())
+                    errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.lessThanToday:%s must be less than or equal today's date", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
+                
                 if (valid.details.length > 0) {
                     var detailErrors = [];
                     for (var i = 0; i < valid.details.length; i++) {
@@ -200,6 +209,9 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                         }
                     }
                 }
+                else {
+                    errors["detail"] = i18n.__("ShipmentDocument.detail.isRequired:%s is required", i18n.__("ShipmentDocument.detail._:Detail")); //"Detail harus diisi";  
+                }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
@@ -207,9 +219,9 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 }
 
                 //Inventory Document Validation
-                valid.storageId = _storages.length > 0 ? new ObjectId(_storages[0]._id) : null;
-                valid.storageName = _storages[0].name;
-                valid.storageReferenceType = "Pengiriman Barang Gudang Jadi";
+                valid.storageId = valid.storage && ObjectId.isValid(valid.storage._id) ? new ObjectId(valid.storage._id) : null
+                valid.storageReferenceType = `Penerimaan Packing ${valid.storage ? valid.storage.name : null}`;
+                valid.storageName = valid.storage && valid.storage.name ? valid.storage.name : null;
                 valid.storageType = "OUT";
 
                 if (!valid.stamp) {

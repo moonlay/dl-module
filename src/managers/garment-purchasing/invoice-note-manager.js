@@ -299,6 +299,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                                     item.purchaseRequestId = deliveryOrderFulfillment.purchaseRequestId;
                                     item.purchaseRequestNo = deliveryOrderFulfillment.purchaseRequestNo;
                                     item.purchaseRequestRefNo = deliveryOrderFulfillment.purchaseRequestRefNo;
+                                    item.roNo = deliveryOrderFulfillment.roNo;
 
                                     item.productId = deliveryOrderFulfillment.productId;
                                     item.product = deliveryOrderFulfillment.product;
@@ -702,6 +703,8 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                             "doNo": "$items.deliveryOrderNo",
                             "poEksNo": "$items.items.purchaseOrderExternalNo",
                             "prNo": "$items.items.purchaseRequestNo",
+                            "prRefNo": "$items.items.purchaseRequestRefNo",
+                            "roNo": "$items.items.roNo",
                             "productCode": "$items.items.product.code",
                             "productName": "$items.items.product.name",
                             "qty": "$items.items.deliveredQuantity",
@@ -753,6 +756,8 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             data["Nomor Surat Jalan"] = _data.doNo;
             data["Nomor PO Eksternal"] = _data.poEksNo;
             data["Nomor PR"] = _data.prNo;
+            data["Nomor Ref PR"] = _data.prRefNo;
+            data["Nomor RO"] = _data.roNo;
             data["Kode Barang"] = _data.productCode;
             data["Nama Barang"] = _data.productName;
             data["Jumlah"] = _data.qty;
@@ -775,7 +780,9 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             xls.options["Pajak Dibayar"] = "string";
             xls.options["Nomor Surat Jalan"] = "string";
             xls.options["Nomor PO Eksternal"] = "string";
+            xls.options["Nomor RO"] = "string";
             xls.options["Nomor PR"] = "string";
+            xls.options["Nomor Ref PR"] = "string";
             xls.options["Kode Barang"] = "string";
             xls.options["Nama Barang"] = "string";
             xls.options["Jumlah"] = "number";

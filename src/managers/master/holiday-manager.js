@@ -65,7 +65,8 @@ module.exports = class HolidayManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         var getDivision = valid.division && ObjectId.isValid(valid.division._id) ? this.DivisionManager.getSingleByIdOrDefault(valid.division._id) : Promise.resolve(null);
@@ -234,8 +235,7 @@ module.exports = class HolidayManager extends BaseManager {
             name: `ix_${map.master.collection.Holiday}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

@@ -55,7 +55,9 @@ module.exports = class YarnEquivalentConversionManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            ne: valid.ne
+            ne: valid.ne,
+            conversionRatio:valid.conversionRatio,
+            _deleted: false
         });
         
         // 2. begin: Validation.
@@ -95,8 +97,7 @@ module.exports = class YarnEquivalentConversionManager extends BaseManager {
             key: {
                 ne: 1,
                 conversionRatio: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, neRatioIndex]);

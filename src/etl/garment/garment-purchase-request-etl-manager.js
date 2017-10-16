@@ -134,7 +134,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 this.getRowNumber(table1, table2, dateStamp)
                     .then((data) => {
 
-                        var pageSize = 5000;
+                        var pageSize = 10000;
                         var dataLength = data;
                         var totalPageNumber = Math.ceil(dataLength / pageSize);
 
@@ -228,6 +228,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
+                                // console.log(result[0].NumberOfRow);
                                 resolve(result[0].NumberOfRow);
                             } else {
                                 reject(err);
@@ -406,11 +407,11 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     nomorRo: [],
                 };
 
-                var unitNotFound = [];
-                var buyerNotFound = [];
-                var categoryNotFound = [];
-                var productNotFound = [];
-                var uomNotFound = [];
+                // var unitNotFound = [];
+                // var buyerNotFound = [];
+                // var categoryNotFound = [];
+                // var productNotFound = [];
+                // var uomNotFound = [];
                 var no = 1;
 
                 for (var Ro of nomorRo) {
@@ -422,6 +423,12 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                     var _createdDate;
                     var _updatedDate;
+
+                    var unitNotFound = [];
+                    var buyerNotFound = [];
+                    var categoryNotFound = [];
+                    var productNotFound = [];
+                    var uomNotFound = [];
 
                     for (var data of datas) {
                         if (Ro == data.Ro) {
@@ -559,6 +566,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     remark: remark,
 
                                     refNo: data.Nopo,
+                                    urut: data.Urut,
 
                                     uomId: uom._id,
                                     uom: {
@@ -662,10 +670,12 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     map._createdDate = new Date(_createdDate + ":" + createdDateTemp.sort()[0]);
                     map._updatedDate = new Date(_updatedDate + ":" + updatedDateTemp.sort()[0]);
                     map.items = items;
+
                     transformData.datas.push(map);
 
                 }
                 transformData.nomorRo = (nomorRo);
+
                 resolve(transformData);
             });
         })

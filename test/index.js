@@ -27,6 +27,8 @@ describe('#dl-module', function (done) {
     test('@ETL/DIM-STAFF', './etl/dim/dim-staff');
     test('@ETL/DIM-COMPANY', './etl/dim/dim-company');
     test('@ETL/DIM-CONTACT', './etl/dim/dim-contact');
+    test('@ETL/DIM-DURATION-ESTIMATION', './etl/dim/dim-duration-estimation');
+    test('@ETL/DIM-BUDGET', './etl/dim/dim-budget');
     test('@ETL/FACT-TOTAL-HUTANG', './etl/purchasing/fact-total-hutang');
     test('@ETL/FACT-PURCHASING', './etl/purchasing/fact-purchasing');
     test('@ETL/FACT-MONITORING-EVENT', './etl/production/fact-monitoring-event');
@@ -150,4 +152,9 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
     test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
+
+    //Textile Inventory
+    test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-SUMMARY', './inventory-textile/textile-inventory-summary');
+    test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-MOVEMENT', './inventory-textile/textile-inventory-movement');
+    test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-DOCUMENT', './inventory-textile/textile-inventory-document');
 });

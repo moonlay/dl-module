@@ -209,9 +209,10 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         // item.purchaseOrderId = new ObjectId(item.purchaseOrderId);
                         // item.purchaseRequestId = new ObjectId(item.purchaseRequestId);
 
-                        item.purchaseOrderNo = _purchaseOrder.no,
-                            item.purchaseRequestNo = _purchaseOrder.purchaseRequest.no,
-                            item.purchaseRequestRefNo = _purchaseOrderItem.refNo;
+                        item.purchaseOrderNo = _purchaseOrder.no;
+                        item.purchaseRequestNo = _purchaseOrder.purchaseRequest.no;
+                        item.purchaseRequestRefNo = _purchaseOrderItem.refNo;
+                        item.roNo = _purchaseOrder.roNo;
                         item.deliveredQuantity = Number(item.deliveredQuantity);
                         item.purchaseOrderQuantity = Number(item.purchaseOrderQuantity);
                         item.pricePerDealUnit = Number(item.pricePerDealUnit);
@@ -703,8 +704,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             _id: ObjectId.isValid(id) ? new ObjectId(id) : {}
                         };
                         return this.getSingleByQuery(query)
-                            .then((unitReceiptNote) => this.updateDeliveryOrderDeleteUnitReceiptNote(unitReceiptNote))
                             .then((unitReceiptNote) => this.updatePurchaseOrderDeleteUnitReceiptNote(unitReceiptNote))
+                            .then((unitReceiptNote) => this.updateDeliveryOrderDeleteUnitReceiptNote(unitReceiptNote))
                             .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
                             .then(() => {
                                 return unitReceiptNote._id;
@@ -873,6 +874,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             "supplier": "$supplier.name",
                             "deliveryorderNo": "$deliveryOrderNo",
                             "purchaseRequestNo": "$items.purchaseRequestNo",
+                            "purchaseRequestRefNo": "$items.purchaseRequestRefNo",
+                            "roNo": "$items.roNo",
                             "productCode": "$items.product.code",
                             "productName": "$items.product.name",
                             "quantity": "$items.deliveredQuantity",
@@ -915,6 +918,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 item["Supplier"] = data.supplier ? data.supplier : '';
                 item["Surat Jalan"] = data.deliveryorderNo ? data.deliveryorderNo : '';
                 item["No PR"] = data.purchaseRequestNo ? data.purchaseRequestNo : '';
+                item["No Ref PR"] = data.purchaseRequestRefNo ? data.purchaseRequestRefNo : '';
+                item["No RO"] = data.roNo ? data.roNo : '';
                 item["Kode Barang"] = data.productCode ? data.productCode : '';
                 item["Nama Barang"] = data.productName ? data.productName : '';
                 item["Jumlah"] = data.quantity ? data.quantity : '';
@@ -930,6 +935,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             xls.options["Supplier"] = "string";
             xls.options["Surat Jalan"] = "string";
             xls.options["No PR"] = "string";
+            xls.options["No Ref PR"] = "string";
+            xls.options["No RO"] = "string";
             xls.options["Kode Barang"] = "string";
             xls.options["Nama Barang"] = "string";
             xls.options["Jumlah"] = "number";
