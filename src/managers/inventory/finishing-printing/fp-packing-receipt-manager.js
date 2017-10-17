@@ -5,6 +5,7 @@ require("mongodb-toolkit");
 var generateCode = require("../../../utils/code-generator");
 
 var PackingManager = require('../../production/finishing-printing/packing-manager');
+var ProductionOrderManager = require('../../sales/production-order-manager');
 var ProductManager = require('../../master/product-manager');
 var StorageManager = require('../../master/storage-manager');
 var InventoryDocumentManager = require('../inventory-document-manager');
@@ -84,17 +85,17 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
             .then((createIndexResults) => {
                 return this.checkUncreatedProducts(data);
             })
-            .then(() => {
+            .then((data) => {
                 return this._validate(data)
             })
     }
 
     checkUncreatedProducts(data) {
         data.items = data.items || [];
-        var createProducts = data.items.length > 0 ? data.items.map((item) => { //checking for uncreated products
-            return this.productManager.collection.find({ name: item.product }).toArray()
-                .then((products) => {
-                    return products
+        var createProducts = data.items.length > 0 ? data.items.map((item) => { //checking for not exist products
+            return this.packingManager.getSingleById(data.packingId)
+                .then((packing) => {
+
                 })
         }) : [];
         return Promise.all(createProducts)
