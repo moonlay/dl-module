@@ -7,6 +7,7 @@ var generateCode = require("../../../utils/code-generator");
 var PackingManager = require('../../production/finishing-printing/packing-manager');
 var ProductionOrderManager = require('../../sales/production-order-manager');
 var ProductManager = require('../../master/product-manager');
+var UomManager = require('../../master/uom-manager');
 var StorageManager = require('../../master/storage-manager');
 var InventoryDocumentManager = require('../inventory-document-manager');
 
@@ -24,7 +25,9 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
         this.collection = this.db.use(Map.inventory.finishingPrinting.collection.FPPackingReceipt);
 
         this.packingManager = new PackingManager(db, user);
+        this.productionOrderManager = new ProductionOrderManager(db, user);
         this.productManager = new ProductManager(db, user);
+        this.uomManager = new UomManager(db, user);
         this.storageManager = new StorageManager(db, user);
         this.inventoryDocumentManager = new InventoryDocumentManager(db, user);
     }
@@ -92,10 +95,60 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
 
     checkUncreatedProducts(data) {
         data.items = data.items || [];
-        var createProducts = data.items.length > 0 ? data.items.map((item) => { //checking for not exist products
+        var index = 0;
+        var createProducts = data.items.length > 0 ? data.items.map((dataItem) => { //checking for not exist products
             return this.packingManager.getSingleById(data.packingId)
                 .then((packing) => {
-
+                    var packingItems = packing.items;
+                    return this.productionOrderManager.getSingleById(packing.productionOrderId)
+                        .then((productionOrder) => {
+                            var uomQuery = {
+                                _deleted: false,
+                                unit: packing.packingUom
+                            }
+                            return this.uomManager.getSingleByQueryOrDefault(uomQuery)
+                                .then((uom) => {
+                                    var productQuery = {
+                                        _deleted: false,
+                                        name: dataItem.product
+                                    }
+                                    return this.productManager.getSingleByQueryOrDefault(productQuery)
+                                        .then((product) => {
+                                            if (!product) {
+                                                var packingItem = packingItems.find((item) => item.remark !== "" ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}/${item.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}` === dataItem.product)
+                                                var packingProduct = {
+                                                    code: generateCode(dataItem.product + index++),
+                                                    currency: {},
+                                                    description: "",
+                                                    name: dataItem.product,
+                                                    price: 0,
+                                                    properties: {
+                                                        productionOrderId: productionOrder._id,
+                                                        productionOrderNo: productionOrder.orderNo,
+                                                        designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                        designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
+                                                        orderType: productionOrder.orderType,
+                                                        buyerId: packing.buyerId,
+                                                        buyerName: packing.buyerName,
+                                                        buyerAddress: packing.buyerAddress,
+                                                        colorName: packing.colorName,
+                                                        construction: packing.construction,
+                                                        lot: packingItem.lot,
+                                                        grade: packingItem.grade,
+                                                        weight: packingItem.weight,
+                                                        length: packingItem.length
+                                                    },
+                                                    tags: `sales contract #${productionOrder.salesContractNo}`,
+                                                    uom: uom,
+                                                    uomId: uom._id
+                                                }
+                                                return this.productManager.create(packingProduct);
+                                            } else {
+                                                return Promise.resolve(data)
+                                            }
+                                        })
+                                })
+                        })
                 })
         }) : [];
         return Promise.all(createProducts)
