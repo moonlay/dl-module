@@ -55,23 +55,26 @@ module.exports = class StorageManager extends BaseManager {
         var errors = {};
         var valid = storage;
         // 1. begin: Declare promises.
-        var getBuyerPromise = this.collection.singleOrDefault({
+        var getStoragePromise = this.collection.singleOrDefault({
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: valid.code,
-            _deleted: false
+            name: valid.name,
+            _deleted: false,
+            unitId: ObjectId.isValid(valid.unit._id) ? new ObjectId(valid.unit._id) : new ObjectId()
+            
         });
 
         var getUnit = valid.unit && ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(valid.unit._id) : Promise.resolve(null);
         // 2. begin: Validation.
-        return Promise.all([getBuyerPromise, getUnit])
+        return Promise.all([getStoragePromise, getUnit])
             .then(results => {
                 var _module = results[0];
                 var _unit=results[1];
 
                 if (_module) {
-                    errors["code"] = i18n.__("Storage.code.isExists:%s is already exists", i18n.__("Storage.code._:Code")); //"Kode sudah ada";
+                    errors["name"] = i18n.__("Storage.name.isExists:%s is already exists", i18n.__("Storage.name._:Name")); //"Nama sudah ada";
+                    errors["unit"] = i18n.__("Storage.unit.isExists:%s is already exists", i18n.__("Storage.unit._:Unit")); //"Unit sudah ada";
                 }
                 if (!valid.name || valid.name == '')
                     errors["name"] = i18n.__("Storage.name.isRequired:%s is required", i18n.__("Storage.name._:Name")); //"Nama Harus diisi";
@@ -99,6 +102,25 @@ module.exports = class StorageManager extends BaseManager {
             });
     }
 
+    // _createIndexes() {
+    //     var dateIndex = {
+    //         name: `ix_${map.master.collection.Storage}__updatedDate`,
+    //         key: {
+    //             _updatedDate: -1
+    //         }
+    //     };
+
+    //     var codeIndex = {
+    //         name: `ix_${map.master.collection.Storage}_code`,
+    //         key: {
+    //             code: 1
+    //         },
+    //         unique: true
+    //     };
+
+    //     return this.collection.createIndexes([dateIndex, codeIndex]);
+    // }
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.collection.Storage}__updatedDate`,
@@ -108,10 +130,12 @@ module.exports = class StorageManager extends BaseManager {
         };
 
         var codeIndex = {
-            name: `ix_${map.master.collection.Storage}_code`,
+            name: `ix_${map.master.collection.Storage}_name_unitId`,
             key: {
-                code: 1
-            }
+                name: 1,
+                unitId:1
+            },
+            unique: true
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
