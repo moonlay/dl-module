@@ -61,7 +61,7 @@ module.exports = class StorageManager extends BaseManager {
             },
             name: valid.name,
             _deleted: false,
-            unitId: ObjectId.isValid(valid.unit._id) ? new ObjectId(valid.unit._id) : new ObjectId()
+            unitId: valid.unit && ObjectId.isValid(valid.unit._id) ? new ObjectId(valid.unit._id) : new ObjectId()
             
         });
 
