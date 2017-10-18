@@ -98,7 +98,8 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                         storageId: inventoryDocument.storageId,
                         productId: item.productId,
                         uomId: item.uomId,
-                        quantity: item.quantity
+                        quantity: item.quantity,
+                        remark:item.remark
                     };
                     return this.inventoryMovementManager.create(movement);
                 })

@@ -8,7 +8,8 @@ class StorageDataUtil {
         var ManagerType = require("../../../src/managers/master/storage-manager");
         return _getSert(input, ManagerType, (data) => {
             return {
-                code: data.code
+                name: data.name,
+                unitId: data.unit._id,
             };
         });
     }
