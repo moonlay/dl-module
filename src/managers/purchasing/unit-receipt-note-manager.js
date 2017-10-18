@@ -14,7 +14,7 @@ var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 var StorageManager = require('../master/storage-manager');
-var TextileInventoryDocumentManager = require('../inventory-textile/textile-inventory-document-manager');
+var TextileInventoryDocumentManager = require('../inventory/inventory-document-manager');
 
 module.exports = class UnitReceiptNoteManager extends BaseManager {
     constructor(db, user) {
