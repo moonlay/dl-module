@@ -110,3 +110,18 @@ it("#02. should success when transforming data", function (done) {
             done(e);
         });
 });
+
+it("#03. should error when insert empty data", function (done) {
+    instanceManager.insertQuery(this.sql, "")
+        .then((id) => {
+            done("should error when create with empty data");
+        })
+        .catch((e) => {
+            try {
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});
