@@ -4,7 +4,7 @@ var options = {
     util: require("../../data-util/master/storage-data-util"),
     validator: require("dl-models").validator.master.storage,
     createDuplicate: false,
-    keys: ["name", "unitId"]
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");
