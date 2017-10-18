@@ -128,7 +128,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
                 if (!valid.storageId || valid.storageId === '')
                     errors["storageId"] = i18n.__("InventoryMovement.storageId.isRequired:%s is required", i18n.__("InventoryMovement.storageId._:Storage")); //"Grade harus diisi";   
-                else if (!_product)
+                else if (!_storage)
                     errors["storageId"] = i18n.__("InventoryMovement.storageId: %s not found", i18n.__("InventoryMovement.storageId._:Storage"));
 
                 if (!valid.uomId || valid.uomId === '')
