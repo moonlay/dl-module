@@ -93,7 +93,7 @@ module.exports = {
             UnitReceiptNoteManager: require('./src/managers/garment-purchasing/unit-receipt-note-manager'),
             InternNoteManager: require('./src/managers/garment-purchasing/intern-note-manager'),
             PurchaseQuantityCorrectionManager: require('./src/managers/garment-purchasing/purchase-quantity-correction-manager'),
-            GarmentCurrencyManager:require('./src/managers/garment-purchasing/garment-currency-manager'),
+            GarmentCurrencyManager: require('./src/managers/garment-purchasing/garment-currency-manager'),
         },
         production: {
             spinning: {
@@ -272,11 +272,14 @@ module.exports = {
             factDealTrackingBoard: require("./src/etl/sales/fact-deal-tracking-board-etl-manager"),
             factDealTrackingStage: require("./src/etl/sales/fact-deal-tracking-stage-etl-manager"),
             factDealTrackingDeal: require("./src/etl/sales/fact-deal-tracking-deal-etl-manager"),
-            factDealTrackingActivity: require("./src/etl/sales/fact-deal-tracking-activity-etl-manager")            
+            factDealTrackingActivity: require("./src/etl/sales/fact-deal-tracking-activity-etl-manager")
         },
         garment: {
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
             factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager"),
+        },
+        migrationLog: {
+            migrationLogManager: require("./src/etl/migration-log/migration-log-manager"),
         }
     }
 }
