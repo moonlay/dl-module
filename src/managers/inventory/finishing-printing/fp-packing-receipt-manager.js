@@ -247,7 +247,8 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 valid.packingCode = _packing.code;
 
                 //Inventory Document Validation
-                valid.storageId = valid.storage && ObjectId.isValid(valid.storage._id) ? new ObjectId(valid.storage._id) : null
+                valid.storageId = valid.storage && ObjectId.isValid(valid.storage._id) ? new ObjectId(valid.storage._id) : null;
+                valid.referenceNo = `RFNO-${valid.code}`;
                 valid.referenceType = `Penerimaan Packing ${valid.storage ? valid.storage.name : null}`;
                 valid.type = "IN";
 
@@ -309,9 +310,16 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                         packing.accepted = true;
                         return this.packingManager.update(packing)
                             .then((id) => {
-                                packingReceipt.referenceNo = `RFNO-${packingReceipt.code}`;
-                                return this.inventoryDocumentManager.create(packingReceipt)
-                                    .then((inventoryDocument) => Promise.resolve(packingReceiptId))
+                                var inventoryDocument = {
+                                    referenceNo: `RFNO-${packingReceipt.code}`,
+                                    referenceType: `Penerimaan Packing ${packingReceipt.storage ? packingReceipt.storage.name : null}`,
+                                    type: "IN",
+                                    date: new Date(),
+                                    storageId: packingReceipt.storageId,
+                                    items: packingReceipt.items
+                                }
+                                return this.inventoryDocumentManager.create(inventoryDocument)
+                                    .then((inventoryDocumentId) => Promise.resolve(packingReceiptId))
                             })
                     })
             })
