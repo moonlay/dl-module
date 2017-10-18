@@ -1,7 +1,7 @@
 'use strict'
 var helper = require("../../helper");
-var TextileInventoryMovementManager = require("../../../src/managers/inventory-textile/textile-inventory-movement-manager");
-var productDataUtil = require('../master/product-data-util');
+var GarmentInventorySummaryManager = require("../../../src/managers/inventory-garment/garment-inventory-summary-manager");
+var productDataUtil = require('../master/garment-product-data-util');
 var storageDataUtil = require('../master/storage-data-util');
 var uomDataUtil = require('../master/uom-data-util');
 
@@ -9,22 +9,19 @@ var codeGenerator = require('../../../src/utils/code-generator');
 
 var Models = require("dl-models");
 var Map = Models.map;
-var TextileInventoryMovementModel = Models.inventoryTextile.TextileInventoryMovement;
+var GarmentInventorySummaryModel = Models.garmentInventory.GarmentInventorySummary;
 
 
-class TextileInventoryMovementDataUtil {
+class GarmentInventorySummaryDataUtil {
     getNewData() {
-        return Promise.all([productDataUtil.getTestData(), storageDataUtil.getTestData(), uomDataUtil.getTestData()])
+        return Promise.all([productDataUtil.getRandomTestData(), storageDataUtil.getTestData(), uomDataUtil.getTestData()])
             .then(result => {
                 var product = result[0];
                 var storage = result[1];
                 var uom = result[2];
-                var code =codeGenerator() 
+
                 var data = {
-                    code: code,
-                    referenceNo:`RFNO-${code}`,
-                    referenceType:'unit-test-doc',
-                    date:new Date(),
+                    code: codeGenerator(),
                     productId: product._id,
                     storageId: storage._id,
                     uomId: uom._id,
@@ -37,7 +34,7 @@ class TextileInventoryMovementDataUtil {
 
     getNewTestData() {
         return helper
-            .getManager(TextileInventoryMovementManager)
+            .getManager(GarmentInventorySummaryManager)
             .then((manager) => {
                 return this.getNewData().then((data) => {
                     return manager.create(data)
@@ -48,4 +45,4 @@ class TextileInventoryMovementDataUtil {
             });
     }
 }
-module.exports = new TextileInventoryMovementDataUtil();
+module.exports = new GarmentInventorySummaryDataUtil();

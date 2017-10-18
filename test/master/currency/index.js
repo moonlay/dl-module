@@ -6,3 +6,7 @@ describe("UPLOAD SCENARIOS", function() {
     require("./upload");
 });
 
+describe("VALIDATION SCENARIOS", function() {
+    require("./validation");
+});
+

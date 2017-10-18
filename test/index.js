@@ -13,6 +13,9 @@ describe('#dl-module', function (done) {
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
+    // // Migration Log
+    test('@Migration Log/Migration Log', './migration-log/migration-log');
+
     //Etl
     test('@ETL/DIM-BUYER', './etl/dim/dim-buyer');
     test('@ETL/DIM-CATEGORY', './etl/dim/dim-category');
@@ -50,6 +53,7 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-DEAL-TRACKING-STAGE', './etl/sales/fact-deal-tracking-stage');
     test('@ETL/FACT-DEAL-TRACKING-DEAL', './etl/sales/fact-deal-tracking-deal');
     test('@ETL/FACT-DEAL-TRACKING-ACTIVITY', './etl/sales/fact-deal-tracking-activity');
+    test('@ETL/FACT-INSPECTION-LOT-COLOR', './etl/production/fact-inspection-lot-color');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
@@ -77,7 +81,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/PROCESS-TYPE', './master/process-type');
     test('@MASTER/COLOR-TYPE', './master/color-type');
     test('@MASTER/INSTRUCTION', './master/instruction');
-    
+
     // test('@MASTER/MONITORING-EVENT-TYPE', './master/monitoring-event-type');
     test('@MASTER/STEP', './master/step');
     //test('@MASTER/MACHINE-TYPE', './master/machine-type');
@@ -152,9 +156,9 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
     test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
-
-    //Textile Inventory
-    test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-SUMMARY', './inventory-textile/textile-inventory-summary');
-    test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-MOVEMENT', './inventory-textile/textile-inventory-movement');
-    test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-DOCUMENT', './inventory-textile/textile-inventory-document');
+    
+    //GarmentInventory
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-SUMMARY', './inventory-garment/garment-inventory-summary');
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-MOVEMENT', './inventory-garment/garment-inventory-movement');
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-DOCUMENT', './inventory-garment/garment-inventory-document');
 });
