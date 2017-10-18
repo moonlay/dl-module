@@ -239,7 +239,8 @@ module.exports = {
             factKanban: require("./src/etl/production/fact-kanban-etl-manager"),
             factProductionOrder: require("./src/etl/production/fact-production-order-etl-manager"),
             factDailyOperations: require("./src/etl/production/fact-daily-operations-etl-manager"),
-            factFabricQualityControl: require("./src/etl/production/fact-fabric-quality-control-etl-manager")
+            factFabricQualityControl: require("./src/etl/production/fact-fabric-quality-control-etl-manager"),
+            factInspectionLotColor: require("./src/etl/production/fact-inspection-lot-color-etl-manager")
         },
         purchasing: {
             factPembelian: require("./src/etl/purchasing/fact-pembelian"),
