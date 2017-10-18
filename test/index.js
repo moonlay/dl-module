@@ -153,8 +153,16 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
     test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
 
-    //Textile Inventory
+
+    //GarmentInventory
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-SUMMARY', './inventory-garment/garment-inventory-summary');
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-MOVEMENT', './inventory-garment/garment-inventory-movement');
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-DOCUMENT', './inventory-garment/garment-inventory-document');
+
+
+    // //Textile Inventory
     test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-SUMMARY', './inventory-textile/textile-inventory-summary');
     test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-MOVEMENT', './inventory-textile/textile-inventory-movement');
     test('@TEXTILE INVENTORY/TEXTILE-INVENTORY-DOCUMENT', './inventory-textile/textile-inventory-document');
 });
+

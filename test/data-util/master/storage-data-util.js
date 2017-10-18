@@ -39,7 +39,19 @@ class StorageDataUtil {
                 return this.getSert(data);
             });
     }
-
+ getGarmentInventTestData() {
+         return unit.getTestData()
+            .then((data) => {
+                var data = {
+                    code: 'UT/GudangGarment',
+                    name: 'Gudang Pembelian Garment',
+                    description: '',
+                    unitId:data._id,
+                    unit:data
+                };
+                return this.getSert(data);
+            });
+    }
     getTestData() {
          return unit.getTestData()
             .then((data) => {
