@@ -53,6 +53,7 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-DEAL-TRACKING-STAGE', './etl/sales/fact-deal-tracking-stage');
     test('@ETL/FACT-DEAL-TRACKING-DEAL', './etl/sales/fact-deal-tracking-deal');
     test('@ETL/FACT-DEAL-TRACKING-ACTIVITY', './etl/sales/fact-deal-tracking-activity');
+    test('@ETL/FACT-INSPECTION-LOT-COLOR', './etl/production/fact-inspection-lot-color');
 
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
