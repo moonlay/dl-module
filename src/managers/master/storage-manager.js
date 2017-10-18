@@ -74,7 +74,7 @@ module.exports = class StorageManager extends BaseManager {
 
                 if (_module) {
                     errors["name"] = i18n.__("Storage.name.isExists:%s is already exists", i18n.__("Storage.name._:Name")); //"Nama sudah ada";
-                    errors["unit"] = i18n.__("Storage.unit.isExists:%s is already exists", i18n.__("Storage.unit._:Unit")); //"Unit sudah ada";
+                    errors["unitId"] = i18n.__("Storage.unit.isExists:%s is already exists", i18n.__("Storage.unit._:Unit")); //"Unit sudah ada";
                 }
                 if (!valid.name || valid.name == '')
                     errors["name"] = i18n.__("Storage.name.isRequired:%s is required", i18n.__("Storage.name._:Name")); //"Nama Harus diisi";

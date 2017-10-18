@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.Storage,
     util: require("../../data-util/master/storage-data-util"),
     validator: require("dl-models").validator.master.storage,
-    createDuplicate: false,
-    keys: []
+    createDuplicate: true,
+    keys: ["name", "unitId"]
 };
 
 var basicTest = require("../../basic-test-factory");
