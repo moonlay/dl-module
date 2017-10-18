@@ -13,6 +13,9 @@ describe('#dl-module', function (done) {
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
+    // // Migration Log
+    test('@Migration Log/Migration Log', './migration-log/migration-log');
+
     //Etl
     test('@ETL/DIM-BUYER', './etl/dim/dim-buyer');
     test('@ETL/DIM-CATEGORY', './etl/dim/dim-category');
@@ -77,7 +80,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/PROCESS-TYPE', './master/process-type');
     test('@MASTER/COLOR-TYPE', './master/color-type');
     test('@MASTER/INSTRUCTION', './master/instruction');
-    
+
     // test('@MASTER/MONITORING-EVENT-TYPE', './master/monitoring-event-type');
     test('@MASTER/STEP', './master/step');
     //test('@MASTER/MACHINE-TYPE', './master/machine-type');
@@ -153,5 +156,10 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
     test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
 
-    
+
+    //GarmentInventory
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-SUMMARY', './inventory-garment/garment-inventory-summary');
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-MOVEMENT', './inventory-garment/garment-inventory-movement');
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-DOCUMENT', './inventory-garment/garment-inventory-document');
+
 });

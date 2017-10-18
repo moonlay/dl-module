@@ -53,6 +53,16 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return query;
     }
 
+    test() {
+        return this.migrationLog.aggregate(
+            [
+                { "$match": { "status": "Successful" } },
+                { "$group": { "_id": { "description": "$description" }, "latestDate": { "$max": "$start" } } }
+            ]
+        ).toArray();
+
+    }
+
     run(o, t1, t2) {
         var startedDate = new Date();
 
@@ -228,7 +238,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
-                                // console.log(result[0].NumberOfRow);
+                                console.log(result[0].NumberOfRow);
                                 resolve(result[0].NumberOfRow);
                             } else {
                                 reject(err);
@@ -416,6 +426,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                 for (var Ro of nomorRo) {
 
+                    // console.log(nomorRo);
+
                     var items = [];
                     var map = {};
                     var createdDateTemp = [];
@@ -579,6 +591,12 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                         _id: category._id,
                                         code: category.code.trim(),
                                         name: category.name.trim(),
+                                        uomId: category.uomId,
+                                        uom: {
+                                            _id: category.uomId,
+                                            unit: category.uom.unit,
+                                        }
+
                                     },
                                     colors: Colors,
                                     id_po: (data.ID_PO),
