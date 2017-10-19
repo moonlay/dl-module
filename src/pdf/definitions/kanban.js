@@ -4,7 +4,6 @@ module.exports = function (kanban) {
 
     var steps = [].concat.apply([], kanban.instruction.steps);
 
-    //var iso = "FM-F-PR-09-01-016B/R2";
     var iso = "FM-FP-00-PC-19-020";
     var number = kanban.no;
 
@@ -24,7 +23,6 @@ module.exports = function (kanban) {
     var grade = kanban.grade;
     var cartQty = kanban.cart.qty <= 0 ? " " : kanban.cart.qty;
     var cartNumber = kanban.cart.cartNumber;
-    //var deliveryDate = kanban.productionOrder.deliveryDate;
 
     var header = [{
         columns: [{
