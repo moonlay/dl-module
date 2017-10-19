@@ -1,5 +1,3 @@
-//SC FP
-
 var global = require('../../global');
 var generateCode = require('../../utils/code-generator');
 var say = require('../../utils/say');
@@ -56,7 +54,7 @@ module.exports = function (salesContract) {
 
     var amount = salesContract.price * convertion;
     var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
-    var amountDec1=parseFloat(amount.toFixed(3));
+    var amountDec1=parseFloat(salesContract.amount.toFixed(3));
     var amountDec=amountDec1.toString().split('.');
     var spellAmount=amount;
 
