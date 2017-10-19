@@ -134,8 +134,7 @@ module.exports = class StorageManager extends BaseManager {
             key: {
                 name: 1,
                 unitId:1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
