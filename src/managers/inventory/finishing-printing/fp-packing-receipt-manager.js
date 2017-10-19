@@ -115,7 +115,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                                     return this.productManager.getSingleByQueryOrDefault(productQuery)
                                         .then((product) => {
                                             if (!product) {
-                                                var packingItem = packingItems.find((item) => item.remark !== "" ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}/${item.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}` === dataItem.product)
+                                                var packingItem = packingItems.find((item) => item.remark !== "" && item.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}/${item.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}/${item.length}` === dataItem.product)
                                                 var packingProduct = {
                                                     code: generateCode(dataItem.product + index++),
                                                     currency: {},

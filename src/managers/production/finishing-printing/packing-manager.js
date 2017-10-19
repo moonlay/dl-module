@@ -96,7 +96,7 @@ module.exports = class PackingManager extends BaseManager {
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packingItems.map((packingItem) => {
-                                    var productName = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                    var productName = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -109,7 +109,7 @@ module.exports = class PackingManager extends BaseManager {
                                         var index = 0;
                                         var createPackingProducts = [];
                                         for (var packingItem of packingItems) {
-                                            var productNameComposition = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                            var productNameComposition = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                             var product = products.find((product) => product !== null && product.name.toString() === productNameComposition.toString())
                                             if (!product) {
                                                 var packingProduct = {
@@ -162,7 +162,7 @@ module.exports = class PackingManager extends BaseManager {
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packingItems.map((packingItem) => {
-                                    var productName = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                    var productName = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -175,7 +175,7 @@ module.exports = class PackingManager extends BaseManager {
                                         var index = 0;
                                         var createPackingProducts = [];
                                         for (var packingItem of packingItems) {
-                                            var productNameComposition = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                            var productNameComposition = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                             var product = products.find((product) => product !== null && product.name.toString() === productNameComposition.toString())
                                             if (!product) {
                                                 var packingProduct = {
