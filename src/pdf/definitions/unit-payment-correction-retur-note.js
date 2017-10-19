@@ -1,6 +1,6 @@
 var global = require('../../global');
 
-module.exports = function (unitPaymentCorrection) {
+module.exports = function (unitPaymentCorrection, offset) {
 
     var items = unitPaymentCorrection.items.map((item) => {
         return {
@@ -34,7 +34,7 @@ module.exports = function (unitPaymentCorrection) {
         {
             stack: [
                 `Nomor : ${unitPaymentCorrection.returNoteNo}`,
-                `(Atas Faktur Pajak Nomor : ${unitPaymentCorrection.unitPaymentOrder.incomeTaxNo} Tanggal : ${moment(unitPaymentCorrection.unitPaymentOrder.incomeTaxDate).format(locale.date.format)})`
+                `(Atas Faktur Pajak Nomor : ${unitPaymentCorrection.unitPaymentOrder.incomeTaxNo} Tanggal : ${moment(unitPaymentCorrection.unitPaymentOrder.incomeTaxDate).add(offset,'h').format(locale.date.format)})`
             ],
             style: ['size09', 'center']
 

@@ -42,12 +42,8 @@ module.exports = function (packing, offset) {
             columns: [{
                 width: '*',
                 stack: [{
-                    text: 'PT DAN LIRIS',
+                    text: 'BON PENYERAHAN PRODUKSI',
                     style: ['size15'],
-                    alignment: "center"
-                }, {
-                    text: 'BANARAN, GROGOL, SUKOHARJO',
-                    style: ['size09'],
                     alignment: "center"
                 }]
             }]
@@ -65,25 +61,17 @@ module.exports = function (packing, offset) {
             lineWidth: 0.5
         }
         ]
-    }, '\n'];
+    }];
 
     var subheader = [{
         columns: [{
             columns: [{
                 width: '*',
                 stack: [{
-                    text: 'BON PENYERAHAN PRODUKSI',
-                    style: ['size09', 'bold'],
-                    alignment: "center",
-                    decoration: 'underline'
-                },
-                    '\n',
-                {
                     text: iso,
                     style: ['size09', 'bold'],
                     alignment: "right"
-                },
-                    '\n'
+                }
                 ]
             }]
 
@@ -124,7 +112,7 @@ module.exports = function (packing, offset) {
         }
 
         ]
-    }, "\n"];
+    }];
 
     var thead = [{
         text: 'NO',
@@ -136,15 +124,19 @@ module.exports = function (packing, offset) {
         style: 'tableHeader'
     },
     {
-        text: 'Jumlah (PCS)',
-        style: 'tableHeader'
-    },
-    {
-        text: 'Berat (Kg)',
+        text: `Jumlah (${packing.packingUom})`,
         style: 'tableHeader'
     },
     {
         text: 'Panjang (Meter)',
+        style: 'tableHeader'
+    },
+    {
+        text: 'Panjang Total (Meter)',
+        style: 'tableHeader'
+    },
+    {
+        text: 'Berat Total (Kg)',
         style: 'tableHeader'
     },
     {
@@ -159,6 +151,7 @@ module.exports = function (packing, offset) {
     var totalJumlah = 0;
     var totalBerat = 0;
     var totalPanjang = 0;
+    var totalPanjangTotal = 0;
 
     var tbody = items.map(function (item, index) {
 
@@ -171,6 +164,7 @@ module.exports = function (packing, offset) {
         totalJumlah += item.quantity;
         totalBerat += item.weight;
         totalPanjang += item.length;
+        totalPanjangTotal += item.length * item.quantity;
 
         return [{
             text: (index + 1).toString() || '',
@@ -186,11 +180,15 @@ module.exports = function (packing, offset) {
             style: ['size08', 'center']
         },
         {
-            text: item.weight,
+            text: item.length,
             style: ['size08', 'center']
         },
         {
-            text: item.length,
+            text: (item.length * item.quantity).toFixed(2),
+            style: ['size08', 'center']
+        },
+        {
+            text: (item.weight * item.quantity).toFixed(2),
             style: ['size08', 'center']
         },
         {
@@ -208,13 +206,16 @@ module.exports = function (packing, offset) {
         text: "Total",
         style: ['size08', 'center']
     }, {
-        text: totalJumlah,
+        text: totalJumlah.toFixed(2),
         style: ['size08', 'center']
     }, {
-        text: totalBerat,
+        text: totalPanjang.toFixed(2),
         style: ['size08', 'center']
     }, {
-        text: totalPanjang,
+        text: totalPanjangTotal.toFixed(2),
+        style: ['size08', 'center']
+    }, {
+        text: totalBerat.toFixed(2),
         style: ['size08', 'center']
     }, "",]];
 
@@ -223,18 +224,18 @@ module.exports = function (packing, offset) {
             text: "tidak ada barang",
             style: ['size08', 'center'],
             colSpan: 6
-        }, "", "", "", "", ""]
+        }, "", "", "", "", "", ""]
     ];
 
     var table = [{
         table: {
-            widths: ['5%', '35%', '10%', '10%', '10%', '30%'],
+            widths: ['5%', '35%', '10%', '10%', '10%', '10%', '20%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot),
         }
     }];
 
-    var footer = ["\n", {
+    var footer = [{
         stack: [{
             columns: [{
                 columns: [{
@@ -258,7 +259,7 @@ module.exports = function (packing, offset) {
     var footer2 = ['\n', {
         columns: [{
             width: '25%',
-            stack: ['Diterima oleh:', '\n\n\n', '(                               )'],
+            stack: ['\n', 'Diterima oleh:', '\n\n\n\n', '(                               )'],
             style: ['center']
         },
         {
@@ -272,7 +273,7 @@ module.exports = function (packing, offset) {
 
         {
             width: '25%',
-            stack: [`Sukoharjo, ${moment(packing.date).add(offset, 'h').format(locale.date.format)} `, 'Diserahkan oleh :', '\n\n', `(  ${packing._createdBy}  )`],
+            stack: [`Sukoharjo, ${moment(packing.date).add(offset, 'h').format(locale.date.format)} `, 'Diserahkan oleh :', '\n\n\n\n', `(  ${packing._createdBy}  )`],
             style: ['center']
         }],
         style: ['size08']

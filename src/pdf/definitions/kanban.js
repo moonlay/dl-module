@@ -1,5 +1,3 @@
-//KANBAN
-
 var global = require('../../global');
 
 module.exports = function (kanban) {
@@ -36,22 +34,11 @@ module.exports = function (kanban) {
                     text: 'PT DAN LIRIS',
                     style: ['size15'],
                     alignment: "center"
-<<<<<<< HEAD
                 },{
                     text: 'KARTU PENGANTAR PROSES PRODUKSI',
                     style: ['size09', 'bold'],
                     alignment: "center",
                     decoration: 'underline'                  
-=======
-                }, {
-                    text: 'BANARAN, GROGOL, SUKOHARJO',
-                    style: ['size09'],
-                    alignment: "center"
-                }, {
-                    text: '\n',
-                    style: ['size09'],
-                    alignment: "center"
->>>>>>> dlmod/dev
                 }]
             }]
 
@@ -74,20 +61,6 @@ module.exports = function (kanban) {
                     text: iso,
                     style: ['size09', 'bold'],
                     alignment: "right"
-<<<<<<< HEAD
-=======
-                },
-                {
-                    text: 'KARTU PENGANTAR PROSES PRODUKSI',
-                    style: ['size09', 'bold'],
-                    alignment: "center",
-                    decoration: 'underline'
-                },
-                {
-                    text: '\n',
-                    style: ['size09'],
-                    alignment: "center",
->>>>>>> dlmod/dev
                 }]
             }]
 
@@ -101,17 +74,10 @@ module.exports = function (kanban) {
                 columns: [{
                     width: '35%',
                     stack: ['NO ORDER', 'BUYER', 'WARNA', 'STANDARD HANDFEEL', 'LEBAR FINISH']
-<<<<<<< HEAD
                 }, {
                     width: '5%',
                     stack: [':', ':', ':', ':', ':']
                 }, {
-=======
-                }, {
-                    width: '5%',
-                    stack: [':', ':', ':', ':', ':']
-                }, {
->>>>>>> dlmod/dev
                     width: '*',
                     stack: [orderNo, buyer, color, standardHandfeel, finishWidth]
                 }],
@@ -122,17 +88,10 @@ module.exports = function (kanban) {
                 columns: [{
                     width: '35%',
                     stack: ['MATERIAL', 'NO BENANG', 'GRADE', 'PANJANG', 'NO KERETA']
-<<<<<<< HEAD
                 }, {
                     width: '5%',
                     stack: [':', ':', ':', ':', ':']
                 }, {
-=======
-                }, {
-                    width: '5%',
-                    stack: [':', ':', ':', ':', ':']
-                }, {
->>>>>>> dlmod/dev
                     width: '*',
                     stack: [material, yarnNumber, grade, cartQty, cartNumber]
                 }],

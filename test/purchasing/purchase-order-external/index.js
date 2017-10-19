@@ -21,3 +21,7 @@ describe("CLOSE SCENARIOS", function() {
 describe("UPDATE SCENARIOS", function() {
     require("./update");
 });
+
+describe("PDF SCENARIOS", function() {
+    require("./pdf");
+});

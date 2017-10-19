@@ -1,5 +1,6 @@
 require("should");
 var dataUtil = require("../../data-util/sales/production-order-data-util");
+var fpSCdataUtil = require("../../data-util/sales/finishing-printing-sales-contract-data-util");
 var processTypeDataUtil = require("../../data-util/master/process-type-data-util");
 var buyerDataUtil = require("../../data-util/master/buyer-data-util");
 var accountDataUtil = require("../../data-util/auth/account-data-util");
@@ -10,6 +11,7 @@ var validate = require("dl-models").validator;
 var codeGenerator = require('../../../src/utils/code-generator');
 
 var ProcessTypeManager = require("../../../src/managers/master/process-type-manager");
+var fpSCManager = require("../../../src/managers/sales/finishing-printing-sales-contract-manager");
 var BuyerManager = require("../../../src/managers/master/buyer-manager");
 var AccountManager = require("../../../src/managers/auth/account-manager");
 var ProductionOrderManager = require("../../../src/managers/sales/production-order-manager");
@@ -25,6 +27,7 @@ before('#00. connect db', function (done) {
             processTypeManager = new ProcessTypeManager(db, { username: 'dev' });
             buyerManager = new BuyerManager(db, { username: 'dev' });
             accountManager = new AccountManager(db, { username: 'dev' });
+            fpSCManager = new fpSCManager(db, { username: 'dev' });
             done();
         })
         .catch(e => {
@@ -37,6 +40,7 @@ var dataProcessType1;
 var dataProcessType2;
 var dataAccount1;
 var dataAccount2;
+var fpSC;
 
 it("#01. should success when create new support data (buyer, account, process type)", function (done) {
     var processType1 = processTypeDataUtil.getNewData();
@@ -83,6 +87,26 @@ it("#01. should success when create new support data (buyer, account, process ty
             done(e);
         });
 });
+
+var createdSCId;
+var createdSCdata;
+it("#01.5. should success when create SalesContract", function (done) {
+    fpSCdataUtil.getNewData()
+        .then((data) =>{
+            createdSCdata=data;
+            fpSCManager.create(data)
+            .then((id) => {
+                return fpSCManager.getSingleById(id);
+                })
+                .then(sc => {
+                    createdSCdata = sc;
+                    done();
+            })
+            .catch((e) => {
+                done(e);
+            });
+        });
+})
 
 it("#02. should success when delete all exist data production order", function (done) {
     manager.read({ size: 100 })
@@ -141,11 +165,11 @@ var orderNo;
 it("#04. should success when create new 10 data Production Order with 2 detail color in each data production order", function (done) {
     var dataReport = [];
     for (var a = 0; a < 5; a++) {
-        var data = dataUtil.getNewData({ buyer: dataBuyer1, process: dataProcessType1, account: dataAccount1 });
+        var data = dataUtil.getNewData({ buyer: dataBuyer1, process: dataProcessType1, account: dataAccount1, salesContract : createdSCdata });
         dataReport.push(data);
     }
     for (var a = 0; a < 5; a++) {
-        var data = dataUtil.getNewData({ buyer: dataBuyer2, process: dataProcessType2, account: dataAccount2 });
+        var data = dataUtil.getNewData({ buyer: dataBuyer2, process: dataProcessType2, account: dataAccount2, salesContract : createdSCdata });
         dataReport.push(data);
     }
     Promise.all(dataReport)
@@ -155,7 +179,8 @@ it("#04. should success when create new 10 data Production Order with 2 detail c
             for (var a of dataResults) {
                 numberIndex++;
                 var code = codeGenerator();
-                a.salesContractNo = `${code}${numberIndex}`;
+                a.salesContractNo = createdSCdata.salesContractNo;
+                a.salesContractId = createdSCdata._id;
                 a.orderNo = `${code}${numberIndex}`;
                 var dataProdOrder = manager.create(a);
                 createData.push(dataProdOrder);
@@ -206,7 +231,7 @@ it("#06. should success get all data Production Order (2 data) when searh report
         .then(docs => {
             var data = docs.data;
             data.should.be.instanceof(Array);
-            data.length.should.equal(2);
+            data.length.should.equal(20);
             done();
         })
         .catch(e => {

@@ -69,7 +69,15 @@ it("#02. should success when transforming data", function (done) {
             },
             input: 50,
             goodOutput: 49,
-            badOutput: null
+            badOutput: null,
+            badOutputReasons: [{
+                precentage: 100,
+                description: "Description",
+                badOutputReason: {
+                    code: "Code",
+                    reason: "Reason"
+                }
+            }]
         }
     ];
     instanceManager.transform(data)

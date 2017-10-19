@@ -33,6 +33,10 @@ class PackingDataUtil {
                     //material width
                     materialWidthFinish: "test",
 
+                    //Jenis Pengiriman dan Jenis Barang Jadi
+                    deliveryType: "TEST",
+                    finishedProductType: "TEST",
+
                     packingUom: "PCS",
                     colorCode: productionOrder.details[0].code,
                     items: [{
@@ -42,7 +46,7 @@ class PackingDataUtil {
                         length: 120,
                         quantity: 6,
                         remark: "6 PCS @20 Meters"
-                    },// {
+                    }// {
                         //     lot: "LOT01",
                         //     grade: "B",
                         //     weight: 0,
@@ -103,6 +107,54 @@ class PackingDataUtil {
 
                 return data;
             })
+    }
+
+    getNewDuplicateLotTestData() {
+        return Promise.all([productionOrderDataUtil.getNewTestData()])
+        .then(result => {
+            var productionOrder = result[0];
+
+
+            var data = {
+                code: codeGenerator(),
+                pointSystem: 10,
+                productionOrderId: productionOrder._id,
+                productionOrderNo: productionOrder.orderNo,
+
+                date: new Date(),
+
+                //buyer
+                buyerId: productionOrder.buyer._id,
+
+                //material construction
+                materialConstructionFinishId: productionOrder.materialConstruction._id,
+
+                //material width
+                materialWidthFinish: "test",
+
+                packingUom: "PCS",
+                colorCode: productionOrder.details[0].code,
+                items: [{
+                    lot: "a",
+                    grade: "b",
+                    weight: 0,
+                    length: 1,
+                    quantity: 1,
+                    remark: ""
+                },
+                    {
+                        lot: "a",
+                        grade: "b",
+                        weight: 0,
+                        length: 1,
+                        quantity: 1,
+                        remark: ""
+                    }
+                ]
+            };
+
+            return data;
+        })
     }
 
     getNewTestData() {

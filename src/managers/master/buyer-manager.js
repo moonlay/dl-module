@@ -48,7 +48,8 @@ module.exports = class BuyerManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
         // 2. begin: Validation.
         return Promise.all([getBuyerPromise])
@@ -183,7 +184,9 @@ module.exports = class BuyerManager extends BaseManager {
                         var newBuyer = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Buyer(data[i]);
+                            var now = new Date();
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
@@ -219,8 +222,7 @@ module.exports = class BuyerManager extends BaseManager {
             name: `ix_${map.master.collection.Buyer}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

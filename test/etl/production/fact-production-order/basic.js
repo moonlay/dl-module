@@ -37,42 +37,37 @@ it("#01. should success when create etl fact-production-order", function (done) 
 it("#02. should success when transforming data for fact-production-order", function (done) {
     var data = [
         {
-            kanban: null,
-            productionOrder: {
-                uom: {
-                    unit: "mtr"
-                },
-                orderQuantity: 1,
-                material: {
-                    name: "test"
-                },
-                materialConstruction: {
-                    name: "test"
-                },
-                yarnMaterial: {
-                    name: "test"
-                },
-                materialWidth: "test"
-            }
+            uom: {
+                unit: "mtr"
+            },
+            orderQuantity: 1,
+            material: {
+                name: "test"
+            },
+            materialConstruction: {
+                name: "test"
+            },
+            yarnMaterial: {
+                name: "test"
+            },
+            materialWidth: "test"
         },
         {
-            kanban: null,
-            productionOrder: {
-                uom: {
-                    unit: "yds"
-                },
-                orderQuantity: 1,
-                material: {
-                    name: "test"
-                },
-                materialConstruction: {
-                    name: "test"
-                },
-                yarnMaterial: {
-                    name: "test"
-                },
-                materialWidth: null
-            }
+
+            uom: {
+                unit: "yds"
+            },
+            orderQuantity: 1,
+            material: {
+                name: "test"
+            },
+            materialConstruction: {
+                name: "test"
+            },
+            yarnMaterial: {
+                name: "test"
+            },
+            materialWidth: null
         }
     ];
     instanceManager.transform(data)
@@ -99,7 +94,7 @@ it("#02. should success when transforming data for fact-production-order", funct
 //         });
 // });
 
-it("#04. should error when insert empty data", function (done) {
+it("#03. should error when insert empty data", function (done) {
     instanceManager.insertQuery(this.sql, "")
         .then((id) => {
             done("should error when create with empty data");

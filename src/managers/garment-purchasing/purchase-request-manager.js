@@ -7,10 +7,11 @@ var map = DLModels.map;
 var PurchaseRequest = DLModels.garmentPurchasing.GarmentPurchaseRequest;
 var BaseManager = require("module-toolkit").BaseManager;
 var UnitManager = require("../master/unit-manager");
-var CategoryManager = require("../master/category-manager");
+var CategoryManager = require("../master/garment-category-manager");
 var ProductManager = require("../master/garment-product-manager");
 var i18n = require("dl-i18n");
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
+var moment = require('moment');
 
 module.exports = class PurchaseRequestManager extends BaseManager {
     constructor(db, user) {
@@ -219,30 +220,6 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         return query;
     }
 
-    pdf(id, offset) {
-        return new Promise((resolve, reject) => {
-
-            this.getSingleById(id)
-                .then(purchaseRequest => {
-                    var getDefinition = require("../../pdf/definitions/garment-purchase-request");
-                    var definition = getDefinition(purchaseRequest, offset);
-
-                    var generatePdf = require("../../pdf/pdf-generator");
-                    generatePdf(definition)
-                        .then(binary => {
-                            resolve(binary);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-
-        });
-    }
-
     getAllDataPR(filter) {
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -284,7 +261,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    getPurchaseRequestByTag(keyword, shipmentDate) {
+    getPurchaseRequestByTag(keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -296,68 +273,96 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         isPosted: true,
                         isUsed: false
                     });
+
+                    var queryMatchItems = Object.assign({});
+                    queryMatchItems = Object.assign(queryMatchItems, {
+                        "items.isUsed": false
+                    });
+
                     if (keyword) {
+                        keyword = keyword.replace(/ \#/g, '#');
                         var keywordFilters = [];
                         if (keyword.indexOf("#") != -1) {
                             keywords = keyword.split("#");
-                            keywords = this.cleanUp(keywords);
+                            keywords.splice(0, 1)
                         } else {
                             keywords.push(keyword)
                         }
-                        for (var _keyword of keywords) {
+
+                        for (var j = 0; j < keywords.length; j++) {
                             var keywordFilter = {};
-                            var regex = new RegExp(_keyword, "i");
-
-                            var filterRoNo = {
-                                "roNo": {
-                                    "$regex": regex
+                            var _keyword = keywords[j]
+                            if (_keyword) {
+                                var regex = new RegExp(_keyword, "i");
+                                switch (j) {
+                                    case 0:
+                                        keywordFilters.push({
+                                            "unit.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
+                                    case 1:
+                                        keywordFilters.push({
+                                            "buyer.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
+                                    case 2:
+                                        queryMatchItems = Object.assign(queryMatchItems, {
+                                            "items.category.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;
                                 }
-                            };
-
-                            var filterBuyer = {
-                                "buyer.name": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            var filterArtikel = {
-                                "artikel": {
-                                    "$regex": regex
-                                }
-                            };
-
-                            keywordFilters.push(filterRoNo, filterBuyer, filterArtikel);
+                            }
                         }
-                        query['$or'] = keywordFilters;
+                        if (keywordFilters.length > 0) {
+                            query['$and'] = keywordFilters;
+                        }
                     }
 
                     var _select = {
                         "no": 1,
-                        "refNo": 1,
                         "roNo": 1,
+                        "buyerId": "$buyer._id",
                         "buyer": "$buyer.name",
                         "artikel": 1,
                         "shipmentDate": 1,
+                        "unitId": "$unit._id",
                         "unit": "$unit.name",
                         "division": "$unit.division.name",
                         "isPosted": 1,
                         "isUsed": 1,
                         "_createdBy": 1,
+                        "items.refNo": "$items.refNo",
+                        "items.productId": "$items.productId",
+                        "items.product": "$items.product.name",
+                        "items.quantity": "$items.quantity",
+                        "items.budgetPrice": "$items.budgetPrice",
+                        "items.uom": "$items.uom.unit",
+                        "items.categoryId": "$items.categoryId",
+                        "items.category": "$items.category.name",
+                        "items.id_po": "$items.id_po",
+                        "items.remark": "$items.remark",
                         "year": { $year: "$shipmentDate" },
                         "month": { $month: "$shipmentDate" },
                         "day": { $dayOfMonth: "$shipmentDate" },
                     };
 
-                    var qryMatch = [{ $match: query }, { $project: _select }];
+                    var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryMatchItems }, { $project: _select }];
 
                     var queryDate = Object.assign({});
-                    if (shipmentDate) {
-                        var _shipmentDate = new Date(shipmentDate);
+                    if (shipmentDateFrom && shipmentDateTo) {
+                        var _shipmentDateFrom = new Date(shipmentDateFrom);
+                        var _shipmentDateTo = new Date(shipmentDateTo);
 
                         queryDate = {
-                            year: _shipmentDate.getFullYear(),
-                            month: _shipmentDate.getMonth() + 1,
-                            day: _shipmentDate.getDate()
+                            year: { $gte: _shipmentDateFrom.getFullYear(), $lte: _shipmentDateTo.getFullYear() },
+                            month: { $gte: _shipmentDateFrom.getMonth() + 1, $lte: _shipmentDateTo.getMonth() + 1 },
+                            day: { $gte: _shipmentDateFrom.getDate(), $lte: _shipmentDateTo.getDate() },
                         }
                         qryMatch.push({ $match: queryDate })
                     }
@@ -373,7 +378,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    getDataPRMonitoring(unitId, categoryId, PRNo, dateFrom, dateTo, state, offset, createdBy) {//all user or by user (createdBy)
+    getDataPRMonitoring(unitId, categoryId, buyerId, PRNo, dateFrom, dateTo, state, offset, createdBy) {//all user or by user (createdBy)
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
@@ -396,23 +401,34 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         });
                     }
 
+                    if (buyerId !== "undefined" && buyerId !== "" && buyerId !== undefined) {
+                        Object.assign(query, {
+                            "buyerId": new ObjectId(buyerId)
+                        });
+                    }
+
                     if (PRNo !== "undefined" && PRNo !== "" && PRNo !== undefined) {
                         Object.assign(query, {
                             "no": PRNo
                         });
                     }
-                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateFrom !== undefined && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null" && dateTo !== undefined) {
-                        var _dateFrom = new Date(dateFrom);
-                        var _dateTo = new Date(dateTo);
-                        _dateFrom.setHours(_dateFrom.getHours() - offset);
-                        _dateTo.setHours(_dateTo.getHours() - offset);
-                        Object.assign(query, {
-                            date: {
-                                $gte: _dateFrom,
-                                $lte: _dateTo
-                            }
-                        });
-                    }
+                    var date = new Date();
+                    var dateString = moment(date).format('YYYY-MM-DD');
+                    var dateNow = new Date(dateString);
+                    var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+                    var EndDate = moment(dateTo).format('YYYY-MM-DD');
+
+                    var _dateFrom = new Date(dateFrom);
+                    var _dateTo = new Date(EndDate + "T23:59");
+                    _dateFrom.setHours(_dateFrom.getHours() - offset);
+                    _dateTo.setHours(_dateTo.getHours() - offset);
+                    Object.assign(query, {
+                        date: {
+                            "$gte": (!query || dateFrom == "undefined" || !dateFrom ? (new Date(1900, 1, 1)) : (new Date(_dateFrom))),
+                            "$lte": (!query || dateTo == "undefined" || !dateTo ? date : (new Date(_dateTo)))
+                        }
+                    });
+
                     if (createdBy !== undefined && createdBy !== "") {
                         Object.assign(query, {
                             _createdBy: createdBy
@@ -423,9 +439,41 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         isPosted: true
                     });
 
-                    this.collection.find(query).toArray()
-                        .then((purchaseRequests) => {
-                            resolve(purchaseRequests);
+                    return this.collection
+                        .aggregate([
+                            { "$unwind": "$items" }
+                            , { "$match": query }
+                            , {
+                                "$project": {
+                                    "prDate": "$date",
+                                    "shipmentDate": "$shipmentDate",
+                                    "roNo": "$roNo",
+                                    "buyer": "$buyer.name",
+                                    "artikel": "$artikel",
+                                    "prNo": "$no",
+                                    "refNo": "$items.refNo",
+                                    "productName": "$items.product.name",
+                                    "division": "$unit.division.name",
+                                    "unit": "$unit.name",
+                                    "category": "$items.category.name",
+                                    "productCode": "$items.product.code",
+                                    "productQty": "$items.quantity",
+                                    "productUom": "$items.product.uom.unit",
+                                    "expected": "$expectedDeliveryDate",
+                                    "remark": "$items.remark",
+                                    "status": "$status",
+                                    "deliveryOrderNos": "$items.deliveryOrderNos"
+                                }
+                            },
+                            {
+                                "$sort": {
+                                    "_updatedDate": -1
+                                }
+                            }
+                        ])
+                        .toArray()
+                        .then(results => {
+                            resolve(results);
                         })
                         .catch(e => {
                             reject(e);
@@ -450,7 +498,14 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             unique: true
         };
 
-        return this.collection.createIndexes([dateIndex, noIndex]);
+        var createdDateIndex = {
+            name: `ix_${map.garmentPurchasing.collection.GarmentPurchaseRequest}__createdDate`,
+            key: {
+                _createdDate: -1
+            }
+        };
+
+        return this.collection.createIndexes([dateIndex, noIndex, createdDateIndex]);
     }
 
     updateCollectionPR(purchaseRequest) {
@@ -465,15 +520,5 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 $set: purchaseRequest
             })
             .then((result) => { return this.getSingleByIdOrDefault(purchaseRequest._id) });
-    }
-
-    cleanUp(input) {
-        var newArr = [];
-        for (var i = 0; i < input.length; i++) {
-            if (input[i]) {
-                newArr.push(input[i]);
-            }
-        }
-        return newArr;
     }
 };

@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.Contact,
     util: require("../../data-util/master/contact-data-util"),
     validator: require("dl-models").validator.master.contact,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

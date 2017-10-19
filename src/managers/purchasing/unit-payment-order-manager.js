@@ -147,9 +147,10 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     //         errors["vatNo"] = i18n.__("UnitPaymentOrder.vatNo.isRequired:%s is required", i18n.__("UnitPaymentOrder.vatNo._:Nomor Faktur Pajak (PPh)"));
                     //     }
 
-                    //     if (!valid.vatDate || valid.vatDate == '') {
-                    //         errors["vatDate"] = i18n.__("UnitPaymentOrder.vatDate.isRequired:%s is required", i18n.__("UnitPaymentOrder.vatDate._:Tanggal Faktur Pajak (PPh)"));
-                    //     }
+                    if (!valid.vatDate || valid.vatDate == '' || valid.vatDate === "undefined") {
+                        // errors["vatDate"] = i18n.__("UnitPaymentOrder.vatDate.isRequired:%s is required", i18n.__("UnitPaymentOrder.vatDate._:Tanggal Faktur Pajak (PPh)"));
+                        valid.vatDate = "";
+                    }
                     // }
                     if (valid.useIncomeTax) {
                         if (!valid.incomeTaxNo || valid.incomeTaxNo == '') {

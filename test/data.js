@@ -1,6 +1,7 @@
 module.exports = {
     master: {
         product: require('./data-util/master/product-data-util'),
+        holiday: require('./data-util/master/holiday-data-util'),
         uom: require('./data-util/master/uom-data-util'),
         vat: require('./data-util/master/vat-data-util'),
         currency: require('./data-util/master/currency-data-util'),
@@ -43,6 +44,11 @@ module.exports = {
     },
     sales: {
         productionOrder: require('./data-util/sales/production-order-data-util'),
+        dealTrackingBoard: require('./data-util/sales/deal-tracking-board-data-util'),
+        dealTrackingStage: require('./data-util/sales/deal-tracking-stage-data-util'),
+        dealTrackingDeal: require('./data-util/sales/deal-tracking-deal-data-util'),
+        dealTrackingActivity: require('./data-util/sales/deal-tracking-activity-data-util')
     },
+    
 
 };

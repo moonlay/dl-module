@@ -178,7 +178,9 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 valid.budget = _budget;
 
                 valid.date = new Date(valid.date);
-                valid.expectedDeliveryDate = new Date(valid.expectedDeliveryDate);
+                
+                if(valid.expectedDeliveryDate)
+                    valid.expectedDeliveryDate = new Date(valid.expectedDeliveryDate);
 
                 for (var prItem of valid.items) {
                     for (var _product of _products) {
@@ -371,7 +373,30 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         isPosted: true
                     });
 
-                    this.collection.find(query).toArray()
+                    var fieldPoEks = map.purchasing.collection.PurchaseOrderExternal;
+                    this.collection.aggregate(
+                        
+                        {
+                            $match:query
+                        },
+                        {
+                            $lookup : {
+                                from : fieldPoEks,
+                                localField : "no",
+                                foreignField : "items.refNo",
+                                as : "poEks"
+                            }
+                        },
+                        {
+                            $unwind : "$poEks"
+                        },
+                        {
+                            $project :  {
+                                "poEks" : "$poEks.expectedDeliveryDate"
+                            }
+                        }
+                        
+                        ).toArray()
                         .then((purchaseRequests) => {
                             resolve(purchaseRequests);
                         })
@@ -431,13 +456,37 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         isPosted: true
                     });
 
-                    this.collection.find(query).toArray()
+                    var fieldPoEks = map.purchasing.collection.PurchaseOrderExternal;
+                    this.collection.aggregate(
+                        
+                        {
+                            $match:query
+                        },
+                        {
+                            $lookup : {
+                                from : fieldPoEks,
+                                localField : "no",
+                                foreignField : "items.refNo",
+                                as : "poEks"
+                            }
+                        },
+                        {
+                            $unwind : "$poEks"
+                        },
+                        {
+                            $project :  {
+                                "poEks" : "$poEks.expectedDeliveryDate"
+                            }
+                        }
+                        
+                        ).toArray()
                         .then((purchaseRequests) => {
                             resolve(purchaseRequests);
                         })
                         .catch(e => {
                             reject(e);
                         });
+                    
                 });
             });
     }

@@ -62,7 +62,8 @@ module.exports = class ContactManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         var getCompany = valid.company && ObjectId.isValid(valid.company._id) ? this.companyManager.getSingleByIdOrDefault(valid.company._id) : Promise.resolve(null);
@@ -113,8 +114,7 @@ module.exports = class ContactManager extends BaseManager {
             name: `ix_${map.master.collection.Contact}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

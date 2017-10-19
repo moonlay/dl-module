@@ -11,6 +11,14 @@ require('mongodb-toolkit');
 
 var ProductManager = require('../../managers/master/product-manager');
 const MIGRATION_LOG_DESCRIPTION = 'Dim Product from MongoDB to Azure DWH';
+const SELECT = {
+    code: 1,
+    name: 1,
+    price: 1,
+    _deleted: 1,
+    description: 1,
+    tags: 1
+};
 
 module.exports = class DimProductEtlManager extends BaseManager {
     constructor(db, user, sql) {
@@ -72,7 +80,7 @@ module.exports = class DimProductEtlManager extends BaseManager {
             _updatedDate: {
                 "$gt": timestamp                
             },
-        }).toArray();
+        }, SELECT).toArray();
     }
 
     transform(data) {
@@ -114,18 +122,19 @@ module.exports = class DimProductEtlManager extends BaseManager {
 
                         var command = [];
 
-                        var sqlQuery = '';
+                        var sqlQuery = 'INSERT INTO [DL_Dim_Product_Temp](Code, Name, Price, Deleted, [Description], Tags) ';
 
                         var count = 1;
                         for (var item of data) {
                             if (item) {
                                 var values = `${item.code}, ${item.name}, ${item.price}, ${item.deleted}, ${item.description}, ${item.tags}`;
-                                var queryString = sqlQuery === "" ? `INSERT INTO [DL_Dim_Product_Temp](Code, Name, Price, Deleted, [Description], Tags) VALUES(${values})` : `,(${values})`;
+                                var queryString = `\nSELECT ${values} UNION ALL `;
                                 
                                 sqlQuery = sqlQuery.concat(queryString);
-                                if (count % 1000 === 0) {
+                                if (count % 4000 === 0) {
+                                    sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                                     command.push(this.insertQuery(request, sqlQuery));
-                                    sqlQuery = "";
+                                    sqlQuery = "INSERT INTO [DL_Dim_Product_Temp](Code, Name, Price, Deleted, [Description], Tags) ";
                                 }
                                 console.log(`add data to query  : ${count}`);
                                 count++;
@@ -133,9 +142,11 @@ module.exports = class DimProductEtlManager extends BaseManager {
                         }
 
 
-                        if (sqlQuery !== "")
+                        if (sqlQuery !== "") {
+                            sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
                             command.push(this.insertQuery(request, `${sqlQuery}`));
-
+                        }
+                            
                         this.sql.multiple = true;
 
                         // var fs = require("fs");

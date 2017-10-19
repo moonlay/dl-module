@@ -1,7 +1,7 @@
 var say = require('../../utils/say');
 var global = require('../../global');
 
-module.exports = function (unitPaymentCorrection) {
+module.exports = function (unitPaymentCorrection, offset) {
 
     var items = unitPaymentCorrection.items.map((item) => {
         return {
@@ -41,7 +41,7 @@ module.exports = function (unitPaymentCorrection) {
                     style: ['size15', 'bold', 'left']
                 }, {
                     width: '60%',
-                    text: 'NOTA DEBET',
+                    text: 'NOTA KOREKSI',
                     style: ['size15', 'bold', 'left']
 
                 }]
@@ -99,8 +99,8 @@ module.exports = function (unitPaymentCorrection) {
                     text: ''
                 }, {
                     width: '30%',
-                    text: `Nomor ${unitPaymentCorrection.no}`,
-                    style: ['size09', 'left', 'bold']
+                    text: `Nomor : ${unitPaymentCorrection.no}`,
+                    style: ['size13', 'left', 'bold']
                 }]
         }, '\n'
     ];
@@ -127,7 +127,44 @@ module.exports = function (unitPaymentCorrection) {
         }
     ];
 
-    var tbody = items.map(function (item, index) {
+if (unitPaymentCorrection.correctionType === "Jumlah") {
+   var tbody = items.map(function (item, index) {
+        return [{
+            text: (index + 1).toString() || '',
+            style: ['size08', 'center']
+        }, {
+                text: item.product.name,
+                style: ['size08', 'left']
+            }, {
+                text: `${item.quantity * -1}   ${item.uom.unit}`,
+                style: ['size08', 'right']
+            }, {
+                columns: [{
+                    width: '20%',
+                    text: currency,
+                    style: ['size08']
+                }, {
+                        width: '*',
+                        text: parseFloat(item.pricePerUnit).toLocaleString(locale, locale.currency),
+                        style: ['size08', 'right']
+                    }]
+            }, {
+                columns: [{
+                    width: '20%',
+                    text: currency,
+                    style: ['size08']
+                }, {
+                        width: '*',
+                        text: (parseFloat(item.priceTotal * -1).toLocaleString(locale, locale.currency)),
+                        style: ['size08', 'right']
+                    }]
+            }, {
+                text: item.prNo,
+                style: ['size08', 'left']
+            }];
+    });
+    } else {
+     var tbody = items.map(function (item, index) {
         return [{
             text: (index + 1).toString() || '',
             style: ['size08', 'center']
@@ -154,14 +191,15 @@ module.exports = function (unitPaymentCorrection) {
                     style: ['size08']
                 }, {
                         width: '*',
-                        text: parseFloat(item.priceTotal).toLocaleString(locale, locale.currency),
+                        text: (parseFloat(item.priceTotal).toLocaleString(locale, locale.currency)),
                         style: ['size08', 'right']
                     }]
             }, {
                 text: item.prNo,
                 style: ['size08', 'left']
             }];
-    });
+       });    
+    }
 
     tbody = tbody.length > 0 ? tbody : [
         [{
@@ -183,11 +221,19 @@ module.exports = function (unitPaymentCorrection) {
         priceTotal: 0
     };
 
-    var _jumlah = (items.length > 0 ? items : [initialValue])
-        .map(item => item.priceTotal)
-        .reduce(function (prev, curr, index, arr) {
-            return prev + curr;
-        }, 0);
+if (unitPaymentCorrection.correctionType === "Jumlah") {
+       var _jumlah = (items.length > 0 ? items : [initialValue])
+          .map(item => item.priceTotal * -1)
+           .reduce(function (prev, curr, index, arr) {
+               return prev + curr;
+           }, 0);
+    } else {
+       var _jumlah = (items.length > 0 ? items : [initialValue])
+          .map(item => item.priceTotal)
+           .reduce(function (prev, curr, index, arr) {
+               return prev + curr;
+           }, 0);
+    }
 
     var useIncomeTax = unitPaymentCorrection.useIncomeTax ? _jumlah * 0.1 : 0;
     var useVAT = unitPaymentCorrection.useVat ? _jumlah * (unitPaymentCorrection.unitPaymentOrder.vatRate / 100) : 0;
@@ -353,7 +399,7 @@ module.exports = function (unitPaymentCorrection) {
                             style: ['size08']
                         }, {
                             width: '*',
-                            text: moment(unitPaymentCorrection.unitPaymentOrder.dueDate).format(locale.date.format),
+                            text: moment(unitPaymentCorrection.unitPaymentOrder.dueDate).add(offset,'h').format(locale.date.format),
                             style: ['size08']
                         }]
                 }, {
@@ -401,7 +447,7 @@ module.exports = function (unitPaymentCorrection) {
                             style: ['size08']
                         }, {
                             width: '*',
-                            text: `${moment(sjDate).format(locale.date.format)} `,
+                            text: `${moment(sjDate).add(offset,'h').format(locale.date.format)} `,
                             style: ['size08']
                         }]
                 }]
