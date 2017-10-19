@@ -4,26 +4,26 @@ var ObjectId = require("mongodb").ObjectId;
 require("mongodb-toolkit");
 var generateCode = require("../../utils/code-generator");
 
-var ProductManager = require('../master/product-manager');
+var GarmentProductManager = require('../master/garment-product-manager');
 var StorageManager = require('../master/storage-manager');
 var UomManager = require('../master/uom-manager');
 
 var Models = require("dl-models");
 var Map = Models.map;
-var TextileInventorySummaryModel = Models.inventoryTextile.TextileInventorySummary;
-var TextileInventoryMovementModel = Models.inventoryTextile.TextileInventoryMovement;
+var GarmentInventorySummaryModel = Models.garmentInventory.GarmentInventorySummary;
+var GarmentInventoryMovementModel = Models.garmentInventory.GarmentInventoryMovement;
 
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var moment = require("moment");
 
-module.exports = class TextileInventorySummaryManager extends BaseManager {
+module.exports = class GarmentInventorySummaryManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
-        this.collection = this.db.use(Map.inventoryTextile.collection.TextileInventorySummary);
+        this.collection = this.db.use(Map.garmentInventory.collection.GarmentInventorySummary);
 
         this.storageManager = new StorageManager(db, user);
-        this.productManager = new ProductManager(db, user);
+        this.productManager = new GarmentProductManager(db, user);
         this.uomManager = new UomManager(db, user);
     }
 
@@ -58,22 +58,18 @@ module.exports = class TextileInventorySummaryManager extends BaseManager {
         return query;
     }
 
-    _beforeInsert(data) {
-        data.code = generateCode();
-        return Promise.resolve(data);
-    }
-
-    _validate(inventorySummary) {
+  
+     _validate(garmentInventorySummary) {
         var errors = {};
-        var valid = inventorySummary;
+        var valid = garmentInventorySummary;
 
-        var getDbInventorySummary = this.collection.singleOrDefault({
+        var getDbGarmentInventorySummary = this.collection.singleOrDefault({
             productId: new ObjectId(valid.productId),
             storageId: new ObjectId(valid.storageId),
             uomId: new ObjectId(valid.uomId)
         });
 
-        var getDuplicateInventorySummary = this.collection.singleOrDefault({
+        var getDuplicateGarmentInventorySummary = this.collection.singleOrDefault({
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
@@ -86,44 +82,38 @@ module.exports = class TextileInventorySummaryManager extends BaseManager {
         var getStorage = valid.storageId && ObjectId.isValid(valid.storageId) ? this.storageManager.getSingleByIdOrDefault(valid.storageId) : Promise.resolve(null);
         var getUom = valid.uomId && ObjectId.isValid(valid.uomId) ? this.uomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
 
-        return Promise.all([getDbInventorySummary,getDuplicateInventorySummary, getProduct, getStorage, getUom])
+        return Promise.all([getDbGarmentInventorySummary,getDuplicateGarmentInventorySummary, getProduct, getStorage, getUom])
             .then(results => {
-                var _dbInventorySummary = results[0]; 
-                var _dbDuplicateInventorySummary = results[1];
+                var _dbGarmentInventorySummary = results[0]; 
+                var _dbDuplicateGarmentInventorySummary = results[1];
                 var _product = results[2];
                 var _storage = results[3];
                 var _uom = results[4];
 
-                if (_dbInventorySummary)
+                if (_dbGarmentInventorySummary)
                 {
                     // prevent key changes.
-                    valid.code = _dbInventorySummary.code;
+                    valid.code = _dbGarmentInventorySummary.code;
                 }
 
-                if (_dbDuplicateInventorySummary)
-                    errors["productId"] = errors["storageId"] = errors["uomId"] = i18n.__("TextileInventorySummary.key.isExist:%s is exist", i18n.__("TextileInventorySummary.key._:Key"));
+                if (_dbDuplicateGarmentInventorySummary)
+                    errors["productId"] = errors["storageId"] = errors["uomId"] = i18n.__("InventorySummary.key.isExist:%s is exist", i18n.__("GarmentInventorySummary.key._:Key"));
 
                 if (!valid.productId || valid.productId === '')
-                    errors["productId"] = i18n.__("TextileInventorySummary.productId.isRequired:%s is required", i18n.__("TextileInventorySummary.productId._:Product")); //"Grade harus diisi";   
+                    errors["productId"] = i18n.__("GarmentInventorySummary.productId.isRequired:%s is required", i18n.__("GarmentInventorySummary.productId._:Product")); //"Grade harus diisi";   
                 else if (!_product)
-                    errors["productId"] = i18n.__("TextileInventorySummary.productId: %s not found", i18n.__("TextileInventorySummary.productId._:Product"));
+                    errors["productId"] = i18n.__("GarmentInventorySummary.productId: %s not found", i18n.__("GarmentInventorySummary.productId._:Product"));
 
                 if (!valid.storageId || valid.storageId === '')
-                    errors["storageId"] = i18n.__("TextileInventorySummary.storageId.isRequired:%s is required", i18n.__("TextileInventorySummary.storageId._:Storage")); //"Grade harus diisi";   
+                    errors["storageId"] = i18n.__("GarmentInventorySummary.storageId.isRequired:%s is required", i18n.__("GarmentInventorySummary.storageId._:Storage")); //"Grade harus diisi";   
                 else if (!_product)
-                    errors["storageId"] = i18n.__("TextileInventorySummary.storageId:%s not found", i18n.__("TextileInventorySummary.storageId._:Storage"));
+                    errors["storageId"] = i18n.__("GarmentInventorySummary.storageId:%s not found", i18n.__("GarmentInventorySummary.storageId._:Storage"));
 
-                // if (!valid.uomId || valid.uomId === '')
-                //     errors["uomId"] = i18n.__("TextileInventorySummary.uomId.isRequired:%s is required", i18n.__("TextileInventorySummary.uomId._:Uom")); //"Grade harus diisi";   
-                // else if (!_uom)
-                //     errors["uomId"] = i18n.__("TextileInventorySummary.uomId:%s not found", i18n.__("TextileInventorySummary.uomId._:Uom"));
-
-
+              
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
                     return Promise.reject(new ValidationError('data does not pass validation', errors));
                 }
-
 
                 valid.productId = _product._id;
                 valid.productName = _product.name;
@@ -135,16 +125,22 @@ module.exports = class TextileInventorySummaryManager extends BaseManager {
 
                 valid.uomId = _uom._id;
                 valid.uom = _uom.unit;
+           
+            
 
                 if (!valid.stamp) {
-                    valid = new TextileInventorySummaryModel(valid);
+                    valid = new GarmentInventorySummaryModel(valid);
                 }
 
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
 
-
             })
+    }
+_beforeInsert(data) {
+        data.code = generateCode();
+        
+        return Promise.resolve(data);
     }
 
     getSert(productId, storageId, uomId) {
@@ -166,13 +162,13 @@ module.exports = class TextileInventorySummaryManager extends BaseManager {
 
     _createIndexes() {
         var dateIndex = {
-            name: `ix_${Map.inventory.collection.TextileInventorySummary}__updatedDate`,
+            name: `ix_${Map.garmentInventory.collection.GarmentInventorySummary}__updatedDate`,
             key: {
                 _updatedDate: -1
             }
         }
         var keyIndex = {
-            name: `ix_${Map.inventory.collection.TextileInventorySummary}__productId_storageId_uomId`,
+            name: `ix_${Map.garmentInventory.collection.GarmentInventorySummary}__productId_storageId_uomId`,
             key: {
                 productId: 1,
                 storageId: 1,
@@ -183,5 +179,4 @@ module.exports = class TextileInventorySummaryManager extends BaseManager {
 
         return this.collection.createIndexes([dateIndex, keyIndex]);
     }
-
 }

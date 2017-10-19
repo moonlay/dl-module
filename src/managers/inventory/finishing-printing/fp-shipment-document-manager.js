@@ -112,7 +112,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
         var products = [];
 
-        if(valid.isVoid != true)
+        if (valid.isVoid != true)
             for (var detail of valid.details) {
                 for (var item of detail.items) {
                     products.push(item.productCode);
@@ -124,9 +124,9 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
         // var getStorage = valid.details ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
 
         var getInventorySummary = products.length != 0 ? this.inventorySummaryManager.collection.find({ "productCode": { "$in": products }, "quantity": { "$gt": 0 }, storageCode: valid.storage ? valid.storage.code : "" }, { "productCode": 1, "quantity": 1, "uom": 1 }).toArray() : Promise.resolve([]);
-        
+
         // return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getStorage, getInventorySummary])
-        return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getInventorySummary])        
+        return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getInventorySummary])
             .then((results) => {
                 var _dbShipmentDocument = results[0];
                 var _duplicateShipmentDocument = results[1];
@@ -150,12 +150,17 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
                 if (!valid.storage || valid.storage === '')
                     errors["storage"] = i18n.__("ShipmentDocument.storage.isRequired:%s is required", i18n.__("ShipmentDocument.storage._:Storage")); //"Gudang harus diisi";  
-                    
+
                 if (!valid.productIdentity || valid.productIdentity === "")
                     errors["productIdentity"] = i18n.__("ShipmentDocument.productIdentity.isRequired:%s is required", i18n.__("ShipmentDocument.productIdentity._:Kode Produk"));
 
                 if (!valid.deliveryCode || valid.deliveryCode === "")
                     errors["deliveryCode"] = i18n.__("ShipmentDocument.deliveryCode.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryCode._:DO No"));
+
+                if (!valid.deliveryDate || valid.deliveryDate === "")
+                    errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
+                else if (new Date(valid.deliveryDate) > new Date())
+                    errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.lessThanToday:%s must be less than or equal today's date", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
 
                 if (valid.details.length > 0) {
                     var detailErrors = [];
@@ -173,13 +178,13 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
                             for (var j = 0; j < items.length; j++) {
                                 var itemError = {};
-                                
+
                                 var productInvSummary = _products.find(p => p.productCode === items[j].productCode && p.uom === items[j].uomUnit);
 
                                 if (!items[j].quantity || items[j].quantity <= 0) {
                                     itemError["quantity"] = i18n.__("PackingReceipt.details.items.quantity.mustBeGreater:%s must be greater than zero", i18n.__("PackingReceipt.details.items.quantity._:Quantity")); //"Kuantitas harus lebih besar dari 0";
                                 }
-                                else if(productInvSummary && (items[j].quantity > productInvSummary.quantity)) {
+                                else if (productInvSummary && (items[j].quantity > productInvSummary.quantity)) {
                                     itemError["quantity"] = i18n.__("PackingReceipt.details.items.quantity.mustBeLessEqual:%s must be less than or equal to stock", i18n.__("PackingReceipt.details.items.quantity._:Quantity")); //"Kuantitas harus lebih kecil atau sama dengan stock";
                                 }
 
@@ -253,6 +258,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 var fpShipmentDocument = fpShipmentDocument;
                 var insertItems = fpShipmentDocument.details.map((detail) => {
                     var data = {
+                        code: generateCode(detail.productionOrderId.toString()),
                         date: fpShipmentDocument._createdDate,
                         referenceNo: `RFNO-${fpShipmentDocument.code}`,
                         referenceType: fpShipmentDocument.storageReferenceType,

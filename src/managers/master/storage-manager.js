@@ -8,11 +8,13 @@ var Storage = DLModels.master.Storage;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var CodeGenerator = require('../../utils/code-generator');
+var UnitManager = require('./unit-manager');
 
 module.exports = class StorageManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.master.collection.Storage);
+        this.unitManager = new UnitManager(db, user);
     }
 
     _getQuery(paging) {
@@ -53,24 +55,33 @@ module.exports = class StorageManager extends BaseManager {
         var errors = {};
         var valid = storage;
         // 1. begin: Declare promises.
-        var getBuyerPromise = this.collection.singleOrDefault({
+        var getStoragePromise = this.collection.singleOrDefault({
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: valid.code,
-            _deleted: false
+            name: valid.name,
+            _deleted: false,
+            unitId: valid.unit && ObjectId.isValid(valid.unit._id) ? new ObjectId(valid.unit._id) : new ObjectId()
+            
         });
+
+        var getUnit = valid.unit && ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(valid.unit._id) : Promise.resolve(null);
         // 2. begin: Validation.
-        return Promise.all([getBuyerPromise])
+        return Promise.all([getStoragePromise, getUnit])
             .then(results => {
                 var _module = results[0];
+                var _unit=results[1];
 
                 if (_module) {
-                    errors["code"] = i18n.__("Storage.code.isExists:%s is already exists", i18n.__("Storage.code._:Code")); //"Kode sudah ada";
+                    errors["name"] = i18n.__("Storage.name.isExists:%s is already exists", i18n.__("Storage.name._:Name")); //"Nama sudah ada";
+                    errors["unitId"] = i18n.__("Storage.unit.isExists:%s is already exists", i18n.__("Storage.unit._:Unit")); //"Unit sudah ada";
                 }
                 if (!valid.name || valid.name == '')
                     errors["name"] = i18n.__("Storage.name.isRequired:%s is required", i18n.__("Storage.name._:Name")); //"Nama Harus diisi";
-
+                
+                if(!_unit){
+                     errors["unit"] = i18n.__("Storage.unit.isRequired:%s is required", i18n.__("Storage.unit._:Unit")); //"unit Harus diisi";
+                }
 
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -80,11 +91,35 @@ module.exports = class StorageManager extends BaseManager {
                 if (!valid.tempo || valid.tempo == '')
                     valid.tempo = 0;
 
+                if(_unit){
+                    valid.unit=_unit;
+                    valid.unitId=new ObjectId(_unit._id);
+                }
+                
                 valid = new Storage(valid);
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
             });
     }
+
+    // _createIndexes() {
+    //     var dateIndex = {
+    //         name: `ix_${map.master.collection.Storage}__updatedDate`,
+    //         key: {
+    //             _updatedDate: -1
+    //         }
+    //     };
+
+    //     var codeIndex = {
+    //         name: `ix_${map.master.collection.Storage}_code`,
+    //         key: {
+    //             code: 1
+    //         },
+    //         unique: true
+    //     };
+
+    //     return this.collection.createIndexes([dateIndex, codeIndex]);
+    // }
 
     _createIndexes() {
         var dateIndex = {
@@ -95,10 +130,12 @@ module.exports = class StorageManager extends BaseManager {
         };
 
         var codeIndex = {
-            name: `ix_${map.master.collection.Storage}_code`,
+            name: `ix_${map.master.collection.Storage}_name_unitId`,
             key: {
-                code: 1
-            }
+                name: 1,
+                unitId:1
+            },
+            unique: true
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

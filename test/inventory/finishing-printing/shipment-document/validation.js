@@ -75,3 +75,27 @@ it("#03. should success when search with keyword", function (done) {
             done(e);
         });
 });
+
+it("#04. should error when create with tomorrow date", function (done) {
+    var date = new Date();
+    date.setDate(date.getDate() + 1);
+    var data = {
+        deliveryDate: new Date(date)
+    };
+
+    manager.create(data)
+        .then((id) => {
+            done("should error when create with tomorrow date");
+        })
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});

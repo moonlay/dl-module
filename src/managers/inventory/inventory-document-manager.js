@@ -83,7 +83,9 @@ module.exports = class InventoryDocumentManager extends BaseManager {
     }
 
     _beforeInsert(data) {
-        data.code = generateCode();
+        if (!data.code) {
+            data.code = generateCode();
+        }
         return Promise.resolve(data);
     }
 
@@ -91,6 +93,7 @@ module.exports = class InventoryDocumentManager extends BaseManager {
         return this.getSingleById(id)
             .then((inventoryDocument) => {
                 var createMovements = inventoryDocument.items.map(item => {
+                    var movementCode = generateCode(item.productId.toString())
                     var movement = {
                         referenceNo: inventoryDocument.referenceNo,
                         referenceType: inventoryDocument.referenceType,
@@ -98,7 +101,8 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                         storageId: inventoryDocument.storageId,
                         productId: item.productId,
                         uomId: item.uomId,
-                        quantity: item.quantity
+                        quantity: item.quantity,
+                        remark:item.remark
                     };
                     return this.inventoryMovementManager.create(movement);
                 })
@@ -108,8 +112,7 @@ module.exports = class InventoryDocumentManager extends BaseManager {
             .then(results => id);
     }
 
-    createIn(inventoryDocument)
-    {
+    createIn(inventoryDocument) {
         inventoryDocument.type = "IN";
         return this.create(inventoryDocument);
     }
