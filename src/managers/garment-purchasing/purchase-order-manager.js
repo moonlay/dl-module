@@ -519,7 +519,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     })
             })
             .catch(e => {
-                reject(e);
+                return Promise.reject(e);
             });
     }
 
