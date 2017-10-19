@@ -206,7 +206,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                              valid.storageName= _storage.name;
                              valid.storageCode=_storage.code;
                         }
-                        }
+                        }else
+                        {
+                            valid.storageId={};
+                            valid.storageName='';
+                            valid.storageCode='';
+                            valid.useStorage=false;
+                       }
                     valid.unitId = new ObjectId(_unit._id);
                     valid.unit = _unit;
                     valid.supplierId = new ObjectId(_supplier._id);
