@@ -1,5 +1,3 @@
-//SC SPINNING
-
 var global = require('../../global');
 var generateCode = require('../../utils/code-generator');
 var say = require('../../utils/say');
@@ -289,7 +287,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.accountBank.currency.symbol + " " + amountbyCurrency +" ( "+ `${numSpell(spellAmount)}`+" "+ salesContract.accountBank.currency.description+" ) (APPROXIMATELLY)" ,
+                        text: salesContract.accountBank.currency.symbol + " " + amountbyCurrency+" ( "+ `${numSpell(spellAmount)}`+" "+ salesContract.accountBank.currency.description+" ) (APPROXIMATELLY)" ,
                         style: ['size09']
                     }]
             }, {
