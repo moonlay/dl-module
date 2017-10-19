@@ -95,6 +95,7 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                 var createMovements = inventoryDocument.items.map(item => {
                     var movementCode = generateCode(item.productId.toString())
                     var movement = {
+                        code: movementCode,
                         referenceNo: inventoryDocument.referenceNo,
                         referenceType: inventoryDocument.referenceType,
                         type: inventoryDocument.type,
