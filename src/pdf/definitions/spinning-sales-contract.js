@@ -53,29 +53,28 @@ module.exports = function (salesContract) {
     var price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}`;
 
     var amount = salesContract.price * convertion;
-
     var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
     var amountDec1=parseFloat(amount.toFixed(3));
     var amountDec=amountDec1.toString().split('.');
     var spellAmount=amount;
 
-    if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
-        amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
-        price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currencySalesContract)}`;
-        if(!amountDec[1]){
-            spellAmount=amount;
-        }
-        else if(amountDec[1].length===1){
-            spellAmount=amount.toFixed(1);
-        }
-        else if(amountDec[1].length===2){
-            spellAmount=amount.toFixed(2);
-        }
-        else if(amountDec[1].length>=3 ){
-            spellAmount=amount.toFixed(3);
-        }
-    }
-    else if(amount % 1 !=0){
+    // if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
+    //     amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
+    //     price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currencySalesContract)}`;
+    //     if(!amountDec[1]){
+    //         spellAmount=amount;
+    //     }
+    //     else if(amountDec[1].length===1){
+    //         spellAmount=amount.toFixed(1);
+    //     }
+    //     else if(amountDec[1].length===2){
+    //         spellAmount=amount.toFixed(2);
+    //     }
+        // else if(amountDec[1].length>=3 ){
+        //     spellAmount=amount.toFixed(3);
+        // }
+    // }
+    // else if(amount % 1 !=0){
         amountDec1=parseFloat(amount.toFixed(2));
         amountDec=amountDec1.toString().split('.');
         if(!amountDec[1]){
@@ -87,7 +86,7 @@ module.exports = function (salesContract) {
         else if(amountDec[1].length>=2){
             spellAmount=amount.toFixed(2);
         }
-    }
+    // }
 
     var detail = salesContract.accountBank.currency.symbol + " " + price + ' / KG' + "\n";
     detailprice = salesContract.accountBank.currency.symbol + " " + price + ' / ' + salesContract.uom.unit + ' ' + ppn;

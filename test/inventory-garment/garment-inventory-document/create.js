@@ -1,15 +1,15 @@
 'use strict';
 var should = require('should');
 var helper = require("../../helper");
-var InventoryDocumentManager = require("../../../src/managers/inventory-textile/textile-inventory-document-manager");
-var inventoryDocumentManager = null;
-var inventoryDocumentDataUtil = require("../../data-util/inventory-textile/textile-inventory-document-data-util");
-var validate = require("dl-models").validator.inventoryTextile.textileInventoryDocument;
+var GarmentInventoryDocumentManager = require("../../../src/managers/inventory-garment/garment-inventory-document-manager");
+var garmentInventoryDocumentManager = null;
+var garmentInventoryDocumentDataUtil = require("../../data-util/inventory-garment/garment-inventory-document-data-util");
+var validate = require("dl-models").validator.inventory.inventoryDocument;
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            inventoryDocumentManager = new InventoryDocumentManager(db, {
+            garmentInventoryDocumentManager = new GarmentInventoryDocumentManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -20,10 +20,11 @@ before('#00. connect db', function (done) {
 });
 
 it("#01. should success when create new data using status OUT", function (done) {
-    inventoryDocumentDataUtil.getNewData()
+    garmentInventoryDocumentDataUtil.getNewData()
         .then((data) => {
             data.type = "OUT";
-           return inventoryDocumentManager.create(data)})
+           
+           return garmentInventoryDocumentManager.create(data)})
         .then((id) => {
             id.should.be.Object();
             done();
@@ -34,10 +35,10 @@ it("#01. should success when create new data using status OUT", function (done) 
 });
 
 it("#02. should success when create new data using status ADJ", function (done) {
-    inventoryDocumentDataUtil.getNewData()
+    garmentInventoryDocumentDataUtil.getNewData()
         .then((data) => {
             data.type = "ADJ";
-            return inventoryDocumentManager.create(data)})
+            return garmentInventoryDocumentManager.create(data)})
         .then((id) => {
             id.should.be.Object();
             done();

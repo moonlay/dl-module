@@ -8,7 +8,8 @@ class StorageDataUtil {
         var ManagerType = require("../../../src/managers/master/storage-manager");
         return _getSert(input, ManagerType, (data) => {
             return {
-                code: data.code
+                name: data.name,
+                unitId: data.unit._id,
             };
         });
     }
@@ -39,7 +40,19 @@ class StorageDataUtil {
                 return this.getSert(data);
             });
     }
-
+ getGarmentInventTestData() {
+         return unit.getTestData()
+            .then((data) => {
+                var data = {
+                    code: 'UT/GudangGarment',
+                    name: 'Gudang Pembelian Garment',
+                    description: '',
+                    unitId:data._id,
+                    unit:data
+                };
+                return this.getSert(data);
+            });
+    }
     getTestData() {
          return unit.getTestData()
             .then((data) => {

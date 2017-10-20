@@ -1,42 +1,40 @@
 'use strict'
 var helper = require("../../helper");
-var TextileInventoryDocumentManager = require("../../../src/managers/inventory-textile/textile-inventory-document-manager");
-var productDataUtil = require('../master/product-data-util');
+var GarmentInventoryDocumentManager = require("../../../src/managers/inventory-garment/garment-inventory-document-manager");
+var productDataUtil = require('../master/garment-product-data-util');
 var storageDataUtil = require('../master/storage-data-util');
 var uomDataUtil = require('../master/uom-data-util');
-
 var codeGenerator = require('../../../src/utils/code-generator');
 
 var Models = require("dl-models");
 var Map = Models.map;
-var TextileInventoryMovementModel = Models.inventoryTextile.TextileInventoryMovement;
+var GarmentInventoryMovementModel = Models.garmentInventory.GarmentInventoryMovement;
 
 
-class TextileInventoryDocumentDataUtil {
+class GarmentInventoryDocumentDataUtil {
     getNewData() {
-        return Promise.all([productDataUtil.getTestData(), productDataUtil.getTestData2(), storageDataUtil.getTestData(), uomDataUtil.getTestData()])
+        return Promise.all([ productDataUtil.getTestData(), storageDataUtil.getGarmentInventTestData(),uomDataUtil.getTestData()])
             .then(result => {
                 var product = result[0];
-                var product2 = result[1];
-                var storage = result[2];
-                var uom = result[3];
+                
+                var storage = result[1];
+                
+                var uom = result [2];
 
                 var code = codeGenerator()
                 var data = {
                     code: code,
                     referenceNo: `RFNO-${code}`,
-                    referenceType: 'unit-test-textile-doc',
+                    referenceType: 'unit-test-doc',
                     type: "IN",
                     date: new Date(),
                     storageId: storage._id,
-                    items: [{
-                        productId: product._id,
-                        quantity: 1000,
-                        uomId: uom._id
-                    }, {
-                        productId: product2._id,
-                        quantity: 1000,
-                        uomId: uom._id
+                    items:[ {
+                       
+                            productId: product._id,
+                            quantity: 1000,
+                            uomId: uom._id
+                      
                     }]
                 };
 
@@ -46,7 +44,7 @@ class TextileInventoryDocumentDataUtil {
 
     getNewTestData() {
         return helper
-            .getManager(TextileInventoryDocumentManager)
+            .getManager(GarmentInventoryDocumentManager)
             .then((manager) => {
                 return this.getNewData().then((data) => {
                     return manager.create(data)
@@ -68,7 +66,7 @@ class TextileInventoryDocumentDataUtil {
                 var data = {
                     code: code,
                     referenceNo: `RFNO-${code}`,
-                    referenceType: 'unit-test-textile-doc',
+                    referenceType: 'unit-test-doc',
                     type: "IN",
                     date: new Date(),
                     storageId: storage._id,
@@ -85,7 +83,7 @@ class TextileInventoryDocumentDataUtil {
 
      getPackingNewTestData() {
         return helper
-            .getManager(TextileInventoryDocumentManager)
+            .getManager(GarmentInventoryDocumentManager)
             .then((manager) => {
                 return this.getPackingNewData().then((data) => {
                     return manager.create(data)
@@ -96,4 +94,4 @@ class TextileInventoryDocumentDataUtil {
             });
     }
 }
-module.exports = new TextileInventoryDocumentDataUtil();
+module.exports = new GarmentInventoryDocumentDataUtil();

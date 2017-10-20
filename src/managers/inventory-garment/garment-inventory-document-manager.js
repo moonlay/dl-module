@@ -4,30 +4,30 @@ var ObjectId = require("mongodb").ObjectId;
 require("mongodb-toolkit");
 var generateCode = require("../../utils/code-generator");
 
-var ProductManager = require('../master/product-manager');
+var GarmentProductManager = require('../master/garment-product-manager');
 var StorageManager = require('../master/storage-manager');
 var UomManager = require('../master/uom-manager');
-var TextileInventorySummaryManager = require('./textile-inventory-summary-manager');
-var TextileInventoryMovementManager = require('./textile-inventory-movement-manager');
+var GarmentInventorySummaryManager = require('./garment-inventory-summary-manager');
+var GarmentInventoryMovementManager = require('./garment-inventory-movement-manager');
 
 var Models = require("dl-models");
 var Map = Models.map;
-var TextileInventoryDocumentModel = Models.inventoryTextile.TextileInventoryDocument;
+var GarmentInventoryDocumentModel = Models.garmentInventory.GarmentInventoryDocument;
 
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var moment = require("moment");
 
-module.exports = class TextileInventoryDocumentManager extends BaseManager {
+module.exports = class GarmentInventoryDocumentManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
-        this.collection = this.db.use(Map.inventoryTextile.collection.TextileInventoryDocument);
+        this.collection = this.db.use(Map.garmentInventory.collection.GarmentInventoryDocument);
 
-        this.textileInventorySummaryManager = new TextileInventorySummaryManager(db, user);
-        this.textileInventoryMovementManager = new TextileInventoryMovementManager(db, user);
+        this.garmentInventorySummaryManager = new GarmentInventorySummaryManager(db, user);
+        this.garmentInventoryMovementManager = new GarmentInventoryMovementManager(db, user);
 
         this.storageManager = new StorageManager(db, user);
-        this.productManager = new ProductManager(db, user);
+        this.productManager = new GarmentProductManager(db, user);
         this.uomManager = new UomManager(db, user);
     }
 
@@ -99,9 +99,10 @@ module.exports = class TextileInventoryDocumentManager extends BaseManager {
                         productId: item.productId,
                         uomId: item.uomId,
                         quantity: item.quantity,
-                        remark:item.remark
+                        remark : item.remark
                     };
-                    return this.textileInventoryMovementManager.create(movement);
+                    
+                    return this.garmentInventoryMovementManager.create(movement);
                 })
 
                 return Promise.all(createMovements);
@@ -109,15 +110,14 @@ module.exports = class TextileInventoryDocumentManager extends BaseManager {
             .then(results => id);
     }
 
-    createIn(inventoryDocument)
-    {
-        inventoryDocument.type = "IN";
-        return this.create(inventoryDocument);
+    createIn(garmentInventoryDocument)    {
+        garmentInventoryDocument.type = "IN";
+        return this.create(garmentInventoryDocument);
     }
 
-    _validate(inventoryDocument) {
+    _validate(garmentInventoryDocument) {
         var errors = {};
-        var valid = inventoryDocument;
+        var valid = garmentInventoryDocument;
 
         var getDbInventoryDocument = this.collection.singleOrDefault({
             _id: new ObjectId(valid._id)
@@ -158,26 +158,24 @@ module.exports = class TextileInventoryDocumentManager extends BaseManager {
                 if (_dbInventoryDocument)
                     valid.code = _dbInventoryDocument.code; // prevent code changes. 
                 if (_duplicateInventoryDocument)
-                    errors["code"] = i18n.__("TextileInventoryDocument.code.isExist: %s is exist", i18n.__("TextileInventoryDocument.code._:Code"));
-
+                    errors["code"] = i18n.__("GarmentInventoryDocument.code.isExist: %s is exist", i18n.__("GarmentInventoryDocument.code._:Code"));
 
                 if (!valid.referenceNo || valid.referenceNo === '')
-                    errors["referenceNo"] = i18n.__("TextileInventoryDocument.referenceNo.isRequired:%s is required", i18n.__("TextileInventoryDocument.referenceNo._:Reference No"));
+                    errors["referenceNo"] = i18n.__("GarmentInventoryDocument.referenceNo.isRequired:%s is required", i18n.__("GarmentInventoryDocument.referenceNo._:Reference No"));
 
                 if (!valid.referenceType || valid.referenceType === '')
-                    errors["referenceType"] = i18n.__("TextileInventoryDocument.referenceType.isRequired:%s is required", i18n.__("TextileInventoryDocument.referenceType._:Reference Type"));
+                    errors["referenceType"] = i18n.__("GarmentInventoryDocument.referenceType.isRequired:%s is required", i18n.__("GarmentInventoryDocument.referenceType._:Reference Type"));
 
                 if (!valid.type || valid.type === '' || !["IN", "OUT", "RET-IN", "RET-OUT", "ADJ"].find(r => r === valid.type))
-                    errors["type"] = i18n.__("TextileInventoryDocument.type.invalid:%s is invalid", i18n.__("TextileInventoryDocument.type._:Type"));
-
+                    errors["type"] = i18n.__("GarmentInventoryDocument.type.invalid:%s is invalid", i18n.__("GarmentInventoryDocument.type._:Type"));
 
                 if (!valid.storageId || valid.storageId === '')
-                    errors["storageId"] = i18n.__("TextileInventoryDocument.storageId.isRequired:%s is required", i18n.__("TextileInventoryDocument.storageId._:Storage")); //"Grade harus diisi";   
+                    errors["storageId"] = i18n.__("GarmentInventoryDocument.storageId.isRequired:%s is required", i18n.__("GarmentInventoryDocument.storageId._:Storage")); //"Grade harus diisi";   
                 else if (!_storage)
-                    errors["storageId"] = i18n.__("TextileInventoryDocument.storageId: %s not found", i18n.__("TextileInventoryDocument.storageId._:Storage"));
+                    errors["storageId"] = i18n.__("GarmentInventoryDocument.storageId: %s not found", i18n.__("GarmentInventoryDocument.storageId._:Storage"));
 
                 if (valid.items && valid.items.length <= 0) {
-                    errors["items"] = i18n.__("TextileInventoryDocument.items.isRequired:%s is required", i18n.__("TextileInventoryDocument.items._: Items")); //"Harus ada minimal 1 barang";
+                    errors["items"] = i18n.__("GarmentInventoryDocument.items.isRequired:%s is required", i18n.__("FabricQualityControl.items._: Items")); //"Harus ada minimal 1 barang";
                 }
                 else {
 
@@ -185,23 +183,23 @@ module.exports = class TextileInventoryDocumentManager extends BaseManager {
                     valid.items.forEach((item, index) => {
                         var itemsError = {};
                         if (!item.productId || item.productId.toString() === "")
-                            itemsError["productId"] = i18n.__("TextileInventoryDocument.items.productId.isRequired:%s is required", i18n.__("TextileInventoryDocument.items.productId._:Product"));
+                            itemsError["productId"] = i18n.__("GarmentInventoryDocument.items.productId.isRequired:%s is required", i18n.__("GarmentInventoryDocument.items.productId._:Product"));
                         else if (!_products.find(product => product._id.toString() === item.productId.toString()))
-                            itemsError["productId"] = i18n.__("TextileInventoryDocument.items.productId.isNotExist:%s is not exist", i18n.__("TextileInventoryDocument.items.productId._:Product"));
+                            itemsError["productId"] = i18n.__("GarmentInventoryDocument.items.productId.isNotExist:%s is not exist", i18n.__("GarmentInventoryDocument.items.productId._:Product"));
 
                         if (!item.uomId || item.uomId.toString() === "")
-                            itemsError["uomId"] = i18n.__("TextileInventoryDocument.items.uomId.isRequired:%s is required", i18n.__("TextileInventoryDocument.items.uomId._:UOM"));
+                            itemsError["uomId"] = i18n.__("GarmentInventoryDocument.items.uomId.isRequired:%s is required", i18n.__("GarmentInventoryDocument.items.uomId._:UOM"));
                         else if (!_uoms.find(uom => uom._id.toString() === item.uomId.toString()))
-                            itemsError["uomId"] = i18n.__("TextileInventoryDocument.items.uomId.isNotExist:%s is not exist", i18n.__("TextileInventoryDocument.items.uomId._:UOM"));
+                            itemsError["uomId"] = i18n.__("GarmentInventoryDocument.items.uomId.isNotExist:%s is not exist", i18n.__("GarmentInventoryDocument.items.uomId._:UOM"));
 
-                        if (!itemsError.productId && !itemsError.uomId) {
-                            var dup = valid.items.find((test, idx) => item.productId.toString() === test.productId.toString() && item.uomId.toString() === test.uomId.toString() && index != idx);
-                            if (dup)
-                                itemsError["productId"] = i18n.__("TextileInventoryDocument.items.productId.isDuplicate:%s is duplicate", i18n.__("TextileInventoryDocument.items.productId._:Product"));
-                        }
+                        // if (!itemsError.productId && !itemsError.uomId) {
+                        //     var dup = valid.items.find((test, idx) => item.productId.toString() === test.productId.toString() && item.uomId.toString() === test.uomId.toString() && index != idx);
+                        //     if (dup)
+                        //         itemsError["productId"] = i18n.__("GarmentInventoryDocument.items.productId.isDuplicate:%s is duplicate", i18n.__("GarmentInventoryDocument.items.productId._:Product"));
+                        // }
 
                         if (item.quantity === 0)
-                            itemsError["quantity"] = i18n.__("TextileInventoryDocument.items.quantity.isRequired:%s is required", i18n.__("TextileInventoryDocument.items.quantity._:Quantity"));
+                            itemsError["quantity"] = i18n.__("GarmentInventoryDocument.items.quantity.isRequired:%s is required", i18n.__("GarmentInventoryDocument.items.quantity._:Quantity"));
 
                         itemsErrors.push(itemsError);
 
@@ -213,7 +211,6 @@ module.exports = class TextileInventoryDocumentManager extends BaseManager {
                         }
                     })
                 }
-
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
@@ -227,35 +224,30 @@ module.exports = class TextileInventoryDocumentManager extends BaseManager {
                 for (var item of valid.items) {
                     var product = _products.find(product => product._id.toString() === item.productId.toString());
                     var uom = _uoms.find(uom => uom._id.toString() === item.uomId.toString());
-
                     item.productId = product._id;
                     item.productCode = product.code;
                     item.productName = product.name;
-
                     item.uomId = uom._id;
                     item.uom = uom.unit;
                 }
 
                 if (!valid.stamp) {
-                    valid = new TextileInventoryDocumentModel(valid);
+                    valid = new GarmentInventoryDocumentModel(valid);
                 }
 
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
-
-
-            })
+})
     }
-
     _createIndexes() {
         var dateIndex = {
-            name: `ix_${Map.inventoryTextile.collection.TextileInventoryDocument}__updatedDate`,
+            name: `ix_${Map.garmentInventory.collection.garmentInventoryDocument}__updatedDate`,
             key: {
                 _updatedDate: -1
             }
         }
         var codeIndex = {
-            name: `ix_${Map.inventoryTextile.collection.TextileInventoryDocument}__code`,
+            name: `ix_${Map.garmentInventory.collection.garmentInventoryDocument}__code`,
             key: {
                 code: 1
             },

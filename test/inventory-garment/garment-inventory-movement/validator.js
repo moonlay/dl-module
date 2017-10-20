@@ -1,10 +1,10 @@
 'use strict';
 var should = require('should');
 var helper = require("../../helper");
-var Manager = require("../../../src/managers/inventory-textile/textile-inventory-movement-manager");
+var Manager = require("../../../src/managers/inventory/inventory-movement-manager");
 var manager = null;
-var dataUtil = require("../../data-util/inventory-textile/textile-inventory-movement-data-util");
-var validate = require("dl-models").validator.inventoryTextile.textileInventoryMovement;
+var dataUtil = require("../../data-util/inventory/inventory-movement-data-util");
+var validate = require("dl-models").validator.inventory.inventoryMovement;
 
 before('#00. connect db', function (done) {
     helper.getDb()
