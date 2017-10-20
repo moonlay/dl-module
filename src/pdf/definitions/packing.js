@@ -152,6 +152,7 @@ module.exports = function (packing, offset) {
     var totalBerat = 0;
     var totalPanjang = 0;
     var totalPanjangTotal = 0;
+    var totalBeratTotal = 0;
 
     var tbody = items.map(function (item, index) {
 
@@ -165,6 +166,7 @@ module.exports = function (packing, offset) {
         totalBerat += item.weight;
         totalPanjang += item.length;
         totalPanjangTotal += item.length * item.quantity;
+        totalBeratTotal += item.weight * item.quantity;
 
         return [{
             text: (index + 1).toString() || '',
@@ -215,7 +217,7 @@ module.exports = function (packing, offset) {
         text: totalPanjangTotal.toFixed(2),
         style: ['size08', 'center']
     }, {
-        text: totalBerat.toFixed(2),
+        text: totalBeratTotal.toFixed(2),
         style: ['size08', 'center']
     }, "",]];
 
