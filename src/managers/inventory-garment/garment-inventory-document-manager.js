@@ -99,7 +99,7 @@ module.exports = class GarmentInventoryDocumentManager extends BaseManager {
                         productId: item.productId,
                         uomId: item.uomId,
                         quantity: item.quantity,
-                        remark : inventoryDocument.remark
+                        remark : item.remark
                     };
                     
                     return this.garmentInventoryMovementManager.create(movement);
