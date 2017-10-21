@@ -4,7 +4,6 @@ module.exports = function (kanban) {
 
     var steps = [].concat.apply([], kanban.instruction.steps);
 
-    //var iso = "FM-F-PR-09-01-016B/R2";
     var iso = "FM-FP-00-PC-19-020";
     var number = kanban.no;
 
@@ -33,14 +32,11 @@ module.exports = function (kanban) {
                     text: 'PT DAN LIRIS',
                     style: ['size15'],
                     alignment: "center"
-                }, {
-                    text: 'BANARAN, GROGOL, SUKOHARJO',
-                    style: ['size09'],
-                    alignment: "center"
-                }, {
-                    text: '\n',
-                    style: ['size09'],
-                    alignment: "center"
+                },{
+                    text: 'KARTU PENGANTAR PROSES PRODUKSI',
+                    style: ['size09', 'bold'],
+                    alignment: "center",
+                    decoration: 'underline'                  
                 }]
             }]
 
@@ -52,20 +48,17 @@ module.exports = function (kanban) {
             columns: [{
                 width: '*',
                 stack: [{
+                    text : "Delivery : " + `${moment(kanban.productionOrder.deliveryDate).format(locale.date.format)}`,
+                    style: ['size09'],
+                    alignment: "right"
+                },{
+                    text : "-----------------------------",
+                    style: ['size02', 'bold'],
+                    alignment: "right"
+                },{
                     text: iso,
                     style: ['size09', 'bold'],
                     alignment: "right"
-                },
-                {
-                    text: 'KARTU PENGANTAR PROSES PRODUKSI',
-                    style: ['size09', 'bold'],
-                    alignment: "center",
-                    decoration: 'underline'
-                },
-                {
-                    text: '\n',
-                    style: ['size09'],
-                    alignment: "center",
                 }]
             }]
 

@@ -211,11 +211,11 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                 if (Object.getOwnPropertyNames(doFulfillment.uomConversion).length > 0 && Object.getOwnPropertyNames(doFulfillment.purchaseOrderUom).length > 0) {
                                     if (doFulfillment.uomConversion.unit.toString() === doFulfillment.purchaseOrderUom.unit.toString()) {
                                         if (doFulfillment.conversion !== 1) {
-                                            fulfillmentError["conversion"] = i18n.__("DeliveryOrder.items.fulfillments.conversion.isRequired:%s must be 1", i18n.__("DeliveryOrder.items.fulfillments.conversion._:Conversion"));
+                                            fulfillmentError["conversion"] = i18n.__("DeliveryOrder.items.fulfillments.conversion.mustOne:%s must be 1", i18n.__("DeliveryOrder.items.fulfillments.conversion._:Conversion"));
                                         }
                                     } else {
                                         if (doFulfillment.conversion === 1) {
-                                            fulfillmentError["conversion"] = i18n.__("DeliveryOrder.items.fulfillments.conversion.isRequired:%s must not be 1", i18n.__("DeliveryOrder.items.fulfillments.conversion._:Conversion"));
+                                            fulfillmentError["conversion"] = i18n.__("DeliveryOrder.items.fulfillments.conversion.mustNotOne:%s must not be 1", i18n.__("DeliveryOrder.items.fulfillments.conversion._:Conversion"));
                                         }
                                     }
                                 } else {
