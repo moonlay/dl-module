@@ -4,6 +4,9 @@ var validatorPurchasing = require('dl-models').validator.purchasing;
 var UnitReceiptNoteManager = require("../../../src/managers/garment-purchasing/unit-receipt-note-manager");
 var unitReceiptNoteManager = null;
 var unitReceiptNote = require("../../data-util/garment-purchasing/unit-receipt-note-data-util");
+var StorageManager = require("../../../src/managers/master/storage-manager");
+var storageManager = null;
+var storage = require("../../data-util/master/storage-data-util");
 require("should");
 
 before('#00. connect db', function (done) {
@@ -87,4 +90,68 @@ it("#04. should error when create new data with deliveredQuantity greater than d
                 done(ex);
             }
         })
+});
+
+//validator useStorage
+
+var storageData;
+var storageDataId;
+
+it("#05. should success when create new data when useStorage is true", function (done) {
+     unitReceiptNote.getNewData()
+        .then((data) => {
+            data.storageId=storageDataId;
+            data.unit=storageData.unit;
+            data.useStorage=true;
+            unitReceiptNoteManager.create(data)
+            .then((id) => {
+                id.should.be.Object();
+                var createdId = id;
+                done();
+            })
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it('#06. should success when create new data with storage', function (done) {
+    unitReceiptNote.getNewData()
+        .then((data) => {
+            data.storageId=storageDataId;
+            data.useStorage=true;
+            unitReceiptNoteManager.create(data)
+            .then((id) => {
+                id.should.be.Object();
+                var createdId = id;
+                done();
+            })
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+it('#07. should error when create new data useStorage=true without storage', function (done) {
+    unitReceiptNote.getNewData()
+        .then(data => {
+
+            data.useStorage=true;
+
+            unitReceiptNoteManager.create(data)
+                .then(id => {
+                    done("should error when create new data useStorage=true without storage");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('storage');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
 });
