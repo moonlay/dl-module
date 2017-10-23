@@ -96,8 +96,26 @@ it("#04. should error when create new data with deliveredQuantity greater than d
 
 var storageData;
 var storageDataId;
+it('#05. should success when create new data', function (done) {
+    storage.getNewData()
+        .then((data) => storageManager.create(data))
+        .then((id) => {
+            storageManager.getSingleById(id)
+            .then((data) => {
+                storageData=data;
+                
+            });
+            
+                id.should.be.Object();
+                storageDataId = id;
+                done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
 
-it("#05. should success when create new data when useStorage is true", function (done) {
+it("#06. should success when create new data when useStorage is true", function (done) {
      unitReceiptNote.getNewData()
         .then((data) => {
             data.storageId=storageDataId;
@@ -115,28 +133,10 @@ it("#05. should success when create new data when useStorage is true", function 
         });
 });
 
-it('#06. should success when create new data with storage', function (done) {
-    unitReceiptNote.getNewData()
-        .then((data) => {
-            data.storageId=storageDataId;
-            data.useStorage=true;
-            unitReceiptNoteManager.create(data)
-            .then((id) => {
-                id.should.be.Object();
-                var createdId = id;
-                done();
-            })
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
 it('#07. should error when create new data useStorage=true without storage', function (done) {
     unitReceiptNote.getNewData()
         .then(data => {
-
             data.useStorage=true;
-
             unitReceiptNoteManager.create(data)
                 .then(id => {
                     done("should error when create new data useStorage=true without storage");
