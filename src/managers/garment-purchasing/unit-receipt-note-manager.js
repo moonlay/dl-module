@@ -111,13 +111,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     if(valid.useStorage){
                         if(!_storage)
                              errors["storage"] = i18n.__("UnitReceiptNote.storage.isRequired:%s name  is required", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama storage tidak boleh kosong";
-                             else
-                             {
-                                    if(valid.unit._id != _storage.unitId)
-                                    {
-                                       errors["storage"] = i18n.__("UnitReceiptNote.storage.unit.notMatch:%s unit not match with unit name ", i18n.__("UnitReceiptNote.storage.unit._:Storage"));  
-                                    }
-                             }
+                             else{
+                            if(_storage.unit){
+                                if(_storage.unit.code != valid.unit.code){
+                                    errors["storage"]= i18n.__("UnitReceiptNote.storage.shouldNot:%s unit name is not matched with unit name", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama unit storage tidak sama dengan nama unit";
+                                }
+                            }
+                        }
                 }
                     if (!_deliveryOrder)
                         errors["deliveryOrderId"] = i18n.__("UnitReceiptNote.deliveryOrder.isRequired:%s is required", i18n.__("UnitReceiptNote.deliveryOrder._:Delivery Order No.")); //"No. surat jalan tidak boleh kosong";

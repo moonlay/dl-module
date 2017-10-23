@@ -1,9 +1,9 @@
 var helper = require("../../helper");
 var validator = require('dl-models').validator.master;
 var validatorPurchasing = require('dl-models').validator.purchasing;
-var UnitReceiptNoteManager = require("../../../src/managers/purchasing/unit-receipt-note-manager");
+var UnitReceiptNoteManager = require("../../../src/managers/garment-purchasing/unit-receipt-note-manager");
 var unitReceiptNoteManager = null;
-var unitReceiptNote = require("../../data-util/purchasing/unit-receipt-note-data-util");
+var unitReceiptNote = require("../../data-util/garment-purchasing/unit-receipt-note-data-util");
 var StorageManager = require("../../../src/managers/master/storage-manager");
 var storageManager = null;
 var storage = require("../../data-util/master/storage-data-util");
@@ -47,8 +47,9 @@ it('#01. should success when create new data storage', function (done) {
         });
 });
 
-it("#02. should success when create new data when useStorage is true", function (done) {
-     unitReceiptNote.getNewData()
+var createdData;
+it('#02. should success when create new data with storage', function (done) {
+    unitReceiptNote.getNewData()
         .then((data) => {
             data.storageId=storageDataId;
             data.unit=storageData.unit;
@@ -68,10 +69,90 @@ it("#02. should success when create new data when useStorage is true", function 
 it('#03. should error when create new data useStorage=true without storage', function (done) {
     unitReceiptNote.getNewData()
         .then(data => {
+
             data.useStorage=true;
+
             unitReceiptNoteManager.create(data)
                 .then(id => {
                     done("should error when create new data useStorage=true without storage");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('storage');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+
+it('#05. should error when create new data without items', function (done) {
+    unitReceiptNote.getNewData()
+        .then(data => {
+            
+            data.items=[];
+
+            unitReceiptNoteManager.create(data)
+                .then(id => {
+                    done("should error when create new data without items");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('items');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#06. should error when create new data with deliveredQuantity=0', function (done) {
+    unitReceiptNote.getNewData()
+        .then(data => {
+            
+            data.items[0].deliveredQuantity=0;
+
+            unitReceiptNoteManager.create(data)
+                .then(id => {
+                    done("should error when create new data with deliveredQuantity=0");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('items');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#07. should error when create new data with storage.unit != data.unit', function (done) {
+    unitReceiptNote.getNewData()
+        .then(data => {
+            
+            data.unit.code="a";
+            data.storageId=storageDataId;
+            data.useStorage=true;
+
+            unitReceiptNoteManager.create(data)
+                .then(id => {
+                    done("should error when create new data with storage.unit != data.unit");
                 })
                 .catch(e => {
                     try {
