@@ -204,7 +204,8 @@ it('#08. should error when create new data with storage.unit != data.unit', func
         .then(data => {
             
             data.unit.code="a";
-            
+            data.storageId=storageDataId;
+            data.isInventory=true;
 
             unitReceiptNoteManager.create(data)
                 .then(id => {
