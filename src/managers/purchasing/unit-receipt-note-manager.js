@@ -381,10 +381,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         //     };
                         //     items.push(item);
                         // }
+                        var unit=unitReceiptNote.unit.name;
                         var doc={
                             date:unitReceiptNote.date,
                             referenceNo: unitReceiptNote.no,
-                            referenceType:"Bon Terima Unit Garment",
+                            referenceType:"Bon Terima Unit " + unit,
                             type:"IN",
                             storageId:storage._id,
                             remark:unitReceiptNote.remark,
@@ -437,11 +438,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         var items = [];
                         for (var prop in temp)
                             items.push(temp[prop]);
-                            
+                        
+                        var unit=unitReceiptNote.unit.name;
                         var doc={
                             date:unitReceiptNote.date,
                             referenceNo: unitReceiptNote.no,
-                            referenceType:"Bon Terima Unit Garment",
+                            referenceType:"Bon Terima Unit "+ unit,
                             type:"OUT",
                             storageId:storage._id,
                             remark:unitReceiptNote.remark,
@@ -497,10 +499,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         for (var prop in temp)
                             items.push(temp[prop]);
 
+                        var unit=unitReceiptNote.unit.name;
                         var doc={
                             date:unitReceiptNote.date,
                             referenceNo: unitReceiptNote.no,
-                            referenceType:"Bon Terima Unit Garment",
+                            referenceType:"Bon Terima Unit "+ unit,
                             type:"IN",
                             storageId:storage._id,
                             remark:unitReceiptNote.remark,
@@ -984,11 +987,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                         var items = [];
                                         for (var prop in temp)
                                             items.push(temp[prop]);
-                                            
+
+                                        var unit=unitReceiptNote.unit.name;    
                                         var doc={
                                             date:unitReceiptNote.date,
                                             referenceNo: unitReceiptNote.no,
-                                            referenceType:"Bon Terima Unit Garment",
+                                            referenceType:"Bon Terima Unit "+ unit,
                                             type:"OUT",
                                             storageId:storage._id,
                                             remark:unitReceiptNote.remark,
