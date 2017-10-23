@@ -111,7 +111,14 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     if(valid.useStorage){
                         if(!_storage)
                              errors["storage"] = i18n.__("UnitReceiptNote.storage.isRequired:%s name  is required", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama storage tidak boleh kosong";
-                    }
+                             else
+                             {
+                                    if(valid.unit._id != _storage.unitId)
+                                    {
+                                       errors["storage"] = i18n.__("UnitReceiptNote.storage.unit.notMatch:%s unit not match with unit name ", i18n.__("UnitReceiptNote.storage.unit._:Storage"));  
+                                    }
+                             }
+                }
                     if (!_deliveryOrder)
                         errors["deliveryOrderId"] = i18n.__("UnitReceiptNote.deliveryOrder.isRequired:%s is required", i18n.__("UnitReceiptNote.deliveryOrder._:Delivery Order No.")); //"No. surat jalan tidak boleh kosong";
                     else if (!valid.deliveryOrderId)
@@ -304,6 +311,9 @@ _beforeUpdate(data){
         return this.getSingleById(data._id) 
             .then(unitReceiptNote => { 
                   if(ObjectId.isValid(unitReceiptNote.storageId)){  
+                   return this.unitManager.getSingleByQueryOrDefault(unitReceiptNote.unit._id)  
+                   .then (  unit =>
+                   {
                 return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
                 .then(storage=>{
                    var temp = {};
@@ -339,7 +349,7 @@ _beforeUpdate(data){
                     var doc={
                         date:unitReceiptNote.date,
                         referenceNo: unitReceiptNote.no,
-                        referenceType:"Bon Terima Unit",
+                        referenceType:"Bon Terima Unit " + unit.name,
                         type:"OUT",
                         storageId:storage._id,
                         remark:unitReceiptNote.remark,
@@ -351,10 +361,14 @@ _beforeUpdate(data){
                         return Promise.resolve(data);
                     });
                 })
+                   })
             }else{
                     return data;
                 }
             }); 
+
+
+            
     }
 
     _beforeInsert(unitReceiptNote) {
@@ -369,6 +383,9 @@ _beforeUpdate(data){
             .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
              .then((unitReceiptNote) => {
                 if(ObjectId.isValid(unitReceiptNote.storageId)){  
+                     return this.unitManager.getSingleByQueryOrDefault(unitReceiptNote.unit._id)  
+                   .then (  unit =>
+                   {
                  return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
                 .then(storage=>{
                     var temp = {};
@@ -403,7 +420,7 @@ _beforeUpdate(data){
                     var doc={
                         date:unitReceiptNote.date,
                         referenceNo: unitReceiptNote.no,
-                        referenceType:"Bon Terima Unit",
+                        referenceType:"Bon Terima Unit "  + unit.name,
                         type:"IN",
                         storageId:storage._id,
                         remark:unitReceiptNote.remark,
@@ -414,7 +431,7 @@ _beforeUpdate(data){
                     .then( ()=> { 
                         return id;
                     });
-                })
+                })})
              }else{
                     return id;
                 }
@@ -429,6 +446,9 @@ _beforeUpdate(data){
             .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
              .then((unitReceiptNote) => {
                  if(ObjectId.isValid(unitReceiptNote.storageId)){  
+                      return this.unitManager.getSingleByQueryOrDefault(unitReceiptNote.unit._id)  
+                   .then (  unit =>
+                   {
                   return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
                 .then(storage=>{
                     var temp = {};
@@ -462,18 +482,18 @@ _beforeUpdate(data){
                     var doc={
                         date:unitReceiptNote.date,
                         referenceNo: unitReceiptNote.no,
-                        referenceType:"Bon Terima Unit",
+                        referenceType:"Bon Terima Unit " + unit.name,
                         type:"IN",
                         storageId:storage._id,
                         remark:unitReceiptNote.remark,
-                         items:items
+                        items:items
                     }
                 
                     return this.garmentInventoryDocumentManager.create(doc)
                     .then( ()=> { 
                         return id;
                     });
-                })
+                })})
              }else{
                     return id;
                 }
@@ -889,6 +909,9 @@ _beforeUpdate(data){
                             .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
                             .then((unitReceiptNote) => {
                                 if(ObjectId.isValid(unitReceiptNote.storageId)){
+                                     return this.unitManager.getSingleByQueryOrDefault(unitReceiptNote.unit._id)  
+                   .then (  unit =>
+                   {
                                 return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
                                 .then(storage=>{
                                    var temp = {};
@@ -923,7 +946,7 @@ _beforeUpdate(data){
                                     var doc={
                                         date:unitReceiptNote.date,
                                         referenceNo: unitReceiptNote.no,
-                                        referenceType:"Bon Terima Unit",
+                                        referenceType:"Bon Terima Unit " + unit.name,
                                         type:"OUT",
                                         storageId:storage._id,
                                         remark:unitReceiptNote.remark,
@@ -934,7 +957,7 @@ _beforeUpdate(data){
                     .then( ()=> { 
                         return unitReceiptNote._id;
                     });
-                })      
+                }) })     
                             }else{
                     return id;
                 }         
