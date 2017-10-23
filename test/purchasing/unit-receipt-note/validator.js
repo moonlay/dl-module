@@ -32,9 +32,15 @@ it('#01. should success when create new data', function (done) {
     storage.getNewData()
         .then((data) => storageManager.create(data))
         .then((id) => {
-            id.should.be.Object();
-            storageDataId = id;
-            done();
+            storageManager.getSingleById(id)
+            .then((data) => {
+                storageData=data;
+                
+            });
+            
+                id.should.be.Object();
+                storageDataId = id;
+                done();
         })
         .catch((e) => {
             done(e);
@@ -46,6 +52,7 @@ it('#02. should success when create new data with storage', function (done) {
     unitReceiptNote.getNewData()
         .then((data) => {
             data.storageId=storageDataId;
+            data.unit=storageData.unit;
             data.isInventory=true;
             unitReceiptNoteManager.create(data)
             .then((id) => {
@@ -180,6 +187,33 @@ it('#07. should error when create new data with deliveredQuantity=0', function (
                 .catch(e => {
                     try {
                         e.errors.should.have.property('items');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#08. should error when create new data with storage.unit != data.unit', function (done) {
+    unitReceiptNote.getNewData()
+        .then(data => {
+            
+            data.unit.code="a";
+            data.storageId=storageDataId;
+            data.isInventory=true;
+
+            unitReceiptNoteManager.create(data)
+                .then(id => {
+                    done("should error when create new data with storage.unit != data.unit");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('storage');
                         done();
                     }
                     catch (ex) {
