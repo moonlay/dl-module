@@ -182,6 +182,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     if(valid.isInventory){
                         if(!_storage)
                             errors["storage"] = i18n.__("UnitReceiptNote.storage.isRequired:%s name  is required", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama storage tidak boleh kosong";
+                        else{
+                            if(_storage.unit){
+                                if(_storage.unit.code != valid.unit.code){
+                                    errors["storage"]= i18n.__("UnitReceiptNote.storage.shouldNot:%s unit name is not matched with unit name", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama unit storage tidak sama dengan nama unit";
+                                }
+                            }
+                        }
                     }
 
                     if (valid.deliveryOrder) {
