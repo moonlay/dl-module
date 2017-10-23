@@ -96,8 +96,8 @@ it("#04. should error when create new data with deliveredQuantity greater than d
 
 var storageData;
 var storageDataId;
-it('#05. should success when create new data', function (done) {
-    storage.getNewData()
+it('#05. should success when create new data storage', function (done) {
+    storage.getNewData ()
         .then((data) => storageManager.create(data))
         .then((id) => {
             storageManager.getSingleById(id)
