@@ -25,7 +25,7 @@ const SELECT = {
     "field.status": 1,
     "field.assignedTo.username": 1,
     "field.sourceStageId": 1,
-    "field.sourceTargetId": 1
+    "field.targetStageId": 1
 };
 
 module.exports = class FactDealTrackingActivityEtlManager extends BaseManager {
