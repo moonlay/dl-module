@@ -97,7 +97,7 @@ module.exports = class FactDealTrackingActivityEtlManager extends BaseManager {
                 deleted: `'${item._deleted}'`,
                 id: `'${item._id.toString()}'`,
                 code: item.code ? `'${item.code.replace(/'/g, '"')}'` : null,
-                createdDate: `'${moment(item._createdDate).add(7, "hours").format("YYYY-MM-DD")}'`,
+                createdDate: `'${moment(item._createdDate).add(7, "hours").format("YYYY-MM-DD HH:mm:ss")}'`,
                 createdBy: `'${item._createdBy}'`,
                 dealId: item.dealId ? `'${item.dealId.toString()}'` : null,
                 type: item.type ? `'${item.type.replace(/'/g, '"')}'` : null,
