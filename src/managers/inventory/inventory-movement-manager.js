@@ -227,7 +227,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
             order = info.order || {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
 
         var filterMovement = {};
 

@@ -12,3 +12,6 @@ describe("REPORT SCENARIOS", function() {
 describe("PDF SCENARIOS", function() {
     require("./pdf");
 });
+describe("VALIDATOR SCENARIOS", function() {
+    require("./validator");
+});
