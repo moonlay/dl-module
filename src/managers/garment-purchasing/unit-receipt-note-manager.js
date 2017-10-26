@@ -365,3 +365,4 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 }
             });
     }
+};
