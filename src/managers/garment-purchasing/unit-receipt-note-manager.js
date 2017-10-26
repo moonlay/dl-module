@@ -12,7 +12,7 @@ var InternNoteManager = require('./intern-note-manager');
 var UnitManager = require('../master/unit-manager');
 var StorageManager = require('../master/storage-manager');
 var SupplierManager = require('../master/garment-supplier-manager');
-var GarmentInventoryDocumentManager = require('../inventory-garment/garment-inventory-document-manager');
+var GarmentInventoryDocumentManager =  require('../inventory-garment/garment-inventory-document-manager');
 
 var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
@@ -25,11 +25,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         this.collection = this.db.use(map.garmentPurchasing.collection.GarmentUnitReceiptNote);
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
-        this.garmentInventoryDocumentManager = new GarmentInventoryDocumentManager(db, user);
+        this.garmentInventoryDocumentManager = new GarmentInventoryDocumentManager(db,user);
         this.internNoteManager = new InternNoteManager(db, user);
         this.unitManager = new UnitManager(db, user);
         this.supplierManager = new SupplierManager(db, user);
-        this.storageManager = new StorageManager(db, user);
+         this.storageManager = new StorageManager(db, user);
     }
 
     _validate(unitReceiptNote) {
@@ -52,8 +52,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             var getDeliveryOrder = valid.deliveryOrderId && ObjectId.isValid(valid.deliveryOrderId) ? this.deliveryOrderManager.getSingleByIdOrDefault(valid.deliveryOrderId) : Promise.resolve(null);
             var getUnit = valid.unit && ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(valid.unit._id) : Promise.resolve(null);
             var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
-            var getStorage = valid.storageId && ObjectId.isValid(valid.storageId) ? this.storageManager.getSingleByIdOrDefault(valid.storageId) : Promise.resolve(null);
-
+            var  getStorage=  valid.storageId && ObjectId.isValid(valid.storageId) ? this.storageManager.getSingleByIdOrDefault(valid.storageId) : Promise.resolve(null);
+            
             valid.items = valid.items || [];
             var _purchaseOrders = valid.items.map((item) => {
                 return item.purchaseOrderId
@@ -72,7 +72,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 }
             });
 
-            Promise.all([getUnitReceiptNotePromise, getDeliveryOrder, getUnit, getSupplier, getStorage].concat(getPurchaseOrder))
+            Promise.all([getUnitReceiptNotePromise, getDeliveryOrder, getUnit, getSupplier,getStorage].concat(getPurchaseOrder))
                 .then(results => {
                     var _unitReceiptNote = results[0];
                     var _deliveryOrder = results[1];
@@ -108,9 +108,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     else if (new Date(valid.date) > now) {
                         errors["date"] = i18n.__("UnitReceiptNote.date.isGreater:%s is greater than today", i18n.__("UnitReceiptNote.date._:Date"));//"Tanggal tidak boleh lebih besar dari tanggal hari ini";
                     }
-                    if (valid.useStorage) {
-                        if (!_storage)
-                            errors["storage"] = i18n.__("UnitReceiptNote.storage.isRequired:%s name  is required", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama storage tidak boleh kosong";
+                    if(valid.useStorage){
+                        if(!_storage)
+                             errors["storage"] = i18n.__("UnitReceiptNote.storage.isRequired:%s name  is required", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama storage tidak boleh kosong";
                     }
                     if (!_deliveryOrder)
                         errors["deliveryOrderId"] = i18n.__("UnitReceiptNote.deliveryOrder.isRequired:%s is required", i18n.__("UnitReceiptNote.deliveryOrder._:Delivery Order No.")); //"No. surat jalan tidak boleh kosong";
@@ -121,7 +121,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             errors["deliveryOrderId"] = i18n.__("UnitReceiptNote.deliveryOrder.isRequired:%s is required", i18n.__("UnitReceiptNote.deliveryOrder._:Delivery Order No")); //"No. surat jalan tidak boleh kosong";
                         var doDate = new Date(_deliveryOrder.date);
                         var validDate = new Date(valid.date);
-
+                        
                         if (validDate < doDate)
                             errors["date"] = i18n.__("UnitReceiptNote.date.isGreaterDO:%s is less than delivery order date", i18n.__("UnitReceiptNote.date._:Date"));//"Tanggal surat jalan tidak boleh lebih besar dari tanggal hari ini";
                     }
@@ -200,13 +200,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
-                    if (valid.useStorage) {
-                        if (_storage) {
-                            valid.storageId = new ObjectId(_storage._id);
-                            valid.storageName = _storage.name;
-                            valid.storageCode = _storage.code;
+                        if(valid.useStorage){
+                         if(_storage){
+                             valid.storageId=new ObjectId(_storage._id);
+                             valid.storageName= _storage.name;
+                             valid.storageCode=_storage.code;
                         }
-                    }
+                        }
                     valid.unitId = new ObjectId(_unit._id);
                     valid.unit = _unit;
                     valid.supplierId = new ObjectId(_supplier._id);
@@ -294,69 +294,66 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return query;
     }
 
+_beforeUpdate(data){ 
+        return this.getSingleById(data._id) 
+            .then(unitReceiptNote => { 
+                  if(ObjectId.isValid(unitReceiptNote.storageId)){  
+                return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
+                .then(storage=>{
+                   var temp = {};
+                    var index=0;
+                    var obj=null;
+                    for(var i=0; i < unitReceiptNote.items.length; i++) {
+                        index=i;
+                        obj={
+                            productId:unitReceiptNote.items[i].product._id.toString(),
+                            quantity:unitReceiptNote.items[i].deliveredQuantity,
+                            uomId:unitReceiptNote.items[i].deliveredUom._id,
+                            remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
+                        };
+                        //obj=unitReceiptNote.items[i];
+                        var dup = unitReceiptNote.items.find((test, idx) => 
+                        obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                        if(!dup) {
+                            temp[obj.productId+obj.uomId.toString()] = obj;
+                        } else {
+                            if(!temp[obj.productId+obj.uomId.toString()]) {
+                                temp[obj.productId+obj.uomId.toString()] = obj;
+                            } else {
+                                temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
+                            }
+                        }
+                    }
+                    var result = [];
+                    for (var prop in temp)
+                        result.push(temp[prop]);
+
+                 
+                    var doc={
+                        date:unitReceiptNote.date,
+                        referenceNo: unitReceiptNote.no,
+                        referenceType:"Bon Terima Unit",
+                        type:"OUT",
+                        storageId:storage._id,
+                        remark:unitReceiptNote.remark,
+                        items:result
+                    }
+                
+                    return this.garmentInventoryDocumentManager.create(doc)
+                    .then( ()=> { 
+                        return Promise.resolve(data);
+                    });
+                })
+            }else{
+                    return data;
+                }
+            }); 
+    }
+
     _beforeInsert(unitReceiptNote) {
         unitReceiptNote.no = generateCode();
         return Promise.resolve(unitReceiptNote);
-    }
-
-    _beforeUpdate(data) { 
-        return this.getSingleById(data._id)
-            .then((unitReceiptNote) => this.updatePurchaseOrderDeleteUnitReceiptNote(unitReceiptNote))
-            .then((unitReceiptNote) => this.updateDeliveryOrderDeleteUnitReceiptNote(unitReceiptNote))
-            .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
-            .then(unitReceiptNote => {
-                if (ObjectId.isValid(unitReceiptNote.storageId)) {
-                    return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
-                        .then(storage => {
-                            var temp = {};
-                            var index = 0;
-                            var obj = null;
-                            for (var i = 0; i < unitReceiptNote.items.length; i++) {
-                                index = i;
-                                obj = {
-                                    productId: unitReceiptNote.items[i].product._id.toString(),
-                                    quantity: unitReceiptNote.items[i].deliveredQuantity,
-                                    uomId: unitReceiptNote.items[i].deliveredUom._id,
-                                    remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
-                                };
-                                //obj=unitReceiptNote.items[i];
-                                var dup = unitReceiptNote.items.find((test, idx) =>
-                                    obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
-                                if (!dup) {
-                                    temp[obj.productId + obj.uomId.toString()] = obj;
-                                } else {
-                                    if (!temp[obj.productId + obj.uomId.toString()]) {
-                                        temp[obj.productId + obj.uomId.toString()] = obj;
-                                    } else {
-                                        temp[obj.productId + obj.uomId.toString()].remark += "; " + obj.remark;
-                                        temp[obj.productId + obj.uomId.toString()].quantity += obj.quantity;
-                                    }
-                                }
-                            }
-                            var result = [];
-                            for (var prop in temp)
-                                result.push(temp[prop]);
-
-
-                            var doc = {
-                                date: unitReceiptNote.date,
-                                referenceNo: unitReceiptNote.no,
-                                referenceType: "Bon Terima Unit",
-                                type: "OUT",
-                                storageId: storage._id,
-                                remark: unitReceiptNote.remark,
-                                items: result
-                            }
-
-                            return this.garmentInventoryDocumentManager.create(doc)
-                                .then(() => {
-                                    return Promise.resolve(data);
-                                });
-                        })
-                } else {
-                    return data;
-                }
-            });
     }
 
     _afterInsert(id) {
@@ -364,119 +361,119 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             .then((unitReceiptNote) => this.updatePurchaseOrder(unitReceiptNote))
             .then((unitReceiptNote) => this.updateDeliveryOrder(unitReceiptNote))
             .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
-            .then((unitReceiptNote) => {
-                if (ObjectId.isValid(unitReceiptNote.storageId)) {
-                    return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
-                        .then(storage => {
-                            var temp = {};
-                            var index = 0;
-                            var obj = null;
-                            for (var i = 0; i < unitReceiptNote.items.length; i++) {
-                                index = i;
-                                obj = {
-                                    productId: unitReceiptNote.items[i].product._id.toString(),
-                                    quantity: unitReceiptNote.items[i].deliveredQuantity,
-                                    uomId: unitReceiptNote.items[i].deliveredUom._id,
-                                    remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
-                                };
-                                //obj=unitReceiptNote.items[i];
-                                var dup = unitReceiptNote.items.find((test, idx) =>
-                                    obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
-                                if (!dup) {
-                                    temp[obj.productId + obj.uomId.toString()] = obj;
-                                } else {
-                                    if (!temp[obj.productId + obj.uomId.toString()]) {
-                                        temp[obj.productId + obj.uomId.toString()] = obj;
-                                    } else {
-                                        temp[obj.productId + obj.uomId.toString()].remark += "; " + obj.remark;
-                                        temp[obj.productId + obj.uomId.toString()].quantity += obj.quantity;
-                                    }
-                                }
+             .then((unitReceiptNote) => {
+                if(ObjectId.isValid(unitReceiptNote.storageId)){  
+                 return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
+                .then(storage=>{
+                    var temp = {};
+                    var index=0;
+                    var obj=null;
+                    for(var i=0; i < unitReceiptNote.items.length; i++) {
+                        index=i;
+                        obj={
+                            productId:unitReceiptNote.items[i].product._id.toString(),
+                            quantity:unitReceiptNote.items[i].deliveredQuantity,
+                            uomId:unitReceiptNote.items[i].deliveredUom._id,
+                            remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
+                        };
+                        //obj=unitReceiptNote.items[i];
+                        var dup = unitReceiptNote.items.find((test, idx) => 
+                        obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                        if(!dup) {
+                            temp[obj.productId+obj.uomId.toString()] = obj;
+                        } else {
+                            if(!temp[obj.productId+obj.uomId.toString()]) {
+                                temp[obj.productId+obj.uomId.toString()] = obj;
+                            } else {
+                                temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
                             }
-                            var result = [];
-                            for (var prop in temp)
-                                result.push(temp[prop]);
-
-                            var doc = {
-                                date: unitReceiptNote.date,
-                                referenceNo: unitReceiptNote.no,
-                                referenceType: "Bon Terima Unit",
-                                type: "IN",
-                                storageId: storage._id,
-                                remark: unitReceiptNote.remark,
-                                items: result
-                            }
-
-                            return this.garmentInventoryDocumentManager.create(doc)
-                                .then(() => {
-                                    return id;
-                                });
-                        })
-                } else {
+                        }
+                    }
+                    var result = [];
+                    for (var prop in temp)
+                        result.push(temp[prop]);
+                   
+                    var doc={
+                        date:unitReceiptNote.date,
+                        referenceNo: unitReceiptNote.no,
+                        referenceType:"Bon Terima Unit",
+                        type:"IN",
+                        storageId:storage._id,
+                        remark:unitReceiptNote.remark,
+                        items :result
+                    }
+                
+                    return this.garmentInventoryDocumentManager.create(doc)
+                    .then( ()=> { 
+                        return id;
+                    });
+                })
+             }else{
                     return id;
                 }
-
+                
             })
     }
-
+ 
     _afterUpdate(id) {
         return this.getSingleById(id)
             .then((unitReceiptNote) => this.updatePurchaseOrderUpdateUnitReceiptNote(unitReceiptNote))
             .then((unitReceiptNote) => this.updateDeliveryOrderUpdateUnitReceiptNote(unitReceiptNote))
             .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
-            .then((unitReceiptNote) => {
-                if (ObjectId.isValid(unitReceiptNote.storageId)) {
-                    return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
-                        .then(storage => {
-                            var temp = {};
-                            var index = 0;
-                            var obj = null;
-                            for (var i = 0; i < unitReceiptNote.items.length; i++) {
-                                index = i;
-                                obj = {
-                                    productId: unitReceiptNote.items[i].product._id.toString(),
-                                    quantity: unitReceiptNote.items[i].deliveredQuantity,
-                                    uomId: unitReceiptNote.items[i].deliveredUom._id,
-                                    remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
-                                };
-                                //obj=unitReceiptNote.items[i];
-                                var dup = unitReceiptNote.items.find((test, idx) =>
-                                    obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
-                                if (!dup) {
-                                    temp[obj.productId + obj.uomId.toString()] = obj;
-                                } else {
-                                    if (!temp[obj.productId + obj.uomId.toString()]) {
-                                        temp[obj.productId + obj.uomId.toString()] = obj;
-                                    } else {
-                                        temp[obj.productId + obj.uomId.toString()].remark += "; " + obj.remark;
-                                        temp[obj.productId + obj.uomId.toString()].quantity += obj.quantity;
-                                    }
-                                }
+             .then((unitReceiptNote) => {
+                 if(ObjectId.isValid(unitReceiptNote.storageId)){  
+                  return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
+                .then(storage=>{
+                    var temp = {};
+                    var index=0;
+                    var obj=null;
+                    for(var i=0; i < unitReceiptNote.items.length; i++) {
+                        index=i;
+                        obj={
+                            productId:unitReceiptNote.items[i].product._id.toString(),
+                            quantity:unitReceiptNote.items[i].deliveredQuantity,
+                            uomId:unitReceiptNote.items[i].deliveredUom._id,
+                            remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
+                        };
+                        //obj=unitReceiptNote.items[i];
+                        var dup = unitReceiptNote.items.find((test, idx) => 
+                        obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                        if(!dup) {
+                            temp[obj.productId+obj.uomId.toString()] = obj;
+                        } else {
+                            if(!temp[obj.productId+obj.uomId.toString()]) {
+                                temp[obj.productId+obj.uomId.toString()] = obj;
+                            } else {
+                                temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
                             }
-                            var items = [];
-                            for (var prop in temp)
-                                items.push(temp[prop]);
-                            var doc = {
-                                date: unitReceiptNote.date,
-                                referenceNo: unitReceiptNote.no,
-                                referenceType: "Bon Terima Unit",
-                                type: "IN",
-                                storageId: storage._id,
-                                remark: unitReceiptNote.remark,
-                                items: items
-                            }
-
-                            return this.garmentInventoryDocumentManager.create(doc)
-                                .then(() => {
-                                    return id;
-                                });
-                        })
-                } else {
+                        }
+                    }
+                    var items = [];
+                    for (var prop in temp)
+                        items.push(temp[prop]);
+                    var doc={
+                        date:unitReceiptNote.date,
+                        referenceNo: unitReceiptNote.no,
+                        referenceType:"Bon Terima Unit",
+                        type:"IN",
+                        storageId:storage._id,
+                        remark:unitReceiptNote.remark,
+                         items:items
+                    }
+                
+                    return this.garmentInventoryDocumentManager.create(doc)
+                    .then( ()=> { 
+                        return id;
+                    });
+                })
+             }else{
                     return id;
                 }
-
+                
             })
-
+          
     }
 
     updatePurchaseOrder(unitReceiptNote) {
@@ -885,58 +882,58 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             .then((unitReceiptNote) => this.updateDeliveryOrderDeleteUnitReceiptNote(unitReceiptNote))
                             .then((unitReceiptNote) => this.updateInternNote(unitReceiptNote))
                             .then((unitReceiptNote) => {
-                                if (ObjectId.isValid(unitReceiptNote.storageId)) {
-                                    return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
-                                        .then(storage => {
-                                            var temp = {};
-                                            var index = 0;
-                                            var obj = null;
-                                            for (var i = 0; i < unitReceiptNote.items.length; i++) {
-                                                index = i;
-                                                obj = {
-                                                    productId: unitReceiptNote.items[i].product._id.toString(),
-                                                    quantity: unitReceiptNote.items[i].deliveredQuantity,
-                                                    uomId: unitReceiptNote.items[i].deliveredUom._id,
-                                                    remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
-                                                };
-                                                //obj=unitReceiptNote.items[i];
-                                                var dup = unitReceiptNote.items.find((test, idx) =>
-                                                    obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
-                                                if (!dup) {
-                                                    temp[obj.productId + obj.uomId.toString()] = obj;
-                                                } else {
-                                                    if (!temp[obj.productId + obj.uomId.toString()]) {
-                                                        temp[obj.productId + obj.uomId.toString()] = obj;
-                                                    } else {
-                                                        temp[obj.productId + obj.uomId.toString()].remark += "; " + obj.remark;
-                                                        temp[obj.productId + obj.uomId.toString()].quantity += obj.quantity;
-                                                    }
-                                                }
+                                if(ObjectId.isValid(unitReceiptNote.storageId)){
+                                return this.storageManager.getSingleByQueryOrDefault(unitReceiptNote.storageId)
+                                .then(storage=>{
+                                   var temp = {};
+                                    var index=0;
+                                    var obj=null;
+                                    for(var i=0; i < unitReceiptNote.items.length; i++) {
+                                        index=i;
+                                        obj={
+                                            productId:unitReceiptNote.items[i].product._id.toString(),
+                                            quantity:unitReceiptNote.items[i].deliveredQuantity,
+                                            uomId:unitReceiptNote.items[i].deliveredUom._id,
+                                            remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
+                                        };
+                                        //obj=unitReceiptNote.items[i];
+                                        var dup = unitReceiptNote.items.find((test, idx) => 
+                                        obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                                        if(!dup) {
+                                            temp[obj.productId+obj.uomId.toString()] = obj;
+                                        } else {
+                                            if(!temp[obj.productId+obj.uomId.toString()]) {
+                                                temp[obj.productId+obj.uomId.toString()] = obj;
+                                            } else {
+                                                temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                                temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
                                             }
-                                            var items = [];
-                                            for (var prop in temp)
-                                                items.push(temp[prop]);
+                                        }
+                                    }
+                                    var items = [];
+                                    for (var prop in temp)
+                                        items.push(temp[prop]);
+                                        
+                                    var doc={
+                                        date:unitReceiptNote.date,
+                                        referenceNo: unitReceiptNote.no,
+                                        referenceType:"Bon Terima Unit",
+                                        type:"OUT",
+                                        storageId:storage._id,
+                                        remark:unitReceiptNote.remark,
+                                        items:items
+                                    }
+                
+                    return this.garmentInventoryDocumentManager.create(doc)
+                    .then( ()=> { 
+                        return unitReceiptNote._id;
+                    });
+                })      
+                            }else{
+                    return id;
+                }         
 
-                                            var doc = {
-                                                date: unitReceiptNote.date,
-                                                referenceNo: unitReceiptNote.no,
-                                                referenceType: "Bon Terima Unit",
-                                                type: "OUT",
-                                                storageId: storage._id,
-                                                remark: unitReceiptNote.remark,
-                                                items: items
-                                            }
-
-                                            return this.garmentInventoryDocumentManager.create(doc)
-                                                .then(() => {
-                                                    return unitReceiptNote._id;
-                                                });
-                                        })
-                                } else {
-                                    return id;
-                                }
-
-                            })
+            })
                     })
             });
     }
@@ -1239,7 +1236,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                             jobs.push(this.internNoteManager.updateStatusNI(interNote));
                         }
                         return Promise.all(jobs)
-                            .then((results) => {
+                        .then((results) => {
                                 return Promise.resolve(unitReceiptNote);
                             })
                     })
