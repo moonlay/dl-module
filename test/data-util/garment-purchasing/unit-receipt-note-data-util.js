@@ -20,10 +20,11 @@ class UnitReceiptNoteDataUtil {
             .getManager(UnitReceiptNoteManager)
             .then(manager => {
                 var getDeliveryOrder = dataDeliveryOrder ? dataDeliveryOrder : getNewDeliveryOrder();
-                return Promise.all([unit.getTestData(), getDeliveryOrder,storageDataUtil.getGarmentInventTestData()])
+                return Promise.all([unit.getTestData(), getDeliveryOrder, storageDataUtil.getGarmentInventTestData()])
                     .then(results => {
                         var dataUnit = results[0];
                         var dataDeliveryOrder = results[1];
+                        var dataStorage = results[2];
 
                         var poCollection = dataDeliveryOrder.items.map(doItem => {
                             var item = doItem.fulfillments.map(fulfillment => {
@@ -107,6 +108,10 @@ class UnitReceiptNoteDataUtil {
                                             deliveryOrderNo: dataDeliveryOrder.no,
                                             remark: 'Unit Test',
                                             isPaid: false,
+                                            storageId: dataStorage._id,
+                                            storageName: dataStorage.name,
+                                            storageCode: dataStorage.code,
+                                            useStorage: true,
                                             items: doItems
                                         };
                                         return Promise.resolve(data);
