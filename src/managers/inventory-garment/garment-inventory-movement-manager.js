@@ -86,7 +86,7 @@ module.exports = class GarmentInventoryMovementManager extends BaseManager {
                         var sum = results[0];
                         var summary = results[1];
                         summary.quantity = sum.quantity;
-                        summary.remark = garmentInventoryMovement.remark;
+                       // summary.remark = garmentInventoryMovement.remark;
                         return this.garmentInventorySummaryManager.update(summary)
                     })
                     .then(sumId => id)

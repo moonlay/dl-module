@@ -34,6 +34,7 @@ const SELECT = {
     packingInstruction: 1,
     uom: 1,
     "fabricGradeTests.type": 1,
+    "fabricGradeTests.grade": 1,
     "fabricGradeTests.pcsNo": 1,
     "fabricGradeTests.width": 1,
     "fabricGradeTests.initLength": 1,
@@ -44,6 +45,7 @@ const SELECT = {
     "fabricGradeTests.finalGradeTest": 1,
     "fabricGradeTests.score": 1,
     "fabricGradeTests.finalScore": 1,
+    "fabricGradeTests.pointLimit": 1,
     "fabricGradeTests.criteria.code": 1,
     "fabricGradeTests.criteria.group": 1,
     "fabricGradeTests.criteria.name": 1,
@@ -175,7 +177,8 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
                         criteriaD: criteria.score.D >= 0 && criteria.score.D !== '' && criteria.score.D ? `${criteria.score.D}` : null,
                         totalScore: `${totalScore}`,
                         deleted: `'${qualityControl._deleted}'`,
-                        isUsed: `'${qualityControl.isUsed}'`
+                        isUsed: `'${qualityControl.isUsed}'`,
+                        pointLimit: gradeTest.pointLimit >= 0 && gradeTest.pointLimit && gradeTest.pointLimit ? `'${gradeTest.pointLimit}'` : null
                     }
                 });
                 return [].concat.apply([], resultss);
@@ -216,7 +219,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `\nSELECT ${item.qcCode}, ${item.qcpointSystem}, ${item.dateIm}, ${item.shiftIm}, ${item.group}, ${item.operatorIm}, ${item.machineNoIm}, ${item.productionOrderNo}, ${item.productionOrderType}, ${item.kanbanCode}, ${item.cartNo}, ${item.buyer}, ${item.orderQuantity}, ${item.color}, ${item.construction}, ${item.packingInstruction}, ${item.uom}, ${item.type}, ${item.pcsNo}, ${item.grade}, ${item.width}, ${item.initLength}, ${item.avalLength}, ${item.finalLength}, ${item.sampleLength}, ${item.fabricGradeTest}, ${item.finalGradeTest}, ${item.score}, ${item.finalScore}, ${item.pointSystem}, ${item.criteriaCode}, ${item.criteriaGroup}, ${item.criteriaName}, ${item.criteriaA}, ${item.criteriaB}, ${item.criteriaC}, ${item.criteriaD}, ${item.totalScore}, ${item.deleted}, ${item.isUsed} UNION ALL `;
+                                var queryString = `\nSELECT ${item.qcCode}, ${item.qcpointSystem}, ${item.dateIm}, ${item.shiftIm}, ${item.group}, ${item.operatorIm}, ${item.machineNoIm}, ${item.productionOrderNo}, ${item.productionOrderType}, ${item.kanbanCode}, ${item.cartNo}, ${item.buyer}, ${item.orderQuantity}, ${item.color}, ${item.construction}, ${item.packingInstruction}, ${item.uom}, ${item.type}, ${item.pcsNo}, ${item.grade}, ${item.width}, ${item.initLength}, ${item.avalLength}, ${item.finalLength}, ${item.sampleLength}, ${item.fabricGradeTest}, ${item.finalGradeTest}, ${item.score}, ${item.finalScore}, ${item.pointSystem}, ${item.criteriaCode}, ${item.criteriaGroup}, ${item.criteriaName}, ${item.criteriaA}, ${item.criteriaB}, ${item.criteriaC}, ${item.criteriaD}, ${item.totalScore}, ${item.deleted}, ${item.isUsed}, ${item.pointLimit} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);

@@ -182,6 +182,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     if(valid.isInventory){
                         if(!_storage)
                             errors["storage"] = i18n.__("UnitReceiptNote.storage.isRequired:%s name  is required", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama storage tidak boleh kosong";
+                        else{
+                            if(_storage.unit){
+                                if(_storage.unit.code != valid.unit.code){
+                                    errors["storage"]= i18n.__("UnitReceiptNote.storage.shouldNot:%s unit name is not matched with unit name", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama unit storage tidak sama dengan nama unit";
+                                }
+                            }
+                        }
                     }
 
                     if (valid.deliveryOrder) {
@@ -381,10 +388,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         //     };
                         //     items.push(item);
                         // }
+                        var unit=unitReceiptNote.unit.name;
                         var doc={
                             date:unitReceiptNote.date,
                             referenceNo: unitReceiptNote.no,
-                            referenceType:"Bon Terima Unit Garment",
+                            referenceType:"Bon Terima Unit " + unit,
                             type:"IN",
                             storageId:storage._id,
                             remark:unitReceiptNote.remark,
@@ -437,11 +445,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         var items = [];
                         for (var prop in temp)
                             items.push(temp[prop]);
-                            
+                        
+                        var unit=unitReceiptNote.unit.name;
                         var doc={
                             date:unitReceiptNote.date,
                             referenceNo: unitReceiptNote.no,
-                            referenceType:"Bon Terima Unit Garment",
+                            referenceType:"Bon Terima Unit "+ unit,
                             type:"OUT",
                             storageId:storage._id,
                             remark:unitReceiptNote.remark,
@@ -497,10 +506,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         for (var prop in temp)
                             items.push(temp[prop]);
 
+                        var unit=unitReceiptNote.unit.name;
                         var doc={
                             date:unitReceiptNote.date,
                             referenceNo: unitReceiptNote.no,
-                            referenceType:"Bon Terima Unit Garment",
+                            referenceType:"Bon Terima Unit "+ unit,
                             type:"IN",
                             storageId:storage._id,
                             remark:unitReceiptNote.remark,
@@ -984,11 +994,12 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                         var items = [];
                                         for (var prop in temp)
                                             items.push(temp[prop]);
-                                            
+
+                                        var unit=unitReceiptNote.unit.name;    
                                         var doc={
                                             date:unitReceiptNote.date,
                                             referenceNo: unitReceiptNote.no,
-                                            referenceType:"Bon Terima Unit Garment",
+                                            referenceType:"Bon Terima Unit "+ unit,
                                             type:"OUT",
                                             storageId:storage._id,
                                             remark:unitReceiptNote.remark,
