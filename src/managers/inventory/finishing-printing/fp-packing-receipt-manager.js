@@ -131,7 +131,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                     errors["packingId"] = i18n.__("PackingReceipt.packingId: %s not found", i18n.__("PackingReceipt.KanbanId._:Packing"));
 
                 if (!valid.storage || valid.storage === '')
-                     errors["storage"] = i18n.__("PackingReceipt.storage.isRequired:%s is required", i18n.__("PackingReceipt.storage._:Storage")); //"Gudang harus diisi";  
+                    errors["storage"] = i18n.__("PackingReceipt.storage.isRequired:%s is required", i18n.__("PackingReceipt.storage._:Storage")); //"Gudang harus diisi";  
 
                 if (!valid.date)
                     errors["date"] = i18n.__("PackingReceipt.date.isRequired:%s is required", i18n.__("PackingReceipt.date._:Date")); //"Grade harus diisi";
