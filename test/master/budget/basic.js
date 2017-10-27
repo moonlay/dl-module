@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.Budget,
     util: require("../../data-util/master/budget-data-util"),
     validator: require("dl-models").validator.master.budget,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

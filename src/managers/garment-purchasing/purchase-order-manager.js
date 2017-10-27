@@ -282,18 +282,28 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
     // getPurchaseOrderByTag(user, categoryId, keyword, shipmentDateFrom, shipmentDateTo) {        
-    getPurchaseOrderByTag(user, keyword, shipmentDateFrom, shipmentDateTo) {
+    getPurchaseOrderByTag(user, category, keyword, shipmentDateFrom, shipmentDateTo) {
         return this._createIndexes()
             .then((createIndexResults) => {
                 return new Promise((resolve, reject) => {
                     var keywords = [];
 
                     var query = Object.assign({});
-                    var queryCategory = {
-                        // "items.categoryId": new ObjectId(categoryId),
-                        "items.isPosted": false,
-                        "items.isClosed": false
-                    };
+                    var queryCategory = Object.assign({});
+
+                    if (category === "FABRIC") {
+                        queryCategory = {
+                            "items.category.code": "FAB",
+                            "items.isPosted": false,
+                            "items.isClosed": false
+                        };
+                    } else {
+                        queryCategory = {
+                            "items.category.code": { "$ne": "FAB" },
+                            "items.isPosted": false,
+                            "items.isClosed": false
+                        };
+                    }
                     query = Object.assign(query, {
                         _deleted: false,
                         isClosed: false,
@@ -509,7 +519,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     })
             })
             .catch(e => {
-                reject(e);
+                return Promise.reject(e);
             });
     }
 
@@ -792,6 +802,16 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "items.isClosed": true,
         };
 
+        if (info.state && info.state !== -1) {
+            Object.assign(query, {
+                "status.value": info.state
+            });
+        }
+        if (info.user && info.user !== "") {
+            Object.assign(query, {
+                _createdBy: info.user
+            });
+        }
         if (info.unitId && info.unitId !== "") {
             Object.assign(query, {
                 unitId: new ObjectId(info.unitId)
@@ -948,6 +968,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "unit.name": 1,
                                     "unit.division.name": 1,
                                     "refNo": "$items.refNo",
+                                    "artikel":1,
                                     "product.name": "$items.product.name",
                                     "product.code": "$items.product.code",
                                     "product.description": "$items.product.description",
@@ -1027,6 +1048,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         unit: data.unit.name,
                         division: data.unit.division.name,
                         refNo: data.refNo,
+                        artikel:data.artikel,
                         category: data.category,
                         productName: data.product.name,
                         productCode: data.product.code,
@@ -1107,6 +1129,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "Unit": data.unit,
                 "Divisi": data.division,
                 "No Ref Purchase Request": data.refNo,
+                "Artikel":data.artikel,
                 "Kategori": data.category,
                 "Nama Barang": data.productName,
                 "Kode Barang": data.productCode,
@@ -1166,6 +1189,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "Unit": "string",
             "Divisi": "string",
             "No Ref Purchase Request": "string",
+            "Artikel": "string",
             "Kategori": "string",
             "Nama Barang": "string",
             "Kode Barang": "string",

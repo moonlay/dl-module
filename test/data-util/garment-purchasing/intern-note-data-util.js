@@ -27,6 +27,7 @@ class InternNoteDataUtil {
                             supplierId: invoiceNote.supplier._id,
                             supplier: invoiceNote.supplier,
                             currency: dataCurrency,
+                            hasUnitReceiptNote: false,
                             remark: 'Unit Test Intern Note',
                             items: [invoiceNote]
                         };

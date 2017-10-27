@@ -87,8 +87,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             "items.priceBeforeTax",
             "items.budgetPrice",
             "items.categoryId",
-            "items.category.code",
-            "items.category.name",
+            "items.category",
             "items.conversion",
             "items.isPosted",
             "items.isClosed",
@@ -368,7 +367,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                 var po = _poInternals.find((poInternal) => poInternal._id.toString() == items.poId.toString());
                                                 var poItem = po.items.find((item) => item.product._id.toString() === items.product._id.toString());
 
-                                                var pr = purchaseRequestList.find((pr) => pr.no.toString() == items.prNo.toString());
+                                                var pr = purchaseRequestList.find((pr) => pr._id.toString() == items.prId.toString());
                                                 var prItem = pr.items.find((item) => item.product.code.toString() === items.product.code.toString() && item.refNo === items.prRefNo)
                                                 var fixBudget = prItem.quantity * prItem.budgetPrice;
                                                 var budgetUsed = listBudget.find((budget) => budget.prNo == items.prNo && budget.prRefNo == items.prRefNo && budget.product == items.product.code);
@@ -421,6 +420,27 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                     if (!items.conversion || items.conversion === "") {
                                                         itemError["conversion"] = i18n.__("PurchaseOrderExternal.items.conversion.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.conversion._:Conversion")); //"Konversi tidak boleh kosong";
                                                     }
+                                                    if (!items.quantityConversion || items.quantityConversion === 0) {
+                                                        itemError["quantityConversion"] = i18n.__("PurchaseOrderExternal.items.quantityConversion.isRequired:%s is required or not 0", i18n.__("PurchaseOrderExternal.items.quantityConversion._:Quantity Conversion"));
+                                                    }
+
+                                                    if (!items.uomConversion || !items.uomConversion.unit || items.uomConversion.unit === "") {
+                                                        itemError["uomConversion"] = i18n.__("PurchaseOrderExternal.items.uomConversion.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.uomConversion._:Uom Conversion"));
+                                                    }
+
+                                                    if (Object.getOwnPropertyNames(items.uomConversion).length > 0 && Object.getOwnPropertyNames(items.dealUom).length > 0) {
+                                                        if (items.uomConversion.unit.toString() === items.dealUom.unit.toString()) {
+                                                            if (items.conversion !== 1) {
+                                                                itemError["conversion"] = i18n.__("PurchaseOrderExternal.items.conversion.mustOne:%s must be 1", i18n.__("PurchaseOrderExternal.items.conversion._:Conversion"));
+                                                            }
+                                                        } else {
+                                                            if (items.conversion === 1) {
+                                                                itemError["conversion"] = i18n.__("PurchaseOrderExternal.items.conversion.mustNotOne:%s must not be 1", i18n.__("PurchaseOrderExternal.items.conversion._:Conversion"));
+                                                            }
+                                                        }
+                                                    } else {
+                                                        itemError["uomConversion"] = i18n.__("PurchaseOrderExternal.items.uomConversion.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.uomConversion._:Uom Conversion"));
+                                                    }
                                                 }
                                                 itemErrors.push(itemError);
                                             }
@@ -467,6 +487,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                             _item.pricePerDealUnit = _item.useIncomeTax ? (100 * _item.priceBeforeTax) / 110 : _item.priceBeforeTax;
                                             _item.budgetPrice = Number(_item.budgetPrice);
                                             _item.conversion = Number(_item.conversion);
+                                            _item.uomConversion = poInternal.items[0].category.uom || _item.dealUom;
+                                            _item.quantityConversion = _item.dealQuantity * _item.conversion;
                                             items.push(_item);
                                         }
                                         valid.items = items;
@@ -836,7 +858,13 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 item.colors = _prItem.colors || []
                                 item.artikel = _pr.artikel;
                             }
-                            var getDefinition = require('../../pdf/definitions/garment-purchase-order-external');
+
+                            var getDefinition;
+                            if (pox.supplier.import == true) {
+                                getDefinition = require('../../pdf/definitions/garment-purchase-order-external-english');
+                            } else {
+                                getDefinition = require('../../pdf/definitions/garment-purchase-order-external');
+                            }
                             var definition = getDefinition(pox, offset);
 
                             var generatePdf = require('../../pdf/pdf-generator');

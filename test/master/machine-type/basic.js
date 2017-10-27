@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.MachineType,
     util: require("../../data-util/master/machine-type-data-util"),
     validator: require("dl-models").validator.master.machineType,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.YarnMaterial,
     util: require("../../data-util/master/yarn-material-data-util"),
     validator: require("dl-models").validator.master.yarnMaterial,
-    createDuplicate: true,
-    keys: ["name"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

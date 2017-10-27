@@ -58,7 +58,8 @@ module.exports = class YarnMaterialManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            name: valid.name
+            name: valid.name,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -95,8 +96,7 @@ module.exports = class YarnMaterialManager extends BaseManager {
             name: `ix_${map.master.collection.YarnMaterial}_name`,
             key: {
                 name: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, nameIndex]);

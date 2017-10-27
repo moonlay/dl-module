@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.StandardTest,
     util: require("../../data-util/master/standard-test-data-util"),
     validator: require("dl-models").validator.master.standardTest,
-    createDuplicate: true,
-    keys: ["name"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

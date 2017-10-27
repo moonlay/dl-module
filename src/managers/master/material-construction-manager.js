@@ -58,7 +58,8 @@ module.exports = class MaterialConstructionManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            name: valid.name
+            name: valid.name,
+            _deleted: false
         });
 
         // 2. begin: Validation.

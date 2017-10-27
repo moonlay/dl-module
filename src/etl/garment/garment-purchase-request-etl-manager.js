@@ -53,7 +53,17 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return query;
     }
 
-    run(o, table1, table2) {
+    test() {
+        return this.migrationLog.aggregate(
+            [
+                { "$match": { "status": "Successful" } },
+                { "$group": { "_id": { "description": "$description" }, "latestDate": { "$max": "$start" } } }
+            ]
+        ).toArray();
+
+    }
+
+    run(o, t1, t2) {
         var startedDate = new Date();
 
         this.migrationLog.insert({
@@ -64,6 +74,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
         return new Promise((resolve, reject) => {
             var date = o;
+            var table1 = t1;
+            var table2 = t2;
             this.getTimeStamp().then((result) => {
                 var dateStamp;
                 if (date.trim() == "latest") {
@@ -132,7 +144,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 this.getRowNumber(table1, table2, dateStamp)
                     .then((data) => {
 
-                        var pageSize = 5000;
+                        var pageSize = 10000;
                         var dataLength = data;
                         var totalPageNumber = Math.ceil(dataLength / pageSize);
 
@@ -226,6 +238,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
+                                console.log(result[0].NumberOfRow);
                                 resolve(result[0].NumberOfRow);
                             } else {
                                 reject(err);
@@ -258,7 +271,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             if (table1 == "Budget" && table2 == "POrder") {
                                 sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
                             } else {
-                                sqlQuery = "exec garment_purchase_request1 " + page + "," + pageSize + ",'" + tgl + "' ";
+                                sqlQuery = "garment_purchase_request_period " + page + "," + pageSize + ",'" + tgl + "' ";
                             }
                         }
 
@@ -404,14 +417,16 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     nomorRo: [],
                 };
 
-                var unitNotFound = [];
-                var buyerNotFound = [];
-                var categoryNotFound = [];
-                var productNotFound = [];
-                var uomNotFound = [];
+                // var unitNotFound = [];
+                // var buyerNotFound = [];
+                // var categoryNotFound = [];
+                // var productNotFound = [];
+                // var uomNotFound = [];
                 var no = 1;
 
                 for (var Ro of nomorRo) {
+
+                    // console.log(nomorRo);
 
                     var items = [];
                     var map = {};
@@ -420,6 +435,12 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                     var _createdDate;
                     var _updatedDate;
+
+                    var unitNotFound = [];
+                    var buyerNotFound = [];
+                    var categoryNotFound = [];
+                    var productNotFound = [];
+                    var uomNotFound = [];
 
                     for (var data of datas) {
                         if (Ro == data.Ro) {
@@ -477,7 +498,28 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             var category = (_category.find(o => o.code.trim() == data.Cat.trim())) ? (_category.find(o => o.code.trim() == data.Cat.trim())) : (categoryNotFound.find(o => o == data.Cat.trim())) ? true : categoryNotFound.push(data.Cat.trim());
 
                             //getting items
-                            var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
+                            var remarkTemp = [];
+                            if (data.Ketr.trim() != "") {
+                                remarkTemp.push(data.Ketr.trim());
+                            }
+                            if (data.Kett.trim() != "") {
+                                remarkTemp.push(data.Kett.trim());
+                            }
+                            if (data.Kett2.trim() != "") {
+                                remarkTemp.push(data.Kett2.trim());
+                            }
+                            if (data.Kett3.trim() != "") {
+                                remarkTemp.push(data.Kett3.trim());
+                            }
+                            if (data.Kett4.trim() != "") {
+                                remarkTemp.push(data.Kett4.trim());
+                            }
+                            if (data.Kett5.trim() != "") {
+                                remarkTemp.push(data.Kett5.trim());
+                            }
+                            // var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
+                            var remark = remarkTemp.toString();
+
 
                             var Colors = [];
                             if (data.Clr1.trim() != "") {
@@ -536,6 +578,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     remark: remark,
 
                                     refNo: data.Nopo,
+                                    urut: data.Urut,
 
                                     uomId: uom._id,
                                     uom: {
@@ -548,6 +591,12 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                         _id: category._id,
                                         code: category.code.trim(),
                                         name: category.name.trim(),
+                                        uomId: category.uomId,
+                                        uom: {
+                                            _id: category.uomId,
+                                            unit: category.uom.unit,
+                                        }
+
                                     },
                                     colors: Colors,
                                     id_po: (data.ID_PO),
@@ -639,10 +688,12 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     map._createdDate = new Date(_createdDate + ":" + createdDateTemp.sort()[0]);
                     map._updatedDate = new Date(_updatedDate + ":" + updatedDateTemp.sort()[0]);
                     map.items = items;
+
                     transformData.datas.push(map);
 
                 }
                 transformData.nomorRo = (nomorRo);
+
                 resolve(transformData);
             });
         })

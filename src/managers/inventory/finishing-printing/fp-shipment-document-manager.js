@@ -112,7 +112,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
         var products = [];
 
-        if(valid.isVoid != true)
+        if (valid.isVoid != true)
             for (var detail of valid.details) {
                 for (var item of detail.items) {
                     products.push(item.productCode);
@@ -166,8 +166,11 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     var detailErrors = [];
                     for (var i = 0; i < valid.details.length; i++) {
                         var detailError = {};
+                        var dup = valid.details.find((detail, index) => (detail.productionOrderId.toString() === valid.details[i].productionOrderId.toString()) && index !== i);
                         if (!valid.details[i].productionOrderId || !valid.details[i].productionOrderId === "") {
                             detailError["productionOrderId"] = i18n.__("PackingReceipt.details.productionOrderId.isRequired:%s is required", i18n.__("PackingReceipt.details.productionOrderId._:Nomor Order")); //"Nomor order harus diisi"; 
+                        } else if (dup) {
+                            detailError["productionOrderId"] = i18n.__("PackingReceipt.details.productionOrderId.isDuplicate:%s is duplicate", i18n.__("PackingReceipt.details.productionOrderId._:Nomor Order"));
                         }
                         if (!valid.details[i].items || valid.details[i].items.length === 0) {
                             detailError["productionOrderNo"] = i18n.__("PackingReceipt.details.productionOrderNo.isRequired:%s is required", i18n.__("PackingReceipt.details.productionOrderNo._:Nomor Order")); //"Harus ada item"; 
@@ -178,13 +181,13 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
                             for (var j = 0; j < items.length; j++) {
                                 var itemError = {};
-                                
+
                                 var productInvSummary = _products.find(p => p.productCode === items[j].productCode && p.uom === items[j].uomUnit);
 
                                 if (!items[j].quantity || items[j].quantity <= 0) {
                                     itemError["quantity"] = i18n.__("PackingReceipt.details.items.quantity.mustBeGreater:%s must be greater than zero", i18n.__("PackingReceipt.details.items.quantity._:Quantity")); //"Kuantitas harus lebih besar dari 0";
                                 }
-                                else if(productInvSummary && (items[j].quantity > productInvSummary.quantity)) {
+                                else if (productInvSummary && (items[j].quantity > productInvSummary.quantity)) {
                                     itemError["quantity"] = i18n.__("PackingReceipt.details.items.quantity.mustBeLessEqual:%s must be less than or equal to stock", i18n.__("PackingReceipt.details.items.quantity._:Quantity")); //"Kuantitas harus lebih kecil atau sama dengan stock";
                                 }
 
@@ -258,6 +261,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 var fpShipmentDocument = fpShipmentDocument;
                 var insertItems = fpShipmentDocument.details.map((detail) => {
                     var data = {
+                        code: generateCode(detail.productionOrderId.toString()),
                         date: fpShipmentDocument._createdDate,
                         referenceNo: `RFNO-${fpShipmentDocument.code}`,
                         referenceType: fpShipmentDocument.storageReferenceType,

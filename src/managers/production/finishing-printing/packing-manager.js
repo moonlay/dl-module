@@ -96,7 +96,7 @@ module.exports = class PackingManager extends BaseManager {
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packingItems.map((packingItem) => {
-                                    var productName = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                    var productName = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -109,7 +109,7 @@ module.exports = class PackingManager extends BaseManager {
                                         var index = 0;
                                         var createPackingProducts = [];
                                         for (var packingItem of packingItems) {
-                                            var productNameComposition = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                            var productNameComposition = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                             var product = products.find((product) => product !== null && product.name.toString() === productNameComposition.toString())
                                             if (!product) {
                                                 var packingProduct = {
@@ -162,7 +162,7 @@ module.exports = class PackingManager extends BaseManager {
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
                                 var getProduct = packingItems.map((packingItem) => {
-                                    var productName = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                    var productName = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -175,7 +175,7 @@ module.exports = class PackingManager extends BaseManager {
                                         var index = 0;
                                         var createPackingProducts = [];
                                         for (var packingItem of packingItems) {
-                                            var productNameComposition = packingItem.remark !== "" || packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                            var productNameComposition = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                             var product = products.find((product) => product !== null && product.name.toString() === productNameComposition.toString())
                                             if (!product) {
                                                 var packingProduct = {
@@ -293,6 +293,14 @@ module.exports = class PackingManager extends BaseManager {
 
                         if (!item.grade || item.grade.trim() === "")
                             itemsError["grade"] = i18n.__("Packing.items.grade.isRequired:%s is required", i18n.__("Packing.items.grade._:Grade"));
+                        else {
+                            var dup = valid.items.find((test, idx) => (item.lot === test.lot && item.grade === test.grade && item.length === test.length) && index != idx);
+                            if (dup) {
+                                itemsError["lot"] = i18n.__("Packing.items.lot.isDuplicate:%s is duplicate", i18n.__("Packing.items.lot._:Lot"));
+                                itemsError["grade"] = i18n.__("Packing.items.grade.isDuplicate:%s is duplicate", i18n.__("Packing.items.grade._:Grade"));
+                                itemsError["length"] = i18n.__("Packing.items.length.isDuplicate:%s is duplicate", i18n.__("Packing.items.length._:Length"));
+                            }
+                        }
                         itemsErrors.push(itemsError);
                     })
 

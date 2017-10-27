@@ -58,7 +58,8 @@ module.exports = class MachineSpesificationStandardManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            valueName: valid.valueName
+            valueName: valid.valueName,
+            _deleted: false
         });
         var getUom = valid.uom && ObjectId.isValid(valid.uom._id) ? this.uomManager.getSingleByIdOrDefault(new ObjectId(valid.uom._id)) : Promise.resolve(null);
         // 2. begin: Validation.
@@ -110,8 +111,7 @@ module.exports = class MachineSpesificationStandardManager extends BaseManager {
             name: `ix_${map.master.collection.MachineSpesificationStandard}_valueName`,
             key: {
                 valueName: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, valueNameIndex]);
