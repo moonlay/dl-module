@@ -111,7 +111,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
         var getProducts = products.length > 0 ? this.productManager.collection.find({ name: { "$in": products } }).toArray() : Promise.resolve([]);
 
         // return Promise.all([getDbPackingReceipt, getDuplicatePackingReceipt, getPacking, getStorage, getProducts])
-        return Promise.all([getDbPackingReceipt, getDuplicatePackingReceipt, getPacking, getProducts])        
+        return Promise.all([getDbPackingReceipt, getDuplicatePackingReceipt, getPacking, getProducts])
             .then((results) => {
                 var _dbPackingReceipt = results[0];
                 var _duplicatePackingReceipt = results[1];
@@ -131,7 +131,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                     errors["packingId"] = i18n.__("PackingReceipt.packingId: %s not found", i18n.__("PackingReceipt.KanbanId._:Packing"));
 
                 if (!valid.storage || valid.storage === '')
-                errors["storage"] = i18n.__("PackingReceipt.storage.isRequired:%s is required", i18n.__("PackingReceipt.storage._:Storage")); //"Gudang harus diisi";  
+                     errors["storage"] = i18n.__("PackingReceipt.storage.isRequired:%s is required", i18n.__("PackingReceipt.storage._:Storage")); //"Gudang harus diisi";  
 
                 if (!valid.date)
                     errors["date"] = i18n.__("PackingReceipt.date.isRequired:%s is required", i18n.__("PackingReceipt.date._:Date")); //"Grade harus diisi";
@@ -169,7 +169,8 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 valid.packingCode = _packing.code;
 
                 //Inventory Document Validation
-                valid.storageId = valid.storage && ObjectId.isValid(valid.storage._id) ? new ObjectId(valid.storage._id) : null
+                valid.storageId = valid.storage && ObjectId.isValid(valid.storage._id) ? new ObjectId(valid.storage._id) : null;
+                valid.referenceNo = `RFNO-${valid.code}`;
                 valid.referenceType = `Penerimaan Packing ${valid.storage ? valid.storage.name : null}`;
                 valid.type = "IN";
 
