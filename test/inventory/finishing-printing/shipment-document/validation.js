@@ -99,3 +99,22 @@ it("#04. should error when create with tomorrow date", function (done) {
             }
         });
 });
+
+it("#04. should error when create with duplicate order number", function (done) {
+    createdData.details.push(createdData.details[0]);
+    manager.create(createdData)
+        .then((id) => {
+            done("should error when create with duplicate order number");
+        })
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});
