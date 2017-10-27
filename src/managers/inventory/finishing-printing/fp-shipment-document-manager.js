@@ -124,9 +124,9 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
         // var getStorage = valid.details ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
 
         var getInventorySummary = products.length != 0 ? this.inventorySummaryManager.collection.find({ "productCode": { "$in": products }, "quantity": { "$gt": 0 }, storageCode: valid.storage ? valid.storage.code : "" }, { "productCode": 1, "quantity": 1, "uom": 1 }).toArray() : Promise.resolve([]);
-        
+
         // return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getStorage, getInventorySummary])
-        return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getInventorySummary])        
+        return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getInventorySummary])
             .then((results) => {
                 var _dbShipmentDocument = results[0];
                 var _duplicateShipmentDocument = results[1];
@@ -150,7 +150,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
                 if (!valid.storage || valid.storage === '')
                     errors["storage"] = i18n.__("ShipmentDocument.storage.isRequired:%s is required", i18n.__("ShipmentDocument.storage._:Storage")); //"Gudang harus diisi";  
-                    
+
                 if (!valid.productIdentity || valid.productIdentity === "")
                     errors["productIdentity"] = i18n.__("ShipmentDocument.productIdentity.isRequired:%s is required", i18n.__("ShipmentDocument.productIdentity._:Kode Produk"));
 
@@ -161,7 +161,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
                 else if(new Date(valid.deliveryDate) > new Date())
                     errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.lessThanToday:%s must be less than or equal today's date", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
-                
+   
                 if (valid.details.length > 0) {
                     var detailErrors = [];
                     for (var i = 0; i < valid.details.length; i++) {
