@@ -161,7 +161,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.isRequired:%s is required", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
                 else if(new Date(valid.deliveryDate) > new Date())
                     errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.lessThanToday:%s must be less than or equal today's date", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
-   
+
                 if (valid.details.length > 0) {
                     var detailErrors = [];
                     for (var i = 0; i < valid.details.length; i++) {
