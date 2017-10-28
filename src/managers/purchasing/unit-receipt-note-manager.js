@@ -411,59 +411,60 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             })
     }
 
-    _beforeUpdate(data){
+    _beforeUpdate(data) {
         return this.getSingleById(data._id)
+            .then((unitReceiptNote) => this.updatePurchaseOrderDeleteUnitReceiptNote(unitReceiptNote))
+            .then((unitReceiptNote) => this.updateDeliveryOrderDeleteUnitReceiptNote(unitReceiptNote))
             .then(unitReceiptNote => {
-                if(ObjectId.isValid(unitReceiptNote.storageId)){
+                if (ObjectId.isValid(unitReceiptNote.storageId)) {
                     return this.storageManager.getSingleByIdOrDefault(unitReceiptNote.storageId)
-                    .then(storage=>{
-                        var temp = {};
-                        var index=0;
-                        var obj=null;
-                        for(var i=0; i < unitReceiptNote.items.length; i++) {
-                            index=i;
-                            obj={
-                                productId:unitReceiptNote.items[i].product._id.toString(),
-                                quantity:unitReceiptNote.items[i].deliveredQuantity,
-                                uomId:unitReceiptNote.items[i].deliveredUom._id,
-                                remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
-                            };
-                            //obj=unitReceiptNote.items[i];
-                            var dup = unitReceiptNote.items.find((test, idx) => 
-                            obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
-                            if(!dup) {
-                                temp[obj.productId+obj.uomId.toString()] = obj;
-                            } else {
-                                if(!temp[obj.productId+obj.uomId.toString()]) {
-                                    temp[obj.productId+obj.uomId.toString()] = obj;
+                        .then(storage => {
+                            var temp = {};
+                            var index = 0;
+                            var obj = null;
+                            for (var i = 0; i < unitReceiptNote.items.length; i++) {
+                                index = i;
+                                obj = {
+                                    productId: unitReceiptNote.items[i].product._id.toString(),
+                                    quantity: unitReceiptNote.items[i].deliveredQuantity,
+                                    uomId: unitReceiptNote.items[i].deliveredUom._id,
+                                    remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
+                                };
+                                //obj=unitReceiptNote.items[i];
+                                var dup = unitReceiptNote.items.find((test, idx) =>
+                                    obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                                if (!dup) {
+                                    temp[obj.productId + obj.uomId.toString()] = obj;
                                 } else {
-                                    temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
-                                    temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
+                                    if (!temp[obj.productId + obj.uomId.toString()]) {
+                                        temp[obj.productId + obj.uomId.toString()] = obj;
+                                    } else {
+                                        temp[obj.productId + obj.uomId.toString()].remark += "; " + obj.remark;
+                                        temp[obj.productId + obj.uomId.toString()].quantity += obj.quantity;
+                                    }
                                 }
                             }
-                        }
-                        var items = [];
-                        for (var prop in temp)
-                            items.push(temp[prop]);
-                        
-                        var unit=unitReceiptNote.unit.name;
-                        var doc={
-                            date:unitReceiptNote.date,
-                            referenceNo: unitReceiptNote.no,
-                            referenceType:"Bon Terima Unit "+ unit,
-                            type:"OUT",
-                            storageId:storage._id,
-                            remark:unitReceiptNote.remark,
-                            items:items
-                        }
-                    
-                        return this.textileInventoryDocumentManager.create(doc)
-                        .then( (id)=> { 
-                            return Promise.resolve(data);
+                            var items = [];
+                            for (var prop in temp)
+                                items.push(temp[prop]);
+
+                            var doc = {
+                                date: unitReceiptNote.date,
+                                referenceNo: unitReceiptNote.no,
+                                referenceType: "Bon Terima Unit Garment",
+                                type: "OUT",
+                                storageId: storage._id,
+                                remark: unitReceiptNote.remark,
+                                items: items
+                            }
+
+                            return this.textileInventoryDocumentManager.create(doc)
+                                .then((id) => {
+                                    return Promise.resolve(data);
+                                });
                         });
-                    });
                 }
-                else{
+                else {
                     return Promise.resolve(data);
                 }
             });

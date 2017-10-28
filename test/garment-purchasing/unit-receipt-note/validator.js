@@ -33,14 +33,14 @@ it('#01. should success when create new data storage', function (done) {
         .then((data) => storageManager.create(data))
         .then((id) => {
             storageManager.getSingleById(id)
-            .then((data) => {
-                storageData=data;
-                
-            });
-            
-                id.should.be.Object();
-                storageDataId = id;
-                done();
+                .then((data) => {
+                    storageData = data;
+
+                });
+
+            id.should.be.Object();
+            storageDataId = id;
+            done();
         })
         .catch((e) => {
             done(e);
@@ -51,15 +51,15 @@ var createdData;
 it('#02. should success when create new data with storage', function (done) {
     unitReceiptNote.getNewData()
         .then((data) => {
-            data.storageId=storageDataId;
-            data.unit=storageData.unit;
-            data.useStorage=true;
+            data.storageId = storageDataId;
+            data.unit = storageData.unit;
+            data.useStorage = true;
             unitReceiptNoteManager.create(data)
-            .then((id) => {
-                id.should.be.Object();
-                var createdId = id;
-                done();
-            })
+                .then((id) => {
+                    id.should.be.Object();
+                    var createdId = id;
+                    done();
+                })
         })
         .catch((e) => {
             done(e);
@@ -70,7 +70,10 @@ it('#03. should error when create new data useStorage=true without storage', fun
     unitReceiptNote.getNewData()
         .then(data => {
 
-            data.useStorage=true;
+            data.useStorage = true;
+            data.storageId = {};
+            data.storageName = '';
+            data.storageCode = '';
 
             unitReceiptNoteManager.create(data)
                 .then(id => {
@@ -95,8 +98,8 @@ it('#03. should error when create new data useStorage=true without storage', fun
 it('#05. should error when create new data without items', function (done) {
     unitReceiptNote.getNewData()
         .then(data => {
-            
-            data.items=[];
+
+            data.items = [];
 
             unitReceiptNoteManager.create(data)
                 .then(id => {
@@ -120,8 +123,8 @@ it('#05. should error when create new data without items', function (done) {
 it('#06. should error when create new data with deliveredQuantity=0', function (done) {
     unitReceiptNote.getNewData()
         .then(data => {
-            
-            data.items[0].deliveredQuantity=0;
+
+            data.items[0].deliveredQuantity = 0;
 
             unitReceiptNoteManager.create(data)
                 .then(id => {
@@ -145,10 +148,10 @@ it('#06. should error when create new data with deliveredQuantity=0', function (
 it('#07. should error when create new data with storage.unit != data.unit', function (done) {
     unitReceiptNote.getNewData()
         .then(data => {
-            
-            data.unit.code="a";
-            data.storageId=storageDataId;
-            data.useStorage=true;
+
+            data.unit.code = "a";
+            data.storageId = storageDataId;
+            data.useStorage = true;
 
             unitReceiptNoteManager.create(data)
                 .then(id => {
