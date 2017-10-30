@@ -156,7 +156,7 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
                     return {
                         deleted: `'${kanban._deleted}'`,
                         kanbanCode: kanban.code ? `'${kanban.code}'` : null,
-                        kanbanDate: kanban._createdDate ? `'${moment(kanban._createdDate).add(7, "hours").format("L")}'` : null,
+                        kanbanDate: kanban._createdDate ? `'${moment(kanban._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                         productionOrderNo: kanban.productionOrder && kanban.productionOrder.orderNo ? `'${kanban.productionOrder.orderNo}'` : null,
                         kanbanGrade: kanban.grade ? `'${kanban.grade}'` : null,
                         kanbanCartNumber: kanban.cart && kanban.cart.cartNumber ? `'${kanban.cart.cartNumber}'` : null,
@@ -170,7 +170,7 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
                         machineCode: step.machine && step.machine.code ? `'${step.machine.code}'` : null,
                         machineName: step.machine && step.machine.name ? `'${step.machine.name}'` : null,
                         machineMonthlyCapacity: step.machine && step.machine.monthlyCapacity ? `${step.machine.monthlyCapacity}` : null,
-                        deadline: step.deadline ? `'${moment(step.deadline).add(7, "hours").format("L")}'` : null,
+                        deadline: step.deadline ? `'${moment(step.deadline).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                         currentStepIndex: `${kanban.currentStepIndex}`,
                         processArea: step.processArea ? `'${step.processArea}'` : null,
                         isComplete: `'${kanban.isComplete}'`,
