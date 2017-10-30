@@ -262,14 +262,14 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     index++;
 
                     return {
-                        salesContractDate: finishingPrintingSC._createdDate ? `'${moment(finishingPrintingSC._createdDate).format("L")}'` : null,
+                        salesContractDate: finishingPrintingSC._createdDate ? `'${moment(finishingPrintingSC._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                         salesContractNo: finishingPrintingSC.salesContractNo ? `'${finishingPrintingSC.salesContractNo}'` : null,
                         salesContractQuantity: finishingPrintingSC.orderQuantity ? `${this.orderQuantityConvertion(finishingPrintingSC.uom.unit, finishingPrintingSC.orderQuantity)}` : null,
-                        productionOrderDate: productionOrder._createdDate ? `'${moment(productionOrder._createdDate).format("L")}'` : null,
+                        productionOrderDate: productionOrder._createdDate ? `'${moment(productionOrder._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                         productionSalesContractNo: productionOrder.salesContractNo ? `'${productionOrder.salesContractNo}'` : null,
                         productionOrderNo: productionOrder.orderNo ? `'${productionOrder.orderNo}'` : null,
                         productionOrderQuantity: productionOrder.orderQuantity ? `${this.orderQuantityConvertion(productionOrder.uom.unit, productionOrder.orderQuantity)}` : null,
-                        kanbanDate: kanban._createdDate ? `'${moment(kanban._createdDate).format("L")}'` : null,
+                        kanbanDate: kanban._createdDate ? `'${moment(kanban._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                         kanbanCode: kanban.code ? `'${kanban.code}'` : null,
                         kanbanSalesContractNo: kanban.productionOrder && kanban.productionOrder.salesContractNo ? `'${kanban.productionOrder.salesContractNo}'` : null,
                         kanbanQuantity: kanban && kanban.cart.qty && kanban.productionOrder && kanban.productionOrder.uom && kanban.productionOrder.uom.unit ? `${this.orderQuantityConvertion(kanban.productionOrder.uom.unit, kanban.cart.qty)}` : null,
@@ -277,28 +277,28 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                         dailyOperationSalesContractNo: dailyOperation ? `'${dailyOperation.kanban.productionOrder.salesContractNo}'` : null,
                         dailyOperationCode: dailyOperation ? `'${dailyOperation.code}'` : null,
                         cartNumber: kanban && kanban.cart.cartNumber ? `'${kanban.cart.cartNumber}'` : null,
-                        fabricQualityControlDate: fabricQC.dateIm ? `'${moment(fabricQC.dateIm).format("L")}'` : null,
+                        fabricQualityControlDate: fabricQC.dateIm ? `'${moment(fabricQC.dateIm).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                         fabricQualityControlQuantity: quantity ? `${quantity}` : null,
                         fabricQualityControlCode: fabricQC && fabricQC.code ? `'${fabricQC.code}'` : null,
                         orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
                         deleted: `'${finishingPrintingSC._deleted}'`,
                         fabricqualitycontroltestindex: fabricQC.code ? `${index}` : null,
-                        dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).format("L")}'` : null,
-                        salesContractDeliveryDate: finishingPrintingSC ? `'${moment(finishingPrintingSC.deliverySchedule).format("L")}'` : null,
-                        productionOrderDeliveryDate: productionOrder ? `'${moment(productionOrder.deliveryDate).format("L")}'` : null
+                        dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
+                        salesContractDeliveryDate: finishingPrintingSC ? `'${moment(finishingPrintingSC.deliverySchedule).add(7, "hours").format("YYYY-MM-DD")}'` : null,
+                        productionOrderDeliveryDate: productionOrder ? `'${moment(productionOrder.deliveryDate).add(7, "hours").format("YYYY-MM-DD")}'` : null
                     }
                 });
                 return [].concat.apply([], results);
             } else {
                 return {
-                    salesContractDate: finishingPrintingSC._createdDate ? `'${moment(finishingPrintingSC._createdDate).format("L")}'` : null,
+                    salesContractDate: finishingPrintingSC._createdDate ? `'${moment(finishingPrintingSC._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                     salesContractNo: finishingPrintingSC.salesContractNo ? `'${finishingPrintingSC.salesContractNo}'` : null,
                     salesContractQuantity: finishingPrintingSC.orderQuantity ? `${this.orderQuantityConvertion(finishingPrintingSC.uom.unit, finishingPrintingSC.orderQuantity)}` : null,
-                    productionOrderDate: productionOrder && productionOrder._createdDate ? `'${moment(productionOrder._createdDate).format("L")}'` : null,
+                    productionOrderDate: productionOrder && productionOrder._createdDate ? `'${moment(productionOrder._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                     productionSalesContractNo: productionOrder && productionOrder.salesContractNo ? `'${productionOrder.salesContractNo}'` : null,
                     productionOrderNo: productionOrder && productionOrder.orderNo ? `'${productionOrder.orderNo}'` : null,
                     productionOrderQuantity: productionOrder && productionOrder.orderQuantity ? `${this.orderQuantityConvertion(productionOrder.uom.unit, productionOrder.orderQuantity)}` : null,
-                    kanbanDate: kanban && kanban._createdDate ? `'${moment(kanban._createdDate).format("L")}'` : null,
+                    kanbanDate: kanban && kanban._createdDate ? `'${moment(kanban._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                     kanbanCode: kanban && kanban.code ? `'${kanban.code}'` : null,
                     kanbanSalesContractNo: kanban && kanban.productionOrder && kanban.productionOrder.salesContractNo ? `'${kanban.productionOrder.salesContractNo}'` : null,
                     dailyOperationQuantity: dailyOperation ? `${dailyOperation.input}` : null,
@@ -312,9 +312,9 @@ module.exports = class FactProductionOrderStatusManager extends BaseManager {
                     orderType: finishingPrintingSC && finishingPrintingSC.orderType && finishingPrintingSC.orderType.name ? `'${finishingPrintingSC.orderType.name}'` : null,
                     deleted: `'${finishingPrintingSC._deleted}'`,
                     fabricqualitycontroltestindex: null,
-                    dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).format("L")}'` : null,
-                    salesContractDeliveryDate: finishingPrintingSC ? `'${moment(finishingPrintingSC.deliverySchedule).format("L")}'` : null,
-                    productionOrderDeliveryDate: productionOrder ? `'${moment(productionOrder.deliveryDate).format("L")}'` : null
+                    dailyOperationDate: dailyOperation && dailyOperation._createdDate ? `'${moment(dailyOperation._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
+                    salesContractDeliveryDate: finishingPrintingSC ? `'${moment(finishingPrintingSC.deliverySchedule).add(7, "hours").format("YYYY-MM-DD")}'` : null,
+                    productionOrderDeliveryDate: productionOrder ? `'${moment(productionOrder.deliveryDate).add(7, "hours").format("YYYY-MM-DD")}'` : null
                 }
             }
         });

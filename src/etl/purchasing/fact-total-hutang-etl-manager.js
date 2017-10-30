@@ -142,8 +142,8 @@ module.exports = class FactTotalHutang extends BaseManager {
 
                     return {
                         unitPaymentOrderNo: `'${unitPaymentOrder.no}'`,
-                        unitPaymentOrderDate: `'${moment(unitPaymentOrder.date).format('L')}'`,
-                        unitPaymentOrderDueDate: `'${moment(unitPaymentOrder.dueDate).format('L')}'`,
+                        unitPaymentOrderDate: `'${moment(unitPaymentOrder.date).add(7, "hours").format("YYYY-MM-DD")}'`,
+                        unitPaymentOrderDueDate: `'${moment(unitPaymentOrder.dueDate).add(7, "hours").format("YYYY-MM-DD")}'`,
                         supplierName: `'${unitPaymentOrder.supplier.name.replace(/'/g, '"')}'`,
                         categoryName: `'${unitPaymentOrder.category.name}'`,
                         categoryType: `'${unitPaymentOrder.category.name.toLowerCase() === "bahan baku" ? "BAHAN BAKU" : "NON BAHAN BAKU"}'`,
