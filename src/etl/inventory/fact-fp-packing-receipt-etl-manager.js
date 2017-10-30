@@ -105,7 +105,7 @@ module.exports = class FactFPPackingReceiptEtlManager extends BaseManager {
                     return {
                         deleted: `'${fpPackingReceipt._deleted}'`,
                         code: fpPackingReceipt.code ? `'${fpPackingReceipt.code}'` : null,
-                        date: fpPackingReceipt.date ? `'${moment(fpPackingReceipt.date).format("L")}'` : null,
+                        date: fpPackingReceipt.date ? `'${moment(fpPackingReceipt.date).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                         packingCode: fpPackingReceipt.packingCode ? `'${fpPackingReceipt.packingCode}'` : null,
                         accepted: `'${fpPackingReceipt.accepted}'`,
                         declined: `'${fpPackingReceipt.declined}'`,
