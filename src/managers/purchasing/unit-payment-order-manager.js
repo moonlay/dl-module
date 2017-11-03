@@ -147,9 +147,10 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     //         errors["vatNo"] = i18n.__("UnitPaymentOrder.vatNo.isRequired:%s is required", i18n.__("UnitPaymentOrder.vatNo._:Nomor Faktur Pajak (PPh)"));
                     //     }
 
-                    //     if (!valid.vatDate || valid.vatDate == '') {
-                    //         errors["vatDate"] = i18n.__("UnitPaymentOrder.vatDate.isRequired:%s is required", i18n.__("UnitPaymentOrder.vatDate._:Tanggal Faktur Pajak (PPh)"));
-                    //     }
+                    if (!valid.vatDate || valid.vatDate == '' || valid.vatDate === "undefined") {
+                        // errors["vatDate"] = i18n.__("UnitPaymentOrder.vatDate.isRequired:%s is required", i18n.__("UnitPaymentOrder.vatDate._:Tanggal Faktur Pajak (PPh)"));
+                        valid.vatDate = "";
+                    }
                     // }
                     if (valid.useIncomeTax) {
                         if (!valid.incomeTaxNo || valid.incomeTaxNo == '') {
@@ -163,11 +164,25 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
 
                     if (valid.items) {
                         if (valid.items.length <= 0) {
-                            errors["items"] = i18n.__("UnitPaymentOrder.items.isRequired:%s is required", i18n.__("UnitPaymentOrder.items._:Item")); //"Harus ada minimal 1 barang";
+                            errors["items"] = [{ "unitReceiptNote": i18n.__("UnitPaymentOrder.unitReceiptNote.isRequired:%s is required", i18n.__("UnitPaymentOrder.unitReceiptNote._:Unit Receipt Note")) }]
+                        } else {
+                            var errItems = []
+                            var isEror = false;
+                            for (var item of valid.items) {
+                                if (!item.unitReceiptNote._id) {
+                                    isEror = true;
+                                    errItems.push({ "unitReceiptNote": i18n.__("UnitPaymentOrder.unitReceiptNote.isRequired:%s is required", i18n.__("UnitPaymentOrder.unitReceiptNote._:Unit Receipt Note")) })
+                                } else {
+                                    errItems.push({})
+                                }
+                            }
+                            if (errItems.length > 0 && isEror) {
+                                errors["items"] = errItems
+                            }
                         }
                     }
                     else {
-                        errors["items"] = i18n.__("UnitPaymentOrder.items.isRequired:%s is required", i18n.__("UnitPaymentOrder.items._:Item")); //"Harus ada minimal 1 barang";
+                        errors["items"] = [{ "unitReceiptNote": i18n.__("UnitPaymentOrder.unitReceiptNote.isRequired:%s is required", i18n.__("UnitPaymentOrder.unitReceiptNote._:Unit Receipt Note")) }]
                     }
 
                     if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -671,7 +686,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                                         break;
                                     }
                                 }
-                                if(!isPaid){
+                                if (!isPaid) {
                                     break;
                                 }
                             }
@@ -778,13 +793,13 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             })
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
 
             this.getSingleById(id)
                 .then(unitPaymentOrder => {
                     var getDefinition = require('../../pdf/definitions/unit-payment-order');
-                    var definition = getDefinition(unitPaymentOrder);
+                    var definition = getDefinition(unitPaymentOrder, offset);
 
                     var generatePdf = require('../../pdf/pdf-generator');
                     generatePdf(definition)

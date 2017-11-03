@@ -8,6 +8,7 @@ var map = DLModels.map;
 var ProductionOrder = DLModels.sales.ProductionOrder;
 var ProductionOrderDetail = DLModels.sales.ProductionOrderDetail;
 var ProductionOrderLampStandard = DLModels.sales.ProductionOrderLampStandard;
+var FPSalesContractManager = require('./finishing-printing-sales-contract-manager');
 var LampStandardManager = require('../master/lamp-standard-manager');
 var BuyerManager = require('../master/buyer-manager');
 var UomManager = require('../master/uom-manager');
@@ -44,6 +45,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         this.FinishTypeManager = new FinishTypeManager(db, user);
         this.StandardTestManager = new StandardTestManager(db, user);
         this.AccountManager = new AccountManager(db, user);
+        this.fpSalesContractManager=new FPSalesContractManager(db,user);
     }
 
     _getQuery(paging) {
@@ -110,8 +112,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
             orderNo: valid.orderNo
         });
 
+        var uomQuery={
+            "unit":"MTR"
+        };
+        //var getUom =this.UomManager.getSingleByQueryOrDefault(uomQuery);
+
         var getBuyer = ObjectId.isValid(valid.buyerId) ? this.BuyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
-        var getUom = valid.uom && ObjectId.isValid(valid.uomId) ? this.UomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
+        var getUom = valid.uom && ObjectId.isValid(valid.uomId) ? this.UomManager.getSingleByIdOrDefault(valid.uomId) : this.UomManager.getSingleByQueryOrDefault(uomQuery);
+        
         var getProduct = ObjectId.isValid(valid.materialId) ? this.ProductManager.getSingleByIdOrDefault(valid.materialId) : Promise.resolve(null);
         var getProcessType = ObjectId.isValid(valid.processTypeId) ? this.ProcessTypeManager.getSingleByIdOrDefault(valid.processTypeId) : Promise.resolve(null);
         var getOrderType = ObjectId.isValid(valid.orderTypeId) ? this.OrderTypeManager.getSingleByIdOrDefault(valid.orderTypeId) : Promise.resolve(null);
@@ -120,6 +128,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         var getStandardTest = ObjectId.isValid(valid.standardTestId) ? this.StandardTestManager.getSingleByIdOrDefault(valid.standardTestId) : Promise.resolve(null);
         var getMaterialConstruction = ObjectId.isValid(valid.materialConstructionId) ? this.MaterialConstructionManager.getSingleByIdOrDefault(valid.materialConstructionId) : Promise.resolve(null);
         var getAccount = ObjectId.isValid(valid.accountId) ? this.AccountManager.getSingleByIdOrDefault(valid.accountId) : Promise.resolve(null);
+        var getSC=ObjectId.isValid(valid.salesContractId)? this.fpSalesContractManager.getSingleByIdOrDefault(valid.salesContractId) : Promise.resolve(null);
 
         valid.details = valid.details || [];
         var getColorTypes = [];
@@ -139,7 +148,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             }
         }
 
-        return Promise.all([getProductionOrder, getBuyer, getUom, getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount].concat(getColorTypes, getLampStandards))
+        return Promise.all([getProductionOrder, getBuyer, getUom, getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount,getSC].concat(getColorTypes, getLampStandards))
             .then(results => {
                 var _productionOrder = results[0];
                 var _buyer = results[1];
@@ -152,12 +161,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var _standard = results[8];
                 var _construction = results[9];
                 var _account = results[10];
-                var _colors = results.slice(11, 11 + getColorTypes.length);
-                var _lampStandards = results.slice(11 + getColorTypes.length, results.length);
+                var _sc = results[11];
+                var _colors = results.slice(12, 12 + getColorTypes.length);
+                var _lampStandards = results.slice(12 + getColorTypes.length, results.length);
 
                 if (_productionOrder) {
                     errors["orderNo"] = i18n.__("ProductionOrder.orderNo.isExist:%s is Exist", i18n.__("Product.orderNo._:orderNo")); //"orderNo sudah ada";
                 }
+
+
                 if (valid.uom) {
                     if (!_uom)
                         errors["uom"] = i18n.__("ProductionOrder.uom.isRequired:%s is required", i18n.__("Product.uom._:Uom")); //"Satuan tidak boleh kosong";
@@ -168,6 +180,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if (!valid.salesContractNo || valid.salesContractNo === '') {
                     errors["salesContractNo"] = i18n.__("ProductionOrder.salesContractNo.isRequired:%s is required", i18n.__("ProductionOrder.salesContractNo._:SalesContractNo")); //"salesContractNo tidak boleh kosong";
                 }
+
+                if (!_sc)
+                    errors["salesContractNo"] = i18n.__("ProductionOrder.salesContractNo.isRequired:%s is not exists", i18n.__("ProductionOrder.salesContractNo._:SalesContractNo")); //"salesContractNo tidak boleh kosong";
+
 
                 if (!_material)
                     errors["material"] = i18n.__("ProductionOrder.material.isRequired:%s is not exists", i18n.__("ProductionOrder.material._:Material")); //"material tidak boleh kosong";
@@ -262,6 +278,13 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if (!valid.orderQuantity || valid.orderQuantity === 0)
                     errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.isRequired:%s is required", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh kosong";
                 else {
+                    //validasi remainingQuantity SC
+                    // if(valid.remainingQuantity!=undefined){
+                    //     valid.remainingQuantity+=valid.beforeQuantity;
+                    //     if(valid.orderQuantity>valid.remainingQuantity){
+                    //         errors["orderQuantity"] =i18n.__("ProductionOrder.orderQuantity.isRequired:%s should not be more than SC remaining quantity", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity"));
+                    //     }
+                    // }
                     var totalqty = 0;
                     if (valid.details.length > 0) {
                         for (var i of valid.details) {
@@ -272,11 +295,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.shouldNot:%s should equal SUM quantity in details", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh berbeda dari total jumlah detail";
 
                     }
+                    
                 }
 
-                if (!valid.shippingQuantityTolerance || valid.shippingQuantityTolerance === 0)
-                    errors["shippingQuantityTolerance"] = i18n.__("ProductionOrder.shippingQuantityTolerance.isRequired:%s is required", i18n.__("ProductionOrder.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh kosong";
-                else if (valid.shippingQuantityTolerance > 100) {
+                if (valid.shippingQuantityTolerance > 100) {
                     errors["shippingQuantityTolerance"] = i18n.__("ProductionOrder.shippingQuantityTolerance.shouldNot:%s should not more than 100", i18n.__("ProductionOrder.shippingQuantityTolerance._:ShippingQuantityTolerance")); //"shippingQuantityTolerance tidak boleh lebih dari 100";
                 }
 
@@ -356,13 +378,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     if (detailErrors.length > 0)
                         errors.details = detailErrors;
 
-
                 }
                 if (!valid.orderNo || valid.orderNo === '') {
                     valid.orderNo = generateCode();
                 }
                 if (_buyer) {
                     valid.buyerId = new ObjectId(_buyer._id);
+                }
+                if(_sc){
+                    valid.salesContractId= new ObjectId(_sc._id);
                 }
                 if (_uom) {
                     valid.uomId = new ObjectId(_uom._id);
@@ -458,6 +482,93 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                 return Promise.resolve(valid);
             });
+    }
+
+     _afterInsert(id) {
+        return this.getSingleById(id)
+            .then((spp) => {
+                var sppId = id;
+                return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                    .then((sc) => {
+                        if(sc.remainingQuantity!=undefined){
+                            sc.remainingQuantity = sc.remainingQuantity-spp.orderQuantity;
+                            return this.fpSalesContractManager.update(sc)
+                                .then(
+                                    (id) => 
+                                    Promise.resolve(sppId));
+                            }
+                            else{
+                                Promise.resolve(sppId);
+                            }
+                        });
+                            
+                    });
+    }
+
+    _beforeUpdate(data) {
+            return this.getSingleById(data._id)
+                .then(spp => {
+                    if(spp.salesContractId){
+                        return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                        .then((sc) => {
+                            if(sc.remainingQuantity!=undefined){
+                                sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
+                                return this.fpSalesContractManager.update(sc)
+                                    .then((id) => 
+                                        Promise.resolve(data));
+                                }
+                                else{
+                                    return Promise.resolve(data);
+                                }
+                            });
+                        }
+                        else{
+                            return Promise.resolve(data);
+                        }
+            });
+    }
+    
+    _afterUpdate(id) {
+        return this.getSingleById(id)
+            .then((spp) => {
+                var sppId = id;
+                if(spp.salesContractId){
+                    return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                        .then((sc) => {
+                            if(sc.remainingQuantity!=undefined){
+                                sc.remainingQuantity -= spp.orderQuantity;
+                            }
+                            return this.fpSalesContractManager.update(sc)
+                                .then((id) => 
+                                    Promise.resolve(sppId));
+                                });
+                }
+                else{
+                    Promise.resolve(sppId);
+                }
+            });
+    }
+
+    delete(data) {
+        return this.getSingleById(data._id)
+        .then(spp => {
+            spp._deleted=true;
+            if(spp.salesContractId){
+                return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                .then((sc) => {
+                    if(sc.remainingQuantity!=undefined){
+                        sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
+                    }
+                    return this.fpSalesContractManager.update(sc)
+                    .then((id) =>{
+                        return this.collection.update(spp);
+                    });
+                });
+            }
+            else{
+                return this.collection.update(spp);
+            }
+        });
     }
 
     _createIndexes() {
@@ -579,16 +690,16 @@ module.exports = class ProductionOrderManager extends BaseManager {
             var getPrdOrder = [];
             getPrdOrder.push(this.collection
                 .aggregate([
-                    { $unwind: "$details" },
                     { $match: qry },
+                    { $unwind: "$details" },
                     { $group: { _id: null, count: { $sum: 1 } } }
                 ])
                 .toArray());
             if ((query.accept || '').toString().indexOf("application/xls") < 0) {
                 getPrdOrder.push(this.collection
                     .aggregate([
-                        { $unwind: "$details" },
                         { $match: qry },
+                        { $unwind: "$details" },
                         {
                             $project: {
                                 "salesContractNo": 1,
@@ -619,8 +730,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
             } else {
                 getPrdOrder.push(this.collection
                     .aggregate([
-                        { $unwind: "$details" },
                         { $match: qry },
+                        { $unwind: "$details" },
                         {
                             $project: {
                                 "salesContractNo": 1,
@@ -771,6 +882,89 @@ module.exports = class ProductionOrderManager extends BaseManager {
         });
     }
 
+    getSalesMonthlyReport(query) {
+        return new Promise((resolve, reject) => {
+            var qry = Object.assign({});
+            var filter = query.filter || {};
+
+            if (filter.orderTypeId) {
+                Object.assign(qry, {
+                    "orderTypeId": (new ObjectId(filter.orderTypeId))
+                });
+            }
+            
+            if (filter.accountId) {
+                Object.assign(qry, {
+                    "accountId": (new ObjectId(filter.accountId))
+                });
+            }
+
+            if (filter.sdate && filter.edate) {
+                Object.assign(qry, {
+                    "_createdDate": {
+                        "$gte": new Date(`${filter.sdate} 00:00:00`),
+                        "$lte": new Date(`${filter.edate} 23:59:59`)
+                    }
+                });
+            }
+
+            qry = Object.assign(qry, { _deleted: false });
+            var getPrdOrder = [];
+            var orderInMeter = {"$cond" : [{"$eq" : ["$uom.unit" ,"YDS"]}, { $multiply: [ "$orderQuantity", 0.9144 ] }, "$orderQuantity"]}
+            getPrdOrder.push(this.collection
+                .aggregate([
+                    { $match: qry }
+                ])
+                .toArray());
+                getPrdOrder.push(this.collection
+                    .aggregate([
+                        { $match : qry },
+                        { $project : {
+                            "account" : "$account.username",
+                            "januari" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,1]}, orderInMeter, 0]},
+                            "februari" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,2]}, orderInMeter, 0]},
+                            "maret" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,3]}, orderInMeter, 0]},
+                            "april" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,4]}, orderInMeter, 0]},
+                            "mei" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,5]}, orderInMeter, 0]},
+                            "juni" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,6]}, orderInMeter, 0]},
+                            "juli" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,7]}, orderInMeter, 0]},
+                            "agustus" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,8]}, orderInMeter, 0]},
+                            "september" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,9]}, orderInMeter, 0]},
+                            "oktober" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,10]}, orderInMeter, 0]},
+                            "november" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,11]}, orderInMeter, 0]},
+                            "desember" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,12]}, orderInMeter, 0]},
+                            "totalOrder" : orderInMeter
+                        }},
+                        {$group : {_id : {"sales" : "$account"},
+                        "jan" : {"$sum" : "$januari"},
+                        "feb" : {"$sum" : "$februari"},
+                        "mar" : {"$sum" : "$maret"},
+                        "apr" : {"$sum" : "$april"},
+                        "mei" : {"$sum" : "$mei"},
+                        "jun" : {"$sum" : "$juni"},
+                        "jul" : {"$sum" : "$juli"},
+                        "agu" : {"$sum" : "$agustus"},
+                        "sep" : {"$sum" : "$september"},
+                        "okt" : {"$sum" : "$oktober"},
+                        "nov" : {"$sum" : "$november"},
+                        "des" : {"$sum" : "$desember"},
+                        "totalOrder" : { "$sum": "$totalOrder" }
+                    }}
+                    ])
+                    .toArray());
+            Promise.all(getPrdOrder).then(result => {
+                var resCount = result[0];
+                var prodOrders = result[1];
+                prodOrders = [].concat.apply([], prodOrders);
+
+                        var results = {
+                            data: prodOrders,
+                        }; 
+                        resolve(results);
+            })
+        });
+    }
+
     getDetailReport(salesContractNo) {
         return new Promise((resolve, reject) => {
             var qry = Object.assign({});
@@ -786,8 +980,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
             this.collection
                 .aggregate([
-                    { $unwind: "$details" },
                     { $match: qry },
+                    { $unwind: "$details" },
                     {
                         $group: {
                             "_id": "$orderNo",
@@ -828,16 +1022,17 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     for (var prodOrder of _prodOrders) {
                         jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
                             {
-                                $unwind: "$kanban.instruction.steps"
-                            },
-                            {
                                 $match: {
                                     "type": "input",
                                     "_deleted": false,
                                     // "kanban.selectedProductionOrderDetail.code": prodOrder.colorCode,
                                     "kanban.productionOrder.orderNo": prodOrder.orderNo
                                 }
-                            }, {
+                            },
+                            {
+                                $unwind: "$kanban.instruction.steps"
+                            },
+                            {
                                 $project:
                                 {
                                     "orderNo": "$kanban.productionOrder.orderNo",
@@ -886,14 +1081,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         var _dailyOperations = this.removeDuplicates(dailyOperations, filters);
                         for (var dailyOperation of _dailyOperations) {
                             jobsGetQC.push(this.fabricQualityControlCollection.aggregate([
-                                { $unwind: "$fabricGradeTests" },
                                 {
                                     $match: {
                                         "_deleted": false,
                                         "productionOrderNo": dailyOperation.orderNo,
                                         "kanbanCode": dailyOperation.kanbanCode
                                     }
-                                }, {
+                                },
+                                { $unwind: "$fabricGradeTests" },
+                                {
                                     $group:
                                     {
                                         "_id": "$fabricGradeTests.grade",

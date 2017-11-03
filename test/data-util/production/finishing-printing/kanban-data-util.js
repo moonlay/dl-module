@@ -3,15 +3,23 @@ var helper = require("../../../helper");
 var KanbanManager = require("../../../../src/managers/production/finishing-printing/kanban-manager");
 var instructionDataUtil = require('../../master/instruction-data-util');
 var productionOrderDataUtil = require('../../sales/production-order-data-util');
+var machineDataUtil = require("../../master/machine-data-util");
 var codeGenerator = require('../../../../src/utils/code-generator');
 
 class KanbanDataUtil {    
     getNewData() {
-        return Promise.all([instructionDataUtil.getTestData(), productionOrderDataUtil.getNewTestData(true)])
+        return Promise.all([instructionDataUtil.getTestData(), productionOrderDataUtil.getNewTestData(true), machineDataUtil.getTestData()])
                     .then(result => {
                         var _instruction = result[0];
                         var _productionOrder = result[1];
+                        var _machine = result[2];
                         var _selectedProductionOrderDetail = (_productionOrder.details && _productionOrder.details.length > 0) ? _productionOrder.details[0] : {};
+                        
+                        _instruction.steps.map((step) => {
+                            step.machine = _machine;
+                            step.deadline = new Date();
+                            return step;
+                        });
 
                         var data = {
                             code : codeGenerator(),

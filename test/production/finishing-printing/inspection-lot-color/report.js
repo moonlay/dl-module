@@ -48,7 +48,7 @@ it("#01. should success when create new data", function(done) {
 });
 
 it("#02. should success when get read data with keyword", function(done) {
-    inspectionLotColorManager.read({keyword : inspection.kanban.cart.cartNumber})
+    inspectionLotColorManager.read({keyword : inspection.cartNo})
         .then((item) => {
             var lotColor = item.data;
             lotColor.should.instanceof(Array);
@@ -91,7 +91,7 @@ it("#04. should success when get report with date parameter", function(done) {
 });
 
 it("#05. should success when get report with kanban parameter", function(done) {
-    inspectionLotColorManager.getReport({kanban : inspection.kanbanId})
+    inspectionLotColorManager.getReport({kanbanId : inspection.kanbanId})
         .then((item) => {
             var lotColor = item.data;
             lotColor.should.instanceof(Array);
@@ -104,7 +104,7 @@ it("#05. should success when get report with kanban parameter", function(done) {
 });
 
 it("#06. should success when get report with production order parameter", function(done) {
-    inspectionLotColorManager.getReport({productionOrder : inspection.kanban.productionOrderId})
+    inspectionLotColorManager.getReport({productionOrder : inspection.productionOrderNo})
         .then((item) => {
             var lotColor = item.data;
             lotColor.should.instanceof(Array);

@@ -60,7 +60,8 @@ module.exports = class ProcessTypeManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         var getOrder = ObjectId.isValid(valid.orderTypeId) ? this.orderManager.getSingleByIdOrDefault(new ObjectId(valid.orderTypeId)) : Promise.resolve(null);
@@ -108,8 +109,7 @@ module.exports = class ProcessTypeManager extends BaseManager {
             name: `ix_${map.master.collection.ProcessType}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

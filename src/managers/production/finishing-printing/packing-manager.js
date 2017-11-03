@@ -9,6 +9,8 @@ var generateCode = require("../../../utils/code-generator");
 var ProductionOrderManager = require('../../sales/production-order-manager');
 var ProductManager = require('../../master/product-manager');
 var UomManager = require('../../master/uom-manager');
+var BuyerManager = require('../../master/buyer-manager');
+var MaterialConstructionManager = require('../../master/material-construction-manager');
 
 var Models = require("dl-models");
 var Map = Models.map;
@@ -26,7 +28,8 @@ module.exports = class PackingManager extends BaseManager {
         this.productionOrderManager = new ProductionOrderManager(db, user);
         this.productManager = new ProductManager(db, user);
         this.uomManager = new UomManager(db, user);
-
+        this.buyerManager = new BuyerManager(db, user);
+        this.materialConstructionManager = new MaterialConstructionManager(db, user);
     }
 
     _getQuery(paging) {
@@ -81,19 +84,19 @@ module.exports = class PackingManager extends BaseManager {
     }
 
     _afterInsert(id) {
-
         return this.getSingleById(id)
             .then((packing) => {
+                var packingItems = packing.items;
                 return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
-                    .then((salesContractNo) => {
+                    .then((productionOrder) => {
                         var query = {
                             _deleted: false,
                             unit: packing.packingUom
                         };
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
-                                var getProduct = packing.items.map(item => {
-                                    var productName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
+                                var getProduct = packingItems.map((packingItem) => {
+                                    var productName = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -103,56 +106,63 @@ module.exports = class PackingManager extends BaseManager {
                                 });
                                 return Promise.all(getProduct)
                                     .then((products) => {
-                                        for (var product of products) {
-                                            if (product) {
-                                                var dataPackingProduct = products
-                                                return Promise.all(dataPackingProduct)
-                                            } else {
-
-
-                                                var createPackingProduct = packing.items.map(item => {
-                                                    var pName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
-                                                    var packingProduct = {
-                                                        code: generateCode(),
-                                                        currency: {},
-                                                        description: "",
-                                                        name: pName,
-                                                        price: 0,
-                                                        properties: {},
-                                                        tags: `sales contract #${salesContractNo.salesContractNo}`,
-                                                        uom: uom,
-                                                        uomId: uom._id
-
-                                                    };
-                                                    return this.productManager.create(packingProduct);
-                                                })
-                                                return Promise.all(createPackingProduct)
+                                        var index = 0;
+                                        var createPackingProducts = [];
+                                        for (var packingItem of packingItems) {
+                                            var productNameComposition = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                            var product = products.find((product) => product !== null && product.name.toString() === productNameComposition.toString())
+                                            if (!product) {
+                                                var packingProduct = {
+                                                    code: generateCode(productNameComposition + index++),
+                                                    currency: {},
+                                                    description: "",
+                                                    name: productNameComposition,
+                                                    price: 0,
+                                                    properties: {
+                                                        productionOrderId: productionOrder._id,
+                                                        productionOrderNo: productionOrder.orderNo,
+                                                        designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                        designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
+                                                        orderType: productionOrder.orderType,
+                                                        buyerId: packing.buyerId,
+                                                        buyerName: packing.buyerName,
+                                                        buyerAddress: packing.buyerAddress,
+                                                        colorName: packing.colorName,
+                                                        construction: packing.construction,
+                                                        lot: packingItem.lot,
+                                                        grade: packingItem.grade,
+                                                        weight: packingItem.weight,
+                                                        length: packingItem.length
+                                                    },
+                                                    tags: `sales contract #${productionOrder.salesContractNo}`,
+                                                    uom: uom,
+                                                    uomId: uom._id
+                                                };
+                                                createPackingProducts.push(this.productManager.create(packingProduct))
                                             }
                                         }
+                                        return Promise.all(createPackingProducts)
                                     })
-
-                                    .then(results => id);
+                                    .then((results) => id)
                             })
                     })
             })
-
-
     }
 
     _afterUpdate(id) {
-
         return this.getSingleById(id)
             .then((packing) => {
+                var packingItems = packing.items;
                 return this.productionOrderManager.getSingleByQueryOrDefault(packing.productionOrderId)
-                    .then((salesContractNo) => {
+                    .then((productionOrder) => {
                         var query = {
                             _deleted: false,
                             unit: packing.packingUom
                         };
                         return this.uomManager.getSingleByQueryOrDefault(query)
                             .then((uom) => {
-                                var getProduct = packing.items.map(item => {
-                                    var productName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
+                                var getProduct = packingItems.map((packingItem) => {
+                                    var productName = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
                                     query = {
                                         _deleted: false,
                                         name: productName
@@ -162,42 +172,48 @@ module.exports = class PackingManager extends BaseManager {
                                 });
                                 return Promise.all(getProduct)
                                     .then((products) => {
-                                        for (var product of products) {
-                                            if (product) {
-                                                var dataPackingProduct = products
-                                                return Promise.all(dataPackingProduct)
-                                            } else {
-
-
-                                                var createPackingProduct = packing.items.map(item => {
-                                                    var pName = `${salesContractNo.salesContractNo}/${packing.colorName}/${packing.construction}/${item.lot}/${item.grade}`;
-                                                    var packingProduct = {
-                                                        code: generateCode(),
-                                                        currency: {},
-                                                        description: "",
-                                                        name: pName,
-                                                        price: 0,
-                                                        properties: {},
-                                                        tags: `sales contract #${salesContractNo.salesContractNo}`,
-                                                        uom: uom,
-                                                        uomId: uom._id
-
-                                                    };
-                                                    return this.productManager.create(packingProduct);
-                                                })
-                                                return Promise.all(createPackingProduct)
+                                        var index = 0;
+                                        var createPackingProducts = [];
+                                        for (var packingItem of packingItems) {
+                                            var productNameComposition = packingItem.remark !== "" && packingItem.remark !== null ? `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${productionOrder.orderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`;
+                                            var product = products.find((product) => product !== null && product.name.toString() === productNameComposition.toString())
+                                            if (!product) {
+                                                var packingProduct = {
+                                                    code: generateCode(productNameComposition + index++),
+                                                    currency: {},
+                                                    description: "",
+                                                    name: productNameComposition,
+                                                    price: 0,
+                                                    properties: {
+                                                        productionOrderId: productionOrder._id,
+                                                        productionOrderNo: productionOrder.orderNo,
+                                                        designCode: productionOrder.designCode ? productionOrder.designCode : "",
+                                                        designNumber: productionOrder.designNumber ? productionOrder.designNumber : "",
+                                                        orderType: productionOrder.orderType,
+                                                        buyerId: packing.buyerId,
+                                                        buyerName: packing.buyerName,
+                                                        buyerAddress: packing.buyerAddress,
+                                                        colorName: packing.colorName,
+                                                        construction: packing.construction,
+                                                        lot: packingItem.lot,
+                                                        grade: packingItem.grade,
+                                                        weight: packingItem.weight,
+                                                        length: packingItem.length
+                                                    },
+                                                    tags: `sales contract #${productionOrder.salesContractNo}`,
+                                                    uom: uom,
+                                                    uomId: uom._id
+                                                };
+                                                createPackingProducts.push(this.productManager.create(packingProduct))
                                             }
                                         }
+                                        return Promise.all(createPackingProducts)
                                     })
-
-                                    .then(results => id);
+                                    .then((results) => id)
                             })
                     })
             })
-
     }
-
-
 
     _validate(fabricQualityControl) {
         var errors = {};
@@ -213,12 +229,16 @@ module.exports = class PackingManager extends BaseManager {
             code: valid.code
         });
         var getProductionOrder = valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(valid.productionOrderId) : Promise.resolve(null);
+        var getBuyer = valid.buyerId && ObjectId.isValid(valid.buyerId) ? this.buyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
+        var getMaterialConstruction = valid.materialConstructionFinishId && ObjectId.isValid(valid.materialConstructionFinishId) ? this.materialConstructionManager.getSingleByIdOrDefault(valid.materialConstructionFinishId) : Promise.resolve(null);
 
-        return Promise.all([getDbPacking, getDuplicatePacking, getProductionOrder])
+        return Promise.all([getDbPacking, getDuplicatePacking, getProductionOrder, getBuyer, getMaterialConstruction])
             .then(results => {
                 var _dbPacking = results[0];
                 var _duplicatePacking = results[1];
                 var _productionOrder = results[2];
+                var _buyer = results[3];
+                var _materialContructionFinish = results[4];
 
                 if (_dbPacking)
                     valid.code = _dbPacking.code; // prevent code changes.
@@ -226,16 +246,29 @@ module.exports = class PackingManager extends BaseManager {
                 if (_duplicatePacking)
                     errors["code"] = i18n.__("Packing.code.isExist: %s is exist", i18n.__("Packing.code._:Code"));
 
-                if (!valid.productionOrderId || valid.productionOrderId === '')
-                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId.isRequired:%s is required", i18n.__("Packing.productionOrderId._:Production Order")); //"Grade harus diisi";   
-                else if (!_productionOrder)
-                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId: %s not found", i18n.__("Packing.productionOrderId._:Production Order"));
+                if (!_productionOrder)
+                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId.isExists: %s is not exists", i18n.__("Packing.productionOrderId._:Production Order"));
+                else if (!valid.productionOrderId || valid.productionOrderId === '')
+                    errors["productionOrderId"] = i18n.__("Packing.productionOrderId.isRequired:%s is required", i18n.__("Packing.productionOrderId._:Production Order")); //"Nomor Order harus diisi";                       
+
+                if (!_buyer)
+                    errors["buyerId"] = i18n.__("Packing.buyerId.isExists: %s is not exists", i18n.__("Packing.buyerId._:Buyer"));
+                else if (!valid.buyerId || valid.buyerId === '')
+                    errors["buyerId"] = i18n.__("Packing.buyerId.isRequired:%s is required", i18n.__("Packing.buyerId._:Buyer")); //"Buyer harus diisi";   
+
+                if (!_materialContructionFinish)
+                    errors["materialConstructionFinishId"] = i18n.__("Packing.materialConstructionFinishId.isExists: %s is not exists", i18n.__("Packing.materialConstructionFinishId._:Material Konstruksi Finish"));
+                else if (!valid.materialConstructionFinishId || valid.materialConstructionFinishId === '')
+                    errors["materialConstructionFinishId"] = i18n.__("Packing.materialConstructionFinishId.isRequired:%s is required", i18n.__("Packing.materialConstructionFinishId._:Material Konstruksi Finish")); //"Material Konstruksi harus diisi";   
 
                 if (!valid.date)
                     errors["date"] = i18n.__("Packing.date.isRequired:%s is required", i18n.__("Packing.date._:Date")); //"Grade harus diisi";
 
                 if (!valid.packingUom || valid.packingUom === '')
-                    errors["packingUom"] = i18n.__("Packing.packingUom.isRequired:%s is required", i18n.__("Packing.packingUom._:Packing UOM")); //"Grade harus diisi";   
+                    errors["packingUom"] = i18n.__("Packing.packingUom.isRequired:%s is required", i18n.__("Packing.packingUom._:Packing UOM")); //"UOM harus diisi";
+
+                if (!valid.materialWidthFinish || valid.materialWidthFinish === '')
+                    errors["materialWidthFinish"] = i18n.__("Packing.materialWidthFinish.isRequired:%s is required", i18n.__("Packing.materialWidthFinish._:Lebar Finish")); //"UOM harus diisi";   
 
                 var targetColor;
                 if (!valid.colorCode || valid.colorCode === '')
@@ -261,13 +294,13 @@ module.exports = class PackingManager extends BaseManager {
                         if (!item.grade || item.grade.trim() === "")
                             itemsError["grade"] = i18n.__("Packing.items.grade.isRequired:%s is required", i18n.__("Packing.items.grade._:Grade"));
                         else {
-                            var dup = valid.items.find((test, idx) => (item.lot === test.lot && item.grade === test.grade) && index != idx);
+                            var dup = valid.items.find((test, idx) => (item.lot === test.lot && item.grade === test.grade && item.length === test.length) && index != idx);
                             if (dup) {
                                 itemsError["lot"] = i18n.__("Packing.items.lot.isDuplicate:%s is duplicate", i18n.__("Packing.items.lot._:Lot"));
                                 itemsError["grade"] = i18n.__("Packing.items.grade.isDuplicate:%s is duplicate", i18n.__("Packing.items.grade._:Grade"));
+                                itemsError["length"] = i18n.__("Packing.items.length.isDuplicate:%s is duplicate", i18n.__("Packing.items.length._:Length"));
                             }
                         }
-
                         itemsErrors.push(itemsError);
                     })
 
@@ -288,10 +321,22 @@ module.exports = class PackingManager extends BaseManager {
 
                 valid.productionOrderId = _productionOrder._id;
                 valid.productionOrderNo = _productionOrder.orderNo;
-                valid.buyer = _productionOrder.buyer.name;
-                valid.buyerLocation = _productionOrder.buyer.type;
+
+                //Buyer Detail
+                valid.buyerId = _buyer._id;
+                valid.buyerCode = _buyer.code;
+                valid.buyerName = _buyer.name;
+                valid.buyerAddress = _buyer.address;
+                valid.buyerType = _buyer.type;
+
+                //Material Konstruksi Finish
+                valid.materialConstructionFinishId = _materialContructionFinish._id;
+                valid.materialConstructionFinishName = _materialContructionFinish.name;
+
+                //Width Finish
+
                 valid.colorName = targetColor.colorRequest;
-                valid.construction = `${_productionOrder.material.name} / ${_productionOrder.materialConstruction.name} / ${_productionOrder.materialWidth}`;
+                valid.construction = `${_productionOrder.material.name} / ${_materialContructionFinish.name} / ${valid.materialWidthFinish}`;
 
                 valid.salesContractNo = _productionOrder.salesContractNo;
 
@@ -369,9 +414,10 @@ module.exports = class PackingManager extends BaseManager {
                 item["No"] = index;
                 item["Nomor Packing"] = packing.code ? packing.code : '';
                 item["Nomor Order"] = packing.productionOrderNo ? packing.productionOrderNo : '';
+                item["Jenis Order"] = packing.orderType ? packing.orderType : '';
                 item["Buyer"] = packing.buyer ? packing.buyer : '';
                 item["Konstruksi"] = packing.construction ? packing.construction : '';
-                item["Design/Motif"] = packing.motif ? packing.motif : '';
+                item["Design/Motif"] = packing.designNumber ? packing.designNumber : '';
                 item["Warna yang diminta"] = packing.colorName ? packing.colorName : '';
                 item["Tanggal"] = packing.date ? moment(new Date(packing.date)).format(dateFormat) : '';
 
@@ -397,6 +443,7 @@ module.exports = class PackingManager extends BaseManager {
         // xls.options["No"] = "number";
         xls.options["Nomor Packing"] = "string";
         xls.options["Nomor Order"] = "string";
+        xls.options["Jenis Order"] = "string";
         xls.options["Buyer"] = "string";
         xls.options["Konstruksi"] = "string";
         xls.options["Design/Motif"] = "string";

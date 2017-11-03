@@ -1,6 +1,6 @@
 var global = require('../../global');
 
-module.exports = function (unitPaymentCorrection) {
+module.exports = function (unitPaymentCorrection, offset) {
 
     var items = unitPaymentCorrection.items.map((item) => {
         return {
@@ -34,7 +34,7 @@ module.exports = function (unitPaymentCorrection) {
         {
             stack: [
                 `Nomor : ${unitPaymentCorrection.returNoteNo}`,
-                `(Atas Faktur Pajak Nomor : ${unitPaymentCorrection.unitPaymentOrder.incomeTaxNo} Tanggal : ${moment(unitPaymentCorrection.unitPaymentOrder.incomeTaxDate).format(locale.date.format)})`
+                `(Atas Faktur Pajak Nomor : ${unitPaymentCorrection.unitPaymentOrder.incomeTaxNo} Tanggal : ${moment(unitPaymentCorrection.unitPaymentOrder.incomeTaxDate).add(offset,'h').format(locale.date.format)})`
             ],
             style: ['size09', 'center']
 
@@ -190,7 +190,7 @@ module.exports = function (unitPaymentCorrection) {
             style: ['size08', 'right']
         }, {
             columns: [{
-                width: '5%',
+                width: '20%',
                 text: currency,
                 style: ['size08']
             }, {
@@ -200,7 +200,7 @@ module.exports = function (unitPaymentCorrection) {
             }]
         }, {
             columns: [{
-                width: '5%',
+                width: '20%',
                 text: currency,
                 style: ['size08']
             }, {
@@ -237,7 +237,7 @@ module.exports = function (unitPaymentCorrection) {
             colSpan: 4
         }, null, null, null, {
             columns: [{
-                width: '10%',
+                width: '20%',
                 text: currency
             }, {
                 width: '*',
@@ -252,7 +252,7 @@ module.exports = function (unitPaymentCorrection) {
             colSpan: 4
         }, null, null, null, {
             columns: [{
-                width: '10%',
+                width: '20%',
                 text: currency
             }, {
                 width: '*',
@@ -297,7 +297,7 @@ module.exports = function (unitPaymentCorrection) {
 
     var table = [{
         table: {
-            widths: ['5%', '40%', '15%', '20%', '20%'],
+            widths: ['5%', '30%', '15%', '25%', '25%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot)
         }

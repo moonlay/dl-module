@@ -17,3 +17,7 @@ describe("DETAIL REPORT SCENARIOS", function() {
 describe("VALIDATION SCENARIOS", function() {
     require("./validator");
 });
+
+describe("PDF SCENARIOS", function() {
+    require("./pdf");
+});

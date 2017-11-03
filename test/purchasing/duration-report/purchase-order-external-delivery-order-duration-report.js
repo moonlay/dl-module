@@ -261,7 +261,7 @@ it('#10. should success when get data for Excel Report using both dateFrom and d
 
 it('#11. should success when get data with unit and Duration >90 days', function (done) {
     var query = {};
-    query.unitId=createdDO3.items[0].fulfillments[0].purchaseOrder.purchaseRequest.unit._id;
+    query.unitId=createdDO3.items[0].fulfillments[0].purchaseOrder.unit._id;
     query.duration = "> 90 hari";
 
     purchaseOrderManager.getDurationPOEksDoData(query)

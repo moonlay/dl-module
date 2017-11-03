@@ -88,3 +88,21 @@ it("#05. should success when create deleted data", function (done) {
             done(e);
         });
 });
+
+it('#06. should failed when create new delivery order with closed purchase order external', function (done) {
+    deliveryOrderDataUtil.getNewTestDataPoExternalIsClosed()
+        .then(po => {
+            done("purchase order external cannot be used to create delivery-order due closed status");
+        })
+        .catch(e => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
+        });
+});

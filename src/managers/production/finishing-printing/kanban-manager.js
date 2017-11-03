@@ -17,6 +17,7 @@ module.exports = class KanbanManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.production.finishingPrinting.collection.Kanban);
+        this.dailyOperationCollection = this.db.use(map.production.finishingPrinting.collection.DailyOperation);
         this.instructionManager = new InstructionManager(db, user);
         this.productionOrderManager = new ProductionOrderManager(db, user);
         this.uomManager = new UomManager(db, user);
@@ -55,7 +56,7 @@ module.exports = class KanbanManager extends BaseManager {
 
     _beforeInsert(data) {
         data.code = generateCode();
-        if (data.cart){
+        if (data.cart) {
             data.cart.code = generateCode();
         }
         data._createdDate = new Date();
@@ -72,20 +73,20 @@ module.exports = class KanbanManager extends BaseManager {
             },
             code: valid.code
         });
-        var getUom = this.uomManager.collection.find({unit: "MTR"}).toArray();
+        var getUom = this.uomManager.collection.find({ unit: "MTR" }).toArray();
         var getProductionOrder = valid.productionOrderId && ObjectId.isValid(valid.productionOrderId) ? this.productionOrderManager.getSingleByIdOrDefault(new ObjectId(valid.productionOrderId)) : Promise.resolve(null);
         var getProductionOrderDetail = (valid.selectedProductionOrderDetail && valid.selectedProductionOrderDetail.code) ? this.productionOrderManager.getSingleProductionOrderDetail(valid.selectedProductionOrderDetail.code) : Promise.resolve(null);
-        var getInstruction = valid.instructionId && ObjectId.isValid(valid.instructionId) ? this.instructionManager.getSingleByIdOrDefault(new ObjectId(valid.instructionId)) : Promise.resolve(null);
+        // var getInstruction = valid.instructionId && ObjectId.isValid(valid.instructionId) ? this.instructionManager.getSingleByIdOrDefault(new ObjectId(valid.instructionId)) : Promise.resolve(null);
         var getKanban = valid._id && ObjectId.isValid(valid._id) ? this.getSingleById(valid._id) : Promise.resolve(null);
 
-        return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getInstruction, getKanban, getUom])
+        // return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getInstruction, getKanban, getUom])
+        return Promise.all([getDuplicateKanbanPromise, getProductionOrder, getProductionOrderDetail, getKanban, getUom])
             .then(results => {
                 var _kanbanDuplicate = results[0];
                 var _productionOrder = results[1];
                 var _productionOrderDetail = results[2];
-                var _instruction = results[3];
-                var _kanban = results[4];
-                var uom = results[5];
+                var _kanban = results[3];
+                var uom = results[4];
                 var _uom = uom[0];
                 if (_kanban)
                     _kanban.currentStepIndex = _kanban.currentStepIndex || 0; // old kanban data does not have currentStepIndex
@@ -96,15 +97,16 @@ module.exports = class KanbanManager extends BaseManager {
                         if (_kanbanDuplicate)
                             errors["code"] = i18n.__("Kanban.code.isExists:%s is exists", i18n.__("Kanban.code._:Code"));
 
-                        if (_kanban && !_kanban.isComplete && valid.isComplete && _kanban.currentStepIndex < _kanban.instruction.steps.length){
-                            errors["isComplete"] = i18n.__("Kanban.isComplete.incompleteSteps:%s steps are incomplete", i18n.__("Kanban.code._:Kanban"));
-                        }
+                        /* Lepas validasi ini karena tambah flow reprocess */
+                        // if (_kanban && !_kanban.isComplete && valid.isComplete && _kanban.currentStepIndex < _kanban.instruction.steps.length){
+                        //     errors["isComplete"] = i18n.__("Kanban.isComplete.incompleteSteps:%s steps are incomplete", i18n.__("Kanban.code._:Kanban"));
+                        // }
 
                         if (!valid.productionOrder)
                             errors["productionOrder"] = i18n.__("Kanban.productionOrder.isRequired:%s is required", i18n.__("Kanban.productionOrder._:ProductionOrder")); //"Production Order harus diisi";
                         else if (!_productionOrder)
                             errors["productionOrder"] = i18n.__("Kanban.productionOrder.notFound:%s not found", i18n.__("Kanban.productionOrder._:ProductionOrder")); //"Production Order tidak ditemukan";
-                        
+
                         if (!_productionOrderDetail)
                             errors["selectedProductionOrderDetail"] = i18n.__("Kanban.selectedProductionOrderDetail.isRequired:%s is required", i18n.__("Kanban.selectedProductionOrderDetail._:Color")); //"Color harus diisi";
 
@@ -138,24 +140,56 @@ module.exports = class KanbanManager extends BaseManager {
                         //             errors["cart"] = i18n.__("Kanban.cart.qtyOverlimit:%s overlimit", i18n.__("Kanban.cart._:Total Qty")); //"Total Qty in cart over limit";
                         //     }
                         // }
-                        
+
                         if (!valid.grade || valid.grade == '')
                             errors["grade"] = i18n.__("Kanban.grade.isRequired:%s is required", i18n.__("Kanban.grade._:Grade")); //"Grade harus diisi";   
 
-                        if (!valid.instruction)
+                        if (!valid.instruction || valid.instruction == '' || valid.instruction.steps.length === 0)
                             errors["instruction"] = i18n.__("Kanban.instruction.isRequired:%s is required", i18n.__("Kanban.instruction._:Instruction")); //"Instruction harus diisi";
-                        else if (!_instruction)
-                            errors["instruction"] = i18n.__("Kanban.instruction.notFound:%s not found", i18n.__("Kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
+                        // else if (!_instruction)
+                        //     errors["instruction"] = i18n.__("Kanban.instruction.notFound:%s not found", i18n.__("Kanban.instruction._:Instruction")); //"Instruction tidak ditemukan";
+                        else {
+                            var stepsError = [];
+                            var hasError = false;
+
+                            for (var step of valid.instruction.steps) {
+                                var stepErrors = {};
+
+                                if (!step.process || step.process == "") {
+                                    stepErrors["process"] = i18n.__("Kanban.instruction.steps.process.isRequired:%s is required", i18n.__("Kanban.instruction.steps.process._:Process")); //"Proses harus diisi";
+                                }
+
+                                // if(!step.machine || Object.getOwnPropertyNames(step.machine).length == 0) {
+                                //     stepErrors["machine"] = i18n.__("Kanban.instruction.steps.machine.isRequired:%s is required", i18n.__("Kanban.instruction.steps.machine._:Machine")); //"Mesin harus diisi";
+                                // }
+
+                                // if(!step.deadline) {
+                                //     stepErrors["deadline"] = i18n.__("Kanban.instruction.steps.deadline.isRequired:%s is required", i18n.__("Kanban.instruction.steps.deadline._:Deadline")); //"Target Selesai harus diisi";
+                                // }
+
+                                stepsError.push(stepErrors);
+                            }
+
+                            for (var stepError of stepsError) {
+                                if (Object.getOwnPropertyNames(stepError).length > 0) {
+                                    hasError = true;
+                                    break;
+                                }
+                            }
+
+                            if (hasError)
+                                errors["steps"] = stepsError;
+                        }
 
                         if (Object.getOwnPropertyNames(errors).length > 0) {
                             var ValidationError = require('module-toolkit').ValidationError;
                             return Promise.reject(new ValidationError('data does not pass validation', errors));
                         }
 
-                        if (_instruction) {
-                            valid.instructionId = _instruction._id;
-                            valid.instruction._id = _instruction._id;
-                            for(var a of valid.instruction.steps){
+                        if (valid.instruction) {
+                            valid.instructionId = ObjectId.isValid(valid.instruction._id) ? new ObjectId(valid.instruction._id) : valid.instruction._id;
+                            valid.instruction._id = valid.instructionId;
+                            for (var a of valid.instruction.steps) {
                                 a._id = new ObjectId(a._id);
                             }
                         }
@@ -165,9 +199,13 @@ module.exports = class KanbanManager extends BaseManager {
                             valid.cart.uomId = _productionOrder.uomId;
                             valid.cart.uom = _productionOrder.uom;
                         }
-                        if(_uom){
+                        if (_uom) {
                             valid.cart.uomId = _uom._id;
                             valid.cart.uom = _uom;
+                        }
+
+                        if (valid.oldKanbanId && ObjectId.isValid(valid.oldKanbanId)) {
+                            valid.oldKanbanId = new ObjectId(valid.oldKanbanId);
                         }
 
                         if (!valid.stamp) {
@@ -175,6 +213,21 @@ module.exports = class KanbanManager extends BaseManager {
                         }
                         valid.stamp(this.user.username, "manager");
                         return Promise.resolve(valid);
+                    })
+            })
+    }
+
+    _afterInsert(id) {
+        var kanbanId = id;
+        return this.getSingleById(id)
+            .then((kanban) => {
+                var getKanban = kanban.oldKanban._id ? this.getSingleById(kanban.oldKanban._id) : Promise.resolve(null);
+                return Promise.all([getKanban])
+                    .then((result) => {
+                        var oldKanban = result[0];
+                        var updateOldKanban = oldKanban ? this.updateIsComplete(oldKanban._id) : Promise.resolve(null);
+                        return Promise.all([updateOldKanban])
+                            .then((result) => Promise.resolve(kanbanId))
                     })
             })
     }
@@ -207,8 +260,8 @@ module.exports = class KanbanManager extends BaseManager {
                 productionOrderDetailFilter = {},
                 query = {};
 
-            if (kanbanId){
-                kanbanFilter = { _id: {'$ne': new ObjectId(kanbanId)}};
+            if (kanbanId) {
+                kanbanFilter = { _id: { '$ne': new ObjectId(kanbanId) } };
             }
 
             if (productionOrder && productionOrder.orderNo != '') {
@@ -242,67 +295,161 @@ module.exports = class KanbanManager extends BaseManager {
         })
     }
 
-    getDataReport(query){
+    getDataReport(query) {
         return new Promise((resolve, reject) => {
-        var deletedQuery = {
+            var deletedQuery = {
                 _deleted: false
             };
-        var orderQuery = {};
-        if(query.orderNo != '' && query.orderNo!=undefined){
-            orderQuery = {
-                "productionOrder.orderNo" : {
-                    "$regex" : (new RegExp(query.orderNo, "i"))
+            var orderQuery = {};
+            if (query.orderNo != '' && query.orderNo != undefined) {
+                orderQuery = {
+                    "productionOrder.orderNo": {
+                        "$regex": (new RegExp(query.orderNo, "i"))
+                    }
+                };
+            }
+            var orderTypeQuery = {};
+            if (query.orderTypeId) {
+                orderTypeQuery = {
+                    "productionOrder.orderTypeId": (new ObjectId(query.orderTypeId))
+                };
+            }
+            var processTypeQuery = {};
+            if (query.processTypeId) {
+                processTypeQuery = {
+                    "productionOrder.processTypeId": (new ObjectId(query.processTypeId))
+                };
+            }
+			     var prosesQuery = {};
+            if (query.proses != '' && query.proses != undefined) {
+              if(query.proses=="Ya"){
+                   prosesQuery = {
+                    "isReprocess": true
+                };
+              }else{
+                    prosesQuery = {
+                    "isReprocess": { $ne: true }
+                };
+              }
+               
+            }
+            var date = {
+                "_createdDate": {
+                    "$gte": (!query || !query.sdate ? (new Date("1900-01-01")) : (new Date(`${query.sdate} 00:00:00`))),
+                    "$lte": (!query || !query.edate ? (new Date()) : (new Date(`${query.edate} 23:59:59`)))
                 }
             };
-        }
-        var orderTypeQuery = {};
-        if(query.orderTypeId){
-            orderTypeQuery = {
-                "productionOrder.orderTypeId" : (new ObjectId(query.orderTypeId))
-            };
-        }
-        var processTypeQuery = {};
-        if(query.processTypeId){
-            processTypeQuery ={
-                "productionOrder.processTypeId" : (new ObjectId(query.processTypeId))
-            };
-        }
-        var date = {
-            "_createdDate" : {
-                "$gte" : (!query || !query.sdate ? (new Date("1900-01-01")) : (new Date(`${query.sdate} 00:00:00`))),
-                "$lte" : (!query || !query.edate ? (new Date()) : (new Date(`${query.edate} 23:59:59`)))
-            }
-        };
-        var Query = {"$and" : [date,processTypeQuery,orderTypeQuery,orderQuery,deletedQuery]};
-        this.collection
-                .aggregate([ 
-                    {$match : Query},
-                    {$project :{
-                        "_createdDate" : 1,
-                        "orderNo" : "$productionOrder.orderNo",
-                        "orderType" : "$productionOrder.orderType.name",
-                        "processType" : "$productionOrder.processType.name",
-                        "color" : "$selectedProductionOrderDetail.colorRequest",
-                        "handfeelStandard" : "$productionOrder.handlingStandard",
-                        "finishWidth" : "$productionOrder.finishWidth",
-                        "material" : "$productionOrder.material.name",
-                        "construction" : "$productionOrder.materialConstruction.name",
-                        "yarnNumber" : "$productionOrder.yarnMaterial.name",
-                        "grade" : "$grade",
-                        "cartNumber" : "$cart.cartNumber",
-                        "length" : "$cart.qty",
-                        "pcs" : "$cart.pcs",
-                        "uom" : "$productionOrder.uom.unit",
-                        "isComplete" : 1,
-                        "currentStepIndex" : 1,
-                        "steps" : "$instruction.steps"
-                    }},
-                    {$sort : {"_createdDate" : -1}}
+            var Query = { "$and": [date, processTypeQuery, orderTypeQuery, orderQuery, deletedQuery,prosesQuery] };
+            this.collection
+                .aggregate([
+                    { $match: Query },
+                    {
+                        $project: {
+                            "_createdDate": 1,
+                            "orderNo": "$productionOrder.orderNo",
+                            "orderType": "$productionOrder.orderType.name",
+                            "processType": "$productionOrder.processType.name",
+                            "color": "$selectedProductionOrderDetail.colorRequest",
+                            "handfeelStandard": "$productionOrder.handlingStandard",
+                            "finishWidth": "$productionOrder.finishWidth",
+                            "material": "$productionOrder.material.name",
+                            "construction": "$productionOrder.materialConstruction.name",
+                            "yarnNumber": "$productionOrder.yarnMaterial.name",
+                            "grade": "$grade",
+                            "cartNumber": "$cart.cartNumber",
+                            "length": "$cart.qty",
+                            "pcs": "$cart.pcs",
+                            "uom": "$productionOrder.uom.unit",
+                            "isReprocess": "$isReprocess",
+                            "isComplete": 1,
+                            "currentStepIndex": 1,
+                            "steps": "$instruction.steps"
+                        }
+                    },
+                    { $sort: { "_createdDate": -1 } }
                 ])
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 })
         });
+    }
+
+    updateIsComplete(id) {
+        var now = new Date();
+        var ticks = ((now.getTime() * 10000) + 621355968000000000);
+
+        var data = {
+            'isComplete': true,
+            '_stamp': ticks.toString(16),
+            '_updatedBy': this.user.username,
+            '_updatedDate': now,
+            '_updateAgent': 'manager'
+        };
+
+        return this.collection.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: data });
+    }
+
+    readVisualization(paging) {
+        return this.read(paging)
+            .then((result) => {
+                var joinDailyOperations = result.data.map((kanban) => {
+                    kanban.currentStepIndex = Math.floor(kanban.currentStepIndex);
+                    var currentStep = kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)];
+                    var kanbanCurrentStepId = kanban.instruction && kanban.instruction.steps.length > 0 && currentStep && currentStep._id ? currentStep._id : null;
+
+                    if (ObjectId.isValid(kanbanCurrentStepId)) {
+                        var getDailyOperations = this.dailyOperationCollection.find({
+                            "kanban.code": kanban.code,
+                            "step._id": kanbanCurrentStepId,
+                            _deleted: false,
+                            type: "input"
+                        }, {
+                                "machine.name": 1,
+                                "input": 1,
+                                "step.process": 1,
+                                "step.processArea": 1,
+                                "step.deadline": 1
+                            }).toArray();
+
+                        return getDailyOperations.then((dailyOperations) => {
+                            var arr = dailyOperations.map((dailyOperation) => {
+                                var obj = {
+                                    code: kanban.code,
+                                    dailyOperationMachine: dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null,
+                                    inputQuantity: dailyOperation.input ? dailyOperation.input : null,
+                                    process: dailyOperation.step ? dailyOperation.step.process : null,
+                                    processArea: dailyOperation.step ? dailyOperation.step.processArea : null,
+                                    deadline: dailyOperation.step ? dailyOperation.step.deadline : null,
+                                    stepsLength: kanban.instruction && kanban.instruction.steps ? kanban.instruction.steps.length : 0,
+                                    currentStepIndex: kanban.currentStepIndex,
+                                    cart: {
+                                        cartNumber: kanban.cart ? kanban.cart.cartNumber : null
+                                    },
+                                    productionOrder: {
+                                        orderNo: kanban.productionOrder ? kanban.productionOrder.orderNo : null,
+                                        salesContractNo: kanban.productionOrder ? kanban.productionOrder.salesContractNo : null,
+                                        deliveryDate: kanban.productionOrder ? kanban.productionOrder.deliveryDate : null,
+                                        buyer: {
+                                            name: kanban.productionOrder && kanban.productionOrder.buyer ? kanban.productionOrder.buyer.name : null
+                                        },
+                                        orderQuantity: kanban.productionOrder ? kanban.productionOrder.orderQuantity : null,
+                                    }
+                                };
+
+                                return obj;
+                            });
+
+                            return Promise.resolve(arr);
+                        });
+                    }
+                });
+
+                return Promise.all(joinDailyOperations)
+                    .then(((joinDailyOperation) => {
+                        result.data = [].concat.apply([], joinDailyOperation);
+                        return result;
+                    }));
+            });
     }
 };

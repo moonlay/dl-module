@@ -6,7 +6,7 @@ var moment = require('moment');
 var FabricQualityControlManager = require("../../../../src/managers/production/finishing-printing/fabric-quality-control-manager");
 var fabricQualityControlManager;
 
-before('#00. connect db', function(done) {
+before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
             fabricQualityControlManager = new FabricQualityControlManager(db, {
@@ -19,7 +19,7 @@ before('#00. connect db', function(done) {
         });
 });
 
-it("#01. should error when create new data with invalid kanban", function(done) {
+it("#01. should error when create new data with invalid kanban", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             data.kanbanId = "test";
@@ -42,7 +42,7 @@ it("#01. should error when create new data with invalid kanban", function(done) 
         });
 });
 
-it("#02. should error when create 4 point system data with no point limit", function(done) {
+it("#02. should error when create 4 point system data with no point limit", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             data.pointSystem = 4;
@@ -65,58 +65,51 @@ it("#02. should error when create 4 point system data with no point limit", func
         });
 });
 
-// it("#02. should error when create new data with date greater than today", function(done) {
-//     dataUtil.getNewData()
-//         .then(data => {
-//             var dateTomorrow = new Date().setDate(new Date().getDate() + 1);
-//             data.date = moment(dateTomorrow).format('YYYY-MM-DD');
-//             inspectionLotColorManager.create(data)
-//                 .then(lotColor => {
-//                     done("should error when create new data with date greater than today");
-//                 })
-//                 .catch((e) => {
-//                     try {
-//                         e.errors.should.have.property('date');
-//                         done();
-//                     }
-//                     catch (ex) {
-//                         done(ex);
-//                     }
-//                 });
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+var createdId;
+it("#03. should success when create new data", function (done) {
+    dataUtil.getNewData()
 
-// it("#03. should error when create new data with items without Pcs No, Lot and status", function(done) {
-//     dataUtil.getNewData()
-//         .then(data => {
-//             data.items = [
-//                 pcsNo = '',
-//                 lot = '',
-//                 status = ''
-//             ]
-//             inspectionLotColorManager.create(data)
-//                 .then(lotColor => {
-//                     done("should error when create new data with date greater than today");
-//                 })
-//                 .catch((e) => {
-//                     try {
-//                         e.errors.should.have.property('items');
-//                         for(var a of e.errors.items){
-//                             a.should.have.property('pcsNo');
-//                             a.should.have.property('lot');
-//                             a.should.have.property('status');
-//                         }
-//                         done();
-//                     }
-//                     catch (ex) {
-//                         done(ex);
-//                     }
-//                 });
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+        .then((data) => fabricQualityControlManager.create(data))
+        .then((id) => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+var createdData;
+it(`#04. should success when get created data with id`, function (done) {
+    fabricQualityControlManager.getSingleById(createdId)
+        .then((data) => {
+            data.should.instanceof(Object);
+            createdData = data;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it('#05. should success when create pdf', function (done) {
+    fabricQualityControlManager.pdf(createdData)
+        .then((pdfData) => {
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it("#06. should success when destroy all unit test data", function (done) {
+    fabricQualityControlManager.destroy(createdId)
+        .then((result) => {
+            result.should.be.Boolean();
+            result.should.equal(true);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

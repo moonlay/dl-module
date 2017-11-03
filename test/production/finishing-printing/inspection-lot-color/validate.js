@@ -19,17 +19,17 @@ before('#00. connect db', function(done) {
         });
 });
 
-it("#01. should error when create new data with no document kanban on collection database", function(done) {
+it("#01. should error when create new data with no document fabric quality control on collection database", function(done) {
     dataUtil.getNewData()
         .then(data => {
-            data.kanbanId = "kanbanId";
+            data.fabricQualityControlId = "id";
             inspectionLotColorManager.create(data)
                 .then(lotColor => {
                     done("should error when create new data with no document kanban on collection database");
                 })
                 .catch((e) => {
                     try {
-                        e.errors.should.have.property('kanban');
+                        e.errors.should.have.property('fabricQualityControlId');
                         done();
                     }
                     catch (ex) {

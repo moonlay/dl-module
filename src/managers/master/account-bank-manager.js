@@ -17,8 +17,8 @@ module.exports = class AccountBankManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -60,7 +60,8 @@ module.exports = class AccountBankManager extends BaseManager {
                 "$ne": new ObjectId(valid._id)
             },
             bankName: valid.bankName,
-            accountNumber: valid.accountNumber
+            accountNumber: valid.accountNumber,
+            _deleted: false
         });
         // 2. begin: Validation.
         return Promise.all([getAccountBankPromise])
@@ -106,8 +107,7 @@ module.exports = class AccountBankManager extends BaseManager {
             key: {
                 bankName: 1,
                 accountNumber: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, nameIndex]);

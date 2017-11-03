@@ -13,12 +13,13 @@ var PackingReceiptModel = Models.inventory.finishingPrinting.PackingReceipt;
 class PackingReceiptDataUtil {
     getNewData() {
         return Promise.all([PackingDataUtil.getNewTestData(), StorageDataUtil.getPackingTestData()])
-            .then(result => {
-                var packing = result[0];
+            .then((results) => {
+                var packing = results[0];
+                var storage = results[1];
 
                 var packingItems = packing.items.map((packingItem) => {
                     return {
-                        product: `${packing.salesContractNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}`,
+                        product: packingItem.remark !== "" || packingItem.remark !== null ? `${packing.productionOrderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${packing.productionOrderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`,
                         quantity: packingItem.quantity,
                         remark: packingItem.remark,
                         notes: "TEST"
@@ -29,6 +30,8 @@ class PackingReceiptDataUtil {
                     code: codeGenerator(),
                     packingId: packing._id,
                     packingCode: packing.code,
+                    // storageName: storage.name,
+                    storage: storage,
                     date: new Date(),
                     accepted: true,
                     remark: "UT packing receipt",

@@ -119,7 +119,7 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
                     for (var item of valid.items) {
                         var itemError = {};
 
-                        if (item.dataType == "input pilihan") {
+                        if (item.dataType.trim() == "input skala angka") {
                             var range = item.defaultValue.split("-");
                             if (item.value < parseInt(range[0]) || item.value > parseInt(range[1]) || item.value == "") {
                                 itemError["value"] = i18n.__("MonitoringSpecificationMachine.items.value.isIncorrect:%s range is incorrect", i18n.__("MonitoringSpecificationMachine.items.value._:value")); //"range incorrect";                       
@@ -135,9 +135,13 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
 
                         if (item.dataType == "input angka") {
 
-                            if (!item.value || item.value == "" || item.value == 0) {
-                                itemError["value"] = i18n.__("MonitoringSpecificationMachine.items.value.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.items.value._:value")); //"is required";                       
+                            if (item.value == "" || item.value == 0) {
+                                item.value = 0;
                             }
+
+                            // if (!item.value || item.value == "" || item.value == 0) {
+                            //     itemError["value"] = i18n.__("MonitoringSpecificationMachine.items.value.isRequired:%s is required", i18n.__("MonitoringSpecificationMachine.items.value._:value")); //"is required";                       
+                            // }
                         }
 
 

@@ -6,8 +6,10 @@ var DLModels = require("dl-models");
 var map = DLModels.map;
 var StepManager = require('../../master/step-manager');
 var MachineManager = require('../../master/machine-manager');
+var BadOutputReasonManager = require('../../master/bad-output-reason-manager');
 var KanbanManager = require('./kanban-manager');
 var DailyOperation = DLModels.production.finishingPrinting.DailyOperation;
+var BadOutputReasonItem = DLModels.production.finishingPrinting.BadOutputReasonItem;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var codeGenerator = require('../../../utils/code-generator');
@@ -17,9 +19,11 @@ module.exports = class DailyOperationManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.production.finishingPrinting.collection.DailyOperation);
+        this.kanbanCollection = this.db.use(map.production.finishingPrinting.collection.Kanban);
         this.stepManager = new StepManager(db, user);
         this.machineManager = new MachineManager(db, user);
         this.kanbanManager = new KanbanManager(db, user);
+        this.badOutputReasonManager = new BadOutputReasonManager(db, user);
     }
 
     _getQuery(paging) {
@@ -96,13 +100,20 @@ module.exports = class DailyOperationManager extends BaseManager {
             var getKanban = valid.kanbanId && ObjectId.isValid(valid.kanbanId) ? this.kanbanManager.getSingleByIdOrDefault(new ObjectId(valid.kanbanId)) : Promise.resolve(null);
             var getMachine = valid.machineId && ObjectId.isValid(valid.machineId) ? this.machineManager.getSingleByIdOrDefault(new ObjectId(valid.machineId)) : Promise.resolve(null);
             var getStep = valid.stepId && ObjectId.isValid(valid.stepId) ? this.stepManager.getSingleByIdOrDefault(new ObjectId(valid.stepId)) : Promise.resolve(null);
-            Promise.all([getKanban,getMachine,getStep, getDaily, thisDaily])
+            var getBadOutput = [];
+            var dataReasons = valid.badOutputReasons || [];
+            for(var a of dataReasons){
+                if(a.badOutputReasonId && ObjectId.isValid(a.badOutputReasonId))
+                    getBadOutput.push(this.badOutputReasonManager.getSingleByIdOrDefault(new ObjectId(a.badOutputReasonId)))
+            }
+            Promise.all([getKanban,getMachine,getStep, getDaily, thisDaily].concat(getBadOutput))
                 .then(results => {
                     var _kanban = results[0];
                     var _machine = results[1];
                     var _step = results[2];
                     var _dailyData = results[3];
                     var _daily = results[4];
+                    var _badOutput = results.slice(5, results.length) || [];
                     var now = new Date();
                     var tempInput;
                     var tempOutput;
@@ -370,11 +381,67 @@ module.exports = class DailyOperationManager extends BaseManager {
                         // }
 
                         var badOutput = valid.badOutput && valid.badOutput !== '' ? valid.badOutput : 0;
-                        var goodOutput = valid.goodOutput && valid.goodOutput !== '' ? valid.goodOutput : 0; 
+                        //var goodOutput = valid.goodOutput && valid.goodOutput !== '' ? valid.goodOutput : 0; 
 
                         if((!valid.goodOutput || valid.goodOutput === '') && (!valid.badOutput || valid.badOutput === '')){
                             errors["goodOutput"] = i18n.__("Harus diisi", i18n.__("DailyOperation.goodOutput._:Good Output")); //"nilai good output tidak boleh kosong";
                             errors["badOutput"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutput._:Bad Output")); //"nilai bad output tidak boleh kosong";
+                        }else if(badOutput > 0){
+                            if(!valid.action || valid.action === "")
+                                errors["action"] = i18n.__("Harus diisi", i18n.__("DailyOperation.action._:Action")); //"keterangan bad output tidak boleh kosong";
+                            if(!valid.badOutputReasons || valid.badOutputReasons.length < 1)
+                                errors["badOutputReasons"] = i18n.__("Harus diisi minimal 1 Keterangan", i18n.__("DailyOperation.badOutputReasons._:BadOutputReasons")); //"keterangan bad output tidak boleh kosong";
+                            else{
+                                var itemErrors = [];
+                                var precentageTotal = 0;
+                                var valueArr = valid.badOutputReasons.map(function (item) { return item.badOutputReasonId ? item.badOutputReasonId.toString() : "" });
+
+                                var itemDuplicateErrors = new Array(valueArr.length);
+                                valueArr.some(function (item, idx) {
+                                    var itemError = {};
+                                    if (valueArr.indexOf(item) != idx) {
+                                        itemError["badOutputReason"] = i18n.__("Ada data duplikasi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"Nama barang tidak boleh kosong";
+                                    }
+                                    if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                        itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                                        itemDuplicateErrors[idx] = itemError;
+                                    } else {
+                                        itemDuplicateErrors[idx] = itemError;
+                                    }
+                                });
+                                for(var a of valid.badOutputReasons){
+                                    var itemError = {};
+                                    var _index = valid.badOutputReasons.indexOf(a);
+                                    var precentage = !a.precentage || a.precentage === "" ? 0 : a.precentage;
+                                    precentageTotal += precentage;
+                                    if(precentage < 1)
+                                        itemError["precentage"] = i18n.__("Harus lebih dari 0", i18n.__("DailyOperation.badOutputReasons.precentage._:Precentage")); //"keterangan bad output tidak boleh kosong";
+                                    if(!a.description || a.description === "")
+                                        itemError["description"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.description._:Description")); //"keterangan bad output tidak boleh kosong";
+                                    function searchItem(params) {
+                                        return !params ? null : params.code === a.badOutputReason.code;
+                                    }
+                                    var dataBadOutput = _badOutput.find(searchItem);
+                                    if(!a.badOutputReasonId || a.badOutputReasonId === "")
+                                        itemError["badOutputReason"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"keterangan bad output tidak boleh kosong";
+                                    else if(!dataBadOutput)
+                                        itemError["badOutputReason"] = i18n.__("Data Keterangan Bad Output tidak ditemukan", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"keterangan bad output tidak boleh kosong";
+                                    else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0){
+                                        itemError["badOutputReason"] = itemDuplicateErrors[_index].badOutputReason;
+                                    }
+                                    itemErrors.push(itemError);
+                                }
+                                if(precentageTotal !== 100)
+                                    errors["badOutputReasons"] = i18n.__("Total persentase harus 100", i18n.__("DailyOperation.badOutputReasons._:BadOutputReasons")); //"keterangan bad output tidak boleh kosong";
+                                else{
+                                    for (var itemError of itemErrors) {
+                                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                            errors["badOutputReasons"] = itemErrors;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     
@@ -410,15 +477,38 @@ module.exports = class DailyOperationManager extends BaseManager {
                         delete valid.timeOutput;
                         delete valid.goodOutput;
                         delete valid.badOutput;
-                        delete valid.badOutputDescription;
+                        delete valid.action;
+                        delete valid.badOutputReasons;
                     }
                     if(valid.type == "output"){
                         valid.dateOutput = new Date(valid.dateOutput);
                         valid.timeOutput = valid.dateOutput.getTime();
+                        valid.code = tempInput.code;
                         delete valid.input;
                         delete valid.dateInput;
                         delete valid.timeInput;
-                        valid.code = tempInput.code;
+                        if(valid.badOutput > 0){
+                            var items = [];
+                            for(var a of valid.badOutputReasons){
+                                function searchItem(params) {
+                                    return !params ? null : params.code === a.badOutputReason.code;
+                                }
+                                var dataBadOutput = _badOutput.find(searchItem);
+                                var data = new BadOutputReasonItem({
+                                    precentage : a.precentage,
+                                    description : a.description,
+                                    badOutputReasonId : new ObjectId(dataBadOutput._id),
+                                    badOutputReason : dataBadOutput
+                                })
+                                data._createdDate = dateNow;
+                                data.stamp(this.user.username, "manager")
+                                items.push(data);
+                            }
+                            valid.badOutputReasons = items;
+                        }else{
+                            delete valid.action;
+                            delete valid.badOutputReasons;
+                        }
                     }
 
                     if (!valid.stamp)
@@ -440,11 +530,20 @@ module.exports = class DailyOperationManager extends BaseManager {
                         .then(kanban => {
                             if(daily.type === "output"){
                                 var tempKanban = kanban;
+
+                                var now = new Date();
+                                var ticks = ((now.getTime() * 10000) + 621355968000000000);
+                                
+                                tempKanban._stamp = ticks.toString(16);
+                                tempKanban._updatedBy = this.user.username;
+                                tempKanban._updatedDate = now;
+                                tempKanban._updateAgent = 'manager';
+
                                 tempKanban.currentQty = daily.goodOutput;
                                 tempKanban.currentStepIndex+=1;
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
-                                this.kanbanManager.update(tempKanban)
+                                this.kanbanCollection.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
                                     })
@@ -475,10 +574,19 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var tempKanban = kanban;
                                 var steps = tempKanban.instruction.steps.map(function (item) { return item.process });
                                 var idx = steps.indexOf(daily.step.process);
+
+                                var now = new Date();
+                                var ticks = ((now.getTime() * 10000) + 621355968000000000);
+                                
+                                tempKanban._stamp = ticks.toString(16);
+                                tempKanban._updatedBy = this.user.username;
+                                tempKanban._updatedDate = now;
+                                tempKanban._updateAgent = 'manager';
+
                                 tempKanban.currentQty = daily.goodOutput;
                                 tempKanban.goodOutput=daily.goodOutput;
                                 tempKanban.badOutput=daily.badOutput;
-                                this.kanbanManager.update(tempKanban)
+                                this.kanbanCollection.update(tempKanban)
                                     .then(kanbanId =>{
                                         resolve(id);
                                     })
@@ -546,7 +654,16 @@ module.exports = class DailyOperationManager extends BaseManager {
                                                     kanban.goodOutput=0;
                                                     kanban.badOutput=0;
                                                 }
-                                                this.kanbanManager.update(kanban)
+
+                                                var now = new Date();
+                                                var ticks = ((now.getTime() * 10000) + 621355968000000000);
+                                                
+                                                kanban._stamp = ticks.toString(16);
+                                                kanban._updatedBy = this.user.username;
+                                                kanban._updatedDate = now;
+                                                kanban._updateAgent = 'manager';
+                                                
+                                                this.kanbanCollection.update(kanban)
                                                     .then(kanbanId =>{
                                                         resolve(id);
                                                     })
@@ -618,21 +735,15 @@ module.exports = class DailyOperationManager extends BaseManager {
 
     getDailyOperationReport(query){
         return new Promise((resolve, reject) => {
-            // var dateTemp = new Date();
-            // var dateString = moment(dateTemp).format('YYYY-MM-DD');
-            // var dateNow = new Date(dateString);
-            // var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            var date = new Date();
+            var dateString = moment(date).format('YYYY-MM-DD');
+            var dateNow = new Date(dateString);
+            var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
             var date = {
-                "$or" : [{
-                    "dateInput" : {
-                        "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
-                        "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
-                }},{
-                    "dateOutput" : {
-                        "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
-                        "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
-                    }
-                }],
+                "dateInput" : {
+                    "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
+                    "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
+                },
                 "_deleted" : false
             };
             var kanbanQuery = {};
@@ -653,11 +764,12 @@ module.exports = class DailyOperationManager extends BaseManager {
                 "dateInput" : -1
             };
             var QueryInput = {"$and" : [date, machineQuery, kanbanQuery, {"type" : "input"}]};
-            var QueryOutput = {"$and" : [date, machineQuery, kanbanQuery, {"type" : "output"}]};
             this.collection
                 .find({ $query : QueryInput, $orderby : order })
                 .toArray()
                 .then(input => {
+                    var itemCode = input.map(function (item) { return item.code });
+                    var QueryOutput = {"$and" : [{"code" : {"$in" : itemCode }}, {"type" : "output"}, {"_deleted" : false}]};
                     this.collection
                         .find({ $query : QueryOutput, $orderby : order })
                         .toArray()
@@ -672,15 +784,50 @@ module.exports = class DailyOperationManager extends BaseManager {
                             var dataTemp = [];
                             for(var a of input){
                                 var tamp = a;
-                                for(var b of output){
-                                    if(tamp.code === b.code){
-                                        tamp.badOutput = b.badOutput;
-                                        tamp.goodOutput = b.goodOutput;
-                                        tamp.dateOutput = b.dateOutput;
-                                        tamp.timeOutput = b.timeOutput;
-                                        tamp.badOutputDescription = b.badOutputDescription;
+                                function searchItem(params) {
+                                    return !params ? null : params.code === a.code;
+                                }
+                                var dataOutput = output.find(searchItem);
+                                if(dataOutput){
+                                    tamp.badOutput = dataOutput.badOutput;
+                                    tamp.goodOutput = dataOutput.goodOutput;
+                                    tamp.dateOutput = dataOutput.dateOutput;
+                                    tamp.timeOutput = dataOutput.timeOutput;
+                                    if(tamp.hasOwnProperty("action"))
+                                        tamp.action = dataOutput.action ? dataOutput.action : "";
+                                    else
+                                        tamp["action"] = dataOutput.action ? dataOutput.action : "";
+                                    if(tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription")) 
+                                        tamp.badOutputDescription = dataOutput.badOutputDescription;
+                                    else if (!tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
+                                        tamp["badOutputDescription"] = dataOutput.badOutputDescription;
+                                    else if(tamp.hasOwnProperty("badOutputDescription") && !dataOutput.hasOwnProperty("badOutputDescription")){
+                                        var description = ""
+                                        if(dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0){
+                                            for(var a of dataOutput.badOutputReasons){
+                                                description += `${a.badOutputReason.reason}, `
+                                            }
+                                        }
+                                        tamp.badOutputDescription = description;
+                                    }else{
+                                        var description = ""
+                                        if(dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0){
+                                            for(var a of dataOutput.badOutputReasons){
+                                                description += `${a.badOutputReason.reason}, `
+                                            }
+                                        }
+                                        tamp["badOutputDescription"] = description;
                                     }
                                 }
+                                // for(var b of output){
+                                //     if(tamp.code === b.code){
+                                //         tamp.badOutput = b.badOutput;
+                                //         tamp.goodOutput = b.goodOutput;
+                                //         tamp.dateOutput = b.dateOutput;
+                                //         tamp.timeOutput = b.timeOutput;
+                                //         tamp.badOutputDescription = b.badOutputDescription;
+                                //     }
+                                // }
                                 dataTemp.push(tamp);
                             }
                             if(dataTemp.length > 0){
@@ -693,6 +840,62 @@ module.exports = class DailyOperationManager extends BaseManager {
                 });
         });
     }
+
+
+
+getDailyOperationBadReport(query){
+        return new Promise((resolve, reject) => {
+           
+            var date = {
+                "dateOutput" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                },
+                "_deleted" : false
+            };
+            // var kanbanQuery = {};
+            // if(query.kanban)
+            // {
+            //     kanbanQuery = {
+            //         "kanbanId" : new ObjectId(query.kanban)
+            //     };
+            // }
+            // var machineQuery = {};
+            //  if(query.machine)
+            //  {
+            //      machineQuery = {
+            //          "machineId" : new ObjectId(query.machine)
+            //      };
+            //  }
+           
+
+            //  var order = {
+            //     "kanban.productionOrder.orderNo" : 1
+            // };
+            // var QueryOutput = {"$and" : [date, machineQuery]};
+    //var Qmatch = {"$and" : [date, machineQuery]};
+        this.collection.aggregate([ 
+                {"$match" : date },       
+                             {
+                    "$group" : {
+                        //"_id" : {"orderNo" : "$kanban.productionOrder.orderNo"},
+                        //"_id" : {"machine" : "$machine.name", "orderNo" : "$kanban.productionOrder.orderNo"},
+                        "_id" : {"machine" : "$machine.name"},
+                        "badOutput" : {"$sum" : { $ifNull: [ "$badOutput", 0 ] }},
+                        "goodOutput" : {"$sum" : { $ifNull: [ "$goodOutput", 0 ] }}
+                     
+                    }
+                },
+                { $sort : { "_id.machine": 1} }
+             ])
+
+            .toArray()
+            .then(result => {
+                resolve(result);
+            });
+        });
+    }
+
 
     getDataDaily(query){
         return this._createIndexes()
@@ -734,6 +937,7 @@ module.exports = class DailyOperationManager extends BaseManager {
             item["BQ"] = daily.goodOutput ? daily.goodOutput : 0;
             item["BS"] = daily.badOutput ? daily.badOutput : 0;
             item["Keterangan BQ"] = daily.badOutputDescription ? daily.badOutputDescription : '';
+            item["Tindakan"] = daily.action ? daily.action : 0;
             
             xls.data.push(item);
         }
@@ -754,6 +958,7 @@ module.exports = class DailyOperationManager extends BaseManager {
         xls.options["BQ"] = "number";
         xls.options["BS"] = "number";
         xls.options["Keterangan BQ"] = "string";
+        xls.options["Tindakan"] = "string";
 
         if(query.dateFrom && query.dateTo){
             xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
@@ -776,8 +981,15 @@ module.exports = class DailyOperationManager extends BaseManager {
             key: {
                 _updatedDate: -1
             }
-        }
+        };
+        
+        var deletedIndex = {
+            name: `ix_${map.production.finishingPrinting.collection.DailyOperation}__deleted`,
+            key: {
+                _deleted: 1
+            }
+        };
 
-        return this.collection.createIndexes([dateIndex]);
+        return this.collection.createIndexes([dateIndex, deletedIndex]);
     }
 };

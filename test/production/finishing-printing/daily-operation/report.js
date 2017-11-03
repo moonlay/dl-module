@@ -7,6 +7,8 @@ var moment = require('moment');
 
 var DailyOperationManager = require("../../../../src/managers/production/finishing-printing/daily-operation-manager");
 var dailyOperationManager;
+var dateNow;
+var dateBefore;
 
 before('#00. connect db', function(done) {
     helper.getDb()
@@ -14,6 +16,8 @@ before('#00. connect db', function(done) {
             dailyOperationManager = new DailyOperationManager(db, {
                 username: 'dev'
             });
+            dateNow = new Date();
+            dateBefore = new Date();
             done();
         })
         .catch(e => {
@@ -22,10 +26,13 @@ before('#00. connect db', function(done) {
 });
 
 var dataDaily;
+var dataInput;
 it("#01. should success when create data", function(done) {
     dataUtil.getNewData("input")
             .then(data => {
-                data.dateInput = '2017-02-01';
+                dateBefore = dateBefore.setDate(dateBefore.getDate() - 10);
+                data.dateInput = moment(dateBefore).format('YYYY-MM-DD');
+                dataInput = data;
                 dailyOperationManager.create(data)
                     .then((item) => {
                         dailyOperationManager.getSingleByIdOrDefault(item)
@@ -114,7 +121,7 @@ it("#06. should success when get report with kanban parameter", function(done) {
 
 var dataReport;
 it("#07. should success when get report with date parameter", function(done) {
-    dailyOperationManager.getDailyOperationReport({"dateForm" : "2017-02-01", "dateTo" : "2017-02-01"})
+    dailyOperationManager.getDailyOperationReport({"dateFrom" : moment(dateBefore).format('YYYY-MM-DD'), "dateTo" : moment(dateNow).format('YYYY-MM-DD')})
         .then((item) => {
             dataReport = item;
             dataReport.data.should.instanceof(Array);
@@ -127,7 +134,7 @@ it("#07. should success when get report with date parameter", function(done) {
 });
 
 it("#08. should success when get data for Excel", function(done) {
-    dailyOperationManager.getXls(dataReport, {"dateForm" : "2017-02-01", "dateTo" : "2017-02-01"})
+    dailyOperationManager.getXls(dataReport, {"dateFrom" : moment(dateBefore).format('YYYY-MM-DD'), "dateTo" : moment(dateNow).format('YYYY-MM-DD')})
         .then((item) => {
             item.should.have.property('data');
             item.should.have.property('options');
@@ -139,12 +146,65 @@ it("#08. should success when get data for Excel", function(done) {
         });
 });
 
-it("#09. should success when destroy all unit test data", function(done) {
-    dailyOperationManager.destroy(dataDaily._id)
+var dailyOutput;
+it("#09. should success when create data output", function(done) {
+    dataUtil.getNewData("output")
+            .then(data => {
+                data.dateOutput = moment(dateNow).format('YYYY-MM-DD');
+                data.kanban = dataInput.kanban;
+                data.kanbanId = dataInput.kanbanId;
+                data.machine = dataInput.machine;
+                data.machineId = dataInput.machineId;
+                data.step = dataInput.step;
+                data.stepId = dataInput.stepId;
+                dailyOperationManager.create(data)
+                    .then((item) => {
+                        dailyOperationManager.getSingleByIdOrDefault(item)
+                            .then(daily => {
+                                validate(daily);
+                                dailyOutput = daily;
+                                done();
+                            })
+                            .catch((e) => {
+                                done(e);
+                            });
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            })
+            .catch((e) => {
+                done(e);
+            });
+});
+
+it("#10. should success when get report with date parameter", function(done) {
+    dailyOperationManager.getDailyOperationBadReport({"dateFrom" : moment(dateBefore).format('YYYY-MM-DD'), "dateTo" : moment(dateNow).format('YYYY-MM-DD')})
         .then((result) => {
-            result.should.be.Boolean();
-            result.should.equal(true);
+            result.should.instanceof(Array);
+            result.length.should.not.equal(0);
             done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+
+it("#11. should success when destroy all unit test data", function(done) {
+    dailyOperationManager.destroy(dailyOutput._id)
+        .then((result) => {
+            dailyOperationManager.destroy(dataDaily._id)
+                .then((result1) => {
+                result.should.be.Boolean();
+                result.should.equal(true);
+                result1.should.be.Boolean();
+                result1.should.equal(true);
+                done();
+            })
+            .catch((e) => {
+                done(e);
+            });
         })
         .catch((e) => {
             done(e);

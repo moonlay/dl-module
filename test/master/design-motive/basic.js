@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.DesignMotive,
     util: require("../../data-util/master/design-motive-data-util"),
     validator: require("dl-models").validator.master.designMotive,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

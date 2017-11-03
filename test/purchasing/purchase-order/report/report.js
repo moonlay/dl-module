@@ -169,3 +169,130 @@ it('#07. should success when get data report Per Category with date', function (
         });
 
 });
+
+it('#08. should success when get data report Per Supplier with date', function (done) {
+    purchaseOrderManager.getDataPOSupplier(startDate,endDate)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#09. should success when get data report Per Supplier', function (done) {
+    purchaseOrderManager.getDataPOSupplier()
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#10. should success when get data report History Price', function (done) {
+    purchaseOrderManager.getPrice()
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#11. should success when get data report History Price with date and product', function (done) {
+   var dateFrom= null;
+   var dateTo = null;
+   var productName ="SUSU";
+    purchaseOrderManager.getPrice(dateFrom, dateTo, productName)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#12. should success when get data report PO Per Unit,Kategori with date', function (done) {
+   var dateFrom = null;
+   var dateTo   = null;
+   var unitId   = null;
+   var categoryId   = null;
+    purchaseOrderManager.getDataPOIntMonitoring(dateFrom, dateTo, unitId, categoryId)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+});
+
+it('#13. should success when get data report Per Supplier Per Unit Per Kategori with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    var unit     = null;
+    var category = null;
+    var supplier = null;
+    purchaseOrderManager.getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#14. should success when get data report Per Supplier Per Unit Per Kategori', function (done) {
+    purchaseOrderManager.getDataTotalBeliSupplier()
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#15. should success when get data detail report Per Supplier with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    var supplierId = null;
+    purchaseOrderManager.getDataPOSplDetil(startdate, enddate, supplierId)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#16. should success when get data report PO Per Staff with date', function (done) {
+    purchaseOrderManager.getDataPOStaff(startDate,endDate)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#17. should success when get data detail report Per Staff with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    var staff = null;
+    purchaseOrderManager.getDataPODetailStaff(startdate, enddate, staff)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});

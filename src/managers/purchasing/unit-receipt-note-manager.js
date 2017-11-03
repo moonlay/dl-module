@@ -13,6 +13,8 @@ var SupplierManager = require('../master/supplier-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
+var StorageManager = require('../master/storage-manager');
+var TextileInventoryDocumentManager = require('../inventory/inventory-document-manager');
 
 module.exports = class UnitReceiptNoteManager extends BaseManager {
     constructor(db, user) {
@@ -22,6 +24,102 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
         this.unitManager = new UnitManager(db, user);
         this.supplierManager = new SupplierManager(db, user);
+        this.storageManager = new StorageManager(db, user);
+        this.textileInventoryDocumentManager = new TextileInventoryDocumentManager(db,user);
+        this.deliveryOrderFields = [
+            "no",
+            "refNo",
+            "date",
+            "supplierDoDate",
+            "supplierId",
+            "supplier._id",
+            "supplier.code",
+            "supplier.name",
+            "isPosted",
+            "isClosed",
+            "items.isClosed",
+            "items.purchaseOrderExternalId",
+            "items.purchaseOrderExternal.no",
+            "items.purchaseOrderExternal._id",
+            "items.fulfillments.purchaseOrderQuantity",
+            "items.fulfillments.purchaseOrderUom._id",
+            "items.fulfillments.purchaseOrderUom.unit",
+            "items.fulfillments.deliveredQuantity",
+            "items.fulfillments.realizationQuantity",
+            "items.fulfillments.productId",
+            "items.fulfillments.product._id",
+            "items.fulfillments.product.code",
+            "items.fulfillments.product.name",
+            "items.fulfillments.purchaseOrderId",
+            "items.fulfillments.purchaseOrder._id",
+            "items.fulfillments.purchaseOrder.purchaseOrderExternal.no",
+            "items.fulfillments.purchaseOrder.purchaseOrderExternal._id",
+            "items.fulfillments.purchaseOrder.unitId",
+            "items.fulfillments.purchaseOrder.unit._id",
+            "items.fulfillments.purchaseOrder.unit.code",
+            "items.fulfillments.purchaseOrder.unit.name",
+            "items.fulfillments.purchaseOrder.unit.divisionId",
+            "items.fulfillments.purchaseOrder.currency._id",
+            "items.fulfillments.purchaseOrder.currency.symbol",
+            "items.fulfillments.purchaseOrder.currency.code",
+            "items.fulfillments.purchaseOrder.currency.rate",
+            "items.fulfillments.purchaseOrder.currencyRate",
+            "items.fulfillments.purchaseOrder.categoryId",
+            "items.fulfillments.purchaseOrder.category._id",
+            "items.fulfillments.purchaseOrder.purchaseRequest.no",
+            "items.fulfillments.purchaseOrder.purchaseRequest._id",
+            "items.fulfillments.purchaseOrder.items.useIncomeTax",
+            "items.fulfillments.purchaseOrder.items.product._id",
+            "items.fulfillments.purchaseOrder.items.product.code",
+            "items.fulfillments.purchaseOrder.items.product.name",
+            "items.fulfillments.purchaseOrder.items.pricePerDealUnit"
+        ];
+        this.purchaseOrderFields=[
+            "_id",
+            "no",
+            "refNo",
+            "purchaseRequestId",
+            "purchaseRequest._id",
+            "purchaseRequest.no",
+            "purchaseOrderExternalId",
+            "purchaseOrderExternal._id",
+            "purchaseOrderExternal.no",
+            "supplierId",
+            "supplier.code",
+            "supplier.name",
+            "supplier.address",
+            "supplier.contact",
+            "supplier.PIC",
+            "supplier.import",
+            "supplier.NPWP",
+            "supplier.serialNumber",
+            "unitId",
+            "unit.code",
+            "unit.divisionId",
+            "unit.division",
+            "unit.name",
+            "categoryId",
+            "category.code",
+            "category.name",
+            "freightCostBy",
+            "currency.code",
+            "currency.symbol",
+            "currency.rate",
+            "currencyRate",
+            "paymentMethod",
+            "paymentDueDays",
+            "vat",
+            "useVat",
+            "vatRate",
+            "useIncomeTax",
+            "date",
+            "expectedDeliveryDate",
+            "actualDeliveryDate",
+            "isPosted",
+            "isClosed",
+            "remark",
+            "items"
+        ];
     }
 
     _validate(unitReceiptNote) {
@@ -40,7 +138,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         _deleted: false
                     }]
             });
-            var getDeliveryOrder = valid.deliveryOrder && ObjectId.isValid(valid.deliveryOrder._id) ? this.deliveryOrderManager.getSingleByIdOrDefault(valid.deliveryOrder._id) : Promise.resolve(null);
+            var getStorage= valid.storageId && ObjectId.isValid(valid.storageId) ? this.storageManager.getSingleByIdOrDefault(valid.storageId) : Promise.resolve(null);
+            var getDeliveryOrder = valid.deliveryOrder && ObjectId.isValid(valid.deliveryOrder._id) ? this.deliveryOrderManager.getSingleByIdOrDefault(valid.deliveryOrder._id,this.deliveryOrderFields) : Promise.resolve(null);
             var getUnit = valid.unit && ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(valid.unit._id) : Promise.resolve(null);
             var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
             var getPurchaseOrder = [];
@@ -54,38 +153,43 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             else
                 getPurchaseOrder = Promise.resolve(null);
 
-            Promise.all([getUnitReceiptNotePromise, getDeliveryOrder, getUnit, getSupplier].concat(getPurchaseOrder))
+            Promise.all([getUnitReceiptNotePromise, getDeliveryOrder, getUnit, getSupplier, getStorage].concat(getPurchaseOrder))
                 .then(results => {
                     var _unitReceiptNote = results[0];
                     var _deliveryOrder = results[1];
                     var _unit = results[2];
                     var _supplier = results[3];
-                    var _purchaseOrderList = results.slice(4, results.length) || [];
+                    var _storage = results[4];
+                    var _purchaseOrderList = results.slice(5, results.length) || [];
                     var now = new Date();
 
                     if (_unitReceiptNote)
                         errors["no"] = i18n.__("UnitReceiptNote.no.isExists:%s is already exists", i18n.__("UnitReceiptNote.no._:No")); //"No. bon unit sudah terdaftar";
 
-                    if (valid.unit) {
-                        if (!valid.unit._id)
-                            errors["unit"] = i18n.__("UnitReceiptNote.unit.isRequired:%s is required", i18n.__("UnitReceiptNote.unit._:Unit")); //"Unit tidak boleh kosong";
-                    }
-                    else if (!valid.unit)
+                    if (!valid.unit)
                         errors["unit"] = i18n.__("UnitReceiptNote.unit.isRequired:%s is required", i18n.__("UnitReceiptNote.unit._:Unit")); //"Unit tidak boleh kosong";
                     else if (!_unit)
                         errors["unit"] = i18n.__("UnitReceiptNote.unit.isRequired:%s is required", i18n.__("UnitReceiptNote.unit._:Unit")); //"Unit tidak boleh kosong";
 
-                    if (valid.supplier) {
-                        if (!valid.supplier._id)
-                            errors["supplier"] = i18n.__("UnitReceiptNote.supplier.isRequired:%s name is required", i18n.__("UnitReceiptNote.supplier._:Supplier")); //"Nama supplier tidak boleh kosong";
-                    }
-                    else if (!valid.supplier)
+                    if (!valid.supplier)
                         errors["supplier"] = i18n.__("UnitReceiptNote.supplier.isRequired:%s name is required", i18n.__("UnitReceiptNote.supplier._:Supplier")); //"Nama supplier tidak boleh kosong";
                     else if (!_supplier)
                         errors["supplier"] = i18n.__("UnitReceiptNote.supplier.isRequired:%s name  is required", i18n.__("UnitReceiptNote.supplier._:Supplier")); //"Nama supplier tidak boleh kosong";
 
                     if (!valid.date || valid.date == '')
                         errors["date"] = i18n.__("UnitReceiptNote.date.isRequired:%s is required", i18n.__("UnitReceiptNote.date._:Date")); //"Tanggal tidak boleh kosong";
+                    
+                    if(valid.isInventory){
+                        if(!_storage)
+                            errors["storage"] = i18n.__("UnitReceiptNote.storage.isRequired:%s name  is required", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama storage tidak boleh kosong";
+                        else{
+                            if(_storage.unit){
+                                if(_storage.unit.code != valid.unit.code){
+                                    errors["storage"]= i18n.__("UnitReceiptNote.storage.shouldNot:%s unit name is not matched with unit name", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama unit storage tidak sama dengan nama unit";
+                                }
+                            }
+                        }
+                    }
 
                     if (valid.deliveryOrder) {
                         if (!valid.deliveryOrder._id)
@@ -138,6 +242,18 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     valid.deliveryOrderId = new ObjectId(_deliveryOrder._id);
                     valid.deliveryOrder = _deliveryOrder;
                     valid.date = new Date(valid.date);
+                    if(valid.isInventory){
+                        if(_storage){
+                            valid.storageId=new ObjectId(_storage._id);
+                            valid.storageName= _storage.name;
+                            valid.storageCode=_storage.code;
+                        }
+                    }
+                    else{
+                        valid.storageId=null;
+                        valid.storageName="";
+                        valid.storageCode="";
+                    }
 
                     for (var item of valid.items) {
                         for (var _po of _purchaseOrderList) {
@@ -230,18 +346,189 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return this.getSingleById(id)
             .then((unitReceiptNote) => this.updatePurchaseOrder(unitReceiptNote))
             .then((unitReceiptNote) => this.updateDeliveryOrder(unitReceiptNote))
-            .then(() => {
-                return this.syncItems(id);
+            .then((unitReceiptNote) => {
+                if(ObjectId.isValid(unitReceiptNote.storageId)){
+                    return this.storageManager.getSingleByIdOrDefault(unitReceiptNote.storageId)
+                    .then(storage=>{
+                        var temp = {};
+                        var index=0;
+                        var obj=null;
+                        for(var i=0; i < unitReceiptNote.items.length; i++) {
+                            index=i;
+                            obj={
+                                productId:unitReceiptNote.items[i].product._id.toString(),
+                                quantity:unitReceiptNote.items[i].deliveredQuantity,
+                                uomId:unitReceiptNote.items[i].deliveredUom._id,
+                                remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
+                            };
+                            //obj=unitReceiptNote.items[i];
+                            var dup = unitReceiptNote.items.find((test, idx) => 
+                            obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                            if(!dup) {
+                                temp[obj.productId+obj.uomId.toString()] = obj;
+                            } else {
+                                if(!temp[obj.productId+obj.uomId.toString()]) {
+                                    temp[obj.productId+obj.uomId.toString()] = obj;
+                                } else {
+                                    temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                    temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
+                                }
+                            }
+                        }
+                        var result = [];
+                        for (var prop in temp)
+                            result.push(temp[prop]);
+                        // var items=[];
+                        // for(var a of unitReceiptNote.items){
+                        //     var item={
+                        //         productId:a.product._id.toString(),
+                        //         quantity:a.deliveredQuantity,
+                        //         uomId:a.deliveredUom._id,
+                        //         remark:a.remark
+                        //     };
+                        //     items.push(item);
+                        // }
+                        var unit=unitReceiptNote.unit.name;
+                        var doc={
+                            date:unitReceiptNote.date,
+                            referenceNo: unitReceiptNote.no,
+                            referenceType:"Bon Terima Unit " + unit,
+                            type:"IN",
+                            storageId:storage._id,
+                            remark:unitReceiptNote.remark,
+                            items:result
+                        }
+                    
+                        return this.textileInventoryDocumentManager.create(doc)
+                        .then( ()=> { 
+                            return this.syncItems(id);
+                        });
+                    })
+                }
+                else{
+                    return this.syncItems(id);
+                }
             })
+    }
+
+    _beforeUpdate(data) {
+        return this.getSingleById(data._id)
+            .then((unitReceiptNote) => this.updatePurchaseOrderDeleteUnitReceiptNote(unitReceiptNote))
+            .then((unitReceiptNote) => this.updateDeliveryOrderDeleteUnitReceiptNote(unitReceiptNote))
+            .then(unitReceiptNote => {
+                if (ObjectId.isValid(unitReceiptNote.storageId)) {
+                    return this.storageManager.getSingleByIdOrDefault(unitReceiptNote.storageId)
+                        .then(storage => {
+                            var temp = {};
+                            var index = 0;
+                            var obj = null;
+                            for (var i = 0; i < unitReceiptNote.items.length; i++) {
+                                index = i;
+                                obj = {
+                                    productId: unitReceiptNote.items[i].product._id.toString(),
+                                    quantity: unitReceiptNote.items[i].deliveredQuantity,
+                                    uomId: unitReceiptNote.items[i].deliveredUom._id,
+                                    remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
+                                };
+                                //obj=unitReceiptNote.items[i];
+                                var dup = unitReceiptNote.items.find((test, idx) =>
+                                    obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                                if (!dup) {
+                                    temp[obj.productId + obj.uomId.toString()] = obj;
+                                } else {
+                                    if (!temp[obj.productId + obj.uomId.toString()]) {
+                                        temp[obj.productId + obj.uomId.toString()] = obj;
+                                    } else {
+                                        temp[obj.productId + obj.uomId.toString()].remark += "; " + obj.remark;
+                                        temp[obj.productId + obj.uomId.toString()].quantity += obj.quantity;
+                                    }
+                                }
+                            }
+                            var items = [];
+                            for (var prop in temp)
+                                items.push(temp[prop]);
+
+                            var doc = {
+                                date: unitReceiptNote.date,
+                                referenceNo: unitReceiptNote.no,
+                                referenceType: "Bon Terima Unit Garment",
+                                type: "OUT",
+                                storageId: storage._id,
+                                remark: unitReceiptNote.remark,
+                                items: items
+                            }
+
+                            return this.textileInventoryDocumentManager.create(doc)
+                                .then((id) => {
+                                    return Promise.resolve(data);
+                                });
+                        });
+                }
+                else {
+                    return Promise.resolve(data);
+                }
+            });
     }
 
     _afterUpdate(id) {
         return this.getSingleById(id)
             .then((unitReceiptNote) => this.updatePurchaseOrderUpdateUnitReceiptNote(unitReceiptNote))
             .then((unitReceiptNote) => this.updateDeliveryOrderUpdateUnitReceiptNote(unitReceiptNote))
-            .then(() => {
-                return this.syncItems(id);
+            .then((unitReceiptNote) => {
+                if(ObjectId.isValid(unitReceiptNote.storageId)){
+                    return this.storageManager.getSingleByIdOrDefault(unitReceiptNote.storageId)
+                    .then(storage=>{
+                        var temp = {};
+                        var index=0;
+                        var obj=null;
+                        for(var i=0; i < unitReceiptNote.items.length; i++) {
+                            index=i;
+                            obj={
+                                productId:unitReceiptNote.items[i].product._id.toString(),
+                                quantity:unitReceiptNote.items[i].deliveredQuantity,
+                                uomId:unitReceiptNote.items[i].deliveredUom._id,
+                                remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
+                            };
+                            //obj=unitReceiptNote.items[i];
+                            var dup = unitReceiptNote.items.find((test, idx) => 
+                            obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                            if(!dup) {
+                                temp[obj.productId+obj.uomId.toString()] = obj;
+                            } else {
+                                if(!temp[obj.productId+obj.uomId.toString()]) {
+                                    temp[obj.productId+obj.uomId.toString()] = obj;
+                                } else {
+                                    temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                    temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
+                                }
+                            }
+                        }
+                        var items = [];
+                        for (var prop in temp)
+                            items.push(temp[prop]);
+
+                        var unit=unitReceiptNote.unit.name;
+                        var doc={
+                            date:unitReceiptNote.date,
+                            referenceNo: unitReceiptNote.no,
+                            referenceType:"Bon Terima Unit "+ unit,
+                            type:"IN",
+                            storageId:storage._id,
+                            remark:unitReceiptNote.remark,
+                            items:items
+                        }
+                    
+                        return this.textileInventoryDocumentManager.create(doc)
+                        .then( ()=> { 
+                            return this.syncItems(id);
+                        });
+                    });
+                }
+                else{
+                    return this.syncItems(id);
+                }
             })
+                
     }
 
     updatePurchaseOrder(unitReceiptNote) {
@@ -641,9 +928,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return this.getSingleByQuery(query)
             .then((unitReceiptNote) => {
                 var getPoInternals = unitReceiptNote.items.map((item) => {
-                    return this.purchaseOrderManager.getSingleById(item.purchaseOrderId)
+                    return this.purchaseOrderManager.getSingleById(item.purchaseOrderId,this.purchaseOrderFields)
                 })
-                return this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId)
+                return this.deliveryOrderManager.getSingleById(unitReceiptNote.deliveryOrderId,this.deliveryOrderFields)
                     .then((deliveryOrder) => {
                         return Promise.all(getPoInternals)
                             .then((purchaseOrderInternals) => {
@@ -676,19 +963,71 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         return this.getSingleByQuery(query)
                             .then((unitReceiptNote) => this.updatePurchaseOrderDeleteUnitReceiptNote(unitReceiptNote))
                             .then((unitReceiptNote) => this.updateDeliveryOrderDeleteUnitReceiptNote(unitReceiptNote))
-                            .then(() => {
-                                return this.syncItems(id);
-                            })
-                    })
+                            .then((unitReceiptNote) => {
+                                if(ObjectId.isValid(unitReceiptNote.storageId)){
+                                    return this.storageManager.getSingleByIdOrDefault(unitReceiptNote.storageId)
+                                    .then(storage=>{
+                                        var temp = {};
+                                        var index=0;
+                                        var obj=null;
+                                        for(var i=0; i < unitReceiptNote.items.length; i++) {
+                                            index=i;
+                                            obj={
+                                                productId:unitReceiptNote.items[i].product._id.toString(),
+                                                quantity:unitReceiptNote.items[i].deliveredQuantity,
+                                                uomId:unitReceiptNote.items[i].deliveredUom._id,
+                                                remark: unitReceiptNote.items[i].deliveredQuantity + " " + unitReceiptNote.items[i].remark
+                                            };
+                                            //obj=unitReceiptNote.items[i];
+                                            var dup = unitReceiptNote.items.find((test, idx) => 
+                                            obj.productId.toString() === test.product._id.toString() && obj.uomId.toString() === test.deliveredUom._id.toString() && index != idx);
+                                            if(!dup) {
+                                                temp[obj.productId+obj.uomId.toString()] = obj;
+                                            } else {
+                                                if(!temp[obj.productId+obj.uomId.toString()]) {
+                                                    temp[obj.productId+obj.uomId.toString()] = obj;
+                                                } else {
+                                                    temp[obj.productId+obj.uomId.toString()].remark += "; " + obj.remark ;
+                                                    temp[obj.productId+obj.uomId.toString()].quantity += obj.quantity;
+                                                }
+                                            }
+                                        }
+                                        var items = [];
+                                        for (var prop in temp)
+                                            items.push(temp[prop]);
+
+                                        var unit=unitReceiptNote.unit.name;    
+                                        var doc={
+                                            date:unitReceiptNote.date,
+                                            referenceNo: unitReceiptNote.no,
+                                            referenceType:"Bon Terima Unit "+ unit,
+                                            type:"OUT",
+                                            storageId:storage._id,
+                                            remark:unitReceiptNote.remark,
+                                            items:items
+                                        }
+                                    
+                                        return this.textileInventoryDocumentManager.create(doc)
+                                        .then( ()=> { 
+                                            return this.syncItems(id);
+                                        });
+                                    });
+                                }
+                                else{
+                                    return this.syncItems(id);
+                                }
+                            });
+                            
+                    });
             });
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
             this.getSingleById(id)
                 .then(unitReceiptNote => {
                     var getDefinition = require('../../pdf/definitions/unit-receipt-note');
-                    var definition = getDefinition(unitReceiptNote);
+                    var definition = getDefinition(unitReceiptNote, offset);
                     var generatePdf = require('../../pdf/pdf-generator');
                     generatePdf(definition)
                         .then(binary => {
@@ -705,7 +1044,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    getUnitReceiptNotes(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, createdBy) {
+    getUnitReceiptNotes(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, offset,  createdBy) {
         return new Promise((resolve, reject) => {
             var query = Object.assign({});
 
@@ -734,10 +1073,15 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 Object.assign(query, supplierId);
             }
             if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "") {
+                var dateFrom = new Date(_dateFrom);
+                var dateTo = new Date(_dateTo);
+                dateFrom.setHours(dateFrom.getHours() - offset);
+                dateTo.setHours(dateTo.getHours() - offset);
+
                 var date = {
                     date: {
-                        $gte: new Date(_dateFrom),
-                        $lte: new Date(_dateTo)
+                        $gte: dateFrom,
+                        $lte: dateTo
                     }
                 };
                 Object.assign(query, date);
@@ -760,6 +1104,71 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 });
         });
     }
+
+    getUnitReceiptWithoutSpb(_unitId, staffName, _dateFrom, _dateTo, offset) 
+    {
+        return new Promise((resolve, reject) => 
+        {
+            var query = Object.assign({});                      
+            var deleted = { _deleted: false };
+            var bayar = {isPaid: false};
+
+            if (_unitId !== "undefined" && _unitId !== "") {
+                var unitId = { unitId: new ObjectId(_unitId) };
+                Object.assign(query, unitId);
+            }
+
+            if (staffName !== undefined && staffName !== "") {
+                        Object.assign(query, {
+                            _createdBy: staffName
+                        });
+                    }
+                                
+            if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "")
+            {
+                var dateFrom = new Date(_dateFrom);
+                var dateTo = new Date(_dateTo);
+                dateFrom.setHours(dateFrom.getHours() - offset);
+                dateTo.setHours(dateTo.getHours() - offset);
+
+                var date = {
+                            date: {
+                                $gte: dateFrom,
+                                $lte: dateTo
+                            }
+                           };
+                            Object.assign(query, date);
+            }
+            
+            Object.assign(query, deleted);
+            Object.assign(query, bayar);
+
+            var doColl = map.purchasing.collection.DeliveryOrder; 
+            
+            this.collection.aggregate(
+                {$match: query},
+                {
+                    $lookup : {
+                                from: doColl, 
+                                localField: "deliveryOrder.no",
+                                foreignField: "no",
+                                as: "jeneng"
+                              }
+                    
+                },{
+                    $unwind:"$jeneng"
+                }
+                ,{
+                    $project:{
+                                "nama": "$jeneng._createdBy"
+      
+                             }
+                  }
+                    ).toArray().then(product=>{
+                    resolve(product);
+                });        
+            });
+        }
 
     _createIndexes() {
         var dateIndex = {

@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.Currency,
     util: require("../../data-util/master/currency-data-util"),
     validator: require("dl-models").validator.master.currency,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");
