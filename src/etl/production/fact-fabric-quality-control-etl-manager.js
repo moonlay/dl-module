@@ -103,7 +103,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
             description: MIGRATION_LOG_DESCRIPTION,
             status: "Successful"
         }).sort({
-            finishedDate: -1
+            finish: -1
         }).limit(1).toArray()
     }
 
