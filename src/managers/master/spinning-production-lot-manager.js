@@ -80,9 +80,9 @@ module.exports = class SpinningProductionLotManager extends BaseManager {
         });
 
         //var getProduct = ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(new ObjectId(valid.productId)) : Promise.resolve(null);
-        var getMachine = ObjectId.isValid(valid.machine._id) ? this.machineManager.getSingleByIdOrDefault(new ObjectId(valid.machine._id)) : Promise.resolve(null);
-        var getUnit = ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(new ObjectId(valid.unit._id)) : Promise.resolve(null);
-        var getSpinningYarn = ObjectId.isValid(valid.spinningYarn._id) ? this.spinningYarnManager.getSingleByIdOrDefault(new ObjectId(valid.spinningYarn._id)) : Promise.resolve(null);
+        var getMachine =valid.machine && ObjectId.isValid(valid.machine._id) ? this.machineManager.getSingleByIdOrDefault(new ObjectId(valid.machine._id)) : Promise.resolve(null);
+        var getUnit =valid.unit && ObjectId.isValid(valid.unit._id) ? this.unitManager.getSingleByIdOrDefault(new ObjectId(valid.unit._id)) : Promise.resolve(null);
+        var getSpinningYarn =valid.spinningYarn && ObjectId.isValid(valid.spinningYarn._id) ? this.spinningYarnManager.getSingleByIdOrDefault(new ObjectId(valid.spinningYarn._id)) : Promise.resolve(null);
 
         return Promise.all([getProductionLotPromise, getSpinningYarn, getMachine, getUnit])
             .then(results => {

@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.SpinningProductionLot,
     util: require("../../data-util/master/spinning-production-lot-data-util"),
     validator: require("dl-models").validator.master.spinningProductionLot,
-    createDuplicate: true,
-    keys: ["unitId","lot","spinningYarnId","machineId"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");
