@@ -98,7 +98,7 @@ module.exports = class SpinningProductionLotManager extends BaseManager {
                     errors["lot"] = i18n.__("SpinningProductionLot.lot.isExists:%s is exists", i18n.__("SpinningProductionLot.lot._:Lot"));
                 }
 
-                if(_machine.unit){
+                if(_machine){
                     if(_machine.unit.code != _unit.code){
                         errors["machineId"] = i18n.__("SpinningProductionLot.machine.shouldNot:%s unit is not matched with lot unit ", i18n.__("SpinningProductionLot.machine._:Machine"));
                         errors["unitId"] = i18n.__("SpinningProductionLot.unit.shouldNot:%s is not matched with machine unit", i18n.__("SpinningProductionLot.unit._:Unit"));
