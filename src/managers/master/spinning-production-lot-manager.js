@@ -72,9 +72,9 @@ module.exports = class SpinningProductionLotManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            spinningYarnId: new ObjectId(valid.spinningYarn._id),
-            machineId: new ObjectId(valid.machine._id),
-            unitId: new ObjectId(valid.unit._id),
+            spinningYarnId: valid.spinningYarn && ObjectId.isValid(valid.spinningYarn._id) ? new ObjectId(valid.spinningYarn._id) : new ObjectId(),
+            machineId: valid.machine && ObjectId.isValid(valid.machine._id) ? new ObjectId(valid.machine._id): new ObjectId(),
+            unitId: valid.unit && ObjectId.isValid(valid.unit._id) ? new ObjectId(valid.unit._id) : new ObjectId(),
             lot: valid.lot,
             _deleted: false
         });
