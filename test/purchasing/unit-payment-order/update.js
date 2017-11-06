@@ -89,22 +89,3 @@ it('#03. should success when update data (add item)', function (done) {
             }
         })
 });
-
-it('#04. should success when get data detail report Surat Perintah Bayar', function (done) {
-        var unitId =null;
-        var PRNo =null;
-        var supplierId = null;
-        var dateFrom = null;
-        var dateTo = null;
-        var staffName = null;
-        var noSpb = null;
-      
-    unitPaymentOrderManager.getDataMonitorSpb(unitId,PRNo,noSpb,supplierId,dateFrom,dateTo,staffName)
-    .then(po => {
-        po.should.instanceof(Array);
-        done();
-    }).catch(e => {
-            done(e);
-        });
-
-});

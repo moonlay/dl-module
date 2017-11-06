@@ -26,8 +26,7 @@ module.exports = class MigrationLogManager extends BaseManager {
         return this.collection.aggregate(
             [
                 { "$match": { "$and": [{ "status": "Successful" }, { "description": new RegExp(info.keyword, "i") }] } },
-                { "$group": { "_id": { "description": "$description" }, "latestDate": { "$max": "$start" } } },
-                { "$sort": { latestDate: 1 }}
+                { "$group": { "_id": { "description": "$description" }, "latestDate": { "$max": "$start" } } }
             ]
         ).toArray()
 
