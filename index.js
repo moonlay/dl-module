@@ -59,7 +59,7 @@ module.exports = {
             InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
             InventoryMovementManager: require("./src/managers/inventory/inventory-movement-manager")
         },
-        garmentInventory :{
+        garmentInventory: {
 
             GarmentInventoryDocumentManager: require("./src/managers/inventory-garment/garment-inventory-document-manager"),
             GarmentInventorySummaryManager: require("./src/managers/inventory-garment/garment-inventory-summary-manager"),
@@ -116,6 +116,9 @@ module.exports = {
             DealTrackingDealManager: require('./src/managers/sales/deal-tracking-deal-manager'),
             DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager')
         },
+        garmentMasterPlan: {
+            WeeklyPlan: require("./src/managers/garment-master-plan/weekly-plan-manager")
+        }
     },
     test: {
         data: {
@@ -185,12 +188,12 @@ module.exports = {
                 // unitPaymentPriceCorrectionNot: require("./test/data-util/garment-purchasing/unit-payment-price-correction-note-data-util"),
                 // unitPaymentQuantityCorrectionNote: require("./test/data-util/garment-purchasing/unit-payment-quantity-correction-note-data-util"),
             },
-             garmentInventory :{
+            garmentInventory: {
 
-            garmentInventoryDocument: require("./test/data-util/inventory-garment/garment-inventory-document-data-util"),
-            garmentInventorySummary: require("./test/data-util/inventory-garment/garment-inventory-summary-data-util"),
-            garmentInventoryMovement: require("./test/data-util/inventory-garment/garment-inventory-movement-data-util")
-        },
+                garmentInventoryDocument: require("./test/data-util/inventory-garment/garment-inventory-document-data-util"),
+                garmentInventorySummary: require("./test/data-util/inventory-garment/garment-inventory-summary-data-util"),
+                garmentInventoryMovement: require("./test/data-util/inventory-garment/garment-inventory-movement-data-util")
+            },
             inventory: {
                 finishingPrinting: {
                     packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util"),
@@ -220,6 +223,9 @@ module.exports = {
                 dealTrackingStage: require('./test/data-util/sales/deal-tracking-stage-data-util'),
                 dealTrackingDeal: require('./test/data-util/sales/deal-tracking-deal-data-util'),
                 dealTrackingActivity: require('./test/data-util/sales/deal-tracking-activity-data-util')
+            },
+            garmentMasterPlan: {
+                weeklyPlan: require("./test/data-util/garment-master-plan/weekly-plan-data-util")
             }
         }
     },
