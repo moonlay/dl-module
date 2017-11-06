@@ -103,7 +103,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
             description: MIGRATION_LOG_DESCRIPTION,
             status: "Successful"
         }).sort({
-            finishedDate: -1
+            finish: -1
         }).limit(1).toArray()
     }
 
@@ -140,7 +140,7 @@ module.exports = class FabricQualityControlEtlManager extends BaseManager {
                     return {
                         qcCode: qualityControl.code && qualityControl.code !== '' ? `'${qualityControl.code.replace(/'/g, '"')}'` : null,
                         qcpointSystem: qualityControl.pointSystem >= 0 && qualityControl.pointSystem !== '' && qualityControl.pointSystem ? `'${qualityControl.pointSystem}'` : null,
-                        dateIm: qualityControl.dateIm ? `'${moment(qualityControl.dateIm).add(7, "hours").format("L")}'` : null,
+                        dateIm: qualityControl.dateIm ? `'${moment(qualityControl.dateIm).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                         shiftIm: qualityControl.shiftIm && qualityControl.shiftIm !== '' ? `'${qualityControl.shiftIm.replace(/'/g, '"')}'` : null,
                         group: qualityControl.group && qualityControl.group !== '' ? `'${qualityControl.group.replace(/'/g, '"')}'` : null,
                         operatorIm: qualityControl.operatorIm && qualityControl.operatorIm !== '' ? `'${qualityControl.operatorIm.replace(/'/g, '"')}'` : null,

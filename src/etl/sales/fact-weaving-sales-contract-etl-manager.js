@@ -100,7 +100,7 @@ module.exports = class FactWeavingSalesContractEtlManager extends BaseManager {
 
             return {
                 salesContractNo: item.salesContractNo ? `'${item.salesContractNo}'` : null,
-                salesContractDate: item._createdDate ? `'${moment(item._createdDate).format("L")}'` : null,
+                salesContractDate: item._createdDate ? `'${moment(item._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                 buyer: item.buyer ? `'${item.buyer.name.replace(/'/g, '"')}'` : null,
                 buyerType: item.buyer ? `'${item.buyer.type.replace(/'/g, '"')}'` : null,
                 orderType: item.orderType ? `'${item.orderType.name}'` : null,
