@@ -329,6 +329,7 @@ if (PRNo!=="") {
             "division.name": "$division.name",
             "namaUnit": "$items.unitReceiptNote.unit.name",
             "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
+        
          }
       }      ,
                       { $sort : { "date" : 1 } }
