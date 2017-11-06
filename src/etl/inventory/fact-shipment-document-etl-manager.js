@@ -101,7 +101,7 @@ module.exports = class FPShipmentDocumentEtlManager extends BaseManager {
                         buyerName: shipment.buyerName ? `'${shipment.buyerName}'` : null,
                         buyerType: shipment.buyerType ? `'${shipment.buyerType}'` : null,
                         shipmentCode: shipment.code ? `'${shipment.code}'` : null,
-                        deliveryDate: shipment.deliveryDate ? `'${moment(shipment.deliveryDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
+                        deliveryDate: shipment.deliveryDate ? `'${moment(shipment.deliveryDate).subtract(7, "hours").format("L")}'` : null,
                         isVoid: `'${shipment.isVoid}'`,
                         designCode: detail.designCode ? `'${detail.designCode}'` : null,
                         designNumber: detail.designNumber ? `'${detail.designNumber}'` : null,

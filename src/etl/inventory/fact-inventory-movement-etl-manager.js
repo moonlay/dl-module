@@ -91,7 +91,7 @@ module.exports = class FactInventoryMovementManager extends BaseManager {
 
     transform(data) {
         var result = data.map((item) => {
-            var date = moment(item.date).add(7, "hours").format("YYYY-MM-DD");
+            var date = moment(item.date).format("YYYY-MM-DD");
 
             return {
                 storageCode: item.storageCode ? `'${item.storageCode.replace(/'/g, '"')}'` : null,
