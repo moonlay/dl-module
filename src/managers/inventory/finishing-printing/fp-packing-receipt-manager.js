@@ -157,14 +157,16 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
             })
     }
 
-    _beforeInsert(data) {
-        data.code = generateCode();
-        return Promise.resolve(data);
-    }
+    // _beforeInsert(data) {
+    //     data.code = generateCode();
+    //     return Promise.resolve(data);
+    // }
 
     _validate(packingReceipt) {
         var errors = {};
         var valid = packingReceipt;
+
+        valid.code = generateCode();
 
         var getDbPackingReceipt = this.collection.singleOrDefault({
             _id: new ObjectId(valid._id)
@@ -322,6 +324,35 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                                     .then((inventoryDocumentId) => Promise.resolve(packingReceiptId))
                             })
                     })
+            })
+    }
+
+    _afterUpdate(id) {
+        return this.getSingleById(id)
+            .then((packingReceipt) => {
+                var packingReceiptId = id;
+                if (packingReceipt.isVoid) {
+                    return this.packingManager.getSingleById(packingReceipt.packingId)
+                    .then((packing) => {
+                        packing.accepted = false;
+                        return this.packingManager.update(packing)
+                            .then((id) => {
+                                var inventoryDocument = {
+                                    referenceNo: `RFNO-${packingReceipt.code}`,
+                                    referenceType: `Penerimaan Packing ${packingReceipt.storage ? packingReceipt.storage.name : null}`,
+                                    type: "OUT",
+                                    remark: "VOID PACKING RECEIPT",
+                                    date: new Date(),
+                                    storageId: packingReceipt.storageId,
+                                    items: packingReceipt.items
+                                }
+                                return this.inventoryDocumentManager.create(inventoryDocument)
+                                    .then((inventoryDocumentId) => Promise.resolve(packingReceiptId))
+                            })
+                    })
+                } else {
+                    return Promise.resolve(packingReceiptId)
+                }
             })
     }
 

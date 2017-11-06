@@ -65,7 +65,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/CURRENCY', './master/currency');
     test('@MASTER/DIVISION', './master/division');
     test('@MASTER/LAMP-STANDARD', './master/lamp-standard');
-    test('@MASTER/LOT-MACHINE', './master/lot-machine');
+    test('@MASTER/SPINNING-PRODUCTION-LOT', './master/spinning-production-lot');
     test('@MASTER/MACHINE', './master/machine');
     test('@MASTER/PRODUCT', './master/product');
     test('@MASTER/GARMENT-PRODUCT', './master/garment-product');
@@ -100,6 +100,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/BAD OUTPUT REASON', './master/bad-output-reason');
     test('@MASTER/FINISHING PRINTING DURATION ESTIMATION', './master/fp-duration-estimation');
     test('@MASTER/DEAL TRACKING REASON', './master/deal-tracking-reason');
+    test('@MASTER/SPINNING YARN', './master/spinning-yarn');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
@@ -161,4 +162,8 @@ describe('#dl-module', function (done) {
     test('@GARMENTINVENTORY/GARMENT-INVENTORY-SUMMARY', './inventory-garment/garment-inventory-summary');
     test('@GARMENTINVENTORY/GARMENT-INVENTORY-MOVEMENT', './inventory-garment/garment-inventory-movement');
     test('@GARMENTINVENTORY/GARMENT-INVENTORY-DOCUMENT', './inventory-garment/garment-inventory-document');
+
+    //Garment Master Plan
+    test('@GARMENT MASTER PLAN/WEEKLY-PLAN', './garment-master-plan/weekly-plan');
+
 });

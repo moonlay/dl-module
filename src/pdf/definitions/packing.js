@@ -156,7 +156,8 @@ module.exports = function (packing, offset) {
 
     var tbody = items.map(function (item, index) {
 
-        if (item.grade.toLowerCase() == "a" || item.grade.toLowerCase() == "b" || item.grade.toLowerCase() == "c") {
+        // if (item.grade.toLowerCase() == "a" || item.grade.toLowerCase() == "b" || item.grade.toLowerCase() == "c") {
+        if (item.grade.toLowerCase() == "a") {                
             gradeItem = "BQ";
         } else {
             gradeItem = "BS";

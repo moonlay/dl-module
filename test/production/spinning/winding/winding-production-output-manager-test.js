@@ -9,7 +9,7 @@ var WindingProductionOutputManager = require("../../../../src/managers/productio
 var UnitManager = require("../../../../src/managers/master/unit-manager");
 var MachineManager = require("../../../../src/managers/master/machine-manager");
 var ProductManager = require("../../../../src/managers/master/product-manager");
-var LotMachineManager = require("../../../../src/managers/master/lot-machine-manager");
+//var LotMachineManager = require("../../../../src/managers/master/lot-machine-manager");
 var ThreadSpecificationManager = require("../../../../src/managers/master/thread-specification-manager");
 var UomUtil = require('../../../data-util/master/uom-data-util');
 var UnitUtil = require('../../../data-util/master/unit-data-util');
@@ -17,11 +17,11 @@ var instanceManager = null;
 var instanceManagerUnit = null;
 var instanceManagerMachine = null;
 var instanceManagerProduct = null;
-var instanceManagerLotMachine = null;
+//var instanceManagerLotMachine = null;
 var instanceManagerThreadSpecification = null;
 var Machine = require('dl-models').master.Machine;
 var ThreadSpecification = require('dl-models').master.ThreadSpecification;
-var LotMachine = require('dl-models').master.LotMachine;
+//var LotMachine = require('dl-models').master.LotMachine;
 var Product = require('dl-models').master.Product;
 
 function getData() {
@@ -75,20 +75,20 @@ function getDataProduct(){
         });
 }
 
-function getLotMachineData() {
-    var LotMachine = require('dl-models').master.LotMachine;
-    var lotMachine = new LotMachine();
+// function getLotMachineData() {
+//     var LotMachine = require('dl-models').master.LotMachine;
+//     var lotMachine = new LotMachine();
     
-    var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+//     var now = new Date();
+//     var stamp = now / 1000 | 0;
+//     var code = stamp.toString(36);
     
-    lotMachine.rpm = 100;
-    lotMachine.ne = 30;
-    lotMachine.constant = 15;
-    lotMachine.lot=`lot [${code}]`;
-    return lotMachine;
-}
+//     lotMachine.rpm = 100;
+//     lotMachine.ne = 30;
+//     lotMachine.constant = 15;
+//     lotMachine.lot=`lot [${code}]`;
+//     return lotMachine;
+// }
 
 function getThreadSpecificationData() {
     var ThreadSpecification = require('dl-models').master.ThreadSpecification;
@@ -138,9 +138,9 @@ before('#00. connect db', function (done) {
             instanceManagerMachine = new MachineManager(db, {
                 username: 'unit-test'
             });
-            instanceManagerLotMachine = new LotMachineManager(db, {
-                username: 'unit-test'
-            });
+            // instanceManagerLotMachine = new LotMachineManager(db, {
+            //     username: 'unit-test'
+            // });
             instanceManagerThreadSpecification= new ThreadSpecificationManager(db, {
                 username: 'unit-test'
             });
@@ -247,37 +247,37 @@ it(`#06. should success when get created data Machine with id`, function (done) 
         })
 });
 
-var lotMachineId;
-it('#07. should success when create new data Lot Machine', function (done) {
-    var data =getLotMachineData();
-    data.productId = product._id;
-    data.product = product;
-    data.machineId = machine._id;
-    data.machine = machine;
-        instanceManagerLotMachine.create(data)
-            .then(id => {
-                id.should.be.Object();
-                lotMachineId = id;
-                done();
-            })
-            .catch(e => {
-            done(e);
-            })
-});
+// var lotMachineId;
+// it('#07. should success when create new data Lot Machine', function (done) {
+//     var data =getLotMachineData();
+//     data.productId = product._id;
+//     data.product = product;
+//     data.machineId = machine._id;
+//     data.machine = machine;
+//         instanceManagerLotMachine.create(data)
+//             .then(id => {
+//                 id.should.be.Object();
+//                 lotMachineId = id;
+//                 done();
+//             })
+//             .catch(e => {
+//             done(e);
+//             })
+// });
 
-var lotMachine;
-it(`#08. should success when get created data Lot Machine with id`, function (done) {
-    instanceManagerLotMachine.getSingleByQuery({ _id: lotMachineId })
-        .then(data => {
-            validatorMaster.lotMachine(data);
-            data.should.instanceof(Object);
-            lotMachine = data;
-            done();
-        })
-        .catch(e => {
-            done(e);
-        })
-});
+// var lotMachine;
+// it(`#08. should success when get created data Lot Machine with id`, function (done) {
+//     instanceManagerLotMachine.getSingleByQuery({ _id: lotMachineId })
+//         .then(data => {
+//             validatorMaster.lotMachine(data);
+//             data.should.instanceof(Object);
+//             lotMachine = data;
+//             done();
+//         })
+//         .catch(e => {
+//             done(e);
+//         })
+// });
 
 var threadSpecificationId;
 it('#09. should success when create new data threadSpecification', function (done) {
@@ -330,8 +330,8 @@ it('#12. should success when create new data', function (done) {
             data.unit = unit;
             data.machine = machine;
             data.machineId = machine._id;
-            data.lotMachine = lotMachine;
-            data.lotMachineId = lotMachine._id;
+            //data.lotMachine = lotMachine;
+            //data.lotMachineId = lotMachine._id;
             data.threadSpecification = threadSpecification;
             data.threadSpecificationId = threadSpecification._id;
             data.product = product;
