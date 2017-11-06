@@ -139,8 +139,10 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 var _packingReceipts = results[3];
                 var _products = results[4];
 
-                if (_dbShipmentDocument)
+                if (_dbShipmentDocument) {
                     valid.code = _dbShipmentDocument.code; // prevent code changes.
+                    valid.isVoid = true; //basic unit test update validation
+                }
 
                 if (_duplicateShipmentDocument)
                     errors["code"] = i18n.__("ShipmentDocument.code.isExist: %s is exist", i18n.__("ShipmentDocument.code._:Code"));
@@ -176,7 +178,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                         //find duplicate production order
                         var duplicateProductionOrder = valid.details.find((validDetail, index) => (validDetail.productionOrderId.toString() === detail.productionOrderId.toString()) && index !== detailIndex);
                         detailIndex++;
-                        if (!detail.productionOrderId || detail.productionOrderId !== "") {
+                        if (!detail.productionOrderId || detail.productionOrderId === "") {
                             detailError["productionOrderId"] = i18n.__("ShipmentDocument.details.productionOrderId.isRequired:%s is required", i18n.__("ShipmentDocument.details.productionOrderId._:Nomor Order")); //"Nomor Order harus diisi"; 
                         } else if (duplicateProductionOrder) {
                             detailError["productionOrderId"] = i18n.__("ShipmentDocument.details.productionOrderId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.productionOrderId._:Nomor Order"));
@@ -192,7 +194,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                 //find duplicate packing receipt
                                 var duplicatePackingReceipt = detail.items.find((detailItem, index) => (detailItem.packingReceiptId.toString() === item.packingReceiptId.toString()) && index !== itemIndex);
                                 itemIndex++;
-                                if (!item.packingReceiptId || item.packingReceiptId !== "") {
+                                if (!item.packingReceiptId || item.packingReceiptId === "") {
                                     itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing")); //"Packing Receipt harus diisi"; 
                                 } else if (duplicatePackingReceipt) {
                                     itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing"));
