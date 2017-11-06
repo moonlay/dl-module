@@ -161,4 +161,8 @@ describe('#dl-module', function (done) {
     test('@GARMENTINVENTORY/GARMENT-INVENTORY-SUMMARY', './inventory-garment/garment-inventory-summary');
     test('@GARMENTINVENTORY/GARMENT-INVENTORY-MOVEMENT', './inventory-garment/garment-inventory-movement');
     test('@GARMENTINVENTORY/GARMENT-INVENTORY-DOCUMENT', './inventory-garment/garment-inventory-document');
+
+    //Garment Master Plan
+    test('@GARMENT MASTER PLAN/WEEKLY-PLAN', './garment-master-plan/weekly-plan');
+
 });
