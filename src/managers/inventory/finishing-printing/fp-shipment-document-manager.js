@@ -118,7 +118,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             detail.items = detail.items || [];
             for (var item of detail.items) {
                 item.packingReceiptItems = item.packingReceiptItems || [];
-                packingReceiptIds.push(item.packingReceiptId);
+                packingReceiptIds.push(new ObjectId(item.packingReceiptId));
                 for (var product of item.packingReceiptItems) {
                     products.push(product.productCode)
                 }
@@ -176,7 +176,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                         //find duplicate production order
                         var duplicateProductionOrder = valid.details.find((validDetail, index) => (validDetail.productionOrderId.toString() === detail.productionOrderId.toString()) && index !== detailIndex);
                         detailIndex++;
-                        if (!detail.productionOrderId || !detail.productionOrderId === "") {
+                        if (!detail.productionOrderId || detail.productionOrderId !== "") {
                             detailError["productionOrderId"] = i18n.__("ShipmentDocument.details.productionOrderId.isRequired:%s is required", i18n.__("ShipmentDocument.details.productionOrderId._:Nomor Order")); //"Nomor Order harus diisi"; 
                         } else if (duplicateProductionOrder) {
                             detailError["productionOrderId"] = i18n.__("ShipmentDocument.details.productionOrderId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.productionOrderId._:Nomor Order"));
@@ -192,7 +192,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                 //find duplicate packing receipt
                                 var duplicatePackingReceipt = detail.items.find((detailItem, index) => (detailItem.packingReceiptId.toString() === item.packingReceiptId.toString()) && index !== itemIndex);
                                 itemIndex++;
-                                if (!item.packingReceiptId || !item.packingReceiptId === "") {
+                                if (!item.packingReceiptId || item.packingReceiptId !== "") {
                                     itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing")); //"Packing Receipt harus diisi"; 
                                 } else if (duplicatePackingReceipt) {
                                     itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing"));
@@ -218,11 +218,11 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
                                     for (var packingReceiptItemError of packingReceiptItemErrors) {
                                         if (Object.getOwnPropertyNames(packingReceiptItemError).length > 0) {
-                                            itemError.packingReceipts = packingReceiptItemErrors;
+                                            itemError.packingReceiptItems = packingReceiptItemErrors;
                                             break;
                                         }
                                     }
-                                } else {
+                                } else if (item.packingReceiptItems.length <= 0) {
                                     itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptItems.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptItems._:Item Penerimaan Packing"));
                                 }
 
@@ -302,6 +302,16 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
                 for (var detail of fpShipmentDocument.details) {
                     for (var item of detail.items) {
+                        var items = [];
+                        for (var packingReceiptItem of item.packingReceiptItems) {
+                            var _item = {};
+                            _item.productId = packingReceiptItem.productId;
+                            _item.quantity = packingReceiptItem.quantity;
+                            _item.uomId = packingReceiptItem.uomId;
+
+                            items.push(_item);
+                        }
+
                         var data = {
                             code: generateCode(detail.productionOrderId.toString()),
                             date: fpShipmentDocument._createdDate,
@@ -310,7 +320,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                             type: fpShipmentDocument.storageType,
                             storageId: fpShipmentDocument.storageId,
                             storageName: fpShipmentDocument.storageName,
-                            items: item.packingReceiptItems
+                            items: items
                         }
                         shipmentItems.push(item);
                         insertItems.push(this.inventoryDocumentManager.create(data));
@@ -319,7 +329,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 return Promise.all(insertItems)
                     .then((result) => {
                         var packingReceiptIds = shipmentItems.map((shipmentItem) => {
-                            return shipmentItem.packingReceiptId;
+                            return new ObjectId(shipmentItem.packingReceiptId);
                         });
                         var query = {
                             "_deleted": false,
@@ -338,10 +348,10 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                     for (var j = 0; j < packingReceipts[i].items.length; j++) {
                                         var shipmentPackingReceiptItem = shipmentPackingReceipt.packingReceiptItems.find((packingReceiptItem) => packingReceiptItem.productName.toString() === packingReceipts[i].items[j].product.toString());
 
-                                        if (shipmentPackingReceipt) {
+                                        if (shipmentPackingReceipt && shipmentPackingReceiptItem) {
                                             packingReceipts[i].items[j].availableQuantity -= shipmentPackingReceiptItem.quantity;
                                         }
-                                        if (shipmentPackingReceipt && packingReceipts[i].items[j].availableQuantity === 0) {
+                                        if (shipmentPackingReceipt && shipmentPackingReceiptItem && packingReceipts[i].items[j].availableQuantity === 0) {
                                             packingReceipts[i].items[j].isDelivered = true;
                                         }
 
@@ -403,10 +413,10 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                     for (var j = 0; j < packingReceipts[i].items.length; j++) {
                                         var shipmentPackingReceiptItem = shipmentPackingReceipt.packingReceiptItems.find((packingReceiptItem) => packingReceiptItem.productName.toString() === packingReceipts[i].items[j].product.toString());
 
-                                        if (shipmentPackingReceipt) {
+                                        if (shipmentPackingReceipt && shipmentPackingReceiptItem) {
                                             packingReceipts[i].items[j].availableQuantity += shipmentPackingReceiptItem.quantity;
                                         }
-                                        if (shipmentPackingReceipt && packingReceipts[i].items[j].availableQuantity !== 0) {
+                                        if (shipmentPackingReceipt && shipmentPackingReceiptItem && packingReceipts[i].items[j].availableQuantity !== 0) {
                                             packingReceipts[i].items[j].isDelivered = false;
                                         }
 
