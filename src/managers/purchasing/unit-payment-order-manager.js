@@ -329,9 +329,7 @@ if (PRNo!=="") {
             "division.name": "$division.name",
             "namaUnit": "$items.unitReceiptNote.unit.name",
             "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
-            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date",
-            "items.unitReceiptNote.no":"$items.unitReceiptNote.no",
-            "items.unitReceiptNote.date":"$items.unitReceiptNote.date",
+        
          }
       }      ,
                       { $sort : { "date" : 1 } }
@@ -344,6 +342,8 @@ if (PRNo!=="") {
                 });
         });
     }
+
+
     _getQuery(paging) {
         var deletedFilter = {
             _deleted: false
