@@ -307,8 +307,8 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
                             return {
                                 purchaseRequestNo: purchaseRequest.no ? `'${purchaseRequest.no.replace(/'/g, '"')}'` : null, //Nomor PR
-                                purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(purchaseRequest._createdDate).add(7, "h").format('L')}'` : null, //Tanggal PR
-                                expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(purchaseRequest.expectedDeliveryDate).add(7, "h").format('L')}'` : null, //Tanggal Diminta Datang
+                                purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(purchaseRequest._createdDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal PR
+                                expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(purchaseRequest.expectedDeliveryDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal Diminta Datang
                                 unitCode: (purchaseRequest.unit && purchaseRequest.unit.code) ? `'${purchaseRequest.unit.code.replace(/'/g, '"')}'` : null, //Kode Unit
                                 unitName: (purchaseRequest.unit && purchaseRequest.unit.name) ? `'${purchaseRequest.unit.name.replace(/'/g, '"')}'` : null, //Nama Unit
                                 divisionCode: (purchaseRequest.unit && purchaseRequest.unit.division && purchaseRequest.unit.division.code) ? `'${purchaseRequest.unit.division.code.replace(/'/g, '"')}'` : null, //Kode Divisi
@@ -325,7 +325,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                                 deletedPR: `'${purchaseRequest._deleted}'`,
 
                                 purchaseOrderNo: purchaseOrder.no ? `'${purchaseOrder.no}'` : null, //Nomor PO Internal
-                                purchaseOrderDate: purchaseOrder._createdDate ? `'${moment(purchaseOrder._createdDate).add(7, "h").format('L')}'` : null, //Tanggal PO Internal
+                                purchaseOrderDate: purchaseOrder._createdDate ? `'${moment(purchaseOrder._createdDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal PO Internal
                                 purchaseOrderExternalDays: `${poExtDays}`, //Jumlah Selisih Hari PO Internal-PO Eksternal
                                 purchaseOrderExternalDaysRange: poExtDays !== null ? `'${this.getRangeWeek(poExtDays)}'` : null, //Selisih Hari PO Internal-PO Eksternal
                                 purchasingStaffName: purchaseOrder._createdBy ? `'${purchaseOrder._createdBy}'` : null, //Nama Staff Pembelian
@@ -333,7 +333,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                                 deletedPO: `'${purchaseOrder._deleted}'`,
 
                                 purchaseOrderExternalNo: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal.no) ? `'${poItem.purchaseOrderExternal.no}'` : null, // Nomor PO Eksternal
-                                purchaseOrderExternalDate: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal._createdDate) ? `'${moment(poItem.purchaseOrderExternal._createdDate).add(7, "h").format('L')}'` : null, //Tanggal PO Eksternal
+                                purchaseOrderExternalDate: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal._createdDate) ? `'${moment(poItem.purchaseOrderExternal._createdDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal PO Eksternal
                                 deliveryOrderDays: null, //Jumlah Selisih Hari DO-PO Eksternal
                                 deliveryOrderDaysRange: null, //Selisih Hari DO-PO Eksternal
                                 supplierCode: (poItem.purchaseOrderExternal && poItem.supplier && poItem.supplier.code !== "") ? `'${poItem.supplier.code}'` : null, //Kode Supplier
@@ -346,29 +346,29 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                                 uom: (poItem.defaultUom && poItem.defaultUom.unit) ? `'${poItem.defaultUom.unit}'` : null, //UOM
                                 pricePerUnit: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal.no) ? `${poItem.pricePerDealUnit}` : null, //Harga Per Unit
                                 totalPrice: (poItem.currency.rate && poItem.pricePerDealUnit && poItem.dealQuantity) ? `${poItem.dealQuantity * poItem.pricePerDealUnit * poItem.currency.rate}` : null, //Total Harga
-                                expectedDeliveryDate: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal.expectedDeliveryDate) ? `'${moment(poItem.purchaseOrderExternal.expectedDeliveryDate).add(7, "h").format('L')}'` : null, //Tanggal Rencana Kedatangan
+                                expectedDeliveryDate: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal.expectedDeliveryDate) ? `'${moment(poItem.purchaseOrderExternal.expectedDeliveryDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal Rencana Kedatangan
                                 prNoAtPoExt: purchaseRequest.no ? `'${purchaseRequest.no}'` : null, //Nomor PR di PO Eksternal
 
                                 deliveryOrderNo: poFulfillment.deliveryOrderNo ? `'${poFulfillment.deliveryOrderNo}'` : null, //Nomor Surat Jalan (Delivery Order)
-                                deliveryOrderDate: poFulfillment.deliveryOrderDate ? `'${moment(poFulfillment.deliveryOrderDate).add(7, "h").format('L')}'` : null, //Tanggal Surat Jalan
+                                deliveryOrderDate: poFulfillment.deliveryOrderDate ? `'${moment(poFulfillment.deliveryOrderDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal Surat Jalan
                                 unitReceiptNoteDays: poFulfillment.unitReceiptNoteDate ? `${urnDays}` : null, //Jumlah Selisih Hari URN-DO
                                 unitReceiptNoteDaysRange: poFulfillment.unitReceiptNoteDate ? `'${this.getRangeWeek(urnDays)}'` : null, //Selisih Hari URN-DO
                                 status: poFulfillment.deliveryOrderDate ? `'${this.getStatus(poItem.purchaseOrderExternal.expectedDeliveryDate, lastDeliveredDate)}'` : null, //Status Ketepatan Waktu
                                 prNoAtDo: purchaseRequest.no ? `'${purchaseRequest.no}'` : null, //Nomor PR di DO
 
                                 unitReceiptNoteNo: poFulfillment.unitReceiptNoteNo ? `'${poFulfillment.unitReceiptNoteNo}'` : null, //Nomor Bon Terima Unit (Unit Receipt Note)
-                                unitReceiptNoteDate: poFulfillment.unitReceiptNoteDate ? `'${moment(poFulfillment.unitReceiptNoteDate).add(7, "h").format('L')}'` : null, //Tanggal URN
+                                unitReceiptNoteDate: poFulfillment.unitReceiptNoteDate ? `'${moment(poFulfillment.unitReceiptNoteDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal URN
                                 unitPaymentOrderDays: poFulfillment.interNoteDate ? `${upoDays}` : null, //Jumlah Selisih Hari UPO-URN
                                 unitPaymentOrderDaysRange: poFulfillment.interNoteDate ? `'${this.getRangeWeek(upoDays)}'` : null, //Selisih Hari UPO-URN
 
                                 unitPaymentOrderNo: poFulfillment.interNoteNo ? `'${poFulfillment.interNoteNo}'` : null, //Nomor Surat Perintah Bayar
-                                unitPaymentOrderDate: poFulfillment.interNoteDate ? `'${moment(poFulfillment.interNoteDate).add(7, "h").format('L')}'` : null, //Tanggal SPB
+                                unitPaymentOrderDate: poFulfillment.interNoteDate ? `'${moment(poFulfillment.interNoteDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal SPB
                                 purchaseOrderDays: poFulfillment.interNoteDate ? `${poDays}` : null, //Jumlah Selisih Hari UPO-PO Internal
                                 purchaseOrderDaysRange: poFulfillment.interNoteDate ? `'${this.getRangeMonth(poDays)}'` : null, //Selisih Hari UPO-PO Internal
                                 invoicePrice: poFulfillment.interNotePrice ? `'${poFulfillment.interNotePrice}'` : null, //Harga Sesuai Invoice
                                 unitPaymentOrderPrice: poFulfillment.interNotePrice ? `'${poFulfillment.interNotePrice}'` : null,
                                 unitPaymentOrderQuantity: poFulfillment.interNoteQuantity ? `'${poFulfillment.interNoteQuantity}'` : null,
-                                unitPaymentOrderDueDate: poFulfillment.interNoteDueDate ? `'${moment(poFulfillment.interNoteDueDate).add(7, "h").format('L')}'` : null,
+                                unitPaymentOrderDueDate: poFulfillment.interNoteDueDate ? `'${moment(poFulfillment.interNoteDueDate).add(7, "h").format('YYYY-MM-DD')}'` : null,
                                 unitReceiptNoteDeliveredQuantity: poFulfillment.unitReceiptNoteDeliveredQuantity ? `'${poFulfillment.unitReceiptNoteDeliveredQuantity}'` : null
                             };
                         });
@@ -378,8 +378,8 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                         var poIntDays = purchaseOrder._createdDate ? moment(moment(purchaseOrder._createdDate).add(7, "h").startOf("day")).diff(moment(moment(purchaseRequest._createdDate).add(7, "h").startOf("day")), "days") : null;
                         return {
                             purchaseRequestNo: purchaseRequest.no ? `'${purchaseRequest.no.replace(/'/g, '"')}'` : null, //Nomor PR
-                            purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(purchaseRequest._createdDate).add(7, "h").format('L')}'` : null, //Tanggal PR
-                            expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(purchaseRequest.expectedDeliveryDate).add(7, "h").format('L')}'` : null, //Tanggal Diminta Datang
+                            purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(purchaseRequest._createdDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal PR
+                            expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(purchaseRequest.expectedDeliveryDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal Diminta Datang
                             unitCode: (purchaseRequest.unit && purchaseRequest.unit.code) ? `'${purchaseRequest.unit.code.replace(/'/g, '"')}'` : null, //Kode Unit
                             unitName: (purchaseRequest.unit && purchaseRequest.unit.name) ? `'${purchaseRequest.unit.name.replace(/'/g, '"')}'` : null, //Nama Unit
                             divisionCode: (purchaseRequest.unit && purchaseRequest.unit.division && purchaseRequest.unit.division.code) ? `'${purchaseRequest.unit.division.code.replace(/'/g, '"')}'` : null, //Kode Divisi
@@ -396,7 +396,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                             deletedPR: `'${purchaseRequest._deleted}'`,
 
                             purchaseOrderNo: purchaseOrder.no ? `'${purchaseOrder.no}'` : null, //Nomor PO Internal
-                            purchaseOrderDate: purchaseOrder._createdDate ? `'${moment(purchaseOrder._createdDate).add(7, "h").format('L')}'` : null, //Tanggal PO Internal
+                            purchaseOrderDate: purchaseOrder._createdDate ? `'${moment(purchaseOrder._createdDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal PO Internal
                             purchaseOrderExternalDays: `${poExtDays}`, //Jumlah Selisih Hari PO Internal-PO Eksternal
                             purchaseOrderExternalDaysRange: poExtDays !== null ? `'${this.getRangeWeek(poExtDays)}'` : null, //Selisih Hari PO Internal-PO Eksternal
                             purchasingStaffName: purchaseOrder._createdBy ? `'${purchaseOrder._createdBy}'` : null, //Nama Staff Pembelian
@@ -404,7 +404,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                             deletedPO: `'${purchaseOrder._deleted}'`,
 
                             purchaseOrderExternalNo: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal.no) ? `'${poItem.purchaseOrderExternal.no}'` : null, // Nomor PO Eksternal
-                            purchaseOrderExternalDate: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal._createdDate) ? `'${moment(poItem.purchaseOrderExternal._createdDate).add(7, "h").format('L')}'` : null, //Tanggal PO Eksternal
+                            purchaseOrderExternalDate: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal._createdDate) ? `'${moment(poItem.purchaseOrderExternal._createdDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal PO Eksternal
                             deliveryOrderDays: null, //Jumlah Selisih Hari DO-PO Eksternal
                             deliveryOrderDaysRange: null, //Selisih Hari DO-PO Eksternal
                             supplierCode: (poItem.purchaseOrderExternal && poItem.supplier && poItem.supplier.code !== "") ? `'${poItem.supplier.code}'` : null, //Kode Supplier
@@ -417,7 +417,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                             uom: (poItem.defaultUom && poItem.defaultUom.unit) ? `'${poItem.defaultUom.unit}'` : null, //UOM
                             pricePerUnit: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal.no) ? `${poItem.pricePerDealUnit}` : null, //Harga Per Unit
                             totalPrice: (poItem.currency.rate && poItem.pricePerDealUnit && poItem.dealQuantity) ? `${poItem.dealQuantity * poItem.pricePerDealUnit * poItem.currency.rate}` : null, //Total Harga
-                            expectedDeliveryDate: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal.expectedDeliveryDate) ? `'${moment(poItem.purchaseOrderExternal.expectedDeliveryDate).add(7, "h").format('L')}'` : null, //Tanggal Rencana Kedatangan
+                            expectedDeliveryDate: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal.expectedDeliveryDate) ? `'${moment(poItem.purchaseOrderExternal.expectedDeliveryDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal Rencana Kedatangan
                             prNoAtPoExt: purchaseRequest.no ? `'${purchaseRequest.no}'` : null, //Nomor PR di PO Eksternal
 
                             deliveryOrderNo: null, //Nomor Surat Jalan (Delivery Order)
@@ -451,8 +451,8 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
                     return {
                         purchaseRequestNo: purchaseRequest.no ? `'${purchaseRequest.no.replace(/'/g, '"')}'` : null, //Nomor PR
-                        purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(purchaseRequest._createdDate).add(7, "h").format('L')}'` : null, //Tanggal PR
-                        expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(purchaseRequest.expectedDeliveryDate).add(7, "h").format('L')}'` : null, //Tanggal Diminta Datang
+                        purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(purchaseRequest._createdDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal PR
+                        expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(purchaseRequest.expectedDeliveryDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal Diminta Datang
                         unitCode: (purchaseRequest.unit && purchaseRequest.unit.code) ? `'${purchaseRequest.unit.code.replace(/'/g, '"')}'` : null, //Kode Unit
                         unitName: (purchaseRequest.unit && purchaseRequest.unit.name) ? `'${purchaseRequest.unit.name.replace(/'/g, '"')}'` : null, //Nama Unit
                         divisionCode: (purchaseRequest.unit && purchaseRequest.unit.division && purchaseRequest.unit.division.code) ? `'${purchaseRequest.unit.division.code.replace(/'/g, '"')}'` : null, //Kode Divisi
