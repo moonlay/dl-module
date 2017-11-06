@@ -923,11 +923,13 @@ getDailyOperationBadReport(query){
             var item = {};
             item["No"] = index;
             item["No Order"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.orderNo : '';
+            item["No Kereta"] = daily.kanban ? daily.kanban.cart.cartNumber : '';
+            item["Reproses"] = daily.kanban ? daily.kanban.isReprocess : '';
             item["Mesin"] = daily.machine ? daily.machine.name : '';
+            item["Step Proses"] = daily.machine ? daily.step.process : '';
             item["Material"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.material.name : '';
             item["Warna"] = daily.kanban.selectedProductionOrderDetail ? daily.kanban.selectedProductionOrderDetail.colorType ? `${daily.kanban.selectedProductionOrderDetail.colorType.name} ${daily.kanban.selectedProductionOrderDetail.colorRequest}` : daily.kanban.selectedProductionOrderDetail.colorRequest : '';
             item["Lebar Kain (inch)"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.materialWidth : '';
-            item["No Kereta"] = daily.kanban ? daily.kanban.cart.cartNumber : '';
             item["Jenis Proses"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.processType.name : '';
             item["Tgl Input"] = daily.dateInput ? moment(new Date(daily.dateInput)).format(dateFormat) : '';
             item["Jam Input"] = daily.timeInput ? moment(daily.timeInput).format('HH:mm') : '';
@@ -944,11 +946,13 @@ getDailyOperationBadReport(query){
 
         xls.options["No"] = "number";
         xls.options["No Order"] = "string";
+        xls.options["No Kereta"] = "string";
+        xls.options["Reproses"] = "string";
         xls.options["Mesin"] = "string";
+        xls.options["Step Proses"] = "string";
         xls.options["Material"] = "string";
         xls.options["Warna"] = "string";
         xls.options["Lebar Kain (inch)"] = "string";
-        xls.options["No Kereta"] = "string";
         xls.options["Jenis Proses"] = "string";
         xls.options["Tgl Input"] = "string";
         xls.options["Jam Input"] = "string";
