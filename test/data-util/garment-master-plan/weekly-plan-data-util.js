@@ -1,34 +1,26 @@
 "use strict";
 var helper = require("../../helper");
-var unit = require("../master/unit-data-util");
 var WeeklyPlanManager = require("../../../src/managers/garment-master-plan/weekly-plan-manager");
 var moment = require("moment");
 
 class WeeklyPlanDataUtil {
     getNewData() {
-        return Promise.all([unit.getTestData()])
-            .then((results) => {
-                var unit = results[0];
-
-                var items = [];
-                for (var i = 1; i <= 52; i++) {
-                    var startDate =  moment().year(2018).day("Monday").week(i).toDate();
-                    var endDate =  moment().year(2018).day("Friday").week(i).toDate();
-                    items.push({
-                        weekNumber: i,
-                        startDate: startDate,
-                        endDate: endDate,
-                        month: startDate.getMonth()
-                    })
-                }
-                var data = {
-                    unitId: unit._id,
-                    unit: unit,
-                    year: new Date().getFullYear()+1,
-                    items: items
-                };
-                return Promise.resolve(data);
-            });
+        var items = [];
+        for (var i = 1; i <= 52; i++) {
+            var startDate = moment().year(2018).day("Monday").week(i).toDate();
+            var endDate = moment().year(2018).day("Friday").week(i).toDate();
+            items.push({
+                weekNumber: i,
+                startDate: startDate,
+                endDate: endDate,
+                month: startDate.getMonth()
+            })
+        }
+        var data = {
+            year: new Date().getFullYear() + 1,
+            items: items
+        };
+        return Promise.resolve(data);
     }
 
     getNewTestData() {
