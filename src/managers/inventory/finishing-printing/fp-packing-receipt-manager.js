@@ -166,7 +166,7 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
         var errors = {};
         var valid = packingReceipt;
 
-        valid.code = generateCode();
+        valid.code = valid.code ? valid.code : generateCode();
 
         var getDbPackingReceipt = this.collection.singleOrDefault({
             _id: new ObjectId(valid._id)
@@ -286,13 +286,13 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
 
     _createIndexes() {
         var dateIndex = {
-            name: `ix_${Map.inventory.finishingPrinting.collection.PackingReceipt}__updatedDate`,
+            name: `ix_${Map.inventory.finishingPrinting.collection.FPPackingReceipt}__updatedDate`,
             key: {
                 _updatedDate: -1
             }
         }
         var codeIndex = {
-            name: `ix_${Map.inventory.finishingPrinting.collection.PackingReceipt}_code`,
+            name: `ix_${Map.inventory.finishingPrinting.collection.FPPackingReceipt}_code`,
             key: {
                 code: 1
             },
@@ -333,23 +333,23 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                 var packingReceiptId = id;
                 if (packingReceipt.isVoid) {
                     return this.packingManager.getSingleById(packingReceipt.packingId)
-                    .then((packing) => {
-                        packing.accepted = false;
-                        return this.packingManager.update(packing)
-                            .then((id) => {
-                                var inventoryDocument = {
-                                    referenceNo: `RFNO-${packingReceipt.code}`,
-                                    referenceType: `Penerimaan Packing ${packingReceipt.storage ? packingReceipt.storage.name : null}`,
-                                    type: "OUT",
-                                    remark: "VOID PACKING RECEIPT",
-                                    date: new Date(),
-                                    storageId: packingReceipt.storageId,
-                                    items: packingReceipt.items
-                                }
-                                return this.inventoryDocumentManager.create(inventoryDocument)
-                                    .then((inventoryDocumentId) => Promise.resolve(packingReceiptId))
-                            })
-                    })
+                        .then((packing) => {
+                            packing.accepted = false;
+                            return this.packingManager.update(packing)
+                                .then((id) => {
+                                    var inventoryDocument = {
+                                        referenceNo: `RFNO-${packingReceipt.code}`,
+                                        referenceType: `Penerimaan Packing ${packingReceipt.storage ? packingReceipt.storage.name : null}`,
+                                        type: "OUT",
+                                        remark: "VOID PACKING RECEIPT",
+                                        date: new Date(),
+                                        storageId: packingReceipt.storageId,
+                                        items: packingReceipt.items
+                                    }
+                                    return this.inventoryDocumentManager.create(inventoryDocument)
+                                        .then((inventoryDocumentId) => Promise.resolve(packingReceiptId))
+                                })
+                        })
                 } else {
                     return Promise.resolve(packingReceiptId)
                 }
