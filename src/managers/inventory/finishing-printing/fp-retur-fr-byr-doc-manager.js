@@ -501,7 +501,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                 this.shipmentDocManager.collection.aggregate([{
                         "$unwind" : "$details"
                     },{
-                        "$unwind" : "$details.items"
+                        "$unwind" : "$details.items.packingReceiptItems"
                     },{
                         "$match" : {
                             "details.productionOrderNo" : {
@@ -517,14 +517,14 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                             "buyerId" : 1,
                             "porductionOrderId" : "$details.productionOrderId",
                             "productionOrderNo" : "$details.productionOrderNo",
-                            "productId" : "$details.items.productId",
-                            "productCode" : "$details.items.productCode",
-                            "productName" : "$details.items.productName",
-                            "designCode" : "$details.items.designCode",
-                            "designNumber" : "$details.items.designNumber",
-                            "colorWay" : "$details.items.colorType",
-                            "uomId" : "$details.items.uomId",
-                            "uom" : "$details.items.uomUnit"
+                            "productId" : "$details.items.packingReceiptItems.productId",
+                            "productCode" : "$details.items.packingReceiptItems.productCode",
+                            "productName" : "$details.items.packingReceiptItems.productName",
+                            "designCode" : "$details.items.packingReceiptItems.designCode",
+                            "designNumber" : "$details.items.packingReceiptItems.designNumber",
+                            "colorWay" : "$details.items.packingReceiptItems.colorType",
+                            "uomId" : "$details.items.packingReceiptItems.uomId",
+                            "uom" : "$details.items.packingReceiptItems.uomUnit"
                         }
                     },{
                         "$group" : {
