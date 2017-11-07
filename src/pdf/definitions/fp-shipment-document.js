@@ -140,52 +140,104 @@ module.exports = function (shipmentDocument, offset) {
 
     var tbody = [];
 
-    for (var i = 0; i < data.details.length; i++) {
-        for (var j = 0; j < data.details[i].items.length; j++) {
-            var weightTotal = data.details[i].items[j].quantity * data.details[i].items[j].weight;
-            var lengthTotal = data.details[i].items[j].quantity * data.details[i].items[j].length;
-            var objArr = [{
-                text: data.details[i].items[j].productName,
-                style: ['size08', 'center']
-            },
-            {
-                text: data.details[i].designNumber,
-                style: ['size08', 'center']
-            },
-            {
-                text: data.details[i].productionOrderNo,
-                style: ['size08', 'center']
-            },
-            {
-                text: data.details[i].items[j].colorType,
-                style: ['size08', 'center']
-            },
-            {
-                text: data.details[i].items[j].uomUnit,
-                style: ['size08', 'center']
-            },
-            {
-                text: data.details[i].items[j].quantity,
-                style: ['size08', 'center']
-            },
-            {
-                text: lengthTotal.toFixed(2),
-                style: ['size08', 'center']
-            },
-            {
-                text: weightTotal.toFixed(2),
-                style: ['size08', 'center']
-            }]
+    for (var detail of data.details) {
+        for (var item of detail.items) {
+            var propertiesCheck = Object.getOwnPropertyNames(item);
+            var oldData = propertiesCheck.find((property) => property.toString().toLocaleLowerCase() === "productname");
 
-            totalJumlah += data.details[i].items[j].quantity;
-            totalBerat += weightTotal;
-            totalPanjang += lengthTotal;
-
-            weightTotal = 0;
-            lengthTotal = 0;
-
-            tbody.push(objArr);
-            objArr = [];
+            if (oldData) {
+                var weightTotal = item.quantity * item.weight;
+                var lengthTotal = item.quantity * item.length;
+                var objArr = [{
+                    text: item.productName,
+                    style: ['size08', 'center']
+                },
+                {
+                    text: detail.designNumber,
+                    style: ['size08', 'center']
+                },
+                {
+                    text: detail.productionOrderNo,
+                    style: ['size08', 'center']
+                },
+                {
+                    text: item.colorType,
+                    style: ['size08', 'center']
+                },
+                {
+                    text: item.uomUnit,
+                    style: ['size08', 'center']
+                },
+                {
+                    text: item.quantity,
+                    style: ['size08', 'center']
+                },
+                {
+                    text: lengthTotal.toFixed(2),
+                    style: ['size08', 'center']
+                },
+                {
+                    text: weightTotal.toFixed(2),
+                    style: ['size08', 'center']
+                }]
+    
+                totalJumlah += item.quantity;
+                totalBerat += weightTotal;
+                totalPanjang += lengthTotal;
+    
+                weightTotal = 0;
+                lengthTotal = 0;
+    
+                tbody.push(objArr);
+                objArr = [];
+            } else {
+                for (var packingReceiptItem of item.packingReceiptItems) {
+                    var weightTotal = packingReceiptItem.quantity * packingReceiptItem.weight;
+                    var lengthTotal = packingReceiptItem.quantity * packingReceiptItem.length;
+                    var objArr = [{
+                        text: packingReceiptItem.productName,
+                        style: ['size08', 'center']
+                    },
+                    {
+                        text: detail.designNumber,
+                        style: ['size08', 'center']
+                    },
+                    {
+                        text: detail.productionOrderNo,
+                        style: ['size08', 'center']
+                    },
+                    {
+                        text: packingReceiptItem.colorType,
+                        style: ['size08', 'center']
+                    },
+                    {
+                        text: packingReceiptItem.uomUnit,
+                        style: ['size08', 'center']
+                    },
+                    {
+                        text: packingReceiptItem.quantity,
+                        style: ['size08', 'center']
+                    },
+                    {
+                        text: lengthTotal.toFixed(2),
+                        style: ['size08', 'center']
+                    },
+                    {
+                        text: weightTotal.toFixed(2),
+                        style: ['size08', 'center']
+                    }]
+        
+                    totalJumlah += packingReceiptItem.quantity;
+                    totalBerat += weightTotal;
+                    totalPanjang += lengthTotal;
+        
+                    weightTotal = 0;
+                    lengthTotal = 0;
+        
+                    tbody.push(objArr);
+                    objArr = [];
+                }
+            }
         }
     }
 
