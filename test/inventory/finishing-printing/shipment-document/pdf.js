@@ -53,8 +53,6 @@ it(`#02. should success when get created data with id`, function (done) {
 
 
 it('#04. should success when create pdf', function (done) {
-    var query = {};
-
     instanceManager.getPdf(createdData)
         .then((pdfData) => {
             done();
@@ -63,8 +61,35 @@ it('#04. should success when create pdf', function (done) {
         });
 });
 
+it('#05. should success when create pdf old data', function (done) {
+    var oldItems = [];
+    for (var detail of createdData.details) {
+        for (var item of detail.items) {
+            for (var packingReceiptItem of item.packingReceiptItems) {
+                oldItems.push(packingReceiptItem);
+            }
+        }
+    }
 
-it("#05. should success when destroy all unit test data", function (done) {
+    var oldDetails = [];
+    for (var detail of createdData.details) {
+        detail.items = oldItems;
+        oldDetails.push(detail);
+    }
+
+    var oldData = createdData;
+    oldData.details = oldDetails;
+
+    instanceManager.getPdf(oldData)
+        .then((pdfData) => {
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
+
+
+it("#06. should success when destroy all unit test data", function (done) {
     instanceManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();

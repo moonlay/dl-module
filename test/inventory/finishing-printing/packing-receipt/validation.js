@@ -3,6 +3,7 @@ var PackingReceipt = require("../../../data-util/inventory/finishing-printing/fp
 var helper = require("../../../helper");
 var validate = require("dl-models").validator.inventory.finishingPrinting.fpPackingReceipt;
 
+var generateCode = require("../../../../src/utils/code-generator");
 var PackingReceiptManager = require("../../../../src/managers/inventory/finishing-printing/fp-packing-receipt-manager");
 var packingReceiptManager = null;
 
@@ -117,7 +118,7 @@ it("#07. should success when create new data with non exist product", function (
         notes: "TEST"
     }];
     var newDataUtil = {
-        code: "TESTCODE",
+        code: generateCode(),
         packingId: createdPacking._id,
         packingCode: createdPacking.code,
         // storageName: storage.name,
