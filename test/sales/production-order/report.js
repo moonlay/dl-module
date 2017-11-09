@@ -462,6 +462,7 @@ it("#18. should success get all data Production Order when search report without
         size: 20,
         header: "application/xls",
         filter: {}
+      
     };
     manager.getReport(query)
         .then(docs => {
