@@ -461,7 +461,9 @@ it("#18. should success get all data Production Order when search report without
         page: 1,
         size: 20,
         header: "application/xls",
-        filter: {}
+        filter: {},
+        query: {}
+      
     };
     manager.getReport(query)
         .then(docs => {
@@ -474,3 +476,185 @@ it("#18. should success get all data Production Order when search report without
         });
 });
 
+it("#19. should success get all data Production Order (2 data) when searh report with Sales Contract No parameter", function (done) {
+    var query = {
+        page: 1,
+        size: 20,
+        header: "application/xls",
+        query: { salesContractNo: salesContractNo }
+    };
+    manager.getReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#20. should success get all data Production Order (2 data) when searh report with Order No parameter", function (done) {
+    var query = {
+        page: 1,
+        size: 20,
+        header: "application/xls",
+        query: { orderNo: orderNo }
+    };
+    manager.getReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#21. should success get all data Production Order (20 data) when searh report with Order Type parameter", function (done) {
+    var query = {
+        page: 1,
+        size: 20,
+        header: "application/xls",
+        query: { orderTypeId: dataProcessType1.orderTypeId }
+    };
+    manager.getReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#22. should success get all data Production Order (10 data) when searh report with Process Type parameter", function (done) {
+    var query = {
+        page: 1,
+        size: 20,
+        header: "application/xls",
+        query: { processTypeId: dataProcessType1._id }
+    };
+    manager.getReport(query)
+        .then(docs => {
+            var data1 = docs.data;
+            data1.should.be.instanceof(Array);
+            manager.getReport({ processTypeId: dataProcessType2._id })
+                .then(docs => {
+                    var data2 = docs.data;
+                    data2.should.be.instanceof(Array);
+                    // data2.length.should.equal(10);
+                    done();
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#23. should success get all data Production Order (10 data) when searh report with buyer parameter", function (done) {
+    var query = {
+        page: 1,
+        size: 20,
+        header: "application/xls",
+        query: { buyerId: dataBuyer1._id }
+    };
+    manager.getReport(query)
+        .then(docs => {
+            var data1 = docs.data;
+            data1.should.be.instanceof(Array);
+            manager.getReport({ buyerId: dataBuyer2._id })
+                .then(docs => {
+                    var data2 = docs.data;
+                    data2.should.be.instanceof(Array);
+                    // data2.length.should.equal(10);
+                    done();
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#24. should success get all data Production Order (10 data) when searh report with account parameter", function (done) {
+    var query = {
+        page: 1,
+        size: 20,
+        header: "application/xls",
+        query: { accountId: dataAccount1._id }
+    };
+    manager.getReport(query)
+        .then(docs => {
+            var data1 = docs.data;
+            data1.should.be.instanceof(Array);
+            manager.getReport({ accountId: dataAccount2._id })
+                .then(docs => {
+                    var data2 = docs.data;
+                    data2.should.be.instanceof(Array);
+                    // data2.length.should.equal(10);
+                    done();
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#25. should success get all data Sales Monthly when searh report with No parameter", function (done) {
+    var query = {
+        header: "application/xls",
+        query: { orderNo: orderNo }
+    };
+    manager.getSalesMonthlyReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#26. should success get all data Sales Monthly when searh report with Account parameter", function (done) {
+    var query = {
+        header: "application/xls",
+        query: { accountId: dataAccount1._id }
+    };
+    manager.getSalesMonthlyReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#27. should success get all data Sales Monthly when searh report with Order Type parameter", function (done) {
+    var query = {
+        header: "application/xls",
+        query: { orderTypeId: dataProcessType1.orderTypeId }
+    };
+    manager.getSalesMonthlyReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});

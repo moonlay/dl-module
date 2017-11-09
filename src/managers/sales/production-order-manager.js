@@ -650,10 +650,24 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }
                 });
             }
+            if (query.salesContractNo) {
+                Object.assign(qry, {
+                    "salesContractNo": {
+                        "$regex": (new RegExp(query.salesContractNo, "i"))
+                    }
+                });
+            }
             if (filter.orderNo) {
                 Object.assign(qry, {
                     "orderNo": {
                         "$regex": (new RegExp(filter.orderNo, "i"))
+                    }
+                });
+            }
+            if (query.orderNo) {
+                Object.assign(qry, {
+                    "orderNo": {
+                        "$regex": (new RegExp(query.orderNo, "i"))
                     }
                 });
             }
@@ -662,14 +676,31 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "orderTypeId": (new ObjectId(filter.orderTypeId))
                 });
             }
+            if (query.orderTypeId) {
+                Object.assign(qry, {
+                    "orderTypeId": (new ObjectId(query.orderTypeId))
+                });
+            }
             if (filter.processTypeId) {
                 Object.assign(qry, {
                     "processTypeId": (new ObjectId(filter.processTypeId))
                 });
             }
+            if (query.processTypeId) {
+                Object.assign(qry, {
+                    "processTypeId": (new ObjectId(query.processTypeId))
+                });
+            }
+         
             if (filter.buyerId) {
                 Object.assign(qry, {
                     "buyerId": (new ObjectId(filter.buyerId))
+                });
+            }
+
+            if (query.buyerId) {
+                Object.assign(qry, {
+                    "buyerId": (new ObjectId(query.buyerId))
                 });
             }
             if (filter.accountId) {
@@ -677,11 +708,25 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "accountId": (new ObjectId(filter.accountId))
                 });
             }
+            if (query.accountId) {
+                Object.assign(qry, {
+                    "accountId": (new ObjectId(query.accountId))
+                });
+            }
             if (filter.sdate && filter.edate) {
                 Object.assign(qry, {
                     "_createdDate": {
                         "$gte": new Date(`${filter.sdate} 00:00:00`),
                         "$lte": new Date(`${filter.edate} 23:59:59`)
+                    }
+                });
+            }
+
+             if (query.sdate && query.edate) {
+                Object.assign(qry, {
+                    "_createdDate": {
+                        "$gte": new Date(`${query.sdate} 00:00:00`),
+                        "$lte": new Date(`${query.edate} 23:59:59`)
                     }
                 });
             }
