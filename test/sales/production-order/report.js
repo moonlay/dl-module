@@ -461,6 +461,14 @@ it("#18. should success get all data Production Order when search report without
         page: 1,
         size: 20,
         header: "application/xls",
+        salesContractNo: "",
+        orderNo: "",
+        orderTypeId: "",
+        processTypeId: "",
+        buyerId: "",
+        accountId: "",
+        sdate : "",
+        edate : "",
         filter: {}
       
     };
