@@ -461,7 +461,7 @@ it("#18. should success get all data Production Order when search report without
         page: 1,
         size: 20,
         header: "application/xls",
-        query: {}
+        filter: {}
       
     };
     manager.getReport(query)
@@ -475,3 +475,50 @@ it("#18. should success get all data Production Order when search report without
         });
 });
 
+it("#19. should success get all data Production Order when search report with parameter (header : application/xls)", function (done) {
+    var query = {
+        header: "application/xls",
+        query: {orderNo: orderNo,salesContractNo: salesContractNo,orderTypeId:dataProcessType1.orderTypeId }
+    };
+    manager.getReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#20. should success get all data Production Order when search report with parameter (header : application/xls)", function (done) {
+    var query = {
+        header: "application/xls",
+        query: {orderNo: orderNo }
+    };
+    manager.getReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#21. should success get all data Production Order when search report with parameter (header : application/xls)", function (done) {
+    var query = {
+        header: "application/xls",
+        query: {orderNo: orderNo,salesContractNo: salesContractNo }
+    };
+    manager.getReport(query)
+        .then(docs => {
+            var data = docs.data;
+            data.should.be.instanceof(Array);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
