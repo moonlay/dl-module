@@ -189,7 +189,7 @@ module.exports = function (pox, offset) {
                 style: ['size08', 'center']
             }, {
                 columns: [{
-                    width: '20%',
+                    width: '30%',
                     text: `${currency}`
                 }, {
                         width: '*',
