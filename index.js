@@ -118,7 +118,8 @@ module.exports = {
             DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager')
         },
         garmentMasterPlan: {
-            WeeklyPlan: require("./src/managers/garment-master-plan/weekly-plan-manager")
+            WeeklyPlan: require("./src/managers/garment-master-plan/weekly-plan-manager"),
+            WorkingHoursStandardManager: require('./src/managers/garment-master-plan/working-hours-standard-manager')
         }
     },
     test: {
@@ -227,7 +228,8 @@ module.exports = {
                 dealTrackingActivity: require('./test/data-util/sales/deal-tracking-activity-data-util')
             },
             garmentMasterPlan: {
-                weeklyPlan: require("./test/data-util/garment-master-plan/weekly-plan-data-util")
+                weeklyPlan: require("./test/data-util/garment-master-plan/weekly-plan-data-util"),
+                workingHoursStandard: require("./test/data-util/garment-master-plan/working-hours-standard-data-util")
             }
         }
     },
