@@ -63,7 +63,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
     }
 
-    run(o, t1, t2) {
+    run(tanggal, t1, t2, page, size) {
         var startedDate = new Date();
 
         this.migrationLog.insert({
@@ -72,13 +72,15 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             start: startedDate,
         })
 
+        this.tgl = tanggal;
+
         return new Promise((resolve, reject) => {
-            var date = o;
             var table1 = t1;
             var table2 = t2;
+
             this.getTimeStamp().then((result) => {
                 var dateStamp;
-                if (date.trim() == "latest") {
+                if (this.tgl.trim() == "latest") {
                     if (result.length != 0) {
                         var year = result[0].start.getFullYear();
                         var month = result[0].start.getMonth() + 1;
@@ -114,92 +116,138 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         "october", "november", "december"];
                     var tempYear = new Date().getFullYear().toString();
 
-                    if (date == monthOpt[1].trim()) {
+                    if (this.tgl == monthOpt[1].trim()) {
                         dateStamp = tempYear + "-01%%";
-                    } else if (date == monthOpt[2].trim()) {
+                    } else if (this.tgl == monthOpt[2].trim()) {
                         dateStamp = tempYear + "-02%%";
-                    } else if (date == monthOpt[3].trim()) {
+                    } else if (this.tgl == monthOpt[3].trim()) {
                         dateStamp = tempYear + "-03%%";
-                    } else if (date == monthOpt[4].trim()) {
+                    } else if (this.tgl == monthOpt[4].trim()) {
                         dateStamp = tempYear + "-04%%";
-                    } else if (date == monthOpt[5].trim()) {
+                    } else if (this.tgl == monthOpt[5].trim()) {
                         dateStamp = tempYear + "-05%%";
-                    } else if (date == monthOpt[6].trim()) {
+                    } else if (this.tgl == monthOpt[6].trim()) {
                         dateStamp = tempYear + "-06%%";
-                    } else if (date == monthOpt[7].trim()) {
+                    } else if (this.tgl == monthOpt[7].trim()) {
                         dateStamp = tempYear + "-07%%";
-                    } else if (date == monthOpt[8].trim()) {
+                    } else if (this.tgl == monthOpt[8].trim()) {
                         dateStamp = tempYear + "-08%%";
-                    } else if (date == monthOpt[9].trim()) {
+                    } else if (this.tgl == monthOpt[9].trim()) {
                         dateStamp = tempYear + "-09%%";
-                    } else if (date == monthOpt[10].trim()) {
+                    } else if (this.tgl == monthOpt[10].trim()) {
                         dateStamp = tempYear + "-10%%";
-                    } else if (date == monthOpt[11].trim()) {
+                    } else if (this.tgl == monthOpt[11].trim()) {
                         dateStamp = tempYear + "-11%%";
-                    } else if (date == monthOpt[12].trim()) {
+                    } else if (this.tgl == monthOpt[12].trim()) {
                         dateStamp = tempYear + "-12%%";
                     }
                 }
 
-                this.getRowNumber(table1, table2, dateStamp)
-                    .then((data) => {
+                // this.getRowNumber(table1, table2, dateStamp)
+                //     .then((data) => {
+                // var dataLength = data;
+                this.tgl = dateStamp;
 
-                        var pageSize = 10000;
-                        var dataLength = data;
-                        var totalPageNumber = Math.ceil(dataLength / pageSize);
+                var processedData = new Promise((res, rej) => {
+                    this.extract(table1, table2, page, size, this.tgl)
+                        .then((extracted) => {
+                            this.transform(extracted)
+                                .then((transformed) => {
+                                    this.load(transformed)
+                                        .then((result) => {
+                                            res(result);
+                                        })
+                                })
+                        })
+                });
 
-                        var date = dateStamp;
-                        var processedData = [];
+                processedData.then((result) => {
+                    var finishedDate = new Date();
+                    var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                    var updateLog = {};
 
-                        for (var i = 1; i <= totalPageNumber; i++) {
-                            processedData.push(new Promise((resolve, reject) => {
-                                this.extract(table1, table2, i, pageSize, date)
-                                    .then((extracted) => {
-                                        this.transform(extracted)
-                                            .then((transformed) => {
-                                                this.load(transformed)
-                                                    .then((result) => {
-                                                        resolve(result);
-                                                    })
-                                            })
-                                    })
-                            }))
-                        }
+                    if (!result) {
+                        updateLog = {
+                            code: "sql-gpr",
+                            description: "Sql to MongoDB: Garment-Purchase-Request",
+                            start: startedDate,
+                            finish: finishedDate,
+                            executionTime: spentTime + " minutes",
+                            status: "today, data didnt exist",
 
-                        Promise.all(processedData).then((processedData) => {
-                            var finishedDate = new Date();
-                            var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
-                            var updateLog = {};
+                        };
+                    } else {
+                        updateLog = {
+                            code: "sql-gpr",
+                            description: "Sql to MongoDB: Garment-Purchase-Request",
+                            start: startedDate,
+                            finish: finishedDate,
+                            executionTime: spentTime + " minutes",
+                            status: "Successful",
 
-                            if (!processedData[0]) {
-                                updateLog = {
-                                    code: "sql-gpr",
-                                    description: "Sql to MongoDB: Garment-Purchase-Request",
-                                    start: startedDate,
-                                    finish: finishedDate,
-                                    executionTime: spentTime + " minutes",
-                                    status: "today, data didnt exist",
+                        };
+                    }
 
-                                };
-                            } else {
-                                updateLog = {
-                                    code: "sql-gpr",
-                                    description: "Sql to MongoDB: Garment-Purchase-Request",
-                                    start: startedDate,
-                                    finish: finishedDate,
-                                    executionTime: spentTime + " minutes",
-                                    status: "Successful",
+                    var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
+                    resolve(result);
+                });
 
-                                };
-                            }
+                // var pageSize = 10000;
+                // var dataLength = data;
+                // var totalPageNumber = Math.ceil(dataLength / pageSize);
 
-                            var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
-                            resolve(processedData);
+                // var date = dateStamp;
+                // var processedData = [];
 
-                        });
+                // for (var i = 1; i <= totalPageNumber; i++) {
+                //     processedData.push(new Promise((resolve, reject) => {
+                //         this.extract(table1, table2, i, pageSize, date)
+                //             .then((extracted) => {
+                //                 this.transform(extracted)
+                //                     .then((transformed) => {
+                //                         this.load(transformed)
+                //                             .then((result) => {
+                //                                 resolve(result);
+                //                             })
+                //                     })
+                //             })
+                //     }))
+                // }
 
-                    });
+                // Promise.all(processedData).then((processedData) => {
+                //     var finishedDate = new Date();
+                //     var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                //     var updateLog = {};
+
+                //     if (!processedData[0]) {
+                //         updateLog = {
+                //             code: "sql-gpr",
+                //             description: "Sql to MongoDB: Garment-Purchase-Request",
+                //             start: startedDate,
+                //             finish: finishedDate,
+                //             executionTime: spentTime + " minutes",
+                //             status: "today, data didnt exist",
+
+                //         };
+                //     } else {
+                //         updateLog = {
+                //             code: "sql-gpr",
+                //             description: "Sql to MongoDB: Garment-Purchase-Request",
+                //             start: startedDate,
+                //             finish: finishedDate,
+                //             executionTime: spentTime + " minutes",
+                //             status: "Successful",
+
+                //         };
+                //     }
+
+                //     var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
+                //     resolve(processedData);
+
+                // });
+
             });
+            // });
         });
     };
 
@@ -231,9 +279,9 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         var sqlQuery;
 
                         if (tgl.includes("%%")) {
-                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
                         } else {
-                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
                         }
 
                         request.query(sqlQuery, function (err, result) {
