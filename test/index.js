@@ -166,5 +166,6 @@ describe('#dl-module', function (done) {
     //Garment Master Plan
     test('@GARMENT MASTER PLAN/WEEKLY-PLAN', './garment-master-plan/weekly-plan');
     test('@GARMENT MASTER PLAN/WORKING-HOURS-STANDARD', './garment-master-plan/working-hours-standard');
+    test('@GARMENT MASTER PLAN/STYLE', './garment-master-plan/style');
 
 });
