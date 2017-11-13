@@ -10,7 +10,7 @@ var BaseManager = require("module-toolkit").BaseManager;
 var UnitManager = require("../master/unit-manager");
 var i18n = require("dl-i18n");
 
-module.exports = class ContactManager extends BaseManager {
+module.exports = class WeeklyPlanManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentMasterPlan.collection.WeeklyPlan);
@@ -135,9 +135,10 @@ module.exports = class ContactManager extends BaseManager {
         };
 
         var uearIndex = {
-            name: `ix_${map.garmentMasterPlan.collection.WeeklyPlan}_year`,
+            name: `ix_${map.garmentMasterPlan.collection.WeeklyPlan}_year_unitId`,
             key: {
-                "year": 1
+                "year": 1,
+                "unitId": 1,
             }
         };
 
