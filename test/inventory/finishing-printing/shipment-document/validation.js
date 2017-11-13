@@ -24,7 +24,7 @@ it("#01. should error when create with item quantity less than or equal to zero"
         .getNewData()
         .then((data) => {
             createdData = data;
-            data.details[0].items[0].quantity = 0;
+            data.details[0].items[0].packingReceiptItems[0].quantity = 0;
 
             manager.create(data)
                 .then((id) => {
@@ -45,7 +45,7 @@ it("#01. should error when create with item quantity less than or equal to zero"
 });
 
 it("#02. should error when create with item quantity greater than stock", function (done) {
-    createdData.details[0].items[0].quantity = Number.MAX_SAFE_INTEGER;
+    createdData.details[0].items[0].packingReceiptItems[0].quantity = Number.MAX_SAFE_INTEGER;
 
     manager.create(createdData)
         .then((id) => {
