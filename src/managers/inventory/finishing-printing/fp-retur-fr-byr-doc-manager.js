@@ -146,7 +146,7 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
             var getUom = uom.length > 0 ? this.uomManager.collection.find({ "unit": { "$in": uom } }).toArray() : Promise.resolve([]);
             var getConstruction = construction.length > 0 ? this.materialConstructionManager.collection.find({ "code": { "$in": construction } }).toArray() : Promise.resolve([]);
             var getBuyer = valid.buyerId && ObjectId.isValid(valid.buyerId) ? this.buyerManager.getSingleByIdOrDefault(new ObjectId(valid.buyerId)) : Promise.resolve(null);
-            var getStorage = valid.details ? this.storageManager.collection.find({ name: "Gudang Jadi Finishing Printing" }).toArray() : Promise.resolve([]);
+            var getStorage = valid.storageId && ObjectId.isValid(valid.storageId) ? this.storageManager.getSingleByIdOrDefault(new ObjectId(valid.storageId)) : Promise.resolve(null);
             Promise.all([getSPP, getProduct, getProductShipment, getUom, getBuyer, getConstruction, getStorage])
                 .then(results => {
                     var _spp = results[0];
@@ -172,6 +172,11 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                         if (returDate > dateNow)
                             errors["date"] = i18n.__("Tidak boleh lebih dari tanggal hari ini", i18n.__("FPReturFromBuyerDoc.date._:Date")); //nomor Beacukai harus diisi
                     }
+
+                    if(!valid.storageId || valid.storageId === "")
+                        errors["storage"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.storage._:Storage"));
+                    else if(!_storage)
+                        errors["storage"] = i18n.__("Data gudang tidak ditemukan", i18n.__("FPReturFromBuyerDoc.storage._:Storage"));
 
                     // if(!valid.spk || valid.spk === "")
                     //     errors["spk"] = i18n.__("Harus diisi", i18n.__("FPReturFromBuyerDoc.spk._:Spk")); //nomor Beacukai harus diisi
@@ -417,8 +422,10 @@ module.exports = class FPReturFrByrDocManager extends BaseManager {
                                 details.push(docDetail);
                             }
                             valid.details = details;
-                            valid.storageId = _storage.length > 0 ? new ObjectId(_storage[0]._id) : null;
-                            valid.storageName = _storage[0].name;
+                            if(_storage){
+                                valid.storageId = _storage._id;
+                                valid.storageName = _storage.name;
+                            }
                             valid.storageReferenceType = "Retur Barang dari Buyer";
                             valid.storageType = "IN";
                             valid = new FPReturFromBuyerDoc(valid);
