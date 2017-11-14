@@ -70,8 +70,8 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                    "no": valid.no
-                }]
+                        "no": valid.no
+                    }]
             });
 
             Promise.all([getUnitPaymentOrderPromise].concat(getUnitReceiptNote))
@@ -244,7 +244,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         });
     }
 
-    getDataMonitorSpb(unitId, PRNo, noSpb, supplierId, dateFrom, dateTo, staffName, offset) {
+getDataMonitorSpb(unitId,PRNo,noSpb,supplierId,dateFrom,dateTo,staffName , offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
 
@@ -254,96 +254,97 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
                 var validStartDate = new Date(dateFrom);
                 var validEndDate = new Date(dateTo);
-                // validStartDate.setHours(validStartDate.getHours() - offset);
+               // validStartDate.setHours(validStartDate.getHours() - offset);
                 //validEndDate.setHours(validEndDate.getHours() - offset);
-                qryMatch["$and"].push(
+  qryMatch["$and"].push(
                     {
                         "date": {
-                            $gte: validStartDate,
-                            $lte: validEndDate
+                             $gte: validStartDate,
+                             $lte: validEndDate
 
                         }
                     }
-
-                )
+                   
+                    )
+            }
+            
+               if (unitId!=="") {
+                qryMatch["$and"].push({
+                      "items.unitReceiptNote.unitId":new ObjectId(unitId)
+ 
+                 })
             }
 
-            if (unitId !== "") {
+                if (supplierId!=="") {
                 qryMatch["$and"].push({
-                    "items.unitReceiptNote.unitId": new ObjectId(unitId)
-
-                })
+                      "supplierId":new ObjectId(supplierId)
+ 
+                 })
             }
 
-            if (supplierId !== "") {
+  if (staffName!=="") {
                 qryMatch["$and"].push({
-                    "supplierId": new ObjectId(supplierId)
-
-                })
+                      "_createdBy":staffName
+ 
+                 })
             }
 
-            if (staffName !== "") {
+if (PRNo!=="") {
                 qryMatch["$and"].push({
-                    "_createdBy": staffName
-
-                })
+                      "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no":PRNo
+ 
+                 })
             }
 
-            if (PRNo !== "") {
+            if (noSpb!=="") {
                 qryMatch["$and"].push({
-                    "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": PRNo
-
-                })
-            }
-
-            if (noSpb !== "") {
-                qryMatch["$and"].push({
-                    "no": noSpb
-
-                })
+                      "no":noSpb
+ 
+                 })
             }
 
             this.collection.aggregate(
                 [
                     {
-                        $match: qryMatch
-                    },
-                    {
+                    $match: qryMatch
+                },
+                 {
                         $unwind: "$items"
-                    },
-                    {
+                    },      
+            {
                         $unwind: "$items.unitReceiptNote.items"
-                    },
+                    },      
 
-                    {
-                        $project: {
-                            no: "$no",
-                            date: "$date",
-                            "items.unitReceiptNote.items.product.name": "$items.unitReceiptNote.items.product.name",
-                            "items.unitReceiptNote.items.deliveredQuantity": "$items.unitReceiptNote.items.deliveredQuantity",
-                            "items.unitReceiptNote.items.pricePerDealUnit": "$items.unitReceiptNote.items.pricePerDealUnit",
-                            invoceDate: "$invoceDate",
-                            invoceNo: "$invoceNo",
-                            dueDate: "$dueDate",
-                            "supplier.name": "$supplier.name",
-                            "division.name": "$division.name",
-                            "namaUnit": "$items.unitReceiptNote.unit.name",
-                            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
-                            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date",
-                            "items.unitReceiptNote.no": "$items.unitReceiptNote.no",
-                            "items.unitReceiptNote.date": "$items.unitReceiptNote.date",
-                        }
-                    },
-                    { $sort: { "date": 1 } }
-                ]
-
+             {
+         $project: {
+            no: "$no",
+            date: "$date",
+            "items.unitReceiptNote.items.product.name": "$items.unitReceiptNote.items.product.name",
+            "items.unitReceiptNote.items.deliveredQuantity": "$items.unitReceiptNote.items.deliveredQuantity",
+            "items.unitReceiptNote.items.pricePerDealUnit": "$items.unitReceiptNote.items.pricePerDealUnit",
+            invoceDate: "$invoceDate",
+            invoceNo: "$invoceNo",
+            dueDate: "$dueDate",
+            "supplier.name": "$supplier.name",
+            "division.name": "$division.name",
+            "namaUnit": "$items.unitReceiptNote.unit.name",
+            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
+            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date",
+            "items.unitReceiptNote.no":"$items.unitReceiptNote.no",
+            "items.unitReceiptNote.date":"$items.unitReceiptNote.date",
+         }
+      }      ,
+                      { $sort : { "date" : 1 } }
+                    ]
+    
             )
-                .toArray(function (err, result) {
+                .toArray(function(err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
         });
     }
+
 
     _getQuery(paging) {
         var deletedFilter = {
@@ -481,7 +482,8 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         })
                 });
         }
-        else { return Promise.resolve(newUnitPaymentOrder) }
+        else
+        { return Promise.resolve(newUnitPaymentOrder) }
     }
 
     updatePurchaseOrder(realizations) {

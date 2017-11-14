@@ -21,6 +21,7 @@ class PackingReceiptDataUtil {
                     return {
                         product: packingItem.remark !== "" || packingItem.remark !== null ? `${packing.productionOrderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}/${packingItem.remark}` : `${packing.productionOrderNo}/${packing.colorName}/${packing.construction}/${packingItem.lot}/${packingItem.grade}/${packingItem.length}`,
                         quantity: packingItem.quantity,
+                        availableQuantity: packingItem.quantity,
                         remark: packingItem.remark,
                         notes: "TEST"
                     }

@@ -1105,13 +1105,14 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    getUnitReceiptWithoutSpb(_unitId, staffName, _dateFrom, _dateTo, offset) 
+    getUnitReceiptWithoutSpb(_unitId, staffName , _dateFrom, _dateTo, offset) 
     {
         return new Promise((resolve, reject) => 
         {
+            var doColl = map.purchasing.collection.DeliveryOrder; 
             var query = Object.assign({});                      
             var deleted = { _deleted: false };
-            var bayar = {isPaid: false};
+            var bayar = {isPaid: false};     
 
             if (_unitId !== "undefined" && _unitId !== "") {
                 var unitId = { unitId: new ObjectId(_unitId) };
@@ -1119,10 +1120,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             }
 
             if (staffName !== undefined && staffName !== "") {
-                        Object.assign(query, {
-                            _createdBy: staffName
-                        });
-                    }
+                var myStap = staffName;                
+            }
                                 
             if (_dateFrom !== "undefined" && _dateFrom !== "null" && _dateFrom !== "" && _dateTo !== "undefined" && _dateTo !== "null" && _dateTo !== "")
             {
@@ -1142,12 +1141,10 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             
             Object.assign(query, deleted);
             Object.assign(query, bayar);
-
-            var doColl = map.purchasing.collection.DeliveryOrder; 
             
-            this.collection.aggregate(
-                {$match: query},
-                {
+            this.collection.aggregate(                
+              {$match: query}
+                , {
                     $lookup : {
                                 from: doColl, 
                                 localField: "deliveryOrder.no",
@@ -1158,13 +1155,21 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 },{
                     $unwind:"$jeneng"
                 }
+                ,{$match: {"jeneng._createdBy": myStap}}
                 ,{
                     $project:{
-                                "nama": "$jeneng._createdBy"
-      
+                                "divisi":"$unit.division.name",
+                                "asmo":"$unit.name",
+                                "supp":"$supplier.name",
+                                "setap": "$jeneng._createdBy",
+                                "sj":"$jeneng.no",
+                                "tglsj":"$jeneng.date",
+                                "bon":"$no",
+                                "tglbon":"$date",
+                                "adm":"$_createdBy" 
                              }
-                  }
-                    ).toArray().then(product=>{
+                }
+            ).toArray().then(product=>{
                     resolve(product);
                 });        
             });
