@@ -63,12 +63,22 @@ module.exports = class ContactManager extends BaseManager {
                 "$ne": new ObjectId(valid._id)
             },
             "$or":[{
-                start:{"$lte": valid.start},
-                end:{"$gte":valid.start}
+                "$and":[{
+                    start:{"$gte": valid.start}
+                },
+                {
+                    start:{"$lte":valid.end}
+                }]  
             },
             {
-                start:{"$lte":valid.end},
-                end:{"$gte":valid.end}
+                "$and":[{
+                    end:{"$gte":valid.start}
+                },
+                {
+                   end:{"$lte":valid.end}
+                }] 
+                
+                
             }
             ],
             _deleted: false
