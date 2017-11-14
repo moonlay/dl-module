@@ -57,7 +57,7 @@ class UnitReceiptNoteDataUtil {
 
                         var getPRJobs = [];
                         for (var prId of prCollection) {
-                            getPRJobs.push(manager.purchaseOrderManager.purchaseRequestManager.getSingleByIdOrDefault(prId, ["_id", , "buyer", "no"]))
+                            getPRJobs.push(manager.purchaseOrderManager.purchaseRequestManager.getSingleByIdOrDefault(prId, ["_id", "artikel", "buyer", "no"]))
                         }
 
                         return Promise.all(jobs)
@@ -88,6 +88,7 @@ class UnitReceiptNoteDataUtil {
                                                     purchaseRequestRefNo: fulfillment.purchaseRequestRefNo,
                                                     roNo: fulfillment.roNo,
                                                     buyer: purchaseRequest.buyer,
+                                                    artikel: purchaseRequest.artikel,
                                                     buyerId: purchaseRequest.buyer._id,
                                                     remark: ''
                                                 }
