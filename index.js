@@ -23,7 +23,7 @@ module.exports = {
             ThreadSpecificationManager: require('./src/managers/master/thread-specification-manager'),
             MachineManager: require('./src/managers/master/machine-manager'),
             MachineTypeManager: require('./src/managers/master/machine-type-manager'),
-            LotMachineManager: require('./src/managers/master/lot-machine-manager'),
+            SpinningProductionLotManager: require('./src/managers/master/spinning-production-lot-manager'),
             YarnEquivalentConversion: require('./src/managers/master/yarn-equivalent-conversion-manager'),
             UsterManager: require('./src/managers/master/uster-manager'),
             LampStandardManager: require('./src/managers/master/lamp-standard-manager'),
@@ -46,7 +46,8 @@ module.exports = {
             ContactManager: require('./src/managers/master/contact-manager'),
             BadOutputReasonManager: require('./src/managers/master/bad-output-reason-manager'),
             FPDurationEstimationManager: require('./src/managers/master/fp-duration-estimation-manager'),
-            DealTrackingReasonManager: require('./src/managers/master/deal-tracking-reason-manager')
+            DealTrackingReasonManager: require('./src/managers/master/deal-tracking-reason-manager'),
+            SpinningYarnManager: require('./src/managers/master/spinning-yarn-manager')
         },
         inventory: {
             finishingPrinting: {
@@ -134,7 +135,7 @@ module.exports = {
                 currency: require("./test/data-util/master/currency-data-util"),
                 division: require("./test/data-util/master/division-data-util"),
                 lampStandard: require("./test/data-util/master/lamp-standard-data-util"),
-                lotMachine: require("./test/data-util/master/lot-machine-data-util"),
+                spinningProductionLot: require("./test/data-util/master/spinning-production-lot-data-util"),
                 machine: require("./test/data-util/master/machine-data-util"),
                 machineType: require("./test/data-util/master/machine-type-data-util"),
                 product: require("./test/data-util/master/product-data-util"),
@@ -162,7 +163,8 @@ module.exports = {
                 contact: require('./test/data-util/master/contact-data-util'),
                 badOutputReason: require('./test/data-util/master/bad-output-reason-data-util'),
                 fpDurationEstimation: require('./test/data-util/master/fp-duration-estimation-data-util'),
-                dealTrackingReason: require('./test/data-util/master/deal-tracking-reason-data-util')
+                dealTrackingReason: require('./test/data-util/master/deal-tracking-reason-data-util'),
+                SpinningYarn: require('./test/data-util/master/spinning-yarn-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util"),
