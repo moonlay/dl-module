@@ -122,7 +122,9 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                             })
                         }
 
-                        if (_invoiceNote) {
+                        if (!valid.no || valid.no === "")
+                            errors["no"] = i18n.__("InvoiceNote.no.isRequired:%s is required", i18n.__("InvoiceNote.no._:No"));
+                        else if (_invoiceNote) {
                             errors["no"] = i18n.__("InvoiceNote.no.isExist:%s is exist", i18n.__("InvoiceNote.no._:No"));
                         }
                         if (_invoiceNoteByRefno) {
