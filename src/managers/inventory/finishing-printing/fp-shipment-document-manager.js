@@ -169,14 +169,14 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 else if (new Date(valid.deliveryDate) > new Date())
                     errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.lessThanToday:%s must be less than or equal today's date", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
 
-                if (valid.details.length > 0) {
+                if (valid.details && valid.details.length > 0) {
                     var detailErrors = [];
                     var detailIndex = 0
                     for (var detail of valid.details) {
                         var detailError = {};
 
                         //find duplicate production order
-                        var duplicateProductionOrder = valid.details.find((validDetail, index) => (validDetail.productionOrderId.toString() === detail.productionOrderId.toString()) && index !== detailIndex);
+                        var duplicateProductionOrder = valid.details.find((validDetail, index) => (validDetail.productionOrderId ? validDetail.productionOrderId.toString() : '' === detail.productionOrderId ? detail.productionOrderId.toString() : '') && index !== detailIndex);
                         detailIndex++;
                         if (!detail.productionOrderId || detail.productionOrderId === "") {
                             detailError["productionOrderId"] = i18n.__("ShipmentDocument.details.productionOrderId.isRequired:%s is required", i18n.__("ShipmentDocument.details.productionOrderId._:Nomor Order")); //"Nomor Order harus diisi"; 
@@ -184,7 +184,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                             detailError["productionOrderId"] = i18n.__("ShipmentDocument.details.productionOrderId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.productionOrderId._:Nomor Order"));
                         }
 
-                        if (detail.items.length > 0) {
+                        if (detail.items && detail.items.length > 0) {
                             var itemErrors = [];
                             var itemIndex = 0;
 
@@ -192,7 +192,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                 var itemError = {};
 
                                 //find duplicate packing receipt
-                                var duplicatePackingReceipt = detail.items.find((detailItem, index) => (detailItem.packingReceiptId.toString() === item.packingReceiptId.toString()) && index !== itemIndex);
+                                var duplicatePackingReceipt = detail.items.find((detailItem, index) => (detailItem.packingReceiptId ? detailItem.packingReceiptId.toString() : '' === item.packingReceiptId ? item.packingReceiptId.toString() : '') && index !== itemIndex);
                                 itemIndex++;
                                 if (!item.packingReceiptId || item.packingReceiptId === "") {
                                     itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing")); //"Packing Receipt harus diisi"; 
@@ -200,7 +200,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                     itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing"));
                                 }
 
-                                if (item.packingReceiptItems.length > 0 && !valid.isVoid) {
+                                if (item.packingReceiptItems && item.packingReceiptItems.length > 0 && !valid.isVoid) {
                                     var packingReceiptItemErrors = [];
 
                                     for (var packingReceiptItem of item.packingReceiptItems) {
