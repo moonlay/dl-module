@@ -103,11 +103,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     else if (!_supplier)
                         errors["supplier"] = i18n.__("UnitReceiptNote.supplier.isRequired:%s name  is required", i18n.__("UnitReceiptNote.supplier._:Supplier")); //"Nama supplier tidak boleh kosong";
 
-                    if (!valid.date || valid.date == '')
-                        errors["date"] = i18n.__("UnitReceiptNote.date.isRequired:%s is required", i18n.__("UnitReceiptNote.date._:Date")); //"Tanggal tidak boleh kosong";
-                    else if (new Date(valid.date) > now) {
-                        errors["date"] = i18n.__("UnitReceiptNote.date.isGreater:%s is greater than today", i18n.__("UnitReceiptNote.date._:Date"));//"Tanggal tidak boleh lebih besar dari tanggal hari ini";
-                    }
+                    // if (!valid.date || valid.date == '')
+                    //     errors["date"] = i18n.__("UnitReceiptNote.date.isRequired:%s is required", i18n.__("UnitReceiptNote.date._:Date")); //"Tanggal tidak boleh kosong";
+                    // else if (new Date(valid.date) > now) {
+                    //     errors["date"] = i18n.__("UnitReceiptNote.date.isGreater:%s is greater than today", i18n.__("UnitReceiptNote.date._:Date"));//"Tanggal tidak boleh lebih besar dari tanggal hari ini";
+                    // }
                     if (valid.useStorage) {
                         if (!_storage)
                             errors["storage"] = i18n.__("UnitReceiptNote.storage.isRequired:%s name  is required", i18n.__("UnitReceiptNote.storage._:Storage")); //"Nama storage tidak boleh kosong";
@@ -368,6 +368,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
 
     _beforeInsert(unitReceiptNote) {
         unitReceiptNote.no = generateCode();
+        unitReceiptNote.date = new Date();
         return Promise.resolve(unitReceiptNote);
     }
 

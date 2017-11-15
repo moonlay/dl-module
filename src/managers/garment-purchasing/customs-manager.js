@@ -127,10 +127,10 @@ module.exports = class CustomsManager extends BaseManager {
                     if (!valid.amountOfPackaging || valid.amountOfPackaging === "" || valid.amountOfPackaging < 1)
                         errors["amountOfPackaging"] = i18n.__("Harus diisi lebih dari 0", i18n.__("Customs.amountOfPackaging._:AmountOfPackaging"));
 
-                    if (!valid.bruto || valid.bruto === "" || valid.bruto < 1)
+                    if (!valid.bruto || valid.bruto === "" || valid.bruto <= 0)
                         errors["bruto"] = i18n.__("Harus diisi lebih dari 0", i18n.__("Customs.bruto._:Bruto"));
 
-                    if (!valid.netto || valid.netto === "" || valid.netto < 1)
+                    if (!valid.netto || valid.netto === "" || valid.netto <= 0)
                         errors["netto"] = i18n.__("Harus diisi lebih dari 0", i18n.__("Customs.netto._:Netto"));
                     else {
                         if (valid.bruto && valid.bruto !== "" && valid.bruto < valid.netto)
