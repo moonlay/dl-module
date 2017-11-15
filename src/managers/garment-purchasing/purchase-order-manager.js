@@ -832,6 +832,19 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "items.supplierId": new ObjectId(info.supplierId)
             });
         }
+        if (info.artikel && info.artikel !== "") {
+            var regex = new RegExp(info.artikel, "i");
+            Object.assign(query, {
+                artikel: {
+                    '$regex': regex
+                }
+            });
+        }
+        if (info.prRefNo && info.prRefNo !== "") {
+            Object.assign(query, {
+                "items.refNo": info.prRefNo
+            });
+        }
 
         var offset = Number(info.offset) || 7;
         var page = (Number(info.page) || 1) - 1;
@@ -968,7 +981,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "unit.name": 1,
                                     "unit.division.name": 1,
                                     "refNo": "$items.refNo",
-                                    "artikel":1,
+                                    "artikel": 1,
                                     "product.name": "$items.product.name",
                                     "product.code": "$items.product.code",
                                     "product.description": "$items.product.description",
@@ -1048,7 +1061,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         unit: data.unit.name,
                         division: data.unit.division.name,
                         refNo: data.refNo,
-                        artikel:data.artikel,
+                        artikel: data.artikel,
                         category: data.category,
                         productName: data.product.name,
                         productCode: data.product.code,
@@ -1129,7 +1142,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "Unit": data.unit,
                 "Divisi": data.division,
                 "No Ref Purchase Request": data.refNo,
-                "Artikel":data.artikel,
+                "Artikel": data.artikel,
                 "Kategori": data.category,
                 "Nama Barang": data.productName,
                 "Kode Barang": data.productCode,
