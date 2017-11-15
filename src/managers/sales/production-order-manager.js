@@ -45,7 +45,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         this.FinishTypeManager = new FinishTypeManager(db, user);
         this.StandardTestManager = new StandardTestManager(db, user);
         this.AccountManager = new AccountManager(db, user);
-        this.fpSalesContractManager=new FPSalesContractManager(db,user);
+        this.fpSalesContractManager = new FPSalesContractManager(db, user);
     }
 
     _getQuery(paging) {
@@ -112,14 +112,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
             orderNo: valid.orderNo
         });
 
-        var uomQuery={
-            "unit":"MTR"
+        var uomQuery = {
+            "unit": "MTR"
         };
         //var getUom =this.UomManager.getSingleByQueryOrDefault(uomQuery);
 
         var getBuyer = ObjectId.isValid(valid.buyerId) ? this.BuyerManager.getSingleByIdOrDefault(valid.buyerId) : Promise.resolve(null);
         var getUom = valid.uom && ObjectId.isValid(valid.uomId) ? this.UomManager.getSingleByIdOrDefault(valid.uomId) : this.UomManager.getSingleByQueryOrDefault(uomQuery);
-        
+
         var getProduct = ObjectId.isValid(valid.materialId) ? this.ProductManager.getSingleByIdOrDefault(valid.materialId) : Promise.resolve(null);
         var getProcessType = ObjectId.isValid(valid.processTypeId) ? this.ProcessTypeManager.getSingleByIdOrDefault(valid.processTypeId) : Promise.resolve(null);
         var getOrderType = ObjectId.isValid(valid.orderTypeId) ? this.OrderTypeManager.getSingleByIdOrDefault(valid.orderTypeId) : Promise.resolve(null);
@@ -128,7 +128,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         var getStandardTest = ObjectId.isValid(valid.standardTestId) ? this.StandardTestManager.getSingleByIdOrDefault(valid.standardTestId) : Promise.resolve(null);
         var getMaterialConstruction = ObjectId.isValid(valid.materialConstructionId) ? this.MaterialConstructionManager.getSingleByIdOrDefault(valid.materialConstructionId) : Promise.resolve(null);
         var getAccount = ObjectId.isValid(valid.accountId) ? this.AccountManager.getSingleByIdOrDefault(valid.accountId) : Promise.resolve(null);
-        var getSC=ObjectId.isValid(valid.salesContractId)? this.fpSalesContractManager.getSingleByIdOrDefault(valid.salesContractId) : Promise.resolve(null);
+        var getSC = ObjectId.isValid(valid.salesContractId) ? this.fpSalesContractManager.getSingleByIdOrDefault(valid.salesContractId) : Promise.resolve(null);
 
         valid.details = valid.details || [];
         var getColorTypes = [];
@@ -148,7 +148,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             }
         }
 
-        return Promise.all([getProductionOrder, getBuyer, getUom, getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount,getSC].concat(getColorTypes, getLampStandards))
+        return Promise.all([getProductionOrder, getBuyer, getUom, getProduct, getProcessType, getOrderType, getFinishType, getYarnMaterial, getStandardTest, getMaterialConstruction, getAccount, getSC].concat(getColorTypes, getLampStandards))
             .then(results => {
                 var _productionOrder = results[0];
                 var _buyer = results[1];
@@ -295,7 +295,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         errors["orderQuantity"] = i18n.__("ProductionOrder.orderQuantity.shouldNot:%s should equal SUM quantity in details", i18n.__("ProductionOrder.orderQuantity._:OrderQuantity")); //"orderQuantity tidak boleh berbeda dari total jumlah detail";
 
                     }
-                    
+
                 }
 
                 if (valid.shippingQuantityTolerance > 100) {
@@ -385,8 +385,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 if (_buyer) {
                     valid.buyerId = new ObjectId(_buyer._id);
                 }
-                if(_sc){
-                    valid.salesContractId= new ObjectId(_sc._id);
+                if (_sc) {
+                    valid.salesContractId = new ObjectId(_sc._id);
                 }
                 if (_uom) {
                     valid.uomId = new ObjectId(_uom._id);
@@ -484,66 +484,66 @@ module.exports = class ProductionOrderManager extends BaseManager {
             });
     }
 
-     _afterInsert(id) {
+    _afterInsert(id) {
         return this.getSingleById(id)
             .then((spp) => {
                 var sppId = id;
                 return this.fpSalesContractManager.getSingleById(spp.salesContractId)
                     .then((sc) => {
-                        if(sc.remainingQuantity!=undefined){
-                            sc.remainingQuantity = sc.remainingQuantity-spp.orderQuantity;
+                        if (sc.remainingQuantity != undefined) {
+                            sc.remainingQuantity = sc.remainingQuantity - spp.orderQuantity;
                             return this.fpSalesContractManager.update(sc)
                                 .then(
-                                    (id) => 
+                                (id) =>
                                     Promise.resolve(sppId));
-                            }
-                            else{
-                                Promise.resolve(sppId);
-                            }
-                        });
-                            
+                        }
+                        else {
+                            Promise.resolve(sppId);
+                        }
                     });
+
+            });
     }
 
     _beforeUpdate(data) {
-            return this.getSingleById(data._id)
-                .then(spp => {
-                    if(spp.salesContractId){
-                        return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+        return this.getSingleById(data._id)
+            .then(spp => {
+                if (spp.salesContractId) {
+                    return this.fpSalesContractManager.getSingleById(spp.salesContractId)
                         .then((sc) => {
-                            if(sc.remainingQuantity!=undefined){
-                                sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
+                            if (sc.remainingQuantity != undefined) {
+                                sc.remainingQuantity = sc.remainingQuantity + spp.orderQuantity;
                                 return this.fpSalesContractManager.update(sc)
-                                    .then((id) => 
+                                    .then((id) =>
                                         Promise.resolve(data));
-                                }
-                                else{
-                                    return Promise.resolve(data);
-                                }
-                            });
-                        }
-                        else{
-                            return Promise.resolve(data);
-                        }
+                            }
+                            else {
+                                return Promise.resolve(data);
+                            }
+                        });
+                }
+                else {
+                    return Promise.resolve(data);
+                }
             });
     }
-    
+
     _afterUpdate(id) {
         return this.getSingleById(id)
             .then((spp) => {
                 var sppId = id;
-                if(spp.salesContractId){
+                if (spp.salesContractId) {
                     return this.fpSalesContractManager.getSingleById(spp.salesContractId)
                         .then((sc) => {
-                            if(sc.remainingQuantity!=undefined){
+                            if (sc.remainingQuantity != undefined) {
                                 sc.remainingQuantity -= spp.orderQuantity;
                             }
                             return this.fpSalesContractManager.update(sc)
-                                .then((id) => 
+                                .then((id) =>
                                     Promise.resolve(sppId));
-                                });
+                        });
                 }
-                else{
+                else {
                     Promise.resolve(sppId);
                 }
             });
@@ -551,24 +551,24 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     delete(data) {
         return this.getSingleById(data._id)
-        .then(spp => {
-            spp._deleted=true;
-            if(spp.salesContractId){
-                return this.fpSalesContractManager.getSingleById(spp.salesContractId)
-                .then((sc) => {
-                    if(sc.remainingQuantity!=undefined){
-                        sc.remainingQuantity = sc.remainingQuantity+spp.orderQuantity;
-                    }
-                    return this.fpSalesContractManager.update(sc)
-                    .then((id) =>{
-                        return this.collection.update(spp);
-                    });
-                });
-            }
-            else{
-                return this.collection.update(spp);
-            }
-        });
+            .then(spp => {
+                spp._deleted = true;
+                if (spp.salesContractId) {
+                    return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                        .then((sc) => {
+                            if (sc.remainingQuantity != undefined) {
+                                sc.remainingQuantity = sc.remainingQuantity + spp.orderQuantity;
+                            }
+                            return this.fpSalesContractManager.update(sc)
+                                .then((id) => {
+                                    return this.collection.update(spp);
+                                });
+                        });
+                }
+                else {
+                    return this.collection.update(spp);
+                }
+            });
     }
 
     _createIndexes() {
@@ -650,10 +650,24 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }
                 });
             }
+            if (query.salesContractNo) {
+                Object.assign(qry, {
+                    "salesContractNo": {
+                        "$regex": (new RegExp(query.salesContractNo, "i"))
+                    }
+                });
+            }
             if (filter.orderNo) {
                 Object.assign(qry, {
                     "orderNo": {
                         "$regex": (new RegExp(filter.orderNo, "i"))
+                    }
+                });
+            }
+            if (query.orderNo) {
+                Object.assign(qry, {
+                    "orderNo": {
+                        "$regex": (new RegExp(query.orderNo, "i"))
                     }
                 });
             }
@@ -662,14 +676,31 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "orderTypeId": (new ObjectId(filter.orderTypeId))
                 });
             }
+            if (query.orderTypeId) {
+                Object.assign(qry, {
+                    "orderTypeId": (new ObjectId(query.orderTypeId))
+                });
+            }
             if (filter.processTypeId) {
                 Object.assign(qry, {
                     "processTypeId": (new ObjectId(filter.processTypeId))
                 });
             }
+            if (query.processTypeId) {
+                Object.assign(qry, {
+                    "processTypeId": (new ObjectId(query.processTypeId))
+                });
+            }
+
             if (filter.buyerId) {
                 Object.assign(qry, {
                     "buyerId": (new ObjectId(filter.buyerId))
+                });
+            }
+
+            if (query.buyerId) {
+                Object.assign(qry, {
+                    "buyerId": (new ObjectId(query.buyerId))
                 });
             }
             if (filter.accountId) {
@@ -677,11 +708,25 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "accountId": (new ObjectId(filter.accountId))
                 });
             }
+            if (query.accountId) {
+                Object.assign(qry, {
+                    "accountId": (new ObjectId(query.accountId))
+                });
+            }
             if (filter.sdate && filter.edate) {
                 Object.assign(qry, {
                     "_createdDate": {
                         "$gte": new Date(`${filter.sdate} 00:00:00`),
                         "$lte": new Date(`${filter.edate} 23:59:59`)
+                    }
+                });
+            }
+
+            if (query.sdate && query.edate) {
+                Object.assign(qry, {
+                    "_createdDate": {
+                        "$gte": new Date(`${query.sdate} 00:00:00`),
+                        "$lte": new Date(`${query.edate} 23:59:59`)
                     }
                 });
             }
@@ -776,12 +821,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                         }, {
                             $project:
-                            {
-                                "orderNo": "$kanban.productionOrder.orderNo",
-                                "kanbanCode": "$kanban.code",
-                                "colorCode": "$kanban.selectedProductionOrderDetail.code",
-                                "input": 1
-                            }
+                                {
+                                    "orderNo": "$kanban.productionOrder.orderNo",
+                                    "kanbanCode": "$kanban.code",
+                                    "colorCode": "$kanban.selectedProductionOrderDetail.code",
+                                    "input": 1
+                                }
                         }
                     ]).toArray());
                 }
@@ -820,11 +865,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         }
                                     }, {
                                         $project:
-                                        {
-                                            "productionOrderNo": 1,
-                                            "kanbanCode": 1,
-                                            "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
-                                        }
+                                            {
+                                                "productionOrderNo": 1,
+                                                "kanbanCode": 1,
+                                                "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
+                                            }
                                     }
                                 ]).toArray());
                             }
@@ -892,7 +937,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "orderTypeId": (new ObjectId(filter.orderTypeId))
                 });
             }
-            
+
             if (filter.accountId) {
                 Object.assign(qry, {
                     "accountId": (new ObjectId(filter.accountId))
@@ -910,57 +955,62 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
             qry = Object.assign(qry, { _deleted: false });
             var getPrdOrder = [];
-            var orderInMeter = {"$cond" : [{"$eq" : ["$uom.unit" ,"YDS"]}, { $multiply: [ "$orderQuantity", 0.9144 ] }, "$orderQuantity"]}
+            var orderInMeter = { "$cond": [{ "$eq": ["$uom.unit", "YDS"] }, { $multiply: ["$orderQuantity", 0.9144] }, "$orderQuantity"] }
             getPrdOrder.push(this.collection
                 .aggregate([
                     { $match: qry }
                 ])
                 .toArray());
-                getPrdOrder.push(this.collection
-                    .aggregate([
-                        { $match : qry },
-                        { $project : {
-                            "account" : "$account.username",
-                            "januari" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,1]}, orderInMeter, 0]},
-                            "februari" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,2]}, orderInMeter, 0]},
-                            "maret" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,3]}, orderInMeter, 0]},
-                            "april" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,4]}, orderInMeter, 0]},
-                            "mei" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,5]}, orderInMeter, 0]},
-                            "juni" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,6]}, orderInMeter, 0]},
-                            "juli" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,7]}, orderInMeter, 0]},
-                            "agustus" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,8]}, orderInMeter, 0]},
-                            "september" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,9]}, orderInMeter, 0]},
-                            "oktober" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,10]}, orderInMeter, 0]},
-                            "november" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,11]}, orderInMeter, 0]},
-                            "desember" : {"$cond" : [{"$eq" : [{"$month" : "$_createdDate"} ,12]}, orderInMeter, 0]},
-                            "totalOrder" : orderInMeter
-                        }},
-                        {$group : {_id : {"sales" : "$account"},
-                        "jan" : {"$sum" : "$januari"},
-                        "feb" : {"$sum" : "$februari"},
-                        "mar" : {"$sum" : "$maret"},
-                        "apr" : {"$sum" : "$april"},
-                        "mei" : {"$sum" : "$mei"},
-                        "jun" : {"$sum" : "$juni"},
-                        "jul" : {"$sum" : "$juli"},
-                        "agu" : {"$sum" : "$agustus"},
-                        "sep" : {"$sum" : "$september"},
-                        "okt" : {"$sum" : "$oktober"},
-                        "nov" : {"$sum" : "$november"},
-                        "des" : {"$sum" : "$desember"},
-                        "totalOrder" : { "$sum": "$totalOrder" }
-                    }}
-                    ])
-                    .toArray());
+            getPrdOrder.push(this.collection
+                .aggregate([
+                    { $match: qry },
+                    {
+                        $project: {
+                            "account": "$account.username",
+                            "januari": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 1] }, orderInMeter, 0] },
+                            "februari": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 2] }, orderInMeter, 0] },
+                            "maret": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 3] }, orderInMeter, 0] },
+                            "april": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 4] }, orderInMeter, 0] },
+                            "mei": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 5] }, orderInMeter, 0] },
+                            "juni": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 6] }, orderInMeter, 0] },
+                            "juli": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 7] }, orderInMeter, 0] },
+                            "agustus": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 8] }, orderInMeter, 0] },
+                            "september": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 9] }, orderInMeter, 0] },
+                            "oktober": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 10] }, orderInMeter, 0] },
+                            "november": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 11] }, orderInMeter, 0] },
+                            "desember": { "$cond": [{ "$eq": [{ "$month": "$_createdDate" }, 12] }, orderInMeter, 0] },
+                            "totalOrder": orderInMeter
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: { "sales": "$account" },
+                            "jan": { "$sum": "$januari" },
+                            "feb": { "$sum": "$februari" },
+                            "mar": { "$sum": "$maret" },
+                            "apr": { "$sum": "$april" },
+                            "mei": { "$sum": "$mei" },
+                            "jun": { "$sum": "$juni" },
+                            "jul": { "$sum": "$juli" },
+                            "agu": { "$sum": "$agustus" },
+                            "sep": { "$sum": "$september" },
+                            "okt": { "$sum": "$oktober" },
+                            "nov": { "$sum": "$november" },
+                            "des": { "$sum": "$desember" },
+                            "totalOrder": { "$sum": "$totalOrder" }
+                        }
+                    }
+                ])
+                .toArray());
             Promise.all(getPrdOrder).then(result => {
                 var resCount = result[0];
                 var prodOrders = result[1];
                 prodOrders = [].concat.apply([], prodOrders);
 
-                        var results = {
-                            data: prodOrders,
-                        }; 
-                        resolve(results);
+                var results = {
+                    data: prodOrders,
+                };
+                resolve(results);
             })
         });
     }
@@ -1034,15 +1084,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             },
                             {
                                 $project:
-                                {
-                                    "orderNo": "$kanban.productionOrder.orderNo",
-                                    "kanbanCode": "$kanban.code",
-                                    "machine": "$machine.name",
-                                    "color": "$kanban.selectedProductionOrderDetail.colorRequest",
-                                    "step": "$kanban.instruction.steps.process",
-                                    "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
-                                    "qty": "$input"
-                                }
+                                    {
+                                        "orderNo": "$kanban.productionOrder.orderNo",
+                                        "kanbanCode": "$kanban.code",
+                                        "machine": "$machine.name",
+                                        "color": "$kanban.selectedProductionOrderDetail.colorRequest",
+                                        "step": "$kanban.instruction.steps.process",
+                                        "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
+                                        "qty": "$input"
+                                    }
                             },
                             {
                                 $match: { "cmp": true }
@@ -1058,8 +1108,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         var _dailyOperations = []
                         if (dailyOperations.length > 0) {
                             dailyOperations.reduce(function (res, value) {
-                                if (!res[`${value.step}${value.machine}${value.color}`]) {
-                                    res[`${value.step}${value.machine}${value.color}`] = {
+                                if (!res[`${value.step}${value.machine}${value.color}${value.orderNo}`]) {
+                                    res[`${value.step}${value.machine}${value.color}${value.orderNo}`] = {
                                         qty: 0,
                                         orderNo: value.orderNo,
                                         color: value.color,
@@ -1067,9 +1117,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         machine: value.machine,
                                         kanbanCode: value.kanbanCode
                                     };
-                                    _dailyOperations.push(res[`${value.step}${value.machine}${value.color}`])
+                                    _dailyOperations.push(res[`${value.step}${value.machine}${value.color}${value.orderNo}`])
                                 }
-                                res[`${value.step}${value.machine}${value.color}`].qty += value.qty
+                                res[`${value.step}${value.machine}${value.color}${value.orderNo}`].qty += value.qty
                                 return res;
                             }, {});
                         }
@@ -1091,11 +1141,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 { $unwind: "$fabricGradeTests" },
                                 {
                                     $group:
-                                    {
-                                        "_id": "$fabricGradeTests.grade",
-                                        "productionOrderNo": { "$first": "$productionOrderNo" },
-                                        "qty": { "$sum": "$fabricGradeTests.initLength" },
-                                    }
+                                        {
+                                            "_id": "$fabricGradeTests.grade",
+                                            "productionOrderNo": { "$first": "$productionOrderNo" },
+                                            "qty": { "$sum": "$fabricGradeTests.initLength" },
+                                        }
                                 }, {
                                     $sort: { "_id": 1 }
                                 }
