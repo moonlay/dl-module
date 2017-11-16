@@ -59,7 +59,7 @@ module.exports = class StandardHourManager extends BaseManager {
                 },
             "_deleted": false,
             "styleId": valid.styleId && ObjectId.isValid(valid.styleId) ? new ObjectId(valid.styleId) : ''
-        }).order({"date" : -1}).execute();
+        }).page(1, 2).order({"date" : -1}).execute();
         var getStyle = valid.styleId && ObjectId.isValid(valid.styleId) ? this.styleManager.getSingleByIdOrDefault(new ObjectId(valid.styleId)) : Promise.resolve(null);
         // 2. begin: Validation.
         return Promise.all([getStandarHour, getStyle])
@@ -90,10 +90,9 @@ module.exports = class StandardHourManager extends BaseManager {
                         errors["date"] = i18n.__(`StandardHour.date.notGreater:%s not greater than today`, i18n.__("StandardHour.date._:Date"));
                     else if(standardHourArr && standardHourArr.data.length > 0){
                         var _standardHour = standardHourArr.data[0]
-                        if(date < _standardHour.date){
+                        if(date <= _standardHour.date){
                             var dateHour = new Date(_standardHour.date);
-                            var stringDate = `${dateHour.getDate()}-${(dateHour.getMonth() + 1)}-${dateHour.getFullYear()}`;
-                            errors["date"] = i18n.__(`StandardHour.date.mustBeGreater:%s must be greater than equal ${stringDate}`, i18n.__("StandardHour.date._:Date"));
+                            errors["date"] = `Date must be greater than ${dateHour.getDate()}-${(dateHour.getMonth() + 1)}-${dateHour.getFullYear()}`;
                         }
                     }
                 }
