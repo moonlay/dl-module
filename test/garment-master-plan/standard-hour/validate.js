@@ -104,11 +104,13 @@ it("#04. should error when create new data with date greater than today", functi
         });
 });
 
+var createdId;
 it("#05. should success when create new data", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             manager.create(data)
                 .then((id) => {
+                    createdId = id;
                     done();
                 })
                 .catch((e) => {
@@ -137,6 +139,29 @@ it("#06. should error when create new data with date greater date data last save
                     e.errors.should.have.property("date");
                     done();
                 });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#07. should success when destroy data with id", function (done) {
+    manager.destroy(createdId)
+        .then((result) => {
+            result.should.be.Boolean();
+            result.should.equal(true);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#08. should null when get destroyed data`, function (done) {
+    manager.getSingleByIdOrDefault(createdId)
+        .then((data) => {
+            should.equal(data, null);
+            done();
         })
         .catch((e) => {
             done(e);
