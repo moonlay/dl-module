@@ -237,3 +237,142 @@ it('#07. should error when create new purchase-order-external with deal price gr
                 })
         })
 });
+
+it('#08. should error when create new purchase-order-external with isOverBudget == true OverbudgetRemark blank', function (done) {
+    purchaseRequestDataUtil.getNewTestData()
+        .then((res) => {
+            return purchaseOrderManager.purchaseRequestManager.getPurchaseRequestByTag()
+        })
+        .then(data => {
+            data.should.be.instanceof(Array);
+            return purchaseOrderManager.createMultiple(data)
+        })
+        .then(listId => {
+            return purchaseOrderManager.getSingleById(listId[0])
+        })
+        .then(poInternal => {
+            var purchaseOrder = Object.assign({}, poInternal);
+
+            poInternal.items.map((item) => {
+                item.defaultQuantity = item.defaultQuantity / 2;
+            })
+            poInternal.sourcePurchaseOrderId = purchaseOrder._id
+            poInternal.sourcePurchaseOrder = Object.assign({}, purchaseOrder);
+            return purchaseOrderManager.split(poInternal)
+        })
+        .then((id) => {
+            return purchaseOrderManager.getSingleById(id);
+        })
+        .then((poInternal) => {
+            return purchaseOrderExternalDataUtil.getNew([poInternal])
+                .then(poe => {
+                    purchaseOrderExternal = poe;
+                    validatePO(purchaseOrderExternal);
+
+                    return purchaseOrderManager.collection.find({
+                        "no": poInternal.sourcePurchaseOrder.no,
+                        "purchaseRequest.no": poInternal.purchaseRequest.no,
+                        "items.refNo": poInternal.items[0].refNo,
+                        "items.product.code": poInternal.items[0].product.code,
+                        _deleted: false,
+                        isClosed: false
+                    }).toArray()
+                })
+        })
+        .then((listPOInternal) => {
+            for (var poInternal of listPOInternal) {
+                for (var item of poInternal.items) {
+                    item.budgetPrice = item.budgetPrice * 2
+                }
+            }
+            return purchaseOrderExternalDataUtil.getNewData(listPOInternal)
+        })
+        .then((data) => {
+            for (var item of data.items) {
+                item.isOverBudget = true;
+                item.overBudgetRemark = "";
+            }
+            return purchaseOrderExternalManager.create(data)
+        })
+        .then((id) => {
+            done("should error when create new purchase-order-external with deal price grater than budget price");
+        })
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
+        });
+});
+
+it('#09. should success when create new purchase-order-external with isOverBugted == true', function (done) {
+    purchaseRequestDataUtil.getNewTestData()
+        .then((res) => {
+            return purchaseOrderManager.purchaseRequestManager.getPurchaseRequestByTag()
+        })
+        .then(data => {
+            data.should.be.instanceof(Array);
+            return purchaseOrderManager.createMultiple(data)
+        })
+        .then(listId => {
+            return purchaseOrderManager.getSingleById(listId[0])
+        })
+        .then(poInternal => {
+            var purchaseOrder = Object.assign({}, poInternal);
+
+            poInternal.items.map((item) => {
+                item.defaultQuantity = item.defaultQuantity / 2;
+            })
+            poInternal.sourcePurchaseOrderId = purchaseOrder._id
+            poInternal.sourcePurchaseOrder = Object.assign({}, purchaseOrder);
+            return purchaseOrderManager.split(poInternal)
+        })
+        .then((id) => {
+            return purchaseOrderManager.getSingleById(id);
+        })
+        .then((poInternal) => {
+            return purchaseOrderExternalDataUtil.getNew([poInternal])
+                .then(poe => {
+                    purchaseOrderExternal = poe;
+                    validatePO(purchaseOrderExternal);
+
+                    return purchaseOrderManager.collection.find({
+                        "no": poInternal.sourcePurchaseOrder.no,
+                        "purchaseRequest.no": poInternal.purchaseRequest.no,
+                        "items.refNo": poInternal.items[0].refNo,
+                        "items.product.code": poInternal.items[0].product.code,
+                        _deleted: false,
+                        isClosed: false
+                    }).toArray()
+                })
+        })
+        .then((listPOInternal) => {
+            for (var poInternal of listPOInternal) {
+                for (var item of poInternal.items) {
+                    item.budgetPrice = item.budgetPrice * 2
+                }
+            }
+            return purchaseOrderExternalDataUtil.getNewData(listPOInternal)
+        })
+        .then((data) => {
+            for (var item of data.items) {
+                item.isOverBudget = true;
+                item.overBudgetRemark = "Over Budget Remark Test";
+            }
+            return purchaseOrderExternalManager.create(data)
+        })
+        .then((id) => {
+            return purchaseOrderExternalManager.getSingleById(id);
+        })
+        .then(po => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
