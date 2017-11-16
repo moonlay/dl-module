@@ -160,18 +160,18 @@ it('#06. should success when create new purchase-order-external with splitted pu
                     }).toArray()
                 })
                 .then((listPOInternal) => {
-                    return purchaseOrderExternalDataUtil.getNew(listPOInternal)
+                    purchaseOrderExternalDataUtil.getNew(listPOInternal)
+                        .then(poe => {
+                            purchaseOrderExternal = poe;
+                            validatePO(purchaseOrderExternal);
+                            done();
+                        })
+                        .catch(e => {
+                            done(e);
+                        });
                 })
         })
-        .then(poe => {
-            purchaseOrderExternal = poe;
-            validatePO(purchaseOrderExternal);
-            done();
-        })
-        .catch(e => {
-            done(e);
-        });
-})
+});
 
 it('#07. should error when create new purchase-order-external with deal price grater than budget price', function (done) {
     purchaseRequestDataUtil.getNewTestData()
