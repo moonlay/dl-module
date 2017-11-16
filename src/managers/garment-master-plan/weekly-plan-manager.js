@@ -6,6 +6,7 @@ var DLModels = require("dl-models");
 var generateCode = require("../../utils/code-generator");
 var map = DLModels.map;
 var WeeklyPlan = DLModels.garmentMasterPlan.WeeklyPlan;
+var WeeklyPlanItem = DLModels.garmentMasterPlan.WeeklyPlanItem;
 var BaseManager = require("module-toolkit").BaseManager;
 var UnitManager = require("../master/unit-manager");
 var i18n = require("dl-i18n");
@@ -85,6 +86,8 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                     var itemErrors = [];
                     for (var item of valid.items) {
                         var itemError = {};
+                        item.startDate = new Date(item.startDate);
+                        item.endDate = new Date(item.endDate);
                         if (!item.month && item.month > 11 && item.month < 0) {
                             itemError["month"] = i18n.__("WeeklyPlan.items.month.isRequired:%s is required", i18n.__("WeeklyPlan.items.month._:Month"));
                         } else if (item.startDate.getMonth() != item.month && item.endDate.getMonth() != item.month) {
@@ -117,6 +120,15 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                     valid.unitId = _unit._id;
                     valid.unit = _unit;
                 }
+                var items = [];
+                for(var item of valid.items){
+                    if (!item.stamp) {
+                        item = new WeeklyPlanItem(item);
+                    }
+                    item.stamp(this.user.username, "manager");
+                    items.push(item);
+                }
+                valid.items = items;
                 if (!valid.stamp) {
                     valid = new WeeklyPlan(valid);
                 }

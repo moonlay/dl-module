@@ -13,6 +13,7 @@ var PackingReceiptManager = require('./fp-packing-receipt-manager');
 var Models = require("dl-models");
 var Map = Models.map;
 var FpShipmentDocumentModel = Models.inventory.finishingPrinting.FPShipmentDocument;
+var FpPackingReceiptModel = Models.inventory.finishingPrinting.FPPackingReceipt;
 
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
@@ -169,14 +170,18 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 else if (new Date(valid.deliveryDate) > new Date())
                     errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.lessThanToday:%s must be less than or equal today's date", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
 
-                if (valid.details.length > 0) {
+                if (valid.details && valid.details.length > 0) {
                     var detailErrors = [];
-                    var detailIndex = 0
-                    for (var detail of valid.details) {
+
+                    valid.details.forEach((detail, detailIndex) => {
                         var detailError = {};
 
                         //find duplicate production order
-                        var duplicateProductionOrder = valid.details.find((validDetail, index) => (validDetail.productionOrderId.toString() === detail.productionOrderId.toString()) && index !== detailIndex);
+                        var duplicateProductionOrder = valid.details.find((validDetail, index) => {
+                            var validId = validDetail.productionOrderId ? validDetail.productionOrderId.toString() : '';
+                            var detailId = detail.productionOrderId ? detail.productionOrderId.toString() : '';
+                            return validId === detailId && index !== detailIndex;
+                        });
                         detailIndex++;
                         if (!detail.productionOrderId || detail.productionOrderId === "") {
                             detailError["productionOrderId"] = i18n.__("ShipmentDocument.details.productionOrderId.isRequired:%s is required", i18n.__("ShipmentDocument.details.productionOrderId._:Nomor Order")); //"Nomor Order harus diisi"; 
@@ -184,15 +189,18 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                             detailError["productionOrderId"] = i18n.__("ShipmentDocument.details.productionOrderId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.productionOrderId._:Nomor Order"));
                         }
 
-                        if (detail.items.length > 0) {
+                        if (detail.items && detail.items.length > 0) {
                             var itemErrors = [];
-                            var itemIndex = 0;
 
-                            for (var item of detail.items) {
+                            detail.items.forEach((item, itemIndex) => {
                                 var itemError = {};
 
                                 //find duplicate packing receipt
-                                var duplicatePackingReceipt = detail.items.find((detailItem, index) => (detailItem.packingReceiptId.toString() === item.packingReceiptId.toString()) && index !== itemIndex);
+                                var duplicatePackingReceipt = detail.items.find((detailItem, index) => {
+                                    var validId = detailItem.packingReceiptId ? detailItem.packingReceiptId.toString() : '';
+                                    var itemId = item.packingReceiptId ? item.packingReceiptId.toString() : '';
+                                    return validId === itemId && index !== itemIndex;
+                                });
                                 itemIndex++;
                                 if (!item.packingReceiptId || item.packingReceiptId === "") {
                                     itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing")); //"Packing Receipt harus diisi"; 
@@ -200,7 +208,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                     itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing"));
                                 }
 
-                                if (item.packingReceiptItems.length > 0 && !valid.isVoid) {
+                                if (item.packingReceiptItems && item.packingReceiptItems.length > 0 && !valid.isVoid) {
                                     var packingReceiptItemErrors = [];
 
                                     for (var packingReceiptItem of item.packingReceiptItems) {
@@ -229,7 +237,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                 }
 
                                 itemErrors.push(itemError);
-                            }
+                            })
 
                             for (var itemError of itemErrors) {
                                 if (Object.getOwnPropertyNames(itemError).length > 0) {
@@ -243,7 +251,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                         }
 
                         detailErrors.push(detailError);
-                    }
+                    });
 
                     for (var detailError of detailErrors) {
                         if (Object.getOwnPropertyNames(detailError).length > 0) {
@@ -359,7 +367,11 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
                                     }
 
-                                    updatePackingReceipts.push(this.packingReceiptManager.update(packingReceipts[i]));
+                                    packingReceipts[i]._updatedDate = new Date();
+                                    packingReceipts[i]._updatedBy = fpShipmentDocument._updatedBy;
+                                    packingReceipts[i] = new FpPackingReceiptModel(packingReceipts[i]);
+
+                                    updatePackingReceipts.push(this.packingReceiptManager.collection.update(packingReceipts[i]));
                                 }
 
                                 return Promise.all(updatePackingReceipts)
@@ -424,7 +436,11 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
                                     }
 
-                                    updatePackingReceipts.push(this.packingReceiptManager.update(packingReceipts[i]));
+                                    packingReceipts[i]._updatedDate = new Date();
+                                    packingReceipts[i]._updatedBy = fpShipmentDocument._updatedBy;
+                                    packingReceipts[i] = new FpPackingReceiptModel(packingReceipts[i]);
+
+                                    updatePackingReceipts.push(this.packingReceiptManager.collection.update(packingReceipts[i]));
                                 }
 
                                 return Promise.all(updatePackingReceipts)
@@ -520,20 +536,43 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
                 for (var field of detail.items) {
 
-                    var item = {};
-                    index += 1;
-                    item["No"] = index;
-                    item["Tanggal"] = shipment._createdDate ? moment(new Date(shipment._createdDate)).format(dateFormat) : '';
-                    item["Kode"] = shipment.code ? shipment.code : '';
-                    item["Kode Pengiriman"] = shipment.shipmentNumber ? shipment.shipmentNumber : '';
-                    item["Kode Delivery Order"] = shipment.deliveryCode ? shipment.deliveryCode : '';
-                    item["Nomor Order"] = detail.productionOrderNo ? detail.productionOrderNo : '';
-                    item["Buyer"] = shipment.buyerName ? shipment.buyerName : '';
-                    item["Nama Barang"] = field.productName ? field.productName : '';
-                    item["Satuan"] = field.uomUnit ? field.uomUnit : '';
-                    item["Kuantiti Satuan"] = field.quantity ? field.quantity : 0;
-                    item["Panjang Total"] = field.length ? (field.length * field.quantity).toFixed(2) : 0;
-                    item["Berat Total"] = field.weight ? (field.weight * field.quantity).toFixed(2) : 0;
+                    if (field.packingReceiptItems && field.packingReceiptItems.length > 0) {
+                        for (var packingReceiptItem of field.packingReceiptItems) {
+
+                            var item = {};
+                            index += 1;
+                            item["No"] = index;
+                            item["Tanggal"] = shipment._createdDate ? moment(new Date(shipment._createdDate)).format(dateFormat) : '';
+                            item["Kode"] = shipment.code ? shipment.code : '';
+                            item["Kode Pengiriman"] = shipment.shipmentNumber ? shipment.shipmentNumber : '';
+                            item["Kode Delivery Order"] = shipment.deliveryCode ? shipment.deliveryCode : '';
+                            item["Nomor Order"] = detail.productionOrderNo ? detail.productionOrderNo : '';
+                            item["Buyer"] = shipment.buyerName ? shipment.buyerName : '';
+                            item["Nama Barang"] = packingReceiptItem.productName ? packingReceiptItem.productName : '';
+                            item["Satuan"] = packingReceiptItem.uomUnit ? packingReceiptItem.uomUnit : '';
+                            item["Kuantiti Satuan"] = packingReceiptItem.quantity ? packingReceiptItem.quantity : 0;
+                            item["Panjang Total"] = packingReceiptItem.length ? (packingReceiptItem.length * packingReceiptItem.quantity).toFixed(2) : 0;
+                            item["Berat Total"] = packingReceiptItem.weight ? (fielpackingReceiptItemd.weight * packingReceiptItem.quantity).toFixed(2) : 0;
+
+                        }
+                    } else {
+
+                        var item = {};
+                        index += 1;
+                        item["No"] = index;
+                        item["Tanggal"] = shipment._createdDate ? moment(new Date(shipment._createdDate)).format(dateFormat) : '';
+                        item["Kode"] = shipment.code ? shipment.code : '';
+                        item["Kode Pengiriman"] = shipment.shipmentNumber ? shipment.shipmentNumber : '';
+                        item["Kode Delivery Order"] = shipment.deliveryCode ? shipment.deliveryCode : '';
+                        item["Nomor Order"] = detail.productionOrderNo ? detail.productionOrderNo : '';
+                        item["Buyer"] = shipment.buyerName ? shipment.buyerName : '';
+                        item["Nama Barang"] = field.productName ? field.productName : '';
+                        item["Satuan"] = field.uomUnit ? field.uomUnit : '';
+                        item["Kuantiti Satuan"] = field.quantity ? field.quantity : 0;
+                        item["Panjang Total"] = field.length ? (field.length * field.quantity).toFixed(2) : 0;
+                        item["Berat Total"] = field.weight ? (field.weight * field.quantity).toFixed(2) : 0;
+
+                    }
 
                     xls.options["No"] = "number";
                     xls.options["Tanggal"] = "string";
