@@ -54,7 +54,9 @@ class PurchaseOrderExternalDataUtil {
                                     budgetPrice: Number(item.budgetPrice),
                                     priceBeforeTax: Number(item.budgetPrice),
                                     pricePerDealUnit: Number(item.budgetPrice),
-                                    useIncomeTax: false
+                                    useIncomeTax: false,
+                                    isOverBudget: false,
+                                    overBudgetRemark: "",
                                 }
                             })
                         })
@@ -133,7 +135,9 @@ class PurchaseOrderExternalDataUtil {
                                     budgetPrice: Number(item.budgetPrice),
                                     priceBeforeTax: Number(item.budgetPrice),
                                     pricePerDealUnit: Number(item.budgetPrice),
-                                    useIncomeTax: false
+                                    useIncomeTax: false,
+                                    isOverBudget: false,
+                                    overBudgetRemark: "",
                                 }
                             })
                         })
