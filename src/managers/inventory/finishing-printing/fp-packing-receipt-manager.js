@@ -350,6 +350,8 @@ module.exports = class FPPackingReceiptManager extends BaseManager {
                                         .then((inventoryDocumentId) => Promise.resolve(packingReceiptId))
                                 })
                         })
+                } else {
+                    return Promise.resolve(packingReceiptId)
                 }
             })
     }
