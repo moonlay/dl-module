@@ -245,15 +245,15 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 },
                                 {
                                     $group:
-                                    {
-                                        _id: null,
-                                        "totalAmount": { $sum: "$price" },
-                                        "product": { "$first": "$product" },
-                                        "productId": { "$first": "$productId" },
-                                        "prNo": { "$first": "$prNo" },
-                                        "prRefNo": { "$first": "$prRefNo" },
-                                        "poNo": { "$first": "$poNo" },
-                                    }
+                                        {
+                                            _id: null,
+                                            "totalAmount": { $sum: "$price" },
+                                            "product": { "$first": "$product" },
+                                            "productId": { "$first": "$productId" },
+                                            "prNo": { "$first": "$prNo" },
+                                            "prRefNo": { "$first": "$prRefNo" },
+                                            "poNo": { "$first": "$poNo" },
+                                        }
                                 }]).toArray())
                         }
 
@@ -391,8 +391,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                     if (!items.dealQuantity || items.dealQuantity === 0) {
                                                         itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
                                                     }
-                                                    else if (totalDealPrice > fixBudget) {
-                                                        itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Total price"));
+                                                    else if (valid.paymentMethod != "CMT" || valid.paymentMethod != "FREE FROM BUYER") {
+                                                        if (totalDealPrice > fixBudget) {
+                                                            itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Total price"));
+                                                        }
                                                     }
 
                                                     if (!items.dealUom || !items.dealUom.unit || items.dealUom.unit === "") {
@@ -401,8 +403,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                     if (!items.priceBeforeTax || items.priceBeforeTax === 0) {
                                                         itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
                                                     }
-                                                    else if (totalDealPrice > fixBudget) {
-                                                        itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Total price"));
+                                                    else if (valid.paymentMethod != "CMT" || valid.paymentMethod != "FREE FROM BUYER") {
+                                                        if (totalDealPrice > fixBudget) {
+                                                            itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Total price"));
+                                                        }
                                                     }
 
                                                     var price = (items.priceBeforeTax.toString()).split(",");

@@ -169,14 +169,18 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 else if (new Date(valid.deliveryDate) > new Date())
                     errors["deliveryDate"] = i18n.__("ShipmentDocument.deliveryDate.lessThanToday:%s must be less than or equal today's date", i18n.__("ShipmentDocument.deliveryDate._:Delivery Date"));
 
-                if (valid.details.length > 0) {
+                if (valid.details && valid.details.length > 0) {
                     var detailErrors = [];
-                    var detailIndex = 0
-                    for (var detail of valid.details) {
+
+                    valid.details.forEach((detail, detailIndex) => {
                         var detailError = {};
 
                         //find duplicate production order
-                        var duplicateProductionOrder = valid.details.find((validDetail, index) => (validDetail.productionOrderId.toString() === detail.productionOrderId.toString()) && index !== detailIndex);
+                        var duplicateProductionOrder = valid.details.find((validDetail, index) => {
+                            var validId = validDetail.productionOrderId ? validDetail.productionOrderId.toString() : '';
+                            var detailId = detail.productionOrderId ? detail.productionOrderId.toString() : '';
+                            return validId === detailId && index !== detailIndex;
+                        });
                         detailIndex++;
                         if (!detail.productionOrderId || detail.productionOrderId === "") {
                             detailError["productionOrderId"] = i18n.__("ShipmentDocument.details.productionOrderId.isRequired:%s is required", i18n.__("ShipmentDocument.details.productionOrderId._:Nomor Order")); //"Nomor Order harus diisi"; 
@@ -184,52 +188,55 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                             detailError["productionOrderId"] = i18n.__("ShipmentDocument.details.productionOrderId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.productionOrderId._:Nomor Order"));
                         }
 
-                        if (detail.items.length > 0) {
+                        if (detail.items && detail.items.length > 0) {
                             var itemErrors = [];
-                            var itemIndex = 0;
 
-                            for (var item of detail.items) {
-                                var itemError = {};
+                            detail.items.forEach((item, itemIndex) => {
+                                    var itemError = {};
 
-                                //find duplicate packing receipt
-                                var duplicatePackingReceipt = detail.items.find((detailItem, index) => (detailItem.packingReceiptId.toString() === item.packingReceiptId.toString()) && index !== itemIndex);
-                                itemIndex++;
-                                if (!item.packingReceiptId || item.packingReceiptId === "") {
-                                    itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing")); //"Packing Receipt harus diisi"; 
-                                } else if (duplicatePackingReceipt) {
-                                    itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing"));
-                                }
-
-                                if (item.packingReceiptItems.length > 0 && !valid.isVoid) {
-                                    var packingReceiptItemErrors = [];
-
-                                    for (var packingReceiptItem of item.packingReceiptItems) {
-                                        var packingReceiptItemError = {};
-
-                                        var productInvSummary = _products.find((product) => product.productCode === packingReceiptItem.productCode && product.uom === packingReceiptItem.uomUnit);
-
-                                        if (productInvSummary && (!packingReceiptItem.quantity || packingReceiptItem.quantity <= 0)) {
-                                            packingReceiptItemError["quantity"] = i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity.mustBeGreater:%s must be greater than zero", i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity._:Quantity")); //"Kuantitas harus lebih besar dari 0";
-                                        }
-                                        else if (productInvSummary && (packingReceiptItem.quantity > productInvSummary.quantity)) {
-                                            packingReceiptItemError["quantity"] = i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity.mustBeLessEqual:%s must be less than or equal to stock", i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity._:Quantity")); //"Kuantitas harus lebih kecil atau sama dengan stock";
-                                        }
-
-                                        packingReceiptItemErrors.push(packingReceiptItemError);
+                                    //find duplicate packing receipt
+                                    var duplicatePackingReceipt = detail.items.find((detailItem, index) => {
+                                        var validId = detailItem.packingReceiptId ? detailItem.packingReceiptId.toString() : '';
+                                        var itemId = item.packingReceiptId ? item.packingReceiptId.toString() : '';
+                                        return validId === itemId && index !== itemIndex;
+                                    });
+                                    itemIndex++;
+                                    if (!item.packingReceiptId || item.packingReceiptId === "") {
+                                        itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing")); //"Packing Receipt harus diisi"; 
+                                    } else if (duplicatePackingReceipt) {
+                                        itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptId.isDuplicate:%s is duplicate", i18n.__("ShipmentDocument.details.items.packingReceiptId._:Penerimaan Packing"));
                                     }
 
-                                    for (var packingReceiptItemError of packingReceiptItemErrors) {
-                                        if (Object.getOwnPropertyNames(packingReceiptItemError).length > 0) {
-                                            itemError.packingReceiptItems = packingReceiptItemErrors;
-                                            break;
-                                        }
-                                    }
-                                } else if (item.packingReceiptItems.length <= 0) {
-                                    itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptItems.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptItems._:Item Penerimaan Packing"));
-                                }
+                                    if (item.packingReceiptItems && item.packingReceiptItems.length > 0 && !valid.isVoid) {
+                                        var packingReceiptItemErrors = [];
 
-                                itemErrors.push(itemError);
-                            }
+                                        for (var packingReceiptItem of item.packingReceiptItems) {
+                                            var packingReceiptItemError = {};
+
+                                            var productInvSummary = _products.find((product) => product.productCode === packingReceiptItem.productCode && product.uom === packingReceiptItem.uomUnit);
+
+                                            if (productInvSummary && (!packingReceiptItem.quantity || packingReceiptItem.quantity <= 0)) {
+                                                packingReceiptItemError["quantity"] = i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity.mustBeGreater:%s must be greater than zero", i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity._:Quantity")); //"Kuantitas harus lebih besar dari 0";
+                                            }
+                                            else if (productInvSummary && (packingReceiptItem.quantity > productInvSummary.quantity)) {
+                                                packingReceiptItemError["quantity"] = i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity.mustBeLessEqual:%s must be less than or equal to stock", i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity._:Quantity")); //"Kuantitas harus lebih kecil atau sama dengan stock";
+                                            }
+
+                                            packingReceiptItemErrors.push(packingReceiptItemError);
+                                        }
+
+                                        for (var packingReceiptItemError of packingReceiptItemErrors) {
+                                            if (Object.getOwnPropertyNames(packingReceiptItemError).length > 0) {
+                                                itemError.packingReceiptItems = packingReceiptItemErrors;
+                                                break;
+                                            }
+                                        }
+                                    } else if (item.packingReceiptItems.length <= 0) {
+                                        itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptItems.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptItems._:Item Penerimaan Packing"));
+                                    }
+
+                                    itemErrors.push(itemError);
+                            })
 
                             for (var itemError of itemErrors) {
                                 if (Object.getOwnPropertyNames(itemError).length > 0) {
@@ -243,7 +250,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                         }
 
                         detailErrors.push(detailError);
-                    }
+                    });
 
                     for (var detailError of detailErrors) {
                         if (Object.getOwnPropertyNames(detailError).length > 0) {
