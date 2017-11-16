@@ -1109,7 +1109,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         correctionPriceTotal: data.correction ? data.correction.correctionPriceTotal : 0,
                         correctionRemark: data.correction ? data.correction.correctionType : "-",
                         remark: data.remark ? data.remark : "-",
-                        status: data.status ? data.status.label : "-"
+                        status: data.status ? data.status.label : "-",
+                        statusValue: data.status ? data.status.value : 0
                     }
                     dataReport.push(item);
                 }
