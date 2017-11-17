@@ -214,7 +214,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                     for (var packingReceiptItem of item.packingReceiptItems) {
                                         var packingReceiptItemError = {};
 
-                                        var productInvSummary = _products.find((product) => product.name === packingReceiptItem.productName && product.uom === packingReceiptItem.uomUnit);
+                                        var productInvSummary = _products.find((product) => product.productName === packingReceiptItem.productName && product.uom === packingReceiptItem.uomUnit);
 
                                         if (productInvSummary && (!packingReceiptItem.quantity || packingReceiptItem.quantity <= 0)) {
                                             packingReceiptItemError["quantity"] = i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity.mustBeGreater:%s must be greater than zero", i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity._:Quantity")); //"Kuantitas harus lebih besar dari 0";
