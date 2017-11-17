@@ -130,7 +130,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
         var getPackingReceipts = packingReceiptIds.length > 0 ? this.packingReceiptManager.collection.find({ "_deleted": false, "_id": { "$in": packingReceiptIds } }).toArray() : Promise.resolve([])
 
-        var getInventorySummaries = products.length != 0 ? this.inventorySummaryManager.collection.find({ "_deleted": false, "productCode": { "$in": products }, storageCode: valid.storage ? valid.storage.code : "" }, { "productCode": 1, "quantity": 1, "uom": 1 }).toArray() : Promise.resolve([]);
+        var getInventorySummaries = products.length != 0 ? this.inventorySummaryManager.collection.find({ "_deleted": false, "productCode": { "$in": products }, storageCode: valid.storage ? valid.storage.code : "" }, { "productCode": 1, "quantity": 1, "uom": 1, "productName": 1 }).toArray() : Promise.resolve([]);
 
         return Promise.all([getDbShipmentDocument, getDuplicateShipmentDocument, getBuyer, getPackingReceipts, getInventorySummaries])
             .then((results) => {
@@ -214,7 +214,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                     for (var packingReceiptItem of item.packingReceiptItems) {
                                         var packingReceiptItemError = {};
 
-                                        var productInvSummary = _products.find((product) => product.productCode === packingReceiptItem.productCode && product.uom === packingReceiptItem.uomUnit);
+                                        var productInvSummary = _products.find((product) => product.productName === packingReceiptItem.productName && product.uom === packingReceiptItem.uomUnit);
 
                                         if (productInvSummary && (!packingReceiptItem.quantity || packingReceiptItem.quantity <= 0)) {
                                             packingReceiptItemError["quantity"] = i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity.mustBeGreater:%s must be greater than zero", i18n.__("ShipmentDocument.details.items.packingReceiptItems.quantity._:Quantity")); //"Kuantitas harus lebih besar dari 0";
@@ -233,7 +233,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                         }
                                     }
                                 } else if (item.packingReceiptItems.length <= 0) {
-                                    itemError["packingReceiptId"] = i18n.__("ShipmentDocument.details.items.packingReceiptItems.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptItems._:Item Penerimaan Packing"));
+                                    itemError["packingReceiptItem"] = i18n.__("ShipmentDocument.details.items.packingReceiptItem.isRequired:%s is required", i18n.__("ShipmentDocument.details.items.packingReceiptItem._:Item Penerimaan Packing"));
                                 }
 
                                 itemErrors.push(itemError);
@@ -247,7 +247,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                             }
                         }
                         else {
-                            detailError["items"] = i18n.__("ShipmentDocument.details.items.isRequired:%s is required", i18n.__("ShipmentDocument.details.items._:Packing Receipt")); //"Harus ada item"; 
+                            detailError["item"] = i18n.__("ShipmentDocument.details.item.isRequired:%s is required", i18n.__("ShipmentDocument.details.item._:Packing Receipt")); //"Harus ada item"; 
                         }
 
                         detailErrors.push(detailError);
@@ -271,7 +271,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
                 //Inventory Document Validation
                 valid.storageId = valid.storage && ObjectId.isValid(valid.storage._id) ? new ObjectId(valid.storage._id) : null
-                valid.storageReferenceType = `Penerimaan Packing ${valid.storage ? valid.storage.name : null}`;
+                valid.storageReferenceType = `Pengiriman Barang ${valid.storage ? valid.storage.name : null}`;
                 valid.storageName = valid.storage && valid.storage.name ? valid.storage.name : null;
                 valid.storageType = "OUT";
 
