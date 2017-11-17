@@ -1167,7 +1167,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
         return Promise.resolve(xls);
     }
-    
+
     getMonitoringDOAll(info) {
         return new Promise((resolve, reject) => {
             var _defaultFilter = {
@@ -1207,14 +1207,6 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 userFilter = { "_createdBy": info.user };
             }
 
-            // if (info.createdBy && info.createdBy != '') {
-            //     createdByFilter = { "_createdBy": info.createdBy};
-            // }
-
-            // if (info.staffName && info.staffName != ''){
-            //     staffNameFilter = { "_createdBy": info.staffName};
-            // }    
-
             var _dateFrom = new Date(info.dateFrom);
             var _dateTo = new Date(info.dateTo + "T23:59");
             _dateFrom.setHours(_dateFrom.getHours() - info.offset);
@@ -1227,9 +1219,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             };
 
             query = { '$and': [_defaultFilter, doNoFilter, supplierFilter, filterDate, userFilter, poEksFilter] };
-            // query = { '$and': [_defaultFilter, doNoFilter, supplierFilter, filterDate, createdByFilter, staffNameFilter, poEksFilter] };
            
-
             return this.collection
                 .aggregate([
                     { "$unwind": "$items" }
