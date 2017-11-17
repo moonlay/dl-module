@@ -391,9 +391,11 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                     if (!items.dealQuantity || items.dealQuantity === 0) {
                                                         itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
                                                     }
-                                                    else if (valid.paymentMethod != "CMT" || valid.paymentMethod != "FREE FROM BUYER") {
-                                                        if (totalDealPrice > fixBudget) {
-                                                            itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Total price"));
+                                                    else if (!items.isOverBudget) {
+                                                        if (valid.paymentMethod != "CMT" || valid.paymentMethod != "FREE FROM BUYER") {
+                                                            if (totalDealPrice > fixBudget) {
+                                                                itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Total price"));
+                                                            }
                                                         }
                                                     }
 
@@ -403,9 +405,11 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                     if (!items.priceBeforeTax || items.priceBeforeTax === 0) {
                                                         itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
                                                     }
-                                                    else if (valid.paymentMethod != "CMT" || valid.paymentMethod != "FREE FROM BUYER") {
-                                                        if (totalDealPrice > fixBudget) {
-                                                            itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Total price"));
+                                                    else if (!items.isOverBudget) {
+                                                        if (valid.paymentMethod != "CMT" || valid.paymentMethod != "FREE FROM BUYER") {
+                                                            if (totalDealPrice > fixBudget) {
+                                                                itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Total price"));
+                                                            }
                                                         }
                                                     }
 
@@ -444,6 +448,11 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                         }
                                                     } else {
                                                         itemError["uomConversion"] = i18n.__("PurchaseOrderExternal.items.uomConversion.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.uomConversion._:Uom Conversion"));
+                                                    }
+                                                    if (items.isOverBudget) {
+                                                        if (!items.overBudgetRemark || items.overBudgetRemark === "") {
+                                                            itemError["overBudgetRemark"] = i18n.__("PurchaseOrderExternal.items.overBudgetRemark.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.overBudgetRemark._:Over Bugdet Remark"));
+                                                        }
                                                     }
                                                 }
                                                 itemErrors.push(itemError);
@@ -1163,5 +1172,92 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             }
         }
         return newArr;
+    }
+
+    getListUsedBudget(purchaseRequestNo, purchaseRequestRefNo, productCode, purchaseOrderExternalNo) {
+        if (purchaseOrderExternalNo) {
+            return this.collection.aggregate([
+                {
+                    $match: {
+                        "_deleted": false,
+                        "no": { "$ne": purchaseOrderExternalNo },
+                        "items.prNo": purchaseRequestNo,
+                        "items.prRefNo": purchaseRequestRefNo,
+                        "items.product.code": productCode
+                    }
+                },
+                {
+                    $unwind: "$items"
+                }, {
+                    $match: {
+                        "items.prNo": purchaseRequestNo,
+                        "items.prRefNo": purchaseRequestRefNo,
+                        "items.product.code": productCode
+                    }
+                },
+                {
+                    $project: {
+                        "productId": "$items.product._id",
+                        "prNo": "$items.prNo",
+                        "prRefNo": "$items.prRefNo",
+                        "poNo": "$items.poNo",
+                        "price": { $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"] },
+                        "product": "$items.product.code"
+                    }
+                },
+                {
+                    $group:
+                        {
+                            _id: null,
+                            "totalAmount": { $sum: "$price" },
+                            "product": { "$first": "$product" },
+                            "productId": { "$first": "$productId" },
+                            "prNo": { "$first": "$prNo" },
+                            "prRefNo": { "$first": "$prRefNo" },
+                            "poNo": { "$first": "$poNo" },
+                        }
+                }]).toArray()
+        } else {
+            return this.collection.aggregate([
+                {
+                    $match: {
+                        "_deleted": false,
+                        "items.prNo": purchaseRequestNo,
+                        "items.prRefNo": purchaseRequestRefNo,
+                        "items.product.code": productCode
+                    }
+                },
+                {
+                    $unwind: "$items"
+                }, {
+                    $match: {
+                        "items.prNo": purchaseRequestNo,
+                        "items.prRefNo": purchaseRequestRefNo,
+                        "items.product.code": productCode
+                    }
+                },
+                {
+                    $project: {
+                        "productId": "$items.product._id",
+                        "prNo": "$items.prNo",
+                        "prRefNo": "$items.prRefNo",
+                        "poNo": "$items.poNo",
+                        "price": { $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"] },
+                        "product": "$items.product.code"
+                    }
+                },
+                {
+                    $group:
+                        {
+                            _id: null,
+                            "totalAmount": { $sum: "$price" },
+                            "product": { "$first": "$product" },
+                            "productId": { "$first": "$productId" },
+                            "prNo": { "$first": "$prNo" },
+                            "prRefNo": { "$first": "$prRefNo" },
+                            "poNo": { "$first": "$poNo" },
+                        }
+                }]).toArray()
+        }
     }
 };
