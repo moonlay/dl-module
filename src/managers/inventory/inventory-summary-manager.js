@@ -29,8 +29,8 @@ module.exports = class InventorySummaryManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -86,16 +86,15 @@ module.exports = class InventorySummaryManager extends BaseManager {
         var getStorage = valid.storageId && ObjectId.isValid(valid.storageId) ? this.storageManager.getSingleByIdOrDefault(valid.storageId) : Promise.resolve(null);
         var getUom = valid.uomId && ObjectId.isValid(valid.uomId) ? this.uomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
 
-        return Promise.all([getDbInventorySummary,getDuplicateInventorySummary, getProduct, getStorage, getUom])
+        return Promise.all([getDbInventorySummary, getDuplicateInventorySummary, getProduct, getStorage, getUom])
             .then(results => {
-                var _dbInventorySummary = results[0]; 
+                var _dbInventorySummary = results[0];
                 var _dbDuplicateInventorySummary = results[1];
                 var _product = results[2];
                 var _storage = results[3];
                 var _uom = results[4];
 
-                if (_dbInventorySummary)
-                {
+                if (_dbInventorySummary) {
                     // prevent key changes.
                     valid.code = _dbInventorySummary.code;
                 }
@@ -147,14 +146,30 @@ module.exports = class InventorySummaryManager extends BaseManager {
             })
     }
 
-    getSert(productId, storageId, uomId) {
+    getSert(productId, storageId, uomId, secondUomId, thirdUomId) {
         var query = {
             productId: new ObjectId(productId),
             storageId: new ObjectId(storageId),
-            uomId: new ObjectId(uomId)
+            uomId: new ObjectId(uomId),
+            secondUomId: new ObjectId(secondUomId),
+            thirdUomId: new ObjectId(thirdUomId)
         }
 
-        return this.getSingleByQueryOrDefault(query)
+        var searchQuery = {
+            productId: new ObjectId(productId),
+            storageId: new ObjectId(storageId),
+            uomId: {
+                $in: [new ObjectId(uomId), new ObjectId(secondUomId), new ObjectId(thirdUomId)]
+            },
+            secondUomId: {
+                $in: [new ObjectId(uomId), new ObjectId(secondUomId), new ObjectId(thirdUomId)]
+            },
+            thirdUomId: {
+                $in: [new ObjectId(uomId), new ObjectId(secondUomId), new ObjectId(thirdUomId)]
+            }
+        }
+
+        return this.getSingleByQueryOrDefault(searchQuery)
             .then((doc) => {
                 if (doc)
                     return doc;
@@ -187,16 +202,16 @@ module.exports = class InventorySummaryManager extends BaseManager {
     getSummaryReport(info) {
         var _defaultFilter = {
             _deleted: false
-        }, 
+        },
             query = {},
             order = info.order || {};
 
         var filterSummary = {};
 
-        if(info.storageId)
+        if (info.storageId)
             filterSummary.storageId = new ObjectId(info.storageId);
 
-        if(info.productId)
+        if (info.productId)
             filterSummary.productId = new ObjectId(info.productId);
 
 
@@ -215,7 +230,7 @@ module.exports = class InventorySummaryManager extends BaseManager {
                         .order(order)
                         .execute();
             });
-                    
+
         return Promise.resolve(data);
     }
 
@@ -244,7 +259,7 @@ module.exports = class InventorySummaryManager extends BaseManager {
         xls.options["Nama Barang"] = "string";
         xls.options["Kuantiti"] = "number";
         xls.options["UOM"] = "string";
-        
+
         xls.name = `Inventory Summaries.xlsx`;
 
         return Promise.resolve(xls);

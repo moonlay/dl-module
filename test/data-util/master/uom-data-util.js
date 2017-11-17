@@ -29,6 +29,20 @@ class UomDataUtil {
         };
         return this.getSert(data);
     }
+    
+    getSecondTestData() {
+        var data = {
+            unit: "MTR"
+        };
+        return this.getSert(data);
+    }
+
+    getThirdTestData() {
+        var data = {
+            unit: "ROLL"
+        };
+        return this.getSert(data);
+    }
 }
 
 module.exports = new UomDataUtil();

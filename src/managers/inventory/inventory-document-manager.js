@@ -102,7 +102,11 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                         storageId: inventoryDocument.storageId,
                         productId: item.productId,
                         uomId: item.uomId,
+                        secondUomId: item.secondUomId ? item.secondUomId : {},
+                        thirdUomId: item.thirdUomId ? item.thirdUomId : {},
                         quantity: item.quantity,
+                        secondQuantity: item.secondQuantity ? item.secondQuantity : 0,
+                        thirdQuantity: item.thirdQuantity ? item.thirdQuantity : 0,
                         remark:item.remark
                     };
                     return this.inventoryMovementManager.create(movement);
@@ -138,6 +142,8 @@ module.exports = class InventoryDocumentManager extends BaseManager {
         valid.items = valid.items || [];
         var productIds = valid.items.map((item) => item.productId && ObjectId.isValid(item.productId) ? new ObjectId(item.productId) : null);
         var uomIds = valid.items.map((item) => item.uomId && ObjectId.isValid(item.uomId) ? new ObjectId(item.uomId) : null);
+        var secondUomIds = valid.items.map((item) => item.secondUomId && ObjectId.isValid(item.secondUomId) ? new ObjectId(item.secondUomId) : null);
+        var thirdUomIds = valid.items.map((item) => item.thirdUomId && ObjectId.isValid(item.thirdUomId) ? new ObjectId(item.thirdUomId) : null);
 
         var getProducts = productIds.filter((id) => id !== null).length > 0 ? this.productManager.collection.find({
             _id: {
@@ -149,14 +155,26 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                 "$in": uomIds
             }
         }).toArray() : Promise.resolve([]);
+        var getSecondUoms = secondUomIds.filter((id) => id !== null).length > 0 ? this.uomManager.collection.find({
+            _id: {
+                "$in": secondUomIds
+            }
+        }).toArray() : Promise.resolve([]);
+        var getThirdUoms = thirdUomIds.filter((id) => id !== null).length > 0 ? this.uomManager.collection.find({
+            _id: {
+                "$in": thirdUomIds
+            }
+        }).toArray() : Promise.resolve([]);
 
-        return Promise.all([getDbInventoryDocument, getDuplicateInventoryDocument, getStorage, getProducts, getUoms])
+        return Promise.all([getDbInventoryDocument, getDuplicateInventoryDocument, getStorage, getProducts, getUoms, getSecondUoms, getThirdUoms])
             .then(results => {
                 var _dbInventoryDocument = results[0];
                 var _duplicateInventoryDocument = results[1];
                 var _storage = results[2];
                 var _products = results[3];
                 var _uoms = results[4];
+                var _secondUoms = results[5];
+                var _thirdUoms = results[6];
 
                 if (_dbInventoryDocument)
                     valid.code = _dbInventoryDocument.code; // prevent code changes. 
@@ -230,6 +248,8 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                 for (var item of valid.items) {
                     var product = _products.find(product => product._id.toString() === item.productId.toString());
                     var uom = _uoms.find(uom => uom._id.toString() === item.uomId.toString());
+                    var secondUom = _secondUoms.find((secondUom) => secondUom._id.toString() === item.secondUomId.toString())
+                    var thirdUom = _thirdUoms.find((thirdUom) => thirdUom._id.toString() === item.thirdUomId.toString())
 
                     item.productId = product._id;
                     item.productCode = product.code;
@@ -237,6 +257,12 @@ module.exports = class InventoryDocumentManager extends BaseManager {
 
                     item.uomId = uom._id;
                     item.uom = uom.unit;
+
+                    item.secondUomId = secondUom && secondUom._id ? secondUom._id : null;
+                    item.secondUom = secondUom && secondUom.unit ? secondUom.unit : "";
+
+                    item.thirdUomId = thirdUom && thirdUom._id ? thirdUom._id : null;
+                    item.thirdUom = thirdUom && thirdUom.unit ? thirdUom.unit : "";
                 }
 
                 if (!valid.stamp) {
