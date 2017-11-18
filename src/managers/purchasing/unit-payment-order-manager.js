@@ -964,6 +964,7 @@ if (PRNo!=="") {
                         "vatDate",
                         "_createdBy",
                         "category.name",
+                        "paymentMethod",
                         "items.unitReceiptNote.no",
                         "items.unitReceiptNote.date",
                         "items.unitReceiptNote.items.purchaseOrder.purchaseOrderExternal.no",
