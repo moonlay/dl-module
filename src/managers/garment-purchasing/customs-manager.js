@@ -461,7 +461,7 @@ module.exports = class CustomsManager extends BaseManager {
                     },
                     {
                         "$group": {
-                            "_id": { "no": "$no", "customsType": "$customsType", "customsDate": "$customsDate", "supplier": "$supplier", "productCode": "$productCode", "productName": "$productName", "uom": "$uom", "currency": "$currency", "_createdBy": "$_createdBy" },
+                            "_id": { "no": "$no", "customsType": "$customsType", "customsDate": "$customsDate", "supplier": "$supplier", "deliveryOrderNo": "$deliveryOrderNo", "deliveryOrderDate": "$deliveryOrderDate", "productCode": "$productCode", "productName": "$productName", "uom": "$uom", "currency": "$currency", "_createdBy": "$_createdBy" },
                             "quantity": { "$sum": "$quantity" },
                             "price": { "$sum": { "$multiply": ["$quantity", "$price"] } }
                         }
