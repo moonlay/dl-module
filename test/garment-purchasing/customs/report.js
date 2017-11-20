@@ -176,3 +176,15 @@ it("#08. should success when get report with parameter no", function (done) {
             done(e);
         });
 });
+
+it('#09. should success when generate data to Excel Report with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    instanceManager.getAllData(startdate, enddate)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+});
