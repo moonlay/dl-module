@@ -219,12 +219,17 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
                         var sqlQuery;
-
-                        if (tgl.includes("%%")) {
-                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                        if (table1 == "Budget") {
+                            if (tgl.includes("%%")) {
+                                sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                            } else {
+                                sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                            }
                         } else {
-                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+
                         }
+
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
@@ -363,7 +368,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         var _product = _product;
         var _buyer = _buyer;
         var _uom = _uom;
-        var nomorRo = nomorRo;
+
         return new Promise((resolve, reject) => {
             var transformData = [];
             var no = 1;
@@ -725,6 +730,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                 var promise = [];
 
+
                 for (var Ro of nomorRo) {
                     promise.push(this.beforeTransform(_unit, _category, _product, _buyer, _uom, Ro, table1))
 
@@ -853,7 +859,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 dataProcessed.processed = result;
                 dataProcessed.MigratedFalse = MigratedFalse;
                 resolve(dataProcessed);
-
             })
 
         });
