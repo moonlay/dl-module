@@ -22,6 +22,7 @@ var i18n = require('dl-i18n');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
 var moment = require('moment');
+var assert = require('assert');
 
 module.exports = class PurchaseOrderExternalManager extends BaseManager {
     constructor(db, user) {
@@ -1163,6 +1164,134 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 return Promise.resolve(valid);
             });
     }
+
+    getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => 
+        {
+           var now = new Date();
+           var deleted = {
+                _deleted: false
+            };
+            var isPosted = {
+                isPosted: true
+            };
+            
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+
+            var query = [deleted, isPosted];
+
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "date": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
+
+      var match = { '$and': query };
+            
+      var POColl = map.garmentPurchasing.collection.GarmentPurchaseOrder; 
+      this.collection.aggregate(
+          [{
+              $match:match
+           }, {
+              $unwind:"$items"
+            },{
+               $unwind:"$items.realizations"
+            },
+         {
+               $lookup :{from :POColl,
+                         foreignField :"no",
+                         localField :"items.poNo",
+                         as :"PO"
+                        },
+           },
+           {$project :{
+                        "PoExt":"$no",
+                        "TgPoExt":"$date",
+                        "Dlvry":"$expectedDeliveryDate",
+                        "KdSpl":"$supplier.code",
+                        "NmSpl":"$supplier.name",
+                        "Ongkir":"$freightCostBy",
+                        "TipeByr":"$paymentType",
+                        "MtdByr":"$paymentMethod",
+                        "Tempo":"$paymentDueDays",
+                        "MtUang":"$currency.code",
+                        "RateMU":"$currencyRate",
+                        "PakaiPPN":"$useIncomeTax",
+                        "PakaiPPH":"$useVat",
+                        "RatePPH":"$vat.rate",
+                        "Status":"$status.label",
+                        "PRNo":"$items.prNo",
+                        "PlanPO":"$items.prRefNo",
+                        "RONo":"$items.roNo",
+                        "KdBrg":"$items.product.code",
+                        "NmBrg":"$items.remark",
+                        "QtyOrder":"$items.defaultQuantity",
+                        "SatOrder":"$items.defaultUom.unit",
+                        "QtyBeli":"$items.dealQuantity",
+                        "SatBeli":"$items.dealUom.unit",
+                        "QtySJ":"$items.realizations.deliveredQuantity",
+                        "SatKonv":"$items.uomConversion.unit",
+                        "Konversi":"$items.conversion",
+                        "HargaSat":"$items.pricePerDealUnit",
+                        "POs" :"$PO"
+                       }
+        }, 
+        {$unwind :"$POs"},
+        {$project :{
+                        "PoExt":"$PoExt","TgPoExt":"$TgPoExt","Dlvry":"$Dlvry","KdSpl":"$KdSpl",
+                        "NmSpl":"$NmSpl","Ongkir":"$Ongkir","TipeByr":"$TipeByr","MtdByr":"$MtdByr",
+                        "Tempo":"$Tempo","MtUang":"$MtUang","RateMU":"$RateMU","PakaiPPN":"$PakaiPPN",
+                        "PakaiPPH":"$PakaiPPH","RatePPH":"$RatePPH","Status":"$Status","PRNo":"$PRNo",
+                        "PlanPO":"$PlanPO","RONo":"$RONo","KdBrg":"$KdBrg","NmBrg":"$NmBrg","QtyOrder":"$QtyOrder",
+                        "SatOrder":"$SatOrder","QtyBeli":"$QtyBeli","QtySJ":"$QtySJ","SatBeli":"$SatBeli",
+                        "SatKonv":"$SatKonv","Konversi":"$Konversi","HargaSat":"$HargaSat","KdByr" :"$POs.buyer.code",
+                        "Konf" : "$POs.unit.code","Article" :"$POs.artikel"
+                  }
+        },
+        {$group :{ _id: {PoExt :"$PoExt",TgPoExt :"$TgPoExt",Dlvry :"$Dlvry",KdSpl :"$KdSpl",NmSpl :"$NmSpl",Ongkir :"$Ongkir",Qty :"$Qy",TipeByr :"$TipeByr",MtdByr:"$MtdByr",
+                         Tempo:"$Tempo",MtUang:"$MtUang",RateMU:"$RateMU",PakaiPPN:"$PakaiPPN",PakaiPPH:"$PakaiPPH",RatePPH:"$RatePPH",Status:"$Status",PRNo:"$PRNo",PlanPO:"$PlanPO",
+                         RONo:"$RONo",KdBrg:"$KdBrg",NmBrg:"$NmBrg",QtyOrder:"$QtyOrder",SatOrder:"$SatOrder",QtyBeli:"$QtyBeli",SatBeli:"$SatBeli",
+                         SatKonv:"$SatKonv",Konversi:"$Konversi",HargaSat:"$HargaSat",KdByr :"$KdByr",Konf : "$Konf",Article :"$Article"
+                        },
+                          "QtySJ": { $sum: "$QtySJ" }
+                 }
+        }  
+      ])
+        .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    console.log(result);
+                    resolve(result);
+                });
+        });
+    }
+
 
     cleanUp(input) {
         var newArr = [];
