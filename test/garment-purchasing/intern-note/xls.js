@@ -102,16 +102,14 @@ it("#05. should success when destroy all unit test data", function (done) {
         });
 });
 
-it('#06. should success when generate data to Excel Report', function (done) {
-    var query = {};
-
-    instanceManager.getAllData(resultForExcelTest, query)
-        .then(xlsData => {
-            xlsData.should.have.property('data');
-            xlsData.should.have.property('options');
-            xlsData.should.have.property('name');
-            done();
-        }).catch(e => {
+it('#06. should success when generate data to Excel Report with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    instanceManager.getAllData(startdate, enddate)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
             done(e);
         });
 });
