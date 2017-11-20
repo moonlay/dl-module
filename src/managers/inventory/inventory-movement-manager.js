@@ -216,7 +216,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
                 valid.secondUom = _secondUom.unit ? _secondUom.unit : "";
 
                 valid.thirdUomId = _thirdUom._id ? _thirdUom._id : null;
-                valid.thirdUomId = _thirdUom.unit;
+                valid.thirdUom = _thirdUom.unit ? _thirdUom.unit : "";
 
                 if (valid.type == "OUT") {
                     valid.quantity = valid.quantity * -1;
