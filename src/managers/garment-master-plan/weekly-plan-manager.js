@@ -66,14 +66,15 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                 if (duplicateWeeklyPlan) {
                     errors["year"] = i18n.__("WeeklyPlan.year.isExists:%s is already exists in selected unit", i18n.__("WeeklyPlan.year._:Weekly Plan"));
                 }
-                var current_year = new Date().getFullYear() + 10;
+                var current_year = (new Date()).getFullYear() + 10;
+                var last_year = (new Date()).getFullYear() - 10;
                 if (!valid.year) {
                     errors["year"] = i18n.__("WeeklyPlan.year.isRequired:%s is required", i18n.__("WeeklyPlan.year._:Year"));
                 }
                 else if (isNaN(valid.year)) {
                     errors["year"] = i18n.__("WeeklyPlan.year.mustNumber:%s must number", i18n.__("WeeklyPlan.year._:Year"));
                 }
-                else if ((valid.year < 1920) || (valid.year > current_year)) {
+                else if ((valid.year < last_year) || (valid.year > current_year)) {
                     errors["year"] = i18n.__("WeeklyPlan.year.outOfRage:%s is out of range year", i18n.__("WeeklyPlan.year._:Year"));
                 }
 
