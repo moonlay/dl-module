@@ -46,19 +46,19 @@ module.exports = class DealTrackingStageManager extends BaseManager {
     _validate(dealTrackingStage) {
         var errors = {};
         var valid = dealTrackingStage;
-        
+
         if (!valid.name || valid.name == "")
             errors["name"] = i18n.__("DealTrackingStage.name.isRequired:%s is required", i18n.__("DealTrackingStage.name._:Name")); //"Nama stage harus diisi";
-        
+
         if (Object.getOwnPropertyNames(errors).length > 0) {
             var ValidationError = require('module-toolkit').ValidationError;
             return Promise.reject(new ValidationError('data does not pass validation', errors));
         }
-        
+
         if (!valid.stamp) {
             valid = new DealTrackingStage(valid);
         }
-        
+
         valid.stamp(this.user.username, "manager");
         return Promise.resolve(valid);
     }
@@ -118,7 +118,7 @@ module.exports = class DealTrackingStageManager extends BaseManager {
 
                             var _filter = {
                                 filter: { _id: { "$in": data.deals } },
-                                select: ["code", "name", "amount", "closeDate", "contact.firstName", "contact.lastName"]
+                                select: ["code", "name", "amount", "closeDate", "contact.firstName", "contact.lastName", "product.name", "quantity", "product.uom.unit", "_createdBy"]
                             };
 
                             query = this._getQuery(_filter);
@@ -128,14 +128,14 @@ module.exports = class DealTrackingStageManager extends BaseManager {
                                 .select(_filter.select)
                                 .execute()
                                 .then((res) => {
-                                    res.data.sort(function(a, b) {
+                                    res.data.sort(function (a, b) {
                                         return deals.indexOf(a._id.toString()) - deals.indexOf(b._id.toString());
                                     });
 
                                     data.deals = res.data;
                                     return data;
                                 })
-                        });                        
+                        });
 
                         return Promise.all(promises)
                             .then((res) => {
@@ -147,7 +147,7 @@ module.exports = class DealTrackingStageManager extends BaseManager {
     }
 
     update(data) {
-        if(data.type == "Activity") {
+        if (data.type == "Activity") {
             var now = new Date();
             var ticks = ((now.getTime() * 10000) + 621355968000000000);
 
@@ -158,8 +158,8 @@ module.exports = class DealTrackingStageManager extends BaseManager {
                 '_updatedDate': now,
                 '_updateAgent': 'manager'
             };
-            
-            return this.collection.findOneAndUpdate({_id: new ObjectId(data._id)}, {$set: updateData});
+
+            return this.collection.findOneAndUpdate({ _id: new ObjectId(data._id) }, { $set: updateData });
         }
         else {
             return this._pre(data)
@@ -171,7 +171,7 @@ module.exports = class DealTrackingStageManager extends BaseManager {
                 })
                 .then((id) => {
                     return this._afterUpdate(id);
-                }); 
+                });
         }
     }
 };

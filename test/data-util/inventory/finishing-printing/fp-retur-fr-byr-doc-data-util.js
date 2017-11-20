@@ -2,6 +2,7 @@
 var helper = require("../../../helper");
 var FPReturManager = require("../../../../src/managers/inventory/finishing-printing/fp-retur-fr-byr-doc-manager");
 var ShipmentDataUtil = require('./fp-shipment-document-data-util');
+var storageDataUtil = require('../../master/storage-data-util');
 
 var codeGenerator = require('../../../../src/utils/code-generator');
 
@@ -13,9 +14,10 @@ var moment = require("moment");
 
 class FPReturFrByrDocDataUtil {
     getNewData() {
-        return Promise.all([ShipmentDataUtil.getNewTestData()])
+        return Promise.all([ShipmentDataUtil.getNewTestData(), storageDataUtil.getRandomTestData()])
             .then(results => {
                 var _shipmetData = results[0];
+                var _storage = results[1];
                 var code = codeGenerator();
                 var data = {
                     code : code,
@@ -32,6 +34,8 @@ class FPReturFrByrDocDataUtil {
                     spk : `spk ${code}`,
                     coverLetter : `sp ${code}`,
                     codeProduct : `code ${code}`,
+                    storageId : _storage._id,
+                    storageName : _storage.name,
                     details : [{
                         productionOrderId : _shipmetData.details[0].productionOrderId,
                         productionOrderNo : _shipmetData.details[0].productionOrderNo,

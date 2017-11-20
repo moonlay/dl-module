@@ -42,6 +42,7 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-SPINNING-SALES-CONTRACT', './etl/sales/fact-spinning-sales-contract');
     test('@ETL/FACT-DAILY-OPERATIONS', './etl/production/fact-daily-operations');
     test('@ETL/FACT-KANBAN', './etl/production/fact-kanban');
+    test('@ETL/FACT-PACKING', './etl/production/fact-packing');
     test('@ETL/FACT-QUALITY-CONTROL', './etl/production/fact-fabric-quality-control');
     test('@ETL/FACT-INVENTORY-MOVEMENT', './etl/inventory/fact-inventory-movement');
     test('@ETL/FACT-INVENTORY-SUMMARY', './etl/inventory/fact-inventory-summary');
@@ -165,5 +166,8 @@ describe('#dl-module', function (done) {
 
     //Garment Master Plan
     test('@GARMENT MASTER PLAN/WEEKLY-PLAN', './garment-master-plan/weekly-plan');
+    test('@GARMENT MASTER PLAN/WORKING-HOURS-STANDARD', './garment-master-plan/working-hours-standard');
+    test('@GARMENT MASTER PLAN/STYLE', './garment-master-plan/style');
+    test('@GARMENT MASTER PLAN/STANDARD-HOUR', './garment-master-plan/standard-hour');
 
 });
