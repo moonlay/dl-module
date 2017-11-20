@@ -118,3 +118,55 @@ it('#07. should failed when create new delivery order with closed purchase order
             }
         });
 });
+
+var sampleData = {};
+it('#08. should error when create new delivery order with invalid conversion value', function (done) {
+    deliveryOrderDataUtil.getNewData()
+        .then((data) => {
+            sampleData = Object.assign({}, data);
+            for (var item of data.items) {
+                for (var fulfillment of item.fulfillments) {
+                    fulfillment.quantityConversion = 0;
+                    fulfillment.uomConversion = {};
+                }
+            }
+            deliveryOrderManager.create(data)
+                .then(po => {
+                    done("invalid conversion value cannot be used to create delivery-order");
+                })
+                .catch(e => {
+                    try {
+                        e.name.should.equal("ValidationError");
+                        e.should.have.property("errors");
+                        e.errors.should.instanceof(Object);
+                        done();
+                    }
+                    catch (ex) {
+                        done(e);
+                    }
+                });
+        })
+});
+
+it('#09. should error when create new delivery order with invalid conversion value', function (done) {
+    for (var item of sampleData.items) {
+        for (var fulfillment of item.fulfillments) {
+            fulfillment.conversion = 2;
+        }
+    }
+    deliveryOrderManager.create(sampleData)
+        .then(po => {
+            done("invalid conversion value cannot be used to create delivery-order");
+        })
+        .catch(e => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
+        });
+});

@@ -47,7 +47,8 @@ module.exports = class VatManager extends BaseManager {
                 '$ne': new ObjectId(valid._id)
             },
             name: valid.name,
-            rate: valid.rate
+            rate: valid.rate,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -139,7 +140,9 @@ module.exports = class VatManager extends BaseManager {
                         var newVat = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Vat(data[i]);
+                            var now = new Date();
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
@@ -175,8 +178,7 @@ module.exports = class VatManager extends BaseManager {
             key: {
                 name: 1,
                 rate: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, nameRateIndex]);

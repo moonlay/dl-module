@@ -244,6 +244,108 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         });
     }
 
+getDataMonitorSpb(unitId,PRNo,noSpb,supplierId,dateFrom,dateTo,staffName , offset) {
+        return new Promise((resolve, reject) => {
+            var qryMatch = {};
+
+            qryMatch["$and"] = [
+                { "_deleted": false }];
+
+            if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
+                var validStartDate = new Date(dateFrom);
+                var validEndDate = new Date(dateTo);
+               // validStartDate.setHours(validStartDate.getHours() - offset);
+                //validEndDate.setHours(validEndDate.getHours() - offset);
+  qryMatch["$and"].push(
+                    {
+                        "date": {
+                             $gte: validStartDate,
+                             $lte: validEndDate
+
+                        }
+                    }
+                   
+                    )
+            }
+            
+               if (unitId!=="") {
+                qryMatch["$and"].push({
+                      "items.unitReceiptNote.unitId":new ObjectId(unitId)
+ 
+                 })
+            }
+
+                if (supplierId!=="") {
+                qryMatch["$and"].push({
+                      "supplierId":new ObjectId(supplierId)
+ 
+                 })
+            }
+
+  if (staffName!=="") {
+                qryMatch["$and"].push({
+                      "_createdBy":staffName
+ 
+                 })
+            }
+
+if (PRNo!=="") {
+                qryMatch["$and"].push({
+                      "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no":PRNo
+ 
+                 })
+            }
+
+            if (noSpb!=="") {
+                qryMatch["$and"].push({
+                      "no":noSpb
+ 
+                 })
+            }
+
+            this.collection.aggregate(
+                [
+                    {
+                    $match: qryMatch
+                },
+                 {
+                        $unwind: "$items"
+                    },      
+            {
+                        $unwind: "$items.unitReceiptNote.items"
+                    },      
+
+             {
+         $project: {
+            no: "$no",
+            date: "$date",
+            "items.unitReceiptNote.items.product.name": "$items.unitReceiptNote.items.product.name",
+            "items.unitReceiptNote.items.deliveredQuantity": "$items.unitReceiptNote.items.deliveredQuantity",
+            "items.unitReceiptNote.items.pricePerDealUnit": "$items.unitReceiptNote.items.pricePerDealUnit",
+            invoceDate: "$invoceDate",
+            invoceNo: "$invoceNo",
+            dueDate: "$dueDate",
+            "supplier.name": "$supplier.name",
+            "division.name": "$division.name",
+            "namaUnit": "$items.unitReceiptNote.unit.name",
+            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
+            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date",
+            "items.unitReceiptNote.no":"$items.unitReceiptNote.no",
+            "items.unitReceiptNote.date":"$items.unitReceiptNote.date",
+         }
+      }      ,
+                      { $sort : { "date" : 1 } }
+                    ]
+    
+            )
+                .toArray(function(err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }
+
+
     _getQuery(paging) {
         var deletedFilter = {
             _deleted: false
@@ -862,6 +964,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         "vatDate",
                         "_createdBy",
                         "category.name",
+                        "paymentMethod",
                         "items.unitReceiptNote.no",
                         "items.unitReceiptNote.date",
                         "items.unitReceiptNote.items.purchaseOrder.purchaseOrderExternal.no",

@@ -18,6 +18,7 @@ module.exports = function (salesContract) {
     var sign=[];
     var remark=[];
     var footer=[];
+    
     var uom="";
     var uom1="";
     var uomLocal="";
@@ -177,7 +178,7 @@ module.exports = function (salesContract) {
                             }]
                         }]
                     },'\n', {
-                            text: 'SALES CONTRACT NO: ' + no,
+                            text: 'SALES CONTRACT',
                             style: ['size11','bold'],
                             alignment: "center"
                         }]
@@ -201,7 +202,37 @@ module.exports = function (salesContract) {
 
         body=[
             {
-                
+                columns: [
+                    {
+                        width: '25%',
+                        text: 'Contract Number',
+                        style: ['size10']
+                    },{
+                        width: '3%',
+                        text: ':',
+                        style: ['size10']
+                    },{
+                        width: '*',
+                        text: salesContract.dispositionNumber,
+                        style: ['size10']
+                    }]
+            },{
+                columns: [
+                    {
+                        width: '25%',
+                        text: 'Code',
+                        style: ['size10']
+                    }, {
+                        width: '3%',
+                        text: ':',
+                        style: ['size10']
+                    },
+                    {
+                        width: '*',
+                        text: no,
+                        style: ['size10']
+                    }]
+            }, {
                 columns: [
                     {
                         width: '25%',
@@ -440,7 +471,7 @@ module.exports = function (salesContract) {
                         style: ['size10'],
                         alignment: "left"
                     },'\n', {
-                            text: 'COMMISSION AGREEMENT NO: '+ code + '\n'+ 'FOR SALES CONTRACT NO: ' + no,
+                            text: 'COMMISSION AGREEMENT NO: '+ salesContract.dispositionNumber + '\n'+ 'FOR SALES CONTRACT NO: ' + no,
                             style: ['size11','bold'],
                             alignment: "center"
                         }]

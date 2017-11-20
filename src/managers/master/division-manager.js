@@ -52,7 +52,8 @@ module.exports = class DivisionManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -132,8 +133,10 @@ module.exports = class DivisionManager extends BaseManager {
                         var newDivision = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Division(data[i]);
+                            var now = new Date();
                             valid.code = generateCode();
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
@@ -168,8 +171,7 @@ module.exports = class DivisionManager extends BaseManager {
             name: `ix_${map.master.collection.Unit}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

@@ -4,6 +4,80 @@ var instanceManager = null;
 var should = require("should");
 var sqlHelper = require("../../../sql-helper");
 
+const DATA_UTIL = [
+    {
+        "_stamp": "8d48155f457f180",
+        "_type": "fabric-quality-control",
+        "_version": "1.0.0",
+        "_active": false,
+        "_deleted": true,
+        "_createdBy": "dev2",
+        "_createdDate": new Date("2017-04-12T03:42:32.975Z"),
+        "_createAgent": "manager",
+        "_updatedBy": "dev2",
+        "_updatedDate": new Date("2017-04-12T03:42:33.769Z"),
+        "_updateAgent": "manager",
+        "code": "Z5MGV08X",
+        "pointSystem": 10,
+        "dateIm": new Date("2017-03-14T17:00:00.000Z"),
+        "shiftIm": "Shift II: 14.00 - 22.00",
+        "group": "",
+        "operatorIm": "Felicia",
+        "machineNoIm": "Mesin-015",
+        "productionOrderNo": "5891ZL2W",
+        "productionOrderType": "SOLID",
+        "kanbanCode": "2973145Z",
+        "cartNo": "11NEO5MR",
+        "buyer": "PRASETYO",
+        "orderQuantity": 25000,
+        "color": "PUTIH",
+        "construction": "TC Oxford /  110x44 / 47",
+        "packingInstruction": "DIROLL @ 60 YDS",
+        "uom": "YDS",
+        "fabricGradeTests": [
+            {
+                "type": "SOLID",
+                "pcsNo": "PCS-001",
+                "grade": "A",
+                "width": 50,
+                "initLength": 2000,
+                "avalLength": 5,
+                "sampleLength": 0,
+                "finalLength": 1995,
+                "fabricGradeTest": 0,
+                "finalGradeTest": 0,
+                "criteria": [
+                    {
+                        "code": "B001",
+                        "group": "BENANG",
+                        "name": "Slubs",
+                        "score": {
+                            "A": 0,
+                            "B": 0,
+                            "C": 0,
+                            "D": 0
+                        }
+                    },
+                    {
+                        "code": "B002",
+                        "group": "BENANG",
+                        "name": "Neps",
+                        "score": {
+                            "A": 0,
+                            "B": 0,
+                            "C": 0,
+                            "D": 0
+                        }
+                    }
+                ],
+                "score": 225,
+                "finalScore": 2.25,
+                "pointSystem": 10
+            }
+        ]
+    }
+]
+
 before("#00. connect db", function (done) {
     Promise.all([helper, sqlHelper])
         .then((result) => {
@@ -33,39 +107,15 @@ it("#01. should success when create etl fact-fabric-quality-control", function (
         });
 });
 
-// it("#02. should success when transforming data", function (done) {
-//     var data = [
-//         {
-//             uom: {
-//                 unit: "yds"
-//             },
-//             orderQuantity: 1,
-//             material: {
-//                 name: ""
-//             },
-//             materialConstruction: {
-//                 name: ""
-//             },
-//             yarnMaterial: {
-//                 name: ""
-//             },
-//             materialWidth: ""
-//         },
-//         {
-//             uom: {
-//                 unit: "mtr"
-//             },
-//             orderQuantity: 1
-//         }
-//     ];
-//     instanceManager.transform(data)
-//         .then(() => {
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+it("#02. should success when transforming data", function (done) {
+    instanceManager.transform(DATA_UTIL)
+        .then(() => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
 
 // it("#03. should error when load empty data", function (done) {
 //     instanceManager.load({})

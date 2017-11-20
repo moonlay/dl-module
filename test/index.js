@@ -13,6 +13,9 @@ describe('#dl-module', function (done) {
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
+    // // Migration Log
+    test('@Migration Log/Migration Log', './migration-log/migration-log');
+
     //Etl
     test('@ETL/DIM-BUYER', './etl/dim/dim-buyer');
     test('@ETL/DIM-CATEGORY', './etl/dim/dim-category');
@@ -24,6 +27,11 @@ describe('#dl-module', function (done) {
     test('@ETL/DIM-ORDER-TYPE', './etl/dim/dim-order-type');
     test('@ETL/DIM-PRODUCT', './etl/dim/dim-product');
     test('@ETL/DIM-STORAGE', './etl/dim/dim-storage');
+    test('@ETL/DIM-STAFF', './etl/dim/dim-staff');
+    test('@ETL/DIM-COMPANY', './etl/dim/dim-company');
+    test('@ETL/DIM-CONTACT', './etl/dim/dim-contact');
+    test('@ETL/DIM-DURATION-ESTIMATION', './etl/dim/dim-duration-estimation');
+    test('@ETL/DIM-BUDGET', './etl/dim/dim-budget');
     test('@ETL/FACT-TOTAL-HUTANG', './etl/purchasing/fact-total-hutang');
     test('@ETL/FACT-PURCHASING', './etl/purchasing/fact-purchasing');
     test('@ETL/FACT-MONITORING-EVENT', './etl/production/fact-monitoring-event');
@@ -38,8 +46,15 @@ describe('#dl-module', function (done) {
     test('@ETL/FACT-INVENTORY-MOVEMENT', './etl/inventory/fact-inventory-movement');
     test('@ETL/FACT-INVENTORY-SUMMARY', './etl/inventory/fact-inventory-summary');
     test('@ETL/garment-purchase-request', './etl/garment/garment-purchase-request');
+    test('@ETL/FACT-GARMENT-PURCHASING', './etl/garment/purchasing/fact-purchasing');
     test('@ETL/FACT-FP-PACKING-RECEIPT', './etl/inventory/fact-fp-packing-receipt');
     test('@ETL/FACT-FP-SHIPMENT-DOCUMENT', './etl/inventory/fact-fp-shipment-document');
+    test('@ETL/FACT-DEAL-TRACKING-BOARD', './etl/sales/fact-deal-tracking-board');
+    test('@ETL/FACT-DEAL-TRACKING-STAGE', './etl/sales/fact-deal-tracking-stage');
+    test('@ETL/FACT-DEAL-TRACKING-DEAL', './etl/sales/fact-deal-tracking-deal');
+    test('@ETL/FACT-DEAL-TRACKING-ACTIVITY', './etl/sales/fact-deal-tracking-activity');
+    test('@ETL/FACT-INSPECTION-LOT-COLOR', './etl/production/fact-inspection-lot-color');
+
     // Master
     test('@MASTER/ACCOUNT-BANK', './master/account-bank');
     test('@MASTER/BUDGET', './master/budget');
@@ -50,7 +65,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/CURRENCY', './master/currency');
     test('@MASTER/DIVISION', './master/division');
     test('@MASTER/LAMP-STANDARD', './master/lamp-standard');
-    test('@MASTER/LOT-MACHINE', './master/lot-machine');
+    test('@MASTER/SPINNING-PRODUCTION-LOT', './master/spinning-production-lot');
     test('@MASTER/MACHINE', './master/machine');
     test('@MASTER/PRODUCT', './master/product');
     test('@MASTER/GARMENT-PRODUCT', './master/garment-product');
@@ -84,6 +99,8 @@ describe('#dl-module', function (done) {
     test('@MASTER/CONTACT', './master/contact');
     test('@MASTER/BAD OUTPUT REASON', './master/bad-output-reason');
     test('@MASTER/FINISHING PRINTING DURATION ESTIMATION', './master/fp-duration-estimation');
+    test('@MASTER/DEAL TRACKING REASON', './master/deal-tracking-reason');
+    test('@MASTER/SPINNING YARN', './master/spinning-yarn');
 
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
@@ -104,6 +121,11 @@ describe('#dl-module', function (done) {
     test('@GARMENT PURCHASING/DELIVERY ORDER', './garment-purchasing/delivery-order');
     test('@GARMENT PURCHASING/CUSTOMS', './garment-purchasing/customs');
     test('@GARMENT PURCHASING/INVOICE NOTE', './garment-purchasing/invoice-note');
+    test('@GARMENT PURCHASING/PURCHASE PRICE CORRECTION', './garment-purchasing/purchase-price-correction');
+    test('@GARMENT PURCHASING/UNIT RECEIPT NOTE', './garment-purchasing/unit-receipt-note');
+    test('@GARMENT PURCHASING/INTERN NOTE', './garment-purchasing/intern-note');
+    test('@GARMENT PURCHASING/PURCHASE QUANTITY CORRECTION', './garment-purchasing/purchase-quantity-correction');
+    test('@GARMENT PURCHASING/garment currency', './garment-purchasing/garment-currency');
 
     //Sales
     test('@SALES/PRODUCTION-ORDER', './sales/production-order');
@@ -134,4 +156,17 @@ describe('#dl-module', function (done) {
     test('@INVENTORY/INVENTORY-SUMMARY', './inventory/inventory-summary');
     test('@INVENTORY/INVENTORY-MOVEMENT', './inventory/inventory-movement');
     test('@INVENTORY/INVENTORY-DOCUMENT', './inventory/inventory-document');
+    test('@INVENTORY/FINISHING-PRINTING/RETUR-FROM-BUYER', './inventory/finishing-printing/fp-retur-fr-byr-doc');
+    
+    //GarmentInventory
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-SUMMARY', './inventory-garment/garment-inventory-summary');
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-MOVEMENT', './inventory-garment/garment-inventory-movement');
+    test('@GARMENTINVENTORY/GARMENT-INVENTORY-DOCUMENT', './inventory-garment/garment-inventory-document');
+
+    //Garment Master Plan
+    test('@GARMENT MASTER PLAN/WEEKLY-PLAN', './garment-master-plan/weekly-plan');
+    test('@GARMENT MASTER PLAN/WORKING-HOURS-STANDARD', './garment-master-plan/working-hours-standard');
+    test('@GARMENT MASTER PLAN/STYLE', './garment-master-plan/style');
+    test('@GARMENT MASTER PLAN/STANDARD-HOUR', './garment-master-plan/standard-hour');
+
 });

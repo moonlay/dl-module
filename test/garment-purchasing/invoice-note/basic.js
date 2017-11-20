@@ -4,7 +4,7 @@ var options = {
     util: require("../../data-util/garment-purchasing/invoice-note-data-util"),
     validator: require("dl-models").validator.garmentPurchasing.garmentInvoiceNote,
     createDuplicate: false,
-    keys: ["no"]
+    keys: ["refNo"]
 };
 
 var basicTest = require("../../basic-test-factory");

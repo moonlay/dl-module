@@ -373,7 +373,30 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         isPosted: true
                     });
 
-                    this.collection.find(query).toArray()
+                    var fieldPoEks = map.purchasing.collection.PurchaseOrderExternal;
+                    this.collection.aggregate(
+                        
+                        {
+                            $match:query
+                        },
+                        {
+                            $lookup : {
+                                from : fieldPoEks,
+                                localField : "no",
+                                foreignField : "items.refNo",
+                                as : "poEks"
+                            }
+                        },
+                        {
+                            $unwind : "$poEks"
+                        },
+                        {
+                            $project :  {
+                                "poEks" : "$poEks.expectedDeliveryDate"
+                            }
+                        }
+                        
+                        ).toArray()
                         .then((purchaseRequests) => {
                             resolve(purchaseRequests);
                         })
@@ -433,13 +456,37 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         isPosted: true
                     });
 
-                    this.collection.find(query).toArray()
+                    var fieldPoEks = map.purchasing.collection.PurchaseOrderExternal;
+                    this.collection.aggregate(
+                        
+                        {
+                            $match:query
+                        },
+                        {
+                            $lookup : {
+                                from : fieldPoEks,
+                                localField : "no",
+                                foreignField : "items.refNo",
+                                as : "poEks"
+                            }
+                        },
+                        {
+                            $unwind : "$poEks"
+                        },
+                        {
+                            $project :  {
+                                "poEks" : "$poEks.expectedDeliveryDate"
+                            }
+                        }
+                        
+                        ).toArray()
                         .then((purchaseRequests) => {
                             resolve(purchaseRequests);
                         })
                         .catch(e => {
                             reject(e);
                         });
+                    
                 });
             });
     }

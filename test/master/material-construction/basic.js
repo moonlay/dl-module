@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.MaterialConstruction,
     util: require("../../data-util/master/material-construction-data-util"),
     validator: require("dl-models").validator.master.materialConstruction,
-    createDuplicate: true,
-    keys: ["name"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

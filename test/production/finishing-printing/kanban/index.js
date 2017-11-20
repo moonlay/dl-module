@@ -9,3 +9,11 @@ describe("VALIDATION SCENARIOS", function() {
 describe("MONITORING SCENARIOS", function() {
     require("./monitoring");
 });
+
+describe("PDF SCENARIOS", function() {
+    require("./pdf");
+});
+
+describe("VISUALIZATION SCENARIOS", function() {
+    require("./visualization");
+});

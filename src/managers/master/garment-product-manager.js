@@ -63,7 +63,8 @@ module.exports = class GarmentProductManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         var getUom = valid.uom && ObjectId.isValid(valid.uom._id) ? this.uomManager.getSingleByIdOrDefault(valid.uom._id) : Promise.resolve(null);
@@ -200,7 +201,7 @@ module.exports = class GarmentProductManager extends BaseManager {
                                         if (errorMessage.length === 1) {
                                             dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage[0] });
                                         } if (errorMessage.length > 1) {
-                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage.split(', ') });
+                                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "uom": data[i]["uom"], "currency": data[i]["currency"], "price": data[i]["price"], "tags": data[i]["tags"], "description": data[i]["description"], "properties": data[i]["properties"], "Error": errorMessage.join(', ') });
                                         } else {
                                             data[i]["uom"] = _uom;
 
@@ -215,10 +216,12 @@ module.exports = class GarmentProductManager extends BaseManager {
                                         var jobs = [];
                                         for (var prd of data) {
                                             var valid = new Product(prd);
+                                            var now = new Date();
                                             valid.currency.rate = Number(valid.currency.rate);
                                             valid.price = Number(valid.price);
                                             valid.uomId = new ObjectId(valid.uom._id);
                                             valid.stamp(this.user.username, 'manager');
+                                            valid._createdDate = now;
                                             var job = this.collection.insert(valid)
                                                 .then(id => {
                                                     return this.getSingleById(id)
@@ -256,8 +259,7 @@ module.exports = class GarmentProductManager extends BaseManager {
             name: `ix_${map.master.collection.Product}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

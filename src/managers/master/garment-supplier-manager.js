@@ -49,7 +49,8 @@ module.exports = class SupplierManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -153,7 +154,9 @@ module.exports = class SupplierManager extends BaseManager {
                                 data[i]["import"] = false;
                             }
                             var valid = new Supplier(data[i]);
+                            var now = new Date();
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
@@ -188,8 +191,7 @@ module.exports = class SupplierManager extends BaseManager {
             name: `ix_${map.master.collection.Supplier}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

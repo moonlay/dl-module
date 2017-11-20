@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.Uster,
     util: require("../../data-util/master/uster-data-util"),
     validator: require("dl-models").validator.master.uster,
-    createDuplicate: true,
-    keys: ["productId"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

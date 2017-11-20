@@ -53,8 +53,18 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return query;
     }
 
-    run(table1, table2, date) {
-        var startedDate = new Date()
+    test() {
+        return this.migrationLog.aggregate(
+            [
+                { "$match": { "status": "Successful" } },
+                { "$group": { "_id": { "description": "$description" }, "latestDate": { "$max": "$start" } } }
+            ]
+        ).toArray();
+
+    }
+
+    run(tanggal, t1, t2, page, size) {
+        var startedDate = new Date();
 
         this.migrationLog.insert({
             code: "sql-gpr",
@@ -62,37 +72,15 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             start: startedDate,
         })
 
+        this.tgl = tanggal;
 
         return new Promise((resolve, reject) => {
+            var table1 = t1;
+            var table2 = t2;
+
             this.getTimeStamp().then((result) => {
                 var dateStamp;
-
-                if (date == 1) {
-                    dateStamp = "2017-01%%";
-                } else if (date == 2) {
-                    dateStamp = "2017-02%%";
-                } else if (date == 3) {
-                    dateStamp = "2017-03%%";
-                } else if (date == 4) {
-                    dateStamp = "2017-04%%";
-                } else if (date == 5) {
-                    dateStamp = "2017-05%%";
-                } else if (date == 6) {
-                    dateStamp = "2017-06%%";
-                } else if (date == 7) {
-                    dateStamp = "2017-07%%";
-                } else if (date == 8) {
-                    dateStamp = "2017-08%%";
-                } else if (date == 9) {
-                    dateStamp = "2017-09%%";
-                } else if (date == 10) {
-                    dateStamp = "2017-10%%";
-                } else if (date == 11) {
-                    dateStamp = "2017-11%%";
-                } else if (date == 12) {
-                    dateStamp = "2017-12%%";
-                }
-                else if (date == "latest") {
+                if (this.tgl.trim() == "latest") {
                     if (result.length != 0) {
                         var year = result[0].start.getFullYear();
                         var month = result[0].start.getMonth() + 1;
@@ -106,86 +94,160 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         }
 
                         dateStamp = [year, month, day].join('-');
+                    } else if (result.length == 0) {
+
+                        var year = new Date().getFullYear();
+                        var month = new Date().getMonth() + 1;
+                        var day = new Date().getDate();
+
+                        if (month < 10) {
+                            month = "0" + month;
+                        }
+                        if (day < 10) {
+                            day = "0" + day;
+                        }
+                        dateStamp = [year, month, day].join('-');
+                    }
+                } else {
+                    var monthOpt = ["latest",
+                        "january", "february", "march",
+                        "april", "may", "june",
+                        "july", "august", "september",
+                        "october", "november", "december"];
+                    var tempYear = new Date().getFullYear().toString();
+
+                    if (this.tgl == monthOpt[1].trim()) {
+                        dateStamp = tempYear + "-01%%";
+                    } else if (this.tgl == monthOpt[2].trim()) {
+                        dateStamp = tempYear + "-02%%";
+                    } else if (this.tgl == monthOpt[3].trim()) {
+                        dateStamp = tempYear + "-03%%";
+                    } else if (this.tgl == monthOpt[4].trim()) {
+                        dateStamp = tempYear + "-04%%";
+                    } else if (this.tgl == monthOpt[5].trim()) {
+                        dateStamp = tempYear + "-05%%";
+                    } else if (this.tgl == monthOpt[6].trim()) {
+                        dateStamp = tempYear + "-06%%";
+                    } else if (this.tgl == monthOpt[7].trim()) {
+                        dateStamp = tempYear + "-07%%";
+                    } else if (this.tgl == monthOpt[8].trim()) {
+                        dateStamp = tempYear + "-08%%";
+                    } else if (this.tgl == monthOpt[9].trim()) {
+                        dateStamp = tempYear + "-09%%";
+                    } else if (this.tgl == monthOpt[10].trim()) {
+                        dateStamp = tempYear + "-10%%";
+                    } else if (this.tgl == monthOpt[11].trim()) {
+                        dateStamp = tempYear + "-11%%";
+                    } else if (this.tgl == monthOpt[12].trim()) {
+                        dateStamp = tempYear + "-12%%";
                     }
                 }
 
-                // if (result.length != 0) {
-                //     var year = result[0].start.getFullYear();
-                //     var month = result[0].start.getMonth() + 1;
-                //     var day = result[0].start.getDate();
+                // this.getRowNumber(table1, table2, dateStamp)
+                //     .then((data) => {
+                // var dataLength = data;
+                this.tgl = dateStamp;
 
-                //     if (month < 10) {
-                //         month = "0" + month;
-                //     }
-                //     if (day < 10) {
-                //         day = "0" + day;
-                //     }
+                var processedData = new Promise((res, rej) => {
+                    this.extract(table1, table2, page, size, this.tgl)
+                        .then((extracted) => {
+                            this.transform(extracted)
+                                .then((transformed) => {
+                                    this.load(transformed)
+                                        .then((result) => {
+                                            res(result);
+                                        })
+                                })
+                        })
+                });
 
-                //     dateStamp = [year, month, day].join('-');
-                // } else if (result.length == 0) {
-                //     dateStamp = "2017-08-2%%";
+                processedData.then((result) => {
+                    var finishedDate = new Date();
+                    var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                    var updateLog = {};
+
+                    if (!result) {
+                        updateLog = {
+                            code: "sql-gpr",
+                            description: "Sql to MongoDB: Garment-Purchase-Request",
+                            start: startedDate,
+                            finish: finishedDate,
+                            executionTime: spentTime + " minutes",
+                            status: "today, data didnt exist",
+
+                        };
+                    } else {
+                        updateLog = {
+                            code: "sql-gpr",
+                            description: "Sql to MongoDB: Garment-Purchase-Request",
+                            start: startedDate,
+                            finish: finishedDate,
+                            executionTime: spentTime + " minutes",
+                            status: "Successful",
+
+                        };
+                    }
+
+                    var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
+                    resolve(result);
+                });
+
+                // var pageSize = 10000;
+                // var dataLength = data;
+                // var totalPageNumber = Math.ceil(dataLength / pageSize);
+
+                // var date = dateStamp;
+                // var processedData = [];
+
+                // for (var i = 1; i <= totalPageNumber; i++) {
+                //     processedData.push(new Promise((resolve, reject) => {
+                //         this.extract(table1, table2, i, pageSize, date)
+                //             .then((extracted) => {
+                //                 this.transform(extracted)
+                //                     .then((transformed) => {
+                //                         this.load(transformed)
+                //                             .then((result) => {
+                //                                 resolve(result);
+                //                             })
+                //                     })
+                //             })
+                //     }))
                 // }
 
+                // Promise.all(processedData).then((processedData) => {
+                //     var finishedDate = new Date();
+                //     var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                //     var updateLog = {};
 
-                this.getRowNumber(table1, table2, dateStamp)
-                    .then((data) => {
+                //     if (!processedData[0]) {
+                //         updateLog = {
+                //             code: "sql-gpr",
+                //             description: "Sql to MongoDB: Garment-Purchase-Request",
+                //             start: startedDate,
+                //             finish: finishedDate,
+                //             executionTime: spentTime + " minutes",
+                //             status: "today, data didnt exist",
 
-                        var pageSize = 1000;
-                        var dataLength = data;
-                        var totalPageNumber = Math.ceil(dataLength / pageSize);
+                //         };
+                //     } else {
+                //         updateLog = {
+                //             code: "sql-gpr",
+                //             description: "Sql to MongoDB: Garment-Purchase-Request",
+                //             start: startedDate,
+                //             finish: finishedDate,
+                //             executionTime: spentTime + " minutes",
+                //             status: "Successful",
 
-                        var date = dateStamp;
-                        var processedData = [];
+                //         };
+                //     }
 
-                        for (var i = 1; i <= totalPageNumber; i++) {
-                            processedData.push(new Promise((resolve, reject) => {
-                                this.extract(table1, table2, i, pageSize, date)
-                                    .then((extracted) => {
-                                        this.transform(extracted)
-                                            .then((transformed) => {
-                                                this.load(transformed)
-                                                    .then((result) => {
-                                                        resolve(result);
-                                                    })
-                                            })
-                                    })
-                            }))
-                        }
+                //     var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
+                //     resolve(processedData);
 
-                        Promise.all(processedData).then((processedData) => {
-                            var finishedDate = new Date();
-                            var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
-                            var updateLog = {};
+                // });
 
-                            if (processedData[0].length == 0) {
-                                updateLog = {
-                                    code: "sql-gpr",
-                                    description: "Sql to MongoDB: Garment-Purchase-Request",
-                                    start: startedDate,
-                                    finish: finishedDate,
-                                    executionTime: spentTime + " minutes",
-                                    status: "today, data didnt exist",
-
-                                };
-                            } else {
-                                updateLog = {
-                                    code: "sql-gpr",
-                                    description: "Sql to MongoDB: Garment-Purchase-Request",
-                                    start: startedDate,
-                                    finish: finishedDate,
-                                    executionTime: spentTime + " minutes",
-                                    status: "Successful",
-
-                                };
-                            }
-
-                            var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
-                            resolve(processedData);
-
-                        });
-
-                    });
             });
+            // });
         });
     };
 
@@ -214,11 +276,17 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     transaction.begin((err) => {
 
                         var request = this.sql.transactionRequest(transaction);
+                        var sqlQuery;
 
-                        var sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                        if (tgl.includes("%%")) {
+                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                        } else {
+                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                        }
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
+                                console.log(result[0].NumberOfRow);
                                 resolve(result[0].NumberOfRow);
                             } else {
                                 reject(err);
@@ -240,13 +308,20 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         var request = this.sql.transactionRequest(transaction);
                         var sqlQuery;
 
-
-                        if (table1 == "Budget" && table2 == "POrder") {
-                            sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
+                        if (tgl.includes("%%")) {
+                            if (table1 == "Budget" && table2 == "POrder") {
+                                sqlQuery = "exec garment_purchase_request_period " + page + "," + pageSize + ",'" + tgl + "' ";
+                            }
+                            // else {
+                            //     sqlQuery = "exec garment_purchase_request1 " + page + "," + pageSize + ",'" + tgl + "' ";
+                            // }
                         } else {
-                            sqlQuery = "exec garment_purchase_request1 " + page + "," + pageSize + ",'" + tgl + "' ";
+                            if (table1 == "Budget" && table2 == "POrder") {
+                                sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
+                            } else {
+                                sqlQuery = "garment_purchase_request_period " + page + "," + pageSize + ",'" + tgl + "' ";
+                            }
                         }
-
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
@@ -390,14 +465,16 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     nomorRo: [],
                 };
 
-                var unitNotFound = [];
-                var buyerNotFound = [];
-                var categoryNotFound = [];
-                var productNotFound = [];
-                var uomNotFound = [];
+                // var unitNotFound = [];
+                // var buyerNotFound = [];
+                // var categoryNotFound = [];
+                // var productNotFound = [];
+                // var uomNotFound = [];
                 var no = 1;
 
                 for (var Ro of nomorRo) {
+
+                    // console.log(nomorRo);
 
                     var items = [];
                     var map = {};
@@ -406,6 +483,12 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                     var _createdDate;
                     var _updatedDate;
+
+                    var unitNotFound = [];
+                    var buyerNotFound = [];
+                    var categoryNotFound = [];
+                    var productNotFound = [];
+                    var uomNotFound = [];
 
                     for (var data of datas) {
                         if (Ro == data.Ro) {
@@ -463,7 +546,28 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             var category = (_category.find(o => o.code.trim() == data.Cat.trim())) ? (_category.find(o => o.code.trim() == data.Cat.trim())) : (categoryNotFound.find(o => o == data.Cat.trim())) ? true : categoryNotFound.push(data.Cat.trim());
 
                             //getting items
-                            var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
+                            var remarkTemp = [];
+                            if (data.Ketr.trim() != "") {
+                                remarkTemp.push(data.Ketr.trim());
+                            }
+                            if (data.Kett.trim() != "") {
+                                remarkTemp.push(data.Kett.trim());
+                            }
+                            if (data.Kett2.trim() != "") {
+                                remarkTemp.push(data.Kett2.trim());
+                            }
+                            if (data.Kett3.trim() != "") {
+                                remarkTemp.push(data.Kett3.trim());
+                            }
+                            if (data.Kett4.trim() != "") {
+                                remarkTemp.push(data.Kett4.trim());
+                            }
+                            if (data.Kett5.trim() != "") {
+                                remarkTemp.push(data.Kett5.trim());
+                            }
+                            // var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
+                            var remark = remarkTemp.toString();
+
 
                             var Colors = [];
                             if (data.Clr1.trim() != "") {
@@ -522,6 +626,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     remark: remark,
 
                                     refNo: data.Nopo,
+                                    urut: data.Urut,
 
                                     uomId: uom._id,
                                     uom: {
@@ -534,11 +639,17 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                         _id: category._id,
                                         code: category.code.trim(),
                                         name: category.name.trim(),
+                                        uomId: category.uomId,
+                                        uom: {
+                                            _id: category.uomId,
+                                            unit: category.uom.unit,
+                                        }
+
                                     },
                                     colors: Colors,
                                     id_po: (data.ID_PO),
                                     isUsed: false,
-                                    purchaseOrderId:{},
+                                    purchaseOrderId: {},
                                 }
                                 items.push(item);
 
@@ -625,10 +736,12 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     map._createdDate = new Date(_createdDate + ":" + createdDateTemp.sort()[0]);
                     map._updatedDate = new Date(_updatedDate + ":" + updatedDateTemp.sort()[0]);
                     map.items = items;
+
                     transformData.datas.push(map);
 
                 }
                 transformData.nomorRo = (nomorRo);
+
                 resolve(transformData);
             });
         })
@@ -654,6 +767,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     load(dataArr) {
         return new Promise((resolve, reject) => {
 
+            var failed = [];
             var processed = [];
             var roNoArr = dataArr.nomorRo;
             var dataTemp = [];
@@ -691,8 +805,13 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 }
 
                 Promise.all(processed).then((processed) => {
-                    resolve(processed);
+                    var dataProcessed = {};
+                    dataProcessed.processed = processed;
+                    dataProcessed.MigratedFalse = MigratedFalse;
+                    resolve(dataProcessed);
+
                 })
+
 
             });
 

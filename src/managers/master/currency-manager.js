@@ -51,7 +51,8 @@ module.exports = class CurrencyManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -160,8 +161,10 @@ module.exports = class CurrencyManager extends BaseManager {
                         var newCurrency = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Currency(data[i]);
+                            var now = new Date();
                             valid.rate = Number(valid.rate);
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
@@ -196,8 +199,7 @@ module.exports = class CurrencyManager extends BaseManager {
             name: `ix_${map.master.collection.Currency}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         }
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

@@ -1,6 +1,7 @@
 module.exports = {
     master: {
         product: require('./data-util/master/product-data-util'),
+        holiday: require('./data-util/master/holiday-data-util'),
         uom: require('./data-util/master/uom-data-util'),
         vat: require('./data-util/master/vat-data-util'),
         currency: require('./data-util/master/currency-data-util'),
@@ -9,7 +10,7 @@ module.exports = {
         supplier: require('./data-util/master/supplier-data-util'),
         unit: require('./data-util/master/unit-data-util'),
         machine: require('./data-util/master/machine-data-util'),
-        lotMachine: require('./data-util/master/lot-machine-data-util'),
+        //lotMachine: require('./data-util/master/lot-machine-data-util'),
         category: require('./data-util/master/category-data-util'),
         lampStandard: require('./data-util/master/lamp-standard-data-util'),
         instruction: require('./data-util/master/instruction-data-util'),
@@ -48,5 +49,6 @@ module.exports = {
         dealTrackingDeal: require('./data-util/sales/deal-tracking-deal-data-util'),
         dealTrackingActivity: require('./data-util/sales/deal-tracking-activity-data-util')
     },
+    
 
 };

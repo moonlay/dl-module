@@ -26,18 +26,21 @@ it(`#01. should success when insert data upload`, function (done) {
     data.push("Kode");
     data.push("Nama");
     data.push("Kode Kebutuhan");
+    data.push("UOM");
     dataAll.push(data);
     data = [];
 
     data.push("AK");
     data.push("KEBERSIHAN");
     data.push("");
+    data.push("COLT");
     dataAll.push(data);
     data = [];
 
     data.push("AL");
     data.push("ALAT LISTRIK");
     data.push("");
+    data.push("COLT");
     dataAll.push(data);
     data = [];
 
@@ -57,12 +60,14 @@ it(`#02. should error when insert duplicate data upload`, function (done) {
     data.push("Kode");
     data.push("Nama");
     data.push("Kode Kebutuhan");
+    data.push("UOM");
     dataAll.push(data);
     data = [];
 
     data.push("AK");
     data.push("KEBERSIHAN");
     data.push("");
+    data.push("COLT");
     dataAll.push(data);
     dataAll.push(data);
     data = [];
