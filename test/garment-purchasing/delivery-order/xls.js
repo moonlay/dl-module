@@ -128,3 +128,17 @@ it('#07. should success when get data for Excel Report', function (done) {
             done(e);
         });
 });
+
+it('#08. should success when generate data to Excel Report', function (done) {
+    var query = {};
+
+    instanceManager.getAllData(resultForExcelTest, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});

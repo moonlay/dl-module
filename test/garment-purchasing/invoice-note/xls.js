@@ -99,3 +99,17 @@ it("#05. should success when destroy all unit test data", function (done) {
             done(e);
         });
 });
+
+it('#06. should success when generate data to Excel Report', function (done) {
+    var query = {};
+
+    instanceManager.getAllData(resultForExcelTest, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
