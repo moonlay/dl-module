@@ -23,8 +23,24 @@ before("#00. connect db", function (done) {
         });
 });
 
+it("#01. should success when get time stamp", function (done) {
+    testTable="Budget"
+    instanceManager.getTimeStamp(testTable)
+        .then((result) => {
+            // var data = result.processed;
+            // data.should.instanceof(Array);
+            // data.length.should.not.equal(0);
+            done();
+
+        })
+        .catch((e) => {
+            console.log(e);
+            done(e);
+        });
+});
+
 var extractedData;
-it("#01. should success when extract all data", function (done) {
+it("#02. should success when extract all data", function (done) {
     garmentPurchaseRequestDataUtil.getNewData()
         .then((result) => {
             extractedData = result;
@@ -39,14 +55,15 @@ it("#01. should success when extract all data", function (done) {
 });
 
 var transfrom;
-it("#02. should success when transfrom all data", function (done) {
+it("#03. should success when transfrom all data", function (done) {
     garmentPurchaseRequestDataUtil.getData().then((data) => {
         extractedData.dataTest = data;
-        instanceManager.transform(extractedData)
+        var table1 = extractedData;
+        instanceManager.transform(extractedData, table1)
             .then((result) => {
                 transfrom = result;
-                transfrom.datas.should.instanceof(Array);
-                transfrom.datas.length.should.not.equal(0);
+                transfrom.should.instanceof(Array);
+                transfrom.length.should.not.equal(0);
                 done();
 
             })
@@ -56,8 +73,21 @@ it("#02. should success when transfrom all data", function (done) {
     });
 });
 
-it("#03. should success when load all data", function (done) {
-    instanceManager.load(transfrom)
+var dataBeforeLoad
+it("#04. should success when delete all data", function (done) {
+    instanceManager.beforeLoad(transfrom)
+        .then((result) => {
+            done();
+
+        })
+        .catch((e) => {
+            console.log(e);
+            done(e);
+        });
+});
+
+it("#05. should success when load all data", function (done) {
+    instanceManager.load(transfrom, dataBeforeLoad)
         .then((result) => {
 
             var data = result.processed;
@@ -72,12 +102,18 @@ it("#03. should success when load all data", function (done) {
         });
 });
 
+
+
 // it("#04. should success migrate all data", function (done) {
 //     // var table1 = "Budget1";
 //     // var table2 = "POrder1";
-//     var table1 = "Budget";
-//     var table2 = "POrder";
-//     instanceManager.run(table1, table2)
+//     var table1 = "Budget1";
+//     var table2 = "POrder1";
+//     var date="latest";
+//     var page=1;
+//     var size=200;
+
+//     instanceManager.run(date, table1, table2, page, size)
 //         .then((result) => {
 
 //             var results = result;
