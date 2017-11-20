@@ -974,7 +974,8 @@ if (PRNo!=="") {
                         "items.unitReceiptNote.items.deliveredQuantity",
                         "items.unitReceiptNote.items.deliveredUom",
                         "items.unitReceiptNote.items.pricePerDealUnit",
-                        "items.unitReceiptNote.items.currency"];
+                        "items.unitReceiptNote.items.currency",
+                        "paymentMethod"];
 
                     this.collection.where(query).select(_select).execute()
                         .then((results) => {
