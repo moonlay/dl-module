@@ -104,14 +104,14 @@ it("#05. should success when load all data", function (done) {
 
 
 
-// it("#04. should success migrate all data", function (done) {
+// it("#zz. should success migrate all data", function (done) {
 //     // var table1 = "Budget1";
 //     // var table2 = "POrder1";
-//     var table1 = "Budget1";
-//     var table2 = "POrder1";
+//     var table1 = "Budget";
+//     var table2 = "POrder";
 //     var date="latest";
 //     var page=1;
-//     var size=200;
+//     var size=10;
 
 //     instanceManager.run(date, table1, table2, page, size)
 //         .then((result) => {
