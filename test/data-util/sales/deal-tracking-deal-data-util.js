@@ -4,14 +4,16 @@ var DealTrackingDealManager = require('../../../src/managers/sales/deal-tracking
 var generateCode = require("../../../src/utils/code-generator");
 var company = require("../master/company-data-util");
 var contact = require("../master/contact-data-util");
+var product = require("../master/product-data-util");
 var dealTrackingStage = require("./deal-tracking-stage-data-util");
 
 class DealTrackingDealDataUtil {
     getNewData() {
-        return Promise.all([contact.getTestData(), dealTrackingStage.getTestData()])
+        return Promise.all([contact.getTestData(), dealTrackingStage.getTestData(), product.getTestData()])
             .then((results) => {
                 var _contact = results[0];
                 var _dealTrackingStage = results[1];
+                var _product = results[2];
 
                 var Model = require('dl-models').sales.DealTrackingDeal;
                 var data = new Model();
@@ -25,6 +27,9 @@ class DealTrackingDealDataUtil {
                 data.company = _contact.company;
                 data.contactId = _contact._id;
                 data.contact = _contact;
+                data.productId = _product._id;
+                data.product = _product;
+                data.quantity = 5000;
                 data.closeDate = new Date();
                 data.description = `description[${code}]`;
                 data.stageId = _dealTrackingStage._id;   

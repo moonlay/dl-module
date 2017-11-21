@@ -54,7 +54,9 @@ class PurchaseOrderExternalDataUtil {
                                     budgetPrice: Number(item.budgetPrice),
                                     priceBeforeTax: Number(item.budgetPrice),
                                     pricePerDealUnit: Number(item.budgetPrice),
-                                    useIncomeTax: false
+                                    useIncomeTax: false,
+                                    isOverBudget: false,
+                                    overBudgetRemark: "",
                                 }
                             })
                         })
@@ -67,7 +69,7 @@ class PurchaseOrderExternalDataUtil {
                             freightCostBy: 'Penjual',
                             currency: currency,
                             currencyRate: currency.rate,
-                            paymentMethod: 'CASH',
+                            paymentMethod: 'SAMPLE',
                             paymentType: 'CASH',
                             paymentDueDays: 0,
                             vat: vat,
@@ -133,7 +135,9 @@ class PurchaseOrderExternalDataUtil {
                                     budgetPrice: Number(item.budgetPrice),
                                     priceBeforeTax: Number(item.budgetPrice),
                                     pricePerDealUnit: Number(item.budgetPrice),
-                                    useIncomeTax: false
+                                    useIncomeTax: false,
+                                    isOverBudget: false,
+                                    overBudgetRemark: "",
                                 }
                             })
                         })
@@ -146,7 +150,7 @@ class PurchaseOrderExternalDataUtil {
                             freightCostBy: 'Penjual',
                             currency: currency,
                             currencyRate: currency.rate,
-                            paymentMethod: 'CASH',
+                            paymentMethod: 'SAMPLE',
                             paymentType: 'CASH',
                             paymentDueDays: 0,
                             vat: vat,

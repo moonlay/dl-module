@@ -87,8 +87,48 @@ it('#04. should success when get data for Excel Report', function (done) {
         });
 });
 
+it('#05. should success when get data for Old data Excel Report', function (done) {
+    var query = { "dateFrom": new Date() };
 
-it("#05. should success when destroy all unit test data", function (done) {
+    var oldData = [];
+    for (var datum of resultForExcelTest.data) {
+
+        var oldItems = [];
+        for (var detail of datum.details) {
+            for (var item of detail.items) {
+                for (var packingReceiptItem of item.packingReceiptItems) {
+                    oldItems.push(packingReceiptItem);
+                }
+            }
+        }
+
+        var oldDetails = [];
+        for (var detail of datum.details) {
+            detail.items = oldItems;
+            oldDetails.push(detail);
+        }
+
+        var oldDatum = datum;
+        oldDatum.details = oldDetails;
+
+        oldData.push(oldDatum);
+    }
+
+    resultForExcelTest.data = oldData;
+
+    instanceManager.getXls(resultForExcelTest, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+
+it("#06. should success when destroy all unit test data", function (done) {
     instanceManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();
