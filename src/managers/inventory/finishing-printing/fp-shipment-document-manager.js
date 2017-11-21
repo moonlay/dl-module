@@ -361,7 +361,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                         if (shipmentPackingReceipt && shipmentPackingReceiptItem) {
                                             packingReceipts[i].items[j].availableQuantity -= shipmentPackingReceiptItem.quantity;
                                         }
-                                        if (shipmentPackingReceipt && shipmentPackingReceiptItem && packingReceipts[i].items[j].availableQuantity === 0) {
+                                        if (shipmentPackingReceipt && shipmentPackingReceiptItem && packingReceipts[i].items[j].availableQuantity !== packingReceipts[i].items[j].quantity) {
                                             packingReceipts[i].items[j].isDelivered = true;
                                         }
 
@@ -430,7 +430,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                                         if (shipmentPackingReceipt && shipmentPackingReceiptItem) {
                                             packingReceipts[i].items[j].availableQuantity += shipmentPackingReceiptItem.quantity;
                                         }
-                                        if (shipmentPackingReceipt && shipmentPackingReceiptItem && packingReceipts[i].items[j].availableQuantity !== 0) {
+                                        if (shipmentPackingReceipt && shipmentPackingReceiptItem && packingReceipts[i].items[j].availableQuantity === packingReceipts[i].items[j].quantity) {
                                             packingReceipts[i].items[j].isDelivered = false;
                                         }
 

@@ -91,8 +91,8 @@ module.exports = class StandardHourManager extends BaseManager {
                     else if(standardHourArr && standardHourArr.data.length > 0){
                         var _standardHour = standardHourArr.data[0]
                         if(date <= _standardHour.date){
-                            var dateHour = new Date(_standardHour.date);
-                            errors["date"] = `Date must be greater than ${dateHour.getDate()}-${(dateHour.getMonth() + 1)}-${dateHour.getFullYear()}`;
+                            var dateHour = moment(new Date(_standardHour.date)).format("DD-MM-YYYY");
+                            errors["date"] = `Date must be greater than ${dateHour}`;
                         }
                     }
                 }
