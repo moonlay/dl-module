@@ -10,7 +10,7 @@ var instanceManager = null;
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
-            instanceManager = new DeliveryOrderManager(db, {
+            instanceManager = new PurchaseOrderExternalManager(db, {
                 username: 'dev'
             });
             done();
