@@ -1275,7 +1275,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
            var deleted = {
                 _deleted: false
             };
-                
+        
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
 
@@ -1313,8 +1313,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 query.push(filterDateFrom);
             }
 
-      var match = { '$and': query };
-            
+      var match = { "$and": query };
+           
       this.collection.aggregate([
       {$match: match },
       {$unwind:"$items"},

@@ -133,8 +133,8 @@ it('#08. should success when generate data to Excel Report with date', function 
     var startdate = null;
     var enddate   = null;
     instanceManager.getAllData(startdate, enddate)
-    .then(po => {
-        po.should.instanceof(Array);
+    .then(result => {
+        result.should.instanceof(Array);
         done();
     }).catch(e => {
             done(e);
