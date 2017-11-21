@@ -14,6 +14,6 @@ describe("LAPORAN SKEMA", function() {
     require("./report");
 });
 
-// describe("POST SCENARIOS", function() {
-//     require("./post");
-// });
+describe("PDF SCENARIOS", function() {
+    require("./pdf");
+});
