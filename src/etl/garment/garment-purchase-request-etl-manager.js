@@ -221,9 +221,9 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         var sqlQuery;
                         if (table1 == "Budget") {
                             if (tgl.includes("%%")) {
-                                sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
                             } else {
-                                sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
                             }
                         } else {
                             sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
@@ -362,19 +362,24 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
     }
 
-    beforeTransform(_unit, _category, _product, _buyer, _uom, Ro, table1) {
-        var _unit = _unit;
-        var _category = _category;
-        var _product = _product;
-        var _buyer = _buyer;
-        var _uom = _uom;
+    beforeTransform(Ro, table1) {
+        // var _unit = _unit;
+        // var _category = _category;
+        // var _product = _product;
+        // var _buyer = _buyer;
+        // var _uom = _uom;
+        // var extract = extract;
+        var Ro = Ro;
+        var table1 = table1;
 
         return new Promise((resolve, reject) => {
             var transformData = [];
             var no = 1;
+            var extractData=(Array.isArray(table1))?Promise.resolve(table1):this.extractRo(Ro, table1);
 
-            this.extractRo(Ro, table1).then((extract) => {
+            extractData.then((extract) => {
 
+                var extract = extract;
                 var items = [];
                 var map = {};
                 var createdDateTemp = [];
@@ -389,359 +394,348 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 var productNotFound = [];
                 var uomNotFound = [];
 
-                for (var data of extract) {
-                    // if (Ro == data.Ro) {
-                    var code = generateCode(data.ID_PO ? data.ID_PO : data._ID);
-                    var createdYear = data.Tglin.getFullYear();
-                    var createdMonth = data.Tglin.getMonth() + 1;
-                    var createdDay = data.Tglin.getDate();
-
-                    if (createdMonth < 10) {
-                        createdMonth = "0" + createdMonth;
-                    }
-                    if (createdDay < 10) {
-                        createdDay = "0" + createdDay;
-                    }
-                    _createdDate = [createdYear, createdMonth, createdDay].join('-');
-
-                    var updatedYear = data.Tglin.getFullYear();
-                    var updatedMonth = data.Tglin.getMonth() + 1;
-                    var updatedDay = data.Tglin.getDate();
-
-                    if (updatedMonth < 10) {
-                        updatedMonth = "0" + updatedMonth;
-                    }
-                    if (updatedDay < 10) {
-                        updatedDay = "0" + updatedDay;
-                    }
-                    _updatedDate = [updatedYear, updatedMonth, updatedDay].join('-');
-
-                    createdDateTemp.push(data.jamin.trim());
-                    updatedDateTemp.push(data.jamed.trim());
-
-                    var unitCode = "";
-                    if (data.Konf.trim() == "K.1") {
-                        unitCode = "C2A"
-                    } else if (data.Konf.trim() == "K.2") {
-                        unitCode = "C2B"
-                    } else if (data.Konf.trim() == "K.3") {
-                        unitCode = "C2C"
-                    } else if (data.Konf.trim() == "K.4") {
-                        unitCode = "C1A"
-                    } else if (data.Konf.trim() == "K.5") {
-                        unitCode = "C2A"
-                    } else {
-                        unitCode = data.Konf.trim();
-                    }
-
-                    var _stamp = ObjectId();
-
-                    var codeBarang = (data.Kodeb.trim() == data.Cat.trim()) ? data.Kodeb.trim() + "001" : data.Kodeb.trim();
-
-                    var unit = (_unit.find(o => o.code.trim() == unitCode)) ? (_unit.find(o => o.code.trim() == unitCode)) : (unitNotFound.find(o => o == unitCode)) ? true : unitNotFound.push(unitCode);
-                    var buyer = (_buyer.find(o => o.code.trim() == data.Buyer.trim())) ? (_buyer.find(o => o.code.trim() == data.Buyer.trim())) : (buyerNotFound.find(o => o == data.Buyer)) ? true : buyerNotFound.push(data.Buyer);
-                    var product = (_product.find(o => o.code.trim() == codeBarang)) ? (_product.find(o => o.code.trim() == codeBarang)) : (productNotFound.find(o => o == codeBarang)) ? true : productNotFound.push(codeBarang);
-                    var uom = (_uom.find(o => o.unit.trim() == data.Satb.trim())) ? (_uom.find(o => o.unit.trim() == data.Satb.trim())) : (uomNotFound.find(o => o == data.Satb.trim())) ? true : uomNotFound.push(data.Satb.trim());
-                    var category = (_category.find(o => o.code.trim() == data.Cat.trim())) ? (_category.find(o => o.code.trim() == data.Cat.trim())) : (categoryNotFound.find(o => o == data.Cat.trim())) ? true : categoryNotFound.push(data.Cat.trim());
-
-                    //getting items
-                    var remarkTemp = [];
-                    if (data.Ketr.trim() != "") {
-                        remarkTemp.push(data.Ketr.trim());
-                    }
-                    if (data.Kett.trim() != "") {
-                        remarkTemp.push(data.Kett.trim());
-                    }
-                    if (data.Kett2.trim() != "") {
-                        remarkTemp.push(data.Kett2.trim());
-                    }
-                    if (data.Kett3.trim() != "") {
-                        remarkTemp.push(data.Kett3.trim());
-                    }
-                    if (data.Kett4.trim() != "") {
-                        remarkTemp.push(data.Kett4.trim());
-                    }
-                    if (data.Kett5.trim() != "") {
-                        remarkTemp.push(data.Kett5.trim());
-                    }
-                    // var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
-                    var remark = remarkTemp.toString();
-
-                    var Colors = [];
-                    if (data.Clr1.trim() != "") {
-                        Colors.push(data.Clr1.trim());
-                    } if (data.Clr2.trim() != "") {
-                        Colors.push(data.Clr2.trim());
-                    } if (data.Clr3.trim() != "") {
-                        Colors.push(data.Clr3.trim());
-                    } if (data.Clr4.trim() != "") {
-                        Colors.push(data.Clr4.trim());
-                    } if (data.Clr5.trim() != "") {
-                        Colors.push(data.Clr5.trim());
-                    } if (data.Clr6.trim() != "") {
-                        Colors.push(data.Clr6.trim());
-                    } if (data.Clr7.trim() != "") {
-                        Colors.push(data.Clr7.trim());
-                    } if (data.Clr8.trim() != "") {
-                        Colors.push(data.Clr8.trim());
-                    } if (data.Clr9.trim() != "") {
-                        Colors.push(data.Clr9.trim());
-                    } if (data.Clr10.trim() != "") {
-                        Colors.push(data.Clr10.trim());
-                    }
-
-                    if (product._id && uom._id && category._id) {
-                        var item = {
-                            _stamp: "",
-                            _type: "purchase-request-item",
-                            _version: "",
-                            _active: true,
-                            _deleted: false,
-                            _createdBy: "",
-                            _createdDate: "",
-                            createdAgent: "",
-                            updatedBy: "",
-                            _updatedDate: "",
-                            updatedAgent: "",
-
-                            productId: product._id,
-                            product: {
-                                _id: product._id,
-                                code: codeBarang,
-                                name: product.name,
-                                price: product.price,
-                                currency: product.currency,
-                                description: product.description,
-                                uomId: product.uomId,
-                                uom: product.uom,
-                                tags: product.tags,
-                                properties: product.properties,
-                            },
-
-                            budgetPrice: data.Harga,
-                            quantity: data.Qty,
-                            deliveryOrderNos: [],
-                            remark: remark,
-
-                            refNo: data.Nopo,
-                            urut: data.Urut,
-
-                            uomId: uom._id,
-                            uom: {
-                                _id: uom._id,
-                                unit: uom.unit,
-                            },
-
-                            categoryId: category._id,
-                            category: {
-                                _id: category._id,
-                                code: category.code.trim(),
-                                name: category.name.trim(),
-                                uomId: category.uomId,
-                                uom: {
-                                    _id: category.uomId,
-                                    unit: category.uom.unit,
-                                }
-
-                            },
-                            colors: Colors,
-                            id_po: (data.ID_PO ? data.ID_PO : data._ID),
-                            isUsed: false,
-                            purchaseOrderId: {},
-                        }
-                        items.push(item);
-
-                    } else if (!product._id || !uom._id || !category._id) {
-                        // migrated = false;
-                        map.migrated = false;
-                        map.dataItemNotfound = {
-                            uomUnit: uomNotFound,
-                            categoryCode: categoryNotFound,
-                            productCode: productNotFound,
-                        };
-                    }
-
-                    //begin transform
-                    if (unit._id && buyer._id) {
-
-                        Object.assign(map, {
-                            _stamp: _stamp,
-                            _type: "purchase request",
-                            _version: "1.0.0",
-                            _active: true,
-                            _deleted: false,
-                            _createdBy: data.Userin,
-                            // _createdDate: new Date(_createdDate),
-                            _createAgent: "manager",
-                            _updatedBy: data.Usered,
-                            // _updatedDate: new Date(_updatedDate),
-                            _updateAgent: "manager",
-                            // no: data.Ro,
-                            no: code,
-                            roNo: data.Ro,
-                            artikel: data.Art,
-                            shipmentDate: data.Shipment,
-                            date: new Date(data.TgValid),
-                            expectedDeliveryDate: data.expectedDeliveryDate ? data.expectedDeliveryDate : "",
-
-                            unitId: unit._id,
-                            unit: {
-                                _id: unit._id,
-                                code: unit.code,
-                                name: unit.name,
-                                description: unit.description,
-                                divisionId: unit.divisionId,
-                                division: unit.division,
-                            },
-
-                            buyerId: buyer._id,
-                            buyer: {
-                                "_id": buyer._id,
-                                "code": buyer.code,
-                                "name": buyer.name,
-                                "address": buyer.address,
-                                "city": buyer.city,
-                                "country": buyer.country,
-                                "contact": buyer.contact,
-                                "tempo": buyer.tempo,
-                                "type": buyer.type,
-                                "NPWP": buyer.NPWP,
-                            },
-
-                            isPosted: true,
-                            isUsed: false,
-                            remark: "",
-                            status: {
-                                name: "POSTED",
-                                value: 2,
-                                label: "Belum diterima Pembelian",
-                            },
-
-                        })
-
-                    } else {
-
-                        map.migrated = false;
-                        map.dataNotfound = {
-                            unitCode: unitNotFound,
-                            buyerCode: buyerNotFound,
-                        };
-                    }
-
-                }
-
-                map._createdDate = new Date(_createdDate + ":" + createdDateTemp.sort()[0]);
-                map._updatedDate = new Date(_updatedDate + ":" + updatedDateTemp.sort()[0]);
-                map.items = items;
-
-                transformData.push(map);
-                resolve(transformData);
-            })
-
-
-
-
-        })
-    }
-
-
-    transform(datas, table1) {
-        var table1 = table1;
-        return new Promise((resolve, reject) => {
-            var nomorRo;
-
-            if (!datas.dataTest) {
-                nomorRo = [];
                 var unitArr = [];
                 var catArr = [];
                 var productArr = [];
                 var buyerArr = [];
                 var uomArr = [];
 
-                for (var unique of datas) {
-                    var unitCode = "";
-
-                    var codeBarang = (unique.Kodeb.trim() == unique.Cat.trim()) ? unique.Kodeb.trim() + "001" : unique.Kodeb.trim();
-
-                    if (unique.Konf.trim() == "K.1") {
-                        unitCode = "C2A"
-                    } else if (unique.Konf.trim() == "K.2") {
-                        unitCode = "C2B"
-                    } else if (unique.Konf.trim() == "K.3") {
-                        unitCode = "C2C"
-                    } else if (unique.Konf.trim() == "K.4") {
-                        unitCode = "C1A"
-                    } else if (unique.Konf.trim() == "K.5") {
-                        unitCode = "C2A"
-                    } else {
-                        unitCode = unique.Konf.trim();
+                if(!Array.isArray(table1)){
+                    for (var unique of extract) {
+                        var unitCode = "";
+    
+                        var codeBarang = (unique.Kodeb.trim() == unique.Cat.trim()) ? unique.Kodeb.trim() + "001" : unique.Kodeb.trim();
+    
+                        if (unique.Konf.trim() == "K.1") {
+                            unitCode = "C2A"
+                        } else if (unique.Konf.trim() == "K.2") {
+                            unitCode = "C2B"
+                        } else if (unique.Konf.trim() == "K.3") {
+                            unitCode = "C2C"
+                        } else if (unique.Konf.trim() == "K.4") {
+                            unitCode = "C1A"
+                        } else if (unique.Konf.trim() == "K.5") {
+                            unitCode = "C2A"
+                        } else {
+                            unitCode = unique.Konf.trim();
+                        }
+    
+                        if (!(unitArr.find(o => o == unitCode))) {
+                            unitArr.push(unitCode);
+                        }
+                        if (!(catArr.find(o => o == unique.Cat.trim()))) {
+                            catArr.push(unique.Cat.trim());
+                        }
+                        if (!(productArr.find(o => o == codeBarang))) {
+                            productArr.push(codeBarang);
+                        }
+                        if (!(buyerArr.find(o => o == unique.Buyer.trim()))) {
+                            buyerArr.push(unique.Buyer.trim());
+                        }
+                        if (!(uomArr.find(o => o == unique.Satb.trim()))) {
+                            uomArr.push(unique.Satb.trim());
+                        }
                     }
-
-                    if (!(nomorRo.find(o => o == unique.Ro.trim()))) {
-
-                        nomorRo.push(unique.Ro.trim());
-                    }
-                    if (!(unitArr.find(o => o == unitCode))) {
-                        unitArr.push(unitCode);
-                    }
-                    if (!(catArr.find(o => o == unique.Cat.trim()))) {
-                        catArr.push(unique.Cat.trim());
-                    }
-                    if (!(productArr.find(o => o == codeBarang))) {
-                        productArr.push(codeBarang);
-                    }
-                    if (!(buyerArr.find(o => o == unique.Buyer.trim()))) {
-                        buyerArr.push(unique.Buyer.trim());
-                    }
-                    if (!(uomArr.find(o => o == unique.Satb.trim()))) {
-                        uomArr.push(unique.Satb.trim());
-                    }
+                    var getUnit = this.getDataUnit(unitArr);
+                    var getCategory = this.getDataCategory(catArr);
+                    var getProduct = this.getDataProduct(productArr);
+                    var getBuyer = this.getDataBuyer(buyerArr);
+                    var getUom = this.getDataUom(uomArr);
+    
+                }else{
+                    var getUnit = extract.dataTest.Unit;
+                    var getCategory = extract.dataTest.Category;
+                    var getProduct = extract.dataTest.Product;
+                    var getBuyer = extract.dataTest.Buyer;
+                    var getUom = extract.dataTest.Uom;
                 }
 
-                var getUnit = this.getDataUnit(unitArr);
-                var getCategory = this.getDataCategory(catArr);
-                var getProduct = this.getDataProduct(productArr);
-                var getBuyer = this.getDataBuyer(buyerArr);
-                var getUom = this.getDataUom(uomArr);
 
-            } else {
-                nomorRo = [];
-                var getUnit = datas.dataTest.Unit;
-                var getCategory = datas.dataTest.Category;
-                var getProduct = datas.dataTest.Product;
-                var getBuyer = datas.dataTest.Buyer;
-                var getUom = datas.dataTest.Uom;
 
-                for (var unique of datas) {
-                    if (!(nomorRo.find(o => o == unique.Ro.trim()))) {
+                Promise.all([getUnit, getCategory, getProduct, getBuyer, getUom]).then((result) => {
+                    var _unit = result[0];
+                    var _category = result[1];
+                    var _product = result[2];
+                    var _buyer = result[3];
+                    var _uom = result[4];
 
-                        nomorRo.push(unique.Ro.trim());
+                    for (var data of extract) {
+                        // if (Ro == data.Ro) {
+                        var code = generateCode(data.ID_PO ? data.ID_PO : data._ID);
+                        var createdYear = data.Tglin.getFullYear();
+                        var createdMonth = data.Tglin.getMonth() + 1;
+                        var createdDay = data.Tglin.getDate();
+
+                        if (createdMonth < 10) {
+                            createdMonth = "0" + createdMonth;
+                        }
+                        if (createdDay < 10) {
+                            createdDay = "0" + createdDay;
+                        }
+                        _createdDate = [createdYear, createdMonth, createdDay].join('-');
+
+                        var updatedYear = data.Tglin.getFullYear();
+                        var updatedMonth = data.Tglin.getMonth() + 1;
+                        var updatedDay = data.Tglin.getDate();
+
+                        if (updatedMonth < 10) {
+                            updatedMonth = "0" + updatedMonth;
+                        }
+                        if (updatedDay < 10) {
+                            updatedDay = "0" + updatedDay;
+                        }
+                        _updatedDate = [updatedYear, updatedMonth, updatedDay].join('-');
+
+                        createdDateTemp.push(data.jamin.trim());
+                        updatedDateTemp.push(data.jamed.trim());
+
+                        var unitCode = "";
+                        if (data.Konf.trim() == "K.1") {
+                            unitCode = "C2A"
+                        } else if (data.Konf.trim() == "K.2") {
+                            unitCode = "C2B"
+                        } else if (data.Konf.trim() == "K.3") {
+                            unitCode = "C2C"
+                        } else if (data.Konf.trim() == "K.4") {
+                            unitCode = "C1A"
+                        } else if (data.Konf.trim() == "K.5") {
+                            unitCode = "C2A"
+                        } else {
+                            unitCode = data.Konf.trim();
+                        }
+
+                        var _stamp = ObjectId();
+
+                        var codeBarang = (data.Kodeb.trim() == data.Cat.trim()) ? data.Kodeb.trim() + "001" : data.Kodeb.trim();
+
+                        var unit = (_unit.find(o => o.code.trim() == unitCode)) ? (_unit.find(o => o.code.trim() == unitCode)) : (unitNotFound.find(o => o == unitCode)) ? true : unitNotFound.push(unitCode);
+                        var buyer = (_buyer.find(o => o.code.trim() == data.Buyer.trim())) ? (_buyer.find(o => o.code.trim() == data.Buyer.trim())) : (buyerNotFound.find(o => o == data.Buyer)) ? true : buyerNotFound.push(data.Buyer);
+                        var product = (_product.find(o => o.code.trim() == codeBarang)) ? (_product.find(o => o.code.trim() == codeBarang)) : (productNotFound.find(o => o == codeBarang)) ? true : productNotFound.push(codeBarang);
+                        var uom = (_uom.find(o => o.unit.trim() == data.Satb.trim())) ? (_uom.find(o => o.unit.trim() == data.Satb.trim())) : (uomNotFound.find(o => o == data.Satb.trim())) ? true : uomNotFound.push(data.Satb.trim());
+                        var category = (_category.find(o => o.code.trim() == data.Cat.trim())) ? (_category.find(o => o.code.trim() == data.Cat.trim())) : (categoryNotFound.find(o => o == data.Cat.trim())) ? true : categoryNotFound.push(data.Cat.trim());
+
+                        //getting items
+                        var remarkTemp = [];
+                        if (data.Ketr.trim() != "") {
+                            remarkTemp.push(data.Ketr.trim());
+                        }
+                        if (data.Kett.trim() != "") {
+                            remarkTemp.push(data.Kett.trim());
+                        }
+                        if (data.Kett2.trim() != "") {
+                            remarkTemp.push(data.Kett2.trim());
+                        }
+                        if (data.Kett3.trim() != "") {
+                            remarkTemp.push(data.Kett3.trim());
+                        }
+                        if (data.Kett4.trim() != "") {
+                            remarkTemp.push(data.Kett4.trim());
+                        }
+                        if (data.Kett5.trim() != "") {
+                            remarkTemp.push(data.Kett5.trim());
+                        }
+                        // var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
+                        var remark = remarkTemp.toString();
+
+                        var Colors = [];
+                        if (data.Clr1.trim() != "") {
+                            Colors.push(data.Clr1.trim());
+                        } if (data.Clr2.trim() != "") {
+                            Colors.push(data.Clr2.trim());
+                        } if (data.Clr3.trim() != "") {
+                            Colors.push(data.Clr3.trim());
+                        } if (data.Clr4.trim() != "") {
+                            Colors.push(data.Clr4.trim());
+                        } if (data.Clr5.trim() != "") {
+                            Colors.push(data.Clr5.trim());
+                        } if (data.Clr6.trim() != "") {
+                            Colors.push(data.Clr6.trim());
+                        } if (data.Clr7.trim() != "") {
+                            Colors.push(data.Clr7.trim());
+                        } if (data.Clr8.trim() != "") {
+                            Colors.push(data.Clr8.trim());
+                        } if (data.Clr9.trim() != "") {
+                            Colors.push(data.Clr9.trim());
+                        } if (data.Clr10.trim() != "") {
+                            Colors.push(data.Clr10.trim());
+                        }
+
+                        if (product._id && uom._id && category._id) {
+                            var item = {
+                                _stamp: "",
+                                _type: "purchase-request-item",
+                                _version: "",
+                                _active: true,
+                                _deleted: false,
+                                _createdBy: "",
+                                _createdDate: "",
+                                createdAgent: "",
+                                updatedBy: "",
+                                _updatedDate: "",
+                                updatedAgent: "",
+
+                                productId: product._id,
+                                product: {
+                                    _id: product._id,
+                                    code: codeBarang,
+                                    name: product.name,
+                                    price: product.price,
+                                    currency: product.currency,
+                                    description: product.description,
+                                    uomId: product.uomId,
+                                    uom: product.uom,
+                                    tags: product.tags,
+                                    properties: product.properties,
+                                },
+
+                                budgetPrice: data.Harga,
+                                quantity: data.Qty,
+                                deliveryOrderNos: [],
+                                remark: remark,
+
+                                refNo: data.Nopo,
+                                urut: data.Urut,
+
+                                uomId: uom._id,
+                                uom: {
+                                    _id: uom._id,
+                                    unit: uom.unit,
+                                },
+
+                                categoryId: category._id,
+                                category: {
+                                    _id: category._id,
+                                    code: category.code.trim(),
+                                    name: category.name.trim(),
+                                    uomId: category.uomId,
+                                    uom: {
+                                        _id: category.uomId,
+                                        unit: category.uom.unit,
+                                    }
+
+                                },
+                                colors: Colors,
+                                id_po: (data.ID_PO ? data.ID_PO : data._ID),
+                                isUsed: false,
+                                purchaseOrderId: {},
+                            }
+                            items.push(item);
+
+                        } else if (!product._id || !uom._id || !category._id) {
+                            // migrated = false;
+                            map.migrated = false;
+                            map.dataItemNotfound = {
+                                uomUnit: uomNotFound,
+                                categoryCode: categoryNotFound,
+                                productCode: productNotFound,
+                            };
+                        }
+
+                        //begin transform
+                        if (unit._id && buyer._id) {
+
+                            Object.assign(map, {
+                                _stamp: _stamp,
+                                _type: "purchase request",
+                                _version: "1.0.0",
+                                _active: true,
+                                _deleted: false,
+                                _createdBy: data.Userin,
+                                // _createdDate: new Date(_createdDate),
+                                _createAgent: "manager",
+                                _updatedBy: data.Usered,
+                                // _updatedDate: new Date(_updatedDate),
+                                _updateAgent: "manager",
+                                // no: data.Ro,
+                                no: code,
+                                roNo: data.Ro,
+                                artikel: data.Art,
+                                shipmentDate: data.Shipment,
+                                date: new Date(data.TgValid),
+                                expectedDeliveryDate: data.expectedDeliveryDate ? data.expectedDeliveryDate : "",
+
+                                unitId: unit._id,
+                                unit: {
+                                    _id: unit._id,
+                                    code: unit.code,
+                                    name: unit.name,
+                                    description: unit.description,
+                                    divisionId: unit.divisionId,
+                                    division: unit.division,
+                                },
+
+                                buyerId: buyer._id,
+                                buyer: {
+                                    "_id": buyer._id,
+                                    "code": buyer.code,
+                                    "name": buyer.name,
+                                    "address": buyer.address,
+                                    "city": buyer.city,
+                                    "country": buyer.country,
+                                    "contact": buyer.contact,
+                                    "tempo": buyer.tempo,
+                                    "type": buyer.type,
+                                    "NPWP": buyer.NPWP,
+                                },
+
+                                isPosted: true,
+                                isUsed: false,
+                                remark: "",
+                                status: {
+                                    name: "POSTED",
+                                    value: 2,
+                                    label: "Belum diterima Pembelian",
+                                },
+
+                            })
+
+                        } else {
+
+                            map.migrated = false;
+                            map.dataNotfound = {
+                                unitCode: unitNotFound,
+                                buyerCode: buyerNotFound,
+                            };
+                        }
+
                     }
-                }
+
+                    map._createdDate = new Date(_createdDate + ":" + createdDateTemp.sort()[0]);
+                    map._updatedDate = new Date(_updatedDate + ":" + updatedDateTemp.sort()[0]);
+                    map.items = items;
+
+                    transformData.push(map);
+                    resolve(transformData);
+
+                });
+
+            })
+        });
+    }
+
+
+    transform(data, table1) {
+        var table1 = table1;
+        var data = data;
+        return new Promise((resolve, reject) => {
+            var process = [];
+            var promise = [];
+
+            if(Array.isArray(table1)){
+                data=[table1[0]];
+                table1=table1;
             }
 
+            for (var i of data) {
+                process.push(this.beforeTransform(i.Ro, table1));
+            }
 
-            Promise.all([getUnit, getCategory, getProduct, getBuyer, getUom]).then((result) => {
-                var _unit = result[0];
-                var _category = result[1];
-                var _product = result[2];
-                var _buyer = result[3];
-                var _uom = result[4];
+            Promise.all(process).then((test) => {
+                resolve(test);
+            })
 
-                var promise = [];
-
-
-                for (var Ro of nomorRo) {
-                    promise.push(this.beforeTransform(_unit, _category, _product, _buyer, _uom, Ro, table1))
-
-                }
-
-                Promise.all(promise).then((data) => {
-                    resolve(data)
-                })
-
-            });
         })
+
 
     }
 
@@ -815,7 +809,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         dataArr = dataTransform;
 
         return new Promise((resolve, reject) => {
-
+            var falseData = 0;
             var failed = [];
             var processed = [];
             var deleteProcess = [];
@@ -838,17 +832,9 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 }
 
                 if (data.migrated == false) {
-                    MigratedFalse.find(o => o == data.roNo) ? true : MigratedFalse.push(data.roNo);
+                    falseData += 1
                 }
 
-                if ((MigratedFalse.find(o => o == data.roNo))) {
-                    data.migrated = false;
-                }
-                if (!(MigratedFalse.find(o => o == data.roNo))) {
-                    data.migrated = true;
-                    data.dataItemNotfound = {};
-                    data.dataNotfound = {};
-                }
 
                 processed.push(this.collection.insert(data));
 
@@ -857,7 +843,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             Promise.all(processed).then((result) => {
                 var dataProcessed = {};
                 dataProcessed.processed = result;
-                dataProcessed.MigratedFalse = MigratedFalse;
+                dataProcessed.MigratedFalse = falseData;
                 resolve(dataProcessed);
             })
 
