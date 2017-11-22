@@ -538,27 +538,30 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         var remark = remarkTemp.toString();
 
                         var Colors = [];
-                        if (data.Clr1.trim() != "") {
-                            Colors.push(data.Clr1.trim());
-                        } if (data.Clr2.trim() != "") {
-                            Colors.push(data.Clr2.trim());
-                        } if (data.Clr3.trim() != "") {
-                            Colors.push(data.Clr3.trim());
-                        } if (data.Clr4.trim() != "") {
-                            Colors.push(data.Clr4.trim());
-                        } if (data.Clr5.trim() != "") {
-                            Colors.push(data.Clr5.trim());
-                        } if (data.Clr6.trim() != "") {
-                            Colors.push(data.Clr6.trim());
-                        } if (data.Clr7.trim() != "") {
-                            Colors.push(data.Clr7.trim());
-                        } if (data.Clr8.trim() != "") {
-                            Colors.push(data.Clr8.trim());
-                        } if (data.Clr9.trim() != "") {
-                            Colors.push(data.Clr9.trim());
-                        } if (data.Clr10.trim() != "") {
-                            Colors.push(data.Clr10.trim());
+                        if (data.Clr1 != null || data.Clr2 != null || data.Clr3 != null || data.Clr4 != null || data.Clr5 != null || data.Clr6 != null || data.Clr7 != null || data.Clr8 != null || data.Clr9 != null || data.Clr10 != null) {
+                            if (data.Clr1.trim() != "") {
+                                Colors.push(data.Clr1.trim());
+                            } if (data.Clr2.trim() != "") {
+                                Colors.push(data.Clr2.trim());
+                            } if (data.Clr3.trim() != "") {
+                                Colors.push(data.Clr3.trim());
+                            } if (data.Clr4.trim() != "") {
+                                Colors.push(data.Clr4.trim());
+                            } if (data.Clr5.trim() != "") {
+                                Colors.push(data.Clr5.trim());
+                            } if (data.Clr6.trim() != "") {
+                                Colors.push(data.Clr6.trim());
+                            } if (data.Clr7.trim() != "") {
+                                Colors.push(data.Clr7.trim());
+                            } if (data.Clr8.trim() != "") {
+                                Colors.push(data.Clr8.trim());
+                            } if (data.Clr9.trim() != "") {
+                                Colors.push(data.Clr9.trim());
+                            } if (data.Clr10.trim() != "") {
+                                Colors.push(data.Clr10.trim());
+                            }
                         }
+
 
                         if (product._id && uom._id && category._id) {
                             var item = {
