@@ -226,7 +226,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                 sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
                             }
                         } else {
-                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                            sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from POrder1 as POrder inner join Budget1 as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
 
                         }
 
@@ -341,7 +341,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             if (table1 == "Budget") {
                                 sqlQuery = "SELECT ROW_NUMBER() OVER ( ORDER BY POrder.Ro ASC ) AS RowNum,POrder.ID_PO,POrder.Harga as hrg,POrder.Tanggal,POrder.jamin,POrder.jamed,POrder.Post,POrder.Urut,POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5,Budget.Harga from POrder as POrder inner join Budget as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.tgvalid,20),10) >= '2017-01-01' and POrder.Harga = 0 and porder.CodeSpl='' and porder.ro='" + ro + "'";
                             } else {
-                                sqlQuery = "SELECT ROW_NUMBER() OVER ( ORDER BY POrder.Ro ASC ) AS RowNum,POrder.ID,POrder.Harga as hrg,POrder.Tanggal,POrder.jamin,POrder.jamed,POrder.Post,POrder.Urut,POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5,Budget.Harga from POrder as POrder inner join Budget as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '2017-01-01' and POrder.Harga = 0 and porder.CodeSpl='' and porder.ro='" + ro + "'";
+                                sqlQuery = "SELECT ROW_NUMBER() OVER ( ORDER BY POrder.Ro ASC ) AS RowNum,POrder.ID,POrder.Harga as hrg,POrder.Tanggal,POrder.jamin,POrder.jamed,POrder.Post,POrder.Urut,POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5,Budget.Harga from POrder1 as POrder inner join Budget1 as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '2017-01-01' and POrder.Harga = 0 and porder.CodeSpl='' and porder.ro='" + ro + "'";
                             }
 
                             request.query(sqlQuery, function (err, result) {
@@ -460,8 +460,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var _uom = result[4];
 
                     for (var data of extract) {
-                        // if (Ro == data.Ro) {
-                        var code = generateCode(data.ID_PO ? data.ID_PO : data._ID);
+                        var code = generateCode(data.ID_PO?data.ID_PO:data.ID);
                         var createdYear = data.Tglin.getFullYear();
                         var createdMonth = data.Tglin.getMonth() + 1;
                         var createdDay = data.Tglin.getDate();
@@ -538,26 +537,29 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         var remark = remarkTemp.toString();
 
                         var Colors = [];
-                        if (data.Clr1.trim() != "") {
-                            Colors.push(data.Clr1.trim());
-                        } if (data.Clr2.trim() != "") {
-                            Colors.push(data.Clr2.trim());
-                        } if (data.Clr3.trim() != "") {
-                            Colors.push(data.Clr3.trim());
-                        } if (data.Clr4.trim() != "") {
-                            Colors.push(data.Clr4.trim());
-                        } if (data.Clr5.trim() != "") {
-                            Colors.push(data.Clr5.trim());
-                        } if (data.Clr6.trim() != "") {
-                            Colors.push(data.Clr6.trim());
-                        } if (data.Clr7.trim() != "") {
-                            Colors.push(data.Clr7.trim());
-                        } if (data.Clr8.trim() != "") {
-                            Colors.push(data.Clr8.trim());
-                        } if (data.Clr9.trim() != "") {
-                            Colors.push(data.Clr9.trim());
-                        } if (data.Clr10.trim() != "") {
-                            Colors.push(data.Clr10.trim());
+                        if (data.Clr1 != null || data.Clr2 != null || data.Clr3 != null || data.Clr4 != null || data.Clr5 != null || data.Clr6 != null || data.Clr7 != null || data.Clr8 != null || data.Clr9 != null || data.Clr10 != null) {
+                            if (data.Clr1.trim() != "") {
+                                Colors.push(data.Clr1.trim());
+                            } if (data.Clr2.trim() != "") {
+                                Colors.push(data.Clr2.trim());
+                            } if (data.Clr3.trim() != "") {
+                                Colors.push(data.Clr3.trim());
+                            } if (data.Clr4.trim() != "") {
+                                Colors.push(data.Clr4.trim());
+                            } if (data.Clr5.trim() != "") {
+                                Colors.push(data.Clr5.trim());
+                            } if (data.Clr6.trim() != "") {
+                                Colors.push(data.Clr6.trim());
+                            } if (data.Clr7.trim() != "") {
+                                Colors.push(data.Clr7.trim());
+                            } if (data.Clr8.trim() != "") {
+                                Colors.push(data.Clr8.trim());
+                            } if (data.Clr9.trim() != "") {
+                                Colors.push(data.Clr9.trim());
+                            } if (data.Clr10.trim() != "") {
+                                Colors.push(data.Clr10.trim());
+                            }
+
                         }
 
                         if (product._id && uom._id && category._id) {
@@ -615,7 +617,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                                 },
                                 colors: Colors,
-                                id_po: (data.ID_PO ? data.ID_PO : data._ID),
+                                id_po: (data.ID_PO ? data.ID_PO : data.ID),
                                 isUsed: false,
                                 purchaseOrderId: {},
                             }
