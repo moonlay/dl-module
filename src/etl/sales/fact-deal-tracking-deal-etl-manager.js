@@ -31,6 +31,7 @@ const SELECT = {
     "product.code": 1,
     "product.name": 1,
     "product.uom.unit": 1,
+    "uom.unit": 1,
     "quantity": 1
 };
 
@@ -115,10 +116,13 @@ module.exports = class FactDealTrackingDealEtlManager extends BaseManager {
                 closeDate: item.closeDate ? `'${moment(item.closeDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                 description: item.description ? `'${item.description.replace(/'/g, '"')}'` : null,
                 reason: item.reason ? `'${item.reason.replace(/'/g, '"')}'` : null,
-                productCode: item.product ? `'${item.product.code.replace(/'/g, '"')}'` : null,
-                productName: item.product ? `'${item.product.name.replace(/'/g, '"')}'` : null,
+                // productCode: item.product ? `'${item.product.code.replace(/'/g, '"')}'` : null,
+                // productName: item.product ? `'${item.product.name.replace(/'/g, '"')}'` : null,
+                productCode: null,
+                productName: null,
+                
                 quantity: item.quantity != undefined ? `'${item.quantity}'` : null,
-                uom: item.product && item.product.uom ? `'${item.product.uom.unit.replace(/'/g, '"')}'` : null
+                uom: item.uom ? `'${item.uom.unit.replace(/'/g, '"')}'` : null
             };
         });
         return Promise.resolve([].concat.apply([], results));
