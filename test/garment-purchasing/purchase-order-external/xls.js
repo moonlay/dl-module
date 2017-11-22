@@ -20,7 +20,103 @@ before('#00. connect db', function (done) {
         });
 });
 
-it('#01. should success when generate data to Excel Report with date', function (done) {
+it("#01. should success when get report with no parameter and get excel", function (done) {
+    instanceManager.getPOExtReport({})
+        .then((data) => {
+            data.should.instanceof(Array);
+            var result = {
+                data : data
+            };
+            instanceManager.getPOExtReportXls(result, {})
+                .then(xls => {
+                    xls.should.instanceof(Object);
+                    xls.should.have.property('data');
+                    xls.should.have.property('options');
+                    xls.should.have.property('name');
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#02. should success when get report with parameter dateFrom", function (done) {
+    instanceManager.getPOExtReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD')})
+        .then((data) => {
+            data.should.instanceof(Array);
+            var result = {
+                data : data
+            };
+            instanceManager.getPOExtReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD')})
+                .then(xls => {
+                    xls.should.instanceof(Object);
+                    xls.should.have.property('data');
+                    xls.should.have.property('options');
+                    xls.should.have.property('name');
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#03. should success when get report with parameter dateTo", function (done) {
+    instanceManager.getPOExtReport({"dateTo":moment(dateNow).format('YYYY-MM-DD')})
+        .then((data) => {
+            data.should.instanceof(Array);
+            var result = {
+                data : data
+            };
+            instanceManager.getPOExtReportXls(result, {"dateTo":moment(dateNow).format('YYYY-MM-DD')})
+                .then(xls => {
+                    xls.should.instanceof(Object);
+                    xls.should.have.property('data');
+                    xls.should.have.property('options');
+                    xls.should.have.property('name');
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#04. should success when get report with parameter dateFrom and dateTo", function (done) {
+    instanceManager.getPOExtReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')})
+        .then((data) => {
+            data.should.instanceof(Array);
+            var result = {
+                data : data
+            };
+            instanceManager.getPOExtReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')})
+                .then(xls => {
+                    xls.should.instanceof(Object);
+                    xls.should.have.property('data');
+                    xls.should.have.property('options');
+                    xls.should.have.property('name');
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it('#05. should success when generate data to Excel Report with date', function (done) {
     var startdate = null;
     var enddate   = null;
     instanceManager.getAllData(startdate, enddate)
