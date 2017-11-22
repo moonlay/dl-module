@@ -1496,7 +1496,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 index++;
                 var item = {};
                 item["No"] = index;
-                item["No Po External"] = data.no ? data..no : '';
+                item["No Po External"] = data.no ? data.no : '';
                 item["Tanggal PO External"] = data.date ? moment(data.date).format("DD/MM/YYYY") : '';
                 item["Tanggal Delivery"] = data.expectedDeliveryDate ? moment(data.expectedDeliveryDate).format("DD/MM/YYYY") : '';
                 item["Kode Supplier"] = data.suppliercode ? data.suppliercode : '';
