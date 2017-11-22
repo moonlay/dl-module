@@ -6,6 +6,7 @@ var purchaseOrderExternalDataUtil = require("../../data-util/garment-purchasing/
 var purchaseOrderDataUtil = require("../../data-util/garment-purchasing/purchase-order-data-util");
 var validatePO = require("dl-models").validator.garmentPurchasing.garmentPurchaseOrderExternal;
 var instanceManager = null;
+var moment = require('moment');
 
 before('#00. connect db', function (done) {
     helper.getDb()
