@@ -341,7 +341,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             if (table1 == "Budget") {
                                 sqlQuery = "SELECT ROW_NUMBER() OVER ( ORDER BY POrder.Ro ASC ) AS RowNum,POrder.ID_PO,POrder.Harga as hrg,POrder.Tanggal,POrder.jamin,POrder.jamed,POrder.Post,POrder.Urut,POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5,Budget.Harga from POrder as POrder inner join Budget as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.tgvalid,20),10) >= '2017-01-01' and POrder.Harga = 0 and porder.CodeSpl='' and porder.ro='" + ro + "'";
                             } else {
-                                sqlQuery = "SELECT ROW_NUMBER() OVER ( ORDER BY POrder.Ro ASC ) AS RowNum,POrder.ID,POrder.Harga as hrg,POrder.Tanggal,POrder.jamin,POrder.jamed,POrder.Post,POrder.Urut,POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5,Budget.Harga from POrder as POrder inner join Budget as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '2017-01-01' and POrder.Harga = 0 and porder.CodeSpl='' and porder.ro='" + ro + "'";
+                                sqlQuery = "SELECT ROW_NUMBER() OVER ( ORDER BY POrder.Ro ASC ) AS RowNum,POrder.ID,POrder.Harga as hrg,POrder.Tanggal,POrder.jamin,POrder.jamed,POrder.Post,POrder.Urut,POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5,Budget.Harga from POrder1 as POrder inner join Budget1 as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '2017-01-01' and POrder.Harga = 0 and porder.CodeSpl='' and porder.ro='" + ro + "'";
                             }
 
                             request.query(sqlQuery, function (err, result) {
@@ -375,7 +375,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return new Promise((resolve, reject) => {
             var transformData = [];
             var no = 1;
-            var extractData=(Array.isArray(table1))?Promise.resolve(table1):this.extractRo(Ro, table1);
+            var extractData = (Array.isArray(table1)) ? Promise.resolve(table1) : this.extractRo(Ro, table1);
 
             extractData.then((extract) => {
 
@@ -400,12 +400,12 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 var buyerArr = [];
                 var uomArr = [];
 
-                if(!Array.isArray(table1)){
+                if (!Array.isArray(table1)) {
                     for (var unique of extract) {
                         var unitCode = "";
-    
+
                         var codeBarang = (unique.Kodeb.trim() == unique.Cat.trim()) ? unique.Kodeb.trim() + "001" : unique.Kodeb.trim();
-    
+
                         if (unique.Konf.trim() == "K.1") {
                             unitCode = "C2A"
                         } else if (unique.Konf.trim() == "K.2") {
@@ -419,7 +419,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         } else {
                             unitCode = unique.Konf.trim();
                         }
-    
+
                         if (!(unitArr.find(o => o == unitCode))) {
                             unitArr.push(unitCode);
                         }
@@ -441,8 +441,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var getProduct = this.getDataProduct(productArr);
                     var getBuyer = this.getDataBuyer(buyerArr);
                     var getUom = this.getDataUom(uomArr);
-    
-                }else{
+
+                } else {
                     var getUnit = extract.dataTest.Unit;
                     var getCategory = extract.dataTest.Category;
                     var getProduct = extract.dataTest.Product;
@@ -721,9 +721,9 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             var process = [];
             var promise = [];
 
-            if(Array.isArray(table1)){
-                data=[table1[0]];
-                table1=table1;
+            if (Array.isArray(table1)) {
+                data = [table1[0]];
+                table1 = table1;
             }
 
             for (var i of data) {
@@ -833,6 +833,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                 if (data.migrated == false) {
                     falseData += 1
+                } else {
+                    data.migrated = true;
                 }
 
 
