@@ -392,7 +392,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                         itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Deal Quantity")); //"Jumlah kesepakatan tidak boleh kosong";
                                                     }
                                                     else if (!items.isOverBudget) {
-                                                        if (valid.paymentMethod != "CMT" || valid.paymentMethod != "FREE FROM BUYER") {
+                                                        if (valid.paymentMethod === "SAMPLE" || valid.paymentMethod === "DAN LIRIS") {
                                                             if (totalDealPrice > fixBudget) {
                                                                 itemError["dealQuantity"] = i18n.__("PurchaseOrderExternal.items.dealQuantity.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.dealQuantity._:Total price"));
                                                             }
@@ -406,7 +406,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                         itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isRequired:%s is required", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Price Per Deal Unit")); //"Harga tidak boleh kosong";
                                                     }
                                                     else if (!items.isOverBudget) {
-                                                        if (valid.paymentMethod != "CMT" || valid.paymentMethod != "FREE FROM BUYER") {
+                                                        if (valid.paymentMethod === "SAMPLE" || valid.paymentMethod === "DAN LIRIS") {
                                                             if (totalDealPrice > fixBudget) {
                                                                 itemError["priceBeforeTax"] = i18n.__("PurchaseOrderExternal.items.priceBeforeTax.isGreater:%s must not be greater than budget", i18n.__("PurchaseOrderExternal.items.items.priceBeforeTax._:Total price"));
                                                             }
