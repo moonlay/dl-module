@@ -76,3 +76,52 @@ it("#03. should error when create new data with invalid month", function (done) 
             done(e);
         });
 });
+
+it("#04. should error when create new data with invalid efficiency and operator", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            data.items[0].efficiency = 0;
+            data.items[0].operator = 0;
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with invalid month");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property('items');
+                    for(var item of e.errors.items){
+                        if (Object.getOwnPropertyNames(item).length > 0) {
+                            item.should.have.property('efficiency');
+                            item.should.have.property('operator');
+                        }
+                    }
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#05. should error when create new data with no data unit", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            data.unitId = "unitId";
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with no data unit");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property('unit');
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

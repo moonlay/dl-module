@@ -22,6 +22,7 @@ module.exports = function (pox, offset) {
             prNo: poItem.prNo,
             prRefNo: poItem.prRefNo,
             artikel: poItem.artikel,
+            roNo: poItem.roNo, 
             quantity: poItem.dealQuantity,
             uom: poItem.dealUom.unit,
             price: poItem.pricePerDealUnit,
@@ -153,7 +154,7 @@ module.exports = function (pox, offset) {
                 }],
                 style: ['size08']
             }, {
-                text: item.artikel,
+                text: `${item.artikel} - ${item.roNo}`,
                 style: ['size08', 'left']
             }, {
                 text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
@@ -189,7 +190,7 @@ module.exports = function (pox, offset) {
                 }],
                 style: ['size08']
             }, {
-                text: item.artikel,
+                text: `${item.artikel} - ${item.roNo}`,
                 style: ['size08', 'left']
             }, {
                 text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,

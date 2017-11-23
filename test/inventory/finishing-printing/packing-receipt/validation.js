@@ -81,7 +81,7 @@ it(`#04. should success when delete product data`, function (done) {
         });
 });
 
-it("#05. should success when destroy data with id", function (done) {
+it("#05. should success when destroy product data with id", function (done) {
     packingReceiptManager.productManager.destroy(selectedCreatedProductId)
         .then((result) => {
             result.should.be.Boolean();
@@ -132,6 +132,18 @@ it("#07. should success when create new data with non exist product", function (
         .then((id) => {
             id.should.be.Object();
             newCreatedId = id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#08. should success when void created data`, function (done) {
+    createdData.isVoid = true;
+    packingReceiptManager.update(createdData)
+        .then((id) => {
+            createdId.toString().should.equal(id.toString());
             done();
         })
         .catch((e) => {

@@ -54,6 +54,8 @@ it("#02. should error when create new data with no exist data buyer", function (
                     spk : newData.spk,
                     coverLetter : newData.coverLetter,
                     codeProduct : newData.codeProduct,
+                    storageId: newData.storageId,
+                    storageName: newData.storageName,
                     details : newData.details
                 };
                 returManager.create(dataAdd)
@@ -79,7 +81,34 @@ it("#02. should error when create new data with no exist data buyer", function (
             });
 });
 
-it("#03. should error when create new data with date after this day", function (done) {
+it("#03. should error when create new data with no exist data storage", function (done) {
+    var data = {
+        code : newData.code,
+        destination : newData.destination,
+        buyerId : newData.buyerId,
+        buyer : newData.buyer,
+        date : newData.date,
+        spk : newData.spk,
+        coverLetter : newData.coverLetter,
+        codeProduct : newData.codeProduct,
+        storageId: "storageId",
+        storageName: "storageName",
+        details : newData.details
+    };
+    returManager.create(data)
+        .then((id) => {
+            done("should error when create new data with no exist data storage");
+        })
+        .catch((e) => {
+            e.name.should.equal("ValidationError");
+            e.should.have.property("errors");
+            e.errors.should.instanceof(Object);
+            e.errors.should.have.property('storage');
+            done();
+        });
+});
+
+it("#04. should error when create new data with date after this day", function (done) {
     var data = {
         code : newData.code,
         destination : newData.destination,
@@ -89,6 +118,8 @@ it("#03. should error when create new data with date after this day", function (
         spk : newData.spk,
         coverLetter : newData.coverLetter,
         codeProduct : newData.codeProduct,
+        storageId: newData.storageId,
+        storageName: newData.storageName,
         details : newData.details
     };
     returManager.create(data)
@@ -104,7 +135,7 @@ it("#03. should error when create new data with date after this day", function (
         });
 });
 
-it("#04. should error when create new data with no data production order", function (done) {
+it("#05. should error when create new data with no data production order", function (done) {
     var data = {
         code : newData.code,
         destination : newData.destination,
@@ -114,6 +145,8 @@ it("#04. should error when create new data with no data production order", funct
         spk : newData.spk,
         coverLetter : newData.coverLetter,
         codeProduct : newData.codeProduct,
+        storageId: newData.storageId,
+        storageName: newData.storageName,
         details : [{
                 productionOrderNo : "",
                 productionOrderId : newData.details[0].productionOrderId,
@@ -146,7 +179,7 @@ it("#04. should error when create new data with no data production order", funct
         });
 });
 
-it("#05. should error when create new data with no product item in details", function (done) {
+it("#06. should error when create new data with no product item in details", function (done) {
     var data = {
         code : newData.code,
         destination : newData.destination,
@@ -156,6 +189,8 @@ it("#05. should error when create new data with no product item in details", fun
         spk : newData.spk,
         coverLetter : newData.coverLetter,
         codeProduct : newData.codeProduct,
+        storageId: newData.storageId,
+        storageName: newData.storageName,
         details : [{
                 productionOrderNo : newData.details[0].productionOrderNo,
                 productionOrderId : newData.details[0].productionOrderId,
@@ -202,7 +237,7 @@ it("#05. should error when create new data with no product item in details", fun
         });
 });
 
-it("#06. should error when create new data with no data remark, weight, length, productCode in items", function (done) {
+it("#07. should error when create new data with no data remark, weight, length, productCode in items", function (done) {
     var data = {
         code : newData.code,
         destination : newData.destination,
@@ -212,6 +247,8 @@ it("#06. should error when create new data with no data remark, weight, length, 
         spk : newData.spk,
         coverLetter : newData.coverLetter,
         codeProduct : newData.codeProduct,
+        storageId: newData.storageId,
+        storageName: newData.storageName,
         details : [{
             productionOrderId : newData.details[0].productionOrderId,
             productionOrderNo : newData.details[0].productionOrderNo,
@@ -302,7 +339,7 @@ it("#06. should error when create new data with no data remark, weight, length, 
 //         });
 // });
 
-it("#07. should error when create new data with no productName, description, remark, uom, length, weight, lot, grade, construction in new Product", function (done) {
+it("#08. should error when create new data with no productName, description, remark, uom, length, weight, lot, grade, construction in new Product", function (done) {
     var data = {
         code : newData.code,
         destination : newData.destination,
@@ -312,6 +349,8 @@ it("#07. should error when create new data with no productName, description, rem
         spk : newData.spk,
         coverLetter : newData.coverLetter,
         codeProduct : newData.codeProduct,
+        storageId: newData.storageId,
+        storageName: newData.storageName,
         details : [{
                 productionOrderNo : newData.details[0].productionOrderNo,
                 productionOrderId : newData.details[0].productionOrderId,
@@ -379,7 +418,7 @@ it("#07. should error when create new data with no productName, description, rem
         });
 });
 
-it("#08. should success when create new data with new Product", function (done) {
+it("#09. should success when create new data with new Product", function (done) {
     constructionDataUtil.getTestData()
         .then(dataCons => {
             var data = {
@@ -391,6 +430,8 @@ it("#08. should success when create new data with new Product", function (done) 
                     spk : newData.spk,
                     coverLetter : newData.coverLetter,
                     codeProduct : newData.codeProduct,
+                    storageId: newData.storageId,
+                    storageName: newData.storageName,
                     details : [{
                             productionOrderNo : newData.details[0].productionOrderNo,
                             productionOrderId : newData.details[0].productionOrderId,
@@ -425,7 +466,7 @@ it("#08. should success when create new data with new Product", function (done) 
         });
 });
 
-it("#09. should success when read data", function (done) {
+it("#10. should success when read data", function (done) {
     returManager.read({keyword : newData.code})
         .then((documents) => {
             documents.should.have.property("data");

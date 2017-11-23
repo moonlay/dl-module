@@ -96,6 +96,18 @@ module.exports = class DealTrackingDealManager extends BaseManager {
                 else if (!_contact)
                     errors["contact"] = i18n.__("DealTrackingDeal.contact.notFound:%s not found", i18n.__("DealTrackingDeal.contact._:Contact")); //"Kontak tidak ditemukan";
                 
+                // if (!valid.product)
+                //     errors["product"] = i18n.__("DealTrackingDeal.product.isRequired:%s is required", i18n.__("DealTrackingDeal.product._:Product")); //"Barang harus diisi";
+                
+                if (!valid.uom)
+                    errors["uom"] = i18n.__("DealTrackingDeal.uom.isRequired:%s is required", i18n.__("DealTrackingDeal.uom._:UOM")); //"Satuan harus diisi";
+                
+                if (!valid.quantity || valid.quantity <= 0)
+                    errors["quantity"] = i18n.__("DealTrackingDeal.quantity.greaterThanZero:%s must be greater than zero", i18n.__("DealTrackingDeal.quantity._:Quantity")); //"Kuantitas harus diisi";
+
+                if (!valid.amount || valid.amount <= 0)
+                    errors["amount"] = i18n.__("DealTrackingDeal.amount.greaterThanZero:%s must be greater than zero", i18n.__("DealTrackingDeal.amount._:Amount")); //"Jumlah harus diisi";
+
                 if (!valid.closeDate || valid.closeDate == "")
                     errors["closeDate"] = i18n.__("DealTrackingDeal.closeDate.isRequired:%s is required", i18n.__("DealTrackingDeal.closeDate._:Close Date")); //"Tanggal tutup harus diisi";
 
@@ -106,6 +118,8 @@ module.exports = class DealTrackingDealManager extends BaseManager {
 
                 valid.companyId = new ObjectId(valid.company._id);
                 valid.contactId = new ObjectId(valid.contact._id);
+                // valid.productId = new ObjectId(valid.product._id);
+                valid.uomId = new ObjectId(valid.uom._id);
                 this.stageId = valid.stageId;
 
                 if (!valid.stamp) {

@@ -323,7 +323,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             var keywordFilter = {};
                             var _keyword = keywords[j]
                             if (_keyword) {
-                                var regex = new RegExp(_keyword, "i");
+                                _keyword = _keyword.replace("(", "\\(");
+                                _keyword = _keyword.replace(")", "\\)");
+                                var regex = new RegExp(_keyword);
                                 switch (j) {
                                     case 0:
                                         keywordFilters.push({
@@ -832,6 +834,19 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "items.supplierId": new ObjectId(info.supplierId)
             });
         }
+        if (info.artikel && info.artikel !== "") {
+            var regex = new RegExp(info.artikel, "i");
+            Object.assign(query, {
+                artikel: {
+                    '$regex': regex
+                }
+            });
+        }
+        if (info.prRefNo && info.prRefNo !== "") {
+            Object.assign(query, {
+                "items.refNo": info.prRefNo
+            });
+        }
 
         var offset = Number(info.offset) || 7;
         var page = (Number(info.page) || 1) - 1;
@@ -913,9 +928,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
                                 },
                                 {
-                                    $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: true }
-                                },
-                                {
                                     $project: {
                                         "prDate": "$purchaseRequest.date",
                                         "prNo": "$purchaseRequest.no",
@@ -941,8 +953,44 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "poeDate": "$items.purchaseOrderExternal.date",
                                         "poeExpectedDeliveryDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
                                         "status": 1,
-                                        "fulfillment": "$items.fulfillments",
+                                        "fulfillments": "$items.fulfillments",
+                                        "fulfillmentsTotal": "$items.fulfillments.deliveryOrderDeliveredQuantity",
                                         "remark": "$items.remark"
+                                    }
+                                },
+                                {
+                                    $unwind: { path: "$fulfillments", preserveNullAndEmptyArrays: true, includeArrayIndex: "arrayIndex" }
+                                },
+                                {
+                                    $project: {
+                                        "prDate": 1,
+                                        "prNo": 1,
+                                        "prCreatedDate": 1,
+                                        "unit.name": 1,
+                                        "unit.division.name": 1,
+                                        "refNo": 1,
+                                        "product.name": 1,
+                                        "product.code": 1,
+                                        "product.description": 1,
+                                        "category": 1,
+                                        "defaultQuantity": 1,
+                                        "defaultUom": 1,
+                                        "budgetPrice": 1,
+                                        "currencyRate": 1,
+                                        "dealQuantity": 1,
+                                        "dealUom": 1,
+                                        "pricePerDealUnit": 1,
+                                        "supplier.name": 1,
+                                        "supplier.code": 1,
+                                        "_createdDate": 1,
+                                        "poeNo": 1,
+                                        "poeDate": 1,
+                                        "poeExpectedDeliveryDate": 1,
+                                        "status": 1,
+                                        "fulfillment": "$fulfillments",
+                                        "fulfillmentsTotal": 1,
+                                        "arrayIndex": 1,
+                                        "remark": 1
                                     }
                                 },
                             ])
@@ -958,9 +1006,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                 $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
                             },
                             {
-                                $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: true }
-                            },
-                            {
                                 $project: {
                                     "prDate": "$purchaseRequest.date",
                                     "prNo": "$purchaseRequest.no",
@@ -968,7 +1013,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "unit.name": 1,
                                     "unit.division.name": 1,
                                     "refNo": "$items.refNo",
-                                    "artikel":1,
                                     "product.name": "$items.product.name",
                                     "product.code": "$items.product.code",
                                     "product.description": "$items.product.description",
@@ -987,8 +1031,44 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "poeDate": "$items.purchaseOrderExternal.date",
                                     "poeExpectedDeliveryDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
                                     "status": 1,
-                                    "fulfillment": "$items.fulfillments",
+                                    "fulfillments": "$items.fulfillments",
+                                    "fulfillmentsTotal": "$items.fulfillments.deliveryOrderDeliveredQuantity",
                                     "remark": "$items.remark"
+                                }
+                            },
+                            {
+                                $unwind: { path: "$fulfillments", preserveNullAndEmptyArrays: true, includeArrayIndex: "arrayIndex" }
+                            },
+                            {
+                                $project: {
+                                    "prDate": 1,
+                                    "prNo": 1,
+                                    "prCreatedDate": 1,
+                                    "unit.name": 1,
+                                    "unit.division.name": 1,
+                                    "refNo": 1,
+                                    "product.name": 1,
+                                    "product.code": 1,
+                                    "product.description": 1,
+                                    "category": 1,
+                                    "defaultQuantity": 1,
+                                    "defaultUom": 1,
+                                    "budgetPrice": 1,
+                                    "currencyRate": 1,
+                                    "dealQuantity": 1,
+                                    "dealUom": 1,
+                                    "pricePerDealUnit": 1,
+                                    "supplier.name": 1,
+                                    "supplier.code": 1,
+                                    "_createdDate": 1,
+                                    "poeNo": 1,
+                                    "poeDate": 1,
+                                    "poeExpectedDeliveryDate": 1,
+                                    "status": 1,
+                                    "fulfillment": "$fulfillments",
+                                    "fulfillmentsTotal": 1,
+                                    "arrayIndex": 1,
+                                    "remark": 1
                                 }
                             },
                             { $skip: page * size },
@@ -1009,6 +1089,17 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
                 for (var data of listData) {
                     var incomeValue = 0, vatValue = 0;
+                    var remainQuantity = 0;
+                    var sum = 0;
+
+                    if (data.arrayIndex || data.arrayIndex >= 0) {
+                        sum = 0;
+                        for (var i = 0; i <= data.arrayIndex; i++) {
+                            sum += data.fulfillmentsTotal[i];
+                        }
+                    }
+                    remainQuantity = data.dealQuantity - sum;
+
                     if (data.fulfillment) {
                         if (data.fulfillment.invoiceUseIncomeTax) {
                             incomeValue = (data.fulfillment.deliveryOrderDeliveredQuantity || 0) * data.pricePerDealUnit * data.currencyRate * 0.1;
@@ -1048,7 +1139,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         unit: data.unit.name,
                         division: data.unit.division.name,
                         refNo: data.refNo,
-                        artikel:data.artikel,
+                        artikel: data.artikel,
                         category: data.category,
                         productName: data.product.name,
                         productCode: data.product.code,
@@ -1070,6 +1161,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         deliveryOrderDate: data.fulfillment ? data.fulfillment.deliveryOrderDate ? moment(new Date(data.fulfillment.deliveryOrderDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
                         deliveryOrderDeliveredQuantity: data.fulfillment ? data.fulfillment.deliveryOrderDeliveredQuantity ? data.fulfillment.deliveryOrderDeliveredQuantity : 0 : 0,
                         deliveryOrderDeliveredUom: data.defaultUom ? data.defaultUom : "-",
+                        remainQuantity: remainQuantity,
                         customsNo: data.fulfillment ? data.fulfillment.customsNo ? data.fulfillment.customsNo : "-" : "-",
                         customsDate: data.fulfillment ? data.fulfillment.customsDate ? moment(new Date(data.fulfillment.customsDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
                         unitReceiptNoteNo: data.fulfillment ? data.fulfillment.unitReceiptNoteNo ? data.fulfillment.unitReceiptNoteNo : "-" : "-",
@@ -1096,7 +1188,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         correctionPriceTotal: data.correction ? data.correction.correctionPriceTotal : 0,
                         correctionRemark: data.correction ? data.correction.correctionType : "-",
                         remark: data.remark ? data.remark : "-",
-                        status: data.status ? data.status.label : "-"
+                        status: data.status ? data.status.label : "-",
+                        statusValue: data.status ? data.status.value : 0
                     }
                     dataReport.push(item);
                 }
@@ -1129,7 +1222,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "Unit": data.unit,
                 "Divisi": data.division,
                 "No Ref Purchase Request": data.refNo,
-                "Artikel":data.artikel,
+                "Artikel": data.artikel,
                 "Kategori": data.category,
                 "Nama Barang": data.productName,
                 "Kode Barang": data.productCode,
@@ -1151,6 +1244,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "Tanggal Datang Barang": data.deliveryOrderDate,
                 "Jumlah Barang Datang": data.deliveryOrderDeliveredQuantity,
                 "Satuan": data.defaultUom,
+                "Jumlah Barang Sisa": data.remainQuantity,
                 "No Bea Cukai": data.customsNo,
                 "Tanggal Bea Cukai": data.customsDate,
                 "No Bon Terima Unit": data.unitReceiptNoteNo,
@@ -1210,6 +1304,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "Tanggal Datang Barang": "string",
             "Jumlah Barang Datang": "number",
             "Satuan": "string",
+            "Jumlah Barang Sisa": "string",
             "No Bea Cukai": "string",
             "Tanggal Bea Cukai": "string",
             "No Bon Terima Unit": "string",
