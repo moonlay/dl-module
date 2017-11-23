@@ -99,3 +99,15 @@ it("#05. should success when destroy all unit test data", function (done) {
             done(e);
         });
 });
+
+it('#06. should success when generate data to Excel Report with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    instanceManager.getAllData(startdate, enddate)
+    .then(result => {
+        result.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+});
