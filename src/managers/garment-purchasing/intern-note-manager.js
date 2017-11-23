@@ -838,6 +838,107 @@ module.exports = class InternNoteManager extends BaseManager {
         });
     }
 
+   getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => 
+        {
+           var now = new Date();
+           var deleted = {
+                _deleted: false
+            };
+            
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+
+            var query = [deleted];
+
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "date": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
+
+      var match = { '$and': query };
+            
+      this.collection.aggregate([
+      {$match: match },
+      {$unwind:"$items"},
+      {$unwind:"$items.items"},
+      {$unwind:"$items.items.items"},
+      {$project :{
+                    "NoNI":"$no",
+                    "TgNI":"$date",
+                    "MtUang":"$currency.code",
+                    "Rate" :"$currency.rate",
+                    "KdSpl":"$supplier.code",
+                    "NmSpl":"$supplier.name",   
+                    "NoInv":"$items.no",
+                    "TgInv":"$items.date",
+                    "NoSJ" :"$items.items.deliveryOrderNo",
+                    "TgSJ":"$items.items.deliveryOrderDate",
+                    "TgDtg":"$items.items.deliveryOrderSupplierDoDate",
+                    "PoExt":"$items.items.items.purchaseOrderExternalNo",
+                    "PlanPO":"$items.items.items.purchaseRequestRefNo",
+                    "NoRO":"$items.items.items.roNo",
+                    "TipeByr":"$items.items.items.paymentType",
+                    "TermByr":"$items.items.items.paymentMethod",
+                    "Tempo":"$items.items.items.paymentDueDays",
+                    "KdBrg":"$items.items.items.product.code",
+                    "NmBrg":"$items.items.items.product.name",
+                    "SatNI":"$items.items.items.purchaseOrderUom.unit",
+                    "Qty" : "$items.items.items.purchaseOrderQuantity",
+                    "Harga" : "$items.items.items.pricePerDealUnit",
+                    "TgIn":"$_createdDate",
+                    "UserIn":"$_createdBy",
+                    "TgEd":"$_updatedDate",
+                    "UserEd":"$_updatedBy",
+      }}, 
+      {$group :{ _id: {"NoNI":"$NoNI","TgNI":"$TgNI","MtUang":"$MtUang","Rate":"$Rate","KdSpl":"$KdSpl","NmSpl":"$NmSpl",   
+                       "NoInv":"$NoInv","TgInv":"$TgInv", "NoSJ" :"$NoSJ","TgSJ":"$TgSJ","TgDtg":"$TgDtg",
+                       "PoExt":"$PoExt","PlanPO":"$PlanPO","NoRO":"$NoRO","TipeByr":"$TipeByr",
+                       "TermByr":"$TermByr","Tempo":"$Tempo","KdBrg":"$KdBrg","NmBrg":"$NmBrg",
+                       "SatNI":"$SatNI","Qty":"$Qty","Harga" : "$Harga","TgIn":"$TgIn","UserIn":"$UserIn",
+                       "TgEd":"$TgEd","UserEd":"$UserEd"
+               },
+               "TotNI": { $sum: { $multiply: ["$Qty", "$Harga","$Rate"]
+                                 }
+                         }
+               }
+        } 
+      ])
+        .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    console.log(result);
+                    resolve(result);
+                });
+        });
+    }
+
     getXls(result, query) {
         var xls = {};
         xls.data = [];
