@@ -38,12 +38,18 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             "_id",
             "no",
             "refNo",
+            "_createdDate",
+            "_createdBy",
             "purchaseRequestId",
             "purchaseRequest._id",
             "purchaseRequest.no",
+            "purchaseRequest._createdDate",
+            "purchaseRequest._createdBy",
             "purchaseOrderExternalId",
             "purchaseOrderExternal._id",
             "purchaseOrderExternal.no",
+            "purchaseOrderExternal._createdDate",
+            "purchaseOrderExternal._createdBy",
             "supplierId",
             "supplier.code",
             "supplier.name",
@@ -358,8 +364,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     '$ne': new ObjectId(valid._id)
                 }
             }, {
-                    "no": valid.no
-                }]
+                "no": valid.no
+            }]
         });
         var getCurrency = valid.currency && ObjectId.isValid(valid.currency._id) ? this.currencyManager.getSingleByIdOrDefault(valid.currency._id) : Promise.resolve(null);
         var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
@@ -1062,32 +1068,32 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             }
                         ]
                     }, {
-                            $subtract: [
-                                { "$add": ["$items.purchaseRequest._createdDate", 60 * offset * 60 * 1000] },
-                                {
-                                    "$add": [
-                                        { "$millisecond": "$items.purchaseRequest._createdDate" },
-                                        {
-                                            "$multiply": [
-                                                { "$second": "$items.purchaseRequest._createdDate" },
-                                                1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$minute": "$items.purchaseRequest._createdDate" },
-                                                60, 1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$hour": { "$add": ["$items.purchaseRequest._createdDate", 60 * offset * 60 * 1000] } },
-                                                60, 60, 1000
-                                            ]
-                                        }
-                                    ]
-                                }]
-                        }]
+                        $subtract: [
+                            { "$add": ["$items.purchaseRequest._createdDate", 60 * offset * 60 * 1000] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$items.purchaseRequest._createdDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$items.purchaseRequest._createdDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$items.purchaseRequest._createdDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$items.purchaseRequest._createdDate", 60 * offset * 60 * 1000] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
                 }, 86400000]
             };
             var durationQuery = {};
@@ -1290,57 +1296,57 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 $divide: [{
                     $subtract: [{
                         $subtract: [{ "$add": ["$_createdDate", 60 * offset * 60 * 1000] },
+                        {
+                            "$add": [
+                                { "$millisecond": "$_createdDate" },
+                                {
+                                    "$multiply": [
+                                        { "$second": "$_createdDate" },
+                                        1000
+                                    ]
+                                },
+                                {
+                                    "$multiply": [
+                                        { "$minute": "$_createdDate" },
+                                        60, 1000
+                                    ]
+                                },
+                                {
+                                    "$multiply": [
+                                        { "$hour": { "$add": ["$_createdDate", 60 * offset * 60 * 1000] } },
+                                        60, 60, 1000
+                                    ]
+                                }
+                            ]
+                        }
+                        ]
+                    }, {
+                        $subtract: [
+                            { "$add": ["$items._createdDate", 60 * offset * 60 * 1000] },
                             {
                                 "$add": [
-                                    { "$millisecond": "$_createdDate" },
+                                    { "$millisecond": "$items._createdDate" },
                                     {
                                         "$multiply": [
-                                            { "$second": "$_createdDate" },
+                                            { "$second": "$items._createdDate" },
                                             1000
                                         ]
                                     },
                                     {
                                         "$multiply": [
-                                            { "$minute": "$_createdDate" },
+                                            { "$minute": "$items._createdDate" },
                                             60, 1000
                                         ]
                                     },
                                     {
                                         "$multiply": [
-                                            { "$hour": { "$add": ["$_createdDate", 60 * offset * 60 * 1000] } },
+                                            { "$hour": { "$add": ["$items._createdDate", 60 * offset * 60 * 1000] } },
                                             60, 60, 1000
                                         ]
                                     }
                                 ]
-                            }
-                        ]
-                    }, {
-                            $subtract: [
-                                { "$add": ["$items._createdDate", 60 * offset * 60 * 1000] },
-                                {
-                                    "$add": [
-                                        { "$millisecond": "$items._createdDate" },
-                                        {
-                                            "$multiply": [
-                                                { "$second": "$items._createdDate" },
-                                                1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$minute": "$items._createdDate" },
-                                                60, 1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$hour": { "$add": ["$items._createdDate", 60 * offset * 60 * 1000] } },
-                                                60, 60, 1000
-                                            ]
-                                        }
-                                    ]
-                                }]
-                        }]
+                            }]
+                    }]
                 }, 86400000]
             };
             var durationQuery = {};
