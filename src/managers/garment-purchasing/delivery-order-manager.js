@@ -982,8 +982,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
     }*/
 
 getAllData(startdate, enddate, offset) {
-        return new Promise((resolve, reject) => 
-        {
+        return new Promise((resolve, reject) => {
+            
            var now = new Date();
            var deleted = {
                 _deleted: false
