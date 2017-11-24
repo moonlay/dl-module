@@ -195,12 +195,11 @@ it("#05. should success when create new data kanban", function(done) {
             data.instructionId = instruction._id;
             data.instruction = instruction;
             
-            data.instruction.steps.map((step) => {
-                step.machine = machine;
-                step.processArea = "Area Pre Treatment";
-                step.deadline = new Date();
-                return step;
-            });
+            // data.instruction.steps.map((step) => {
+            //     step.machine = machine;
+            //     step.deadline = new Date();
+            //     return step;
+            // });
 
             kanbanManager.create(data)
                 .then(id =>{
