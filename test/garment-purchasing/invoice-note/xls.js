@@ -103,7 +103,7 @@ it("#05. should success when destroy all unit test data", function (done) {
 it('#06. should success when generate data to Excel Report with date', function (done) {
     var startdate = null;
     var enddate   = null;
-    
+    var offset=7;
     instanceManager.getAllData(startdate, enddate, offset)
     .then(result => {
         result.should.instanceof(Array);
