@@ -85,14 +85,18 @@ module.exports = class InventorySummaryManager extends BaseManager {
         var getProduct = valid.productId && ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(valid.productId) : Promise.resolve(null);
         var getStorage = valid.storageId && ObjectId.isValid(valid.storageId) ? this.storageManager.getSingleByIdOrDefault(valid.storageId) : Promise.resolve(null);
         var getUom = valid.uomId && ObjectId.isValid(valid.uomId) ? this.uomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
+        var getSecondUom = valid.secondUomId && ObjectId.isValid(valid.secondUomId) ? this.uomManager.getSingleByIdOrDefault(valid.secondUomId) : Promise.resolve(null);
+        var getThirdUom = valid.thirdUomId && ObjectId.isValid(valid.thirdUomId) ? this.uomManager.getSingleByIdOrDefault(valid.thirdUomId) : Promise.resolve(null);
 
-        return Promise.all([getDbInventorySummary, getDuplicateInventorySummary, getProduct, getStorage, getUom])
-            .then(results => {
+        return Promise.all([getDbInventorySummary, getDuplicateInventorySummary, getProduct, getStorage, getUom, getSecondUom, getThirdUom])
+            .then((results) => {
                 var _dbInventorySummary = results[0];
                 var _dbDuplicateInventorySummary = results[1];
                 var _product = results[2];
                 var _storage = results[3];
                 var _uom = results[4];
+                var _secondUom = results[5];
+                var _thirdUom = results[6];
 
                 if (_dbInventorySummary) {
                     // prevent key changes.
@@ -135,6 +139,12 @@ module.exports = class InventorySummaryManager extends BaseManager {
                 valid.uomId = _uom._id;
                 valid.uom = _uom.unit;
 
+                valid.secondUomId = _secondUom && _secondUom._id ? _secondUom._id : null;
+                valid.secondUom = _secondUom && _secondUom._id ? _secondUom.unit : "";
+
+                valid.thirdUomId = _thirdUom && _thirdUom._id ? _thirdUom._id : null;
+                valid.thirdUom = _thirdUom && _thirdUom._id ? _thirdUom.unit : "";
+
                 if (!valid.stamp) {
                     valid = new InventorySummaryModel(valid);
                 }
@@ -146,30 +156,14 @@ module.exports = class InventorySummaryManager extends BaseManager {
             })
     }
 
-    getSert(productId, storageId, uomId, secondUomId, thirdUomId) {
+    getSert(productId, storageId, uomId) {
         var query = {
             productId: new ObjectId(productId),
             storageId: new ObjectId(storageId),
-            uomId: new ObjectId(uomId),
-            secondUomId: new ObjectId(secondUomId),
-            thirdUomId: new ObjectId(thirdUomId)
+            uomId: new ObjectId(uomId)
         }
 
-        var searchQuery = {
-            productId: new ObjectId(productId),
-            storageId: new ObjectId(storageId),
-            uomId: {
-                $in: [new ObjectId(uomId), new ObjectId(secondUomId), new ObjectId(thirdUomId)]
-            },
-            secondUomId: {
-                $in: [new ObjectId(uomId), new ObjectId(secondUomId), new ObjectId(thirdUomId)]
-            },
-            thirdUomId: {
-                $in: [new ObjectId(uomId), new ObjectId(secondUomId), new ObjectId(thirdUomId)]
-            }
-        }
-
-        return this.getSingleByQueryOrDefault(searchQuery)
+        return this.getSingleByQueryOrDefault(query)
             .then((doc) => {
                 if (doc)
                     return doc;
@@ -178,6 +172,7 @@ module.exports = class InventorySummaryManager extends BaseManager {
                         .then(id => this.getSingleById(id));
             });
     }
+
 
     _createIndexes() {
         var dateIndex = {

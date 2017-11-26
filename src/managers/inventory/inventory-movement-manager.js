@@ -18,12 +18,6 @@ var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var moment = require("moment");
 
-const PROPERTY_PAIRS = {
-    "uom": "quantity",
-    "secondUom": "secondQuantity",
-    "thirdUom": "thirdQuantity"
-}
-
 module.exports = class InventoryMovementManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
@@ -104,48 +98,19 @@ module.exports = class InventoryMovementManager extends BaseManager {
         return this.getSingleById(id)
             .then((inventoryMovement) => {
                 var inventoryMovement = inventoryMovement;
-                var updateSummary = this.inventorySummaryManager.getSert(inventoryMovement.productId, inventoryMovement.storageId, inventoryMovement.uomId)
-                    .then((summary) => {
-                        return sumInventory(inventoryMovement, summary)
-                            .then((inventorySummary) => {
-                                return this.inventorySummaryManager.update(inventorySummary)
-                                    .then((summaryId) => Promise.resolve(id))
-                            })
+                return this.inventorySummaryManager.getSert(inventoryMovement.productId, inventoryMovement.storageId, inventoryMovement.uomId)
+                    .then((inventorySummary) => {
+
+                        inventorySummary.secondUomId = inventoryMovement.secondUomId;
+                        inventorySummary.thirdUomId = inventoryMovement.thirdUomId;
+                        inventorySummary.quantity = inventoryMovement.after;
+                        inventorySummary.secondQuantity = inventoryMovement.secondAfter;
+                        inventorySummary.thirdQuantity = inventoryMovement.thirdAfter;
+
+                        return this.inventorySummaryManager.update(inventorySummary)
+                            .then((sumId) => id)
                     })
             })
-    }
-
-    searchObjectProperty(object, query) {
-        for (var key in object) {
-            var value = object[key];
-            if (value === query) {
-                return key
-            }
-        }
-    }
-
-    sumInventory(movement, summary) {
-        var inventoryMovement = movement;
-        var inventorySummary = summary;
-        return new Promise((resolve, reject) => {
-
-            if (movement.uom && movement.uom !== "") {
-                property = searchObjectProperty(inventorySummary, movement.uom);
-                inventorySummary[PROPERTY_PAIRS[property]] -= movement.quantity;
-            }
-
-            if (movement.secondUom && movement.secondUom !== "") {
-                property = searchObjectProperty(inventorySummary, movement.secondUom);
-                inventorySummary[PROPERTY_PAIRS[property]] -= movement.secondQuantity;
-            }
-
-            if (movement.thirdUom && movement.thirdUom !== "") {
-                property = searchObjectProperty(inventorySummary, movement.thirdUom);
-                inventorySummary[PROPERTY_PAIRS[property]] -= movement.thirdQuantity;
-            }
-
-            return Promise.resolve(inventorySummary);
-        })
     }
 
     _validate(inventoryMovement) {
@@ -161,7 +126,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
         var getThirdUom = valid.thirdUomId && ObjectId.isValid(valid.thirdUomId) ? this.uomManager.getSingleByIdOrDefault(valid.thirdUomId) : Promise.resolve(null);
 
         return Promise.all([getInventorySummary, getProduct, getStorage, getUom, getSecondUom, getThirdUom])
-            .then(results => {
+            .then((results) => {
                 var _dbInventorySummary = results[0];
                 var _product = results[1];
                 var _storage = results[2];
@@ -212,22 +177,30 @@ module.exports = class InventoryMovementManager extends BaseManager {
                 valid.uomId = _uom._id;
                 valid.uom = _uom.unit;
 
-                valid.secondUomId = _secondUom._id ? _secondUom._id : null;
-                valid.secondUom = _secondUom.unit ? _secondUom.unit : "";
+                valid.secondUomId = _secondUom && _secondUom._id ? _secondUom._id : null;
+                valid.secondUom = _secondUom && _secondUom.unit ? _secondUom.unit : "";
 
-                valid.thirdUomId = _thirdUom._id ? _thirdUom._id : null;
-                valid.thirdUom = _thirdUom.unit ? _thirdUom.unit : "";
+                valid.thirdUomId = _thirdUom && _thirdUom._id ? _thirdUom._id : null;
+                valid.thirdUom = _thirdUom && _thirdUom.unit ? _thirdUom.unit : "";
 
                 if (valid.type == "OUT") {
                     valid.quantity = valid.quantity * -1;
+                    valid.secondQuantity = valid.secondQuantity * -1
+                    valid.thirdQuantity = valid.thirdQuantity * -1
                 }
 
                 valid.before = _dbInventorySummary.quantity;
+                valid.secondBefore = _dbInventorySummary.secondQuantity ? _dbInventorySummary.secondQuantity : 0;
+                valid.thirdBefore = _dbInventorySummary.thirdQuantity ? _dbInventorySummary.thirdQuantity : 0;
 
                 if (valid.type == "ADJ") {
                     valid.after = valid.quantity;
+                    valid.secondAfter = valid.secondQuantity;
+                    valid.thirdAfter = valid.thirdQuantity;
                 } else {
                     valid.after = _dbInventorySummary.quantity + valid.quantity;
+                    valid.secondAfter = (_dbInventorySummary.secondQuantity ? _dbInventorySummary.secondQuantity : 0) + valid.secondQuantity;
+                    valid.thirdAfter = (_dbInventorySummary.thirdQuantity ? _dbInventorySummary.thirdQuantity : 0) + valid.thirdQuantity;
                 }
 
                 if (!valid.stamp) {
