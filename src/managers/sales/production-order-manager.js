@@ -1079,9 +1079,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                     "kanban.productionOrder.orderNo": prodOrder.orderNo
                                 }
                             },
-                            {
-                                $unwind: "$kanban.instruction.steps"
-                            },
+                            // {
+                            //     $unwind: "$kanban.instruction.steps"
+                            // },
                             {
                                 $project:
                                     {
@@ -1089,14 +1089,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         "kanbanCode": "$kanban.code",
                                         "machine": "$machine.name",
                                         "color": "$kanban.selectedProductionOrderDetail.colorRequest",
-                                        "step": "$kanban.instruction.steps.process",
-                                        "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
+                                        // "step": "$kanban.instruction.steps.process",
+                                        "step": "$step.process",
+                                        // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
                                         "qty": "$input"
                                     }
                             },
-                            {
-                                $match: { "cmp": true }
-                            },
+                            // {
+                            //     $match: { "cmp": true }
+                            // },
                             { $sort: { "kanbanCode": -1, "_createdDate": 1 } }
                         ]).toArray());
                     }

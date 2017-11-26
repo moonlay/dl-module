@@ -10,6 +10,7 @@ var StyleManager = require('./style-manager');
 var i18n = require("dl-i18n");
 var moment = require('moment');
 var generateCode = require("../../utils/code-generator");
+var global = require("../../global");
 
 module.exports = class StandardHourManager extends BaseManager {
     constructor(db, user) {
@@ -52,6 +53,8 @@ module.exports = class StandardHourManager extends BaseManager {
     _validate(standardHour) {
         var errors = {};
         var valid = standardHour;
+        var locale = global.config.locale;
+        moment.locale(locale.name);
         // 1. begin: Declare promises.
         var getStandarHour = this.collection.where({ 
             "_id": {
@@ -91,6 +94,7 @@ module.exports = class StandardHourManager extends BaseManager {
                     else if(standardHourArr && standardHourArr.data.length > 0){
                         var _standardHour = standardHourArr.data[0]
                         if(date <= _standardHour.date){
+
                             var dateHour = moment(new Date(_standardHour.date)).format("DD-MM-YYYY");
                             errors["date"] = `Date must be greater than ${dateHour}`;
                         }

@@ -5,6 +5,7 @@ describe("BASIC SCENARIOS", function() {
 describe("PDF SCENARIOS", function() {
     require("./pdf");
 });
+
 describe("REPORT SCENARIOS", function() {
     require("./report");
 });

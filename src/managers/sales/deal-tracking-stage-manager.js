@@ -118,7 +118,7 @@ module.exports = class DealTrackingStageManager extends BaseManager {
 
                             var _filter = {
                                 filter: { _id: { "$in": data.deals } },
-                                select: ["code", "name", "amount", "closeDate", "contact.firstName", "contact.lastName", "product.name", "quantity", "product.uom.unit", "_createdBy"]
+                                select: ["code", "name", "amount", "closeDate", "contact.firstName", "contact.lastName", "product.name", "quantity", "product.uom.unit", "_createdBy", "uom.unit"]
                             };
 
                             query = this._getQuery(_filter);
