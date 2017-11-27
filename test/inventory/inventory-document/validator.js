@@ -123,7 +123,7 @@ it('#04. should error when create new data no productId', function (done) {
         });
 });
 
-it('#05. should error when create new data no uomId', function (done) {
+it('#05. should error when create new data with no uomId', function (done) {
     inventoryDocumentDataUtil.getNewData()
         .then(data => {
 
@@ -131,7 +131,57 @@ it('#05. should error when create new data no uomId', function (done) {
 
             inventoryDocumentManager.create(data)
                 .then(id => {
-                    done("should error when create new data no uomId");
+                    done("should error when create new data with no uomId");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('items');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#06. should error when create new data with duplicate productId', function (done) {
+    inventoryDocumentDataUtil.getNewData()
+        .then(data => {
+
+            data.items[1].productId = data.items[0].productId;
+
+            inventoryDocumentManager.create(data)
+                .then(id => {
+                    done("should error when create new data with duplicate productId");
+                })
+                .catch(e => {
+                    try {
+                        e.errors.should.have.property('items');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#07. should error when create new data with zero first quantity', function (done) {
+    inventoryDocumentDataUtil.getNewData()
+        .then(data => {
+
+            data.items[1].quantity = 0;
+
+            inventoryDocumentManager.create(data)
+                .then(id => {
+                    done("should error when create new data with zero first quantity");
                 })
                 .catch(e => {
                     try {
