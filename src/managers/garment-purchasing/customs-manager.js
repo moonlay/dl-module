@@ -483,6 +483,48 @@ module.exports = class CustomsManager extends BaseManager {
         });
     }
 
+getAllData(filter) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+                    query = Object.assign(query, filter);
+                    query = Object.assign(query, {
+                        _deleted: false
+                    });
+
+                    var _select = ["no",
+                        "customsDate",
+                        "validateDate",
+                        "customsType",
+                        "customsOrigin",
+                        "supplier",
+                        "amountOfPackaging",
+                        "packaging",
+                        "bruto",
+                        "netto",
+                        "currency",
+                        "deliveryOrders.no",
+                        "deliveryOrders.date",
+                        "deliveryOrders.supplierDoDate",
+                        "deliveryOrders.items",
+                        "_createdBy",
+                        "_createdDate",
+                        "_updatedBy",
+                        "_updatedDate"  
+                        ];
+
+                    this.collection.where(query).select(_select).execute()
+                        .then((results) => {
+                            resolve(results.data);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
     getCustomsReportXls(dataReport, query) {
         return new Promise((resolve, reject) => {
             var xls = {};
