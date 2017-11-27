@@ -198,6 +198,31 @@ it('#07. should error when create new data with zero first quantity', function (
         });
 });
 
+it('#08. should error when create new data with empty secondUom but exist thirdUom', function (done) {
+    inventoryDocumentDataUtil.getNewData()
+        .then(data => {
+
+            data.items[1].secondUomId = {};
+
+            inventoryDocumentManager.create(data)
+                .then((id) => {
+                    done("should error when create new data with empty secondUom but exist thirdUom");
+                })
+                .catch((e) => {
+                    try {
+                        e.errors.should.have.property('items');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 // var createdId;
 // it("#03. should success when create new data using status IN", function (done) {
 //     inventoryDocumentDataUtil.getNewData()
