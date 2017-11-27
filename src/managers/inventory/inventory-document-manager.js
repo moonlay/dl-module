@@ -384,8 +384,8 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                     valid.items.forEach((item, index) => {
                         var itemsError = {};
 
-                        var existSecondUom = _uoms.find((uom) => item.secondUomId && uom._id.toString() === item.secondUomId.toString());
-                        var existThirdUom = _uoms.find((uom) => item.thirdUomId && uom._id.toString() === item.thirdUomId.toString());
+                        var existSecondUom = _secondUoms.find((uom) => item.secondUomId && uom._id.toString() === item.secondUomId.toString());
+                        var existThirdUom = _thirdUoms.find((uom) => item.thirdUomId && uom._id.toString() === item.thirdUomId.toString());
 
                         var existProduct = _products.find((product) => product._id.toString() === item.productId.toString());
                         if (!item.productId || item.productId.toString() === "")
