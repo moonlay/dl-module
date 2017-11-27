@@ -112,15 +112,7 @@ it("#05. should success when create new data one uom only", function (done) {
         .then((data) => {
 
             var newItems = data.items.map((item) => {
-                var tempUom = item.uomId;
-                var tempSecondUom = item.secondUomId;
-                var tempThirdUom = item.thirdUomId;
-                var tempQuantity = item.quantity;
-                var tempSecondQuantity = item.secondQuantity;
-                var tempThirdQuantity = item.thirdQuantity;
-
-                item.uomId = tempThirdUom;
-                item.quantity = tempThirdQuantity;
+                
                 item.secondUomId = {};
                 item.secondQuantity = 0;
                 item.thirdUomId = {};
@@ -150,10 +142,8 @@ it("#06. should success when create new data two uom only", function (done) {
 
             var newItems = data.items.map((item) => {
                 var tempUom = item.uomId;
-                var tempSecondUom = item.secondUomId;
                 var tempThirdUom = item.thirdUomId;
                 var tempQuantity = item.quantity;
-                var tempSecondQuantity = item.secondQuantity;
                 var tempThirdQuantity = item.thirdQuantity;
 
                 item.uomId = tempThirdUom;
