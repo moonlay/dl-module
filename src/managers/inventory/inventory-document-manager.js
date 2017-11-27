@@ -399,18 +399,26 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                         else if (!existUom)
                             itemsError["uomId"] = i18n.__("InventoryDocument.items.uomId.isNotExist:%s is not exist", i18n.__("InventoryDocument.items.uomId._:UOM"));
                         else if (existUom) {
-                            if (item.secondUomId && ObjectId.isValid(item.secondUomId))
+                            if (item.secondUomId && ObjectId.isValid(item.secondUomId)) {
                                 if (item.secondUomId.toString() === item.uomId.toString())
                                     itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isDuplicate:%s is duplicate with UOM Ke-1", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
+                                else if (!existSecondUom)
+                                    itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isNotExist:%s is not exist", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
+                                else if (existSecondUom)
+                                    if (item.secondQuantity === 0)
+                                        itemsError["secondQuantity"] = i18n.__("InventoryDocument.items.secondQuantity.isNotExist:%s should not be empty", i18n.__("InventoryDocument.items.secondQuantity._:Quantity Ke-2"));
+                            }
+
                             if (item.thirdUomId && ObjectId.isValid(item.thirdUomId)) {
                                 if (!item.secondUomId || !ObjectId.isValid(item.secondUomId))
                                     itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isNotExist:%s should exist", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
                                 else if (item.thirdUomId.toString() === item.uomId.toString())
                                     itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isDuplicate:%s is duplicate with UOM Ke-1", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
-                                else if (item.secondUomId && ObjectId.isValid(item.secondUomId)) {
-                                    if (item.thirdUomId.toString() === item.secondUomId.toString())
-                                        itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isDuplicate:%s is duplicate with UOM Ke-2", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
-                                }
+                                else if (item.thirdUomId.toString() === item.secondUomId.toString()) {
+                                    itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isDuplicate:%s is duplicate with UOM Ke-2", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
+                                } else if (existThirdUom)
+                                    if (item.thirdQuantity === 0)
+                                        itemsError["thirdQuantity"] = i18n.__("InventoryDocument.items.secondQuantity.isNotExist:%s should not be empty", i18n.__("InventoryDocument.items.secondQuantity._:Quantity Ke-2"));
                             }
                         }
 

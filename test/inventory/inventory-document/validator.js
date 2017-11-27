@@ -223,8 +223,34 @@ it('#08. should error when create new data with empty secondUom but exist thirdU
         });
 });
 
+it('#09. should error when create new data with uom but zero quantity', function (done) {
+    inventoryDocumentDataUtil.getNewData()
+        .then(data => {
+
+            data.items[1].secondQuantity = 0;
+            data.items[1].thirdQuantity = 0;
+
+            inventoryDocumentManager.create(data)
+                .then((id) => {
+                    done("should error when create new data with empty secondUom but exist thirdUom");
+                })
+                .catch((e) => {
+                    try {
+                        e.errors.should.have.property('items');
+                        done();
+                    }
+                    catch (ex) {
+                        done(ex);
+                    }
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 var createdId;
-it("#09. should success when create new data using status IN", function (done) {
+it("#10. should success when create new data using status IN", function (done) {
     inventoryDocumentDataUtil.getNewData()
         .then((data) => {
             return inventoryDocumentManager.create(data)
@@ -239,7 +265,7 @@ it("#09. should success when create new data using status IN", function (done) {
         });
 });
 
-it("#10. should success when search with keyword", function (done) {
+it("#11. should success when search with keyword", function (done) {
     inventoryDocumentManager.read({ keyword: "test" })
         .then((result) => {
             result.should.have.property("data");
