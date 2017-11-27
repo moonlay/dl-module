@@ -935,6 +935,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "unit.name": 1,
                                         "unit.division.name": 1,
                                         "refNo": "$items.refNo",
+                                        "artikel": "$artikel",
                                         "product.name": "$items.product.name",
                                         "product.code": "$items.product.code",
                                         "product.description": "$items.product.description",
@@ -969,6 +970,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "unit.name": 1,
                                         "unit.division.name": 1,
                                         "refNo": 1,
+                                        "artikel": 1,
                                         "product.name": 1,
                                         "product.code": 1,
                                         "product.description": 1,
@@ -1013,6 +1015,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "unit.name": 1,
                                     "unit.division.name": 1,
                                     "refNo": "$items.refNo",
+                                    "artikel": "$artikel",
                                     "product.name": "$items.product.name",
                                     "product.code": "$items.product.code",
                                     "product.description": "$items.product.description",
@@ -1047,6 +1050,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "unit.name": 1,
                                     "unit.division.name": 1,
                                     "refNo": 1,
+                                    "artikel": 1,
                                     "product.name": 1,
                                     "product.code": 1,
                                     "product.description": 1,
@@ -1346,6 +1350,570 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         }
         else
             xls.name = `Laporan Monitoring Pembelian.xlsx`;
+
+        return Promise.resolve(xls);
+    }
+
+     getPurchaseReportAll(info) {
+        var query = {
+            _deleted: false,
+            isClosed: true,
+            "items.isClosed": true,
+        };
+
+        if (info.state && info.state !== -1) {
+            Object.assign(query, {
+                "status.value": info.state
+            });
+        }
+        if (info.user && info.user !== "" ) {
+            Object.assign(query, {      
+                "_createdBy": info.user.username
+            });
+        }
+        if (info.unitId && info.unitId !== "") {
+            Object.assign(query, {
+                unitId: new ObjectId(info.unitId)
+            });
+        }
+        if (info.categoryId && info.categoryId !== "") {
+            Object.assign(query, {
+                "items.categoryId": new ObjectId(info.categoryId)
+            });
+        }
+        if (info.purchaseOrderExternalNo && info.purchaseOrderExternalNo !== "") {
+            Object.assign(query, {
+                "items.purchaseOrderExternal.no": info.purchaseOrderExternalNo
+            });
+        }
+        if (info.supplierId && info.supplierId !== "") {
+            Object.assign(query, {
+                "items.supplierId": new ObjectId(info.supplierId)
+            });
+        }
+        if (info.artikel && info.artikel !== "") {
+            var regex = new RegExp(info.artikel, "i");
+            Object.assign(query, {
+                artikel: {
+                    '$regex': regex
+                }
+            });
+        }
+        if (info.prRefNo && info.prRefNo !== "") {
+            Object.assign(query, {
+                "items.refNo": info.prRefNo
+            });
+        }
+
+        var offset = Number(info.offset) || 7;
+        var page = (Number(info.page) || 1) - 1;
+        var size = Number(info.size) || 25;
+        var _dateNow = new Date();
+        var dateFormat = "DD/MM/YYYY";
+
+        if (info.dateFrom && info.dateFrom !== "" && info.dateTo && info.dateTo !== "") {
+            var _dateFrom = new Date(info.dateFrom);
+            var _dateTo = new Date(info.dateTo);
+            _dateFrom.setHours(_dateFrom.getHours() - offset);
+            _dateTo.setHours(_dateTo.getHours() - offset);
+            Object.assign(query, {
+                "purchaseRequest.date": {
+                    $gte: _dateFrom,
+                    $lte: _dateTo
+                }
+            });
+        } else if (info.dateFrom && info.dateFrom !== "") {
+            if (!info.dateTo && info.dateTo === "") {
+                var _dateFrom = new Date(info.dateFrom);
+                if (_dateNow > _dateFrom) {
+                    var _dateTo = new Date();
+                    _dateFrom.setHours(_dateFrom.getHours() - offset);
+                    _dateTo.setHours(_dateTo.getHours() - offset);
+                    Object.assign(query, {
+                        "purchaseRequest.date": {
+                            $gte: _dateFrom,
+                            $lte: _dateTo
+                        }
+                    });
+                }
+            }
+        } else if (info.dateTo && info.dateTo !== "") {
+            if (!info.dateFrom && info.dateFrom === "") {
+                var _dateTo = new Date(info.dateTo);
+                if (_dateNow < _dateTo) {
+                    var _dateFrom = new Date();
+                    _dateFrom.setHours(_dateFrom.getHours() - offset);
+                    _dateTo.setHours(_dateTo.getHours() - offset);
+                    Object.assign(query, {
+                        "purchaseRequest.date": {
+                            $gte: _dateFrom,
+                            $lte: _dateTo
+                        }
+                    });
+                }
+            }
+        }
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                var getDataPromise = [];
+                getDataPromise.push(
+                    this.collection
+                        .aggregate([
+                            {
+                                $match: query
+                            },
+                            {
+                                $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: true }
+                            },
+                            { $group: { _id: null, count: { $sum: 1 } } }
+                        ])
+                        .toArray()
+                );
+
+                if (info.xls) {
+                    getDataPromise.push(
+                        this.collection
+                            .aggregate([
+                                {
+                                    $match: query
+                                },
+                                {
+                                    $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
+                                },
+                                {
+                                    $project: {
+                                        "prDate": "$purchaseRequest.date",
+                                        "prNo": "$purchaseRequest.no",
+                                        "prCreatedDate": "$purchaseRequest._createdDate",
+                                        "unit.name": 1,
+                                        "unit.division.name": 1,
+                                        "refNo": "$items.refNo",
+                                        "artikel": "$artikel",
+                                        "product.name": "$items.product.name",
+                                        "product.code": "$items.product.code",
+                                        "product.description": "$items.product.description",
+                                        "category": "$items.category.name",
+                                        "defaultQuantity": "$items.defaultQuantity",
+                                        "defaultUom": "$items.defaultUom.unit",
+                                        "budgetPrice": "$items.budgetPrice",
+                                        "currencyRate": "$items.currency.rate",
+                                        "dealQuantity": "$items.dealQuantity",
+                                        "dealUom": "$items.dealUom.unit",
+                                        "pricePerDealUnit": "$items.pricePerDealUnit",
+                                        "supplier.name": "$items.supplier.name",
+                                        "supplier.code": "$items.supplier.code",
+                                        "_createdDate": 1,
+                                        "poeNo": "$items.purchaseOrderExternal.no",
+                                        "poeDate": "$items.purchaseOrderExternal.date",
+                                        "poeExpectedDeliveryDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
+                                        "status": 1,
+                                        "fulfillments": "$items.fulfillments",
+                                        "fulfillmentsTotal": "$items.fulfillments.deliveryOrderDeliveredQuantity",
+                                        "remark": "$items.remark",
+                                        "_createdBy": "$_createdBy"
+                                    }
+                                },
+                                {
+                                    $unwind: { path: "$fulfillments", preserveNullAndEmptyArrays: true, includeArrayIndex: "arrayIndex" }
+                                },
+                                {
+                                    $project: {
+                                        "prDate": 1,
+                                        "prNo": 1,
+                                        "prCreatedDate": 1,
+                                        "unit.name": 1,
+                                        "unit.division.name": 1,
+                                        "refNo": 1,
+                                        "artikel": 1,
+                                        "product.name": 1,
+                                        "product.code": 1,
+                                        "product.description": 1,
+                                        "category": 1,
+                                        "defaultQuantity": 1,
+                                        "defaultUom": 1,
+                                        "budgetPrice": 1,
+                                        "currencyRate": 1,
+                                        "dealQuantity": 1,
+                                        "dealUom": 1,
+                                        "pricePerDealUnit": 1,
+                                        "supplier.name": 1,
+                                        "supplier.code": 1,
+                                        "_createdDate": 1,
+                                        "poeNo": 1,
+                                        "poeDate": 1,
+                                        "poeExpectedDeliveryDate": 1,
+                                        "status": 1,
+                                        "fulfillment": "$fulfillments",
+                                        "fulfillmentsTotal": 1,
+                                        "arrayIndex": 1,
+                                        "remark": 1,
+                                        "_createdBy": 1
+                                    }
+                                },
+                            ])
+                            .toArray()
+                    );
+                } else {
+                    getDataPromise.push(this.collection
+                        .aggregate([
+                            {
+                                $match: query
+                            },
+                            {
+                                $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $project: {
+                                    "prDate": "$purchaseRequest.date",
+                                    "prNo": "$purchaseRequest.no",
+                                    "prCreatedDate": "$purchaseRequest._createdDate",
+                                    "unit.name": 1,
+                                    "unit.division.name": 1,
+                                    "refNo": "$items.refNo",
+                                    "artikel": "$artikel",
+                                    "product.name": "$items.product.name",
+                                    "product.code": "$items.product.code",
+                                    "product.description": "$items.product.description",
+                                    "category": "$items.category.name",
+                                    "defaultQuantity": "$items.defaultQuantity",
+                                    "defaultUom": "$items.defaultUom.unit",
+                                    "budgetPrice": "$items.budgetPrice",
+                                    "currencyRate": "$items.currency.rate",
+                                    "dealQuantity": "$items.dealQuantity",
+                                    "dealUom": "$items.dealUom.unit",
+                                    "pricePerDealUnit": "$items.pricePerDealUnit",
+                                    "supplier.name": "$items.supplier.name",
+                                    "supplier.code": "$items.supplier.code",
+                                    "_createdDate": 1,
+                                    "poeNo": "$items.purchaseOrderExternal.no",
+                                    "poeDate": "$items.purchaseOrderExternal.date",
+                                    "poeExpectedDeliveryDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
+                                    "status": 1,
+                                    "fulfillments": "$items.fulfillments",
+                                    "fulfillmentsTotal": "$items.fulfillments.deliveryOrderDeliveredQuantity",
+                                    "remark": "$items.remark",
+                                    "_createdBy": "$_createdBy"
+                                }
+                            },
+                            {
+                                $unwind: { path: "$fulfillments", preserveNullAndEmptyArrays: true, includeArrayIndex: "arrayIndex" }
+                            },
+                            {
+                                $project: {
+                                    "prDate": 1,
+                                    "prNo": 1,
+                                    "prCreatedDate": 1,
+                                    "unit.name": 1,
+                                    "unit.division.name": 1,
+                                    "refNo": 1,
+                                    "artikel": 1,
+                                    "product.name": 1,
+                                    "product.code": 1,
+                                    "product.description": 1,
+                                    "category": 1,
+                                    "defaultQuantity": 1,
+                                    "defaultUom": 1,
+                                    "budgetPrice": 1,
+                                    "currencyRate": 1,
+                                    "dealQuantity": 1,
+                                    "dealUom": 1,
+                                    "pricePerDealUnit": 1,
+                                    "supplier.name": 1,
+                                    "supplier.code": 1,
+                                    "_createdDate": 1,
+                                    "poeNo": 1,
+                                    "poeDate": 1,
+                                    "poeExpectedDeliveryDate": 1,
+                                    "status": 1,
+                                    "fulfillment": "$fulfillments",
+                                    "fulfillmentsTotal": 1,
+                                    "arrayIndex": 1,
+                                    "remark": 1,
+                                    "_createdBy": 1
+                                }
+                            },
+                            { $skip: page * size },
+                            { $limit: size }
+                        ])
+                        .toArray()
+                    );
+                }
+
+                return Promise.all(getDataPromise);
+            })
+            .then(result => {
+                var resCount = result[0];
+                var count = resCount.length > 0 ? resCount[0].count : 0;
+                var listData = result[1];
+                var dataReport = [];
+                var index = 0;
+
+                for (var data of listData) {
+                    var incomeValue = 0, vatValue = 0;
+                    var remainQuantity = 0;
+                    var sum = 0;
+
+                    if (data.arrayIndex || data.arrayIndex >= 0) {
+                        sum = 0;
+                        for (var i = 0; i <= data.arrayIndex; i++) {
+                            sum += data.fulfillmentsTotal[i];
+                        }
+                    }
+                    remainQuantity = data.dealQuantity - sum;
+
+                    if (data.fulfillment) {
+                        if (data.fulfillment.invoiceUseIncomeTax) {
+                            incomeValue = (data.fulfillment.deliveryOrderDeliveredQuantity || 0) * data.pricePerDealUnit * data.currencyRate * 0.1;
+                        }
+                        if (data.fulfillment.invoiceUseVat) {
+                            vatValue = (data.fulfillment.deliveryOrderDeliveredQuantity || 0) * data.pricePerDealUnit * data.currencyRate * data.fulfillment.invoiceVat.rate / 100;
+                        }
+                        if (data.fulfillment.corrections) {
+                            var i = 1;
+                            var _correctionNo = "";
+                            var _correctionPriceTotal = "";
+                            var _correctionDate = "";
+                            var _correctionType = "";
+                            for (var correction of data.fulfillment.corrections) {
+                                var total = (correction.newPriceTotal - correction.oldPriceTotal) * correction.currencyRate
+                                _correctionNo = `${_correctionNo}${i}. ${correction.correctionNo}\n`;
+                                _correctionPriceTotal = `${_correctionPriceTotal}${i}. ${total.toLocaleString()}\n`;
+                                _correctionDate = `${_correctionDate}${i}. ${moment(new Date(correction.correctionDate)).add(offset, 'h').format(dateFormat)}\n`;
+                                _correctionType = `${_correctionType}${i}. ${correction.correctionType}\n`;
+                                i++;
+                            }
+                            data.correction = {
+                                correctionNo: _correctionNo,
+                                correctionPriceTotal: _correctionPriceTotal,
+                                correctionDate: _correctionDate,
+                                correctionType: _correctionType
+                            }
+                        }
+                    } else {
+                        data.correction = {};
+                    }
+                    index++;
+                    var item = {
+                        no: index,
+                        prDate: data.prDate ? moment(new Date(data.prDate)).add(offset, 'h').format(dateFormat) : "-",
+                        prNo: data.prNo,
+                        unit: data.unit.name,
+                        division: data.unit.division.name,
+                        refNo: data.refNo,
+                        artikel: data.artikel,
+                        category: data.category,
+                        productName: data.product.name,
+                        productCode: data.product.code,
+                        productDesc: data.product.description,
+                        defaultQuantity: data.defaultQuantity ? data.defaultQuantity : 0,
+                        defaultUom: data.defaultUom ? data.defaultUom : "-",
+                        budgetPrice: data.budgetPrice * data.currencyRate,
+                        pricePerItem: data.pricePerDealUnit * data.currencyRate,
+                        priceTotal: data.pricePerDealUnit * data.dealQuantity * data.currencyRate,
+                        supplierCode: data.supplier.code,
+                        supplierName: data.supplier.name,
+                        poIntCreatedDate: data._createdDate ? moment(new Date(data._createdDate)).add(offset, 'h').format(dateFormat) : "-",
+                        poExtNo: data.poeNo,
+                        poExtDate: data.poeDate ? moment(new Date(data.poeDate)).add(offset, 'h').format(dateFormat) : "-",
+                        poExtExpectedDeliveryDate: data.poeExpectedDeliveryDate ? moment(new Date(data.poeExpectedDeliveryDate)).add(offset, 'h').format(dateFormat) : "-",
+                        deliveryOrderNo: data.fulfillment ? data.fulfillment.deliveryOrderNo ? data.fulfillment.deliveryOrderNo : "-" : "-",
+                        deliveryOrderUseCustoms: data.fulfillment ? data.fulfillment.deliveryOrderUseCustoms ? data.fulfillment.deliveryOrderUseCustoms : false : false,
+                        supplierDoDate: data.fulfillment ? data.fulfillment.supplierDoDate ? moment(new Date(data.fulfillment.supplierDoDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
+                        deliveryOrderDate: data.fulfillment ? data.fulfillment.deliveryOrderDate ? moment(new Date(data.fulfillment.deliveryOrderDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
+                        deliveryOrderDeliveredQuantity: data.fulfillment ? data.fulfillment.deliveryOrderDeliveredQuantity ? data.fulfillment.deliveryOrderDeliveredQuantity : 0 : 0,
+                        deliveryOrderDeliveredUom: data.defaultUom ? data.defaultUom : "-",
+                        remainQuantity: remainQuantity,
+                        customsNo: data.fulfillment ? data.fulfillment.customsNo ? data.fulfillment.customsNo : "-" : "-",
+                        customsDate: data.fulfillment ? data.fulfillment.customsDate ? moment(new Date(data.fulfillment.customsDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
+                        unitReceiptNoteNo: data.fulfillment ? data.fulfillment.unitReceiptNoteNo ? data.fulfillment.unitReceiptNoteNo : "-" : "-",
+                        unitReceiptNoteDate: data.fulfillment ? data.fulfillment.unitReceiptNoteDate ? moment(new Date(data.fulfillment.unitReceiptNoteDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
+                        unitReceiptNoteDeliveredQuantity: data.fulfillment ? data.fulfillment.unitReceiptNoteDeliveredQuantity ? data.fulfillment.unitReceiptNoteDeliveredQuantity : 0 : 0,
+                        unitReceiptDeliveredUom: data.fulfillment ? data.fulfillment.unitReceiptDeliveredUom ? data.fulfillment.unitReceiptDeliveredUom.unit : "-" : "-",
+                        invoiceNo: data.fulfillment ? data.fulfillment.invoiceNo ? data.fulfillment.invoiceNo : "-" : "-",
+                        invoiceDate: data.fulfillment ? data.fulfillment.invoiceDate ? moment(new Date(data.fulfillment.invoiceDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
+                        invoiceUseIncomeTax: data.fulfillment ? data.fulfillment.invoiceUseIncomeTax ? data.fulfillment.invoiceUseIncomeTax : false : false,
+                        invoiceIncomeTaxNo: data.fulfillment ? data.fulfillment.invoiceIncomeTaxNo ? data.fulfillment.invoiceIncomeTaxNo : "-" : "-",
+                        invoiceIncomeTaxDate: data.fulfillment ? data.fulfillment.invoiceIncomeTaxDate ? moment(new Date(data.fulfillment.invoiceIncomeTaxDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
+                        incomeValue: incomeValue,
+                        invoiceUseVat: data.fulfillment ? data.fulfillment.invoiceUseVat ? data.fulfillment.invoiceUseVat : false : false,
+                        invoiceVat: data.fulfillment ? data.fulfillment.invoiceVat ? `${data.fulfillment.invoiceVat.name} ${data.fulfillment.invoiceVat.rate}` : "-" : "-",
+                        invoiceVatNo: data.fulfillment ? data.fulfillment.invoiceVatNo ? data.fulfillment.invoiceVatNo : "-" : "-",
+                        invoiceVatDate: data.fulfillment ? data.fulfillment.invoiceVatDate ? moment(new Date(data.fulfillment.invoiceVatDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
+                        vatValue: vatValue,
+                        interNoteNo: data.fulfillment ? data.fulfillment.interNoteNo ? data.fulfillment.interNoteNo : "-" : "-",
+                        interNoteDate: data.fulfillment ? data.fulfillment.interNoteDate ? moment(new Date(data.fulfillment.interNoteDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
+                        interNoteValue: data.fulfillment ? data.fulfillment.interNoteQuantity && data.fulfillment.interNotePrice ? (data.fulfillment.interNoteQuantity * data.fulfillment.interNotePrice) : 0 : 0,
+                        interNoteDueDate: data.fulfillment ? data.fulfillment.interNoteDueDate ? moment(new Date(data.fulfillment.interNoteDueDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
+                        correctionNo: data.correction ? data.correction.correctionNo : "-",
+                        correctionDate: data.correction ? data.correction.correctionDate : "-",
+                        correctionPriceTotal: data.correction ? data.correction.correctionPriceTotal : 0,
+                        correctionRemark: data.correction ? data.correction.correctionType : "-",
+                        remark: data.remark ? data.remark : "-",
+                        status: data.status ? data.status.label : "-",
+                        statusValue: data.status ? data.status.value : 0,
+                        _createdBy: data._createdBy ? data._createdBy : "_"
+                    }
+                    dataReport.push(item);
+                }
+
+                var result = {
+                    data: dataReport,
+                    count: dataReport.length,
+                    size: size,
+                    total: count,
+                    page: page + 1
+                };
+
+                return Promise.resolve(result);
+            })
+    }
+
+    getXlsPurchaseReportAll(results, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+        var offset = query.offset || 7;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var data of results.data) {
+            var item = {
+                "No": data.no,
+                "Tanggal Purchase Request": data.prDate,
+                "No Purchase Request": data.prNo,
+                "Unit": data.unit,
+                "Divisi": data.division,
+                "No Ref Purchase Request": data.refNo,
+                "Artikel": data.artikel,
+                "Kategori": data.category,
+                "Nama Barang": data.productName,
+                "Kode Barang": data.productCode,
+                "Keterangan Barang": data.productDesc,
+                "Jumlah Barang": data.defaultQuantity,
+                "Satuan Barang": data.defaultUom,
+                "Harga Budget": data.budgetPrice,
+                "Harga Satuan Beli": data.pricePerItem,
+                "Harga Total": data.pricePerItem,
+                "Kode Supplier": data.supplierCode,
+                "Nama Supplier": data.supplierName,
+                "Tanggal Terima PO Internal": data.poIntCreatedDate,
+                "No PO Eksternal": data.poExtNo,
+                "Tanggal PO Eksternal": data.poExtDate,
+                "Tanggal Target Datang": data.poExtExpectedDeliveryDate,
+                "No Surat Jalan": data.deliveryOrderNo,
+                "Dikenakan Bea Cukai": data.deliveryOrderUseCustoms ? "Ya" : "Tidak",
+                "Tanggal Surat Jalan": data.supplierDoDate,
+                "Tanggal Datang Barang": data.deliveryOrderDate,
+                "Jumlah Barang Datang": data.deliveryOrderDeliveredQuantity,
+                "Satuan": data.defaultUom,
+                "Jumlah Barang Sisa": data.remainQuantity,
+                "No Bea Cukai": data.customsNo,
+                "Tanggal Bea Cukai": data.customsDate,
+                "No Bon Terima Unit": data.unitReceiptNoteNo,
+                "Tanggal Bon Terima Unit": data.unitReceiptNoteDate,
+                "Jumlah Barang Diterima": data.unitReceiptNoteDeliveredQuantity,
+                "Satuan Barang Diterima": data.unitReceiptDeliveredUom,
+                "No Invoice": data.invoiceNo,
+                "Tanggal Invoice": data.invoiceDate,
+                "Dikenakan PPN": data.invoiceUseIncomeTax ? "Ya" : "Tidak",
+                "No PPN": data.invoiceIncomeTaxNo,
+                "Tanggal PPN": data.invoiceIncomeTaxDate,
+                "Nilai PPN": data.incomeValue,
+                "Dikenakan PPH": data.invoiceUseVat ? "Ya" : "Tidak",
+                "Jenis PPH": data.invoiceVat,
+                "No PPH": data.invoiceVatNo,
+                "Tanggal PPH": data.invoiceVatDate,
+                "Nilai PPH": data.vatValue,
+                "No Nota Intern": data.interNoteNo,
+                "Tanggal Nota Intern": data.interNoteDate,
+                "Nilai Nota Intern": data.interNoteValue,
+                "Tanggal Jatuh Tempo": data.interNoteDueDate,
+                "No Koreksi": data.correctionNo,
+                "Tanggal Koreksi": data.correctionDate,
+                "Nilai Koreksi": data.correctionPriceTotal,
+                "Ket Koreksi": data.correctionRemark,
+                "Keterangan": data.remark,
+                "Status": data.status,
+                "_createdBy": data._createdBy
+            }
+            xls.data.push(item);
+        }
+
+        var options = {
+            "No": "number",
+            "Tanggal Purchase Request": "string",
+            "No Purchase Request": "string",
+            "Unit": "string",
+            "Divisi": "string",
+            "No Ref Purchase Request": "string",
+            "Artikel": "string",
+            "Kategori": "string",
+            "Nama Barang": "string",
+            "Kode Barang": "string",
+            "Keterangan Barang": "string",
+            "Jumlah Barang": "number",
+            "Satuan Barang": "string",
+            "Harga Barang": "number",
+            "Harga Total": "number",
+            "Kode Supplier": "string",
+            "Nama Supplier": "string",
+            "Tanggal Terima PO Internal": "string",
+            "No PO Eksternal": "string",
+            "Tanggal PO Eksternal": "string",
+            "Tanggal Target Datang": "string",
+            "No Surat Jalan": "string",
+            "Dikenakan Bea Cukai": "string",
+            "Tanggal Surat Jalan": "string",
+            "Tanggal Datang Barang": "string",
+            "Jumlah Barang Datang": "number",
+            "Satuan": "string",
+            "Jumlah Barang Sisa": "string",
+            "No Bea Cukai": "string",
+            "Tanggal Bea Cukai": "string",
+            "No Bon Terima Unit": "string",
+            "Tanggal Bon Terima Unit": "string",
+            "Jumlah Barang Diterima": "number",
+            "Satuan Barang Diterima": "string",
+            "No Invoice": "string",
+            "Tanggal Invoice": "string",
+            "Dikenakan PPN": "string",
+            "No PPN": "string",
+            "Tanggal PPN": "string",
+            "Nilai PPN": "number",
+            "Dikenakan PPH": "string",
+            "Jenis PPH": "string",
+            "No PPH": "string",
+            "Tanggal PPH": "string",
+            "Nilai PPH": "number",
+            "No Nota Intern": "string",
+            "Tanggal Nota Intern": "string",
+            "Nilai Nota Intern": "string",
+            "Tanggal Jatuh Tempo": "string",
+            "No Koreksi": "string",
+            "Tanggal Koreksi": "string",
+            "Nilai Koreksi": "string",
+            "Ket Koreksi": "string",
+            "Keterangan": "string",
+            "Status": "string",
+            "Staff Input": "string"
+        };
+        xls.options = options;
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Laporan Monitoring Pembelian All User - ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Laporan Monitoring Pembelian All User - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Laporan Monitoring Pembelian All User - ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Laporan Monitoring Pembelian All User.xlsx`;
 
         return Promise.resolve(xls);
     }
