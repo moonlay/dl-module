@@ -274,10 +274,10 @@ module.exports = class InventoryDocumentManager extends BaseManager {
     //         .then(results => id);
     // }
 
-    createIn(inventoryDocument) {
-        inventoryDocument.type = "IN";
-        return this.create(inventoryDocument);
-    }
+    // createIn(inventoryDocument) {
+    //     inventoryDocument.type = "IN";
+    //     return this.create(inventoryDocument);
+    // }
 
     _validate(inventoryDocument) {
         var errors = {};
