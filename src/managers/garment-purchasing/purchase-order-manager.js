@@ -1904,16 +1904,16 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         xls.options = options;
 
         if (query.dateFrom && query.dateTo) {
-            xls.name = `Laporan Monitoring Pembelian All User - ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            xls.name = `Laporan Monitoring Pembelian All - ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
         else if (!query.dateFrom && query.dateTo) {
-            xls.name = `Laporan Monitoring Pembelian All User - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            xls.name = `Laporan Monitoring Pembelian All - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }
         else if (query.dateFrom && !query.dateTo) {
-            xls.name = `Laporan Monitoring Pembelian All User - ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+            xls.name = `Laporan Monitoring Pembelian All - ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
         }
         else
-            xls.name = `Laporan Monitoring Pembelian All User.xlsx`;
+            xls.name = `Laporan Monitoring Pembelian All.xlsx`;
 
         return Promise.resolve(xls);
     }
