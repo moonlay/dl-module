@@ -418,42 +418,75 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                                     itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isDuplicate:%s is duplicate with UOM Ke-2", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
                                 } else if (existThirdUom)
                                     if (item.thirdQuantity === 0)
-                                        itemsError["thirdQuantity"] = i18n.__("InventoryDocument.items.secondQuantity.isNotExist:%s should not be empty", i18n.__("InventoryDocument.items.secondQuantity._:Quantity Ke-2"));
+                                        itemsError["thirdQuantity"] = i18n.__("InventoryDocument.items.secondQuantity.isNotValid:%s should not be empty", i18n.__("InventoryDocument.items.secondQuantity._:Quantity Ke-2"));
                             }
                         }
 
-                        if ((item.productId && item.productId.toString() !== "" && existProduct) && (valid.storageId && valid.storageId.toString() && _storage) && (item.uomId && item.uomId.toString() !== "" && existUom)) {
-                            var summaryDatum = this.findSummaryDocument(_summaries, valid.storageId, item);
+                        if (item.quantity === 0)
+                            itemsError["quantity"] = i18n.__("InventoryDocument.items.quantity.isRequired:%s is required", i18n.__("InventoryDocument.items.quantity._:Quantity"));
 
-                            if (summaryDatum) {
-                                if (!summaryDatum.secondUomId || !summaryDatum.thirdUomId) {
-                                    if ((item.uomId.toString() !== summaryDatum.uomId.toString()) && (item.secondUomId && (item.secondUomId.toString() !== summaryDatum.uomId.toString())) && (item.thirdUomId && (item.thirdUomId.toString() !== summaryDatum.uomId.toString()))) {
-                                        itemsError["uomId"] = i18n.__("InventoryDocument.items.uomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
-                                        if (item.secondUomId.toString() !== "")
+                        if (Object.getOwnPropertyNames(itemsError).length === 0) {
+                            if ((item.productId && item.productId.toString() !== "" && existProduct) && (valid.storageId && valid.storageId.toString() && _storage) && (item.uomId && item.uomId.toString() !== "" && existUom)) {
+                                var summaryDatum = this.findSummaryDocument(_summaries, valid.storageId, item);
+
+                                if (summaryDatum) {
+                                    if (ObjectId.isValid(summaryDatum.thirdUomId)) {
+                                        if (ObjectId.isValid(item.uomId) && item.uomId.toString() !== summaryDatum.uomId.toString() && item.uomId.toString() !== summaryDatum.secondUomId.toString() && item.uomId.toString() !== summaryDatum.thirdUomId.toString()) {
+                                            itemsError["uomId"] = i18n.__("InventoryDocument.items.uomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
+                                        } else if (ObjectId.isValid(item.secondUomId) && item.secondUomId.toString() !== summaryDatum.uomId.toString() && item.secondUomId.toString() !== summaryDatum.secondUomId.toString() && item.secondUomId.toString() !== summaryDatum.thirdUomId.toString()) {
                                             itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
-                                        if (item.thirdUomId.toString() !== "")
-                                            itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
+                                        } else if (ObjectId.isValid(item.thirdUomId) && item.thirdUomId.toString() !== summaryDatum.uomId.toString() && item.thirdUomId.toString() !== summaryDatum.secondUomId.toString() && item.thirdUomId.toString() !== summaryDatum.thirdUomId.toString()) {
+                                            itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-2"));
+                                        }
+                                    } else if (!ObjectId.isValid(summaryDatum.thirdUomId) && ObjectId.isValid(summaryDatum.secondUomId)) {
+                                        if (ObjectId.isValid(item.uomId) && ObjectId.isValid(item.secondUomId) && ObjectId.isValid(item.thirdUomId)) {
+                                            if ((item.uomId.toString() !== summaryDatum.uomId.toString() && item.secondUomId.toString() !== summaryDatum.secondUomId.toString())) {
+                                                if ((item.uomId.toString() !== summaryDatum.secondUomId.toString() && item.secondUomId.toString() !== summaryDatum.uomId.toString())) {
+                                                    itemsError["uomId"] = i18n.__("InventoryDocument.items.uomId.isNotValid:%s should have at least one pair that similar to summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
+                                                    itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isNotValid:%s should have at least one pair that similar to summary", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
+                                                    itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isNotValid:%s should have at least one pair that similar to summary", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
+                                                } else if ((item.secondUomId.toString() !== summaryDatum.uomId.toString() && item.thirdUomId.toString() !== summaryDatum.secondUomId.toString())) {
+                                                    if (item.secondUomId.toString() !== summaryDatum.secondUomId.toString() && item.thirdUomId.toString() !== summaryDatum.uomId.toString()) {
+                                                        itemsError["uomId"] = i18n.__("InventoryDocument.items.uomId.isNotValid:%s should have at least one pair that similar to summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
+                                                        itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isNotValid:%s should have at least one pair that similar to summary", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
+                                                        itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isNotValid:%s should have at least one pair that similar to summary", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
+                                                    }
+                                                } else if (item.uomId.toString() !== summaryDatum.uomId.toString() && item.thirdUomId.toString() !== summaryDatum.secondUomId.toString()) {
+                                                    if (item.uomId.toString() !== summaryDatum.secondUomId.toString() && item.thirdUomId.toString() !== summaryDatum.uomId.toString()) {
+                                                        itemsError["uomId"] = i18n.__("InventoryDocument.items.uomId.isNotValid:%s should have at least one pair that similar to summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
+                                                        itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isNotValid:%s should have at least one pair that similar to summary", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
+                                                        itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isNotValid:%s should have at least one pair that similar to summary", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
+                                                    }
+                                                }
+                                            }
+                                        } else if (!ObjectId.isValid(item.thirdUomId) && ObjectId.isValid(item.uomId) && ObjectId.isValid(item.secondUomId)) {
+                                            if ((item.uomId.toString() !== summaryDatum.uomId.toString() && item.secondUomId.toString() !== summaryDatum.secondUomId.toString())) {
+                                                if ((item.uomId.toString() !== summaryDatum.secondUomId.toString() && item.secondUomId.toString() !== summaryDatum.uomId.toString())) {
+                                                    itemsError["uomId"] = i18n.__("InventoryDocument.items.uomId.isNotValid:%s should have one pair that similar to summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
+                                                    itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isNotValid:%s should have one pair that similar to summary", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
+                                                }
+                                            }
+                                        } else if (!ObjectId.isValid(item.thirdUomId) && !ObjectId.isValid(item.secondUomId) && ObjectId.isValid(item.uomId)) {
+                                            if (item.uomId.toString() !== summaryDatum.uomId.toString()) {
+                                                itemsError["uomId"] = i18n.__("InventoryDocument.items.uomId.isNotValid:%s is not similar with UOM Ke-1 in Summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
+                                            }
+                                        }
+                                    } else if (!ObjectId.isValid(summaryDatum.thirdUomId) && !ObjectId.isValid(summaryDatum.secondUomId)) {
+                                        if (item.uomId.toString() !== summaryDatum.uomId.toString() && item.secondUomId.toString() !== summaryDatum.uomId.toString() && item.thirdUomId.toString() !== summaryDatum.uomId.toString()) {
+                                            itemsError["uomId"] = i18n.__("InventoryDocument.items.uomId.isNotValid:%s should have at least 1 UOM similar with UOM Ke-1 in Summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
+                                            itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isNotValid:%s should have at least 1 UOM similar with UOM Ke-1 in Summary", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
+                                            itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isNotValid:%s should have at least 1 UOM similar with UOM Ke-1 in Summary", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
+                                        }
                                     }
-                                } else {
-                                    if ((item.uomId.toString() !== summaryDatum.uomId.toString()) && (summaryDatum.secondUomId && (summaryDatum.secondUomId.toString() !== item.uomId.toString())) && (summaryDatum.thirdUomId && (summaryDatum.thirdUomId.toString() !== item.uomId.toString())))
-                                        itemsError["uomId"] = i18n.__("InventoryDocument.items.uomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
-                                    if (item.secondUomId && ObjectId.isValid(item.secondUomId))
-                                        if ((item.secondUomId.toString() !== summaryDatum.uomId.toString()) && (ObjectId.isValid(summaryDatum.secondUomId) && (summaryDatum.secondUomId.toString() !== item.secondUomId.toString())) && (ObjectId.isValid(summaryDatum.thirdUomId) && (summaryDatum.thirdUomId.toString() !== item.secondUomId.toString())))
-                                            itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
-                                    if (item.thirdUomId && ObjectId.isValid(item.thirdUomId))
-                                        if ((item.thirdUomId.toString() !== summaryDatum.uomId.toString()) && (ObjectId.isValid(summaryDatum.secondUomId) && (summaryDatum.secondUomId.toString() !== item.thirdUomId.toString())) && (ObjectId.isValid(summaryDatum.thirdUomId) && (summaryDatum.thirdUomId.toString() !== item.thirdUomId.toString())))
-                                            itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
                                 }
                             }
                         }
 
-                        if (!itemsError.productId && !itemsError.uomId) {
-                            var dup = valid.items.find((test, idx) => item.productId.toString() === test.productId.toString() && item.uomId.toString() === test.uomId.toString() && index != idx);
+                        if (!itemsError.productId) {
+                            var dup = valid.items.find((test, idx) => item.productId.toString() === test.productId.toString() && index != idx);
                             if (dup)
                                 itemsError["productId"] = i18n.__("InventoryDocument.items.productId.isDuplicate:%s is duplicate", i18n.__("InventoryDocument.items.productId._:Product"));
                         }
-                        if (item.quantity === 0)
-                            itemsError["quantity"] = i18n.__("InventoryDocument.items.quantity.isRequired:%s is required", i18n.__("InventoryDocument.items.quantity._:Quantity"));
 
                         itemsErrors.push(itemsError);
                         for (var itemsError of itemsErrors) {
