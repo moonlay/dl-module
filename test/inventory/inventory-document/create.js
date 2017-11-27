@@ -112,7 +112,7 @@ it("#05. should success when create new data one uom only", function (done) {
         .then((data) => {
 
             var newItems = data.items.map((item) => {
-                
+
                 item.secondUomId = {};
                 item.secondQuantity = 0;
                 item.thirdUomId = {};
@@ -170,8 +170,8 @@ it("#06. should success when create new data two uom only", function (done) {
         });
 });
 
-it("#07. should success when destroy all inventory data", function (done) {
-     Promise.all([inventoryDocumentManager.collection.drop(), inventoryDocumentManager.inventoryMovementManager.collection.drop(), inventoryDocumentManager.inventorySummaryManager.collection.drop()])
+it("#07. should success when drop all inventory data", function (done) {
+    Promise.all([inventoryDocumentManager.collection.drop(), inventoryDocumentManager.inventoryMovementManager.collection.drop(), inventoryDocumentManager.inventorySummaryManager.collection.drop()])
         .then((results) => {
             results.should.be.Array();
             done();

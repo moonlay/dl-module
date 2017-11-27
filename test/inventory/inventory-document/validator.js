@@ -223,21 +223,33 @@ it('#08. should error when create new data with empty secondUom but exist thirdU
         });
 });
 
-// var createdId;
-// it("#03. should success when create new data using status IN", function (done) {
-//     inventoryDocumentDataUtil.getNewData()
-//         .then((data) => {
-//             return inventoryDocumentManager.create(data)
-//         })
-//         .then((id) => {
-//             createdId = id;
-//             id.should.be.Object();
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+var createdId;
+it("#09. should success when create new data using status IN", function (done) {
+    inventoryDocumentDataUtil.getNewData()
+        .then((data) => {
+            return inventoryDocumentManager.create(data)
+        })
+        .then((id) => {
+            createdId = id;
+            id.should.be.Object();
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#10. should success when search with keyword", function (done) {
+    inventoryDocumentManager.read({ keyword: "test" })
+        .then((result) => {
+            result.should.have.property("data");
+            result.data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
 
 // it('#04. should error when create new data with non first uom in summary', function (done) {
 //     inventoryDocumentDataUtil.getNewData()

@@ -124,7 +124,7 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                 return key;
             }
         }
-        return null;
+        return "";
     }
 
     matchUomField(item, summary) {
@@ -154,35 +154,44 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                     newItem[PROPERTY_PAIRS[thirdKey]] = item.thirdQuantity;
                 }
             }
+
+            if (ObjectId.isValid(item.secondUomId) && !ObjectId.isValid(item.thirdUomId)) {
+                if (!newItem.secondUomId) {
+                    if (ObjectId.isValid(summary.secondUomId)) {
+                        newItem.secondUomId = summary.secondUomId;
+                        newItem.secondQuantity = 0;
+                    } else if (!ObjectId.isValid(summary.secondUomId)) {
+                        if (item.secondUomId.toString() === summary.uomId.toString()) {
+                            newItem.secondUomId = item.uomId;
+                            newItem.secondQuantity = item.quantity;
+                        } else {
+                            newItem.secondUomId = item.secondUomId;
+                            newItem.secondQuantity = item.secondQuantity;
+                        }
+                    }
+                }
+                if (!newItem.thirdUomId) {
+                    if (ObjectId.isValid(summary.thirdUomId)) {
+                        newItem.thirdUomId = summary.thirdUomId;
+                        newItem.thirdQuantity = 0;
+                    }
+                }
+            } else if (ObjectId.isValid(item.thirdUomId) && !ObjectId.isValid(summary.thirdUomId)) {
+                if (newItem.uomId.toString() !== item.uomId.toString() && newItem.secondUomId.toString() !== item.uomId.toString()) {
+                    newItem.thirdUomId === item.uomId;
+                    newItem.thirdQuantity === item.quantity;
+                } else if (newItem.uomId.toString() !== item.secondUomId.toString() && newItem.secondUomId.toString() !== item.secondUomId.toString()) {
+                    newItem.thirdUomId === item.secondUomId;
+                    newItem.thirdQuantity === item.secondQuantity;
+                } else if (newItem.uomId.toString() !== item.thirdUomId.toString() && newItem.secondUomId.toString() !== item.thirdUomId.toString()) {
+                    newItem.thirdUomId === item.thirdUomId;
+                    newItem.thirdQuantity === item.thirdQuantity;
+                }
+            }
         }
 
         if (Object.getOwnPropertyNames(newItem).length === 0) {
             newItem = item;
-        } else if (!newItem.secondUomId || !newItem.thirdUomId) {
-            if (!newItem.secondUomId) {
-                if (ObjectId.isValid(item.uomId) && item.uomId.toString() !== newItem.uomId.toString()) {
-                    newItem.secondUomId = item.uomId;
-                    newItem.secondQuantity = item.quantity;
-                } else if (ObjectId.isValid(item.secondUomId) && item.secondUomId.toString() !== newItem.uomId.toString()) {
-                    newItem.secondUomId = item.secondUomId;
-                    newItem.secondQuantity = item.secondQuantity;
-                } else if (ObjectId.isValid(item.thirdUomId) && item.thirdUomId.toString() !== newItem.uomId.toString()) {
-                    newItem.secondUomId = item.thirdUomId;
-                    newItem.secondQuantity = item.thirdQuantity;
-                }
-            }
-            if (!newItem.thirdUomId) {
-                if ((ObjectId.isValid(item.uomId) && item.uomId.toString() !== newItem.uomId.toString()) && (ObjectId.isValid(item.uomId) && item.uomId.toString() !== newItem.secondUomId.toString())) {
-                    newItem.thirdUomId = item.uomId;
-                    newItem.thirdQuantity = item.quantity;
-                } else if ((ObjectId.isValid(item.secondUomId) && item.secondUomId.toString() !== newItem.uomId.toString()) && (ObjectId.isValid(item.secondUomId) && item.secondUomId.toString() !== newItem.secondUomId.toString())) {
-                    newItem.thirdUomId = item.secondUomId;
-                    newItem.thirdQuantity = item.secondQuantity;
-                } else if ((ObjectId.isValid(item.thirdUomId) && item.thirdUomId.toString() !== newItem.uomId.toString()) && (ObjectId.isValid(item.thirdUomId) && item.thirdUomId.toString() !== newItem.secondUomId.toString())) {
-                    newItem.thirdUomId = item.thirdUomId;
-                    newItem.thirdQuantity = item.thirdQuantity;
-                }
-            }
         }
 
         return newItem;
