@@ -6,7 +6,7 @@ var storageDataUtil = require('../../data-util/master/storage-data-util');
 var uomDataUtil = require('../../data-util/master/uom-data-util');
 
 var helper = require("../../helper");
-var validate = require("dl-models").validator.inventory.inventorySummary;
+var validate = require("dl-models").validator.garmentInventory.garmentInventorySummary;
 var moment = require('moment');
 
 var GarmentInventorySummaryManager = require("../../../src/managers/inventory-garment/garment-inventory-summary-manager");
