@@ -197,6 +197,7 @@ it("#05. should success when create new data kanban", function(done) {
             
             data.instruction.steps.map((step) => {
                 step.machine = machine;
+                step.processArea = "Area Pre Treatment";
                 step.deadline = new Date();
                 return step;
             });
