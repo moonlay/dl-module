@@ -22,10 +22,10 @@ before('#00. connect db', function (done) {
 it('#01. should error when create new data without productId, uomId, quantity=0', function (done) {
     inventoryDocumentDataUtil.getNewData()
         .then(data => {
-            
-            data.items[0].quantity=0;
-            data.items[0].productId={};
-            data.items[0].uomId={};
+
+            data.items[0].quantity = 0;
+            data.items[0].productId = {};
+            data.items[0].uomId = {};
 
             inventoryDocumentManager.create(data)
                 .then(id => {
@@ -277,13 +277,13 @@ it("#11. should success when search with keyword", function (done) {
         });
 });
 
-it('#12. should error when create new data without productId, uomId, quantity=0', function (done) {
+it('#12. should error when create new data with empty string productId, uomId, and quantity = 0', function (done) {
     inventoryDocumentDataUtil.getNewData()
         .then(data => {
-            
-            data.items[0].quantity=0;
-            data.items[0].productId="";
-            data.items[0].uomId="";
+
+            data.items[0].quantity = 0;
+            data.items[0].productId = "";
+            data.items[0].uomId = "";
 
             inventoryDocumentManager.create(data)
                 .then(id => {
