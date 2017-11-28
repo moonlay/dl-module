@@ -150,39 +150,94 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                 }
             }
 
-            if (ObjectId.isValid(item.secondUomId) && !ObjectId.isValid(item.thirdUomId)) {
+            if (Object.getOwnPropertyNames(newItem).length !== 0) {
+
                 if (!newItem.secondUomId) {
-                    if (ObjectId.isValid(summary.secondUomId)) {
-                        newItem.secondUomId = summary.secondUomId;
-                        newItem.secondQuantity = 0;
-                    } else if (!ObjectId.isValid(summary.secondUomId)) {
-                        if (item.secondUomId.toString() === summary.uomId.toString()) {
-                            newItem.secondUomId = item.uomId;
-                            newItem.secondQuantity = item.quantity;
-                        } else {
-                            newItem.secondUomId = item.secondUomId;
-                            newItem.secondQuantity = item.secondQuantity;
-                        }
+                    if (ObjectId.isValid(item.uomId) && item.uomId.toString() !== newItem.uomId.toString()) {
+                        newItem.secondUomId = item.uomId;
+                        newItem.secondQuantity = item.quantity;
+                    } else if (ObjectId.isValid(item.secondUomId) && item.secondUomId.toString() !== newItem.uomId.toString()) {
+                        newItem.secondUomId = item.secondUomId;
+                        newItem.secondQuantity = item.secondQuantity;
+                    } else if (ObjectId.isValid(item.thirdUomId) && item.thirdUomId.toString() !== newItem.uomId.toString()) {
+                        newItem.secondUomId = item.thirdUomId;
+                        newItem.secondQuantity = item.thirdQuantity;
+                    }
+                } else if (!newItem.thirdUomId) {
+                    if (ObjectId.isValid(item.uomId) && item.uomId.toString() !== newItem.uomId.toString() && item.uomId.toString() !== newItem.secondUomId.toString()) {
+                        newItem.thirdUomId = item.uomId;
+                        newItem.thirdQuantity = item.quantity;
+                    } else if (ObjectId.isValid(item.secondUomId) && item.secondUomId.toString() !== newItem.uomId.toString() && item.secondUomId.toString() !== newItem.secondUomId.toString()) {
+                        newItem.thirdUomId = item.secondUomId;
+                        newItem.thirdQuantity = item.secondQuantity;
+                    } else if (ObjectId.isValid(item.thirdUomId) && item.thirdUomId.toString() !== newItem.uomId.toString() && item.thirdUomId.toString() !== newItem.secondUomId.toString()) {
+                        newItem.thirdUomId = item.thirdUomId;
+                        newItem.thirdQuantity = item.thirdQuantity;
                     }
                 }
-                if (!newItem.thirdUomId) {
-                    if (ObjectId.isValid(summary.thirdUomId)) {
-                        newItem.thirdUomId = summary.thirdUomId;
-                        newItem.thirdQuantity = 0;
+
+                var newItemUom = "";
+                var newItemSecondUom = "";
+                var newItemThirdUom = "";
+                for (var field in newItem) {
+                    if (field === "uomId") {
+                        newItemUom = field
+                    }
+                    if (field === "secondUomId") {
+                        newItemSecondUom = field
+                    }
+                    if (field === "thirdUomId") {
+                        newItemThirdUom = field
                     }
                 }
-            } else if (ObjectId.isValid(item.thirdUomId) && !ObjectId.isValid(summary.thirdUomId)) {
-                if (newItem.uomId.toString() !== item.uomId.toString() && newItem.secondUomId.toString() !== item.uomId.toString()) {
-                    newItem.thirdUomId === item.uomId;
-                    newItem.thirdQuantity === item.quantity;
-                } else if (newItem.uomId.toString() !== item.secondUomId.toString() && newItem.secondUomId.toString() !== item.secondUomId.toString()) {
-                    newItem.thirdUomId === item.secondUomId;
-                    newItem.thirdQuantity === item.secondQuantity;
-                } else if (newItem.uomId.toString() !== item.thirdUomId.toString() && newItem.secondUomId.toString() !== item.thirdUomId.toString()) {
-                    newItem.thirdUomId === item.thirdUomId;
-                    newItem.thirdQuantity === item.thirdQuantity;
+
+                if (!newItemUom) {
+                    newItem.uomId = summary.uomId;
+                    newItem.quantity = 0;
+                }
+                if (!newItemSecondUom) {
+                    newItem.secondUomId = summary.secondUomId;
+                    newItem.secondQuantity = 0;
+                }
+                if (!newItemThirdUom) {
+                    newItem.thirdUomId = summary.thirdUomId;
+                    newItem.thirdQuantity = 0;
                 }
             }
+
+            // if (ObjectId.isValid(item.secondUomId) && !ObjectId.isValid(item.thirdUomId)) {
+            //     if (!newItem.secondUomId) {
+            //         if (ObjectId.isValid(summary.secondUomId)) {
+            //             newItem.secondUomId = summary.secondUomId;
+            //             newItem.secondQuantity = 0;
+            //         } else if (!ObjectId.isValid(summary.secondUomId)) {
+            //             if (item.secondUomId.toString() === summary.uomId.toString()) {
+            //                 newItem.secondUomId = item.uomId;
+            //                 newItem.secondQuantity = item.quantity;
+            //             } else {
+            //                 newItem.secondUomId = item.secondUomId;
+            //                 newItem.secondQuantity = item.secondQuantity;
+            //             }
+            //         }
+            //     }
+            //     if (!newItem.thirdUomId) {
+            //         if (ObjectId.isValid(summary.thirdUomId)) {
+            //             newItem.thirdUomId = summary.thirdUomId;
+            //             newItem.thirdQuantity = 0;
+            //         }
+            //     }
+            // } else if (ObjectId.isValid(item.thirdUomId) && !ObjectId.isValid(summary.thirdUomId)) {
+            //     if (newItem.uomId.toString() !== item.uomId.toString() && newItem.secondUomId.toString() !== item.uomId.toString()) {
+            //         newItem.thirdUomId === item.uomId;
+            //         newItem.thirdQuantity === item.quantity;
+            //     } else if (newItem.uomId.toString() !== item.secondUomId.toString() && newItem.secondUomId.toString() !== item.secondUomId.toString()) {
+            //         newItem.thirdUomId === item.secondUomId;
+            //         newItem.thirdQuantity === item.secondQuantity;
+            //     } else if (newItem.uomId.toString() !== item.thirdUomId.toString() && newItem.secondUomId.toString() !== item.thirdUomId.toString()) {
+            //         newItem.thirdUomId === item.thirdUomId;
+            //         newItem.thirdQuantity === item.thirdQuantity;
+            //     }
+            // }
         }
 
         if (Object.getOwnPropertyNames(newItem).length === 0) {
@@ -439,7 +494,7 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                                         itemsError["secondUomId"] = i18n.__("InventoryDocument.items.secondUomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.secondUomId._:UOM Ke-2"));
                                     }
                                     if (ObjectId.isValid(item.thirdUomId) && item.thirdUomId.toString() !== summary.uomId.toString() && item.thirdUomId.toString() !== summary.secondUomId.toString() && item.thirdUomId.toString() !== summary.thirdUomId.toString()) {
-                                        itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-2"));
+                                        itemsError["thirdUomId"] = i18n.__("InventoryDocument.items.thirdUomId.isNotExist:%s is not exist in Summary", i18n.__("InventoryDocument.items.thirdUomId._:UOM Ke-3"));
                                     }
                                 } else if (!ObjectId.isValid(summary.thirdUomId) && ObjectId.isValid(summary.secondUomId)) {
                                     var errPoint = 0;
@@ -459,7 +514,17 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                                         thirdUomCheck = "thirdUomId";
                                     }
 
-                                    if (errPoint > 1) {
+                                    if (errPoint > 1 && ObjectId.isValid(item.thirdUomId)) {
+                                        if (firstUomCheck) {
+                                            itemsError[firstUomCheck] = i18n.__("InventoryDocument.items.uomId.isNotValid:%s should have at least one pair that similar in summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
+                                        }
+                                        if (secondUomCheck) {
+                                            itemsError[secondUomCheck] = i18n.__("InventoryDocument.items.uomId.isNotValid:%s should have at least one pair that similar in summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-2"));
+                                        }
+                                        if (thirdUomCheck) {
+                                            itemsError[thirdUomCheck] = i18n.__("InventoryDocument.items.uomId.isNotValid:%s should have at least one pair that similar in summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-3"));
+                                        }
+                                    } else if (errPoint > 0 && !ObjectId.isValid(item.thirdUomId)) {
                                         if (firstUomCheck) {
                                             itemsError[firstUomCheck] = i18n.__("InventoryDocument.items.uomId.isNotValid:%s should have at least one pair that similar in summary", i18n.__("InventoryDocument.items.uomId._:UOM Ke-1"));
                                         }
