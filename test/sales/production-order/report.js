@@ -92,19 +92,19 @@ var createdSCId;
 var createdSCdata;
 it("#01.5. should success when create SalesContract", function (done) {
     fpSCdataUtil.getNewData()
-        .then((data) =>{
-            createdSCdata=data;
+        .then((data) => {
+            createdSCdata = data;
             fpSCManager.create(data)
-            .then((id) => {
-                return fpSCManager.getSingleById(id);
+                .then((id) => {
+                    return fpSCManager.getSingleById(id);
                 })
                 .then(sc => {
                     createdSCdata = sc;
                     done();
-            })
-            .catch((e) => {
-                done(e);
-            });
+                })
+                .catch((e) => {
+                    done(e);
+                });
         });
 })
 
@@ -165,11 +165,11 @@ var orderNo;
 it("#04. should success when create new 10 data Production Order with 2 detail color in each data production order", function (done) {
     var dataReport = [];
     for (var a = 0; a < 5; a++) {
-        var data = dataUtil.getNewData({ buyer: dataBuyer1, process: dataProcessType1, account: dataAccount1, salesContract : createdSCdata });
+        var data = dataUtil.getNewData({ buyer: dataBuyer1, process: dataProcessType1, account: dataAccount1, salesContract: createdSCdata });
         dataReport.push(data);
     }
     for (var a = 0; a < 5; a++) {
-        var data = dataUtil.getNewData({ buyer: dataBuyer2, process: dataProcessType2, account: dataAccount2, salesContract : createdSCdata });
+        var data = dataUtil.getNewData({ buyer: dataBuyer2, process: dataProcessType2, account: dataAccount2, salesContract: createdSCdata });
         dataReport.push(data);
     }
     Promise.all(dataReport)
@@ -244,7 +244,7 @@ it("#07. should success get all data Production Order (2 data) when searh report
         page: 1,
         size: 20,
         header: "application/json",
-        filter: { orderNo: orderNo }
+        orderNo: orderNo
     };
     manager.getReport(query)
         .then(docs => {
@@ -263,7 +263,7 @@ it("#08. should success get all data Production Order (20 data) when searh repor
         page: 1,
         size: 20,
         header: "application/json",
-        filter: { orderTypeId: dataProcessType1.orderTypeId }
+        orderTypeId: dataProcessType1.orderTypeId
     };
     manager.getReport(query)
         .then(docs => {
@@ -282,7 +282,7 @@ it("#09. should success get all data Production Order (10 data) when searh repor
         page: 1,
         size: 20,
         header: "application/json",
-        filter: { processTypeId: dataProcessType1._id }
+        processTypeId: dataProcessType1._id
     };
     manager.getReport(query)
         .then(docs => {
@@ -310,7 +310,7 @@ it("#10. should success get all data Production Order (10 data) when searh repor
         page: 1,
         size: 20,
         header: "application/json",
-        filter: { buyerId: dataBuyer1._id }
+        buyerId: dataBuyer1._id
     };
     manager.getReport(query)
         .then(docs => {
@@ -338,7 +338,7 @@ it("#11. should success get all data Production Order (10 data) when searh repor
         page: 1,
         size: 20,
         header: "application/json",
-        filter: { accountId: dataAccount1._id }
+        accountId: dataAccount1._id
     };
     manager.getReport(query)
         .then(docs => {
@@ -364,7 +364,7 @@ it("#11. should success get all data Production Order (10 data) when searh repor
 it("#12. should success get all data Sales Monthly when searh report with No parameter", function (done) {
     var query = {
         header: "application/json",
-        filter: { orderNo: orderNo }
+        orderNo: orderNo
     };
     manager.getSalesMonthlyReport(query)
         .then(docs => {
@@ -380,7 +380,7 @@ it("#12. should success get all data Sales Monthly when searh report with No par
 it("#13. should success get all data Sales Monthly when searh report with Account parameter", function (done) {
     var query = {
         header: "application/json",
-        filter: { accountId: dataAccount1._id }
+        accountId: dataAccount1._id
     };
     manager.getSalesMonthlyReport(query)
         .then(docs => {
@@ -396,7 +396,7 @@ it("#13. should success get all data Sales Monthly when searh report with Accoun
 it("#14. should success get all data Sales Monthly when searh report with Order Type parameter", function (done) {
     var query = {
         header: "application/json",
-        filter: { orderTypeId: dataProcessType1.orderTypeId }
+        orderTypeId: dataProcessType1.orderTypeId
     };
     manager.getSalesMonthlyReport(query)
         .then(docs => {
@@ -467,10 +467,10 @@ it("#18. should success get all data Production Order when search report without
         processTypeId: "",
         buyerId: "",
         accountId: "",
-        sdate : "",
-        edate : "",
+        sdate: "",
+        edate: "",
         filter: {}
-      
+
     };
     manager.getReport(query)
         .then(docs => {

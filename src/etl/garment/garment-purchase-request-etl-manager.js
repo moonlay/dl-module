@@ -460,7 +460,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var _uom = result[4];
 
                     for (var data of extract) {
-                        var code = generateCode(data.ID_PO?data.ID_PO:data.ID);
+                        var code = generateCode(data.ID_PO + data.RowNum ? data.ID_PO + data.RowNum : data.ID + data.RowNum);
                         var createdYear = data.Tglin.getFullYear();
                         var createdMonth = data.Tglin.getMonth() + 1;
                         var createdDay = data.Tglin.getDate();
@@ -691,7 +691,62 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                             })
 
-                        } else {
+                        } else if (!unit._id || !buyer._id) {
+
+                            Object.assign(map, {
+                                _stamp: _stamp,
+                                _type: "purchase request",
+                                _version: "1.0.0",
+                                _active: true,
+                                _deleted: false,
+                                _createdBy: data.Userin,
+                                // _createdDate: new Date(_createdDate),
+                                _createAgent: "manager",
+                                _updatedBy: data.Usered,
+                                // _updatedDate: new Date(_updatedDate),
+                                _updateAgent: "manager",
+                                // no: data.Ro,
+                                no: code,
+                                roNo: data.Ro,
+                                artikel: data.Art,
+                                shipmentDate: data.Shipment,
+                                date: new Date(data.TgValid),
+                                expectedDeliveryDate: data.expectedDeliveryDate ? data.expectedDeliveryDate : "",
+
+                                unitId: unit._id,
+                                unit: {
+                                    _id: unit._id,
+                                    code: unit.code,
+                                    name: unit.name,
+                                    description: unit.description,
+                                    divisionId: unit.divisionId,
+                                    division: unit.division,
+                                },
+
+                                buyerId: buyer._id,
+                                buyer: {
+                                    "_id": buyer._id,
+                                    "code": buyer.code,
+                                    "name": buyer.name,
+                                    "address": buyer.address,
+                                    "city": buyer.city,
+                                    "country": buyer.country,
+                                    "contact": buyer.contact,
+                                    "tempo": buyer.tempo,
+                                    "type": buyer.type,
+                                    "NPWP": buyer.NPWP,
+                                },
+
+                                isPosted: true,
+                                isUsed: false,
+                                remark: "",
+                                status: {
+                                    name: "POSTED",
+                                    value: 2,
+                                    label: "Belum diterima Pembelian",
+                                },
+
+                            });
 
                             map.migrated = false;
                             map.dataNotfound = {
@@ -791,13 +846,17 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             }
                             tempProcess.push(i);
 
-                            deleteProcess.push(this.collection.remove({ "_id": _id }));
+                            deleteProcess.push(Promise.resolve(temp))
+                            // deleteProcess.push((this.collection.deleteOne({ "_id": _id })));
                         }
                     }
                 }
 
                 Promise.all(deleteProcess).then((result) => {
-                    resolve(tempProcess);
+                    this.collection.deleteMany({ roNo: { $in: result } }).then((deleted) => {
+                        resolve(tempProcess);
+                    })
+
 
                 })
 
