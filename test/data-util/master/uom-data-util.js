@@ -43,6 +43,27 @@ class UomDataUtil {
         };
         return this.getSert(data);
     }
+
+    getFourthTestData() {
+        var data = {
+            unit: "YDS"
+        };
+        return this.getSert(data);
+    }
+
+    getFifthTestData() {
+        var data = {
+            unit: "KG"
+        };
+        return this.getSert(data);
+    }
+
+    getSixthTestData() {
+        var data = {
+            unit: "KM"
+        };
+        return this.getSert(data);
+    }
 }
 
 module.exports = new UomDataUtil();

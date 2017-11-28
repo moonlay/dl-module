@@ -521,10 +521,10 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                     item.uomId = uom._id;
                     item.uom = uom.unit;
 
-                    item.secondUomId = secondUom && secondUom._id ? secondUom._id : null;
+                    item.secondUomId = secondUom && secondUom._id ? secondUom._id : {};
                     item.secondUom = secondUom && secondUom.unit ? secondUom.unit : "";
 
-                    item.thirdUomId = thirdUom && thirdUom._id ? thirdUom._id : null;
+                    item.thirdUomId = thirdUom && thirdUom._id ? thirdUom._id : {};
                     item.thirdUom = thirdUom && thirdUom.unit ? thirdUom.unit : "";
                 }
 
