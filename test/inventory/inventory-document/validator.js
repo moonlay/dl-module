@@ -362,7 +362,7 @@ it("#16. should success when create new data using status IN", function (done) {
         .then((data) => {
             data.should.instanceof(Object);
             validateUom(data);
-            createdFourthUom = data;
+            createdFifthUom = data;
             done();
         })
         .catch((e) => {
@@ -376,7 +376,7 @@ it("#17. should success when create new data using status IN", function (done) {
         .then((data) => {
             data.should.instanceof(Object);
             validateUom(data);
-            createdFourthUom = data;
+            createdSixthUom = data;
             done();
         })
         .catch((e) => {
