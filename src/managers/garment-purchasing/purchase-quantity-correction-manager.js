@@ -557,7 +557,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                     "NoSJ" : "$deliveryOrder.no",
                     "TgSJ": "$deliveryOrder.date",
                     "TgDtg": "$deliveryOrder.supplierDoDate",
-                    "POExt":"$items.purchaseOrderInternalNo",
+                    "POExt":"$items.purchaseOrderExternalNo",
                     "NoPR":"$items.purchaseRequestNo",
                     "PlanPO":"$items.purchaseRequestRefNo",
                     "NoRO":"$items.roNo",
