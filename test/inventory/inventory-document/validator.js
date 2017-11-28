@@ -343,7 +343,7 @@ it('#14. should error when create new data with exist third uom and empty second
 });
 
 var createdFourthUom;
-it("#15. should success when create new data using status IN", function (done) {
+it("#15. should success when create fourth", function (done) {
     uomDataUtil.getFourthTestData()
         .then((data) => {
             data.should.instanceof(Object);
@@ -357,7 +357,7 @@ it("#15. should success when create new data using status IN", function (done) {
 });
 
 var createdFifthUom;
-it("#16. should success when create new data using status IN", function (done) {
+it("#16. should success when create fifth uom", function (done) {
     uomDataUtil.getFifthTestData()
         .then((data) => {
             data.should.instanceof(Object);
@@ -370,21 +370,7 @@ it("#16. should success when create new data using status IN", function (done) {
         });
 });
 
-var createdSixthUom;
-it("#17. should success when create new data using status IN", function (done) {
-    uomDataUtil.getSixthTestData()
-        .then((data) => {
-            data.should.instanceof(Object);
-            validateUom(data);
-            createdSixthUom = data;
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-
-it('#18. should error when create new data with non exist uom in summary', function (done) {
+it('#17. should error when create new data with non exist uom in summary', function (done) {
     inventoryDocumentDataUtil.getNewData()
         .then((data) => {
 
