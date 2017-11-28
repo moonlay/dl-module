@@ -393,7 +393,7 @@ it('#18. should error when create new data with non exist uom in summary', funct
 
             inventoryDocumentManager.create(data)
                 .then((id) => {
-                    done("should error create new data with duplicate uom");
+                    done("should error when create new data with non exist uom in summary");
                 })
                 .catch((e) => {
                     try {
