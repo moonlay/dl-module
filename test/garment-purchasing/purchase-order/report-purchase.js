@@ -94,6 +94,8 @@ it('#05. should success when create report', function (done) {
     info.supplierId = createdData.items[0].supplierId;
     info.category = createdData.items[0].categoryId;
     info.unit = createdData.unitId;
+    info.refNo = createdData.items[0].refNo;
+    info.artikel = createdData.artikel;
     info.username = createdData._createdBy;
     info.dateFrom = createdData.date;
     info.dateTo = new Date();
