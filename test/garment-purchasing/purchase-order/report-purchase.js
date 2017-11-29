@@ -44,6 +44,8 @@ it('#02. should success when create report', function (done) {
     info.supplierId = createdData.items[0].supplierId;
     info.category = createdData.items[0].categoryId;
     info.unit = createdData.unitId;
+    info.refNo = createdData.items[0].refNo;
+    info.artikel = createdData.artikel;
     info.dateFrom = createdData.date;
     info.dateTo = new Date();
     info.dateTo.setDate(createdData.date.getDate() + 5);
