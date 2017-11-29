@@ -846,16 +846,16 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             }
                             tempProcess.push(i);
 
-                            deleteProcess.push(Promise.resolve(temp))
-                            // deleteProcess.push((this.collection.deleteOne({ "_id": _id })));
+                            // deleteProcess.push(Promise.resolve(temp))
+                            deleteProcess.push((this.collection.remove({ "_id": _id })));
                         }
                     }
                 }
 
                 Promise.all(deleteProcess).then((result) => {
-                    this.collection.deleteMany({ roNo: { $in: result } }).then((deleted) => {
+                    // this.collection.deleteMany({ roNo: { $in: result } }).then((deleted) => {
                         resolve(tempProcess);
-                    })
+                    // })
 
 
                 })
