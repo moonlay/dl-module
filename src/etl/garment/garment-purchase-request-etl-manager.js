@@ -144,6 +144,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         .then((extracted) => {
                             this.transform(extracted, table1)
                                 .then((transformed) => {
+                                    var transformed = transformed;
                                     this.beforeLoad(transformed)
                                         .then((deleted) => {
                                             this.load(transformed, deleted)
@@ -363,12 +364,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     }
 
     beforeTransform(Ro, table1) {
-        // var _unit = _unit;
-        // var _category = _category;
-        // var _product = _product;
-        // var _buyer = _buyer;
-        // var _uom = _uom;
-        // var extract = extract;
         var Ro = Ro;
         var table1 = table1;
 
@@ -459,8 +454,11 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var _buyer = result[3];
                     var _uom = result[4];
 
+                    var obj= new ObjectId();
+                    var code = generateCode(extract[0].ID_PO ? extract[0].ID_PO + obj.toString() : extract[0].ID + obj.toString());
+
                     for (var data of extract) {
-                        var code = generateCode(data.ID_PO + data.RowNum ? data.ID_PO + data.RowNum : data.ID + data.RowNum);
+                        // var code = generateCode(data.ID_PO + data.RowNum ? data.ID_PO + data.RowNum : data.ID + data.RowNum);
                         var createdYear = data.Tglin.getFullYear();
                         var createdMonth = data.Tglin.getMonth() + 1;
                         var createdDay = data.Tglin.getDate();
@@ -649,7 +647,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                 // _updatedDate: new Date(_updatedDate),
                                 _updateAgent: "manager",
                                 // no: data.Ro,
-                                no: code,
+                                // no: code,
                                 roNo: data.Ro,
                                 artikel: data.Art,
                                 shipmentDate: data.Shipment,
@@ -693,61 +691,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         } else if (!unit._id || !buyer._id) {
 
-                            Object.assign(map, {
-                                _stamp: _stamp,
-                                _type: "purchase request",
-                                _version: "1.0.0",
-                                _active: true,
-                                _deleted: false,
-                                _createdBy: data.Userin,
-                                // _createdDate: new Date(_createdDate),
-                                _createAgent: "manager",
-                                _updatedBy: data.Usered,
-                                // _updatedDate: new Date(_updatedDate),
-                                _updateAgent: "manager",
-                                // no: data.Ro,
-                                no: code,
-                                roNo: data.Ro,
-                                artikel: data.Art,
-                                shipmentDate: data.Shipment,
-                                date: new Date(data.TgValid),
-                                expectedDeliveryDate: data.expectedDeliveryDate ? data.expectedDeliveryDate : "",
-
-                                unitId: unit._id,
-                                unit: {
-                                    _id: unit._id,
-                                    code: unit.code,
-                                    name: unit.name,
-                                    description: unit.description,
-                                    divisionId: unit.divisionId,
-                                    division: unit.division,
-                                },
-
-                                buyerId: buyer._id,
-                                buyer: {
-                                    "_id": buyer._id,
-                                    "code": buyer.code,
-                                    "name": buyer.name,
-                                    "address": buyer.address,
-                                    "city": buyer.city,
-                                    "country": buyer.country,
-                                    "contact": buyer.contact,
-                                    "tempo": buyer.tempo,
-                                    "type": buyer.type,
-                                    "NPWP": buyer.NPWP,
-                                },
-
-                                isPosted: true,
-                                isUsed: false,
-                                remark: "",
-                                status: {
-                                    name: "POSTED",
-                                    value: 2,
-                                    label: "Belum diterima Pembelian",
-                                },
-
-                            });
-
+                            map.roNo = data.Ro;
                             map.migrated = false;
                             map.dataNotfound = {
                                 unitCode: unitNotFound,
@@ -757,6 +701,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                     }
 
+                    map.no = code;
                     map._createdDate = new Date(_createdDate + ":" + createdDateTemp.sort()[0]);
                     map._updatedDate = new Date(_updatedDate + ":" + updatedDateTemp.sort()[0]);
                     map.items = items;
@@ -804,9 +749,17 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         });
     }
 
-    delete(id) {
+    delete(ro) {
         return new Promise((resolve, reject) => {
-            this.collection.remove({ "_id": id }).then((result) => {
+            this.collection.deleteMany({ roNo: { $in: ro } }).then((result) => {
+                resolve(result);
+            })
+        });
+    }
+
+    insert(data) {
+        return new Promise((resolve, reject) => {
+            this.collection.insertMany(data).then((result) => {
                 resolve(result);
             })
         });
@@ -835,30 +788,29 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 dataTemp = result;
 
                 if (dataTemp) {
-                    for (var data of dataRo) {
-                        var temp = dataTemp.find(o => o.roNo == data.roNo);
+                    for (var data of dataTemp) {
 
-                        if (temp) {
-                            var _id = temp._id;
-                            var i = {
-                                _id: temp._id,
-                                roNo: temp.roNo,
-                            }
-                            tempProcess.push(i);
-
-                            // deleteProcess.push(Promise.resolve(temp))
-                            deleteProcess.push((this.collection.remove({ "_id": _id })));
+                        var _id = data._id;
+                        var i = {
+                            _id: data._id,
+                            roNo: data.roNo,
                         }
+                        tempProcess.push((i));
+
+                        deleteProcess.push((data.roNo))
+
                     }
+
+                    this.delete(deleteProcess).then((deleted) => {
+                        console.log(deleted.deletedCount)
+                        resolve(tempProcess);
+                    })
+
+                } else {
+                    resolve([])
                 }
 
-                Promise.all(deleteProcess).then((result) => {
-                    // this.collection.deleteMany({ roNo: { $in: result } }).then((deleted) => {
-                        resolve(tempProcess);
-                    // })
 
-
-                })
 
             });
 
@@ -876,7 +828,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             var deleteProcess = [];
             var tempProcess = [];
             var roNoArr = [];
-            var dataTemp = [];
+
             var dataRo = [];
 
             for (var i of dataArr) {
@@ -901,13 +853,13 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     data.migrated = true;
                 }
 
-                processed.push(this.collection.insert(data));
-
+                // processed.push(this.collection.insert(data));
+                processed.push((data));
             }
 
-            Promise.all(processed).then((result) => {
+            this.insert(processed).then((resultProcess) => {
                 var dataProcessed = {};
-                dataProcessed.processed = result;
+                dataProcessed.processed = resultProcess.ops;
                 dataProcessed.MigratedFalse = falseData;
                 resolve(dataProcessed);
             })
