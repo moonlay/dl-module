@@ -24,6 +24,7 @@ before('#00. connect db', function (done) {
 });
 
 var createdId;
+var outputId;
 var kanbanId;
 it("#01. should success when create new data", function (done) {
     DailyOperation.getNewData()
@@ -32,9 +33,19 @@ it("#01. should success when create new data", function (done) {
             return dailyOperationManager.create(data)
         })
         .then((id) => {
-            id.should.be.Object();
             createdId = id;
-            done();
+            id.should.be.Object();
+
+            dailyOperationManager.getSingleById(id)
+                .then((dailyOperation) => {
+                    dailyOperation.type = "output"
+                    dailyOperationManager.create(dailyOperation)
+                        .then((idOutput) => {
+                            outputId = idOutput;
+                            idOutput.should.be.Object();
+                            done();
+                        });
+                });
         })
         .catch((e) => {
             done(e);
