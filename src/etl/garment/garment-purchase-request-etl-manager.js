@@ -53,20 +53,38 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 }
             };
 
-            keywordFilter["$or"] = [noFilter,roFilter];
+            var buyerNameFilter = {
+                "buyer.name": {
+                    "$regex": regex
+                }
+            };
+
+            keywordFilter["$or"] = [noFilter, roFilter,buyerNameFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
     }
 
-    run(tanggal, t1, t2, page, size) {
+    run(tanggal, t1, t2, page, size,buyerFilter) {
         var startedDate = new Date();
-        var code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
-        this.migrationLog.insert({
-            code: code,
-            description: "Sql to MongoDB: Garment-Purchase-Request",
-            start: startedDate,
-        })
+        var code;
+        var buyerFilter=buyerFilter;
+        if(!buyerFilter){
+            code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
+            this.migrationLog.insert({
+                code: code,
+                description: "Sql to MongoDB: Garment-Purchase-Request",
+                start: startedDate,
+            })
+        }else{
+            code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
+            this.migrationLog.insert({
+                code: code+" "+buyerFilter,
+                description: "Sql to MongoDB: Garment-Purchase-Request",
+                start: startedDate,
+            })
+        }
+
 
         this.tgl = tanggal;
 
@@ -76,7 +94,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
             this.getTimeStamp(t1).then((result) => {
                 var dateStamp;
-                if (this.tgl.trim() == "latest") {
+                if (this.tgl.trim() == "latest" && !buyerFilter) {
                     if (result.length != 0) {
                         var year = result[0].start.getFullYear();
                         var month = result[0].start.getMonth() + 1;
@@ -91,27 +109,20 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         dateStamp = [year, month, day].join('-');
                     } else if (result.length == 0) {
-
-                        // var year = new Date().getFullYear();
-                        // var month = new Date().getMonth() + 1;
-                        // var day = new Date().getDate();
-
-                        // if (month < 10) {
-                        //     month = "0" + month;
-                        // }
-                        // if (day < 10) {
-                        //     day = "0" + day;
-                        // }
-                        // dateStamp = [year, month, day].join('-');
                         dateStamp = "2017-01-01"
                     }
                 } else {
+
                     var monthOpt = ["latest",
                         "january", "february", "march",
                         "april", "may", "june",
                         "july", "august", "september",
                         "october", "november", "december"];
                     var tempYear = new Date().getFullYear().toString();
+
+                    if(buyerFilter && this.tgl.trim() == "latest"){
+                        this.tgl=monthOpt[new Date().getMonth()+1]                       
+                    }
 
                     if (this.tgl == monthOpt[1].trim()) {
                         dateStamp = tempYear + "-01%%";
@@ -140,13 +151,11 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     }
                 }
 
-
                 this.tgl = dateStamp;
-
 
                 var flag = table1;
                 var processedData = new Promise((res, rej) => {
-                    this.extract(table1, table2, page, size, dateStamp)
+                    this.extract(table1, table2, page, size, dateStamp,buyerFilter)
                         .then((extracted) => {
                             this.transform(extracted, table1)
                                 .then((transformed) => {
@@ -216,7 +225,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
 
 
-    getRowNumber(table1, table2, tgl) {
+    getRowNumber(table1, table2, tgl,buyerFilter) {
         return new Promise((resolve, reject) => {
             this.sql.startConnection()
                 .then(() => {
@@ -226,15 +235,22 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
                         var sqlQuery;
-                        if (table1 == "Budget") {
-                            if (tgl.includes("%%")) {
-                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
-                            } else {
-                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                        if(!buyerFilter){
+                            if (table1 == "Budget") {
+                                if (tgl.includes("%%")) {
+                                    sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                                } else {
+                                    sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                                }
+                            }else{
+                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from POrder1 as POrder inner join Budget1 as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
                             }
-                        } else {
-                            sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from POrder1 as POrder inner join Budget1 as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
-
+                        }else{
+                            if (table1 == "Budget" && buyerFilter) {
+                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl='' and porder.buyer='"+buyerFilter+"'"                               
+                            }else if(table1 == "Budget1" && buyerFilter){
+                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl='' and porder.buyer='"+buyerFilter+"'"                               
+                            }
                         }
 
 
@@ -251,7 +267,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         })
     }
 
-    extract(table1, table2, page, pageSize, tgl) {
+    extract(table1, table2, page, pageSize, tgl,buyerFilter) {
         return new Promise((resolve, reject) => {
             this.sql.startConnection()
                 .then(() => {
@@ -261,21 +277,29 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
                         var sqlQuery;
-
-                        if (tgl.includes("%%")) {
-                            if (table1 == "Budget" && table2 == "POrder") {
-                                sqlQuery = "exec garment_purchase_request_period " + page + "," + pageSize + ",'" + tgl + "' ";
-                            }
-                            else {
-                                sqlQuery = "exec garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "' ";
-                            }
-                        } else {
-                            if (table1 == "Budget" && table2 == "POrder") {
-                                sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
+                        if (!buyerFilter ){
+                            if (tgl.includes("%%")) {
+                                if (table1 == "Budget" && table2 == "POrder") {
+                                    sqlQuery = "exec garment_purchase_request_period " + page + "," + pageSize + ",'" + tgl + "' ";
+                                }
+                                else {
+                                    sqlQuery = "exec garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "' ";
+                                }
                             } else {
-                                sqlQuery = "exec garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "' ";
+                                if (table1 == "Budget" && table2 == "POrder") {
+                                    sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
+                                } else {
+                                    sqlQuery = "exec garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "' ";
+                                }
+                            }
+                        }else{
+                            if (table1 == "Budget" && table2 == "POrder"){
+                                sqlQuery = "exec extract_garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "','" + buyerFilter + "' ";
+                            }else{
+                                sqlQuery = "exec extract_garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "','" + buyerFilter + "' ";
                             }
                         }
+
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
@@ -460,7 +484,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var _buyer = result[3];
                     var _uom = result[4];
 
-                    var obj= new ObjectId();
+                    var obj = new ObjectId();
                     var code = generateCode(extract[0].ID_PO ? extract[0].ID_PO + obj.toString() : extract[0].ID + obj.toString());
 
                     for (var data of extract) {
@@ -800,6 +824,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         var i = {
                             _id: data._id,
                             roNo: data.roNo,
+                            no:data.no,
                         }
                         tempProcess.push((i));
 
@@ -815,8 +840,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 } else {
                     resolve([])
                 }
-
-
 
             });
 
@@ -847,6 +870,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var temp = deletedData.find(o => o.roNo == data.roNo);
                     if (temp) {
                         data._id = temp._id;
+                        data.no=temp.no;
                     }
                 }
 
