@@ -1383,7 +1383,6 @@ getAllData(startdate, enddate, offset) {
       ])
         .toArray(function (err, result) {
                     assert.equal(err, null);
-                    console.log(result);
                     resolve(result);
                 });
         });
