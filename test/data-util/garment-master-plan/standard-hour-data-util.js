@@ -3,12 +3,13 @@ var _getSert = require("../getsert");
 var generateCode = require("../../../src/utils/code-generator");
 var Style = require("./style-data-util");
 
-class StyleDataUtil {
+class StandardHourDataUtil {
     getSert(input) {
-        var Manager = require("../../../src/managers/garment-master-plan/style-manager");
+        var Manager = require("../../../src/managers/garment-master-plan/standard-hour-manager");
         return _getSert(input, Manager, (data) => {
             return {
-                code: data.code
+               // code: data.code,
+                styleId : data.styleId
             };
         });
     }
@@ -56,4 +57,4 @@ class StyleDataUtil {
             });
     }
 }
-module.exports = new StyleDataUtil();
+module.exports = new StandardHourDataUtil();
