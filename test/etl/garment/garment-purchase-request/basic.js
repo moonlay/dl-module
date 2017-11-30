@@ -102,13 +102,41 @@ it("#05. should success when load all data", function (done) {
         });
 });
 
+it("#06. should success when delete all data exist", function (done) {
+    instanceManager.beforeLoad(transfrom)
+        .then((result) => {
+            done();
+
+        })
+        .catch((e) => {
+            console.log(e);
+            done(e);
+        });
+});
+
+it("#07. should success when load after delete all data", function (done) {
+    instanceManager.load(transfrom, dataBeforeLoad)
+        .then((result) => {
+
+            var data = result.processed;
+            data.should.instanceof(Array);
+            data.length.should.not.equal(0);
+            done();
+
+        })
+        .catch((e) => {
+            console.log(e);
+            done(e);
+        });
+});
+
 
 
 // it("#zz. should success migrate all data", function (done) {
-//     // var table1 = "Budget1";
-//     // var table2 = "POrder1";
-//     var table1 = "Budget";
-//     var table2 = "POrder";
+//     var table1 = "Budget1";
+//     var table2 = "POrder1";
+//     // var table1 = "Budget";
+//     // var table2 = "POrder";
 //     var date="latest";
 //     var page=1;
 //     var size=10;
