@@ -125,3 +125,13 @@ it(`#07. should null when get destroyed style data`, function(done) {
             done(e);
         });
 });
+
+it(`#08. should success when remove all data`, function(done) {
+    manager.collection.remove({})
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
