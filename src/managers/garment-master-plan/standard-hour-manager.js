@@ -138,4 +138,28 @@ module.exports = class StandardHourManager extends BaseManager {
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
     }
+
+    getStandardHourByStyle(styleCode){
+        return new Promise((resolve, reject) => {
+            this.collection.aggregate(
+                [
+                    { $match: { "style.code":styleCode } },
+                    { $sort: { date:-1, _updatedDate:-1 } },
+                    {
+                    $group:
+                        {
+                        _id: "$style.code",
+                        firstSHSewing: { $first: "$shSewing" },
+                        shId: { $first: "$_id" }
+                        //shId: "$_id"
+                        }
+                    }
+                    //{ $match: { _id:styleCode } }
+                ]
+                )
+                .toArray(function (err, result) {
+                    resolve(result);
+                });
+        });
+    }
 }

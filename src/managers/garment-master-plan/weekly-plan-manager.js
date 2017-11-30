@@ -157,4 +157,29 @@ module.exports = class WeeklyPlanManager extends BaseManager {
 
         return this.collection.createIndexes([dateIndex]);
     }
+
+    getWeek(keyword, filter){
+        return new Promise((resolve, reject) => {
+            var regex = new RegExp(keyword, "i");
+            this.collection.aggregate(
+                [
+                     {$unwind:"$items"},
+                    {
+                   
+                    $match: {
+                        "year": filter.year,
+                        "unit.code":filter.unit,
+                        _deleted:false
+
+                    }
+                },
+            {$project: {'items':"$items"}}
+                ]
+            )
+                .toArray(function (err, result) {
+                    resolve(result);
+                });
+        });
+    }
+
 }
