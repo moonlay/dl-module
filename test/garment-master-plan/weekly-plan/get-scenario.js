@@ -129,7 +129,7 @@ it(`#07. should null when get destroyed unit data`, function(done) {
         });
 });
 
-it(`#06. should success when destroy all data`, function(done) {
+it(`#08. should success when remove all data`, function(done) {
     manager.collection.remove({})
         .then((result) => {
             done();
