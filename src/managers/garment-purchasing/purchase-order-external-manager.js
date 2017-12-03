@@ -22,6 +22,7 @@ var i18n = require('dl-i18n');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
 var moment = require('moment');
+var assert = require('assert');
 
 module.exports = class PurchaseOrderExternalManager extends BaseManager {
     constructor(db, user) {
@@ -1260,4 +1261,321 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 }]).toArray()
         }
     }
+
+getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => 
+        {
+           var now = new Date();
+           var deleted = {
+                _deleted: false
+            };
+            var isPosted = {
+                isPosted: true
+            };
+            
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+
+            var query = [deleted, isPosted];
+
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "date": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
+
+      var match = { '$and': query };
+            
+      var POColl = map.garmentPurchasing.collection.GarmentPurchaseOrder; 
+      this.collection.aggregate(
+          [{
+              $match:match
+           }, {
+              $unwind:"$items"
+            },{
+               $unwind:"$items.realizations"
+            },
+         {
+               $lookup :{from :POColl,
+                         foreignField :"no",
+                         localField :"items.poNo",
+                         as :"PO"
+                        },
+           },
+           {$project :{
+                        "PoExt":"$no",
+                        "TgPoExt":"$date",
+                        "Dlvry":"$expectedDeliveryDate",
+                        "KdSpl":"$supplier.code",
+                        "NmSpl":"$supplier.name",
+                        "Ongkir":"$freightCostBy",
+                        "TipeByr":"$paymentType",
+                        "MtdByr":"$paymentMethod",
+                        "Tempo":"$paymentDueDays",
+                        "MtUang":"$currency.code",
+                        "RateMU":"$currencyRate",
+                        "PakaiPPN":"$useIncomeTax",
+                        "PakaiPPH":"$useVat",
+                        "RatePPH":"$vat.rate",
+                        "Status":"$status.label",
+                        "PRNo":"$items.prNo",
+                        "PlanPO":"$items.prRefNo",
+                        "RONo":"$items.roNo",
+                        "KdBrg":"$items.product.code",
+                        "NmBrg":"$items.remark",
+                        "QtyOrder":"$items.defaultQuantity",
+                        "SatOrder":"$items.defaultUom.unit",
+                        "QtyBeli":"$items.dealQuantity",
+                        "SatBeli":"$items.dealUom.unit",
+                        "QtySJ":"$items.realizations.deliveredQuantity",
+                        "SatKonv":"$items.uomConversion.unit",
+                        "Konversi":"$items.conversion",
+                        "HargaSat":"$items.pricePerDealUnit",
+                        "POs" :"$PO"
+                       }
+        }, 
+        {$unwind :"$POs"},
+        {$project :{
+                        "PoExt":"$PoExt","TgPoExt":"$TgPoExt","Dlvry":"$Dlvry","KdSpl":"$KdSpl",
+                        "NmSpl":"$NmSpl","Ongkir":"$Ongkir","TipeByr":"$TipeByr","MtdByr":"$MtdByr",
+                        "Tempo":"$Tempo","MtUang":"$MtUang","RateMU":"$RateMU","PakaiPPN":"$PakaiPPN",
+                        "PakaiPPH":"$PakaiPPH","RatePPH":"$RatePPH","Status":"$Status","PRNo":"$PRNo",
+                        "PlanPO":"$PlanPO","RONo":"$RONo","KdBrg":"$KdBrg","NmBrg":"$NmBrg","QtyOrder":"$QtyOrder",
+                        "SatOrder":"$SatOrder","QtyBeli":"$QtyBeli","QtySJ":"$QtySJ","SatBeli":"$SatBeli",
+                        "SatKonv":"$SatKonv","Konversi":"$Konversi","HargaSat":"$HargaSat","KdByr" :"$POs.buyer.code",
+                        "Konf" : "$POs.unit.code","Article" :"$POs.artikel"
+                  }
+        },
+        {$group :{ _id: {PoExt :"$PoExt",TgPoExt :"$TgPoExt",Dlvry :"$Dlvry",KdSpl :"$KdSpl",NmSpl :"$NmSpl",Ongkir :"$Ongkir",Qty :"$Qy",TipeByr :"$TipeByr",MtdByr:"$MtdByr",
+                         Tempo:"$Tempo",MtUang:"$MtUang",RateMU:"$RateMU",PakaiPPN:"$PakaiPPN",PakaiPPH:"$PakaiPPH",RatePPH:"$RatePPH",Status:"$Status",PRNo:"$PRNo",PlanPO:"$PlanPO",
+                         RONo:"$RONo",KdBrg:"$KdBrg",NmBrg:"$NmBrg",QtyOrder:"$QtyOrder",SatOrder:"$SatOrder",QtyBeli:"$QtyBeli",SatBeli:"$SatBeli",
+                         SatKonv:"$SatKonv",Konversi:"$Konversi",HargaSat:"$HargaSat",KdByr :"$KdByr",Konf : "$Konf",Article :"$Article"
+                        },
+                          "QtySJ": { $sum: "$QtySJ" }
+                 }
+        }  
+      ])
+        .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }
+
+    getPOExtReport(query) {
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                _deleted: false
+            };
+            var date = new Date();
+            var dateString = moment(date).format('YYYY-MM-DD');
+            var dateNow = new Date(dateString);
+            var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            var dateQuery = {
+                "date": {
+                    "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
+                    "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
+                }
+            };
+            var PONoQuery = {};
+            if (query.no) {
+                PONoQuery = {
+                    "no": query.no
+                }
+            }
+            var supplierQuery = {};
+            if (query.supplier) {
+                supplierQuery = {
+                    "supplierId": new ObjectId(query.supplier)
+                };
+            }
+    
+            var Query = { "$and": [dateQuery, deletedQuery, supplierQuery, PONoQuery] };
+            this.collection
+                .aggregate([
+                    { "$match": Query }
+                    , { "$unwind": "$items" }
+                    , {
+                       "$project": {
+                            "no":"$no",
+                            "date":"$date",
+                            "expectedDeliveryDate":"$expectedDeliveryDate",
+                            "suppliercode":"$supplier.code",
+                            "suppliername":"$supplier.name",
+                            "freightCostBy":"$freightCostBy",
+                            "paymentMethod":"$paymentMethod",
+                            "paymentType":"$paymentType",
+                            "paymentDueDays":"$paymentDueDays",
+                            "currencycode":"$currency.code",
+                            "currencyRate":"$currencyRate",
+                            "useVat":"$useVat",
+                            "vatRate":"$vatRate",
+                            "useIncomeTax":"$useIncomeTax",
+                            "category":"$category",
+                            "prNo":"$items.prNo",
+                            "prRefNo":"$items.prRefNo",
+                            "roNo":"$items.roNo",
+                            "productcode":"$items.product.code",
+                            "description":"$items.remark",
+                            "defaultQuantity":"$items.defaultQuantity",
+                            "defaultUom":"$items.defaultUom.unit",
+                            "dealQuantity":"$items.dealQuantity",
+                            "dealUom":"$items.dealUom.unit",
+                            "pricePerDealUnit":"$items.pricePerDealUnit",
+                            "conversion":"$items.conversion",
+                            "uomConversion":"$items.uomConversion.unit",
+                            "quantityConversion":"$items.quantityConversion"                            
+                        }
+                    },
+                    // {
+                    //     "$group": {
+                    //         "_id": { "no": "$no", "date": "$date","expectedDeliveryDate": "expectedDeliveryDate",
+                    //                  "suppliercode": "$suppliercode", "deliveryOrderNo": "$deliveryOrderNo", "deliveryOrderDate": "$deliveryOrderDate",
+                    //                  "productCode": "$productCode", "productName": "$productName",
+                    //                  "uom": "$uom", "currency": "$currency", "_createdBy": "$_createdBy" },
+                    //                  "quantity": { "$sum": "$quantity" },
+                    //                  "price": { "$sum": { "$multiply": ["$quantity", "$price"] } }
+                    //     }
+                    // },
+                    {
+                        "$sort": {
+                            "_id.date": 1,
+                            "_id.suppliercode": 1
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    getPOExtReportXls(dataReport, query) {
+        return new Promise((resolve, reject) => {
+            var xls = {};
+            xls.data = [];
+            xls.options = [];
+            xls.name = '';
+
+            var index = 0;
+            var dateFormat = "DD/MM/YYYY";
+
+            for (var data of dataReport.data) {
+                index++;
+                var item = {};
+                item["No"] = index;
+                item["No Po External"] = data.no ? data.no : '';
+                item["Tanggal PO External"] = data.date ? moment(data.date).format("DD/MM/YYYY") : '';
+                item["Tanggal Delivery"] = data.expectedDeliveryDate ? moment(data.expectedDeliveryDate).format("DD/MM/YYYY") : '';
+                item["Kode Supplier"] = data.suppliercode ? data.suppliercode : '';
+                item["Nama Supplier"] = data.suppliername ? data.suppliername : '';
+                item["Ongkos Kirim"] = data.freightCostBy ? data.freightCostBy : '';
+                item["Tipe Bayar"] = data.paymentType ? data.paymentType : '';
+                item["Term Bayar"] = data.paymentMethod ? data.paymentMethod : '';
+                item["Tempo Bayar"] = data.paymentDueDays ? data.paymentDueDays : 0;
+                item["Mata Uang"] = data.currencycode ? data.currencycode : '';
+                item["Rate"] = data.currencyRate ? data.currencyRate : 0;
+                item["Mata Uang"] = data.currencycode ? data.currencycode : '';
+                item["Pakai PPN"] = data.useIncomeTax ? "Ya" : "Tidak";
+                item["PPN"] = data.useIncomeTax ? 10 : 0;
+                item["Pakai PPH"] = data.useVat ? "Ya" : "Tidak";
+                item["PPH"] = data.vatRate ? data.vatRate : 0;
+                item["Kategori"] = data.category ? data.category : '';
+                item["No PR"] = data.prNo ? data.prNo : '';
+                item["No Ref PR"] = data.prRefNo ? data.prRefNo : '';
+                item["No RO"] = data.roNo ? data.roNo : '';
+                item["Kode Barang"] = data.productCode ? data.productCode : '';
+                item["Nama Barang"] = data.description ? data.description : '';
+                item["Jumlah Order"] = data.defaultQuantity ? data.defaultQuantity : 0;
+                item["Satuan Order"] = data.defaultUom ? data.defaultUom : '';
+                item["Jumlah Beli"] = data.dealQuantity ? data.dealQuantity : 0;
+                item["Satuan Beli"] = data.dealUom ? data.dealUom : '';
+                item["Konversi"] = data.conversion ? data.conversion : 0;
+                item["Satuan Konversi"] = data.uomConversion ? data.uomConversion : '';
+                item["Jumlah Konversi"] = data.quantityConversion ? data.quantityConversion : 0;
+                item["Harga Beli"] = data.pricePerDealUnit ? data.pricePerDealUnit : 0;
+                item["Jumlah Harga"] = data.dealQuantity * data.pricePerDealUnit;
+
+                xls.data.push(item);
+            }
+
+		        xls.options["No"] = "number";
+                xls.options["No Po External"] = "string";
+                xls.options["Tanggal PO External"] = "string";
+                xls.options["Tanggal Delivery"] = "string";
+                xls.options["Kode Supplier"] = "string";
+                xls.options["Nama Supplier"] = "string";
+                xls.options["Ongkos Kirim"] = "string";
+                xls.options["Tipe Bayar"] = "string";
+                xls.options["Term Bayar"] = "string";
+                xls.options["Tempo Bayar"] = "numner";
+                xls.options["Mata Uang"] = "string";
+                xls.options["Rate"] = "number";
+                xls.options["Mata Uang"] = "string";
+                xls.options["Pakai PPN"] = "string";
+                xls.options["PPN"] = "string";
+                xls.options["Pakai PPH"] = "string";
+                xls.options["PPH"] = "number";
+                xls.options["Kategori"] = "string";
+                xls.options["No PR"] = "string";
+                xls.options["No Ref PR"] = "string";
+                xls.options["No RO"] = "string";
+                xls.options["Kode Barang"] = "string";
+                xls.options["Nama Barang"] = "string";
+                xls.options["Jumlah Order"] = "number";
+                xls.options["Satuan Order"] = "string";
+                xls.options["Jumlah Beli"] = "number";
+                xls.options["Satuan Beli"] = "string";
+                xls.options["Konversi"] = "number";
+                xls.options["Satuan Konversi"] = "string";
+                xls.options["Jumlah Konversi"] = "number";
+                xls.options["Harga Beli"] = "number";
+                xls.options["Jumlah Harga"] = "number";
+
+            if (query.dateFrom && query.dateTo) {
+                xls.name = `PO External Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            }
+            else if (!query.dateFrom && query.dateTo) {
+                xls.name = `PO External Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            }
+            else if (query.dateFrom && !query.dateTo) {
+                xls.name = `PO External Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+            }
+            else
+                xls.name = `PO External Report.xlsx`;
+
+            resolve(xls);
+        });
+    }
+
 };

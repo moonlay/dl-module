@@ -85,7 +85,7 @@ describe('#dl-module', function (done) {
 
     // test('@MASTER/MONITORING-EVENT-TYPE', './master/monitoring-event-type');
     test('@MASTER/STEP', './master/step');
-    //test('@MASTER/MACHINE-TYPE', './master/machine-type');
+    // test('@MASTER/MACHINE-TYPE', './master/machine-type');
     test('@MASTER/MACHINE-SPESIFICATION-STANDARD', './master/machine-spesification-standard');
     test('@MASTER/MATERIAL-CONSTRUCTION', './master/material-construction');
     test('@MASTER/YARN-MATERIAL', './master/yarn-material');
@@ -102,7 +102,8 @@ describe('#dl-module', function (done) {
     test('@MASTER/FINISHING PRINTING DURATION ESTIMATION', './master/fp-duration-estimation');
     test('@MASTER/DEAL TRACKING REASON', './master/deal-tracking-reason');
     test('@MASTER/SPINNING YARN', './master/spinning-yarn');
-
+    test('@MASTER/HOLIDAY', './master/holiday');
+    
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
     test('@PURCHASING/PURCHASE ORDER', './purchasing/purchase-order');
@@ -138,7 +139,7 @@ describe('#dl-module', function (done) {
     test('@SALES/DEAL TRACKING DEAL', './sales/deal-tracking-deal');
     test('@SALES/DEAL TRACKING ACTIVITY', './sales/deal-tracking-activity');
 
-    //Production
+    // //Production
     test('@PRODUCTION/FINISHING-PRINTING/KANBAN', './production/finishing-printing/kanban');
     test('@PRODUCTION/FINISHING-PRINTING/FABRIC-QUALITY-CONTROL', './production/finishing-printing/fabric-quality-control');
     test('@PRODUCTION/FINISHING-PRINTING/PACKING', './production/finishing-printing/packing');
@@ -150,7 +151,7 @@ describe('#dl-module', function (done) {
     // test('@production/winding-quality-sampling-manager', './production/spinning/winding/winding-quality-sampling-manager-test');
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
 
-    //Inventory
+    // //Inventory
     test('@INVENTORY/FINISHING-PRINTING/PACKING-RECEIPT', './inventory/finishing-printing/packing-receipt');
     test('@INVENTORY/FINISHING-PRINTING/RETUR-TO-QC', './inventory/finishing-printing/fp-retur-to-qc-doc');
     test('@INVENTORY/FINISHING-PRINTING/SHIPMENT-DOCUMENT', './inventory/finishing-printing/shipment-document');
@@ -165,6 +166,7 @@ describe('#dl-module', function (done) {
     test('@GARMENTINVENTORY/GARMENT-INVENTORY-DOCUMENT', './inventory-garment/garment-inventory-document');
 
     //Garment Master Plan
+    test('@GARMENT MASTER PLAN/BOOKING-ORDER', './garment-master-plan/booking-order');
     test('@GARMENT MASTER PLAN/WEEKLY-PLAN', './garment-master-plan/weekly-plan');
     test('@GARMENT MASTER PLAN/WORKING-HOURS-STANDARD', './garment-master-plan/working-hours-standard');
     test('@GARMENT MASTER PLAN/STYLE', './garment-master-plan/style');

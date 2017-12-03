@@ -643,10 +643,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
             var qry = Object.assign({});
             var filter = query.filter || {};
 
-            if (filter.salesContractNo) {
+            if (query.salesContractNo) {
                 Object.assign(qry, {
                     "salesContractNo": {
-                        "$regex": (new RegExp(filter.salesContractNo, "i"))
+                        "$regex": (new RegExp(query.salesContractNo, "i"))
                     }
                 });
             }
@@ -657,10 +657,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }
                 });
             }
-            if (filter.orderNo) {
+            if (query.orderNo) {
                 Object.assign(qry, {
                     "orderNo": {
-                        "$regex": (new RegExp(filter.orderNo, "i"))
+                        "$regex": (new RegExp(query.orderNo, "i"))
                     }
                 });
             }
@@ -671,9 +671,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }
                 });
             }
-            if (filter.orderTypeId) {
+            if (query.orderTypeId) {
                 Object.assign(qry, {
-                    "orderTypeId": (new ObjectId(filter.orderTypeId))
+                    "orderTypeId": (new ObjectId(query.orderTypeId))
                 });
             }
             if (query.orderTypeId) {
@@ -681,9 +681,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "orderTypeId": (new ObjectId(query.orderTypeId))
                 });
             }
-            if (filter.processTypeId) {
+            if (query.processTypeId) {
                 Object.assign(qry, {
-                    "processTypeId": (new ObjectId(filter.processTypeId))
+                    "processTypeId": (new ObjectId(query.processTypeId))
                 });
             }
             if (query.processTypeId) {
@@ -692,9 +692,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 });
             }
 
-            if (filter.buyerId) {
+            if (query.buyerId) {
                 Object.assign(qry, {
-                    "buyerId": (new ObjectId(filter.buyerId))
+                    "buyerId": (new ObjectId(query.buyerId))
                 });
             }
 
@@ -703,9 +703,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "buyerId": (new ObjectId(query.buyerId))
                 });
             }
-            if (filter.accountId) {
+            if (query.accountId) {
                 Object.assign(qry, {
-                    "accountId": (new ObjectId(filter.accountId))
+                    "accountId": (new ObjectId(query.accountId))
                 });
             }
             if (query.accountId) {
@@ -713,11 +713,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "accountId": (new ObjectId(query.accountId))
                 });
             }
-            if (filter.sdate && filter.edate) {
+            if (query.sdate && query.edate) {
                 Object.assign(qry, {
                     "_createdDate": {
-                        "$gte": new Date(`${filter.sdate} 00:00:00`),
-                        "$lte": new Date(`${filter.edate} 23:59:59`)
+                        "$gte": new Date(`${query.sdate} 00:00:00`),
+                        "$lte": new Date(`${query.edate} 23:59:59`)
                     }
                 });
             }
@@ -757,14 +757,18 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "orderQuantity": "$orderQuantity",
                                 "uom": "$uom.unit",
                                 "colorCode": "$details.code",
-                                "colorTemplate": "$details.colorTemplate",
-                                "colorRequest": "$details.colorRequest",
-                                "colorType": "$details.colorType.name",
+                                // "colorTemplate": "$details.colorTemplate",
+                                // "colorRequest": "$details.colorRequest",
+                                // "colorType": "$details.colorType.name",
                                 "quantity": "$details.quantity",
-                                "uomDetail": "$details.uom.unit",
+                                // "uomDetail": "$details.uom.unit",
                                 "deliveryDate": "$deliveryDate",
                                 "firstname": "$account.profile.firstname",
-                                "lastname": "$account.profile.lastname"
+                                "lastname": "$account.profile.lastname",
+                                "materialName": "$material.name",
+                                "materialConstruction": "$materialConstruction.name",
+                                "materialWidth": "$materialWidth",
+                                "designMotive": "$designMotive.name",
                             }
                         },
                         { $sort: { "_createdDate": -1 } },
@@ -789,14 +793,18 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "orderQuantity": "$orderQuantity",
                                 "uom": "$uom.unit",
                                 "colorCode": "$details.code",
-                                "colorTemplate": "$details.colorTemplate",
-                                "colorRequest": "$details.colorRequest",
-                                "colorType": "$details.colorType.name",
+                                // "colorTemplate": "$details.colorTemplate",
+                                // "colorRequest": "$details.colorRequest",
+                                // "colorType": "$details.colorType.name",
                                 "quantity": "$details.quantity",
-                                "uomDetail": "$details.uom.unit",
+                                // "uomDetail": "$details.uom.unit",
                                 "deliveryDate": "$deliveryDate",
                                 "firstname": "$account.profile.firstname",
-                                "lastname": "$account.profile.lastname"
+                                "lastname": "$account.profile.lastname",
+                                "materialName": "$material.name",
+                                "materialConstruction": "$materialConstruction.name",
+                                "materialWidth": "$materialWidth",
+                                "designMotive": "$designMotive.name",
                             }
                         },
                         { $sort: { "_createdDate": -1 } }
@@ -810,7 +818,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 prodOrders = [].concat.apply([], prodOrders);
 
                 var jobsGetDailyOperation = [];
-                for (var prodOrder of prodOrders) {
+                prodOrders.map((prodOrder) => {
                     jobsGetDailyOperation.push(this.dailyOperationCollection.aggregate([
                         {
                             $match: {
@@ -829,7 +837,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                         }
                     ]).toArray());
-                }
+                })
                 if (jobsGetDailyOperation.length == 0) {
                     jobsGetDailyOperation.push(Promise.resolve(null))
                 }
@@ -837,7 +845,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     dailyOperations = [].concat.apply([], dailyOperations);
                     dailyOperations = this.cleanUp(dailyOperations);
                     var jobsGetQC = [];
-                    for (var prodOrder of prodOrders) {
+                    var no = 1;
+                    prodOrders.map((prodOrder) => {
                         var _dailyOperations = dailyOperations.filter(function (dailyOperation) {
                             return dailyOperation.orderNo === prodOrder.orderNo && dailyOperation.colorCode === prodOrder.colorCode;
                         })
@@ -880,14 +889,21 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             prodOrder.input = 0;
                             prodOrder.kanbanCodes = [];
                         }
-                    }
+                        prodOrder.staffName = `${prodOrder.firstname} ${prodOrder.lastname}`;
+                        prodOrder.no = no;
+                        var construction = `${prodOrder.materialName} / ${prodOrder.materialConstruction} / ${prodOrder.materialWidth}`;
+                        var designMotive = prodOrder.designMotive;
+                        prodOrder.designMotive = designMotive;
+                        prodOrder.construction = construction;
+                        no++;
+                    })
                     if (jobsGetQC.length == 0) {
                         jobsGetQC.push(Promise.resolve(null))
                     }
                     Promise.all(jobsGetQC).then(qualityControls => {//Get QC
                         qualityControls = [].concat.apply([], qualityControls);
                         qualityControls = this.cleanUp(qualityControls);
-                        for (var prodOrder of prodOrders) {
+                        prodOrders.map((prodOrder) => {
                             var _qualityControls = qualityControls.filter(function (qualityControl) {
                                 return qualityControl.productionOrderNo === prodOrder.orderNo && prodOrder.kanbanCodes.includes(qualityControl.kanbanCode);
                             })
@@ -912,7 +928,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                             prodOrder.detail = `${prodOrder.quantity} di spp\n${prodOrder.input} di produksi\n${prodOrder.orderQuantityQC} di pemeriksaan`;
 
-                        }
+                        })
                         var results = {
                             data: prodOrders,
                             count: prodOrders.length,
@@ -1091,6 +1107,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         "color": "$kanban.selectedProductionOrderDetail.colorRequest",
                                         // "step": "$kanban.instruction.steps.process",
                                         "step": "$step.process",
+                                        "area": "$step.processArea",
                                         // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
                                         "qty": "$input"
                                     }
@@ -1115,6 +1132,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         orderNo: value.orderNo,
                                         color: value.color,
                                         step: value.step,
+                                        area: value.area,
                                         machine: value.machine,
                                         kanbanCode: value.kanbanCode
                                     };

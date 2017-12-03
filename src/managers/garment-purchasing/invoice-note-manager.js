@@ -730,6 +730,170 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         });
     }
 
+       getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => 
+        {
+           var now = new Date();
+           var deleted = {
+                _deleted: false
+            };
+            
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+
+            var query = [deleted];
+
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "date": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
+
+      var match = { '$and': query };
+            
+      var POColl = map.garmentPurchasing.collection.GarmentPurchaseOrderExternal; 
+      this.collection.aggregate([
+      {$match: match },
+      {$unwind:"$items"},
+      {$unwind:"$items.items"},
+      {$lookup :{from :POColl,
+                 localField :"items.items.purchaseOrderExternalNo",
+                 foreignField :"no",
+                 as :"POEX"},  
+      },
+      {$project :{
+                    "NoInv":"$no",
+                    "TgInv":"$date",
+                    "KdSpl":"$supplier.code",
+                    "NmSpl":"$supplier.name",
+                    "PakaiPPN":"$useIncomeTax",
+                    "NoPPN":"$incomeTaxNo",
+                    "TgPPN":"$incomeTaxDate",
+                    "PakaiPPH":"$useVat",
+                    "NoPPH":"$vatNo",
+                    "TgPPH":"$vatDate",
+                    "NmPPH":"$vat.name",
+                    "RatePPH":"$vat.rate",
+                    "NoSJ":"$items.deliveryOrderNo",
+                    "TgSJ":"$items.deliveryOrderSupplierDoDate",
+                    "TgDtg":"$items.deliveryOrderDate",
+                    "PoExt":"$items.items.purchaseOrderExternalNo",
+                    "NoPR":"$items.items.purchaseRequestNo",
+                    "PlanPO":"$items.items.purchaseRequestRefNo",
+                    "NoRO":"$items.items.roNo",
+                    "KdBrg":"$items.items.product.code",
+                    "NmBrg":"$items.items.product.name",
+                    "QtyInv": "$items.items.deliveredQuantity",
+                    "HrgInv": "$items.items.pricePerDealUnit",
+                    "SatInv":"$items.items.purchaseOrderUom.unit",
+                    "POEXs": "$POEX",
+                    "UserIn":"$_createdBy",
+                    "TgIn":"$_createdDate",
+                    "UserEd":"$_updatedBy",
+                    "TgEd":"$_updatedDate"   
+                 }
+      }, 
+      {$unwind :"$POEXs"},
+      {$project :{
+                    "NoInv":"$NoInv",
+                    "TgInv":"$TgInv",
+                    "KdSpl":"$KdSpl",
+                    "NmSpl":"$NmSpl",
+                    "PakaiPPN":"$PakaiPPN",
+                    "NoPPN":"$NoPPN",
+                    "TgPPN":"$TgPPN",
+                    "PakaiPPH":"$PakaiPPH",
+                    "NoPPH":"$NoPPH",
+                    "TgPPH":"$TgPPH",
+                    "NmPPH":"$NmPPH",
+                    "RatePPH":"$RatePPH",
+                    "NoSJ":"$NoSJ",
+                    "TgSJ":"$TgSJ",
+                    "TgDtg":"$TgDtg",
+                    "PoExt":"$PoExt",
+                    "NoPR":"$NoPR",
+                    "PlanPO":"$PlanPO",
+                    "NoRO":"$NoRO",
+                    "KdBrg":"$KdBrg",
+                    "NmBrg":"$NmBrg",
+                    "QtyInv": "$QtyInv",
+                    "HrgInv": "$HrgInv",
+                    "SatInv":"$SatInv",
+                    "PrsPPH":"$POEXs.vatRate",
+                    "MtUang":"$POEXs.currency.code",
+                    "Rate":"$POEXs.currencyRate",
+                    "UserIn":"$UserIn","TgIn":"$TgIn",
+                    "UserEd":"$UserEd","TgEd":"$TgEd"
+                 }
+      },
+      {$group :{ _id: { "NoInv":"$NoInv",
+                        "TgInv":"$TgInv",
+                        "KdSpl":"$KdSpl",
+                        "NmSpl":"$NmSpl",
+                        "PakaiPPN":"$PakaiPPN",
+                        "NoPPN":"$NoPPN",
+                        "TgPPN":"$TgPPN",
+                        "PakaiPPH":"$PakaiPPH",
+                        "NoPPH":"$NoPPH",
+                        "TgPPH":"$TgPPH",
+                        "NmPPH":"$NmPPH",
+                        "RatePPH":"$RatePPH",
+                        "NoSJ":"$NoSJ",
+                        "TgSJ":"$TgSJ",
+                        "TgDtg":"$TgDtg",
+                        "PoExt":"$PoExt",
+                        "NoPR":"$NoPR",
+                        "PlanPO":"$PlanPO",
+                        "NoRO":"$NoRO",
+                        "KdBrg":"$KdBrg",
+                        "NmBrg":"$NmBrg",
+                        "QtyInv": "$QtyInv",
+                        "HrgInv": "$HrgInv",
+                        "SatInv":"$SatInv",
+                        "PrsPPH":"$PrsPPH",
+                        "MtUang":"$MtUang",
+                        "Rate":"$Rate",
+                        "UserIn":"$UserIn","TgIn":"$TgIn",
+                        "UserEd":"$UserEd","TgEd":"$TgEd"
+                      },
+               "TQtyInv": { $sum: "$QtyInv" }, 
+               "TotInv": { $sum: { $multiply: ["$QtyInv", "$HrgInv"]}}
+               }
+        } 
+      ])
+        .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }
+
     getXls(result, query) {
         var xls = {};
         xls.data = [];
