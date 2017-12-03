@@ -1345,7 +1345,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             ).sort({ "_id": 1 })
                 .toArray(function (err, result) {
                     assert.equal(err, null);
-                    console.log(result);
                     resolve(result);
                 });
         });
