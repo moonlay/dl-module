@@ -47,7 +47,13 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 }
             };
 
-            keywordFilter["$or"] = [noFilter];
+            var roFilter = {
+                "roNo": {
+                    "$regex": regex
+                }
+            };
+
+            keywordFilter["$or"] = [noFilter,roFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
