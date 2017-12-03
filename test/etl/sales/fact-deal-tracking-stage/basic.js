@@ -27,7 +27,6 @@ it("#01. should success when create etl fact deal tracking stage", function (don
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });

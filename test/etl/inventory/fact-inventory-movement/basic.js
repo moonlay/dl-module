@@ -27,7 +27,6 @@ it("#01. should success when create etl fact-inventory-movement", function (done
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
