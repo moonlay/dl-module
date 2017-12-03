@@ -102,7 +102,8 @@ describe('#dl-module', function (done) {
     test('@MASTER/FINISHING PRINTING DURATION ESTIMATION', './master/fp-duration-estimation');
     test('@MASTER/DEAL TRACKING REASON', './master/deal-tracking-reason');
     test('@MASTER/SPINNING YARN', './master/spinning-yarn');
-
+    test('@MASTER/HOLIDAY', './master/holiday');
+    
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
     test('@PURCHASING/PURCHASE ORDER', './purchasing/purchase-order');
