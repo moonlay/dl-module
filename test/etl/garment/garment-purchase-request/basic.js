@@ -34,7 +34,6 @@ it("#01. should success when get time stamp", function (done) {
 
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
@@ -49,7 +48,6 @@ it("#02. should success when extract all data", function (done) {
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
@@ -68,7 +66,6 @@ it("#03. should success when transfrom all data", function (done) {
 
             })
     }).catch((e) => {
-        console.log(e);
         done(e);
     });
 });
@@ -81,7 +78,6 @@ it("#04. should success when delete all data", function (done) {
 
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
@@ -97,7 +93,6 @@ it("#05. should success when load all data", function (done) {
 
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
@@ -122,7 +117,6 @@ it("#05. should success when load all data", function (done) {
 
 //         })
 //         .catch((e) => {
-//             console.log(e);
 //             done(e);
 //         });
 // });

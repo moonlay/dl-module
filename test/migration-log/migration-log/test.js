@@ -59,7 +59,6 @@ it("#03. should success when get all successful data", function (done) {
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 })
