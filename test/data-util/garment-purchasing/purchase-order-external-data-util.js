@@ -82,6 +82,8 @@ class PurchaseOrderExternalDataUtil {
                             actualDeliveryDate: new Date(),
                             isPosted: false,
                             isClosed: false,
+                            isOverBudget: false,
+                            isApproved: true,
                             remark: '',
                             qualityStandard: {
                                 shrinkage: '80%',
@@ -163,6 +165,8 @@ class PurchaseOrderExternalDataUtil {
                             actualDeliveryDate: new Date(),
                             isPosted: false,
                             isClosed: false,
+                            isOverBudget: false,
+                            isApproved: true,
                             remark: '',
                             qualityStandard: {
                                 shrinkage: '80%',
