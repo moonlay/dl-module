@@ -170,8 +170,8 @@ it("#06. should success when create new data two uom only", function (done) {
         });
 });
 
-it("#07. should success when drop all inventory data", function (done) {
-    Promise.all([inventoryDocumentManager.collection.drop(), inventoryDocumentManager.inventoryMovementManager.collection.drop(), inventoryDocumentManager.inventorySummaryManager.collection.drop()])
+it("#07. should success when remove all inventory data", function (done) {
+    Promise.all([inventoryDocumentManager.collection.remove({}), inventoryDocumentManager.inventoryMovementManager.collection.remove({}), inventoryDocumentManager.inventorySummaryManager.collection.remove({})])
         .then((results) => {
             results.should.be.Array();
             done();
