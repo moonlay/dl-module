@@ -171,5 +171,6 @@ describe('#dl-module', function (done) {
     test('@GARMENT MASTER PLAN/WORKING-HOURS-STANDARD', './garment-master-plan/working-hours-standard');
     test('@GARMENT MASTER PLAN/STYLE', './garment-master-plan/style');
     test('@GARMENT MASTER PLAN/STANDARD-HOUR', './garment-master-plan/standard-hour');
+    test('@GARMENT MASTER PLAN/MASTER PLAN COMODITY', './garment-master-plan/master-plan-comodity');
 
 });
