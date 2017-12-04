@@ -21,3 +21,7 @@ describe("VALIDATION SCENARIOS", function() {
 describe("PDF SCENARIOS", function() {
     require("./pdf");
 });
+
+describe("STATUS REPORT SCENARIOS", function() {
+    require("./status-order-report");
+});

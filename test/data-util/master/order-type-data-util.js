@@ -33,6 +33,15 @@ class OrderTypeDataUtil {
         };
         return this.getSert(data);
     }
+
+    getPrintingData() {
+        var data = {
+            code : "ORDTP-UT-01",
+            name: "PRINTING",
+            remark:"remark for UT"
+        };
+        return this.getSert(data);
+    }
 }
 
 module.exports = new OrderTypeDataUtil();
