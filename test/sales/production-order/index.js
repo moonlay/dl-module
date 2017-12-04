@@ -22,6 +22,6 @@ describe("PDF SCENARIOS", function() {
     require("./pdf");
 });
 
-describe("STATUS REPORT SCENARIOS", function() {
-    require("./status-order-report");
+describe("ORDER STATUS REPORT SCENARIOS", function() {
+    require("./order-status-report");
 });
