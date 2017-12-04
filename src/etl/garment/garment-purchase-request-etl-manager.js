@@ -73,14 +73,14 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
             this.migrationLog.insert({
                 code: code,
-                description: "Sql to MongoDB: Garment-Purchase-Request",
+                description: "Sql to MongoDB: Garment-Purchase-Request "+code,
                 start: startedDate,
             })
         }else{
             code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
             this.migrationLog.insert({
                 code: code+" "+buyerFilter,
-                description: "Sql to MongoDB: Garment-Purchase-Request",
+                description: "Sql to MongoDB: Garment-Purchase-Request "+code,
                 start: startedDate,
             })
         }
@@ -180,7 +180,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     if (result.processed == 0) {
                         updateLog = {
                             code: code,
-                            description: "Sql to MongoDB: Garment-Purchase-Request",
+                            description: "Sql to MongoDB: Garment-Purchase-Request "+code,
                             start: startedDate,
                             finish: finishedDate,
                             executionTime: spentTime + " minutes",
@@ -190,7 +190,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     } else {
                         updateLog = {
                             code: code,
-                            description: "Sql to MongoDB: Garment-Purchase-Request",
+                            description: "Sql to MongoDB: Garment-Purchase-Request "+code,
                             start: startedDate,
                             finish: finishedDate,
                             executionTime: spentTime + " minutes",
@@ -213,7 +213,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return new Promise((resolve, reject) => {
             this.migrationLog.find({
                 code: code,
-                description: "Sql to MongoDB: Garment-Purchase-Request",
+                description: "Sql to MongoDB: Garment-Purchase-Request "+code,
                 status: "Successful"
             }).sort({
                 finish: -1
