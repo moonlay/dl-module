@@ -177,7 +177,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                     var updateLog = {};
                     var code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
-                    if (!result) {
+                    if (result.processed == 0) {
                         updateLog = {
                             code: code,
                             description: "Sql to MongoDB: Garment-Purchase-Request",
@@ -851,48 +851,56 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         dataArr = dataTransform;
 
         return new Promise((resolve, reject) => {
-            var falseData = 0;
-            var failed = [];
-            var processed = [];
-            var deleteProcess = [];
-            var tempProcess = [];
-            var roNoArr = [];
 
-            var dataRo = [];
-
-            for (var i of dataArr) {
-                roNoArr.push(i[0].roNo);
-                dataRo.push(i[0])
-            }
-
-            for (var data of dataRo) {
-                if (deletedData) {
-                    var temp = deletedData.find(o => o.roNo == data.roNo);
-                    if (temp) {
-                        data._id = temp._id;
-                        data.no=temp.no;
+            if(dataArr.length !=0){
+                var falseData = 0;
+                var failed = [];
+                var processed = [];
+                var deleteProcess = [];
+                var tempProcess = [];
+                var roNoArr = [];
+    
+                var dataRo = [];
+    
+                for (var i of dataArr) {
+                    roNoArr.push(i[0].roNo);
+                    dataRo.push(i[0])
+                }
+    
+                for (var data of dataRo) {
+                    if (deletedData) {
+                        var temp = deletedData.find(o => o.roNo == data.roNo);
+                        if (temp) {
+                            data._id = temp._id;
+                            data.no=temp.no;
+                        }
                     }
+    
+                    if (data.migrated == false) {
+                        falseData += 1
+                    } else if (!data.migrated) {
+                        data.migrated = true;
+                    }
+                    else {
+                        data.migrated = true;
+                    }
+    
+                    // processed.push(this.collection.insert(data));
+                    processed.push((data));
                 }
-
-                if (data.migrated == false) {
-                    falseData += 1
-                } else if (!data.migrated) {
-                    data.migrated = true;
-                }
-                else {
-                    data.migrated = true;
-                }
-
-                // processed.push(this.collection.insert(data));
-                processed.push((data));
+    
+                this.insert(processed).then((resultProcess) => {
+                    var dataProcessed = {};
+                    dataProcessed.processed = resultProcess.ops;
+                    dataProcessed.MigratedFalse = falseData;
+                    resolve(dataProcessed);
+                })
+            }else{
+                var dataProcessed = {};
+                dataProcessed.processed = [];
+                resolve(dataProcessed);
             }
 
-            this.insert(processed).then((resultProcess) => {
-                var dataProcessed = {};
-                dataProcessed.processed = resultProcess.ops;
-                dataProcessed.MigratedFalse = falseData;
-                resolve(dataProcessed);
-            })
 
         });
     }
