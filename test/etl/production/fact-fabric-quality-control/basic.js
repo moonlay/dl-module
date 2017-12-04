@@ -98,11 +98,9 @@ before("#00. connect db", function (done) {
 it("#01. should success when create etl fact-fabric-quality-control", function (done) {
     instanceManager.run()
         .then((a) => {
-            console.log(a);
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });

@@ -122,7 +122,8 @@ module.exports = {
             WorkingHoursStandardManager: require('./src/managers/garment-master-plan/working-hours-standard-manager'),
             StyleManager: require('./src/managers/garment-master-plan/style-manager'),
             StandardHourManager: require('./src/managers/garment-master-plan/standard-hour-manager'),
-            BookingOrderManager: require('./src/managers/garment-master-plan/booking-order-manager')
+            BookingOrderManager: require('./src/managers/garment-master-plan/booking-order-manager'),
+            MasterPlanComodityManager: require('./src/managers/garment-master-plan/master-plan-comodity-manager')
         }
     },
     test: {
@@ -235,7 +236,8 @@ module.exports = {
                 workingHoursStandard: require("./test/data-util/garment-master-plan/working-hours-standard-data-util"),
                 style: require("./test/data-util/garment-master-plan/style-data-util"),
                 standardHour: require("./test/data-util/garment-master-plan/standard-hour-data-util"),
-                bookingOrder: require("./test/data-util/garment-master-plan/booking-order-data-util")
+                bookingOrder: require("./test/data-util/garment-master-plan/booking-order-data-util"),
+                masterPlanComodity: require("./test/data-util/garment-master-plan/master-plan-comodity-data-util")
             }
         }
     },
