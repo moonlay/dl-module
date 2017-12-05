@@ -91,6 +91,54 @@ class StepDataUtil {
                 return this.getSert(data);
     }
 
+    getTestData2(step) {
+        var _process = step && step.process ? step.process : "SCOURING";
+        // var _itemMonitoring = items ? items : [
+        //         'Speed (m/mnt)', 'Pressure Burner (mBar)', 'Titik Api', 'Pressure Saturator (Bar)', 'Hasil Bakar Bulu (baik/tidak)'
+        //     ];
+        var _alias = step && step.alias ? step.alias : "GS DZ";
+        var _stepIndicator = step && step.indicators ? step.indicators : [
+            {
+                name : 'SETTING',
+                value : '3'
+            },
+            {
+                name : 'PRESS. BURNER',
+                value : '14',
+                uom : 'mBar'
+            },
+            {
+                name : 'TEMP. SATURATOR',
+                value : '65',
+                uom : 'C'
+            },
+            {
+                name : 'SPEED',
+                value : '90',
+                uom : 'm/mnt'
+            },
+            {
+                name : 'TITIK API',
+                value : '3'
+            },
+            {
+                name : 'LEBAR KAIN',
+                value : '',
+                uom : 'inchi'
+            },
+            {
+                name : 'COUNTER',
+                value : ''
+            }
+        ];
+         var data = {
+            process: _process,
+            alias:_alias,
+            stepIndicators:_stepIndicator
+        };
+        return this.getSert(data);
+}
+
     // getTestData2(data, items, indicator) {
     //             var _process = data ? data : "SCOURING";
     //             // var _itemMonitoring = items ? items : [

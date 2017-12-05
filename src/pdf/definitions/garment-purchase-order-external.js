@@ -22,11 +22,12 @@ module.exports = function (pox, offset) {
             prNo: poItem.prNo,
             prRefNo: poItem.prRefNo,
             artikel: poItem.artikel,
-            roNo: poItem.roNo, 
+            roNo: poItem.roNo,
             quantity: poItem.dealQuantity,
             uom: poItem.dealUom.unit,
             price: poItem.pricePerDealUnit,
             remark: poItem.remark,
+            isOverBudget: poItem.isOverBudget,
             colors: poItem.colors || []
         };
     });
@@ -68,7 +69,7 @@ module.exports = function (pox, offset) {
                     alignment: "right",
                     style: ['size08']
                 }, {
-                    text: `Nomor PO : ${number}`,
+                    text: `Nomor PO : ${number}${pox.isOverBudget ? '-OB' : ''}`,
                     alignment: "right",
                     style: ['size09', 'bold']
                 }]
@@ -103,23 +104,23 @@ module.exports = function (pox, offset) {
     }];
 
     var openingText = [
-            '\n', {
-                text: 'Dengan hormat,\n'
-            }, {
-                text: 'Yang bertanda tangan di bawah ini, '
-            }, {
-                text: 'PT. DAN LIRIS, SOLO',
-                style: ['bold']
-            }, {
-                text: ' (selanjutnya disebut sebagai pihak Pembeli) dan '
-            }, {
-                text: supplier,
-                style: ['bold']
-            }, {
-                text: ' (selanjutnya disebut sebagai pihak Penjual) saling menyetujui untuk mengadakan kontrak jual beli dengan ketentuan sebagai berikut: '
-            },
-            '\n\n'
-        ];
+        '\n', {
+            text: 'Dengan hormat,\n'
+        }, {
+            text: 'Yang bertanda tangan di bawah ini, '
+        }, {
+            text: 'PT. DAN LIRIS, SOLO',
+            style: ['bold']
+        }, {
+            text: ' (selanjutnya disebut sebagai pihak Pembeli) dan '
+        }, {
+            text: supplier,
+            style: ['bold']
+        }, {
+            text: ' (selanjutnya disebut sebagai pihak Penjual) saling menyetujui untuk mengadakan kontrak jual beli dengan ketentuan sebagai berikut: '
+        },
+        '\n\n'
+    ];
 
     var opening = {
         text: openingText,
@@ -149,7 +150,7 @@ module.exports = function (pox, offset) {
         tbody = items.map(function (item) {
             return [{
                 stack: [item.productCode, item.productName, `COMPOSITION: ${item.productDesc}`, `KONSTRUKSI: ${item.productProperties[0]}`, `YARN: ${item.productProperties[1]}`, `LEBAR: ${item.productProperties[2]}`, "QUALITY : EXPORT QUALITY", `DESIGN/COLOUR : ${item.colors.join(', ')}`, `Keterangan : ${item.remark}`, {
-                    text: `${item.prNo} - ${item.prRefNo}`,
+                    text: `${item.prNo} - ${item.prRefNo}${item.isOverBudget ? "-OB" : ""}`,
                     style: 'bold'
                 }],
                 style: ['size08']
@@ -185,7 +186,7 @@ module.exports = function (pox, offset) {
         tbody = items.map(function (item) {
             return [{
                 stack: [`${item.productCode} - ${item.productName}`, item.productDesc, item.remark, {
-                    text: `${item.prNo} - ${item.prRefNo}`,
+                    text: `${item.prNo} - ${item.prRefNo}${item.isOverBudget ? "-OB" : ""}`,
                     style: 'bold'
                 }],
                 style: ['size08']
@@ -322,7 +323,7 @@ module.exports = function (pox, offset) {
         [{
             text: 'Total Jumlah',
             style: ['size08', 'bold', 'right'],
-        },null, {
+        }, null, {
             text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
             style: ['size08', 'right']
         }, {
@@ -382,44 +383,44 @@ module.exports = function (pox, offset) {
         }
     }];
 
-    var footerText =[
-            '\n', {
-                stack: [{
+    var footerText = [
+        '\n', {
+            stack: [{
+                columns: [{
+                    width: '40%',
                     columns: [{
                         width: '40%',
-                        columns: [{
-                            width: '40%',
-                            stack: ['Ongkos Kirim', 'Pembayaran']
-                        }, {
-                            width: '3%',
-                            stack: [':', ':']
-                        }, {
-                            width: '*',
-                            stack: [`Ditanggung ${pox.freightCostBy}`, `${pox.paymentType}, ${pox.paymentDueDays} hari setelah terima barang`]
-                        }]
+                        stack: ['Ongkos Kirim', 'Pembayaran']
                     }, {
-                        width: '20%',
-                        text: ''
+                        width: '3%',
+                        stack: [':', ':']
                     }, {
-                        width: '40%',
-                        columns: [{
-                            width: '45%',
-                            stack: ['Delivery', 'Lain-lain']
-                        }, {
-                            width: '3%',
-                            stack: [':', ':']
-                        }, {
-                            width: '*',
-                            stack: [{
-                                text: `${moment(pox.expectedDeliveryDate).add(offset, 'h').format(locale.date.format)}`,
-                                style: ['bold']
-                            }, `${pox.remark}`]
-                        }]
+                        width: '*',
+                        stack: [`Ditanggung ${pox.freightCostBy}`, `${pox.paymentType}, ${pox.paymentDueDays} hari setelah terima barang`]
                     }]
-                }],
-                style: ['size08']
-            }
-        ];
+                }, {
+                    width: '20%',
+                    text: ''
+                }, {
+                    width: '40%',
+                    columns: [{
+                        width: '45%',
+                        stack: ['Delivery', 'Lain-lain']
+                    }, {
+                        width: '3%',
+                        stack: [':', ':']
+                    }, {
+                        width: '*',
+                        stack: [{
+                            text: `${moment(pox.expectedDeliveryDate).add(offset, 'h').format(locale.date.format)}`,
+                            style: ['bold']
+                        }, `${pox.remark}`]
+                    }]
+                }]
+            }],
+            style: ['size08']
+        }
+    ];
 
     var footer = footerText;
 
@@ -612,34 +613,34 @@ module.exports = function (pox, offset) {
         footer = footer.concat(stdQ)
     }
     var signatureText = [
-            '\n\n\n',
-            {
-                stack: [
-                    {
-                        columns: [
-                            {
-                                width: '35%',
-                                stack: ['Pembeli\n\n\n\n\n', {
-                                    text: pox._createdBy,
-                                    style: ['bold']
-                                }],
-                                style: 'center'
-                            }, {
-                                width: '30%',
-                                text: ''
-                            }, {
-                                width: '35%',
-                                stack: ['Penjual\n\n\n\n\n', {
-                                    text: supplier,
-                                    style: ['bold']
-                                }],
-                                style: 'center'
-                            }]
-                    }
-                ],
-                style: ['size08']
-            }
-        ];
+        '\n\n\n',
+        {
+            stack: [
+                {
+                    columns: [
+                        {
+                            width: '35%',
+                            stack: ['Pembeli\n\n\n\n\n', {
+                                text: pox._createdBy,
+                                style: ['bold']
+                            }],
+                            style: 'center'
+                        }, {
+                            width: '30%',
+                            text: ''
+                        }, {
+                            width: '35%',
+                            stack: ['Penjual\n\n\n\n\n', {
+                                text: supplier,
+                                style: ['bold']
+                            }],
+                            style: 'center'
+                        }]
+                }
+            ],
+            style: ['size08']
+        }
+    ];
 
     var signature = signatureText;
 
