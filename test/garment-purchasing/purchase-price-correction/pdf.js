@@ -45,23 +45,20 @@ it('#02. should success when create pdf', function (done) {
         });
 });
 
-// it('#03. should error when create with greater than todays date', function (done) {
-//     var date = new Date();
-//     var tomorrowDate = new Date(date.setDate(date.getDate() + 1));
+it('#03. should error when create with delivery order not has invoice', function (done) {
+    PurchasePriceCorrection.getNewTestDataUsingDeliveryOrderHasNotInvoice()
+        .then(result => {
+            done("Error");
+        }).catch(e => {
+            e.name.should.equal("ValidationError");
+            e.should.have.property("errors");
+            e.errors.should.instanceof(Object);
+            e.errors.should.have.property("deliveryOrder");
+            done();
+        });
+});
 
-//     purchaseCorrectionManager.create({ date: tomorrowDate })
-//         .then(result => {
-//             done("Error");
-//         }).catch(e => {
-//             e.name.should.equal("ValidationError");
-//             e.should.have.property("errors");
-//             e.errors.should.instanceof(Object);
-//             e.errors.should.have.property("date");
-//             done();
-//         });
-// });
-
-it("#03. should success when destroy all unit test data", function (done) {
+it("#04. should success when destroy all unit test data", function (done) {
     purchaseCorrectionManager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();

@@ -68,6 +68,8 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                         errors["deliveryOrder"] = i18n.__("garmentPurchaseCorrection.deliveryOrder.isRequired:%s is required", i18n.__("garmentPurchaseCorrection.deliveryOrder._:Delivery Order"));
                     else if (!_deliveryOrder)
                         errors["deliveryOrder"] = i18n.__("garmentPurchaseCorrection.deliveryOrder.notFound:%s not found", i18n.__("garmentPurchaseCorrection.deliveryOrder._:Delivery Order"));
+                    else if (!_deliveryOrder.hasInvoice)
+                        errors["deliveryOrder"] = i18n.__("garmentPurchaseCorrection.deliveryOrder.hasInvoice:%s not has invoice", i18n.__("garmentPurchaseCorrection.deliveryOrder._:Delivery Order"));
 
                     if (valid.items) {
                         if (valid.items.length > 0) {
@@ -461,7 +463,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                     item["Nomor PO Eksternal"] = data.noPOEks ? data.noPOEks : '';
                     item["No PR"] = data.noPR ? data.noPR : '';
                     item["No Ref PR"] = data.noRefPR ? data.noRefPR : '';
-                    item["No RO"] = data.noRO ? data.noRO: '';
+                    item["No RO"] = data.noRO ? data.noRO : '';
                     item["Kode Barang"] = data.itemCode ? data.itemCode : '';
                     item["Nama Barang"] = data.itemName ? data.itemName : '';
                     var correction = data.fulfillments.corrections ? data.fulfillments.corrections : data.fulfillments.correction;
