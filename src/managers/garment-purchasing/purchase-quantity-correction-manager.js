@@ -430,7 +430,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                             for (var purchaseOrder of purchaseOrders) {
                                 for (var item of purchaseOrder.items) {
                                     for (var fulfillment of item.fulfillments) {
-                                        listInvoice.push({ deliveryOrderNo: fulfillment.deliveryOrderNo, invoiceNo: fulfillment.invoiceIncomeTaxNo || "", invoiceDate : fulfillment.invoiceIncomeTaxDate})
+                                        listInvoice.push({ deliveryOrderNo: fulfillment.deliveryOrderNo, invoiceNo: fulfillment.invoiceIncomeTaxNo || "", invoiceDate: fulfillment.invoiceIncomeTaxDate })
                                     }
                                 }
                             }
@@ -438,7 +438,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                             var _invoiceNo = listInvoice.find((inv) => inv.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no);
                             purchaseQuantityCorrection.invoiceNo = _invoiceNo.invoiceNo;
                             purchaseQuantityCorrection.invoiceDate = _invoiceNo.invoiceDate;
-                            
+
                             purchaseQuantityCorrection.deliveryOrder.items.map(item => {
                                 item.fulfillments.map((fulfillment) => {
                                     deliveryOrderItems.push({
@@ -630,7 +630,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                         "NoSJ": "$deliveryOrder.no",
                         "TgSJ": "$deliveryOrder.date",
                         "TgDtg": "$deliveryOrder.supplierDoDate",
-                        "POExt": "$items.purchaseOrderInternalNo",
+                        "POExt": "$items.purchaseOrderExternalNo",
                         "NoPR": "$items.purchaseRequestNo",
                         "PlanPO": "$items.purchaseRequestRefNo",
                         "NoRO": "$items.roNo",
@@ -663,7 +663,6 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
             ])
                 .toArray(function (err, result) {
                     assert.equal(err, null);
-                    console.log(result);
                     resolve(result);
                 });
         });

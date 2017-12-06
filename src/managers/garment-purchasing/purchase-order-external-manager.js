@@ -1388,7 +1388,6 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 ])
                 .toArray(function (err, result) {
                     assert.equal(err, null);
-                    console.log(result);
                     resolve(result);
                 });
         });

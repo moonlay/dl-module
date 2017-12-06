@@ -47,20 +47,44 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 }
             };
 
-            keywordFilter["$or"] = [noFilter];
+            var roFilter = {
+                "roNo": {
+                    "$regex": regex
+                }
+            };
+
+            var buyerNameFilter = {
+                "buyer.name": {
+                    "$regex": regex
+                }
+            };
+
+            keywordFilter["$or"] = [noFilter, roFilter,buyerNameFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
     }
 
-    run(tanggal, t1, t2, page, size) {
+    run(tanggal, t1, t2, page, size,buyerFilter) {
         var startedDate = new Date();
-        var code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
-        this.migrationLog.insert({
-            code: code,
-            description: "Sql to MongoDB: Garment-Purchase-Request",
-            start: startedDate,
-        })
+        var code;
+        var buyerFilter=buyerFilter;
+        if(!buyerFilter){
+            code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
+            this.migrationLog.insert({
+                code: code,
+                description: "Sql to MongoDB: Garment-Purchase-Request "+code,
+                start: startedDate,
+            })
+        }else{
+            code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
+            this.migrationLog.insert({
+                code: code+" "+buyerFilter,
+                description: "Sql to MongoDB: Garment-Purchase-Request "+code,
+                start: startedDate,
+            })
+        }
+
 
         this.tgl = tanggal;
 
@@ -70,7 +94,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
             this.getTimeStamp(t1).then((result) => {
                 var dateStamp;
-                if (this.tgl.trim() == "latest") {
+                if (this.tgl.trim() == "latest" && !buyerFilter) {
                     if (result.length != 0) {
                         var year = result[0].start.getFullYear();
                         var month = result[0].start.getMonth() + 1;
@@ -85,27 +109,20 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         dateStamp = [year, month, day].join('-');
                     } else if (result.length == 0) {
-
-                        // var year = new Date().getFullYear();
-                        // var month = new Date().getMonth() + 1;
-                        // var day = new Date().getDate();
-
-                        // if (month < 10) {
-                        //     month = "0" + month;
-                        // }
-                        // if (day < 10) {
-                        //     day = "0" + day;
-                        // }
-                        // dateStamp = [year, month, day].join('-');
                         dateStamp = "2017-01-01"
                     }
                 } else {
+
                     var monthOpt = ["latest",
                         "january", "february", "march",
                         "april", "may", "june",
                         "july", "august", "september",
                         "october", "november", "december"];
                     var tempYear = new Date().getFullYear().toString();
+
+                    if(buyerFilter && this.tgl.trim() == "latest"){
+                        this.tgl=monthOpt[new Date().getMonth()+1]                       
+                    }
 
                     if (this.tgl == monthOpt[1].trim()) {
                         dateStamp = tempYear + "-01%%";
@@ -134,16 +151,15 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     }
                 }
 
-
                 this.tgl = dateStamp;
-
 
                 var flag = table1;
                 var processedData = new Promise((res, rej) => {
-                    this.extract(table1, table2, page, size, dateStamp)
+                    this.extract(table1, table2, page, size, dateStamp,buyerFilter)
                         .then((extracted) => {
                             this.transform(extracted, table1)
                                 .then((transformed) => {
+                                    var transformed = transformed;
                                     this.beforeLoad(transformed)
                                         .then((deleted) => {
                                             this.load(transformed, deleted)
@@ -161,10 +177,10 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
                     var updateLog = {};
                     var code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
-                    if (!result) {
+                    if (result.processed == 0) {
                         updateLog = {
                             code: code,
-                            description: "Sql to MongoDB: Garment-Purchase-Request",
+                            description: "Sql to MongoDB: Garment-Purchase-Request "+code,
                             start: startedDate,
                             finish: finishedDate,
                             executionTime: spentTime + " minutes",
@@ -174,7 +190,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     } else {
                         updateLog = {
                             code: code,
-                            description: "Sql to MongoDB: Garment-Purchase-Request",
+                            description: "Sql to MongoDB: Garment-Purchase-Request "+code,
                             start: startedDate,
                             finish: finishedDate,
                             executionTime: spentTime + " minutes",
@@ -197,7 +213,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return new Promise((resolve, reject) => {
             this.migrationLog.find({
                 code: code,
-                description: "Sql to MongoDB: Garment-Purchase-Request",
+                description: "Sql to MongoDB: Garment-Purchase-Request "+code,
                 status: "Successful"
             }).sort({
                 finish: -1
@@ -209,7 +225,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
 
 
-    getRowNumber(table1, table2, tgl) {
+    getRowNumber(table1, table2, tgl,buyerFilter) {
         return new Promise((resolve, reject) => {
             this.sql.startConnection()
                 .then(() => {
@@ -219,15 +235,22 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
                         var sqlQuery;
-                        if (table1 == "Budget") {
-                            if (tgl.includes("%%")) {
-                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
-                            } else {
-                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                        if(!buyerFilter){
+                            if (table1 == "Budget") {
+                                if (tgl.includes("%%")) {
+                                    sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                                } else {
+                                    sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                                }
+                            }else{
+                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from POrder1 as POrder inner join Budget1 as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
                             }
-                        } else {
-                            sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from POrder1 as POrder inner join Budget1 as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
-
+                        }else{
+                            if (table1 == "Budget" && buyerFilter) {
+                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl='' and porder.buyer='"+buyerFilter+"'"                               
+                            }else if(table1 == "Budget1" && buyerFilter){
+                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl='' and porder.buyer='"+buyerFilter+"'"                               
+                            }
                         }
 
 
@@ -244,7 +267,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         })
     }
 
-    extract(table1, table2, page, pageSize, tgl) {
+    extract(table1, table2, page, pageSize, tgl,buyerFilter) {
         return new Promise((resolve, reject) => {
             this.sql.startConnection()
                 .then(() => {
@@ -254,21 +277,29 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
                         var sqlQuery;
-
-                        if (tgl.includes("%%")) {
-                            if (table1 == "Budget" && table2 == "POrder") {
-                                sqlQuery = "exec garment_purchase_request_period " + page + "," + pageSize + ",'" + tgl + "' ";
-                            }
-                            else {
-                                sqlQuery = "exec garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "' ";
-                            }
-                        } else {
-                            if (table1 == "Budget" && table2 == "POrder") {
-                                sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
+                        if (!buyerFilter ){
+                            if (tgl.includes("%%")) {
+                                if (table1 == "Budget" && table2 == "POrder") {
+                                    sqlQuery = "exec garment_purchase_request_period " + page + "," + pageSize + ",'" + tgl + "' ";
+                                }
+                                else {
+                                    sqlQuery = "exec garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "' ";
+                                }
                             } else {
-                                sqlQuery = "exec garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "' ";
+                                if (table1 == "Budget" && table2 == "POrder") {
+                                    sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
+                                } else {
+                                    sqlQuery = "exec garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "' ";
+                                }
+                            }
+                        }else{
+                            if (table1 == "Budget" && table2 == "POrder"){
+                                sqlQuery = "exec extract_garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "','" + buyerFilter + "' ";
+                            }else{
+                                sqlQuery = "exec extract_garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "','" + buyerFilter + "' ";
                             }
                         }
+
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
@@ -363,12 +394,6 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
     }
 
     beforeTransform(Ro, table1) {
-        // var _unit = _unit;
-        // var _category = _category;
-        // var _product = _product;
-        // var _buyer = _buyer;
-        // var _uom = _uom;
-        // var extract = extract;
         var Ro = Ro;
         var table1 = table1;
 
@@ -459,8 +484,11 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     var _buyer = result[3];
                     var _uom = result[4];
 
+                    var obj = new ObjectId();
+                    var code = generateCode(extract[0].ID_PO ? extract[0].ID_PO + obj.toString() : extract[0].ID + obj.toString());
+
                     for (var data of extract) {
-                        var code = generateCode(data.ID_PO?data.ID_PO:data.ID);
+                        // var code = generateCode(data.ID_PO + data.RowNum ? data.ID_PO + data.RowNum : data.ID + data.RowNum);
                         var createdYear = data.Tglin.getFullYear();
                         var createdMonth = data.Tglin.getMonth() + 1;
                         var createdDay = data.Tglin.getDate();
@@ -649,7 +677,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                 // _updatedDate: new Date(_updatedDate),
                                 _updateAgent: "manager",
                                 // no: data.Ro,
-                                no: code,
+                                // no: code,
                                 roNo: data.Ro,
                                 artikel: data.Art,
                                 shipmentDate: data.Shipment,
@@ -691,8 +719,9 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                             })
 
-                        } else {
+                        } else if (!unit._id || !buyer._id) {
 
+                            map.roNo = data.Ro;
                             map.migrated = false;
                             map.dataNotfound = {
                                 unitCode: unitNotFound,
@@ -702,6 +731,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                     }
 
+                    map.no = code;
                     map._createdDate = new Date(_createdDate + ":" + createdDateTemp.sort()[0]);
                     map._updatedDate = new Date(_updatedDate + ":" + updatedDateTemp.sort()[0]);
                     map.items = items;
@@ -749,9 +779,17 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         });
     }
 
-    delete(id) {
+    delete(ro) {
         return new Promise((resolve, reject) => {
-            this.collection.remove({ "_id": id }).then((result) => {
+            this.collection.deleteMany({ roNo: { $in: ro } }).then((result) => {
+                resolve(result);
+            })
+        });
+    }
+
+    insert(data) {
+        return new Promise((resolve, reject) => {
+            this.collection.insertMany(data).then((result) => {
                 resolve(result);
             })
         });
@@ -780,26 +818,28 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 dataTemp = result;
 
                 if (dataTemp) {
-                    for (var data of dataRo) {
-                        var temp = dataTemp.find(o => o.roNo == data.roNo);
+                    for (var data of dataTemp) {
 
-                        if (temp) {
-                            var _id = temp._id;
-                            var i = {
-                                _id: temp._id,
-                                roNo: temp.roNo,
-                            }
-                            tempProcess.push(i);
-
-                            deleteProcess.push(this.collection.remove({ "_id": _id }));
+                        var _id = data._id;
+                        var i = {
+                            _id: data._id,
+                            roNo: data.roNo,
+                            no:data.no,
                         }
+                        tempProcess.push((i));
+
+                        deleteProcess.push((data.roNo))
+
                     }
+
+                    this.delete(deleteProcess).then((deleted) => {
+                        console.log(deleted.deletedCount)
+                        resolve(tempProcess);
+                    })
+
+                } else {
+                    resolve([])
                 }
-
-                Promise.all(deleteProcess).then((result) => {
-                    resolve(tempProcess);
-
-                })
 
             });
 
@@ -811,47 +851,56 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         dataArr = dataTransform;
 
         return new Promise((resolve, reject) => {
-            var falseData = 0;
-            var failed = [];
-            var processed = [];
-            var deleteProcess = [];
-            var tempProcess = [];
-            var roNoArr = [];
-            var dataTemp = [];
-            var dataRo = [];
 
-            for (var i of dataArr) {
-                roNoArr.push(i[0].roNo);
-                dataRo.push(i[0])
-            }
-
-            for (var data of dataRo) {
-                if (deletedData) {
-                    var temp = deletedData.find(o => o.roNo == data.roNo);
-                    if (temp) {
-                        data._id = temp._id;
+            if(dataArr.length !=0){
+                var falseData = 0;
+                var failed = [];
+                var processed = [];
+                var deleteProcess = [];
+                var tempProcess = [];
+                var roNoArr = [];
+    
+                var dataRo = [];
+    
+                for (var i of dataArr) {
+                    roNoArr.push(i[0].roNo);
+                    dataRo.push(i[0])
+                }
+    
+                for (var data of dataRo) {
+                    if (deletedData) {
+                        var temp = deletedData.find(o => o.roNo == data.roNo);
+                        if (temp) {
+                            data._id = temp._id;
+                            data.no=temp.no;
+                        }
                     }
+    
+                    if (data.migrated == false) {
+                        falseData += 1
+                    } else if (!data.migrated) {
+                        data.migrated = true;
+                    }
+                    else {
+                        data.migrated = true;
+                    }
+    
+                    // processed.push(this.collection.insert(data));
+                    processed.push((data));
                 }
-
-                if (data.migrated == false) {
-                    falseData += 1
-                } else if (!data.migrated) {
-                    data.migrated = true;
-                }
-                else {
-                    data.migrated = true;
-                }
-
-                processed.push(this.collection.insert(data));
-
+    
+                this.insert(processed).then((resultProcess) => {
+                    var dataProcessed = {};
+                    dataProcessed.processed = resultProcess.ops;
+                    dataProcessed.MigratedFalse = falseData;
+                    resolve(dataProcessed);
+                })
+            }else{
+                var dataProcessed = {};
+                dataProcessed.processed = [];
+                resolve(dataProcessed);
             }
 
-            Promise.all(processed).then((result) => {
-                var dataProcessed = {};
-                dataProcessed.processed = result;
-                dataProcessed.MigratedFalse = falseData;
-                resolve(dataProcessed);
-            })
 
         });
     }
