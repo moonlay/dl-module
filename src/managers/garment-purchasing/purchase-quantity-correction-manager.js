@@ -222,12 +222,17 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
         });
     }
 
-
-
     _beforeInsert(purchaseQuantityCorrection) {
         purchaseQuantityCorrection.no = generateCode();
         purchaseQuantityCorrection.date = new Date();
-        return Promise.resolve(purchaseQuantityCorrection);
+
+        return this.purchaseOrderExternalManager.getSingleByIdOrDefault(purchaseQuantityCorrection.items[0].purchaseOrderExternalId, ["no", "useIncomeTax"])
+            .then((purchaseOrderExternal) => {
+                if (purchaseOrderExternal.useIncomeTax) {
+                    purchaseQuantityCorrection.returNoteNo = generateCode("returNoteNo");
+                }
+                return Promise.resolve(purchaseQuantityCorrection);
+            })
     }
 
     _afterInsert(id) {
@@ -245,7 +250,6 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 return Promise.resolve(id);
             });
     }
-
 
     updateDeliveryOrder(purchaseQuantityCorrection) {
         return this.deliveryOrderManager.getSingleById(purchaseQuantityCorrection.deliveryOrderId)
@@ -405,6 +409,73 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 });
         })
     }
+
+    getPdfReturNote(id, offset) {
+        return new Promise((resolve, reject) => {
+            this.getSingleById(id)
+                .then(purchaseQuantityCorrection => {
+                    var getDefinition = require('../../pdf/definitions/garment-purchase-correction-retur-note');
+                    var getPOInternal = [];
+                    var deliveryOrderItems = [];
+
+                    for (var _item of purchaseQuantityCorrection.items) {
+                        if (ObjectId.isValid(_item.purchaseOrderInternalId)) {
+                            var poId = new ObjectId(_item.purchaseOrderInternalId);
+                            getPOInternal.push(this.purchaseOrderManager.getSingleByIdOrDefault(poId, ["no", "items.fulfillments"]));
+                        }
+                    }
+                    Promise.all(getPOInternal)
+                        .then(purchaseOrders => {
+                            var listInvoice = [];
+                            for (var purchaseOrder of purchaseOrders) {
+                                for (var item of purchaseOrder.items) {
+                                    for (var fulfillment of item.fulfillments) {
+                                        listInvoice.push({ deliveryOrderNo: fulfillment.deliveryOrderNo, invoiceNo: fulfillment.invoiceIncomeTaxNo || "", invoiceDate : fulfillment.invoiceIncomeTaxDate})
+                                    }
+                                }
+                            }
+
+                            var _invoiceNo = listInvoice.find((inv) => inv.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no);
+                            purchaseQuantityCorrection.invoiceNo = _invoiceNo.invoiceNo;
+                            purchaseQuantityCorrection.invoiceDate = _invoiceNo.invoiceDate;
+                            
+                            purchaseQuantityCorrection.deliveryOrder.items.map(item => {
+                                item.fulfillments.map((fulfillment) => {
+                                    deliveryOrderItems.push({
+                                        purchaseOrderExternalNo: item.purchaseOrderExternalNo,
+                                        purchaseOrderNo: fulfillment.purchaseOrderNo,
+                                        product: fulfillment.product.code,
+                                        deliveredQuantity: fulfillment.deliveredQuantity,
+                                        pricePerDealUnit: fulfillment.pricePerDealUnit
+                                    })
+                                })
+                            })
+
+                            for (var item of purchaseQuantityCorrection.items) {
+                                var deliveryOrderItem = deliveryOrderItems.find(doItem => doItem.purchaseOrderExternalNo === item.purchaseOrderExternalNo && doItem.purchaseOrderNo === item.purchaseOrderInternalNo && doItem.product === item.product.code);
+                                item.quantityCorrection = deliveryOrderItem.deliveredQuantity - item.quantity;
+                                item.priceCorrection = item.pricePerUnit;
+                                item.totalCorrection = item.quantityCorrection * item.priceCorrection;
+                            }
+
+                            var definition = getDefinition(purchaseQuantityCorrection, offset);
+                            var generatePdf = require('../../pdf/pdf-generator');
+                            generatePdf(definition)
+                                .then(binary => {
+                                    resolve(binary);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        })
+                })
+                .catch(e => {
+                    reject(e);
+                });
+
+        });
+    }
+
     getPurchaseQuantityCorrectionReport(query, user) {
         return new Promise((resolve, reject) => {
 

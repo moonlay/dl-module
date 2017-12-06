@@ -45,7 +45,18 @@ it('#02. should success when create pdf', function (done) {
         });
 });
 
-it('#03. should error when create with delivery order not has invoice', function (done) {
+it('#03. should success when create return note', function (done) {
+    var query = {};
+
+    purchaseCorrectionManager.getPdfReturNote(createdId, 7)
+        .then(pdfData => {
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#04. should error when create with delivery order not has invoice', function (done) {
     PurchasePriceCorrection.getNewTestDataUsingDeliveryOrderHasNotInvoice()
         .then(result => {
             done("Error");
@@ -58,7 +69,7 @@ it('#03. should error when create with delivery order not has invoice', function
         });
 });
 
-it("#04. should success when destroy all unit test data", function (done) {
+it("#05. should success when destroy all unit test data", function (done) {
     purchaseCorrectionManager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();

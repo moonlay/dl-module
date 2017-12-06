@@ -7,6 +7,7 @@ var map = DLModels.map;
 var i18n = require('dl-i18n');
 var PurchaseOrderManager = require('./purchase-order-manager');
 var DeliveryOrderManager = require('./delivery-order-manager');
+var PurchaseOrderExternalManager = require('./purchase-order-external-manager');
 var GarmentPurchaseCorrection = DLModels.garmentPurchasing.GarmentPurchaseCorrection;
 var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
@@ -18,6 +19,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
         this.collection = this.db.use(map.garmentPurchasing.collection.GarmentPurchaseCorrection);
         this.deliveryOrderManager = new DeliveryOrderManager(db, user);
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
+        this.purchaseOrderExternalManager = new PurchaseOrderExternalManager(db, user);
     }
 
     _validate(garmentPurchaseCorrection) {
@@ -170,7 +172,13 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
     _beforeInsert(garmentPurchaseCorrection) {
         garmentPurchaseCorrection.no = generateCode();
         garmentPurchaseCorrection.date = new Date();
-        return Promise.resolve(garmentPurchaseCorrection);
+        return this.purchaseOrderExternalManager.getSingleByIdOrDefault(garmentPurchaseCorrection.items[0].purchaseOrderExternalId, ["no", "useIncomeTax"])
+            .then((purchaseOrderExternal) => {
+                if (purchaseOrderExternal.useIncomeTax) {
+                    garmentPurchaseCorrection.returNoteNo = generateCode("returNoteNo");
+                }
+                return Promise.resolve(garmentPurchaseCorrection);
+            })
     }
 
     _afterInsert(id) {
@@ -348,6 +356,78 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
         });
     }
 
+    getPdfReturNote(id, offset) {
+        return new Promise((resolve, reject) => {
+            this.getSingleById(id)
+                .then(purchasePriceCorrection => {
+                    var getDefinition = require('../../pdf/definitions/garment-purchase-correction-retur-note');
+                    var getPOInternal = [];
+                    var deliveryOrderItems = [];
+
+                    for (var _item of purchasePriceCorrection.items) {
+                        if (ObjectId.isValid(_item.purchaseOrderInternalId)) {
+                            var poId = new ObjectId(_item.purchaseOrderInternalId);
+                            getPOInternal.push(this.purchaseOrderManager.getSingleByIdOrDefault(poId, ["no", "items.fulfillments"]));
+                        }
+                    }
+
+                    Promise.all(getPOInternal)
+                        .then(purchaseOrders => {
+                            var listInvoice = [];
+                            for (var purchaseOrder of purchaseOrders) {
+                                for (var item of purchaseOrder.items) {
+                                    for (var fulfillment of item.fulfillments) {
+                                        listInvoice.push({ deliveryOrderNo: fulfillment.deliveryOrderNo, invoiceNo: fulfillment.invoiceIncomeTaxNo || "", invoiceDate : fulfillment.invoiceIncomeTaxDate})
+                                    }
+                                }
+                            }
+
+                            var _invoiceNo = listInvoice.find((inv) => inv.deliveryOrderNo === purchasePriceCorrection.deliveryOrder.no);
+                            purchasePriceCorrection.invoiceNo = _invoiceNo.invoiceNo;
+                            purchasePriceCorrection.invoiceDate = _invoiceNo.invoiceDate;
+
+                            purchasePriceCorrection.deliveryOrder.items.map(item => {
+                                item.fulfillments.map((fulfillment) => {
+                                    deliveryOrderItems.push({
+                                        purchaseOrderExternalNo: item.purchaseOrderExternalNo,
+                                        purchaseOrderNo: fulfillment.purchaseOrderNo,
+                                        product: fulfillment.product.code,
+                                        deliveredQuantity: fulfillment.deliveredQuantity,
+                                        pricePerDealUnit: fulfillment.pricePerDealUnit
+                                    })
+                                })
+                            })
+
+                            for (var item of purchasePriceCorrection.items) {
+                                var deliveryOrderItem = deliveryOrderItems.find(doItem => doItem.purchaseOrderExternalNo === item.purchaseOrderExternalNo && doItem.purchaseOrderInternalNo === item.purchaseOrderNo && doItem.product === item.product.code);
+                                item.quantityCorrection = item.quantity;
+                                if (purchasePriceCorrection.correctionType === "Harga Satuan") {
+                                    item.priceCorrection = deliveryOrderItem.pricePerDealUnit - item.pricePerUnit;
+                                    item.totalCorrection = item.quantityCorrection * item.priceCorrection;
+                                } else {
+                                    item.priceCorrection = item.pricePerUnit;
+                                    item.totalCorrection = (item.quantityCorrection * item.priceCorrection) - item.priceTotal;
+                                }
+                            }
+
+                            var definition = getDefinition(purchasePriceCorrection, offset);
+                            var generatePdf = require('../../pdf/pdf-generator');
+                            generatePdf(definition)
+                                .then(binary => {
+                                    resolve(binary);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+
+        });
+    }
+
     getPurchasePriceCorrectionReport(query, user) {
         return new Promise((resolve, reject) => {
 
@@ -439,6 +519,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                 });
         });
     }
+
     getPurchasePriceCorrectionReportXls(dataReport, query) {
 
         return new Promise((resolve, reject) => {
