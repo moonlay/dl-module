@@ -733,46 +733,24 @@ module.exports = class InvoiceNoteManager extends BaseManager {
        getAllData(startdate, enddate, offset) {
         return new Promise((resolve, reject) => 
         {
-           var now = new Date();
+                   var now = new Date();
            var deleted = {
                 _deleted: false
-            };
+           };
             
-            var validStartDate = new Date(startdate);
-            var validEndDate = new Date(enddate);
+           var query = [deleted];
 
-            var query = [deleted];
-
-            if (startdate && enddate) {
-                validStartDate.setHours(validStartDate.getHours() - offset);
-                validEndDate.setHours(validEndDate.getHours() - offset);
-                var filterDate = {
-                    "date": {
-                        $gte: validStartDate,
-                        $lte: validEndDate
+           if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
+                var validStartDate = new Date(startdate);
+                var validEndDate = new Date(enddate);
+                query.push(
+                     {
+                          "date": {
+                                   $gte: validStartDate,
+                                   $lte: validEndDate
+                                  }
                     }
-                };
-                query.push(filterDate);
-            }
-            else if (!startdate && enddate) {
-                validEndDate.setHours(validEndDate.getHours() - offset);
-                var filterDateTo = {
-                    "date": {
-                        $gte: now,
-                        $lte: validEndDate
-                    }
-                };
-                query.push(filterDateTo);
-            }
-            else if (startdate && !enddate) {
-                validStartDate.setHours(validStartDate.getHours() - offset);
-                var filterDateFrom = {
-                    "date": {
-                        $gte: validStartDate,
-                        $lte: now
-                    }
-                };
-                query.push(filterDateFrom);
+                    )
             }
 
       var match = { '$and': query };
