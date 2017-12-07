@@ -495,18 +495,22 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
         });
     }
 
-  getAllData(startdate, enddate, offset) {
+getAllData(startdate, enddate, offset) {
         return new Promise((resolve, reject) => 
         {
            var now = new Date();
            var deleted = {
                 _deleted: false
             };
-                
+            var query = [deleted];
+
+            var jenis = {
+                       "correctionType": "Jumlah"
+            };
+            var query = [jenis];
+
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
-
-            var query = [deleted];
 
             if (startdate && enddate) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
@@ -544,6 +548,8 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
             
       this.collection.aggregate([
       {$match: match },
+      {$unwind:"$deliveryOrder.items"},
+      {$unwind:"$deliveryOrder.items.fulfillments"},
       {$unwind:"$items"},
       {$project :{
                     "NoNK":"$no",
@@ -557,6 +563,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                     "NoSJ" : "$deliveryOrder.no",
                     "TgSJ": "$deliveryOrder.date",
                     "TgDtg": "$deliveryOrder.supplierDoDate",
+                    "QtySJ":"$deliveryOrder.items.fulfillments.deliveredQuantity",                    
                     "POExt":"$items.purchaseOrderExternalNo",
                     "NoPR":"$items.purchaseRequestNo",
                     "PlanPO":"$items.purchaseRequestRefNo",
@@ -574,18 +581,16 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
       }}, 
       {$group :{ _id: {"NoNK":"$NoNK","TgNK":"$TgNK","Jenis":"$Jenis","Ketr":"$Ketr","MtUang":"$MtUang",
                       "Rate":"$Rate","KdSpl":"$KdSpl","NmSpl":"$NmSpl","NoSJ":"$NoSJ","TgSJ":"$TgSJ",
-                      "TgDtg":"$TgDtg","POExt":"$POExt","NoPR":"$NoPR","PlanPO":"$PlanPO","NoRO":"$NoRO",
-                      "KdBrg":"$KdBrg","NmBrg":"$NmBrg","Satuan":"$Satuan","Qty":"$Qty","Harga":"$Harga",
-                      "Total":"$Total","TgIn":"$TgIn","UserIn":"$UserIn","TgEd":"$TgEd","UserEd":"$UserEd"
-                     
-               },
-               "QtyNK": { $sum: "$Qty" },
-               "TotNK": { $sum: "$Total" }
+                      "TgDtg":"$TgDtg","QtySJ":"$QtySJ","POExt":"$POExt","NoPR":"$NoPR","PlanPO":"$PlanPO",
+                      "NoRO":"$NoRO","KdBrg":"$KdBrg","NmBrg":"$NmBrg","Satuan":"$Satuan","Qty":"$Qty","Harga":"$Harga",
+                      "Total":"$Total","TgIn":"$TgIn","UserIn":"$UserIn","TgEd":"$TgEd","UserEd":"$UserEd"                     
+               }
                }
         } 
       ])
         .toArray(function (err, result) {
                     assert.equal(err, null);
+                    console.log(result);
                     resolve(result);
                 });
         });

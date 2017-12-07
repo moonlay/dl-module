@@ -522,7 +522,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         purchaseOrderExternal.no = generateCode();
         purchaseOrderExternal.status = poStatusEnum.CREATED;
         purchaseOrderExternal.date = new Date();
-        return Promise.resolve(purchaseOrderExternal)
+        return this.checkIsOverbudget(purchaseOrderExternal);
     }
 
     _afterInsert(id) {
@@ -606,7 +606,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 return Promise.all(jobs);
             })
             .then((result) => {
-                return Promise.resolve(purchaseOrderExternal);
+                return this.checkIsOverbudget(purchaseOrderExternal);
             })
     }
 
@@ -1262,17 +1262,16 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         }
     }
 
-getAllData(startdate, enddate, offset) {
-        return new Promise((resolve, reject) => 
-        {
-           var now = new Date();
-           var deleted = {
+    getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var now = new Date();
+            var deleted = {
                 _deleted: false
             };
             var isPosted = {
                 isPosted: true
             };
-            
+
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
 
@@ -1310,78 +1309,84 @@ getAllData(startdate, enddate, offset) {
                 query.push(filterDateFrom);
             }
 
-      var match = { '$and': query };
-            
-      var POColl = map.garmentPurchasing.collection.GarmentPurchaseOrder; 
-      this.collection.aggregate(
-          [{
-              $match:match
-           }, {
-              $unwind:"$items"
-            },{
-               $unwind:"$items.realizations"
-            },
-         {
-               $lookup :{from :POColl,
-                         foreignField :"no",
-                         localField :"items.poNo",
-                         as :"PO"
+            var match = { '$and': query };
+
+            var POColl = map.garmentPurchasing.collection.GarmentPurchaseOrder;
+            this.collection.aggregate(
+                [{
+                    $match: match
+                }, {
+                    $unwind: "$items"
+                }, {
+                    $unwind: "$items.realizations"
+                },
+                {
+                    $lookup: {
+                        from: POColl,
+                        foreignField: "no",
+                        localField: "items.poNo",
+                        as: "PO"
+                    },
+                },
+                {
+                    $project: {
+                        "PoExt": "$no",
+                        "TgPoExt": "$date",
+                        "Dlvry": "$expectedDeliveryDate",
+                        "KdSpl": "$supplier.code",
+                        "NmSpl": "$supplier.name",
+                        "Ongkir": "$freightCostBy",
+                        "TipeByr": "$paymentType",
+                        "MtdByr": "$paymentMethod",
+                        "Tempo": "$paymentDueDays",
+                        "MtUang": "$currency.code",
+                        "RateMU": "$currencyRate",
+                        "PakaiPPN": "$useIncomeTax",
+                        "PakaiPPH": "$useVat",
+                        "RatePPH": "$vat.rate",
+                        "Status": "$status.label",
+                        "PRNo": "$items.prNo",
+                        "PlanPO": "$items.prRefNo",
+                        "RONo": "$items.roNo",
+                        "KdBrg": "$items.product.code",
+                        "NmBrg": "$items.remark",
+                        "QtyOrder": "$items.defaultQuantity",
+                        "SatOrder": "$items.defaultUom.unit",
+                        "QtyBeli": "$items.dealQuantity",
+                        "SatBeli": "$items.dealUom.unit",
+                        "QtySJ": "$items.realizations.deliveredQuantity",
+                        "SatKonv": "$items.uomConversion.unit",
+                        "Konversi": "$items.conversion",
+                        "HargaSat": "$items.pricePerDealUnit",
+                        "POs": "$PO"
+                    }
+                },
+                { $unwind: "$POs" },
+                {
+                    $project: {
+                        "PoExt": "$PoExt", "TgPoExt": "$TgPoExt", "Dlvry": "$Dlvry", "KdSpl": "$KdSpl",
+                        "NmSpl": "$NmSpl", "Ongkir": "$Ongkir", "TipeByr": "$TipeByr", "MtdByr": "$MtdByr",
+                        "Tempo": "$Tempo", "MtUang": "$MtUang", "RateMU": "$RateMU", "PakaiPPN": "$PakaiPPN",
+                        "PakaiPPH": "$PakaiPPH", "RatePPH": "$RatePPH", "Status": "$Status", "PRNo": "$PRNo",
+                        "PlanPO": "$PlanPO", "RONo": "$RONo", "KdBrg": "$KdBrg", "NmBrg": "$NmBrg", "QtyOrder": "$QtyOrder",
+                        "SatOrder": "$SatOrder", "QtyBeli": "$QtyBeli", "QtySJ": "$QtySJ", "SatBeli": "$SatBeli",
+                        "SatKonv": "$SatKonv", "Konversi": "$Konversi", "HargaSat": "$HargaSat", "KdByr": "$POs.buyer.code",
+                        "Konf": "$POs.unit.code", "Article": "$POs.artikel"
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            PoExt: "$PoExt", TgPoExt: "$TgPoExt", Dlvry: "$Dlvry", KdSpl: "$KdSpl", NmSpl: "$NmSpl", Ongkir: "$Ongkir", Qty: "$Qy", TipeByr: "$TipeByr", MtdByr: "$MtdByr",
+                            Tempo: "$Tempo", MtUang: "$MtUang", RateMU: "$RateMU", PakaiPPN: "$PakaiPPN", PakaiPPH: "$PakaiPPH", RatePPH: "$RatePPH", Status: "$Status", PRNo: "$PRNo", PlanPO: "$PlanPO",
+                            RONo: "$RONo", KdBrg: "$KdBrg", NmBrg: "$NmBrg", QtyOrder: "$QtyOrder", SatOrder: "$SatOrder", QtyBeli: "$QtyBeli", SatBeli: "$SatBeli",
+                            SatKonv: "$SatKonv", Konversi: "$Konversi", HargaSat: "$HargaSat", KdByr: "$KdByr", Konf: "$Konf", Article: "$Article"
                         },
-           },
-           {$project :{
-                        "PoExt":"$no",
-                        "TgPoExt":"$date",
-                        "Dlvry":"$expectedDeliveryDate",
-                        "KdSpl":"$supplier.code",
-                        "NmSpl":"$supplier.name",
-                        "Ongkir":"$freightCostBy",
-                        "TipeByr":"$paymentType",
-                        "MtdByr":"$paymentMethod",
-                        "Tempo":"$paymentDueDays",
-                        "MtUang":"$currency.code",
-                        "RateMU":"$currencyRate",
-                        "PakaiPPN":"$useIncomeTax",
-                        "PakaiPPH":"$useVat",
-                        "RatePPH":"$vat.rate",
-                        "Status":"$status.label",
-                        "PRNo":"$items.prNo",
-                        "PlanPO":"$items.prRefNo",
-                        "RONo":"$items.roNo",
-                        "KdBrg":"$items.product.code",
-                        "NmBrg":"$items.remark",
-                        "QtyOrder":"$items.defaultQuantity",
-                        "SatOrder":"$items.defaultUom.unit",
-                        "QtyBeli":"$items.dealQuantity",
-                        "SatBeli":"$items.dealUom.unit",
-                        "QtySJ":"$items.realizations.deliveredQuantity",
-                        "SatKonv":"$items.uomConversion.unit",
-                        "Konversi":"$items.conversion",
-                        "HargaSat":"$items.pricePerDealUnit",
-                        "POs" :"$PO"
-                       }
-        }, 
-        {$unwind :"$POs"},
-        {$project :{
-                        "PoExt":"$PoExt","TgPoExt":"$TgPoExt","Dlvry":"$Dlvry","KdSpl":"$KdSpl",
-                        "NmSpl":"$NmSpl","Ongkir":"$Ongkir","TipeByr":"$TipeByr","MtdByr":"$MtdByr",
-                        "Tempo":"$Tempo","MtUang":"$MtUang","RateMU":"$RateMU","PakaiPPN":"$PakaiPPN",
-                        "PakaiPPH":"$PakaiPPH","RatePPH":"$RatePPH","Status":"$Status","PRNo":"$PRNo",
-                        "PlanPO":"$PlanPO","RONo":"$RONo","KdBrg":"$KdBrg","NmBrg":"$NmBrg","QtyOrder":"$QtyOrder",
-                        "SatOrder":"$SatOrder","QtyBeli":"$QtyBeli","QtySJ":"$QtySJ","SatBeli":"$SatBeli",
-                        "SatKonv":"$SatKonv","Konversi":"$Konversi","HargaSat":"$HargaSat","KdByr" :"$POs.buyer.code",
-                        "Konf" : "$POs.unit.code","Article" :"$POs.artikel"
-                  }
-        },
-        {$group :{ _id: {PoExt :"$PoExt",TgPoExt :"$TgPoExt",Dlvry :"$Dlvry",KdSpl :"$KdSpl",NmSpl :"$NmSpl",Ongkir :"$Ongkir",Qty :"$Qy",TipeByr :"$TipeByr",MtdByr:"$MtdByr",
-                         Tempo:"$Tempo",MtUang:"$MtUang",RateMU:"$RateMU",PakaiPPN:"$PakaiPPN",PakaiPPH:"$PakaiPPH",RatePPH:"$RatePPH",Status:"$Status",PRNo:"$PRNo",PlanPO:"$PlanPO",
-                         RONo:"$RONo",KdBrg:"$KdBrg",NmBrg:"$NmBrg",QtyOrder:"$QtyOrder",SatOrder:"$SatOrder",QtyBeli:"$QtyBeli",SatBeli:"$SatBeli",
-                         SatKonv:"$SatKonv",Konversi:"$Konversi",HargaSat:"$HargaSat",KdByr :"$KdByr",Konf : "$Konf",Article :"$Article"
-                        },
-                          "QtySJ": { $sum: "$QtySJ" }
-                 }
-        }  
-      ])
-        .toArray(function (err, result) {
+                        "QtySJ": { $sum: "$QtySJ" }
+                    }
+                }
+                ])
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -1415,42 +1420,42 @@ getAllData(startdate, enddate, offset) {
                     "supplierId": new ObjectId(query.supplier)
                 };
             }
-    
+
             var Query = { "$and": [dateQuery, deletedQuery, supplierQuery, PONoQuery] };
             this.collection
                 .aggregate([
                     { "$match": Query }
                     , { "$unwind": "$items" }
                     , {
-                       "$project": {
-                            "no":"$no",
-                            "date":"$date",
-                            "expectedDeliveryDate":"$expectedDeliveryDate",
-                            "suppliercode":"$supplier.code",
-                            "suppliername":"$supplier.name",
-                            "freightCostBy":"$freightCostBy",
-                            "paymentMethod":"$paymentMethod",
-                            "paymentType":"$paymentType",
-                            "paymentDueDays":"$paymentDueDays",
-                            "currencycode":"$currency.code",
-                            "currencyRate":"$currencyRate",
-                            "useVat":"$useVat",
-                            "vatRate":"$vatRate",
-                            "useIncomeTax":"$useIncomeTax",
-                            "category":"$category",
-                            "prNo":"$items.prNo",
-                            "prRefNo":"$items.prRefNo",
-                            "roNo":"$items.roNo",
-                            "productcode":"$items.product.code",
-                            "description":"$items.remark",
-                            "defaultQuantity":"$items.defaultQuantity",
-                            "defaultUom":"$items.defaultUom.unit",
-                            "dealQuantity":"$items.dealQuantity",
-                            "dealUom":"$items.dealUom.unit",
-                            "pricePerDealUnit":"$items.pricePerDealUnit",
-                            "conversion":"$items.conversion",
-                            "uomConversion":"$items.uomConversion.unit",
-                            "quantityConversion":"$items.quantityConversion"                            
+                        "$project": {
+                            "no": "$no",
+                            "date": "$date",
+                            "expectedDeliveryDate": "$expectedDeliveryDate",
+                            "suppliercode": "$supplier.code",
+                            "suppliername": "$supplier.name",
+                            "freightCostBy": "$freightCostBy",
+                            "paymentMethod": "$paymentMethod",
+                            "paymentType": "$paymentType",
+                            "paymentDueDays": "$paymentDueDays",
+                            "currencycode": "$currency.code",
+                            "currencyRate": "$currencyRate",
+                            "useVat": "$useVat",
+                            "vatRate": "$vatRate",
+                            "useIncomeTax": "$useIncomeTax",
+                            "category": "$category",
+                            "prNo": "$items.prNo",
+                            "prRefNo": "$items.prRefNo",
+                            "roNo": "$items.roNo",
+                            "productcode": "$items.product.code",
+                            "description": "$items.remark",
+                            "defaultQuantity": "$items.defaultQuantity",
+                            "defaultUom": "$items.defaultUom.unit",
+                            "dealQuantity": "$items.dealQuantity",
+                            "dealUom": "$items.dealUom.unit",
+                            "pricePerDealUnit": "$items.pricePerDealUnit",
+                            "conversion": "$items.conversion",
+                            "uomConversion": "$items.uomConversion.unit",
+                            "quantityConversion": "$items.quantityConversion"
                         }
                     },
                     // {
@@ -1529,38 +1534,38 @@ getAllData(startdate, enddate, offset) {
                 xls.data.push(item);
             }
 
-		        xls.options["No"] = "number";
-                xls.options["No Po External"] = "string";
-                xls.options["Tanggal PO External"] = "string";
-                xls.options["Tanggal Delivery"] = "string";
-                xls.options["Kode Supplier"] = "string";
-                xls.options["Nama Supplier"] = "string";
-                xls.options["Ongkos Kirim"] = "string";
-                xls.options["Tipe Bayar"] = "string";
-                xls.options["Term Bayar"] = "string";
-                xls.options["Tempo Bayar"] = "numner";
-                xls.options["Mata Uang"] = "string";
-                xls.options["Rate"] = "number";
-                xls.options["Mata Uang"] = "string";
-                xls.options["Pakai PPN"] = "string";
-                xls.options["PPN"] = "string";
-                xls.options["Pakai PPH"] = "string";
-                xls.options["PPH"] = "number";
-                xls.options["Kategori"] = "string";
-                xls.options["No PR"] = "string";
-                xls.options["No Ref PR"] = "string";
-                xls.options["No RO"] = "string";
-                xls.options["Kode Barang"] = "string";
-                xls.options["Nama Barang"] = "string";
-                xls.options["Jumlah Order"] = "number";
-                xls.options["Satuan Order"] = "string";
-                xls.options["Jumlah Beli"] = "number";
-                xls.options["Satuan Beli"] = "string";
-                xls.options["Konversi"] = "number";
-                xls.options["Satuan Konversi"] = "string";
-                xls.options["Jumlah Konversi"] = "number";
-                xls.options["Harga Beli"] = "number";
-                xls.options["Jumlah Harga"] = "number";
+            xls.options["No"] = "number";
+            xls.options["No Po External"] = "string";
+            xls.options["Tanggal PO External"] = "string";
+            xls.options["Tanggal Delivery"] = "string";
+            xls.options["Kode Supplier"] = "string";
+            xls.options["Nama Supplier"] = "string";
+            xls.options["Ongkos Kirim"] = "string";
+            xls.options["Tipe Bayar"] = "string";
+            xls.options["Term Bayar"] = "string";
+            xls.options["Tempo Bayar"] = "numner";
+            xls.options["Mata Uang"] = "string";
+            xls.options["Rate"] = "number";
+            xls.options["Mata Uang"] = "string";
+            xls.options["Pakai PPN"] = "string";
+            xls.options["PPN"] = "string";
+            xls.options["Pakai PPH"] = "string";
+            xls.options["PPH"] = "number";
+            xls.options["Kategori"] = "string";
+            xls.options["No PR"] = "string";
+            xls.options["No Ref PR"] = "string";
+            xls.options["No RO"] = "string";
+            xls.options["Kode Barang"] = "string";
+            xls.options["Nama Barang"] = "string";
+            xls.options["Jumlah Order"] = "number";
+            xls.options["Satuan Order"] = "string";
+            xls.options["Jumlah Beli"] = "number";
+            xls.options["Satuan Beli"] = "string";
+            xls.options["Konversi"] = "number";
+            xls.options["Satuan Konversi"] = "string";
+            xls.options["Jumlah Konversi"] = "number";
+            xls.options["Harga Beli"] = "number";
+            xls.options["Jumlah Harga"] = "number";
 
             if (query.dateFrom && query.dateTo) {
                 xls.name = `PO External Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
@@ -1578,4 +1583,408 @@ getAllData(startdate, enddate, offset) {
         });
     }
 
+    checkIsOverbudget(purchaseOrderExternal) {
+        purchaseOrderExternal.isOverBudget = purchaseOrderExternal.items
+            .map((item) => item.isOverBudget)
+            .reduce((prev, curr, index) => {
+                return prev || curr
+            }, true);
+        if (!purchaseOrderExternal.isApproved) {
+            if (purchaseOrderExternal.isOverBudget) {
+                purchaseOrderExternal.isApproved = false;
+            } else {
+                purchaseOrderExternal.isApproved = true;
+            }
+        }
+
+        return Promise.resolve(purchaseOrderExternal)
+    }
+
+    validateApprove(purchaseOrderExternal) {
+        var purchaseOrderExternalError = {};
+        var valid = purchaseOrderExternal;
+
+        return this.getSingleByIdOrDefault(valid._id)
+            .then((poe) => {
+                if (!poe.isOverBudget)
+                    purchaseOrderExternalError["no"] = i18n.__("PurchaseOrderExternal.isOverBudget:%s is not over budget", i18n.__("PurchaseOrderExternal.isOverBudget._:No"));
+
+                if (Object.getOwnPropertyNames(purchaseOrderExternalError).length > 0) {
+                    var ValidationError = require('module-toolkit').ValidationError;
+                    return Promise.reject(new ValidationError('data podl does not pass validation', purchaseOrderExternalError));
+                }
+
+                if (!valid.stamp) {
+                    valid = new PurchaseOrderExternal(valid);
+                }
+                valid.stamp(this.user.username, 'manager');
+                return Promise.resolve(valid);
+            });
+    }
+
+    approve(listPurchaseOrderExternal) {
+        var getPOExternalById = listPurchaseOrderExternal.map((purchaseOrderExternal) => this.getSingleByIdOrDefault(purchaseOrderExternal._id));
+        return Promise.all(getPOExternalById)
+            .then((purchaseOrderExternals) => {
+                var jobs = purchaseOrderExternals.map((purchaseOrderExternal) => {
+                    return this.validateApprove(purchaseOrderExternal)
+                        .then((purchaseOrderExternal) => {
+                            purchaseOrderExternal.isApproved = true;
+                            return this.update(purchaseOrderExternal);
+                        })
+                        .then((result) => Promise.resolve(purchaseOrderExternal._id));
+                });
+                return Promise.all(jobs)
+            })
+            .then((purchaseOrderExternalIds) => {
+                return Promise.resolve(purchaseOrderExternalIds);
+            });
+    }
+
+    getOverBudgetReport(info) {
+        var query = {
+            _deleted: false,
+            isOverBudget: true
+        };
+        var queryItem = {
+            "items.isOverBudget": true
+        };
+        var queryPR = {};
+
+        if (info.prNo && info.prNo !== "") {
+            Object.assign(queryItem, {
+                "items.prNo": info.prNo
+            });
+        }
+
+        if (info.unitId && info.unitId !== "") {
+            Object.assign(queryPR, {
+                "purchaseRequest.unitId": new ObjectId(info.unitId)
+            });
+        }
+        if (info.categoryId && info.categoryId !== "") {
+            Object.assign(queryItem, {
+                "items.categoryId": new ObjectId(info.categoryId)
+            });
+        }
+
+        if (info.buyerId && info.buyerId !== "") {
+            Object.assign(queryPR, {
+                "purchaseRequest.buyerId": new ObjectId(info.buyerId)
+            });
+        }
+
+        var offset = Number(info.offset) || 7;
+        var page = (Number(info.page) || 1) - 1;
+        var size = Number(info.size) || 25;
+        var _dateNow = new Date();
+        var dateFormat = "DD/MM/YYYY";
+
+        if (info.dateFrom && info.dateFrom !== "" && info.dateTo && info.dateTo !== "") {
+            var _dateFrom = new Date(info.dateFrom);
+            var _dateTo = new Date(info.dateTo);
+            _dateFrom.setHours(_dateFrom.getHours() - offset);
+            _dateTo.setHours(_dateTo.getHours() - offset);
+            Object.assign(query, {
+                "date": {
+                    $gte: _dateFrom,
+                    $lte: _dateTo
+                }
+            });
+        } else if (info.dateFrom && info.dateFrom !== "") {
+            if (!info.dateTo && info.dateTo === "") {
+                var _dateFrom = new Date(info.dateFrom);
+                if (_dateNow > _dateFrom) {
+                    var _dateTo = new Date();
+                    _dateFrom.setHours(_dateFrom.getHours() - offset);
+                    _dateTo.setHours(_dateTo.getHours() - offset);
+                    Object.assign(query, {
+                        "date": {
+                            $gte: _dateFrom,
+                            $lte: _dateTo
+                        }
+                    });
+                }
+            }
+        } else if (info.dateTo && info.dateTo !== "") {
+            if (!info.dateFrom && info.dateFrom === "") {
+                var _dateTo = new Date(info.dateTo);
+                if (_dateNow < _dateTo) {
+                    var _dateFrom = new Date();
+                    _dateFrom.setHours(_dateFrom.getHours() - offset);
+                    _dateTo.setHours(_dateTo.getHours() - offset);
+                    Object.assign(query, {
+                        "date": {
+                            $gte: _dateFrom,
+                            $lte: _dateTo
+                        }
+                    });
+                }
+            }
+        }
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                var getDataPromise = [];
+                getDataPromise.push(
+                    this.collection
+                        .aggregate([
+                            {
+                                $match: query
+                            },
+                            {
+                                $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $match: queryItem
+                            },
+                            {
+                                $lookup:
+                                    {
+                                        from: "garment-purchase-requests",
+                                        localField: "items.prNo",
+                                        foreignField: "no",
+                                        as: "purchaseRequest"
+                                    }
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $match: queryPR
+                            },
+                            { $group: { _id: null, count: { $sum: 1 } } }
+                        ])
+                        .toArray()
+                );
+
+                if (info.xls) {
+                    getDataPromise.push(
+                        this.collection
+                            .aggregate([
+                                {
+                                    $match: query
+                                },
+                                {
+                                    $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
+                                },
+                                {
+                                    $match: queryItem
+                                },
+                                {
+                                    $lookup:
+                                        {
+                                            from: "garment-purchase-requests",
+                                            localField: "items.prNo",
+                                            foreignField: "no",
+                                            as: "purchaseRequest"
+                                        }
+                                },
+                                {
+                                    $unwind: { path: "$purchaseRequest", preserveNullAndEmptyArrays: true }
+                                },
+                                {
+                                    $match: queryPR
+                                },
+                                {
+                                    $project: {
+                                        no: 1,
+                                        date: 1,
+                                        supplierCode: "$supplier.code",
+                                        supplierName: "$supplier.name",
+                                        prDate: "$purchaseRequest.date",
+                                        prNo: "$items.prNo",
+                                        prRefNo: "$items.prRefNo",
+                                        unitCode: "$purchaseRequest.unit.code",
+                                        unitName: "$purchaseRequest.unit.name",
+                                        category: "$items.category.name",
+                                        productCode: "$items.product.code",
+                                        productName: "$items.product.name",
+                                        remark: "$items.remark",
+                                        quantity: "$items.dealQuantity",
+                                        uom: "$items.dealUom.unit",
+                                        budgetPrice: "$items.budgetPrice",
+                                        price: "$items.pricePerDealUnit",
+                                        overBudgetRemark: "$items.overBudgetRemark"
+                                    }
+                                }
+                            ])
+                            .toArray()
+                    );
+                } else {
+                    getDataPromise.push(this.collection
+                        .aggregate([
+                            {
+                                $match: query
+                            },
+                            {
+                                $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $match: queryItem
+                            },
+                            {
+                                $lookup:
+                                    {
+                                        from: "garment-purchase-requests",
+                                        localField: "items.prNo",
+                                        foreignField: "no",
+                                        as: "purchaseRequest"
+                                    }
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $match: queryPR
+                            },
+                            {
+                                $project: {
+                                    no: 1,
+                                    date: 1,
+                                    supplierCode: "$supplier.code",
+                                    supplierName: "$supplier.name",
+                                    prDate: "$purchaseRequest.date",
+                                    prNo: "$items.prNo",
+                                    prRefNo: "$items.prRefNo",
+                                    unitCode: "$purchaseRequest.unit.code",
+                                    unitName: "$purchaseRequest.unit.name",
+                                    category: "$items.category.name",
+                                    productCode: "$items.product.code",
+                                    productName: "$items.product.name",
+                                    remark: "$items.remark",
+                                    quantity: "$items.dealQuantity",
+                                    uom: "$items.dealUom.unit",
+                                    budgetPrice: "$items.budgetPrice",
+                                    price: "$items.pricePerDealUnit",
+                                    overBudgetRemark: "$items.overBudgetRemark"
+                                }
+                            },
+                            { $skip: page * size },
+                            { $limit: size }
+                        ])
+                        .toArray()
+                    );
+                }
+
+                return Promise.all(getDataPromise);
+            })
+            .then(result => {
+                var resCount = result[0];
+                var count = resCount.length > 0 ? resCount[0].count : 0;
+                var listData = result[1];
+                var dataReport = [];
+                var index = 0;
+
+                for (var data of listData) {
+                    index++;
+                    var item = {
+                        no: index,
+                        poExtNo: data.no,
+                        poExtDate: data.date ? moment(new Date(data.date)).add(offset, 'h').format(dateFormat) : "-",
+                        supplierCode: data.supplierCode,
+                        supplierName: data.supplierName,
+                        prDate: data.prDate ? moment(new Date(data.prDate)).add(offset, 'h').format(dateFormat) : "-",
+                        prNo: data.prNo,
+                        prRefNo: data.prRefNo,
+                        unit: `${data.unitCode} - ${data.unitName}`,
+                        category: data.category,
+                        productCode: data.productCode,
+                        productName: data.productName,
+                        productDesc: data.remark,
+                        quantity: data.quantity,
+                        uom: data.uom,
+                        budgetPrice: data.budgetPrice,
+                        price: data.price,
+                        totalBudgetPrice: data.budgetPrice * data.quantity,
+                        totalPrice: data.price * data.quantity,
+                        overBudgetRemark: data.overBudgetRemark
+                    }
+                    dataReport.push(item);
+                }
+
+                var result = {
+                    data: dataReport,
+                    count: dataReport.length,
+                    size: size,
+                    total: count,
+                    page: page + 1
+                };
+
+                return Promise.resolve(result);
+            })
+    }
+
+    getXlstOverBudgetReport(results, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+        var offset = query.offset || 7;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var data of results.data) {
+            var item = {
+                "No": data.no,
+                "No PO Eksternal": data.poExtNo,
+                "Tanggal PO Eksternal": data.poExtDate,
+                "Kode Supplier": data.supplierCode,
+                "Nama Supplier": data.supplierName,
+                "Tanggal Purchase Request": data.prDate,
+                "No Purchase Request": data.prNo,
+                "No Ref Purchase Request": data.prRefNo,
+                "Unit": data.unit,
+                "Kategori": data.category,
+                "Kode Barang": data.productCode,
+                "Nama Barang": data.productName,
+                "Keterangan Barang": data.productDesc,
+                "Jumlah Barang": data.quantity,
+                "Satuan Barang": data.uom,
+                "Harga Budget": data.budgetPrice,
+                "Harga Beli": data.price,
+                "Total Harga Budget": data.totalBudgetPrice,
+                "Total Harga Beli": data.totalPrice,
+                "Keterangan Over Budget": data.overBudgetRemark
+            }
+            xls.data.push(item);
+        }
+
+        var options = {
+            "No": "number",
+            "No PO Eksternal": "string",
+            "Tanggal PO Eksternal": "string",
+            "Kode Supplier": "string",
+            "Nama Supplier": "string",
+            "Tanggal Purchase Request": "string",
+            "No Purchase Request": "string",
+            "No Ref Purchase Request": "string",
+            "Unit": "string",
+            "Kategori": "string",
+            "Kode Barang": "string",
+            "Nama Barang": "string",
+            "Keterangan Barang": "string",
+            "Jumlah Barang": "number",
+            "Satuan Barang": "string",
+            "Harga Budget": "number",
+            "Harga Total": "number",
+            "Total Harga Budget": "number",
+            "Total Harga Beli": "number",
+            "Keterangan Over Budget": "string"
+        };
+        xls.options = options;
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Laporan Purchase Order External Over Budget - ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Laporan Purchase Order External Over Budget - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Laporan Purchase Order External Over Budget - ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Laporan Purchase Order External Over Budget.xlsx`;
+
+        return Promise.resolve(xls);
+    }
 };

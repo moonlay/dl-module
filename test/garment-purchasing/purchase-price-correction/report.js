@@ -136,6 +136,18 @@ it("#06. should success when get report with no parameter and get excel", functi
         });
 });
 
+it('#07. should success when generate data to Excel Report with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    var offset=7;
+    purchasePriceCorrectionManager.getAllData(startdate, enddate, offset)
+    .then(result => {
+        result.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+});
 
 
 

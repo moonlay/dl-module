@@ -1094,6 +1094,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 };
             }
 
+            var purchaseRequestRefNoQuery = {};
+            if (query.purchaseRequestRefNo) {
+                purchaseRequestRefNoQuery = {
+                    "items.purchaseRequestRefNo": (query.purchaseRequestRefNo)
+                };
+            }
+
             var unitQuery = {};
             if (query.unit) {
                 unitQuery = {
@@ -1109,7 +1116,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             }
 
 
-            var Query = { "$and": [userQuery, dateQuery, deletedQuery, supplierQuery, unitQuery, purchaseRequestQuery, noQuery] };
+            var Query = { "$and": [userQuery, dateQuery, deletedQuery, supplierQuery, purchaseRequestRefNoQuery, unitQuery, purchaseRequestQuery, noQuery] };
             this.collection
                 .aggregate([
                     { "$unwind": "$items" }

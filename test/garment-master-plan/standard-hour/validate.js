@@ -167,3 +167,13 @@ it(`#08. should null when get destroyed data`, function (done) {
             done(e);
         });
 });
+
+it(`#09. should success when remove all data`, function(done) {
+    manager.collection.remove({})
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

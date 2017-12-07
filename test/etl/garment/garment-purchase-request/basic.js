@@ -97,13 +97,72 @@ it("#05. should success when load all data", function (done) {
         });
 });
 
+it("#06. should success when find data", function (done) {
+    instanceManager.findData([extractedData.Ro])
+        .then((result) => {
+            done();
+
+        })
+        .catch((e) => {
+            console.log(e);
+            done(e);
+        });
+});
+
+it("#07. should success when delete data", function (done) {
+    instanceManager.delete([extractedData.Ro])
+        .then((result) => {
+            done();
+
+        })
+        .catch((e) => {
+            console.log(e);
+            done(e);
+        });
+});
+
+it("#08. should success when insert data", function (done) {
+    instanceManager.delete([extractedData.Ro])
+        .then((result) => {
+            done();
+
+        })
+        .catch((e) => {
+            console.log(e);
+            done(e);
+        });
+});
+
+it("#09. should success when get data all embeded data", function (done) {
+    instanceManager.getDataUnit([extractedData.Konf])
+        .then((result) => {
+            instanceManager.getDataBuyer([extractedData.Buyer])
+            .then((result) => {
+                instanceManager.getDataUom([extractedData.Satb])
+                .then((result) => {
+                    instanceManager.getDataProduct([extractedData.Kodeb])
+                    .then((result) => {
+                        instanceManager.getDataCategory([extractedData.Cat])
+                        .then((result) => {
+                            done();
+                        })
+                    })
+                })
+            })
+        })
+        .catch((e) => {
+            console.log(e);
+            done(e);
+        });
+});
+
 
 
 // it("#zz. should success migrate all data", function (done) {
-//     // var table1 = "Budget1";
-//     // var table2 = "POrder1";
-//     var table1 = "Budget";
-//     var table2 = "POrder";
+//     var table1 = "Budget1";
+//     var table2 = "POrder1";
+//     // var table1 = "Budget";
+//     // var table2 = "POrder";
 //     var date="latest";
 //     var page=1;
 //     var size=10;
