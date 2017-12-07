@@ -186,7 +186,7 @@ module.exports = function (pox, offset) {
         tbody = items.map(function (item) {
             return [{
                 stack: [`${item.productCode} - ${item.productName}`, item.productDesc, item.remark, {
-                    text: `${item.prNo} - ${item.prRefNo}`,
+                    text: `${item.prNo} - ${item.prRefNo}${item.isOverBudget ? "-OB" : ""}`,
                     style: 'bold'
                 }],
                 style: ['size08']

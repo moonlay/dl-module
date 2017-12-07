@@ -1587,7 +1587,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         purchaseOrderExternal.isOverBudget = purchaseOrderExternal.items
             .map((item) => item.isOverBudget)
             .reduce((prev, curr, index) => {
-                return prev && curr
+                return prev || curr
             }, true);
         if (!purchaseOrderExternal.isApproved) {
             if (purchaseOrderExternal.isOverBudget) {
@@ -1639,5 +1639,352 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             .then((purchaseOrderExternalIds) => {
                 return Promise.resolve(purchaseOrderExternalIds);
             });
+    }
+
+    getOverBudgetReport(info) {
+        var query = {
+            _deleted: false,
+            isOverBudget: true
+        };
+        var queryItem = {
+            "items.isOverBudget": true
+        };
+        var queryPR = {};
+
+        if (info.prNo && info.prNo !== "") {
+            Object.assign(queryItem, {
+                "items.prNo": info.prNo
+            });
+        }
+
+        if (info.unitId && info.unitId !== "") {
+            Object.assign(queryPR, {
+                "purchaseRequest.unitId": new ObjectId(info.unitId)
+            });
+        }
+        if (info.categoryId && info.categoryId !== "") {
+            Object.assign(queryItem, {
+                "items.categoryId": new ObjectId(info.categoryId)
+            });
+        }
+
+        if (info.buyerId && info.buyerId !== "") {
+            Object.assign(queryPR, {
+                "purchaseRequest.buyerId": new ObjectId(info.buyerId)
+            });
+        }
+
+        var offset = Number(info.offset) || 7;
+        var page = (Number(info.page) || 1) - 1;
+        var size = Number(info.size) || 25;
+        var _dateNow = new Date();
+        var dateFormat = "DD/MM/YYYY";
+
+        if (info.dateFrom && info.dateFrom !== "" && info.dateTo && info.dateTo !== "") {
+            var _dateFrom = new Date(info.dateFrom);
+            var _dateTo = new Date(info.dateTo);
+            _dateFrom.setHours(_dateFrom.getHours() - offset);
+            _dateTo.setHours(_dateTo.getHours() - offset);
+            Object.assign(query, {
+                "date": {
+                    $gte: _dateFrom,
+                    $lte: _dateTo
+                }
+            });
+        } else if (info.dateFrom && info.dateFrom !== "") {
+            if (!info.dateTo && info.dateTo === "") {
+                var _dateFrom = new Date(info.dateFrom);
+                if (_dateNow > _dateFrom) {
+                    var _dateTo = new Date();
+                    _dateFrom.setHours(_dateFrom.getHours() - offset);
+                    _dateTo.setHours(_dateTo.getHours() - offset);
+                    Object.assign(query, {
+                        "date": {
+                            $gte: _dateFrom,
+                            $lte: _dateTo
+                        }
+                    });
+                }
+            }
+        } else if (info.dateTo && info.dateTo !== "") {
+            if (!info.dateFrom && info.dateFrom === "") {
+                var _dateTo = new Date(info.dateTo);
+                if (_dateNow < _dateTo) {
+                    var _dateFrom = new Date();
+                    _dateFrom.setHours(_dateFrom.getHours() - offset);
+                    _dateTo.setHours(_dateTo.getHours() - offset);
+                    Object.assign(query, {
+                        "date": {
+                            $gte: _dateFrom,
+                            $lte: _dateTo
+                        }
+                    });
+                }
+            }
+        }
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                var getDataPromise = [];
+                getDataPromise.push(
+                    this.collection
+                        .aggregate([
+                            {
+                                $match: query
+                            },
+                            {
+                                $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $match: queryItem
+                            },
+                            {
+                                $lookup:
+                                    {
+                                        from: "garment-purchase-requests",
+                                        localField: "items.prNo",
+                                        foreignField: "no",
+                                        as: "purchaseRequest"
+                                    }
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $match: queryPR
+                            },
+                            { $group: { _id: null, count: { $sum: 1 } } }
+                        ])
+                        .toArray()
+                );
+
+                if (info.xls) {
+                    getDataPromise.push(
+                        this.collection
+                            .aggregate([
+                                {
+                                    $match: query
+                                },
+                                {
+                                    $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
+                                },
+                                {
+                                    $match: queryItem
+                                },
+                                {
+                                    $lookup:
+                                        {
+                                            from: "garment-purchase-requests",
+                                            localField: "items.prNo",
+                                            foreignField: "no",
+                                            as: "purchaseRequest"
+                                        }
+                                },
+                                {
+                                    $unwind: { path: "$purchaseRequest", preserveNullAndEmptyArrays: true }
+                                },
+                                {
+                                    $match: queryPR
+                                },
+                                {
+                                    $project: {
+                                        no: 1,
+                                        date: 1,
+                                        supplierCode: "$supplier.code",
+                                        supplierName: "$supplier.name",
+                                        prDate: "$purchaseRequest.date",
+                                        prNo: "$items.prNo",
+                                        prRefNo: "$items.prRefNo",
+                                        unitCode: "$purchaseRequest.unit.code",
+                                        unitName: "$purchaseRequest.unit.name",
+                                        category: "$items.category.name",
+                                        productCode: "$items.product.code",
+                                        productName: "$items.product.name",
+                                        remark: "$items.remark",
+                                        quantity: "$items.dealQuantity",
+                                        uom: "$items.dealUom.unit",
+                                        budgetPrice: "$items.budgetPrice",
+                                        price: "$items.pricePerDealUnit",
+                                        overBudgetRemark: "$items.overBudgetRemark"
+                                    }
+                                }
+                            ])
+                            .toArray()
+                    );
+                } else {
+                    getDataPromise.push(this.collection
+                        .aggregate([
+                            {
+                                $match: query
+                            },
+                            {
+                                $unwind: { path: "$items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $match: queryItem
+                            },
+                            {
+                                $lookup:
+                                    {
+                                        from: "garment-purchase-requests",
+                                        localField: "items.prNo",
+                                        foreignField: "no",
+                                        as: "purchaseRequest"
+                                    }
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $match: queryPR
+                            },
+                            {
+                                $project: {
+                                    no: 1,
+                                    date: 1,
+                                    supplierCode: "$supplier.code",
+                                    supplierName: "$supplier.name",
+                                    prDate: "$purchaseRequest.date",
+                                    prNo: "$items.prNo",
+                                    prRefNo: "$items.prRefNo",
+                                    unitCode: "$purchaseRequest.unit.code",
+                                    unitName: "$purchaseRequest.unit.name",
+                                    category: "$items.category.name",
+                                    productCode: "$items.product.code",
+                                    productName: "$items.product.name",
+                                    remark: "$items.remark",
+                                    quantity: "$items.dealQuantity",
+                                    uom: "$items.dealUom.unit",
+                                    budgetPrice: "$items.budgetPrice",
+                                    price: "$items.pricePerDealUnit",
+                                    overBudgetRemark: "$items.overBudgetRemark"
+                                }
+                            },
+                            { $skip: page * size },
+                            { $limit: size }
+                        ])
+                        .toArray()
+                    );
+                }
+
+                return Promise.all(getDataPromise);
+            })
+            .then(result => {
+                var resCount = result[0];
+                var count = resCount.length > 0 ? resCount[0].count : 0;
+                var listData = result[1];
+                var dataReport = [];
+                var index = 0;
+
+                for (var data of listData) {
+                    index++;
+                    var item = {
+                        no: index,
+                        poExtNo: data.no,
+                        poExtDate: data.date ? moment(new Date(data.date)).add(offset, 'h').format(dateFormat) : "-",
+                        supplierCode: data.supplierCode,
+                        supplierName: data.supplierName,
+                        prDate: data.prDate ? moment(new Date(data.prDate)).add(offset, 'h').format(dateFormat) : "-",
+                        prNo: data.prNo,
+                        prRefNo: data.prRefNo,
+                        unit: `${data.unitCode} - ${data.unitName}`,
+                        category: data.category,
+                        productCode: data.productCode,
+                        productName: data.productName,
+                        productDesc: data.remark,
+                        quantity: data.quantity,
+                        uom: data.uom,
+                        budgetPrice: data.budgetPrice,
+                        price: data.price,
+                        totalBudgetPrice: data.budgetPrice * data.quantity,
+                        totalPrice: data.price * data.quantity,
+                        overBudgetRemark: data.overBudgetRemark
+                    }
+                    dataReport.push(item);
+                }
+
+                var result = {
+                    data: dataReport,
+                    count: dataReport.length,
+                    size: size,
+                    total: count,
+                    page: page + 1
+                };
+
+                return Promise.resolve(result);
+            })
+    }
+
+    getXlstOverBudgetReport(results, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+        var offset = query.offset || 7;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var data of results.data) {
+            var item = {
+                "No": data.no,
+                "No PO Eksternal": data.poExtNo,
+                "Tanggal PO Eksternal": data.poExtDate,
+                "Kode Supplier": data.supplierCode,
+                "Nama Supplier": data.supplierName,
+                "Tanggal Purchase Request": data.prDate,
+                "No Purchase Request": data.prNo,
+                "No Ref Purchase Request": data.prRefNo,
+                "Unit": data.unit,
+                "Kategori": data.category,
+                "Kode Barang": data.productCode,
+                "Nama Barang": data.productName,
+                "Keterangan Barang": data.productDesc,
+                "Jumlah Barang": data.quantity,
+                "Satuan Barang": data.uom,
+                "Harga Budget": data.budgetPrice,
+                "Harga Beli": data.price,
+                "Total Harga Budget": data.totalBudgetPrice,
+                "Total Harga Beli": data.totalPrice,
+                "Keterangan Over Budget": data.overBudgetRemark
+            }
+            xls.data.push(item);
+        }
+
+        var options = {
+            "No": "number",
+            "No PO Eksternal": "string",
+            "Tanggal PO Eksternal": "string",
+            "Kode Supplier": "string",
+            "Nama Supplier": "string",
+            "Tanggal Purchase Request": "string",
+            "No Purchase Request": "string",
+            "No Ref Purchase Request": "string",
+            "Unit": "string",
+            "Kategori": "string",
+            "Kode Barang": "string",
+            "Nama Barang": "string",
+            "Keterangan Barang": "string",
+            "Jumlah Barang": "number",
+            "Satuan Barang": "string",
+            "Harga Budget": "number",
+            "Harga Total": "number",
+            "Total Harga Budget": "number",
+            "Total Harga Beli": "number",
+            "Keterangan Over Budget": "string"
+        };
+        xls.options = options;
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `Laporan Purchase Order External Over Budget - ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `Laporan Purchase Order External Over Budget - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `Laporan Purchase Order External Over Budget - ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `Laporan Purchase Order External Over Budget.xlsx`;
+
+        return Promise.resolve(xls);
     }
 };
