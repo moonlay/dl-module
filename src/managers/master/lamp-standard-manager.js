@@ -78,7 +78,8 @@ module.exports = class LampStandardManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            name: valid.name
+            name: valid.name,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -118,8 +119,7 @@ module.exports = class LampStandardManager extends BaseManager {
             name: `ix_${map.master.collection.LampStandard}_name`,
             key: {
                 name: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, nameIndex]);

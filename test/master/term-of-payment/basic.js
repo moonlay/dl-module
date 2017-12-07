@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.TermOfPayment,
     util: require("../../data-util/master/term-of-payment-data-util"),
     validator: require("dl-models").validator.master.termOfPayment,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

@@ -44,6 +44,8 @@ it('#02. should success when create report', function (done) {
     info.supplierId = createdData.items[0].supplierId;
     info.category = createdData.items[0].categoryId;
     info.unit = createdData.unitId;
+    info.refNo = createdData.items[0].refNo;
+    info.artikel = createdData.artikel;
     info.dateFrom = createdData.date;
     info.dateTo = new Date();
     info.dateTo.setDate(createdData.date.getDate() + 5);
@@ -83,6 +85,46 @@ it("#04. should success when destroy all unit test data", function (done) {
             done();
         })
         .catch((e) => {
+            done(e);
+        });
+});
+
+var resultForExcelTest = {};
+it('#05. should success when create report', function (done) {
+    var info = {};
+    info.purchaseOrderExternalNo = createdData.items[0].purchaseOrderExternal.no;
+    info.supplierId = createdData.items[0].supplierId;
+    info.category = createdData.items[0].categoryId;
+    info.unit = createdData.unitId;
+    info.refNo = createdData.items[0].refNo;
+    info.artikel = createdData.artikel;
+    info.username = createdData._createdBy;
+    info.dateFrom = createdData.date;
+    info.dateTo = new Date();
+    info.dateTo.setDate(createdData.date.getDate() + 5);
+
+    manager.getPurchaseReportAll(info)
+        .then(result => {
+            resultForExcelTest = result;
+            var POdata = result.data;
+            POdata.should.instanceof(Array);
+            POdata.length.should.not.equal(0);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#06. should success when get data for Excel Report', function (done) {
+    var query = {};
+
+    manager.getXlsPurchaseReportAll(resultForExcelTest, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
             done(e);
         });
 });

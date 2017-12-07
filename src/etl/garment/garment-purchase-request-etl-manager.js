@@ -47,26 +47,36 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 }
             };
 
-            keywordFilter["$or"] = [noFilter];
+            var roFilter = {
+                "roNo": {
+                    "$regex": regex
+                }
+            };
+
+            keywordFilter["$or"] = [noFilter,roFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
     }
 
-    run(o, table1, table2) {
+    run(tanggal, t1, t2, page, size) {
         var startedDate = new Date();
-
+        var code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
         this.migrationLog.insert({
-            code: "sql-gpr",
+            code: code,
             description: "Sql to MongoDB: Garment-Purchase-Request",
             start: startedDate,
         })
 
+        this.tgl = tanggal;
+
         return new Promise((resolve, reject) => {
-            var date = o;
-            this.getTimeStamp().then((result) => {
+            var table1 = t1;
+            var table2 = t2;
+
+            this.getTimeStamp(t1).then((result) => {
                 var dateStamp;
-                if (date.trim() == "latest") {
+                if (this.tgl.trim() == "latest") {
                     if (result.length != 0) {
                         var year = result[0].start.getFullYear();
                         var month = result[0].start.getMonth() + 1;
@@ -82,17 +92,18 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         dateStamp = [year, month, day].join('-');
                     } else if (result.length == 0) {
 
-                        var year = new Date().getFullYear();
-                        var month = new Date().getMonth() + 1;
-                        var day = new Date().getDate();
+                        // var year = new Date().getFullYear();
+                        // var month = new Date().getMonth() + 1;
+                        // var day = new Date().getDate();
 
-                        if (month < 10) {
-                            month = "0" + month;
-                        }
-                        if (day < 10) {
-                            day = "0" + day;
-                        }
-                        dateStamp = [year, month, day].join('-');
+                        // if (month < 10) {
+                        //     month = "0" + month;
+                        // }
+                        // if (day < 10) {
+                        //     day = "0" + day;
+                        // }
+                        // dateStamp = [year, month, day].join('-');
+                        dateStamp = "2017-01-01"
                     }
                 } else {
                     var monthOpt = ["latest",
@@ -102,100 +113,97 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         "october", "november", "december"];
                     var tempYear = new Date().getFullYear().toString();
 
-                    if (date == monthOpt[1].trim()) {
+                    if (this.tgl == monthOpt[1].trim()) {
                         dateStamp = tempYear + "-01%%";
-                    } else if (date == monthOpt[2].trim()) {
+                    } else if (this.tgl == monthOpt[2].trim()) {
                         dateStamp = tempYear + "-02%%";
-                    } else if (date == monthOpt[3].trim()) {
+                    } else if (this.tgl == monthOpt[3].trim()) {
                         dateStamp = tempYear + "-03%%";
-                    } else if (date == monthOpt[4].trim()) {
+                    } else if (this.tgl == monthOpt[4].trim()) {
                         dateStamp = tempYear + "-04%%";
-                    } else if (date == monthOpt[5].trim()) {
+                    } else if (this.tgl == monthOpt[5].trim()) {
                         dateStamp = tempYear + "-05%%";
-                    } else if (date == monthOpt[6].trim()) {
+                    } else if (this.tgl == monthOpt[6].trim()) {
                         dateStamp = tempYear + "-06%%";
-                    } else if (date == monthOpt[7].trim()) {
+                    } else if (this.tgl == monthOpt[7].trim()) {
                         dateStamp = tempYear + "-07%%";
-                    } else if (date == monthOpt[8].trim()) {
+                    } else if (this.tgl == monthOpt[8].trim()) {
                         dateStamp = tempYear + "-08%%";
-                    } else if (date == monthOpt[9].trim()) {
+                    } else if (this.tgl == monthOpt[9].trim()) {
                         dateStamp = tempYear + "-09%%";
-                    } else if (date == monthOpt[10].trim()) {
+                    } else if (this.tgl == monthOpt[10].trim()) {
                         dateStamp = tempYear + "-10%%";
-                    } else if (date == monthOpt[11].trim()) {
+                    } else if (this.tgl == monthOpt[11].trim()) {
                         dateStamp = tempYear + "-11%%";
-                    } else if (date == monthOpt[12].trim()) {
+                    } else if (this.tgl == monthOpt[12].trim()) {
                         dateStamp = tempYear + "-12%%";
                     }
                 }
 
-                this.getRowNumber(table1, table2, dateStamp)
-                    .then((data) => {
 
-                        var pageSize = 5000;
-                        var dataLength = data;
-                        var totalPageNumber = Math.ceil(dataLength / pageSize);
+                this.tgl = dateStamp;
 
-                        var date = dateStamp;
-                        var processedData = [];
 
-                        for (var i = 1; i <= totalPageNumber; i++) {
-                            processedData.push(new Promise((resolve, reject) => {
-                                this.extract(table1, table2, i, pageSize, date)
-                                    .then((extracted) => {
-                                        this.transform(extracted)
-                                            .then((transformed) => {
-                                                this.load(transformed)
-                                                    .then((result) => {
-                                                        resolve(result);
-                                                    })
-                                            })
-                                    })
-                            }))
-                        }
+                var flag = table1;
+                var processedData = new Promise((res, rej) => {
+                    this.extract(table1, table2, page, size, dateStamp)
+                        .then((extracted) => {
+                            this.transform(extracted, table1)
+                                .then((transformed) => {
+                                    var transformed = transformed;
+                                    this.beforeLoad(transformed)
+                                        .then((deleted) => {
+                                            this.load(transformed, deleted)
+                                                .then((result) => {
+                                                    res(result);
+                                                })
+                                        })
 
-                        Promise.all(processedData).then((processedData) => {
-                            var finishedDate = new Date();
-                            var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
-                            var updateLog = {};
+                                })
+                        })
+                });
 
-                            if (!processedData[0]) {
-                                updateLog = {
-                                    code: "sql-gpr",
-                                    description: "Sql to MongoDB: Garment-Purchase-Request",
-                                    start: startedDate,
-                                    finish: finishedDate,
-                                    executionTime: spentTime + " minutes",
-                                    status: "today, data didnt exist",
+                processedData.then((result) => {
+                    var finishedDate = new Date();
+                    var spentTime = moment(finishedDate).diff(moment(startedDate), "minutes");
+                    var updateLog = {};
+                    var code = (t1 == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)")
+                    if (!result) {
+                        updateLog = {
+                            code: code,
+                            description: "Sql to MongoDB: Garment-Purchase-Request",
+                            start: startedDate,
+                            finish: finishedDate,
+                            executionTime: spentTime + " minutes",
+                            status: "today, data didnt exist",
 
-                                };
-                            } else {
-                                updateLog = {
-                                    code: "sql-gpr",
-                                    description: "Sql to MongoDB: Garment-Purchase-Request",
-                                    start: startedDate,
-                                    finish: finishedDate,
-                                    executionTime: spentTime + " minutes",
-                                    status: "Successful",
+                        };
+                    } else {
+                        updateLog = {
+                            code: code,
+                            description: "Sql to MongoDB: Garment-Purchase-Request",
+                            start: startedDate,
+                            finish: finishedDate,
+                            executionTime: spentTime + " minutes",
+                            status: "Successful",
 
-                                };
-                            }
+                        };
+                    }
 
-                            var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
-                            resolve(processedData);
-
-                        });
-
-                    });
+                    var migrate = this.migrationLog.updateOne({ start: startedDate }, updateLog);
+                    resolve(result);
+                });
             });
+
         });
     };
 
 
-    getTimeStamp() {
+    getTimeStamp(opt) {
+        var code = (opt == "Budget" ? "sql-gpr" : "sql-gpr(Budget1,POrder1)");
         return new Promise((resolve, reject) => {
             this.migrationLog.find({
-                code: "sql-gpr",
+                code: code,
                 description: "Sql to MongoDB: Garment-Purchase-Request",
                 status: "Successful"
             }).sort({
@@ -205,6 +213,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             });
         })
     }
+
 
 
     getRowNumber(table1, table2, tgl) {
@@ -217,15 +226,21 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
                         var request = this.sql.transactionRequest(transaction);
                         var sqlQuery;
-
-                        if (tgl.includes("%%")) {
-                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                        if (table1 == "Budget") {
+                            if (tgl.includes("%%")) {
+                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) like '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                            } else {
+                                sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from " + table2 + " as POrder inner join  " + table1 + " as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                            }
                         } else {
-                            sqlQuery = "SELECT count(POrder.Ro) as NumberOfRow from " + table1 + " as Budget inner join  " + table2 + " as POrder On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.TgValid,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+                            sqlQuery = "SELECT count(distinct POrder.Ro) as NumberOfRow from POrder1 as POrder inner join Budget1 as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '" + tgl + "' and POrder.Harga = 0 and porder.CodeSpl=''"
+
                         }
+
 
                         request.query(sqlQuery, function (err, result) {
                             if (result) {
+                                console.log(result[0].NumberOfRow);
                                 resolve(result[0].NumberOfRow);
                             } else {
                                 reject(err);
@@ -251,14 +266,14 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             if (table1 == "Budget" && table2 == "POrder") {
                                 sqlQuery = "exec garment_purchase_request_period " + page + "," + pageSize + ",'" + tgl + "' ";
                             }
-                            // else {
-                            //     sqlQuery = "exec garment_purchase_request1 " + page + "," + pageSize + ",'" + tgl + "' ";
-                            // }
+                            else {
+                                sqlQuery = "exec garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "' ";
+                            }
                         } else {
                             if (table1 == "Budget" && table2 == "POrder") {
                                 sqlQuery = "exec garment_purchase_request " + page + "," + pageSize + ",'" + tgl + "' ";
                             } else {
-                                sqlQuery = "exec garment_purchase_request1 " + page + "," + pageSize + ",'" + tgl + "' ";
+                                sqlQuery = "exec garment_purchase_request2 " + page + "," + pageSize + ",'" + tgl + "' ";
                             }
                         }
 
@@ -316,170 +331,217 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         });
     }
 
-    transform(datas) {
+    extractRo(ro, table1) {
         return new Promise((resolve, reject) => {
-            var nomorRo;
 
-            if (!datas.dataTest) {
-                //distinct 
-                nomorRo = [];
-                var unitArr = [];
-                var catArr = [];
-                var productArr = [];
-                var buyerArr = [];
-                var uomArr = [];
+            if (Array.isArray(table1)) {
+                resolve(table1);
+            } else
 
-                for (var unique of datas) {
-                    var unitCode = "";
+                this.sql.startConnection()
+                    .then(() => {
+                        var transaction = this.sql.transaction();
+                        transaction.begin((err) => {
 
-                    var codeBarang = (unique.Kodeb.trim() == unique.Cat.trim()) ? unique.Kodeb.trim() + "001" : unique.Kodeb.trim();
+                            var request = this.sql.transactionRequest(transaction);
+                            var sqlQuery;
+                            if (table1 == "Budget") {
+                                sqlQuery = "SELECT ROW_NUMBER() OVER ( ORDER BY POrder.Ro ASC ) AS RowNum,POrder.ID_PO,POrder.Harga as hrg,POrder.Tanggal,POrder.jamin,POrder.jamed,POrder.Post,POrder.Urut,POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5,Budget.Harga from POrder as POrder inner join Budget as Budget On Budget.Po = POrder.Nopo where (POrder.Post ='Y' or POrder.Post ='M') and left(convert(varchar,POrder.tgvalid,20),10) >= '2017-01-01' and POrder.Harga = 0 and porder.CodeSpl='' and porder.ro='" + ro + "'";
+                            } else {
+                                sqlQuery = "SELECT ROW_NUMBER() OVER ( ORDER BY POrder.Ro ASC ) AS RowNum,POrder.ID,POrder.Harga as hrg,POrder.Tanggal,POrder.jamin,POrder.jamed,POrder.Post,POrder.Urut,POrder.Clr1,POrder.Clr2,POrder.Clr3,POrder.Clr4,POrder.Clr5,POrder.Clr6,POrder.Clr7,POrder.Clr8,POrder.Clr9,POrder.Clr10,POrder.Ro,POrder.Art,POrder.Buyer,POrder.Shipment,POrder.Nopo,POrder.TgValid,POrder.Delivery,POrder.Konf,POrder.Cat,POrder.Userin,POrder.Tglin,POrder.Usered,POrder.Tgled,POrder.Kodeb,POrder.Ketr,POrder.Qty,POrder.Satb,POrder.Kett,POrder.Kett2,POrder.Kett3,POrder.Kett4,POrder.Kett5,Budget.Harga from POrder1 as POrder inner join Budget1 as Budget On Budget.Po = POrder.Nopo where left(convert(varchar,POrder.tglin,20),10) >= '2017-01-01' and POrder.Harga = 0 and porder.CodeSpl='' and porder.ro='" + ro + "'";
+                            }
 
-                    if (unique.Konf.trim() == "K.1") {
-                        unitCode = "C2A"
-                    } else if (unique.Konf.trim() == "K.2") {
-                        unitCode = "C2B"
-                    } else if (unique.Konf.trim() == "K.3") {
-                        unitCode = "C2C"
-                    } else if (unique.Konf.trim() == "K.4") {
-                        unitCode = "C1A"
-                    } else if (unique.Konf.trim() == "K.5") {
-                        unitCode = "C2A"
-                    } else {
-                        unitCode = unique.Konf.trim();
-                    }
+                            request.query(sqlQuery, function (err, result) {
+                                if (result) {
 
-                    if (!(nomorRo.find(o => o == unique.Ro.trim()))) {
+                                    resolve(result);
 
-                        nomorRo.push(unique.Ro.trim());
-                    }
-                    if (!(unitArr.find(o => o == unitCode))) {
-                        unitArr.push(unitCode);
-                    }
-                    if (!(catArr.find(o => o == unique.Cat.trim()))) {
-                        catArr.push(unique.Cat.trim());
-                    }
-                    if (!(productArr.find(o => o == codeBarang))) {
-                        productArr.push(codeBarang);
-                    }
-                    if (!(buyerArr.find(o => o == unique.Buyer.trim()))) {
-                        buyerArr.push(unique.Buyer.trim());
-                    }
-                    if (!(uomArr.find(o => o == unique.Satb.trim()))) {
-                        uomArr.push(unique.Satb.trim());
-                    }
-                }
+                                } else {
+                                    reject(err);
+                                }
+                            })
 
-                var getUnit = this.getDataUnit(unitArr);
-                var getCategory = this.getDataCategory(catArr);
-                var getProduct = this.getDataProduct(productArr);
-                var getBuyer = this.getDataBuyer(buyerArr);
-                var getUom = this.getDataUom(uomArr);
+                        })
 
-            } else {
-                nomorRo = [];
-                var getUnit = datas.dataTest.Unit;
-                var getCategory = datas.dataTest.Category;
-                var getProduct = datas.dataTest.Product;
-                var getBuyer = datas.dataTest.Buyer;
-                var getUom = datas.dataTest.Uom;
+                    })
 
-                for (var unique of datas) {
-                    if (!(nomorRo.find(o => o == unique.Ro.trim()))) {
+        })
 
-                        nomorRo.push(unique.Ro.trim());
-                    }
-                }
-            }
+    }
 
+    beforeTransform(Ro, table1) {
+        var Ro = Ro;
+        var table1 = table1;
 
-            Promise.all([getUnit, getCategory, getProduct, getBuyer, getUom]).then((result) => {
-                var _unit = result[0];
-                var _category = result[1];
-                var _product = result[2];
-                var _buyer = result[3];
-                var _uom = result[4];
+        return new Promise((resolve, reject) => {
+            var transformData = [];
+            var no = 1;
+            var extractData = (Array.isArray(table1)) ? Promise.resolve(table1) : this.extractRo(Ro, table1);
 
-                var transformData = {
-                    datas: [],
-                    nomorRo: [],
-                };
+            extractData.then((extract) => {
+
+                var extract = extract;
+                var items = [];
+                var map = {};
+                var createdDateTemp = [];
+                var updatedDateTemp = [];
+
+                var _createdDate;
+                var _updatedDate;
 
                 var unitNotFound = [];
                 var buyerNotFound = [];
                 var categoryNotFound = [];
                 var productNotFound = [];
                 var uomNotFound = [];
-                var no = 1;
 
-                for (var Ro of nomorRo) {
+                var unitArr = [];
+                var catArr = [];
+                var productArr = [];
+                var buyerArr = [];
+                var uomArr = [];
 
-                    var items = [];
-                    var map = {};
-                    var createdDateTemp = [];
-                    var updatedDateTemp = [];
+                if (!Array.isArray(table1)) {
+                    for (var unique of extract) {
+                        var unitCode = "";
 
-                    var _createdDate;
-                    var _updatedDate;
+                        var codeBarang = (unique.Kodeb.trim() == unique.Cat.trim()) ? unique.Kodeb.trim() + "001" : unique.Kodeb.trim();
 
-                    for (var data of datas) {
-                        if (Ro == data.Ro) {
-                            var code = generateCode(data.ID_PO);
-                            var createdYear = data.Tglin.getFullYear();
-                            var createdMonth = data.Tglin.getMonth() + 1;
-                            var createdDay = data.Tglin.getDate();
+                        if (unique.Konf.trim() == "K.1") {
+                            unitCode = "C2A"
+                        } else if (unique.Konf.trim() == "K.2") {
+                            unitCode = "C2B"
+                        } else if (unique.Konf.trim() == "K.3") {
+                            unitCode = "C2C"
+                        } else if (unique.Konf.trim() == "K.4") {
+                            unitCode = "C1A"
+                        } else if (unique.Konf.trim() == "K.5") {
+                            unitCode = "C2A"
+                        } else {
+                            unitCode = unique.Konf.trim();
+                        }
 
-                            if (createdMonth < 10) {
-                                createdMonth = "0" + createdMonth;
-                            }
-                            if (createdDay < 10) {
-                                createdDay = "0" + createdDay;
-                            }
-                            _createdDate = [createdYear, createdMonth, createdDay].join('-');
+                        if (!(unitArr.find(o => o == unitCode))) {
+                            unitArr.push(unitCode);
+                        }
+                        if (!(catArr.find(o => o == unique.Cat.trim()))) {
+                            catArr.push(unique.Cat.trim());
+                        }
+                        if (!(productArr.find(o => o == codeBarang))) {
+                            productArr.push(codeBarang);
+                        }
+                        if (!(buyerArr.find(o => o == unique.Buyer.trim()))) {
+                            buyerArr.push(unique.Buyer.trim());
+                        }
+                        if (!(uomArr.find(o => o == unique.Satb.trim()))) {
+                            uomArr.push(unique.Satb.trim());
+                        }
+                    }
+                    var getUnit = this.getDataUnit(unitArr);
+                    var getCategory = this.getDataCategory(catArr);
+                    var getProduct = this.getDataProduct(productArr);
+                    var getBuyer = this.getDataBuyer(buyerArr);
+                    var getUom = this.getDataUom(uomArr);
 
-                            var updatedYear = data.Tglin.getFullYear();
-                            var updatedMonth = data.Tglin.getMonth() + 1;
-                            var updatedDay = data.Tglin.getDate();
+                } else {
+                    var getUnit = extract.dataTest.Unit;
+                    var getCategory = extract.dataTest.Category;
+                    var getProduct = extract.dataTest.Product;
+                    var getBuyer = extract.dataTest.Buyer;
+                    var getUom = extract.dataTest.Uom;
+                }
 
-                            if (updatedMonth < 10) {
-                                updatedMonth = "0" + updatedMonth;
-                            }
-                            if (updatedDay < 10) {
-                                updatedDay = "0" + updatedDay;
-                            }
-                            _updatedDate = [updatedYear, updatedMonth, updatedDay].join('-');
 
-                            createdDateTemp.push(data.jamin.trim());
-                            updatedDateTemp.push(data.jamed.trim());
 
-                            var unitCode = "";
-                            if (data.Konf.trim() == "K.1") {
-                                unitCode = "C2A"
-                            } else if (data.Konf.trim() == "K.2") {
-                                unitCode = "C2B"
-                            } else if (data.Konf.trim() == "K.3") {
-                                unitCode = "C2C"
-                            } else if (data.Konf.trim() == "K.4") {
-                                unitCode = "C1A"
-                            } else if (data.Konf.trim() == "K.5") {
-                                unitCode = "C2A"
-                            } else {
-                                unitCode = data.Konf.trim();
-                            }
+                Promise.all([getUnit, getCategory, getProduct, getBuyer, getUom]).then((result) => {
+                    var _unit = result[0];
+                    var _category = result[1];
+                    var _product = result[2];
+                    var _buyer = result[3];
+                    var _uom = result[4];
 
-                            var _stamp = ObjectId();
+                    var obj= new ObjectId();
+                    var code = generateCode(extract[0].ID_PO ? extract[0].ID_PO + obj.toString() : extract[0].ID + obj.toString());
 
-                            var codeBarang = (data.Kodeb.trim() == data.Cat.trim()) ? data.Kodeb.trim() + "001" : data.Kodeb.trim();
+                    for (var data of extract) {
+                        // var code = generateCode(data.ID_PO + data.RowNum ? data.ID_PO + data.RowNum : data.ID + data.RowNum);
+                        var createdYear = data.Tglin.getFullYear();
+                        var createdMonth = data.Tglin.getMonth() + 1;
+                        var createdDay = data.Tglin.getDate();
 
-                            var unit = (_unit.find(o => o.code.trim() == unitCode)) ? (_unit.find(o => o.code.trim() == unitCode)) : (unitNotFound.find(o => o == unitCode)) ? true : unitNotFound.push(unitCode);
-                            var buyer = (_buyer.find(o => o.code.trim() == data.Buyer.trim())) ? (_buyer.find(o => o.code.trim() == data.Buyer.trim())) : (buyerNotFound.find(o => o == data.Buyer)) ? true : buyerNotFound.push(data.Buyer);
-                            var product = (_product.find(o => o.code.trim() == codeBarang)) ? (_product.find(o => o.code.trim() == codeBarang)) : (productNotFound.find(o => o == codeBarang)) ? true : productNotFound.push(codeBarang);
-                            var uom = (_uom.find(o => o.unit.trim() == data.Satb.trim())) ? (_uom.find(o => o.unit.trim() == data.Satb.trim())) : (uomNotFound.find(o => o == data.Satb.trim())) ? true : uomNotFound.push(data.Satb.trim());
-                            var category = (_category.find(o => o.code.trim() == data.Cat.trim())) ? (_category.find(o => o.code.trim() == data.Cat.trim())) : (categoryNotFound.find(o => o == data.Cat.trim())) ? true : categoryNotFound.push(data.Cat.trim());
+                        if (createdMonth < 10) {
+                            createdMonth = "0" + createdMonth;
+                        }
+                        if (createdDay < 10) {
+                            createdDay = "0" + createdDay;
+                        }
+                        _createdDate = [createdYear, createdMonth, createdDay].join('-');
 
-                            //getting items
-                            var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
+                        var updatedYear = data.Tglin.getFullYear();
+                        var updatedMonth = data.Tglin.getMonth() + 1;
+                        var updatedDay = data.Tglin.getDate();
 
-                            var Colors = [];
+                        if (updatedMonth < 10) {
+                            updatedMonth = "0" + updatedMonth;
+                        }
+                        if (updatedDay < 10) {
+                            updatedDay = "0" + updatedDay;
+                        }
+                        _updatedDate = [updatedYear, updatedMonth, updatedDay].join('-');
+
+                        createdDateTemp.push(data.jamin.trim());
+                        updatedDateTemp.push(data.jamed.trim());
+
+                        var unitCode = "";
+                        if (data.Konf.trim() == "K.1") {
+                            unitCode = "C2A"
+                        } else if (data.Konf.trim() == "K.2") {
+                            unitCode = "C2B"
+                        } else if (data.Konf.trim() == "K.3") {
+                            unitCode = "C2C"
+                        } else if (data.Konf.trim() == "K.4") {
+                            unitCode = "C1A"
+                        } else if (data.Konf.trim() == "K.5") {
+                            unitCode = "C2A"
+                        } else {
+                            unitCode = data.Konf.trim();
+                        }
+
+                        var _stamp = ObjectId();
+
+                        var codeBarang = (data.Kodeb.trim() == data.Cat.trim()) ? data.Kodeb.trim() + "001" : data.Kodeb.trim();
+
+                        var unit = (_unit.find(o => o.code.trim() == unitCode)) ? (_unit.find(o => o.code.trim() == unitCode)) : (unitNotFound.find(o => o == unitCode)) ? true : unitNotFound.push(unitCode);
+                        var buyer = (_buyer.find(o => o.code.trim() == data.Buyer.trim())) ? (_buyer.find(o => o.code.trim() == data.Buyer.trim())) : (buyerNotFound.find(o => o == data.Buyer)) ? true : buyerNotFound.push(data.Buyer);
+                        var product = (_product.find(o => o.code.trim() == codeBarang)) ? (_product.find(o => o.code.trim() == codeBarang)) : (productNotFound.find(o => o == codeBarang)) ? true : productNotFound.push(codeBarang);
+                        var uom = (_uom.find(o => o.unit.trim() == data.Satb.trim())) ? (_uom.find(o => o.unit.trim() == data.Satb.trim())) : (uomNotFound.find(o => o == data.Satb.trim())) ? true : uomNotFound.push(data.Satb.trim());
+                        var category = (_category.find(o => o.code.trim() == data.Cat.trim())) ? (_category.find(o => o.code.trim() == data.Cat.trim())) : (categoryNotFound.find(o => o == data.Cat.trim())) ? true : categoryNotFound.push(data.Cat.trim());
+
+                        //getting items
+                        var remarkTemp = [];
+                        if (data.Ketr.trim() != "") {
+                            remarkTemp.push(data.Ketr.trim());
+                        }
+                        if (data.Kett.trim() != "") {
+                            remarkTemp.push(data.Kett.trim());
+                        }
+                        if (data.Kett2.trim() != "") {
+                            remarkTemp.push(data.Kett2.trim());
+                        }
+                        if (data.Kett3.trim() != "") {
+                            remarkTemp.push(data.Kett3.trim());
+                        }
+                        if (data.Kett4.trim() != "") {
+                            remarkTemp.push(data.Kett4.trim());
+                        }
+                        if (data.Kett5.trim() != "") {
+                            remarkTemp.push(data.Kett5.trim());
+                        }
+                        // var remark = data.Ketr.trim() ? data.Ketr.trim() : "";
+                        var remark = remarkTemp.toString();
+
+                        var Colors = [];
+                        if (data.Clr1 != null || data.Clr2 != null || data.Clr3 != null || data.Clr4 != null || data.Clr5 != null || data.Clr6 != null || data.Clr7 != null || data.Clr8 != null || data.Clr9 != null || data.Clr10 != null) {
                             if (data.Clr1.trim() != "") {
                                 Colors.push(data.Clr1.trim());
                             } if (data.Clr2.trim() != "") {
@@ -502,150 +564,186 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                 Colors.push(data.Clr10.trim());
                             }
 
-                            if (product._id && uom._id && category._id) {
-                                var item = {
-                                    _stamp: "",
-                                    _type: "purchase-request-item",
-                                    _version: "",
-                                    _active: true,
-                                    _deleted: false,
-                                    _createdBy: "",
-                                    _createdDate: "",
-                                    createdAgent: "",
-                                    updatedBy: "",
-                                    _updatedDate: "",
-                                    updatedAgent: "",
+                        }
 
-                                    productId: product._id,
-                                    product: {
-                                        _id: product._id,
-                                        code: codeBarang,
-                                        name: product.name,
-                                        price: product.price,
-                                        currency: product.currency,
-                                        description: product.description,
-                                        uomId: product.uomId,
-                                        uom: product.uom,
-                                        tags: product.tags,
-                                        properties: product.properties,
-                                    },
+                        if (product._id && uom._id && category._id) {
+                            var item = {
+                                _stamp: "",
+                                _type: "purchase-request-item",
+                                _version: "",
+                                _active: true,
+                                _deleted: false,
+                                _createdBy: "",
+                                _createdDate: "",
+                                createdAgent: "",
+                                updatedBy: "",
+                                _updatedDate: "",
+                                updatedAgent: "",
 
-                                    budgetPrice: data.Harga,
-                                    quantity: data.Qty,
-                                    deliveryOrderNos: [],
-                                    remark: remark,
+                                productId: product._id,
+                                product: {
+                                    _id: product._id,
+                                    code: codeBarang,
+                                    name: product.name,
+                                    price: product.price,
+                                    currency: product.currency,
+                                    description: product.description,
+                                    uomId: product.uomId,
+                                    uom: product.uom,
+                                    tags: product.tags,
+                                    properties: product.properties,
+                                },
 
-                                    refNo: data.Nopo,
+                                budgetPrice: data.Harga,
+                                quantity: data.Qty,
+                                deliveryOrderNos: [],
+                                remark: remark,
 
-                                    uomId: uom._id,
+                                refNo: data.Nopo,
+                                urut: data.Urut,
+
+                                uomId: uom._id,
+                                uom: {
+                                    _id: uom._id,
+                                    unit: uom.unit,
+                                },
+
+                                categoryId: category._id,
+                                category: {
+                                    _id: category._id,
+                                    code: category.code.trim(),
+                                    name: category.name.trim(),
+                                    uomId: category.uomId,
                                     uom: {
-                                        _id: uom._id,
-                                        unit: uom.unit,
-                                    },
+                                        _id: category.uomId,
+                                        unit: category.uom.unit,
+                                    }
 
-                                    categoryId: category._id,
-                                    category: {
-                                        _id: category._id,
-                                        code: category.code.trim(),
-                                        name: category.name.trim(),
-                                    },
-                                    colors: Colors,
-                                    id_po: (data.ID_PO),
-                                    isUsed: false,
-                                    purchaseOrderId: {},
-                                }
-                                items.push(item);
-
-                            } else if (!product._id || !uom._id || !category._id) {
-                                // migrated = false;
-                                map.migrated = false;
-                                map.dataItemNotfound = {
-                                    uomUnit: uomNotFound,
-                                    categoryCode: categoryNotFound,
-                                    productCode: productNotFound,
-                                };
+                                },
+                                colors: Colors,
+                                id_po: (data.ID_PO ? data.ID_PO : data.ID),
+                                isUsed: false,
+                                purchaseOrderId: {},
                             }
+                            items.push(item);
 
-                            //begin transform
-                            if (unit._id && buyer._id) {
+                        } else if (!product._id || !uom._id || !category._id) {
+                            // migrated = false;
+                            map.migrated = false;
+                            map.dataItemNotfound = {
+                                uomUnit: uomNotFound,
+                                categoryCode: categoryNotFound,
+                                productCode: productNotFound,
+                            };
+                        }
 
-                                Object.assign(map, {
-                                    _stamp: _stamp,
-                                    _type: "purchase request",
-                                    _version: "1.0.0",
-                                    _active: true,
-                                    _deleted: false,
-                                    _createdBy: data.Userin,
-                                    // _createdDate: new Date(_createdDate),
-                                    _createAgent: "manager",
-                                    _updatedBy: data.Usered,
-                                    // _updatedDate: new Date(_updatedDate),
-                                    _updateAgent: "manager",
-                                    // no: data.Ro,
-                                    no: code,
-                                    roNo: data.Ro,
-                                    artikel: data.Art,
-                                    shipmentDate: data.Shipment,
-                                    date: new Date(data.TgValid),
-                                    expectedDeliveryDate: data.expectedDeliveryDate ? data.expectedDeliveryDate : "",
+                        //begin transform
+                        if (unit._id && buyer._id) {
 
-                                    unitId: unit._id,
-                                    unit: {
-                                        _id: unit._id,
-                                        code: unit.code,
-                                        name: unit.name,
-                                        description: unit.description,
-                                        divisionId: unit.divisionId,
-                                        division: unit.division,
-                                    },
+                            Object.assign(map, {
+                                _stamp: _stamp,
+                                _type: "purchase request",
+                                _version: "1.0.0",
+                                _active: true,
+                                _deleted: false,
+                                _createdBy: data.Userin,
+                                // _createdDate: new Date(_createdDate),
+                                _createAgent: "manager",
+                                _updatedBy: data.Usered,
+                                // _updatedDate: new Date(_updatedDate),
+                                _updateAgent: "manager",
+                                // no: data.Ro,
+                                // no: code,
+                                roNo: data.Ro,
+                                artikel: data.Art,
+                                shipmentDate: data.Shipment,
+                                date: new Date(data.TgValid),
+                                expectedDeliveryDate: data.expectedDeliveryDate ? data.expectedDeliveryDate : "",
 
-                                    buyerId: buyer._id,
-                                    buyer: {
-                                        "_id": buyer._id,
-                                        "code": buyer.code,
-                                        "name": buyer.name,
-                                        "address": buyer.address,
-                                        "city": buyer.city,
-                                        "country": buyer.country,
-                                        "contact": buyer.contact,
-                                        "tempo": buyer.tempo,
-                                        "type": buyer.type,
-                                        "NPWP": buyer.NPWP,
-                                    },
+                                unitId: unit._id,
+                                unit: {
+                                    _id: unit._id,
+                                    code: unit.code,
+                                    name: unit.name,
+                                    description: unit.description,
+                                    divisionId: unit.divisionId,
+                                    division: unit.division,
+                                },
 
-                                    isPosted: true,
-                                    isUsed: false,
-                                    remark: "",
-                                    status: {
-                                        name: "POSTED",
-                                        value: 2,
-                                        label: "Belum diterima Pembelian",
-                                    },
+                                buyerId: buyer._id,
+                                buyer: {
+                                    "_id": buyer._id,
+                                    "code": buyer.code,
+                                    "name": buyer.name,
+                                    "address": buyer.address,
+                                    "city": buyer.city,
+                                    "country": buyer.country,
+                                    "contact": buyer.contact,
+                                    "tempo": buyer.tempo,
+                                    "type": buyer.type,
+                                    "NPWP": buyer.NPWP,
+                                },
 
-                                })
+                                isPosted: true,
+                                isUsed: false,
+                                remark: "",
+                                status: {
+                                    name: "POSTED",
+                                    value: 2,
+                                    label: "Belum diterima Pembelian",
+                                },
 
-                            } else {
+                            })
 
-                                map.migrated = false;
-                                map.dataNotfound = {
-                                    unitCode: unitNotFound,
-                                    buyerCode: buyerNotFound,
-                                };
-                            }
+                        } else if (!unit._id || !buyer._id) {
+
+                            map.roNo = data.Ro;
+                            map.migrated = false;
+                            map.dataNotfound = {
+                                unitCode: unitNotFound,
+                                buyerCode: buyerNotFound,
+                            };
                         }
 
                     }
 
+                    map.no = code;
                     map._createdDate = new Date(_createdDate + ":" + createdDateTemp.sort()[0]);
                     map._updatedDate = new Date(_updatedDate + ":" + updatedDateTemp.sort()[0]);
                     map.items = items;
-                    transformData.datas.push(map);
 
-                }
-                transformData.nomorRo = (nomorRo);
-                resolve(transformData);
-            });
+                    transformData.push(map);
+                    resolve(transformData);
+
+                });
+
+            })
+        });
+    }
+
+
+    transform(data, table1) {
+        var table1 = table1;
+        var data = data;
+        return new Promise((resolve, reject) => {
+            var process = [];
+            var promise = [];
+
+            if (Array.isArray(table1)) {
+                data = [table1[0]];
+                table1 = table1;
+            }
+
+            for (var i of data) {
+                process.push(this.beforeTransform(i.Ro, table1));
+            }
+
+            Promise.all(process).then((test) => {
+                resolve(test);
+            })
+
         })
+
 
     }
 
@@ -657,64 +755,120 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         });
     }
 
-    upsertData(Ro, data) {
+    delete(ro) {
         return new Promise((resolve, reject) => {
-            this.collection.updateOne({ "roNo": Ro }, { $set: data }, { upsert: true }).then((result) => {
+            this.collection.deleteMany({ roNo: { $in: ro } }).then((result) => {
                 resolve(result);
             })
         });
     }
 
-    load(dataArr) {
+    insert(data) {
+        return new Promise((resolve, reject) => {
+            this.collection.insertMany(data).then((result) => {
+                resolve(result);
+            })
+        });
+    }
+
+    beforeLoad(dataTransform) {
+        var dataArr = [];
+        dataArr = dataTransform;
+
         return new Promise((resolve, reject) => {
 
-            var failed = [];
-            var processed = [];
-            var roNoArr = dataArr.nomorRo;
+
+            var deleteProcess = [];
+            var tempProcess = [];
+            var roNoArr = [];
             var dataTemp = [];
+            var dataRo = [];
+
+            for (var i of dataArr) {
+                roNoArr.push(i[0].roNo);
+                dataRo.push(i[0])
+            }
+
 
             this.findData(roNoArr).then((result) => {
                 dataTemp = result;
 
-                for (var data of dataArr.datas) {
+                if (dataTemp) {
+                    for (var data of dataTemp) {
 
-                    var temp = dataTemp.find(o => o.roNo == data.roNo);
-
-                    if (temp) {
-                        for (var item of temp.items) {
-                            var itemTemp = data.items.find(o => o.id_po == item.id_po);
-                            if (!itemTemp) {
-                                data.items.push(item);
-                            }
+                        var _id = data._id;
+                        var i = {
+                            _id: data._id,
+                            roNo: data.roNo,
                         }
-                    };
+                        tempProcess.push((i));
 
-                    if (data.migrated == false) {
-                        MigratedFalse.find(o => o == data.roNo) ? true : MigratedFalse.push(data.roNo);
+                        deleteProcess.push((data.roNo))
+
                     }
 
-                    if ((MigratedFalse.find(o => o == data.roNo))) {
-                        data.migrated = false;
-                    }
-                    if (!(MigratedFalse.find(o => o == data.roNo))) {
-                        data.migrated = true;
-                        data.dataItemNotfound = {};
-                        data.dataNotfound = {};
-                    }
+                    this.delete(deleteProcess).then((deleted) => {
+                        console.log(deleted.deletedCount)
+                        resolve(tempProcess);
+                    })
 
-                    processed.push(this.collection.updateOne({ "roNo": data.roNo }, { $set: data }, { upsert: true }));
+                } else {
+                    resolve([])
                 }
 
-                Promise.all(processed).then((processed) => {
-                    var dataProcessed = {};
-                    dataProcessed.processed = processed;
-                    dataProcessed.MigratedFalse = MigratedFalse;
-                    resolve(dataProcessed);
-
-                })
 
 
             });
+
+        });
+    }
+
+    load(dataTransform, deletedData) {
+        var dataArr = [];
+        dataArr = dataTransform;
+
+        return new Promise((resolve, reject) => {
+            var falseData = 0;
+            var failed = [];
+            var processed = [];
+            var deleteProcess = [];
+            var tempProcess = [];
+            var roNoArr = [];
+
+            var dataRo = [];
+
+            for (var i of dataArr) {
+                roNoArr.push(i[0].roNo);
+                dataRo.push(i[0])
+            }
+
+            for (var data of dataRo) {
+                if (deletedData) {
+                    var temp = deletedData.find(o => o.roNo == data.roNo);
+                    if (temp) {
+                        data._id = temp._id;
+                    }
+                }
+
+                if (data.migrated == false) {
+                    falseData += 1
+                } else if (!data.migrated) {
+                    data.migrated = true;
+                }
+                else {
+                    data.migrated = true;
+                }
+
+                // processed.push(this.collection.insert(data));
+                processed.push((data));
+            }
+
+            this.insert(processed).then((resultProcess) => {
+                var dataProcessed = {};
+                dataProcessed.processed = resultProcess.ops;
+                dataProcessed.MigratedFalse = falseData;
+                resolve(dataProcessed);
+            })
 
         });
     }

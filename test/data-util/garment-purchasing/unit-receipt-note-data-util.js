@@ -5,16 +5,26 @@ var codeGenerator = require('../../../src/utils/code-generator');
 var unit = require("../master/unit-data-util");
 var supplier = require('../master/garment-supplier-data-util');
 var deliveryOrder = require('../garment-purchasing/delivery-order-data-util');
+var storageDataUtil = require('../master/storage-data-util');
+
+var getNewDeliveryOrder = function () {
+    return deliveryOrder.getNewTestData()
+        .then((datadeliveryOrder) => {
+            return Promise.resolve(datadeliveryOrder);
+        });
+};
 
 class UnitReceiptNoteDataUtil {
-    getNewData() {
+    getNewData(dataDeliveryOrder) {
         return helper
             .getManager(UnitReceiptNoteManager)
             .then(manager => {
-                return Promise.all([unit.getTestData(), deliveryOrder.getNewTestData()])
+                var getDeliveryOrder = dataDeliveryOrder ? dataDeliveryOrder : getNewDeliveryOrder();
+                return Promise.all([unit.getTestData(), getDeliveryOrder, storageDataUtil.getGarmentInventTestData()])
                     .then(results => {
                         var dataUnit = results[0];
                         var dataDeliveryOrder = results[1];
+                        var dataStorage = results[2];
 
                         var poCollection = dataDeliveryOrder.items.map(doItem => {
                             var item = doItem.fulfillments.map(fulfillment => {
@@ -47,7 +57,7 @@ class UnitReceiptNoteDataUtil {
 
                         var getPRJobs = [];
                         for (var prId of prCollection) {
-                            getPRJobs.push(manager.purchaseOrderManager.purchaseRequestManager.getSingleByIdOrDefault(prId, ["_id", , "buyer", "no"]))
+                            getPRJobs.push(manager.purchaseOrderManager.purchaseRequestManager.getSingleByIdOrDefault(prId, ["_id", "artikel", "buyer", "no"]))
                         }
 
                         return Promise.all(jobs)
@@ -72,10 +82,13 @@ class UnitReceiptNoteDataUtil {
                                                     category: poItem.category,
                                                     categoryId: poItem.category._id,
                                                     purchaseOrderId: fulfillment.purchaseOrderId,
-                                                    purchaseOrder: fulfillment.purchaseOrder,
+                                                    purchaseOrderNo: fulfillment.purchaseOrderNo,
                                                     purchaseRequestId: fulfillment.purchaseRequestId,
                                                     purchaseRequestNo: fulfillment.purchaseRequestNo,
+                                                    purchaseRequestRefNo: fulfillment.purchaseRequestRefNo,
+                                                    roNo: fulfillment.roNo,
                                                     buyer: purchaseRequest.buyer,
+                                                    artikel: purchaseRequest.artikel,
                                                     buyerId: purchaseRequest.buyer._id,
                                                     remark: ''
                                                 }
@@ -86,7 +99,7 @@ class UnitReceiptNoteDataUtil {
 
                                         doItems = [].concat.apply([], doItems);
                                         var data = {
-                                            no: `UT/URN/${codeGenerator()}`,
+                                            no: `UT/URN/${codeGenerator(dataDeliveryOrder.no)}`,
                                             unitId: dataUnit._id,
                                             unit: dataUnit,
                                             date: new Date(),
@@ -96,6 +109,10 @@ class UnitReceiptNoteDataUtil {
                                             deliveryOrderNo: dataDeliveryOrder.no,
                                             remark: 'Unit Test',
                                             isPaid: false,
+                                            storageId: dataStorage._id,
+                                            storageName: dataStorage.name,
+                                            storageCode: dataStorage.code,
+                                            useStorage: true,
                                             items: doItems
                                         };
                                         return Promise.resolve(data);
@@ -106,11 +123,11 @@ class UnitReceiptNoteDataUtil {
             })
     }
 
-    getNewTestData() {
+    getNewTestData(dataDeliveryOrder) {
         return helper
             .getManager(UnitReceiptNoteManager)
             .then((manager) => {
-                return this.getNewData().then((data) => {
+                return this.getNewData(dataDeliveryOrder).then((data) => {
                     return manager.create(data)
                         .then((id) => manager.getSingleById(id));
                 });

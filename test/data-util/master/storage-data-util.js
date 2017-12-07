@@ -1,28 +1,37 @@
 "use strict";
 var _getSert = require("../getsert");
 var generateCode = require("../../../src/utils/code-generator");
+var unit = require("./unit-data-util");
 
 class StorageDataUtil {
     getSert(input) {
         var ManagerType = require("../../../src/managers/master/storage-manager");
         return _getSert(input, ManagerType, (data) => {
             return {
-                code: data.code
+                name: data.name,
+                unitId: data.unit._id,
             };
         });
     }
 
     getNewData() {
-        var Model = require('dl-models').master.Storage;
-        var data = new Model();
+        return Promise.all([unit.getTestData()])
+            .then((results) => {
+                var _unit= results[0];
+                var Model = require('dl-models').master.Storage;
 
-        var code = generateCode();
+                var code = generateCode();
+                
+                var data ={
+                    code : code,
+                    name : `name[${code}]`,
+                    description : `storage description [${code}]`,
+                    unit:_unit,
+                    unitId:_unit._id
+                }
 
-        data.code = code;
-        data.name = `name[${code}]`;
-        data.description = `storage description [${code}]`;
-
-        return Promise.resolve(data);
+                return Promise.resolve(data);
+            });
     }
 
     getRandomTestData() {
@@ -31,23 +40,58 @@ class StorageDataUtil {
                 return this.getSert(data);
             });
     }
-
+ getGarmentInventTestData() {
+         return unit.getTestData()
+            .then((data) => {
+                var data = {
+                    code: 'UT/GudangGarment',
+                    name: 'Gudang Pembelian Garment',
+                    description: '',
+                    unitId:data._id,
+                    unit:data
+                };
+                return this.getSert(data);
+            });
+    }
     getTestData() {
-        var data = {
-            code: 'UT/STO/01',
-            name: 'Storage Unit Test',
-            description: ''
-        };
-        return this.getSert(data);
+         return unit.getTestData()
+            .then((data) => {
+                data.code = "Storage-UT-01";
+                data.name = "Storage Unit Test 01";
+                data.unitId=data._id;
+                data.unit=data;
+                data.description = "Product untuk unit test";
+
+                return this.getSert(data);
+            });
     }
 
     getPackingTestData() {
-        var data = {
-            code: 'UT/GudangJadi',
-            name: 'Gudang Jadi Finishing Printing',
-            description: ''
-        };
-        return this.getSert(data);
+        return unit.getTestData()
+            .then((data) => {
+                data = {
+                    code: 'UT/GudangJadi01',
+                    name: 'Gudang Jadi Finishing Printing',
+                    description: '',
+                    unitId:data._id,
+                    unit:data
+                };
+                return this.getSert(data);
+         });
+    }
+
+    getTextileInventoryTestData() {
+        return unit.getTestData()
+            .then((data) => {
+                var data = {
+                    code: 'UT/GudangTextile01',
+                    name: 'Gudang Pembelian Textile',
+                    description: '',
+                    unitId:data._id,
+                    unit:data
+                };
+                return this.getSert(data);
+            });
     }
 }
 module.exports = new StorageDataUtil();

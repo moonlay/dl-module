@@ -22,6 +22,7 @@ module.exports = function (pox, offset) {
             prNo: poItem.prNo,
             prRefNo: poItem.prRefNo,
             artikel: poItem.artikel,
+            roNo: poItem.roNo, 
             quantity: poItem.dealQuantity,
             uom: poItem.dealUom.unit,
             price: poItem.pricePerDealUnit,
@@ -77,18 +78,18 @@ module.exports = function (pox, offset) {
             ]
         }, {
             alignment: "center",
-            text: pox.supplier.import == true ? "PURCHASE ORDER" : "ORDER PEMBELIAN",
+            text: "ORDER PEMBELIAN",
             style: ['size09', 'bold']
         },
         '\n'
     ];
 
-    var attentionTextSupplier = pox.supplier.import == true ? `${supplier}\n Attn. ${supplierAtt}` : `${supplier}\n Attn. ${supplierAtt}\n Telp. ${supplierTel}`;
+    var attentionTextSupplier = `${supplier}\n Attn. ${supplierAtt}\n Telp. ${supplierTel}`;
 
     var attention = [{
         columns: [{
             width: '15%',
-            text: pox.supplier.import == true ? "Supplier" : 'Kepada Yth:',
+            text: 'Kepada Yth:',
             style: ['size08']
         }, {
             width: '*',
@@ -101,21 +102,7 @@ module.exports = function (pox, offset) {
         }]
     }];
 
-    var openingText = pox.supplier.import == true ? [
-        '\n', {
-            text: 'The undersigned below, '
-        }, {
-            text: 'PT. DAN LIRIS, SOLO',
-            style: ['bold']
-        }, {
-            text: ' (hereinafter referred to as parties Purchasers) dan '
-        }, {
-            text: supplier,
-            style: ['bold']
-        }, {
-            text: ' (hereinafter referred to as seller\'s side) mutually agreed to enter into a sale and purchase contract with the following conditions: '
-        },
-        '\n\n'] : [
+    var openingText = [
             '\n', {
                 text: 'Dengan hormat,\n'
             }, {
@@ -139,22 +126,7 @@ module.exports = function (pox, offset) {
         style: ['size09', 'justify']
     };
 
-    var theadOpt = pox.supplier.import == true ? [{
-        text: 'DESCRIPTION OF GOODS',
-        style: ['size08', 'bold', 'center']
-    }, {
-        text: 'ARTICLE',
-        style: ['size08', 'bold', 'center']
-    }, {
-        text: 'QUANTITY',
-        style: ['size08', 'bold', 'center']
-    }, {
-        text: 'UNIT PRICE',
-        style: ['size08', 'bold', 'center']
-    }, {
-        text: 'SUB TOTAL',
-        style: ['size08', 'bold', 'center']
-    }] : [{
+    var theadOpt = [{
         text: 'NAMA DAN JENIS BARANG',
         style: ['size08', 'bold', 'center']
     }, {
@@ -172,8 +144,6 @@ module.exports = function (pox, offset) {
     }];
 
     var thead = theadOpt;
-
-    var tbodyText = [];
     var tbody = [];
     if (pox.category === "FABRIC") {
         tbody = items.map(function (item) {
@@ -184,7 +154,7 @@ module.exports = function (pox, offset) {
                 }],
                 style: ['size08']
             }, {
-                text: item.artikel,
+                text: `${item.artikel} - ${item.roNo}`,
                 style: ['size08', 'left']
             }, {
                 text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
@@ -220,7 +190,7 @@ module.exports = function (pox, offset) {
                 }],
                 style: ['size08']
             }, {
-                text: item.artikel,
+                text: `${item.artikel} - ${item.roNo}`,
                 style: ['size08', 'left']
             }, {
                 text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
@@ -249,91 +219,11 @@ module.exports = function (pox, offset) {
         });
     }
 
-    if (pox.category === "FABRIC") {
-        tbodyText = items.map(function (item) {
-            return [{
-                stack: [item.productCode, item.productName, `COMPOSITION: ${item.productDesc}`, `CONTRUCTION: ${item.productProperties[0]}`, `YARN: ${item.productProperties[1]}`, `FINISH WIDTH: ${item.productProperties[2]}`, "QUALITY : EXPORT QUALITY", `DESIGN/COLOUR : ${item.colors.join(', ')}`, `Remark : ${item.remark}`, {
-                    text: `${item.prNo} - ${item.prRefNo}`,
-                    style: 'bold'
-                }],
-                style: ['size08']
-            }, {
-                text: item.artikel,
-                style: ['size08', 'left']
-            }, {
-                text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
-                style: ['size08', 'center']
-            }, {
-                columns: [{
-                    width: '25%',
-                    text: `${currency}`
-                }, {
-                    width: '*',
-                    text: `${parseFloat(item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
-                    style: ['right']
-                }],
-                style: ['size08']
-            }, {
-                columns: [{
-                    width: '25%',
-                    text: `${currency}`
-                }, {
-                    width: '*',
-                    text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
-                    style: ['right']
-                }],
-                style: ['size08']
-            }];
-        });
-    } else {
-        tbodyText = items.map(function (item) {
-            return [{
-                stack: [`${item.productCode} - ${item.productName}`, item.productDesc, item.remark, {
-                    text: `${item.prNo} - ${item.prRefNo}`,
-                    style: 'bold'
-                }],
-                style: ['size08']
-            }, {
-                text: item.artikel,
-                style: ['size08', 'left']
-            }, {
-                text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
-                style: ['size08', 'center']
-            }, {
-                columns: [{
-                    width: '25%',
-                    text: `${currency}`
-                }, {
-                    width: '*',
-                    text: `${parseFloat(item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
-                    style: ['right']
-                }],
-                style: ['size08']
-            }, {
-                columns: [{
-                    width: '25%',
-                    text: `${currency}`
-                }, {
-                    width: '*',
-                    text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
-                    style: ['right']
-                }],
-                style: ['size08']
-            }];
-        });
-    }
+
 
     tbody = tbody.length > 0 ? tbody : [
         [{
             text: "tidak ada barang",
-            style: ['size08', 'center'],
-            colSpan: 5
-        }, "", "", "", ""]
-    ];
-
-    tbodyText = tbody.length > 0 ? tbody : [
-        [{
-            text: "no items",
             style: ['size08', 'center'],
             colSpan: 5
         }, "", "", "", ""]
@@ -358,31 +248,7 @@ module.exports = function (pox, offset) {
 
     var incomeTaxValue = pox.useIncomeTax ? sum * 0.1 : 0;
     var vatValue = pox.useVat ? sum * pox.vat.rate / 100 : 0;
-    var vatName = pox.vat ? `${pox.vat.name} ${pox.vat.name}` : 0;
-
-
-    var tfootTextImport = [
-        [{
-            text: 'TOTAL QUANTITY',
-            style: ['size08', 'bold', 'right'],
-        },null, {
-            text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
-            style: ['size08', 'right']
-        }, {
-            text: 'TOTAL',
-            style: ['size08', 'bold', 'right'],
-        }, {
-            columns: [{
-                width: '25%',
-                text: currency
-            }, {
-                width: '*',
-                text: parseFloat(sum).toLocaleString(locale, locale.currency),
-                style: ['right']
-            }],
-            style: ['size08']
-        }]
-    ];
+    var vatName = pox.vat ? `${pox.vat.name} ${pox.vat.rate}` : 0;
 
     var tfootTextLocalUseVat = [
         [{
@@ -506,54 +372,17 @@ module.exports = function (pox, offset) {
     ];
 
     var tfootTextLocal = pox.useVat ? tfootTextLocalUseVat : tfootTextLocalNoVat;
-    var tfoot = pox.supplier.import == true ? tfootTextImport : tfootTextLocal;
+    var tfoot = tfootTextLocal;
 
     var table = [{
         table: {
             widths: ['25%', '22%', '13%', '15%', '25%'],
             headerRows: 1,
-            body: [].concat([thead], pox.supplier.import == true ? tbodyText : tbody, tfoot)
+            body: [].concat([thead], tbody, tfoot)
         }
     }];
 
-    var footerText = pox.supplier.import == true ? ['\n', {
-        stack: [{
-            columns: [{
-                width: '40%',
-                columns: [{
-                    width: '40%',
-                    stack: ['Delivery cost', 'Term payment']
-                }, {
-                    width: '3%',
-                    stack: [':', ':']
-                }, {
-                    width: '*',
-                    stack: [`${pox.freightCostBy.trim() == "Penjual" ? "Seller" : "Buyer"}`, `${pox.paymentType}`]
-
-                }]
-            }, {
-                width: '20%',
-                text: ''
-            }, {
-                width: '40%',
-                columns: [{
-                    width: '45%',
-                    stack: ['Delivery date', 'Other']
-                }, {
-                    width: '3%',
-                    stack: [':', ':']
-                }, {
-                    width: '*',
-                    stack: [{
-                        text: `${moment(pox.expectedDeliveryDate).add(offset, 'h').format(locale.date.format)}`,
-                        style: ['bold']
-                    }, `${pox.remark}`]
-                }]
-            }]
-        }],
-        style: ['size08']
-    }
-    ] : [
+    var footerText =[
             '\n', {
                 stack: [{
                     columns: [{
@@ -631,10 +460,10 @@ module.exports = function (pox, offset) {
                                     columns: [
                                         {
                                             width: '20%',
-                                            text: 'Shrinkage test untuk'
+                                            text: 'Shrinkage test'
                                         }, {
                                             width: '2%',
-                                            text: ''
+                                            text: ':'
                                         }, {
                                             width: '*',
                                             text: pox.qualityStandard.shrinkage
@@ -782,34 +611,7 @@ module.exports = function (pox, offset) {
     if (pox.category === "FABRIC") {
         footer = footer.concat(stdQ)
     }
-    var signatureText = pox.supplier.import == true ? ['\n\n\n',
-        {
-            stack: [
-                {
-                    columns: [
-                        {
-                            width: '35%',
-                            stack: ['Buyer\n\n\n\n\n', {
-                                text: pox._createdBy,
-                                style: ['bold']
-                            }],
-                            style: 'center'
-                        }, {
-                            width: '30%',
-                            text: ''
-                        }, {
-                            width: '35%',
-                            stack: ['Seller\n\n\n\n\n', {
-                                text: supplier,
-                                style: ['bold']
-                            }],
-                            style: 'center'
-                        }]
-                }
-            ],
-            style: ['size08']
-        }
-    ] : [
+    var signatureText = [
             '\n\n\n',
             {
                 stack: [

@@ -56,7 +56,13 @@ it('#02. should error when insert empty data', function (done) {
 });
 
 it('#03. should success when insert csv', function (done) {
-    manager.insert(createdData)
+    var dataTest = {};
+    dataTest.data = [
+        ["Mata Uang", "Kurs"],
+        ["USD", "9999"],
+    ];
+    dataTest.date = new Date();
+    manager.insert(dataTest)
         .then(result => {
             result.should.instanceof(Array);
             result.length.should.not.equal(0);

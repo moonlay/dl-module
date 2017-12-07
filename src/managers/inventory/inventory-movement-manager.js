@@ -128,7 +128,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
 
                 if (!valid.storageId || valid.storageId === '')
                     errors["storageId"] = i18n.__("InventoryMovement.storageId.isRequired:%s is required", i18n.__("InventoryMovement.storageId._:Storage")); //"Grade harus diisi";   
-                else if (!_product)
+                else if (!_storage)
                     errors["storageId"] = i18n.__("InventoryMovement.storageId: %s not found", i18n.__("InventoryMovement.storageId._:Storage"));
 
                 if (!valid.uomId || valid.uomId === '')
@@ -227,7 +227,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
             order = info.order || {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
 
         var filterMovement = {};
 

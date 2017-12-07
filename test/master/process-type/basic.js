@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.ProcessType,
     util: require("../../data-util/master/process-type-data-util"),
     validator: require("dl-models").validator.master.processType,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.Supplier,
     util: require("../../data-util/master/garment-supplier-data-util"),
     validator: require("dl-models").validator.master.supplier,
-    createDuplicate: true,
-    keys: ["code"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

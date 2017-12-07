@@ -101,3 +101,43 @@ it("#05. should success when destroy all unit test data", function (done) {
             done(e);
         });
 });
+
+var resultForExcelTest = {};
+it('#06. should success when create report', function (done) {
+    var info = {};
+       
+    instanceManager.getMonitoringDOAll(info)
+        .then(result => {
+             result.should.instanceof(Object);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#07. should success when get data for Excel Report', function (done) {
+    var query = {};
+
+    instanceManager.getXlsMonitoringDOAll(resultForExcelTest, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#08. should success when generate data to Excel Report with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    var offset=7;
+    instanceManager.getAllData(startdate, enddate, offset)
+    .then(result => {
+        result.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+})

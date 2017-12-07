@@ -4,6 +4,9 @@ var validatorPurchasing = require('dl-models').validator.purchasing;
 var UnitReceiptNoteManager = require("../../../src/managers/garment-purchasing/unit-receipt-note-manager");
 var unitReceiptNoteManager = null;
 var unitReceiptNote = require("../../data-util/garment-purchasing/unit-receipt-note-data-util");
+var StorageManager = require("../../../src/managers/master/storage-manager");
+var storageManager = null;
+var storage = require("../../data-util/master/storage-data-util");
 require("should");
 
 before('#00. connect db', function (done) {
@@ -88,3 +91,5 @@ it("#04. should error when create new data with deliveredQuantity greater than d
             }
         })
 });
+
+

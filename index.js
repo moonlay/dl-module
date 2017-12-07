@@ -23,7 +23,7 @@ module.exports = {
             ThreadSpecificationManager: require('./src/managers/master/thread-specification-manager'),
             MachineManager: require('./src/managers/master/machine-manager'),
             MachineTypeManager: require('./src/managers/master/machine-type-manager'),
-            LotMachineManager: require('./src/managers/master/lot-machine-manager'),
+            SpinningProductionLotManager: require('./src/managers/master/spinning-production-lot-manager'),
             YarnEquivalentConversion: require('./src/managers/master/yarn-equivalent-conversion-manager'),
             UsterManager: require('./src/managers/master/uster-manager'),
             LampStandardManager: require('./src/managers/master/lamp-standard-manager'),
@@ -42,12 +42,12 @@ module.exports = {
             TermOfPaymentManager: require('./src/managers/master/term-of-payment-manager'),
             DesignMotiveManager: require('./src/managers/master/design-motive-manager'),
             StorageManager: require('./src/managers/master/storage-manager'),
-            HolidayManager: require('./src/managers/master/holiday-manager'),
             CompanyManager: require('./src/managers/master/company-manager'),
             ContactManager: require('./src/managers/master/contact-manager'),
             BadOutputReasonManager: require('./src/managers/master/bad-output-reason-manager'),
             FPDurationEstimationManager: require('./src/managers/master/fp-duration-estimation-manager'),
-            DealTrackingReasonManager: require('./src/managers/master/deal-tracking-reason-manager')
+            DealTrackingReasonManager: require('./src/managers/master/deal-tracking-reason-manager'),
+            SpinningYarnManager: require('./src/managers/master/spinning-yarn-manager')
         },
         inventory: {
             finishingPrinting: {
@@ -60,11 +60,12 @@ module.exports = {
             InventorySummaryManager: require("./src/managers/inventory/inventory-summary-manager"),
             InventoryMovementManager: require("./src/managers/inventory/inventory-movement-manager")
         },
-        // inventoryTextile: {
-        //     TextileInventoryDocumentManager: require("./src/managers/inventory-textile/textile-inventory-document-manager"),
-        //     TextileInventorySummaryManager: require("./src/managers/inventory-textile/textile-inventory-summary-manager"),
-        //     TextileInventoryMovementManager: require("./src/managers/inventory-textile/textile-inventory-movement-manager")
-        // },
+        garmentInventory: {
+
+            GarmentInventoryDocumentManager: require("./src/managers/inventory-garment/garment-inventory-document-manager"),
+            GarmentInventorySummaryManager: require("./src/managers/inventory-garment/garment-inventory-summary-manager"),
+            GarmentInventoryMovementManager: require("./src/managers/inventory-garment/garment-inventory-movement-manager")
+        },
         purchasing: {
             PurchaseOrderManager: require('./src/managers/purchasing/purchase-order-manager'),
             PurchaseOrderExternalManager: require('./src/managers/purchasing/purchase-order-external-manager'),
@@ -86,7 +87,7 @@ module.exports = {
             UnitReceiptNoteManager: require('./src/managers/garment-purchasing/unit-receipt-note-manager'),
             InternNoteManager: require('./src/managers/garment-purchasing/intern-note-manager'),
             PurchaseQuantityCorrectionManager: require('./src/managers/garment-purchasing/purchase-quantity-correction-manager'),
-            GarmentCurrencyManager:require('./src/managers/garment-purchasing/garment-currency-manager'),
+            GarmentCurrencyManager: require('./src/managers/garment-purchasing/garment-currency-manager'),
         },
         production: {
             spinning: {
@@ -116,6 +117,13 @@ module.exports = {
             DealTrackingDealManager: require('./src/managers/sales/deal-tracking-deal-manager'),
             DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager')
         },
+        garmentMasterPlan: {
+            WeeklyPlanManager: require("./src/managers/garment-master-plan/weekly-plan-manager"),
+            WorkingHoursStandardManager: require('./src/managers/garment-master-plan/working-hours-standard-manager'),
+            StyleManager: require('./src/managers/garment-master-plan/style-manager'),
+            StandardHourManager: require('./src/managers/garment-master-plan/standard-hour-manager'),
+            BookingOrderManager: require('./src/managers/garment-master-plan/booking-order-manager')
+        }
     },
     test: {
         data: {
@@ -131,7 +139,7 @@ module.exports = {
                 currency: require("./test/data-util/master/currency-data-util"),
                 division: require("./test/data-util/master/division-data-util"),
                 lampStandard: require("./test/data-util/master/lamp-standard-data-util"),
-                lotMachine: require("./test/data-util/master/lot-machine-data-util"),
+                spinningProductionLot: require("./test/data-util/master/spinning-production-lot-data-util"),
                 machine: require("./test/data-util/master/machine-data-util"),
                 machineType: require("./test/data-util/master/machine-type-data-util"),
                 product: require("./test/data-util/master/product-data-util"),
@@ -159,7 +167,8 @@ module.exports = {
                 contact: require('./test/data-util/master/contact-data-util'),
                 badOutputReason: require('./test/data-util/master/bad-output-reason-data-util'),
                 fpDurationEstimation: require('./test/data-util/master/fp-duration-estimation-data-util'),
-                dealTrackingReason: require('./test/data-util/master/deal-tracking-reason-data-util')
+                dealTrackingReason: require('./test/data-util/master/deal-tracking-reason-data-util'),
+                SpinningYarn: require('./test/data-util/master/spinning-yarn-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util"),
@@ -185,6 +194,12 @@ module.exports = {
                 // unitPaymentPriceCorrectionNot: require("./test/data-util/garment-purchasing/unit-payment-price-correction-note-data-util"),
                 // unitPaymentQuantityCorrectionNote: require("./test/data-util/garment-purchasing/unit-payment-quantity-correction-note-data-util"),
             },
+            garmentInventory: {
+
+                garmentInventoryDocument: require("./test/data-util/inventory-garment/garment-inventory-document-data-util"),
+                garmentInventorySummary: require("./test/data-util/inventory-garment/garment-inventory-summary-data-util"),
+                garmentInventoryMovement: require("./test/data-util/inventory-garment/garment-inventory-movement-data-util")
+            },
             inventory: {
                 finishingPrinting: {
                     packingReceipt: require("./test/data-util/inventory/finishing-printing/fp-packing-receipt-data-util"),
@@ -196,11 +211,6 @@ module.exports = {
                 inventoryMovement: require('./test/data-util/inventory/inventory-movement-data-util'),
                 inventorySummary: require('./test/data-util/inventory/inventory-summary-data-util')
             },
-            // inventoryTextile: {
-            //     textileInventoryDocument: require('./test/data-util/inventory-textile/textile-inventory-document-data-util'),
-            //     textileInventoryMovement: require('./test/data-util/inventory-textile/textile-inventory-movement-data-util'),
-            //     textileInventorySummary: require('./test/data-util/inventory-textile/textile-inventory-summary-data-util')
-            // },
             production: {
                 dailyOperation: require('./test/data-util/production/finishing-printing/daily-operation-data-util'),
                 monitoringEvent: require('./test/data-util/production/finishing-printing/monitoring-event-data-util'),
@@ -219,12 +229,20 @@ module.exports = {
                 dealTrackingStage: require('./test/data-util/sales/deal-tracking-stage-data-util'),
                 dealTrackingDeal: require('./test/data-util/sales/deal-tracking-deal-data-util'),
                 dealTrackingActivity: require('./test/data-util/sales/deal-tracking-activity-data-util')
+            },
+            garmentMasterPlan: {
+                weeklyPlan: require("./test/data-util/garment-master-plan/weekly-plan-data-util"),
+                workingHoursStandard: require("./test/data-util/garment-master-plan/working-hours-standard-data-util"),
+                style: require("./test/data-util/garment-master-plan/style-data-util"),
+                standardHour: require("./test/data-util/garment-master-plan/standard-hour-data-util"),
+                bookingOrder: require("./test/data-util/garment-master-plan/booking-order-data-util")
             }
         }
     },
     etl: {
         dim: {
             dimCategory: require("./src/etl/dim/dim-category-etl-manager"),
+            dimStaff: require("./src/etl/dim/dim-staff-etl-manager"),
             dimDivision: require("./src/etl/dim/dim-division-etl-manager"),
             dimBuyer: require("./src/etl/dim/dim-buyer-etl-manager"),
             dimOrderType: require("./src/etl/dim/dim-order-type-etl-manager"),
@@ -236,7 +254,8 @@ module.exports = {
             dimProduct: require("./src/etl/dim/dim-product-etl-manager"),
             dimCompany: require("./src/etl/dim/dim-company-etl-manager"),
             dimContact: require("./src/etl/dim/dim-contact-etl-manager"),
-            dimDurationEstimation: require("./src/etl/dim/dim-duration-estimation-etl-manager")
+            dimDurationEstimation: require("./src/etl/dim/dim-duration-estimation-etl-manager"),
+            dimBudget: require("./src/etl/dim/dim-budget-etl-manager")
         },
         inventory: {
             factPackingReceipt: require("./src/etl/inventory/fact-fp-packing-receipt-etl-manager"),
@@ -249,7 +268,9 @@ module.exports = {
             factKanban: require("./src/etl/production/fact-kanban-etl-manager"),
             factProductionOrder: require("./src/etl/production/fact-production-order-etl-manager"),
             factDailyOperations: require("./src/etl/production/fact-daily-operations-etl-manager"),
-            factFabricQualityControl: require("./src/etl/production/fact-fabric-quality-control-etl-manager")
+            factFabricQualityControl: require("./src/etl/production/fact-fabric-quality-control-etl-manager"),
+            factPacking: require("./src/etl/production/fact-packing-etl-manager"),
+            factInspectionLotColor: require("./src/etl/production/fact-inspection-lot-color-etl-manager")
         },
         purchasing: {
             factPembelian: require("./src/etl/purchasing/fact-pembelian"),
@@ -263,11 +284,14 @@ module.exports = {
             factDealTrackingBoard: require("./src/etl/sales/fact-deal-tracking-board-etl-manager"),
             factDealTrackingStage: require("./src/etl/sales/fact-deal-tracking-stage-etl-manager"),
             factDealTrackingDeal: require("./src/etl/sales/fact-deal-tracking-deal-etl-manager"),
-            factDealTrackingActivity: require("./src/etl/sales/fact-deal-tracking-activity-etl-manager")            
+            factDealTrackingActivity: require("./src/etl/sales/fact-deal-tracking-activity-etl-manager")
         },
         garment: {
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
-            factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager")
+            factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager"),
+        },
+        migrationLog: {
+            migrationLogManager: require("./src/etl/migration-log/migration-log-manager"),
         }
     }
 }

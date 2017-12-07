@@ -59,7 +59,8 @@ module.exports = class UsterManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            productId: ObjectId.isValid(valid.productId) ? new ObjectId(valid.productId) : new ObjectId()
+            productId: ObjectId.isValid(valid.productId) ? new ObjectId(valid.productId) : new ObjectId(),
+            _deleted: false
         });
 
         var getProduct = ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(valid.productId) : Promise.resolve(null);
@@ -134,8 +135,7 @@ module.exports = class UsterManager extends BaseManager {
             name: `ix_${map.master.collection.Uster}_productId`,
             key: {
                 productId: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, productIdIndex]);

@@ -159,13 +159,17 @@ module.exports = class KanbanManager extends BaseManager {
                                     stepErrors["process"] = i18n.__("Kanban.instruction.steps.process.isRequired:%s is required", i18n.__("Kanban.instruction.steps.process._:Process")); //"Proses harus diisi";
                                 }
 
-                                // if(!step.machine || Object.getOwnPropertyNames(step.machine).length == 0) {
-                                //     stepErrors["machine"] = i18n.__("Kanban.instruction.steps.machine.isRequired:%s is required", i18n.__("Kanban.instruction.steps.machine._:Machine")); //"Mesin harus diisi";
-                                // }
+                                if (!step.machine || Object.getOwnPropertyNames(step.machine).length == 0) {
+                                    stepErrors["machine"] = i18n.__("Kanban.instruction.steps.machine.isRequired:%s is required", i18n.__("Kanban.instruction.steps.machine._:Machine")); //"Mesin harus diisi";
+                                }
 
-                                // if(!step.deadline) {
-                                //     stepErrors["deadline"] = i18n.__("Kanban.instruction.steps.deadline.isRequired:%s is required", i18n.__("Kanban.instruction.steps.deadline._:Deadline")); //"Target Selesai harus diisi";
-                                // }
+                                if (!step.processArea || step.processArea == "") {
+                                    stepErrors["processArea"] = i18n.__("Kanban.instruction.steps.processArea.isRequired:%s is required", i18n.__("Kanban.instruction.steps.processArea._:Process Area")); //"Area Proses harus diisi";
+                                }
+
+                                if (!step.deadline) {
+                                    stepErrors["deadline"] = i18n.__("Kanban.instruction.steps.deadline.isRequired:%s is required", i18n.__("Kanban.instruction.steps.deadline._:Deadline")); //"Target Selesai harus diisi";
+                                }
 
                                 stepsError.push(stepErrors);
                             }
@@ -320,18 +324,18 @@ module.exports = class KanbanManager extends BaseManager {
                     "productionOrder.processTypeId": (new ObjectId(query.processTypeId))
                 };
             }
-			     var prosesQuery = {};
+            var prosesQuery = {};
             if (query.proses != '' && query.proses != undefined) {
-              if(query.proses=="Ya"){
-                   prosesQuery = {
-                    "isReprocess": true
-                };
-              }else{
+                if (query.proses == "Ya") {
                     prosesQuery = {
-                    "isReprocess": { $ne: true }
-                };
-              }
-               
+                        "isReprocess": true
+                    };
+                } else {
+                    prosesQuery = {
+                        "isReprocess": { $ne: true }
+                    };
+                }
+
             }
             var date = {
                 "_createdDate": {
@@ -339,7 +343,7 @@ module.exports = class KanbanManager extends BaseManager {
                     "$lte": (!query || !query.edate ? (new Date()) : (new Date(`${query.edate} 23:59:59`)))
                 }
             };
-            var Query = { "$and": [date, processTypeQuery, orderTypeQuery, orderQuery, deletedQuery,prosesQuery] };
+            var Query = { "$and": [date, processTypeQuery, orderTypeQuery, orderQuery, deletedQuery, prosesQuery] };
             this.collection
                 .aggregate([
                     { $match: Query },
@@ -399,48 +403,118 @@ module.exports = class KanbanManager extends BaseManager {
                     var kanbanCurrentStepId = kanban.instruction && kanban.instruction.steps.length > 0 && currentStep && currentStep._id ? currentStep._id : null;
 
                     if (ObjectId.isValid(kanbanCurrentStepId)) {
-                        var getDailyOperations = this.dailyOperationCollection.find({
-                            "kanban.code": kanban.code,
-                            "step._id": kanbanCurrentStepId,
-                            _deleted: false,
-                            type: "input"
-                        }, {
-                                "machine.name": 1,
-                                "input": 1,
-                                "step.process": 1,
-                                "step.processArea": 1,
-                                "step.deadline": 1
-                            }).toArray();
+                        var getDailyOperations;
+                        if(kanban.currentStepIndex != kanban.instruction.steps.length) {
+                            getDailyOperations = this.dailyOperationCollection.find({
+                                "kanban.code": kanban.code,
+                                "step._id": kanbanCurrentStepId,
+                                _deleted: false,
+                                type: "input"
+                            }, {
+                                    "machine.name": 1,
+                                    "input": 1,
+                                    "step.process": 1,
+                                    "step.processArea": 1,
+                                    "step.deadline": 1
+                                }).toArray();
+                        }
+                        else {
+                            getDailyOperations = Promise.resolve([]);
+                        }
 
-                        return getDailyOperations.then((dailyOperations) => {
-                            var arr = dailyOperations.map((dailyOperation) => {
-                                var obj = {
-                                    code: kanban.code,
-                                    dailyOperationMachine: dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null,
-                                    inputQuantity: dailyOperation.input ? dailyOperation.input : null,
-                                    process: dailyOperation.step ? dailyOperation.step.process : null,
-                                    processArea: dailyOperation.step ? dailyOperation.step.processArea : null,
-                                    deadline: dailyOperation.step ? dailyOperation.step.deadline : null,
-                                    stepsLength: kanban.instruction && kanban.instruction.steps ? kanban.instruction.steps.length : 0,
-                                    currentStepIndex: kanban.currentStepIndex,
-                                    cart: {
-                                        cartNumber: kanban.cart ? kanban.cart.cartNumber : null
-                                    },
-                                    productionOrder: {
-                                        orderNo: kanban.productionOrder ? kanban.productionOrder.orderNo : null,
-                                        salesContractNo: kanban.productionOrder ? kanban.productionOrder.salesContractNo : null,
-                                        deliveryDate: kanban.productionOrder ? kanban.productionOrder.deliveryDate : null,
-                                        buyer: {
-                                            name: kanban.productionOrder && kanban.productionOrder.buyer ? kanban.productionOrder.buyer.name : null
-                                        },
-                                        orderQuantity: kanban.productionOrder ? kanban.productionOrder.orderQuantity : null,
+                        return new Promise((resolve, reject) => {
+                            getDailyOperations.then((dailyOperations) => {
+                                var arr = [];
+                                if (dailyOperations.length > 0) {
+                                    arr = dailyOperations.map((dailyOperation) => {
+                                        var obj = {
+                                            code: kanban.code,
+                                            dailyOperationMachine: dailyOperation.machine && dailyOperation.machine.name ? dailyOperation.machine.name : null,
+                                            inputQuantity: dailyOperation.input ? dailyOperation.input : null,
+                                            process: dailyOperation.step ? dailyOperation.step.process : null,
+                                            processArea: dailyOperation.step ? dailyOperation.step.processArea : null,
+                                            deadline: dailyOperation.step ? dailyOperation.step.deadline : null,
+                                            stepsLength: kanban.instruction && kanban.instruction.steps ? kanban.instruction.steps.length : 0,
+                                            currentStepIndex: kanban.currentStepIndex,
+                                            cart: {
+                                                cartNumber: kanban.cart ? kanban.cart.cartNumber : null
+                                            },
+                                            productionOrder: {
+                                                orderNo: kanban.productionOrder ? kanban.productionOrder.orderNo : null,
+                                                salesContractNo: kanban.productionOrder ? kanban.productionOrder.salesContractNo : null,
+                                                deliveryDate: kanban.productionOrder ? kanban.productionOrder.deliveryDate : null,
+                                                buyer: {
+                                                    name: kanban.productionOrder && kanban.productionOrder.buyer ? kanban.productionOrder.buyer.name : null
+                                                },
+                                                orderQuantity: kanban.productionOrder ? kanban.productionOrder.orderQuantity : null,
+                                            },
+                                            type: "Input"
+                                        };
+
+                                        return obj;
+                                    });
+
+                                    resolve(arr);
+                                }
+                                else if (kanban.currentStepIndex != 0) {
+                                    let currStepIndex = kanban.currentStepIndex - 1;
+                                    let currStep = kanban.instruction.steps[currStepIndex];
+                                    let kanbanCurrStepId = kanban.instruction && kanban.instruction.steps.length > 0 && currStep && currStep._id ? currStep._id : null;
+
+                                    if (ObjectId.isValid(kanbanCurrStepId)) {
+                                        var getDailyOp = this.dailyOperationCollection.find({
+                                            "kanban.code": kanban.code,
+                                            "step._id": kanbanCurrStepId,
+                                            _deleted: false,
+                                            type: "output"
+                                        }, {
+                                                "machine.name": 1,
+                                                "goodOutput": 1,
+                                                "badOutput": 1,
+                                                "step.process": 1,
+                                                "step.processArea": 1,
+                                                "step.deadline": 1
+                                            }).toArray();
+
+                                        getDailyOp.then((dailyOps) => {
+                                            arr = dailyOps.map((dailyOp) => {
+                                                var ob = {
+                                                    code: kanban.code,
+                                                    dailyOperationMachine: dailyOp.machine && dailyOp.machine.name ? dailyOp.machine.name : null,
+                                                    goodOutput: dailyOp.goodOutput ? dailyOp.goodOutput : null,
+                                                    badOutput: dailyOp.badOutput ? dailyOp.badOutput : null,
+                                                    process: dailyOp.step ? dailyOp.step.process : null,
+                                                    processArea: dailyOp.step ? dailyOp.step.processArea : null,
+                                                    deadline: dailyOp.step ? dailyOp.step.deadline : null,
+                                                    stepsLength: kanban.instruction && kanban.instruction.steps ? kanban.instruction.steps.length : 0,
+                                                    currentStepIndex: kanban.currentStepIndex,
+                                                    cart: {
+                                                        cartNumber: kanban.cart ? kanban.cart.cartNumber : null
+                                                    },
+                                                    productionOrder: {
+                                                        orderNo: kanban.productionOrder ? kanban.productionOrder.orderNo : null,
+                                                        salesContractNo: kanban.productionOrder ? kanban.productionOrder.salesContractNo : null,
+                                                        deliveryDate: kanban.productionOrder ? kanban.productionOrder.deliveryDate : null,
+                                                        buyer: {
+                                                            name: kanban.productionOrder && kanban.productionOrder.buyer ? kanban.productionOrder.buyer.name : null
+                                                        },
+                                                        orderQuantity: kanban.productionOrder ? kanban.productionOrder.orderQuantity : null,
+                                                    },
+                                                    type: "Output"
+                                                };
+                                                
+                                                return ob;
+                                            });
+
+                                            resolve(arr);
+                                        });
                                     }
-                                };
-
-                                return obj;
+                                    else
+                                        resolve([]);
+                                }
+                                else
+                                    resolve([]);
                             });
-
-                            return Promise.resolve(arr);
                         });
                     }
                 });

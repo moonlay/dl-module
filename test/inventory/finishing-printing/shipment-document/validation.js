@@ -24,7 +24,7 @@ it("#01. should error when create with item quantity less than or equal to zero"
         .getNewData()
         .then((data) => {
             createdData = data;
-            data.details[0].items[0].quantity = 0;
+            data.details[0].items[0].packingReceiptItems[0].quantity = 0;
 
             manager.create(data)
                 .then((id) => {
@@ -45,7 +45,7 @@ it("#01. should error when create with item quantity less than or equal to zero"
 });
 
 it("#02. should error when create with item quantity greater than stock", function (done) {
-    createdData.details[0].items[0].quantity = Number.MAX_SAFE_INTEGER;
+    createdData.details[0].items[0].packingReceiptItems[0].quantity = Number.MAX_SAFE_INTEGER;
 
     manager.create(createdData)
         .then((id) => {
@@ -86,6 +86,25 @@ it("#04. should error when create with tomorrow date", function (done) {
     manager.create(data)
         .then((id) => {
             done("should error when create with tomorrow date");
+        })
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(ex);
+            }
+        });
+});
+
+it("#04. should error when create with duplicate order number", function (done) {
+    createdData.details.push(createdData.details[0]);
+    manager.create(createdData)
+        .then((id) => {
+            done("should error when create with duplicate order number");
         })
         .catch((e) => {
             try {

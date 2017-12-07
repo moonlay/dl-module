@@ -27,12 +27,18 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "_id",
             "no",
             "refNo",
+            "_createdDate",
+            "_createdBy",
             "purchaseRequestId",
             "purchaseRequest._id",
             "purchaseRequest.no",
+            "purchaseRequest._createdDate",
+            "purchaseRequest._createdBy",
             "purchaseOrderExternalId",
             "purchaseOrderExternal._id",
             "purchaseOrderExternal.no",
+            "purchaseOrderExternal._createdDate",
+            "purchaseOrderExternal._createdBy",
             "supplierId",
             "supplier.code",
             "supplier.name",
@@ -632,19 +638,19 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 [{
                     $match: qryMatch
                 }, {
-                        $unwind: "$items"
-                    }, {
-                        $group: {
-                            _id: "$unit.division",
-                            "pricetotal": {
-                                $sum: {
-                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                }
+                    $unwind: "$items"
+                }, {
+                    $group: {
+                        _id: "$unit.division",
+                        "pricetotal": {
+                            $sum: {
+                                $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                             }
                         }
-                    }]
+                    }
+                }]
             )
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -652,13 +658,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
 
-getDataPOStaff(startdate , enddate , divisi , offset) {
+    getDataPOStaff(startdate, enddate, divisi, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
             qryMatch["$and"] = [
                 { "_deleted": false },
                 { "purchaseOrderExternal.isPosted": true }];
-    
+
 
             if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
                 var validStartDate = new Date(startdate);
@@ -675,41 +681,42 @@ getDataPOStaff(startdate , enddate , divisi , offset) {
                     })
             }
 
-               if (divisi !== ""  ) {
+            if (divisi !== "") {
                 qryMatch["$and"].push({
                     //"unit.division.name":divisi
-             "unit.division._id": new ObjectId(divisi)    
-             })
-                
-                
+                    "unit.division._id": new ObjectId(divisi)
+                })
+
+
 
             }
 
-                    
-        
+
+
             this.collection.aggregate(
                 [{
                     $match: qryMatch
                 }, {
-                        $unwind: "$items"
-                    }, 
-                   // { $unwind: "$items.fulfillments" },
-                    { $unwind:{ path: "$items.fulfillments", preserveNullAndEmptyArrays: true }  },
-                    {
-                        $group: {
-                           _id:{_id:"$author",namee:"$_createdBy",noprr:"$purchaseRequest.no"},                      
-                    "division": { $first: "$unit.division._id"},   
-                     }
-                    },
-                    {
-            $group: {
-                           _id:{name:"$_id.namee"},
-                           "div": { $first: "$division"},
-                   "count":{$sum:1}}
-    },
-                    { $sort : { "_id.name" : 1 } }]
+                    $unwind: "$items"
+                },
+                // { $unwind: "$items.fulfillments" },
+                { $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: true } },
+                {
+                    $group: {
+                        _id: { _id: "$author", namee: "$_createdBy", noprr: "$purchaseRequest.no" },
+                        "division": { $first: "$unit.division._id" },
+                    }
+                },
+                {
+                    $group: {
+                        _id: { name: "$_id.namee" },
+                        "div": { $first: "$division" },
+                        "count": { $sum: 1 }
+                    }
+                },
+                { $sort: { "_id.name": 1 } }]
             )
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -750,19 +757,19 @@ getDataPOStaff(startdate , enddate , divisi , offset) {
                 [{
                     $match: qryMatch
                 }, {
-                        $unwind: "$items"
-                    }, {
-                        $group: {
-                            _id: "$unit.name",
-                            "pricetotal": {
-                                $sum: {
-                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                }
+                    $unwind: "$items"
+                }, {
+                    $group: {
+                        _id: "$unit.name",
+                        "pricetotal": {
+                            $sum: {
+                                $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                             }
                         }
-                    }]
+                    }
+                }]
             )
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -770,7 +777,7 @@ getDataPOStaff(startdate , enddate , divisi , offset) {
     }
 
 
-getDataPODetailStaff(startdate, enddate, staff,divisi, offset) {
+    getDataPODetailStaff(startdate, enddate, staff, divisi, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
 
@@ -779,13 +786,13 @@ getDataPODetailStaff(startdate, enddate, staff,divisi, offset) {
                 { "purchaseOrderExternal.isPosted": true }];
 
 
- var bbbb = new Date();
-bbbb.setHours(bbbb.getHours() - offset);
-                
-var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
-//{"$sum" : { $ifNull: [ "$items.fulfillments.deliveryOrderDate", 0 ] }}
+            var bbbb = new Date();
+            bbbb.setHours(bbbb.getHours() - offset);
 
- var dates = {
+            var aaaa = { $ifNull: ["$items.fulfillments.deliveryOrderDate", bbbb] };
+            //{"$sum" : { $ifNull: [ "$items.fulfillments.deliveryOrderDate", 0 ] }}
+
+            var dates = {
                 $divide: [{
                     $subtract: [{
                         $subtract: [
@@ -815,37 +822,37 @@ var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
                             }
                         ]
                     }, {
-                            $subtract: [
-                                { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] },
-                                {
-                                    "$add": [
-                                        { "$millisecond": "$purchaseOrderExternal.expectedDeliveryDate" },
-                                        {
-                                            "$multiply": [
-                                                { "$second": "$purchaseOrderExternal.expectedDeliveryDate" },
-                                                1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$minute": "$purchaseOrderExternal.expectedDeliveryDate" },
-                                                60, 1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$hour": { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] } },
-                                                60, 60, 1000
-                                            ]
-                                        }
-                                    ]
-                                }]
-                        }]
+                        $subtract: [
+                            { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$purchaseOrderExternal.expectedDeliveryDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$purchaseOrderExternal.expectedDeliveryDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
                 }, 86400000]
             };
-        
 
- var dates2 = {
+
+            var dates2 = {
                 $divide: [{
                     $subtract: [{
                         $subtract: [
@@ -875,32 +882,32 @@ var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
                             }
                         ]
                     }, {
-                            $subtract: [
-                                { "$add": ["$_createdDate", 60 * 60 * 1000 * offset] },
-                                {
-                                    "$add": [
-                                        { "$millisecond": "$_createdDate" },
-                                        {
-                                            "$multiply": [
-                                                { "$second": "$_createdDate" },
-                                                1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$minute": "$_createdDate" },
-                                                60, 1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$hour": { "$add": ["$_createdDate", 60 * 60 * 1000 * offset] } },
-                                                60, 60, 1000
-                                            ]
-                                        }
-                                    ]
-                                }]
-                        }]
+                        $subtract: [
+                            { "$add": ["$_createdDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$_createdDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$_createdDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$_createdDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$_createdDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
                 }, 86400000]
             };
 
@@ -909,33 +916,33 @@ var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
                 var validEndDate = new Date(enddate);
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
-  qryMatch["$and"].push(
+                qryMatch["$and"].push(
                     {
                         "purchaseOrderExternal.expectedDeliveryDate": {
                             $gte: validStartDate,
                             $lte: validEndDate
                         }
                     }
-                   
-                    )
-            }
-            
 
-               if (staff!=="") {
-                qryMatch["$and"].push({
-                    "_createdBy":staff
-                 })
-                
-                
-
+                )
             }
 
-               if (divisi!=="") {
+
+            if (staff !== "") {
                 qryMatch["$and"].push({
-            "unit.division._id": new ObjectId(divisi)    
-             })
-                
-                
+                    "_createdBy": staff
+                })
+
+
+
+            }
+
+            if (divisi !== "") {
+                qryMatch["$and"].push({
+                    "unit.division._id": new ObjectId(divisi)
+                })
+
+
 
             }
 
@@ -943,36 +950,36 @@ var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
             this.collection.aggregate(
                 [
                     {
-                    $match: qryMatch
-                },
-                 {
+                        $match: qryMatch
+                    },
+                    {
                         $unwind: "$items"
-                    }, 
+                    },
                     //{ $unwind: "$items.fulfillments" },
-                    { $unwind:{ path: "$items.fulfillments", preserveNullAndEmptyArrays: true }  },
+                    { $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: true } },
                     {
                         $group: {
-                           _id:{_id:"$author",name:"$purchaseRequest.no"},
-                           "user": { $first: "$_createdBy"},
-                           "divisi": { $first: "$unit.division.name"},
-                           "unit": { $first: "$unit.name"},
-                           "selisih": { $first: dates },
-                           "selisih2": { $first: dates2 },
-                           "nmbarang": { $first: "$items.product.name" },
-                           "nmsupp": { $first: "$purchaseOrderExternal.supplier.name" },
-                             "tgltarget": { $first: "$purchaseOrderExternal.expectedDeliveryDate" },
-                            "tgldatang": { $first:  "$items.fulfillments.deliveryOrderDate" },
-                            "tglpoint": { $first:  "$_createdDate" },
-                            "tglpoeks": { $first:  "$purchaseOrderExternal.date" },
-                            "tgpr": { $first:  "$purchaseRequest._createdDate" },   
+                            _id: { _id: "$author", name: "$purchaseRequest.no" },
+                            "user": { $first: "$_createdBy" },
+                            "divisi": { $first: "$unit.division.name" },
+                            "unit": { $first: "$unit.name" },
+                            "selisih": { $first: dates },
+                            "selisih2": { $first: dates2 },
+                            "nmbarang": { $first: "$items.product.name" },
+                            "nmsupp": { $first: "$purchaseOrderExternal.supplier.name" },
+                            "tgltarget": { $first: "$purchaseOrderExternal.expectedDeliveryDate" },
+                            "tgldatang": { $first: "$items.fulfillments.deliveryOrderDate" },
+                            "tglpoint": { $first: "$_createdDate" },
+                            "tglpoeks": { $first: "$purchaseOrderExternal.date" },
+                            "tgpr": { $first: "$purchaseRequest._createdDate" },
                         }
                     },
-                 
-                      { $sort : { "tgltarget" : 1 } }
-                    ]
-    
+
+                    { $sort: { "tgltarget": 1 } }
+                ]
+
             )
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -981,7 +988,7 @@ var aaaa={ $ifNull: [ "$items.fulfillments.deliveryOrderDate", bbbb] };
 
 
 
-getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
+    getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
             var now = new Date();
             var deleted = {
@@ -993,7 +1000,7 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
             var query = [deleted, isPosted];
-           if (unit) {
+            if (unit) {
                 var filterUnit = {
                     "unit._id": new ObjectId(unit)
                 };
@@ -1047,17 +1054,17 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                 [{
                     $match: match
                 }, {
-                        $unwind: "$items"
-                    }, {
-                        $group: {
-                            _id: { supplier: "$supplier.name", unit: "$unit.name", category: "$category.name" },
-                            "pricetotal": {
-                                $sum: {
-                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                }
+                    $unwind: "$items"
+                }, {
+                    $group: {
+                        _id: { supplier: "$supplier.name", unit: "$unit.name", category: "$category.name" },
+                        "pricetotal": {
+                            $sum: {
+                                $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                             }
                         }
-                    }]
+                    }
+                }]
             ).sort({ "_id": 1 })
                 .toArray(function (err, result) {
                     assert.equal(err, null);
@@ -1067,7 +1074,7 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
         });
     }
 
-  getDataPOSupplier(startdate, enddate, offset) {
+    getDataPOSupplier(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
             qryMatch["$and"] = [
@@ -1092,19 +1099,19 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                 [{
                     $match: qryMatch
                 }, {
-                        $unwind: "$items"
-                    }, {
-                        $group: {
-                            _id: "$supplier",
-                            "pricetotal": {
-                                $sum: {
-                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                }
+                    $unwind: "$items"
+                }, {
+                    $group: {
+                        _id: "$supplier",
+                        "pricetotal": {
+                            $sum: {
+                                $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                             }
                         }
-                    }]
+                    }
+                }]
             )
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -1137,19 +1144,19 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                 [{
                     $match: qryMatch
                 }, {
-                        $unwind: "$items"
-                    }, {
-                        $group: {
-                            _id: "$purchaseOrderExternal.no",
-                            "pricetotal": {
-                                $sum: {
-                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                }
+                    $unwind: "$items"
+                }, {
+                    $group: {
+                        _id: "$purchaseOrderExternal.no",
+                        "pricetotal": {
+                            $sum: {
+                                $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                             }
                         }
-                    }]
+                    }
+                }]
             )
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -1181,19 +1188,19 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                 [{
                     $match: qryMatch
                 }, {
-                        $unwind: "$items"
-                    }, {
-                        $group: {
-                            _id: "$category.name",
-                            "pricetotal": {
-                                $sum: {
-                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                }
+                    $unwind: "$items"
+                }, {
+                    $group: {
+                        _id: "$category.name",
+                        "pricetotal": {
+                            $sum: {
+                                $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                             }
                         }
-                    }]
+                    }
+                }]
             )
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -1225,20 +1232,20 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                 [{
                     $match: qryMatch
                 }, {
-                        $unwind: "$items"
-                    }, {
-                        $group: {
-                            _id: { division: "$unit.division.name", unit: "$unit.name", category: "$category.name" },
-                            "pricetotal": {
-                                $sum: {
-                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                }
+                    $unwind: "$items"
+                }, {
+                    $group: {
+                        _id: { division: "$unit.division.name", unit: "$unit.name", category: "$category.name" },
+                        "pricetotal": {
+                            $sum: {
+                                $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                             }
                         }
-                    }]
+                    }
+                }]
             )
                 .sort({ "_id": 1 })
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -1319,26 +1326,25 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                 [{
                     $match: match
                 }, {
-                        $unwind: "$items"
-                    }, {
-                        $group: {
-                            _id: { division: "$unit.division.name", unit: "$unit.name", category: "$category.name", currency: "$currency.code" },
-                            "pricePerCurrency": {
-                                $sum: {
-                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"]
-                                }
-                            },
-                            "pricetotal": {
-                                $sum: {
-                                    $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
-                                }
+                    $unwind: "$items"
+                }, {
+                    $group: {
+                        _id: { division: "$unit.division.name", unit: "$unit.name", category: "$category.name", currency: "$currency.code" },
+                        "pricePerCurrency": {
+                            $sum: {
+                                $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"]
+                            }
+                        },
+                        "pricetotal": {
+                            $sum: {
+                                $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$currencyRate"]
                             }
                         }
-                    }]
+                    }
+                }]
             ).sort({ "_id": 1 })
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
-                    console.log(result);
                     resolve(result);
                 });
         });
@@ -1450,32 +1456,32 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                             }
                         ]
                     }, {
-                            $subtract: [
-                                { "$add": ["$purchaseRequest._createdDate", 60 * 60 * 1000 * offset] },
-                                {
-                                    "$add": [
-                                        { "$millisecond": "$purchaseRequest._createdDate" },
-                                        {
-                                            "$multiply": [
-                                                { "$second": "$purchaseRequest._createdDate" },
-                                                1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$minute": "$purchaseRequest._createdDate" },
-                                                60, 1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$hour": { "$add": ["$purchaseRequest._createdDate", 60 * 60 * 1000 * offset] } },
-                                                60, 60, 1000
-                                            ]
-                                        }
-                                    ]
-                                }]
-                        }]
+                        $subtract: [
+                            { "$add": ["$purchaseRequest._createdDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$purchaseRequest._createdDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$purchaseRequest._createdDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$purchaseRequest._createdDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$purchaseRequest._createdDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
                 }, 86400000]
             };
             var durationQuery = {};
@@ -1684,32 +1690,32 @@ getDataTotalBeliSupplier(unit, category, supplier, startdate, enddate, offset) {
                             }
                         ]
                     }, {
-                            $subtract: [
-                                { "$add": ["$purchaseOrderExternal._createdDate", 60 * 60 * 1000 * offset] },
-                                {
-                                    "$add": [
-                                        { "$millisecond": "$purchaseOrderExternal._createdDate" },
-                                        {
-                                            "$multiply": [
-                                                { "$second": "$purchaseOrderExternal._createdDate" },
-                                                1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$minute": "$purchaseOrderExternal._createdDate" },
-                                                60, 1000
-                                            ]
-                                        },
-                                        {
-                                            "$multiply": [
-                                                { "$hour": { "$add": ["$purchaseOrderExternal._createdDate", 60 * 60 * 1000 * offset] } },
-                                                60, 60, 1000
-                                            ]
-                                        }
-                                    ]
-                                }]
-                        }]
+                        $subtract: [
+                            { "$add": ["$purchaseOrderExternal._createdDate", 60 * 60 * 1000 * offset] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$purchaseOrderExternal._createdDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$purchaseOrderExternal._createdDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$purchaseOrderExternal._createdDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$purchaseOrderExternal._createdDate", 60 * 60 * 1000 * offset] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
                 }, 86400000]
             };
             var durationQuery = {};

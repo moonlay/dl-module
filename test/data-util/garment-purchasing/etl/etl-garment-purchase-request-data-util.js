@@ -70,7 +70,7 @@ class garmentPurchaseRequestDataUtil {
                 Konf: "unitNotFound",
                 Nopo: "22222222222",
                 Qty: 1,
-                Ro: "unitTest-Ro2",
+                Ro: "unitTest-Ro",
                 Satb: "uomNotFound",
 
                 Shipment: new Date(),
@@ -111,7 +111,7 @@ class garmentPurchaseRequestDataUtil {
 
                 Nopo: "33333333333",
                 Qty: 1,
-                Ro: "unitTest-Ro3",
+                Ro: "unitTest-Ro",
                 Satb: "uomNotFound",
 
                 Shipment: new Date(),

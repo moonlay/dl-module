@@ -55,7 +55,8 @@ module.exports = class CompanyManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
         // 2. begin: Validation.
         return Promise.all([getCompanyPromise])
@@ -95,8 +96,7 @@ module.exports = class CompanyManager extends BaseManager {
             name: `ix_${map.master.collection.Company}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

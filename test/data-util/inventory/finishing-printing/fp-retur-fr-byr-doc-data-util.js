@@ -2,6 +2,7 @@
 var helper = require("../../../helper");
 var FPReturManager = require("../../../../src/managers/inventory/finishing-printing/fp-retur-fr-byr-doc-manager");
 var ShipmentDataUtil = require('./fp-shipment-document-data-util');
+var storageDataUtil = require('../../master/storage-data-util');
 
 var codeGenerator = require('../../../../src/utils/code-generator');
 
@@ -13,9 +14,10 @@ var moment = require("moment");
 
 class FPReturFrByrDocDataUtil {
     getNewData() {
-        return Promise.all([ShipmentDataUtil.getNewTestData()])
+        return Promise.all([ShipmentDataUtil.getNewTestData(), storageDataUtil.getRandomTestData()])
             .then(results => {
                 var _shipmetData = results[0];
+                var _storage = results[1];
                 var code = codeGenerator();
                 var data = {
                     code : code,
@@ -32,22 +34,24 @@ class FPReturFrByrDocDataUtil {
                     spk : `spk ${code}`,
                     coverLetter : `sp ${code}`,
                     codeProduct : `code ${code}`,
+                    storageId : _storage._id,
+                    storageName : _storage.name,
                     details : [{
                         productionOrderId : _shipmetData.details[0].productionOrderId,
                         productionOrderNo : _shipmetData.details[0].productionOrderNo,
                         items : [{
-                            productId:_shipmetData.details[0].items[0].productId,
-                            productCode:_shipmetData.details[0].items[0].productCode,
-                            productName:_shipmetData.details[0].items[0].productName,
+                            productId:_shipmetData.details[0].items[0].packingReceiptItems[0].productId,
+                            productCode:_shipmetData.details[0].items[0].packingReceiptItems[0].productCode,
+                            productName:_shipmetData.details[0].items[0].packingReceiptItems[0].productName,
                             productDescription:'',
                             hasNewProduct : false,
-                            designNumber:_shipmetData.details[0].items[0].designNumber,
-                            designCode:_shipmetData.details[0].items[0].designCode,
+                            designNumber:_shipmetData.details[0].items[0].packingReceiptItems[0].designNumber,
+                            designCode:_shipmetData.details[0].items[0].packingReceiptItems[0].designCode,
                             remark:`Ket ${code}`,
-                            colorWay:_shipmetData.details[0].items[0].colorType,
+                            colorWay:_shipmetData.details[0].items[0].packingReceiptItems[0].colorType,
                             returQuantity:2,
-                            uomId:_shipmetData.details[0].items[0].uomId,
-                            uom:_shipmetData.details[0].items[0].uomUnit,
+                            uomId:_shipmetData.details[0].items[0].packingReceiptItems[0].uomId,
+                            uom:_shipmetData.details[0].items[0].packingReceiptItems[0].uomUnit,
                             length:2,
                             weight:2
                         }]

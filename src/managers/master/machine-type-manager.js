@@ -60,6 +60,7 @@ module.exports = class MachineTypeManager extends BaseManager {
                 '$ne': new ObjectId(valid._id)
             },
             code: valid.code,
+            _deleted: false
         });
 
 
@@ -185,8 +186,7 @@ module.exports = class MachineTypeManager extends BaseManager {
             name: `ix_${map.master.type.MachineType}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

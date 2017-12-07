@@ -10,7 +10,7 @@ module.exports = function (data, offset) {
                 return {
                     deliveryOrderNo: dataItem.deliveryOrderNo,
                     date: dataItem.deliveryOrderDate,
-                    purchaseRequestNo: item.purchaseRequestNo,
+                    purchaseRequestRefNo: item.purchaseRequestRefNo,
                     product: item.product.name,
                     productDesc: item.product.description,
                     quantity: item.deliveredQuantity,
@@ -153,7 +153,7 @@ module.exports = function (data, offset) {
                     stack: [
                         {
                             columns: [{
-                                width: '25%',
+                                width: '28%',
                                 text: 'Tgl. Nota Intern',
                                 style: ['size06']
                             }, {
@@ -168,7 +168,7 @@ module.exports = function (data, offset) {
                         },
                         {
                             columns: [{
-                                width: '25%',
+                                width: '28%',
                                 text: 'Tgl. Jatuh Tempo',
                                 style: ['size06']
                             }, {
@@ -180,7 +180,21 @@ module.exports = function (data, offset) {
                                 text: `${moment(dueDate).add(offset, 'h').format("DD MMM YYYY")}`,
                                 style: ['size06']
                             }]
-                        }
+                        },{
+                            columns: [{
+                                width: '28%',
+                                text: 'Term Pembayaran',
+                                style: ['size06']
+                            }, {
+                                width: '2%',
+                                text: ':',
+                                style: ['size06']
+                            }, {
+                                width: '*',
+                                text: paymentMethod,
+                                style: ['size06']
+                            }]
+                        },
                     ]
                 }
             ]
@@ -227,7 +241,7 @@ module.exports = function (data, offset) {
             text: `${moment(item.date).add(offset, 'h').format("DD MMM YYYY")}`,
             style: ['size06', 'left']
         }, {
-            text: item.purchaseRequestNo,
+            text: item.purchaseRequestRefNo,
             style: ['size06', 'left']
         }, {
             text: `${item.product};${item.productDesc}`,

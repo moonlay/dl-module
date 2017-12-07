@@ -8,3 +8,10 @@ describe("CREATE SCENARIOS", function() {
 describe("REPORT SCENARIOS", function() {
     require("./report");
 });
+
+describe("PDF SCENARIOS", function() {
+    require("./pdf");
+});
+describe("VALIDATOR SCENARIOS", function() {
+    require("./validator");
+});

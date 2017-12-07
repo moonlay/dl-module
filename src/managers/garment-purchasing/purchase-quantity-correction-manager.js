@@ -162,7 +162,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
 
                             for (var item of valid.items) {
                                 var itemError = {};
-                                if (item.quantity <= 0) {
+                                if (item.quantity < 0) {
                                     itemError["quantity"] = i18n.__("PurchaseQuantityCorrection.items.quantity.isRequired:%s is required", i18n.__("PurchaseQuantityCorrection.items.quantity._:Quantity"));
                                 }
 
@@ -351,6 +351,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                             fulfillment.corrections.push(_correction);
                         }
                     }
+                    // purchaseOrder.isClosed = false;
                     return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);
                 });
             jobs.push(job);
@@ -371,6 +372,12 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
             var job = this.purchaseOrderExternalManager.getSingleById(purchaseOrderExternalId)
                 .then((purchaseOrderExternal) => {
                     purchaseOrderExternal.isClosed = false;
+                    for (var poeItem of purchaseOrderExternal.items) {
+                        var item = purchaseQuantityCorrection.items.find((correctionItem) => correctionItem.purchaseOrderInternalNo === poeItem.poNo)
+                        if (item) {
+                            poeItem.isClosed = false;
+                        }
+                    }
                     return this.purchaseOrderExternalManager.update(purchaseOrderExternal);
                 })
             jobs.push(job);
@@ -454,6 +461,8 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                             "supplier": "$deliveryOrder.supplier.name",
                             "noPOEks": "$items.purchaseOrderExternalNo",
                             "noPR": "$items.purchaseRequestNo",
+                            "noRefPR": "$items.purchaseRequestRefNo",
+                            "noRO": "$items.roNo",
                             "itemCode": "$items.product.code",
                             "itemName": "$items.product.name",
                             "qty": "$items.quantity",
@@ -485,6 +494,103 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 });
         });
     }
+
+  getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => 
+        {
+           var now = new Date();
+           var deleted = {
+                _deleted: false
+            };
+                
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+
+            var query = [deleted];
+
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "date": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
+
+      var match = { '$and': query };
+            
+      this.collection.aggregate([
+      {$match: match },
+      {$unwind:"$items"},
+      {$project :{
+                    "NoNK":"$no",
+                    "TgNK":"$date",
+                    "Jenis":"$correctionType",
+                    "Ketr":"$remark",
+                    "MtUang" :"$items.currency.code",
+                    "Rate" : "$items.currencyRate",
+                    "KdSpl":"$deliveryOrder.supplier.code",
+                    "NmSpl":"$deliveryOrder.supplier.name",
+                    "NoSJ" : "$deliveryOrder.no",
+                    "TgSJ": "$deliveryOrder.date",
+                    "TgDtg": "$deliveryOrder.supplierDoDate",
+                    "POExt":"$items.purchaseOrderExternalNo",
+                    "NoPR":"$items.purchaseRequestNo",
+                    "PlanPO":"$items.purchaseRequestRefNo",
+                    "NoRO":"$items.roNo",
+                    "KdBrg":"$items.product.code",
+                    "NmBrg":"$items.product.name",
+                    "Qty":"$items.quantity",
+                    "Satuan":"$items.uom.unit",
+                    "Harga":"$items.pricePerUnit",
+                    "Total":"$items.priceTotal",
+                    "TgIn":"$_createdDate",
+                    "UserIn":"$_createdBy",
+                    "TgEd":"$_updatedDate",
+                    "UserEd":"$_updatedBy",
+      }}, 
+      {$group :{ _id: {"NoNK":"$NoNK","TgNK":"$TgNK","Jenis":"$Jenis","Ketr":"$Ketr","MtUang":"$MtUang",
+                      "Rate":"$Rate","KdSpl":"$KdSpl","NmSpl":"$NmSpl","NoSJ":"$NoSJ","TgSJ":"$TgSJ",
+                      "TgDtg":"$TgDtg","POExt":"$POExt","NoPR":"$NoPR","PlanPO":"$PlanPO","NoRO":"$NoRO",
+                      "KdBrg":"$KdBrg","NmBrg":"$NmBrg","Satuan":"$Satuan","Qty":"$Qty","Harga":"$Harga",
+                      "Total":"$Total","TgIn":"$TgIn","UserIn":"$UserIn","TgEd":"$TgEd","UserEd":"$UserEd"
+                     
+               },
+               "QtyNK": { $sum: "$Qty" },
+               "TotNK": { $sum: "$Total" }
+               }
+        } 
+      ])
+        .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }
+
     getPurchaseQuantityCorrectionReportXls(dataReport, query) {
 
         return new Promise((resolve, reject) => {
@@ -508,6 +614,8 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                     item["Supplier"] = data.supplier ? data.supplier : '';
                     item["Nomor PO Eksternal"] = data.noPOEks ? data.noPOEks : '';
                     item["No PR"] = data.noPR ? data.noPR : '';
+                    item["No Ref PR"] = data.noRefPR ? data.noRefPR : '';
+                    item["No RO"] = data.noRO ? data.noRO: '';
                     item["Kode Barang"] = data.itemCode ? data.itemCode : '';
                     item["Nama Barang"] = data.itemName ? data.itemName : '';
                     var correction = data.fulfillments.corrections ? data.fulfillments.corrections : data.fulfillments.correction;
@@ -545,6 +653,8 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
             xls.options["Supplier"] = "string";
             xls.options["Nomor PO Eksternal"] = "string";
             xls.options["No PR"] = "string";
+            xls.options["No Ref PR"] = "string";
+            xls.options["No RO"] = "string";
             xls.options["Kode Barang"] = "string";
             xls.options["Nama Barang"] = "string";
             xls.options["Jumlah Awal"] = "number";

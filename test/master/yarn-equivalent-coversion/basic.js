@@ -3,8 +3,8 @@ var options = {
     model: require("dl-models").master.YarnEquivalentConversion,
     util: require("../../data-util/master/yarn-equivalent-conversion-data-util"),
     validator: require("dl-models").validator.master.yarnEquivalentConversion,
-    createDuplicate: true,
-    keys: ["ne"]
+    createDuplicate: false,
+    keys: []
 };
 
 var basicTest = require("../../basic-test-factory");

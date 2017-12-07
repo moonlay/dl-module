@@ -127,10 +127,10 @@ module.exports = class CustomsManager extends BaseManager {
                     if (!valid.amountOfPackaging || valid.amountOfPackaging === "" || valid.amountOfPackaging < 1)
                         errors["amountOfPackaging"] = i18n.__("Harus diisi lebih dari 0", i18n.__("Customs.amountOfPackaging._:AmountOfPackaging"));
 
-                    if (!valid.bruto || valid.bruto === "" || valid.bruto < 1)
+                    if (!valid.bruto || valid.bruto === "" || valid.bruto <= 0)
                         errors["bruto"] = i18n.__("Harus diisi lebih dari 0", i18n.__("Customs.bruto._:Bruto"));
 
-                    if (!valid.netto || valid.netto === "" || valid.netto < 1)
+                    if (!valid.netto || valid.netto === "" || valid.netto <= 0)
                         errors["netto"] = i18n.__("Harus diisi lebih dari 0", i18n.__("Customs.netto._:Netto"));
                     else {
                         if (valid.bruto && valid.bruto !== "" && valid.bruto < valid.netto)
@@ -448,17 +448,20 @@ module.exports = class CustomsManager extends BaseManager {
                             "customsType": 1,
                             "customsDate": 1,
                             "supplier": "$supplier.name",
+                            "deliveryOrderNo":"$deliveryOrders.no",
+                            "deliveryOrderDate":"$deliveryOrders.date",
                             "productCode": "$deliveryOrders.items.fulfillments.product.code",
                             "productName": "$deliveryOrders.items.fulfillments.product.name",
                             "quantity": "$deliveryOrders.items.fulfillments.deliveredQuantity",
                             "price": "$deliveryOrders.items.fulfillments.pricePerDealUnit",
                             "uom": "$deliveryOrders.items.fulfillments.purchaseOrderUom.unit",
-                            "currency": "$currency.code"
+                            "currency": "$currency.code",
+                            "_createdBy": "$_createdBy"
                         }
                     },
                     {
                         "$group": {
-                            "_id": { "no": "$no", "customsType": "$customsType", "customsDate": "$customsDate", "supplier": "$supplier", "productCode": "$productCode", "productName": "$productName", "uom": "$uom", "currency": "$currency" },
+                            "_id": { "no": "$no", "customsType": "$customsType", "customsDate": "$customsDate", "supplier": "$supplier", "deliveryOrderNo": "$deliveryOrderNo", "deliveryOrderDate": "$deliveryOrderDate", "productCode": "$productCode", "productName": "$productName", "uom": "$uom", "currency": "$currency", "_createdBy": "$_createdBy" },
                             "quantity": { "$sum": "$quantity" },
                             "price": { "$sum": { "$multiply": ["$quantity", "$price"] } }
                         }
@@ -480,6 +483,48 @@ module.exports = class CustomsManager extends BaseManager {
         });
     }
 
+getAllData(filter) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+                    query = Object.assign(query, filter);
+                    query = Object.assign(query, {
+                        _deleted: false
+                    });
+
+                    var _select = ["no",
+                        "customsDate",
+                        "validateDate",
+                        "customsType",
+                        "customsOrigin",
+                        "supplier",
+                        "amountOfPackaging",
+                        "packaging",
+                        "bruto",
+                        "netto",
+                        "currency",
+                        "deliveryOrders.no",
+                        "deliveryOrders.date",
+                        "deliveryOrders.supplierDoDate",
+                        "deliveryOrders.items",
+                        "_createdBy",
+                        "_createdDate",
+                        "_updatedBy",
+                        "_updatedDate"  
+                        ];
+
+                    this.collection.where(query).select(_select).execute()
+                        .then((results) => {
+                            resolve(results.data);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
     getCustomsReportXls(dataReport, query) {
         return new Promise((resolve, reject) => {
             var xls = {};
@@ -498,12 +543,15 @@ module.exports = class CustomsManager extends BaseManager {
                 item["Nomor Dokumen Pabean"] = data._id.no ? data._id.no : '';
                 item["Tanggal Dokumen Pabean"] = data._id.customsDate ? moment(data._id.customsDate).format("DD/MM/YYYY") : '';
                 item["Pemasok / Pengirim"] = data._id.supplier ? data._id.supplier : '';
+                item["Nomor Surat Jalan"] = data._id.deliveryOrderNo ? data._id.deliveryOrderNo : '';
+                item["Tgl Surat Jalan"] = data._id.deliveryOrderDate ? moment(data._id.deliveryOrderDate).format("DD/MM/YYYY") : '';
                 item["Kode Barang"] = data._id.productCode ? data._id.productCode : '';
                 item["Nama Barang"] = data._id.productName ? data._id.productName : '';
                 item["Jumlah"] = data.quantity ? data.quantity : '';
                 item["Satuan"] = data._id.uom ? data._id.uom : '';
                 item["Nilai Barang"] = data.price ? data.price : '';
                 item["Mata Uang"] = data._id.currency ? data._id.currency : '';
+                item["User Input"] = data._id._createdBy ? data._id._createdBy : '';
 
                 xls.data.push(item);
             }
@@ -513,12 +561,15 @@ module.exports = class CustomsManager extends BaseManager {
             xls.options["Nomor Dokumen Pabean"] = "string";
             xls.options["Tanggal Dokumen Pabean"] = "string";
             xls.options["Pemasok / Pengirim"] = "string";
+            xls.options["Nomor Surat Jalan"] = "string";
+            xls.options["Tgl Surat Jalan"] = "string";
             xls.options["Kode Barang"] = "string";
             xls.options["Nama Barang"] = "string";
             xls.options["Jumlah"] = "number";
             xls.options["Satuan"] = "string";
             xls.options["Nilai Barang"] = "number";
             xls.options["Mata Uang"] = "string";
+            xls.options["User Input"] = "string";
 
             if (query.dateFrom && query.dateTo) {
                 xls.name = `Bea Cukai Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;

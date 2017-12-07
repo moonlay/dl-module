@@ -10,7 +10,7 @@ var ProductManager = require('../../../master/product-manager');
 var MachineManager = require('../../../master/machine-manager');
 var UnitManager = require('../../../master/unit-manager');
 var ThreadSpecificationManager = require('../../../master/thread-specification-manager');
-var LotMachineManager = require('../../../master/lot-machine-manager');
+//var LotMachineManager = require('../../../master/lot-machine-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var DailySpinningProductionReportManager = require('../daily-spinning-production-report-manager');
@@ -22,7 +22,7 @@ module.exports = class WindingProductionOutputManager extends BaseManager {
         this.productManager = new ProductManager(db, user);
         this.machineManager = new MachineManager(db, user);
         this.unitManager = new UnitManager(db, user);
-        this.lotmachineManager = new LotMachineManager(db, user);
+        //this.lotmachineManager = new LotMachineManager(db, user);
         this.threadSpecificationManager = new ThreadSpecificationManager(db, user);
         this.dailySpinningProductionReportManager = new DailySpinningProductionReportManager(db, user);
     }
@@ -104,32 +104,32 @@ module.exports = class WindingProductionOutputManager extends BaseManager {
                         productId : ObjectId.isValid(valid.productId) ? new ObjectId(valid.productId) : ''
                 }
             };
-            var getLotMachine = valid.productId && ObjectId.isValid(valid.productId) ? this.lotmachineManager.read(queryProduct) : Promise.resolve(null);
+            //var getLotMachine = valid.productId && ObjectId.isValid(valid.productId) ? this.lotmachineManager.read(queryProduct) : Promise.resolve(null);
             var getThreadSpecification = valid.productId && ObjectId.isValid(valid.productId) ? this.threadSpecificationManager.read(queryProduct) : Promise.resolve(null);
-            Promise.all([getWindingProductionOutputPromise, getProduct, getMachine, getLotMachine, getThreadSpecification, getUnit])
+            Promise.all([getWindingProductionOutputPromise, getProduct, getMachine, getThreadSpecification, getUnit])
              .then(results =>{
                 var _module = results[0];
                 var _product = results[1];
                 var _machine = results[2];
-                var _lotmachine = results[3];
-                var _threadSpecification = results[4];
-                var _unit= results[5];
+                //var _lotmachine = results[3];
+                var _threadSpecification = results[3];
+                var _unit= results[4];
                 var _Lm=null;
                 var _Ts=null;
                 var now = new Date();
                 
                 valid.product=_product;
 
-                if(_lotmachine.data.length > 0){
-                    for(var a of _lotmachine.data)
-                    {
-                        if(a.productId==valid.productId && a.machineId==valid.machineId) {
-                        // if(a._id.toString() == valid.lotMachineId.toString()) {
-                            _Lm = a;
-                            break;
-                        }
-                    }
-                }
+                // if(_lotmachine.data.length > 0){
+                //     for(var a of _lotmachine.data)
+                //     {
+                //         if(a.productId==valid.productId && a.machineId==valid.machineId) {
+                //         // if(a._id.toString() == valid.lotMachineId.toString()) {
+                //             _Lm = a;
+                //             break;
+                //         }
+                //     }
+                // }
 
                 if(_threadSpecification.data.length > 0){
                     for(var b of _threadSpecification.data)
@@ -192,25 +192,25 @@ module.exports = class WindingProductionOutputManager extends BaseManager {
                         errors["machine"] = i18n.__("WindingProductionOutput.machine.isRequired:%s is required", i18n.__("WindingProductionOutput.machine._:Machine"));
                 }
 
-                if(_Lm)
-                {
-                    valid.lotMachine=_Lm;
-                    valid.lotMachineId=new ObjectId(_Lm._id);
-                }
+                // if(_Lm)
+                // {
+                //     valid.lotMachine=_Lm;
+                //     valid.lotMachineId=new ObjectId(_Lm._id);
+                // }
                 if(_Ts)
                 {
                     valid.threadSpecification=_Ts;
                     valid.threadSpecificationId=new ObjectId(_Ts._id);
                 }
 
-                if (!_Lm)
-                    errors["lotMachine"] = i18n.__("WindingProductionOutput.lotMachine.isRequired:%s is not exists", i18n.__("WindingProductionOutput.lotMachine._:LotMachine")); 
-                else if (!valid.lotMachineId)
-                    errors["lotMachine"] = i18n.__("WindingProductionOutput.lotMachine.isRequired:%s is required", i18n.__("WindingProductionOutput.lotMachine._:LotMachine"));
-                else if (valid.lotMachine) {
-                    if (!valid.lotMachine._id)
-                        errors["lotMachine"] = i18n.__("WindingProductionOutput.lotMachine.isRequired:%s is required", i18n.__("WindingProductionOutput.lotMachine._:LotMachine"));
-                }
+                // if (!_Lm)
+                //     errors["lotMachine"] = i18n.__("WindingProductionOutput.lotMachine.isRequired:%s is not exists", i18n.__("WindingProductionOutput.lotMachine._:LotMachine")); 
+                // else if (!valid.lotMachineId)
+                //     errors["lotMachine"] = i18n.__("WindingProductionOutput.lotMachine.isRequired:%s is required", i18n.__("WindingProductionOutput.lotMachine._:LotMachine"));
+                // else if (valid.lotMachine) {
+                //     if (!valid.lotMachine._id)
+                //         errors["lotMachine"] = i18n.__("WindingProductionOutput.lotMachine.isRequired:%s is required", i18n.__("WindingProductionOutput.lotMachine._:LotMachine"));
+                // }
 
                 if (!_Ts)
                     errors["threadSpecification"] = i18n.__("WindingProductionOutput.threadSpecification.isRequired:%s is not exists", i18n.__("WindingProductionOutput.threadSpecification._:ThreadSpecification")); 
