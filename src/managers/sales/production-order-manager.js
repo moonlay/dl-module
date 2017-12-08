@@ -1668,7 +1668,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "kanban.code": kanban.code,
                                 "step._id": kanbanCurrentStepId,
                                 type: "input",
-                                "kanban.currentStepIndex": currentStep
+                                "kanban.currentStepIndex": kanban.currentStepIndex
                             };
 
                             let dailyFields = {
@@ -1692,7 +1692,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                                 else if (kanban.currentStepIndex === 0) {
                                     kanban.type = "kanban";
-                                    return Promise.resolve(kanban);
+                                    resolve(kanban);
                                 }
                                 else {
                                     let currStepIndex = kanban.currentStepIndex - 1;
@@ -1833,7 +1833,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             let i = 1;
 
             for (var datum of data) {
-                var exist = results.find((result) => result && result.orderNo.toString() === datum.orderNo.toString() && result.processArea.toString() === datum.processArea.toString());
+                var exist = results.find((result) => result && result.orderNo.toString() === datum.orderNo.toString() && (result.processArea ? result.processArea.toString() === datum.processArea.toString() : true));
                 if (exist) {
                     var index = results.findIndex(result => result.orderNo === exist.orderNo && result.processArea === exist.processArea);
                     results[index].quantity += datum.quantity;
@@ -2045,7 +2045,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     getShipmentDetailStatus(year, month, orderType, productionOrders) {
         var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
- 
+
         return this.fpPackingShipmentCollection.aggregate([
             {
                 "$match": {
@@ -2092,19 +2092,19 @@ module.exports = class ProductionOrderManager extends BaseManager {
         ]).toArray()
             .then((shipmentDocuments) => {
                 var shipmentDocumentData = [];
- 
+
                 if (shipmentDocuments.length > 0) {
                     for (var shipmentDocument of shipmentDocuments) {
                         var shipmentDocumentDatum = {};
- 
+
                         shipmentDocumentDatum.month = shipmentDocument.month;
- 
+
                         shipmentDocumentDatum.quantity = 0;
                         if (shipmentDocument.details && shipmentDocument.details.length > 0) {
                             for (var detail of shipmentDocument.details) {
-                                
+
                                 shipmentDocumentDatum.orderNo = detail.productionOrderNo;
- 
+
                                 if (detail.items) {
                                     for (var item of detail.items) {
                                         if (item.packingReceiptItems && item.packingReceiptItems.length > 0) {
@@ -2118,7 +2118,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                             }
                         }
- 
+
                         shipmentDocumentData.push(shipmentDocumentDatum);
                     }
                 }
