@@ -897,7 +897,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         }
                         prodOrder.staffName = `${prodOrder.firstname} ${prodOrder.lastname}`;
                         prodOrder.no = no;
-                        var construction = `${prodOrder.materialName} / ${prodOrder.materialConstruction} / ${prodOrder.materialWidth}`;
+                        var construction = `${prodOrder.materialName} / ${prodOrder.materialConstruction} / ${prodOrder.materialWidth}`;
                         var designMotive = prodOrder.designMotive;
                         prodOrder.designMotive = designMotive;
                         prodOrder.construction = construction;
@@ -1581,6 +1581,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 "$project": {
                     "_deleted": 1,
                     "processType": 1,
+                    "orderType": 1,
                     "orderQuantity": 1,
                     "year": {
                         "$year": "$deliveryDate"
@@ -2100,11 +2101,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
  
                         shipmentDocumentDatum.month = shipmentDocument.month;
  
-                        shipmentDocumentDatum.quantity = 0;
                         if (shipmentDocument.details && shipmentDocument.details.length > 0) {
                             for (var detail of shipmentDocument.details) {
                                 
                                 shipmentDocumentDatum.orderNo = detail.productionOrderNo;
+                                shipmentDocumentDatum.quantity = 0;
  
                                 if (detail.items) {
                                     for (var item of detail.items) {
