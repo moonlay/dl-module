@@ -835,12 +835,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                         }, {
                             $project:
-                            {
-                                "orderNo": "$kanban.productionOrder.orderNo",
-                                "kanbanCode": "$kanban.code",
-                                "colorCode": "$kanban.selectedProductionOrderDetail.code",
-                                "input": 1
-                            }
+                                {
+                                    "orderNo": "$kanban.productionOrder.orderNo",
+                                    "kanbanCode": "$kanban.code",
+                                    "colorCode": "$kanban.selectedProductionOrderDetail.code",
+                                    "input": 1
+                                }
                         }
                     ]).toArray());
                 })
@@ -880,11 +880,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         }
                                     }, {
                                         $project:
-                                        {
-                                            "productionOrderNo": 1,
-                                            "kanbanCode": 1,
-                                            "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
-                                        }
+                                            {
+                                                "productionOrderNo": 1,
+                                                "kanbanCode": 1,
+                                                "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
+                                            }
                                     }
                                 ]).toArray());
                             }
@@ -1106,17 +1106,17 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             // },
                             {
                                 $project:
-                                {
-                                    "orderNo": "$kanban.productionOrder.orderNo",
-                                    "kanbanCode": "$kanban.code",
-                                    "machine": "$machine.name",
-                                    "color": "$kanban.selectedProductionOrderDetail.colorRequest",
-                                    // "step": "$kanban.instruction.steps.process",
-                                    "step": "$step.process",
-                                    "area": "$step.processArea",
-                                    // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
-                                    "qty": "$input"
-                                }
+                                    {
+                                        "orderNo": "$kanban.productionOrder.orderNo",
+                                        "kanbanCode": "$kanban.code",
+                                        "machine": "$machine.name",
+                                        "color": "$kanban.selectedProductionOrderDetail.colorRequest",
+                                        // "step": "$kanban.instruction.steps.process",
+                                        "step": "$step.process",
+                                        "area": "$step.processArea",
+                                        // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
+                                        "qty": "$input"
+                                    }
                             },
                             // {
                             //     $match: { "cmp": true }
@@ -1166,11 +1166,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 { $unwind: "$fabricGradeTests" },
                                 {
                                     $group:
-                                    {
-                                        "_id": "$fabricGradeTests.grade",
-                                        "productionOrderNo": { "$first": "$productionOrderNo" },
-                                        "qty": { "$sum": "$fabricGradeTests.initLength" },
-                                    }
+                                        {
+                                            "_id": "$fabricGradeTests.grade",
+                                            "productionOrderNo": { "$first": "$productionOrderNo" },
+                                            "qty": { "$sum": "$fabricGradeTests.initLength" },
+                                        }
                                 }, {
                                     $sort: { "_id": 1 }
                                 }
@@ -1234,13 +1234,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var getProductionOrderStatus = this.getProductionOrderStatus(year, orderType);
                 var getPackingReceiptStatus = this.getPackingReceiptStatus(year, orderType, productionOrders);
                 var getShipmentStatus = this.getShipmentStatus(year, orderType, productionOrders);
+                var getProductionOrderNotInKanban = this.getProductionOrderNotInKanban(year, null, orderType);
 
-                return Promise.all([getProductionOrderStatus, getDailyOperationStatus, getPackingReceiptStatus, getShipmentStatus])
+                return Promise.all([getProductionOrderStatus, getDailyOperationStatus, getPackingReceiptStatus, getShipmentStatus, getProductionOrderNotInKanban])
                     .then((results) => {
-                        var productionOrders = results[0];
+                        var _productionOrders = results[0];
                         var dailyOperations = results[1];
                         var packingReceipts = results[2];
                         var packingShipments = results[3];
+                        var productionOrdersNotInKanban = results[4];
 
                         var data = [];
                         var monthName = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
@@ -1253,6 +1255,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                         grandTotal.storageQuantity = 0;
                         grandTotal.shipmentQuantity = 0;
+                        grandTotal.productionOrderNotInKanbanQuantity = 0;
                         for (var i = 0; i < 12; i++) {
                             var datum = {};
 
@@ -1293,7 +1296,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
 
                             datum.orderQuantity = 0;
-                            for (var productionOrder of productionOrders) {
+                            for (var productionOrder of _productionOrders) {
                                 if (productionOrder.month - 1 === i) {
                                     grandTotal.orderQuantity += productionOrder.quantity;
                                     datum.orderQuantity += productionOrder.quantity;
@@ -1316,27 +1319,143 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                             }
 
-                            datum.preProductionQuantity = datum.preProductionQuantity.toFixed(2);
-                            datum.onProductionQuantity = datum.onProductionQuantity.toFixed(2);
-                            datum.orderQuantity = datum.orderQuantity.toFixed(2);
-                            datum.storageQuantity = datum.storageQuantity.toFixed(2);
-                            datum.shipmentQuantity = datum.shipmentQuantity.toFixed(2);
+                            datum.productionOrderNotInKanbanQuantity = 0;
+                            for (var productionOrderNotInKanban of productionOrdersNotInKanban) {
+                                if (productionOrderNotInKanban.month - 1 === i) {
+                                    grandTotal.productionOrderNotInKanbanQuantity += productionOrderNotInKanban.quantity;
+                                    datum.productionOrderNotInKanbanQuantity += productionOrderNotInKanban.quantity;
+                                }
+                            }
+
+                            datum.preProductionQuantity = datum.preProductionQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            datum.onProductionQuantity = datum.onProductionQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            datum.orderQuantity = datum.orderQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            datum.storageQuantity = datum.storageQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            datum.shipmentQuantity = datum.shipmentQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            datum.productionOrderNotInKanbanQuantity = datum.productionOrderNotInKanbanQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
                             data.push(datum);
                         }
 
-                        grandTotal.preProductionQuantity = grandTotal.preProductionQuantity.toFixed(2);
-                        grandTotal.onProductionQuantity = grandTotal.onProductionQuantity.toFixed(2);
-                        grandTotal.orderQuantity = grandTotal.orderQuantity.toFixed(2);
+                        grandTotal.preProductionQuantity = grandTotal.preProductionQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        grandTotal.onProductionQuantity = grandTotal.onProductionQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        grandTotal.orderQuantity = grandTotal.orderQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                        grandTotal.storageQuantity = grandTotal.storageQuantity.toFixed(2);
-                        grandTotal.shipmentQuantity = grandTotal.shipmentQuantity.toFixed(2);
+                        grandTotal.storageQuantity = grandTotal.storageQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        grandTotal.shipmentQuantity = grandTotal.shipmentQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        grandTotal.productionOrderNotInKanbanQuantity = grandTotal.productionOrderNotInKanbanQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
                         data.push(grandTotal);
 
                         return Promise.resolve(data)
                     });
             });
+    }
+
+    getProductionOrderNotInKanban(year, month, orderType) {
+        let kanbanQuery = {
+            "_deleted": false,
+            "_updatedDate": {
+                "$gte": new Date(`${year}-01-01`),
+                "$lt": new Date(`${year + 1}-01-01`)
+            }
+        };
+
+        if (month) {
+            kanbanQuery._updatedDate = {
+                "$gte": new Date(`${year}-${month}-01`),
+                "$lt": new Date(`${year}-${month % 12 === 0 ? 1 : month}-01`)
+            }
+        }
+
+        let kanbanFields = {
+            "productionOrder.orderNo": 1
+        };
+
+        return this.kanbanCollection.find(kanbanQuery, kanbanFields).toArray()
+            .then((kanbans) => {
+                var orderNumbers = kanbans.map((kanban) => kanban.productionOrder.orderNo)
+                let query = {
+                    "_deleted": false,
+                    "year": year,
+                    "orderNo": {
+                        "$nin": orderNumbers
+                    }
+                };
+
+                switch (orderType.toString().toLowerCase()) {
+                    case "yarn dyed":
+                    case "printing": {
+                        query["orderType.name"] = orderType;
+                        break;
+                    }
+                    case "dyeing":
+                    case "white": {
+                        query["processType.name"] = orderType;
+                        break;
+                    }
+                    default: {
+                        query["$or"] = [
+                            { "orderType.name": { "$in": ["PRINTING", "YARN DYED"] } },
+                            { "processType.name": { "$in": ["WHITE", "DYEING"] } }
+                        ];
+                    }
+                }
+
+                var group = {
+                    "_id": { "month": "$month" },
+                    "total": { "$sum": "$orderQuantity" },
+                }
+
+                if (month) {
+                    group._id["orderNo"] = "$orderNo";
+                    query["month"] = month;
+                }
+
+                return this.collection.aggregate([
+                    {
+                        "$project": {
+                            "_deleted": 1,
+                            "processType": 1,
+                            "orderNo": 1,
+                            "orderQuantity": 1,
+                            "year": {
+                                "$year": "$deliveryDate"
+                            },
+                            "month": {
+                                "$month": "$deliveryDate"
+                            }
+                        }
+                    },
+                    {
+                        "$match": query
+                    },
+                    {
+                        "$group": group
+                    }
+                ]).toArray()
+                    .then((productionOrders) => {
+                        var productionOrderData = [];
+
+                        if (productionOrders.length > 0) {
+                            for (var productionOrder of productionOrders) {
+                                var productionOrderDatum = {};
+
+                                productionOrderDatum.month = productionOrder._id.month;
+
+                                productionOrderDatum.quantity = productionOrder.total;
+
+                                if (productionOrder._id.orderNo) {
+                                    productionOrderDatum.orderNo = productionOrder._id.orderNo
+                                }
+
+                                productionOrderData.push(productionOrderDatum);
+                            }
+                        }
+
+                        return Promise.resolve(productionOrderData);
+                    })
+            })
     }
 
     getProductionOrderData(year, orderType) {
@@ -1433,6 +1552,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                             for (var packingReceiptItem of item.packingReceiptItems) {
                                                 shipmentDocumentDatum.quantity = shipmentDocumentDatum.quantity + (packingReceiptItem.quantity && packingReceiptItem.length ? (packingReceiptItem.quantity * packingReceiptItem.length) : 0);
                                             }
+                                        } else if (item.quantity) {
+                                            shipmentDocumentDatum.quantity = shipmentDocumentDatum.quantity + (item.quantity && item.length ? (item.quantity * item.length) : 0);
                                         }
                                     }
                                 }
@@ -1554,7 +1675,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 let joinDailyOperations = kanbans.map((kanban) => {
                     kanban.currentStepIndex = Math.floor(kanban.currentStepIndex);
 
-                    if(kanban.currentStepIndex === 0) {
+                    if (kanban.currentStepIndex === 0) {
                         kanban.type = "kanban";
                         return Promise.resolve(kanban);
                     }
@@ -1805,18 +1926,22 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var getDailyOperationDetailStatus = this.getDailyOperationStatus(year, orderType);
                 var getPackingReceiptDetailStatus = this.getPackingReceiptDetailStatus(year, month, orderType, productionOrders);
                 var getShipmentDetailStatus = this.getShipmentDetailStatus(year, month, orderType, productionOrders);
+                var getShipmentDetailStatus = this.getShipmentDetailStatus(year, month, orderType, productionOrders);
+                var getProductionOrderNotInKanban = this.getProductionOrderNotInKanban(year, month, orderType);
 
-                return Promise.all([getDailyOperationDetailStatus, getPackingReceiptDetailStatus, getShipmentDetailStatus])
+                return Promise.all([getDailyOperationDetailStatus, getPackingReceiptDetailStatus, getShipmentDetailStatus, getProductionOrderNotInKanban])
                     .then((results) => {
                         var dailyOperations = results[0];
                         var packingReceipts = results[1];
                         var packingShipments = results[2];
+                        var productionOrdersNotInKanban = results[3];
 
                         var data = {};
                         data.preProductionData = [];
                         data.onProductionData = [];
                         data.storageData = [];
                         data.shipmentData = [];
+                        data.productionOrdersNotInKanban = [];
 
                         // let preIndex = 1;
                         // let onIndex = 1;
@@ -1843,7 +1968,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                     }
                                     case "kanban": {
                                         dailyMonth = moment(dailyOperation._createdDate).month();
-                                        dailyYear = moment(dailyOperation._createdDate).monyearth();
+                                        dailyYear = moment(dailyOperation._createdDate).year();
                                         dailyQuantity = dailyOperation.cart ? dailyOperation.cart.qty : 0;
                                     }
                                 }
@@ -1856,7 +1981,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                     if (processArea.toLowerCase() === "area pre treatment") {
                                         let obj = {
                                             orderNo: dailyProductionOrder,
-                                            quantity: dailyQuantity,
+                                            quantity: dailyQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                                             processArea: processArea
                                         };
 
@@ -1867,7 +1992,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                     } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc") {
                                         let obj = {
                                             orderNo: dailyOperation.kanban.productionOrder.orderNo,
-                                            quantity: dailyQuantity,
+                                            quantity: dailyQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
                                             processArea: processArea
                                         };
 
@@ -1890,7 +2015,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 let obj = {
                                     no: storageIndex++,
                                     orderNo: packingReceipt._id,
-                                    deliveredLength: packingReceipt.total.toFixed(2)
+                                    deliveredLength: packingReceipt.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                                 };
 
                                 if (pOrder)
@@ -1906,13 +2031,29 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             let obj = {
                                 no: shipmentIndex++,
                                 orderNo: packingShipment._id,
-                                deliveredLength: packingShipment.total.toFixed(2)
+                                deliveredLength: packingShipment.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                             };
 
                             if (pOrder)
                                 Object.assign(obj, pOrder);
 
                             data.shipmentData.push(obj);
+                        }
+
+                        var notInKanbanIndex = 1;
+                        for (var productionOrderNotInKanban of productionOrdersNotInKanban) {
+                            let pOrder = productionOrders.find((productionOrder) => productionOrder.orderNo === productionOrderNotInKanban.orderNo);
+
+                            let obj = {
+                                no: notInKanbanIndex++,
+                            };
+
+                            if (pOrder) {
+                                pOrder.orderQuantity = pOrder.orderQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                Object.assign(obj, pOrder);
+                            }
+
+                            data.productionOrdersNotInKanban.push(obj);
                         }
 
                         return Promise.resolve(data)
@@ -2026,37 +2167,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 return Promise.resolve(packingReceipts);
             });
     }
-
-    // getOrderStatusDetailXls(result, query) {
-    //     var xls = {};
-    //     var year = parseInt(query.year);
-    //     var orderType = query.orderType;
-    //     xls.data = [];
-    //     xls.options = [];
-    //     xls.name = `LAPORAN STATUS ORDER ${orderType} BERDASARKAN DELIVERY TAHUN ${year}.xlsx`;
-
-    //     for (var statusOrder of result.data) {
-
-    //         var item = {};
-    //         item["Bulan"] = statusOrder.name ? statusOrder.name : '';
-    //         item["Belum Produksi"] = statusOrder.preProductionQuantity ? Number(statusOrder.preProductionQuantity.toFixed(2)) : 0;
-    //         item["Sudah Produksi"] = statusOrder.onProductionQuantity ? Number(statusOrder.onProductionQuantity.toFixed(2)) : 0;
-    //         item["Total"] = statusOrder.orderQuantity ? Number(statusOrder.orderQuantity.toFixed(2)) : 0;
-    //         item["Sudah Dikirim Ke Gudang"] = statusOrder.storageQuantity ? Number(statusOrder.storageQuantity.toFixed(2)) : 0;
-    //         item["Sudah Dikirim Ke Buyer"] = statusOrder.shipmentQuantity ? Number(statusOrder.shipmentQuantity.toFixed(2)) : 0;
-
-    //         xls.data.push(item);
-    //     }
-
-    //     xls.options["Bulan"] = "string";
-    //     xls.options["Belum Produksi"] = "number";
-    //     xls.options["Sudah Produksi"] = "number";
-    //     xls.options["Total"] = "number";
-    //     xls.options["Sudah Dikirim Ke Gudang"] = "number";
-    //     xls.options["Sudah Dikirim Ke Buyer"] = "number";
-
-    //     return Promise.resolve(xls);
-    // }
 
     //#endregion Detail
 }
