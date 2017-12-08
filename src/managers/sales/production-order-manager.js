@@ -28,6 +28,8 @@ var assert = require('assert');
 var moment = require('moment');
 
 module.exports = class ProductionOrderManager extends BaseManager {
+    //#region CRUD and Report
+
     constructor(db, user) {
         super(db, user);
 
@@ -833,12 +835,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                         }, {
                             $project:
-                                {
-                                    "orderNo": "$kanban.productionOrder.orderNo",
-                                    "kanbanCode": "$kanban.code",
-                                    "colorCode": "$kanban.selectedProductionOrderDetail.code",
-                                    "input": 1
-                                }
+                            {
+                                "orderNo": "$kanban.productionOrder.orderNo",
+                                "kanbanCode": "$kanban.code",
+                                "colorCode": "$kanban.selectedProductionOrderDetail.code",
+                                "input": 1
+                            }
                         }
                     ]).toArray());
                 })
@@ -878,11 +880,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         }
                                     }, {
                                         $project:
-                                            {
-                                                "productionOrderNo": 1,
-                                                "kanbanCode": 1,
-                                                "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
-                                            }
+                                        {
+                                            "productionOrderNo": 1,
+                                            "kanbanCode": 1,
+                                            "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
+                                        }
                                     }
                                 ]).toArray());
                             }
@@ -1104,17 +1106,17 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             // },
                             {
                                 $project:
-                                    {
-                                        "orderNo": "$kanban.productionOrder.orderNo",
-                                        "kanbanCode": "$kanban.code",
-                                        "machine": "$machine.name",
-                                        "color": "$kanban.selectedProductionOrderDetail.colorRequest",
-                                        // "step": "$kanban.instruction.steps.process",
-                                        "step": "$step.process",
-                                        "area": "$step.processArea",
-                                        // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
-                                        "qty": "$input"
-                                    }
+                                {
+                                    "orderNo": "$kanban.productionOrder.orderNo",
+                                    "kanbanCode": "$kanban.code",
+                                    "machine": "$machine.name",
+                                    "color": "$kanban.selectedProductionOrderDetail.colorRequest",
+                                    // "step": "$kanban.instruction.steps.process",
+                                    "step": "$step.process",
+                                    "area": "$step.processArea",
+                                    // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
+                                    "qty": "$input"
+                                }
                             },
                             // {
                             //     $match: { "cmp": true }
@@ -1164,11 +1166,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 { $unwind: "$fabricGradeTests" },
                                 {
                                     $group:
-                                        {
-                                            "_id": "$fabricGradeTests.grade",
-                                            "productionOrderNo": { "$first": "$productionOrderNo" },
-                                            "qty": { "$sum": "$fabricGradeTests.initLength" },
-                                        }
+                                    {
+                                        "_id": "$fabricGradeTests.grade",
+                                        "productionOrderNo": { "$first": "$productionOrderNo" },
+                                        "qty": { "$sum": "$fabricGradeTests.initLength" },
+                                    }
                                 }, {
                                     $sort: { "_id": 1 }
                                 }
@@ -1218,9 +1220,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return newArr;
     }
 
-     //#region Status Order
+    //#endregion CRUD and Report
 
-     getOrderStatusReport(info) {
+    
+    //#region Status Order
+
+    getOrderStatusReport(info) {
         var year = parseInt(info.year);
         var orderType = info.orderType;
 
@@ -1664,7 +1669,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "kanban.code": kanban.code,
                                 "step._id": kanbanCurrentStepId,
                                 type: "input",
-                                "kanban.currentStepIndex": currentStep
+                                "kanban.currentStepIndex": kanban.currentStepIndex
                             };
 
                             let dailyFields = {
@@ -1688,7 +1693,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                                 else if (kanban.currentStepIndex === 0) {
                                     kanban.type = "kanban";
-                                    return Promise.resolve(kanban);
+                                    resolve(kanban);
                                 }
                                 else {
                                     let currStepIndex = kanban.currentStepIndex - 1;
@@ -1829,7 +1834,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             let i = 1;
 
             for (var datum of data) {
-                var exist = results.find((result) => result && result.orderNo.toString() === datum.orderNo.toString() && result.processArea.toString() === datum.processArea.toString());
+                var exist = results.find((result) => result && result.orderNo.toString() === datum.orderNo.toString() && (result.processArea ? result.processArea.toString() === datum.processArea.toString() : true));
                 if (exist) {
                     var index = results.findIndex(result => result.orderNo === exist.orderNo && result.processArea === exist.processArea);
                     results[index].quantity += datum.quantity;
