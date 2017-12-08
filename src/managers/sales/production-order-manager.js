@@ -28,6 +28,8 @@ var assert = require('assert');
 var moment = require('moment');
 
 module.exports = class ProductionOrderManager extends BaseManager {
+    //#region CRUD and Report
+
     constructor(db, user) {
         super(db, user);
 
@@ -833,12 +835,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                         }, {
                             $project:
-                                {
-                                    "orderNo": "$kanban.productionOrder.orderNo",
-                                    "kanbanCode": "$kanban.code",
-                                    "colorCode": "$kanban.selectedProductionOrderDetail.code",
-                                    "input": 1
-                                }
+                            {
+                                "orderNo": "$kanban.productionOrder.orderNo",
+                                "kanbanCode": "$kanban.code",
+                                "colorCode": "$kanban.selectedProductionOrderDetail.code",
+                                "input": 1
+                            }
                         }
                     ]).toArray());
                 })
@@ -878,11 +880,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         }
                                     }, {
                                         $project:
-                                            {
-                                                "productionOrderNo": 1,
-                                                "kanbanCode": 1,
-                                                "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
-                                            }
+                                        {
+                                            "productionOrderNo": 1,
+                                            "kanbanCode": 1,
+                                            "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
+                                        }
                                     }
                                 ]).toArray());
                             }
@@ -1104,17 +1106,17 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             // },
                             {
                                 $project:
-                                    {
-                                        "orderNo": "$kanban.productionOrder.orderNo",
-                                        "kanbanCode": "$kanban.code",
-                                        "machine": "$machine.name",
-                                        "color": "$kanban.selectedProductionOrderDetail.colorRequest",
-                                        // "step": "$kanban.instruction.steps.process",
-                                        "step": "$step.process",
-                                        "area": "$step.processArea",
-                                        // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
-                                        "qty": "$input"
-                                    }
+                                {
+                                    "orderNo": "$kanban.productionOrder.orderNo",
+                                    "kanbanCode": "$kanban.code",
+                                    "machine": "$machine.name",
+                                    "color": "$kanban.selectedProductionOrderDetail.colorRequest",
+                                    // "step": "$kanban.instruction.steps.process",
+                                    "step": "$step.process",
+                                    "area": "$step.processArea",
+                                    // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
+                                    "qty": "$input"
+                                }
                             },
                             // {
                             //     $match: { "cmp": true }
@@ -1164,11 +1166,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 { $unwind: "$fabricGradeTests" },
                                 {
                                     $group:
-                                        {
-                                            "_id": "$fabricGradeTests.grade",
-                                            "productionOrderNo": { "$first": "$productionOrderNo" },
-                                            "qty": { "$sum": "$fabricGradeTests.initLength" },
-                                        }
+                                    {
+                                        "_id": "$fabricGradeTests.grade",
+                                        "productionOrderNo": { "$first": "$productionOrderNo" },
+                                        "qty": { "$sum": "$fabricGradeTests.initLength" },
+                                    }
                                 }, {
                                     $sort: { "_id": 1 }
                                 }
@@ -1218,6 +1220,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return newArr;
     }
 
+    //#endregion CRUD and Report
+
+    
     //#region Status Order
 
     getOrderStatusReport(info) {
@@ -1664,7 +1669,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "kanban.code": kanban.code,
                                 "step._id": kanbanCurrentStepId,
                                 type: "input",
-                                "kanban.currentStepIndex": currentStep
+                                "kanban.currentStepIndex": kanban.currentStepIndex
                             };
 
                             let dailyFields = {
@@ -1688,7 +1693,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                                 else if (kanban.currentStepIndex === 0) {
                                     kanban.type = "kanban";
-                                    return Promise.resolve(kanban);
+                                    resolve(kanban);
                                 }
                                 else {
                                     let currStepIndex = kanban.currentStepIndex - 1;
@@ -1821,4 +1826,359 @@ module.exports = class ProductionOrderManager extends BaseManager {
     //#endregion Status Order
 
     //#region Detail
+
+    groupDailyData(data) {
+        var results = [];
+
+        if (data.length > 0) {
+            let i = 1;
+
+            for (var datum of data) {
+                var exist = results.find((result) => result && result.orderNo.toString() === datum.orderNo.toString() && (result.processArea ? result.processArea.toString() === datum.processArea.toString() : true));
+                if (exist) {
+                    var index = results.findIndex(result => result.orderNo === exist.orderNo && result.processArea === exist.processArea);
+                    results[index].quantity += datum.quantity;
+                } else {
+                    datum.no = i++;
+                    results.push(datum);
+                }
+            }
+        }
+
+        return results;
+    }
+
+    getProductionOrderDataDetail(year, month, orderType) {
+        let query = {
+            "_deleted": false,
+            "year": year
+        };
+
+        switch (orderType.toString().toLowerCase()) {
+            case "yarn dyed":
+            case "printing": {
+                query["orderType.name"] = orderType;
+                break;
+            }
+            case "dyeing":
+            case "white": {
+                query["processType.name"] = orderType;
+                break;
+            }
+            default: {
+                query["$or"] = [
+                    { "orderType.name": { "$in": ["PRINTING", "YARN DYED"] } },
+                    { "processType.name": { "$in": ["WHITE", "DYEING"] } }
+                ];
+            }
+        }
+
+        return this.collection.aggregate([
+            {
+                "$project": {
+                    "_deleted": 1,
+                    "processType.name": 1,
+                    "orderType.name": 1,
+                    "orderNo": 1,
+                    "year": {
+                        "$year": "$deliveryDate"
+                    },
+                    "orderQuantity": 1,
+                    "buyer.name": 1,
+                    "account.username": 1,
+                    "_createdDate": 1,
+                    "deliveryDate": 1
+                }
+            },
+            {
+                "$match": query
+            }
+        ]).toArray()
+    }
+
+    getOrderStatusDetailReport(info) {
+        var monthName = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+        var year = parseInt(info.year);
+        var orderType = info.orderType;
+        var month = monthName.indexOf(info.month) + 1;
+
+        return this.getProductionOrderDataDetail(year, month, orderType)
+            .then((productionOrders) => {
+                var getDailyOperationDetailStatus = this.getDailyOperationStatus(year, orderType);
+                var getPackingReceiptDetailStatus = this.getPackingReceiptDetailStatus(year, month, orderType, productionOrders);
+                var getShipmentDetailStatus = this.getShipmentDetailStatus(year, month, orderType, productionOrders);
+                var getProductionOrderNotInKanban = this.getProductionOrderNotInKanban(year, month, orderType);
+
+                // return Promise.all([Promise.resolve([]), Promise.resolve([]), Promise.resolve([]), getProductionOrderNotInKanban])
+                return Promise.all([getDailyOperationDetailStatus, getPackingReceiptDetailStatus, getShipmentDetailStatus, getProductionOrderNotInKanban])
+                    .then((results) => {
+                        var dailyOperations = results[0];
+                        var packingReceipts = results[1];
+                        var packingShipments = results[2];
+                        var productionOrdersNotInKanban = results[3];
+
+                        var data = {};
+                        data.preProductionData = [];
+                        data.onProductionData = [];
+                        data.storageData = [];
+                        data.shipmentData = [];
+                        data.productionOrdersNotInKanban = [];
+
+                        // let preIndex = 1;
+                        // let onIndex = 1;
+                        let storageIndex = 1;
+                        let shipmentIndex = 1;
+
+                        for (var dailyOperation of dailyOperations) {
+                            let dailyMonth, dailyYear, dailyQuantity;
+                            let processArea = dailyOperation.step ? dailyOperation.step.processArea : null;
+
+                            if (processArea) {
+                                switch (dailyOperation.type.toLowerCase()) {
+                                    case "input": {
+                                        dailyMonth = moment(dailyOperation.dateInput).month();
+                                        dailyYear = moment(dailyOperation.dateInput).year();
+                                        dailyQuantity = dailyOperation.input;
+                                        break;
+                                    }
+                                    case "output": {
+                                        dailyMonth = moment(dailyOperation.dateOutput).month();
+                                        dailyYear = moment(dailyOperation.dateOutput).year();
+                                        dailyQuantity = dailyOperation.goodOutput;
+                                        break;
+                                    }
+                                    case "kanban": {
+                                        dailyMonth = moment(dailyOperation._createdDate).month();
+                                        dailyYear = moment(dailyOperation._createdDate).year();
+                                        dailyQuantity = dailyOperation.cart ? dailyOperation.cart.qty : 0;
+                                    }
+                                }
+
+                                if (dailyMonth === (month - 1) && dailyYear === year) {
+                                    let dailyProductionOrder = dailyOperation.kanban.productionOrder.orderNo;
+
+                                    let pOrder = productionOrders.find((productionOrder) => productionOrder.orderNo === dailyProductionOrder);
+
+                                    if (processArea.toLowerCase() === "area pre treatment") {
+                                        let obj = {
+                                            orderNo: dailyProductionOrder,
+                                            quantity: dailyQuantity,
+                                            processArea: processArea
+                                        };
+
+                                        if (pOrder)
+                                            Object.assign(obj, pOrder);
+
+                                        data.preProductionData.push(obj);
+                                    } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc") {
+                                        let obj = {
+                                            orderNo: dailyOperation.kanban.productionOrder.orderNo,
+                                            quantity: dailyQuantity,
+                                            processArea: processArea
+                                        };
+
+                                        if (pOrder)
+                                            Object.assign(obj, pOrder);
+
+                                        data.onProductionData.push(obj);
+                                    }
+                                }
+                            }
+                        }
+
+                        data.preProductionData = this.groupDailyData(data.preProductionData);
+                        data.onProductionData = this.groupDailyData(data.onProductionData);
+
+                        for (var packingReceipt of packingReceipts) {
+                            if (packingReceipt.total > 0) {
+                                let pOrder = productionOrders.find((productionOrder) => productionOrder.orderNo === packingReceipt._id);
+
+                                let obj = {
+                                    no: storageIndex++,
+                                    orderNo: packingReceipt._id,
+                                    quantity: packingReceipt.total
+                                };
+
+                                if (pOrder)
+                                    Object.assign(obj, pOrder);
+
+                                data.storageData.push(obj);
+                            }
+                        }
+
+                        for (var packingShipment of packingShipments) {
+                            let pOrder = productionOrders.find((productionOrder) => productionOrder.orderNo === packingShipment.orderNo);
+
+                            let obj = {
+                                no: shipmentIndex++,
+                                orderNo: packingShipment.orderNo,
+                                quantity: packingShipment.quantity
+                            };
+
+                            if (pOrder)
+                                Object.assign(obj, pOrder);
+
+                            data.shipmentData.push(obj);
+                        }
+
+                        data.shipmentData = this.groupDailyData(data.shipmentData);
+
+                        var notInKanbanIndex = 1;
+                        for (var productionOrderNotInKanban of productionOrdersNotInKanban) {
+                            let pOrder = productionOrders.find((productionOrder) => productionOrder.orderNo === productionOrderNotInKanban.orderNo);
+
+                            let obj = {
+                                no: notInKanbanIndex++,
+                            };
+
+                            if (pOrder) {
+                                pOrder.orderQuantity = pOrder.orderQuantity;
+                                Object.assign(obj, pOrder);
+                            }
+
+                            data.productionOrdersNotInKanban.push(obj);
+                        }
+
+                        return Promise.resolve(data)
+                    });
+            });
+    }
+
+    getShipmentDetailStatus(year, month, orderType, productionOrders) {
+        var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
+ 
+        return this.fpPackingShipmentCollection.aggregate([
+            {
+                "$match": {
+                    "_deleted": false,
+                    "details.productionOrderNo": {
+                        "$in": orderNumbers
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_deleted": 1,
+                    "year": {
+                        "$year": "$deliveryDate"
+                    },
+                    "month": {
+                        "$month": "$deliveryDate"
+                    },
+                    "details": 1,
+                }
+            },
+            {
+                "$match": {
+                    "year": year,
+                    "month": month
+                }
+            }
+            // { $unwind: "$details" },
+            // { $unwind: "$details.items" },
+            // { $unwind: "$details.items.packingReceiptItems" },
+            // {
+            //     "$project": {
+            //         "details.productionOrderNo": 1,
+            //         "details.items": 1,
+            //         "totalLength": { "$multiply": ["$details.items.packingReceiptItems.length", "$details.items.packingReceiptItems.quantity"] }
+            //     }
+            // },
+            // {
+            //     "$group": {
+            //         "_id": "$details.productionOrderNo",
+            //         "total": { "$sum": "$totalLength" }
+            //     }
+            // }
+        ]).toArray()
+            .then((shipmentDocuments) => {
+                var shipmentDocumentData = [];
+ 
+                if (shipmentDocuments.length > 0) {
+                    for (var shipmentDocument of shipmentDocuments) {
+                        var shipmentDocumentDatum = {};
+ 
+                        shipmentDocumentDatum.month = shipmentDocument.month;
+ 
+                        shipmentDocumentDatum.quantity = 0;
+                        if (shipmentDocument.details && shipmentDocument.details.length > 0) {
+                            for (var detail of shipmentDocument.details) {
+                                
+                                shipmentDocumentDatum.orderNo = detail.productionOrderNo;
+ 
+                                if (detail.items) {
+                                    for (var item of detail.items) {
+                                        if (item.packingReceiptItems && item.packingReceiptItems.length > 0) {
+                                            for (var packingReceiptItem of item.packingReceiptItems) {
+                                                shipmentDocumentDatum.quantity = shipmentDocumentDatum.quantity + (packingReceiptItem.quantity && packingReceiptItem.length ? (packingReceiptItem.quantity * packingReceiptItem.length) : 0);
+                                            }
+                                        } else if (item.quantity) {
+                                            shipmentDocumentDatum.quantity = shipmentDocumentDatum.quantity + (item.quantity && item.length ? (item.quantity * item.length) : 0);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+ 
+                        shipmentDocumentData.push(shipmentDocumentDatum);
+                    }
+                }
+                return Promise.resolve(shipmentDocumentData);
+            });
+    }
+
+    getPackingReceiptDetailStatus(year, month, orderType, productionOrders) {
+        var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
+
+        return this.fpPackingReceiptCollection.aggregate([
+            {
+                "$match": {
+                    "_deleted": false,
+                    "productionOrderNo": {
+                        "$in": orderNumbers
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "isVoid": 1,
+                    "items": 1,
+                    "year": {
+                        "$year": "$date"
+                    },
+                    "month": {
+                        "$month": "$date"
+                    },
+                    "productionOrderNo": 1,
+                    "items": 1
+                }
+            },
+            {
+                "$match": {
+                    "year": year,
+                    "month": month
+                }
+            },
+            { $unwind: "$items" },
+            {
+                "$project": {
+                    "productionOrderNo": 1,
+                    "items": 1,
+                    "totalLength": { "$multiply": ["$items.availableQuantity", "$items.length"] }
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$productionOrderNo",
+                    "total": { "$sum": "$totalLength" }
+                }
+            }
+        ]).toArray()
+            .then((packingReceipts) => {
+
+                return Promise.resolve(packingReceipts);
+            });
+    }
+
+    //#endregion Detail
 }
