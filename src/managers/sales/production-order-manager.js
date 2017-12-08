@@ -1220,8 +1220,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return newArr;
     }
 
-    //#endregion CRUD and Report
-
     //#region Status Order
 
     getOrderStatusReport(info) {
@@ -1234,15 +1232,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var getProductionOrderStatus = this.getProductionOrderStatus(year, orderType);
                 var getPackingReceiptStatus = this.getPackingReceiptStatus(year, orderType, productionOrders);
                 var getShipmentStatus = this.getShipmentStatus(year, orderType, productionOrders);
-                var getProductionOrderNotInKanban = this.getProductionOrderNotInKanban(year, null, orderType);
+                // var getProductionOrderNotInKanban = this.getProductionOrderNotInKanban(year, null, orderType);
 
-                return Promise.all([getProductionOrderStatus, getDailyOperationStatus, getPackingReceiptStatus, getShipmentStatus, getProductionOrderNotInKanban])
+                return Promise.all([getProductionOrderStatus, getDailyOperationStatus, getPackingReceiptStatus, getShipmentStatus])
                     .then((results) => {
                         var _productionOrders = results[0];
                         var dailyOperations = results[1];
                         var packingReceipts = results[2];
                         var packingShipments = results[3];
-                        var productionOrdersNotInKanban = results[4];
+                        // var productionOrdersNotInKanban = results[4];
 
                         var data = [];
                         var monthName = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
@@ -1319,31 +1317,31 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                             }
 
-                            datum.productionOrderNotInKanbanQuantity = 0;
-                            for (var productionOrderNotInKanban of productionOrdersNotInKanban) {
-                                if (productionOrderNotInKanban.month - 1 === i) {
-                                    grandTotal.productionOrderNotInKanbanQuantity += productionOrderNotInKanban.quantity;
-                                    datum.productionOrderNotInKanbanQuantity += productionOrderNotInKanban.quantity;
-                                }
-                            }
+                            // datum.productionOrderNotInKanbanQuantity = 0;
+                            // for (var productionOrderNotInKanban of productionOrdersNotInKanban) {
+                            //     if (productionOrderNotInKanban.month - 1 === i) {
+                            //         grandTotal.productionOrderNotInKanbanQuantity += productionOrderNotInKanban.quantity;
+                            //         datum.productionOrderNotInKanbanQuantity += productionOrderNotInKanban.quantity;
+                            //     }
+                            // }
 
-                            datum.preProductionQuantity = datum.preProductionQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            datum.onProductionQuantity = datum.onProductionQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            datum.orderQuantity = datum.orderQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            datum.storageQuantity = datum.storageQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            datum.shipmentQuantity = datum.shipmentQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            datum.productionOrderNotInKanbanQuantity = datum.productionOrderNotInKanbanQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            datum.preProductionQuantity = datum.preProductionQuantity;
+                            datum.onProductionQuantity = datum.onProductionQuantity;
+                            datum.orderQuantity = datum.orderQuantity;
+                            datum.storageQuantity = datum.storageQuantity;
+                            datum.shipmentQuantity = datum.shipmentQuantity;
+                            datum.productionOrderNotInKanbanQuantity = datum.productionOrderNotInKanbanQuantity;
 
                             data.push(datum);
                         }
 
-                        grandTotal.preProductionQuantity = grandTotal.preProductionQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        grandTotal.onProductionQuantity = grandTotal.onProductionQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        grandTotal.orderQuantity = grandTotal.orderQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        grandTotal.preProductionQuantity = grandTotal.preProductionQuantity;
+                        grandTotal.onProductionQuantity = grandTotal.onProductionQuantity;
+                        grandTotal.orderQuantity = grandTotal.orderQuantity;
 
-                        grandTotal.storageQuantity = grandTotal.storageQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        grandTotal.shipmentQuantity = grandTotal.shipmentQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        grandTotal.productionOrderNotInKanbanQuantity = grandTotal.productionOrderNotInKanbanQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        grandTotal.storageQuantity = grandTotal.storageQuantity;
+                        grandTotal.shipmentQuantity = grandTotal.shipmentQuantity;
+                        grandTotal.productionOrderNotInKanbanQuantity = grandTotal.productionOrderNotInKanbanQuantity;
 
                         data.push(grandTotal);
 
@@ -1353,109 +1351,90 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     getProductionOrderNotInKanban(year, month, orderType) {
-        let kanbanQuery = {
+        let query = {
             "_deleted": false,
-            "_updatedDate": {
-                "$gte": new Date(`${year}-01-01`),
-                "$lt": new Date(`${year + 1}-01-01`)
-            }
+            "year": year,
+            "month": month
         };
 
-        if (month) {
-            kanbanQuery._updatedDate = {
-                "$gte": new Date(`${year}-${month}-01`),
-                "$lt": new Date(`${year}-${month % 12 === 0 ? 1 : month}-01`)
+        switch (orderType.toString().toLowerCase()) {
+            case "yarn dyed":
+            case "printing": {
+                query["orderType.name"] = orderType;
+                break;
+            }
+            case "dyeing":
+            case "white": {
+                query["processType.name"] = orderType;
+                break;
+            }
+            default: {
+                query["$or"] = [
+                    { "orderType.name": { "$in": ["PRINTING", "YARN DYED"] } },
+                    { "processType.name": { "$in": ["WHITE", "DYEING"] } }
+                ];
             }
         }
 
-        let kanbanFields = {
-            "productionOrder.orderNo": 1
-        };
-
-        return this.kanbanCollection.find(kanbanQuery, kanbanFields).toArray()
-            .then((kanbans) => {
-                var orderNumbers = kanbans.map((kanban) => kanban.productionOrder.orderNo)
-                let query = {
-                    "_deleted": false,
-                    "year": year,
-                    "orderNo": {
-                        "$nin": orderNumbers
-                    }
-                };
-
-                switch (orderType.toString().toLowerCase()) {
-                    case "yarn dyed":
-                    case "printing": {
-                        query["orderType.name"] = orderType;
-                        break;
-                    }
-                    case "dyeing":
-                    case "white": {
-                        query["processType.name"] = orderType;
-                        break;
-                    }
-                    default: {
-                        query["$or"] = [
-                            { "orderType.name": { "$in": ["PRINTING", "YARN DYED"] } },
-                            { "processType.name": { "$in": ["WHITE", "DYEING"] } }
-                        ];
-                    }
+        return this.collection.aggregate([
+            {
+                $project: {
+                    _deleted: 1,
+                    month: { $month: "$deliveryDate" },
+                    year: { $year: "$deliveryDate" },
+                    "processType.name": 1,
+                    "orderType.name": 1,
+                    orderNo: 1
                 }
-
-                var group = {
-                    "_id": { "month": "$month" },
-                    "total": { "$sum": "$orderQuantity" },
+            },
+            {
+                $match: query
+            },
+            {
+                $lookup:
+                {
+                    from: "kanbans",
+                    localField: "orderNo",
+                    foreignField: "productionOrder.orderNo",
+                    as: "kanbans"
                 }
-
-                if (month) {
-                    group._id["orderNo"] = "$orderNo";
-                    query["month"] = month;
+            },
+            {
+                $project: {
+                    orderNo: 1,
+                    "kanbans._deleted": 1,
                 }
+            }
+        ]).toArray()
+            .then((productionOrders) => {
+                var productionOrderData = [];
 
-                return this.collection.aggregate([
-                    {
-                        "$project": {
-                            "_deleted": 1,
-                            "processType": 1,
-                            "orderNo": 1,
-                            "orderQuantity": 1,
-                            "year": {
-                                "$year": "$deliveryDate"
-                            },
-                            "month": {
-                                "$month": "$deliveryDate"
+                if (productionOrders.length > 0) {
+                    for (var productionOrder of productionOrders) {
+                        if (productionOrder.kanbans) {
+                            if (productionOrder.kanbans.length === 0) {
+                                productionOrderData.push(productionOrder);
                             }
-                        }
-                    },
-                    {
-                        "$match": query
-                    },
-                    {
-                        "$group": group
-                    }
-                ]).toArray()
-                    .then((productionOrders) => {
-                        var productionOrderData = [];
-
-                        if (productionOrders.length > 0) {
-                            for (var productionOrder of productionOrders) {
-                                var productionOrderDatum = {};
-
-                                productionOrderDatum.month = productionOrder._id.month;
-
-                                productionOrderDatum.quantity = productionOrder.total;
-
-                                if (productionOrder._id.orderNo) {
-                                    productionOrderDatum.orderNo = productionOrder._id.orderNo
+                            else {
+                                let valid = true;
+                                for (let i = 0; i < productionOrder.kanbans.length; i++) {
+                                    if (productionOrder.kanbans[i]._deleted === false) {
+                                        valid = false;
+                                        break;
+                                    }
                                 }
 
-                                productionOrderData.push(productionOrderDatum);
+                                if (valid === true) {
+                                    productionOrderData.push(productionOrder);
+                                }
                             }
-                        }
 
-                        return Promise.resolve(productionOrderData);
-                    })
-            })
+                        }
+                    }
+                }
+
+                return Promise.resolve(productionOrderData);
+            });
     }
 
     getProductionOrderData(year, orderType) {
@@ -1675,11 +1654,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 let joinDailyOperations = kanbans.map((kanban) => {
                     kanban.currentStepIndex = Math.floor(kanban.currentStepIndex);
 
-                    if (kanban.currentStepIndex === 0) {
-                        kanban.type = "kanban";
-                        return Promise.resolve(kanban);
-                    }
-
                     let currentStep = kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)];
                     let kanbanCurrentStepId = kanban.instruction && kanban.instruction.steps.length > 0 && currentStep && currentStep._id ? currentStep._id : null;
 
@@ -1691,7 +1665,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 _deleted: false,
                                 "kanban.code": kanban.code,
                                 "step._id": kanbanCurrentStepId,
-                                type: "input"
+                                type: "input",
+                                "kanban.currentStepIndex": currentStep
                             };
 
                             let dailyFields = {
@@ -1713,7 +1688,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 if (dailyOperation) {
                                     resolve(dailyOperation);
                                 }
-                                else if (kanban.currentStepIndex != 0) {
+                                else if (kanban.currentStepIndex === 0) {
+                                    kanban.type = "kanban";
+                                    return Promise.resolve(kanban);
+                                }
+                                else {
                                     let currStepIndex = kanban.currentStepIndex - 1;
                                     let currStep = kanban.instruction.steps[currStepIndex];
                                     let kanbanCurrStepId = kanban.instruction && kanban.instruction.steps.length > 0 && currStep && currStep._id ? currStep._id : null;
@@ -1724,14 +1703,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                             "kanban.code": kanban.code,
                                             "step._id": kanbanCurrStepId,
                                             type: "output",
-                                            "kanban.productionOrder.orderNo": 1
+                                            "kanban.currentStepIndex": currStepIndex
                                         };
 
                                         let dailyFieldsOutput = {
                                             "goodOutput": 1,
                                             "step.processArea": 1,
                                             "dateOutput": 1,
-                                            "type": 1
+                                            "type": 1,
+                                            "kanban.productionOrder.orderNo": 1
                                         };
 
                                         let getDailyOpOutput = this.dailyOperationCollection.findOne(dailyQueryOutput, dailyFieldsOutput);
@@ -1743,8 +1723,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                     else
                                         resolve(null);
                                 }
-                                else
-                                    resolve(null);
                             });
                         });
                     }
@@ -1845,328 +1823,4 @@ module.exports = class ProductionOrderManager extends BaseManager {
     //#endregion Status Order
 
     //#region Detail
-
-    groupDailyData(data) {
-        var results = [];
-
-        if (data.length > 0) {
-            let i = 1;
-
-            for (var datum of data) {
-                var exist = results.find((result) => result && result.orderNo.toString() === datum.orderNo.toString() && result.processArea.toString() === datum.processArea.toString());
-                if (exist) {
-                    var index = results.findIndex(result => result.orderNo === exist.orderNo && result.processArea === exist.processArea);
-                    results[index].quantity += datum.quantity;
-                } else {
-                    datum.no = i++;
-                    results.push(datum);
-                }
-            }
-        }
-
-        return results;
-    }
-
-    getProductionOrderDataDetail(year, month, orderType) {
-        let query = {
-            "_deleted": false,
-            "year": year
-        };
-
-        switch (orderType.toString().toLowerCase()) {
-            case "yarn dyed":
-            case "printing": {
-                query["orderType.name"] = orderType;
-                break;
-            }
-            case "dyeing":
-            case "white": {
-                query["processType.name"] = orderType;
-                break;
-            }
-            default: {
-                query["$or"] = [
-                    { "orderType.name": { "$in": ["PRINTING", "YARN DYED"] } },
-                    { "processType.name": { "$in": ["WHITE", "DYEING"] } }
-                ];
-            }
-        }
-
-        return this.collection.aggregate([
-            {
-                "$project": {
-                    "_deleted": 1,
-                    "processType.name": 1,
-                    "orderType.name": 1,
-                    "orderNo": 1,
-                    "year": {
-                        "$year": "$deliveryDate"
-                    },
-                    "orderQuantity": 1,
-                    "buyer.name": 1,
-                    "account.username": 1,
-                    "_createdDate": 1,
-                    "deliveryDate": 1
-                }
-            },
-            {
-                "$match": query
-            }
-        ]).toArray()
-    }
-
-    getOrderStatusDetailReport(info) {
-        var monthName = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
-        var year = parseInt(info.year);
-        var orderType = info.orderType;
-        var month = monthName.indexOf(info.month) + 1;
-
-        return this.getProductionOrderDataDetail(year, month, orderType)
-            .then((productionOrders) => {
-                var getDailyOperationDetailStatus = this.getDailyOperationStatus(year, orderType);
-                var getPackingReceiptDetailStatus = this.getPackingReceiptDetailStatus(year, month, orderType, productionOrders);
-                var getShipmentDetailStatus = this.getShipmentDetailStatus(year, month, orderType, productionOrders);
-                var getShipmentDetailStatus = this.getShipmentDetailStatus(year, month, orderType, productionOrders);
-                var getProductionOrderNotInKanban = this.getProductionOrderNotInKanban(year, month, orderType);
-
-                return Promise.all([getDailyOperationDetailStatus, getPackingReceiptDetailStatus, getShipmentDetailStatus, getProductionOrderNotInKanban])
-                    .then((results) => {
-                        var dailyOperations = results[0];
-                        var packingReceipts = results[1];
-                        var packingShipments = results[2];
-                        var productionOrdersNotInKanban = results[3];
-
-                        var data = {};
-                        data.preProductionData = [];
-                        data.onProductionData = [];
-                        data.storageData = [];
-                        data.shipmentData = [];
-                        data.productionOrdersNotInKanban = [];
-
-                        // let preIndex = 1;
-                        // let onIndex = 1;
-                        let storageIndex = 1;
-                        let shipmentIndex = 1;
-
-                        for (var dailyOperation of dailyOperations) {
-                            let dailyMonth, dailyYear, dailyQuantity;
-                            let processArea = dailyOperation.step ? dailyOperation.step.processArea : null;
-
-                            if (processArea) {
-                                switch (dailyOperation.type.toLowerCase()) {
-                                    case "input": {
-                                        dailyMonth = moment(dailyOperation.dateInput).month();
-                                        dailyYear = moment(dailyOperation.dateInput).year();
-                                        dailyQuantity = dailyOperation.input;
-                                        break;
-                                    }
-                                    case "output": {
-                                        dailyMonth = moment(dailyOperation.dateOutput).month();
-                                        dailyYear = moment(dailyOperation.dateOutput).year();
-                                        dailyQuantity = dailyOperation.goodOutput;
-                                        break;
-                                    }
-                                    case "kanban": {
-                                        dailyMonth = moment(dailyOperation._createdDate).month();
-                                        dailyYear = moment(dailyOperation._createdDate).year();
-                                        dailyQuantity = dailyOperation.cart ? dailyOperation.cart.qty : 0;
-                                    }
-                                }
-
-                                if (dailyMonth === (month - 1) && dailyYear === year) {
-                                    let dailyProductionOrder = dailyOperation.kanban.productionOrder.orderNo;
-
-                                    let pOrder = productionOrders.find((productionOrder) => productionOrder.orderNo === dailyProductionOrder);
-
-                                    if (processArea.toLowerCase() === "area pre treatment") {
-                                        let obj = {
-                                            orderNo: dailyProductionOrder,
-                                            quantity: dailyQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                                            processArea: processArea
-                                        };
-
-                                        if (pOrder)
-                                            Object.assign(obj, pOrder);
-
-                                        data.preProductionData.push(obj);
-                                    } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc") {
-                                        let obj = {
-                                            orderNo: dailyOperation.kanban.productionOrder.orderNo,
-                                            quantity: dailyQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                                            processArea: processArea
-                                        };
-
-                                        if (pOrder)
-                                            Object.assign(obj, pOrder);
-
-                                        data.onProductionData.push(obj);
-                                    }
-                                }
-                            }
-                        }
-
-                        data.preProductionData = this.groupDailyData(data.preProductionData);
-                        data.onProductionData = this.groupDailyData(data.onProductionData);
-
-                        for (var packingReceipt of packingReceipts) {
-                            if (packingReceipt.total > 0) {
-                                let pOrder = productionOrders.find((productionOrder) => productionOrder.orderNo === packingReceipt._id);
-
-                                let obj = {
-                                    no: storageIndex++,
-                                    orderNo: packingReceipt._id,
-                                    deliveredLength: packingReceipt.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                };
-
-                                if (pOrder)
-                                    Object.assign(obj, pOrder);
-
-                                data.storageData.push(obj);
-                            }
-                        }
-
-                        for (var packingShipment of packingShipments) {
-                            let pOrder = productionOrders.find((productionOrder) => productionOrder.orderNo === packingShipment._id);
-
-                            let obj = {
-                                no: shipmentIndex++,
-                                orderNo: packingShipment._id,
-                                deliveredLength: packingShipment.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                            };
-
-                            if (pOrder)
-                                Object.assign(obj, pOrder);
-
-                            data.shipmentData.push(obj);
-                        }
-
-                        var notInKanbanIndex = 1;
-                        for (var productionOrderNotInKanban of productionOrdersNotInKanban) {
-                            let pOrder = productionOrders.find((productionOrder) => productionOrder.orderNo === productionOrderNotInKanban.orderNo);
-
-                            let obj = {
-                                no: notInKanbanIndex++,
-                            };
-
-                            if (pOrder) {
-                                pOrder.orderQuantity = pOrder.orderQuantity.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                Object.assign(obj, pOrder);
-                            }
-
-                            data.productionOrdersNotInKanban.push(obj);
-                        }
-
-                        return Promise.resolve(data)
-                    });
-            });
-    }
-
-    getShipmentDetailStatus(year, month, orderType, productionOrders) {
-        var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
-
-        return this.fpPackingShipmentCollection.aggregate([
-            {
-                "$match": {
-                    "_deleted": false,
-                    "details.productionOrderNo": {
-                        "$in": orderNumbers
-                    }
-                }
-            },
-            {
-                "$project": {
-                    "_deleted": 1,
-                    "year": {
-                        "$year": "$deliveryDate"
-                    },
-                    "month": {
-                        "$month": "$deliveryDate"
-                    },
-                    "details.productionOrderNo": 1,
-                    "details.items": 1
-                }
-            },
-            {
-                "$match": {
-                    "year": year,
-                    "month": month
-                }
-            },
-            { $unwind: "$details" },
-            { $unwind: "$details.items" },
-            { $unwind: "$details.items.packingReceiptItems" },
-            {
-                "$project": {
-                    "details.productionOrderNo": 1,
-                    "details.items": 1,
-                    "totalLength": { "$multiply": ["$details.items.packingReceiptItems.length", "$details.items.packingReceiptItems.quantity"] }
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$details.productionOrderNo",
-                    "total": { "$sum": "$totalLength" }
-                }
-            }
-        ]).toArray()
-            .then((shipmentDocuments) => {
-
-                return Promise.resolve(shipmentDocuments);
-            });
-    }
-
-    getPackingReceiptDetailStatus(year, month, orderType, productionOrders) {
-        var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
-
-        return this.fpPackingReceiptCollection.aggregate([
-            {
-                "$match": {
-                    "_deleted": false,
-                    "productionOrderNo": {
-                        "$in": orderNumbers
-                    }
-                }
-            },
-            {
-                "$project": {
-                    "isVoid": 1,
-                    "items": 1,
-                    "year": {
-                        "$year": "$date"
-                    },
-                    "month": {
-                        "$month": "$date"
-                    },
-                    "productionOrderNo": 1,
-                    "items": 1
-                }
-            },
-            {
-                "$match": {
-                    "year": year,
-                    "month": month
-                }
-            },
-            { $unwind: "$items" },
-            {
-                "$project": {
-                    "productionOrderNo": 1,
-                    "items": 1,
-                    "totalLength": { "$multiply": ["$items.availableQuantity", "$items.length"] }
-                }
-            },
-            {
-                "$group": {
-                    "_id": "$productionOrderNo",
-                    "total": { "$sum": "$totalLength" }
-                }
-            }
-        ]).toArray()
-            .then((packingReceipts) => {
-
-                return Promise.resolve(packingReceipts);
-            });
-    }
-
-    //#endregion Detail
 }
