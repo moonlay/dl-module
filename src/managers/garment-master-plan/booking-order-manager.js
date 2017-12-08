@@ -8,7 +8,7 @@ var BookingOrder = DLModels.garmentMasterPlan.BookingOrder;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var ComodityManager = require('./master-plan-comodity-manager');
-var MasterPlanManager = require('./master-plan-manager');
+//var MasterPlanManager = require('./master-plan-manager');
 var GarmentBuyerManager = require('../master/garment-buyer-manager');
 var generateCode = require("../../utils/code-generator");
 
@@ -17,7 +17,7 @@ module.exports = class BookingOrderManager extends BaseManager {
         super(db, user);
         this.collection = this.db.use(map.garmentMasterPlan.collection.BookingOrder);
         this.comodityManager = new ComodityManager(db, user);
-        this.masterPlanManager = new MasterPlanManager(db, user);
+        //this.masterPlanManager = new MasterPlanManager(db, user);
         this.garmentBuyerManager = new GarmentBuyerManager(db, user);
     }
 
