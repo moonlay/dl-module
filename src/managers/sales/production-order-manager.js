@@ -1580,6 +1580,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 "$project": {
                     "_deleted": 1,
                     "processType": 1,
+                    "orderType": 1,
                     "orderQuantity": 1,
                     "year": {
                         "$year": "$deliveryDate"
@@ -2045,7 +2046,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     getShipmentDetailStatus(year, month, orderType, productionOrders) {
         var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
-
+ 
         return this.fpPackingShipmentCollection.aggregate([
             {
                 "$match": {
@@ -2092,19 +2093,19 @@ module.exports = class ProductionOrderManager extends BaseManager {
         ]).toArray()
             .then((shipmentDocuments) => {
                 var shipmentDocumentData = [];
-
+ 
                 if (shipmentDocuments.length > 0) {
                     for (var shipmentDocument of shipmentDocuments) {
                         var shipmentDocumentDatum = {};
-
+ 
                         shipmentDocumentDatum.month = shipmentDocument.month;
-
-                        shipmentDocumentDatum.quantity = 0;
+ 
                         if (shipmentDocument.details && shipmentDocument.details.length > 0) {
                             for (var detail of shipmentDocument.details) {
-
+                                
                                 shipmentDocumentDatum.orderNo = detail.productionOrderNo;
-
+                                shipmentDocumentDatum.quantity = 0;
+ 
                                 if (detail.items) {
                                     for (var item of detail.items) {
                                         if (item.packingReceiptItems && item.packingReceiptItems.length > 0) {
@@ -2118,7 +2119,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                             }
                         }
-
+ 
                         shipmentDocumentData.push(shipmentDocumentDatum);
                     }
                 }
