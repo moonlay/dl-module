@@ -48,6 +48,8 @@ class PurchasePriceCorrectionDataUtil {
                                     date: new Date(),
                                     deliveryOrderId: dataDeliveryOrder._id,
                                     deliveryOrder: dataDeliveryOrder,
+                                    useIncomeTax: true,
+                                    useVat: true,
                                     correctionType: 'Harga Satuan',
                                     remark: 'Unit Test Purchase Price Correction',
                                     items: itemsPurchasePriceCorrection

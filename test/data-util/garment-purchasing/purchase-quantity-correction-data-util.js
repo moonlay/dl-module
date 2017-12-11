@@ -48,6 +48,8 @@ class PurchaseQuantityCorrectionDataUtil {
                                     deliveryOrderId: dataDeliveryOrder._id,
                                     deliveryOrder: dataDeliveryOrder,
                                     correctionType: 'Jumlah',
+                                    useIncomeTax: true,
+                                    useVat: true,
                                     remark: 'Unit Test Purchase Quantity Correction',
                                     items: purchaseQuantityCorrectionItems
                                 };

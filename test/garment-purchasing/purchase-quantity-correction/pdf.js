@@ -83,10 +83,10 @@ it('#03. should success when create pdf', function (done) {
         });
 });
 
-it('#04. should success when create pdf return note', function (done) {
+it('#04. should success when create pdf return note ppn', function (done) {
     var query = {};
 
-    purchaseQuantityCorrectionManager.getPdfReturNote(createdId, 7)
+    purchaseQuantityCorrectionManager.getPdfReturNotePPn(createdId, 7)
         .then((pdfData) => {
             done();
         }).catch((e) => {
@@ -94,7 +94,18 @@ it('#04. should success when create pdf return note', function (done) {
         });
 });
 
-it('#05. should error when create with delivery order not has invoice', function (done) {
+it('#05. should success when create pdf return note pph', function (done) {
+    var query = {};
+
+    purchaseQuantityCorrectionManager.getPdfReturNotePph(createdId, 7)
+        .then((pdfData) => {
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
+
+it('#06. should error when create with delivery order not has invoice', function (done) {
     PurchaseQuantityCorrectionDataUtil.getNewTestDataUsingDeliveryOrderHasNotInvoice()
         .then(result => {
             done("Error");
@@ -107,7 +118,7 @@ it('#05. should error when create with delivery order not has invoice', function
         });
 });
 
-it("#06. should success when destroy all unit test data", function (done) {
+it("#07. should success when destroy all unit test data", function (done) {
     purchaseQuantityCorrectionManager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();

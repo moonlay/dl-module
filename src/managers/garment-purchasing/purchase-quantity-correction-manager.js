@@ -226,13 +226,10 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
         purchaseQuantityCorrection.no = generateCode();
         purchaseQuantityCorrection.date = new Date();
 
-        return this.purchaseOrderExternalManager.getSingleByIdOrDefault(purchaseQuantityCorrection.items[0].purchaseOrderExternalId, ["no", "useIncomeTax"])
-            .then((purchaseOrderExternal) => {
-                if (purchaseOrderExternal.useIncomeTax) {
-                    purchaseQuantityCorrection.returNoteNo = generateCode("returNoteNo");
-                }
-                return Promise.resolve(purchaseQuantityCorrection);
-            })
+        if (purchaseQuantityCorrection.useIncomeTax || purchaseQuantityCorrection.useVat) {
+            purchaseQuantityCorrection.returNoteNo = generateCode("returNoteNo");
+        }
+        return Promise.resolve(purchaseQuantityCorrection);
     }
 
     _afterInsert(id) {
@@ -410,18 +407,18 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
         })
     }
 
-    getPdfReturNote(id, offset) {
+    getPdfReturNotePph(id, offset) {
         return new Promise((resolve, reject) => {
             this.getSingleById(id)
                 .then(purchaseQuantityCorrection => {
-                    var getDefinition = require('../../pdf/definitions/garment-purchase-correction-retur-note');
+                    var getDefinitionPph = require('../../pdf/definitions/garment-purchase-correction-retur-pph-note');
                     var getPOInternal = [];
                     var deliveryOrderItems = [];
 
                     for (var _item of purchaseQuantityCorrection.items) {
                         if (ObjectId.isValid(_item.purchaseOrderInternalId)) {
                             var poId = new ObjectId(_item.purchaseOrderInternalId);
-                            getPOInternal.push(this.purchaseOrderManager.getSingleByIdOrDefault(poId, ["no", "items.fulfillments"]));
+                            getPOInternal.push(this.purchaseOrderManager.getSingleByIdOrDefault(poId, ["no", "items.product", "items.fulfillments"]));
                         }
                     }
                     Promise.all(getPOInternal)
@@ -430,37 +427,97 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                             for (var purchaseOrder of purchaseOrders) {
                                 for (var item of purchaseOrder.items) {
                                     for (var fulfillment of item.fulfillments) {
-                                        listInvoice.push({ deliveryOrderNo: fulfillment.deliveryOrderNo, invoiceNo: fulfillment.invoiceIncomeTaxNo || "", invoiceDate: fulfillment.invoiceIncomeTaxDate })
+                                        listInvoice.push({
+                                            deliveryOrderNo: fulfillment.deliveryOrderNo,
+                                            purchaseOrderNo: purchaseOrder.no,
+                                            invoiceNo: fulfillment.invoiceNo || "",
+                                            invoiceVatNo: fulfillment.invoiceVatNo,
+                                            invoiceVat: fulfillment.invoiceVat,
+                                            product: item.product.code,
+                                            deliveredQuantity: fulfillment.deliveryOrderDeliveredQuantity
+                                        })
                                     }
                                 }
                             }
 
-                            var _invoiceNo = listInvoice.find((inv) => inv.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no);
-                            purchaseQuantityCorrection.invoiceNo = _invoiceNo.invoiceNo;
-                            purchaseQuantityCorrection.invoiceDate = _invoiceNo.invoiceDate;
-
-                            purchaseQuantityCorrection.deliveryOrder.items.map(item => {
-                                item.fulfillments.map((fulfillment) => {
-                                    deliveryOrderItems.push({
-                                        purchaseOrderExternalNo: item.purchaseOrderExternalNo,
-                                        purchaseOrderNo: fulfillment.purchaseOrderNo,
-                                        product: fulfillment.product.code,
-                                        deliveredQuantity: fulfillment.deliveredQuantity,
-                                        pricePerDealUnit: fulfillment.pricePerDealUnit
-                                    })
-                                })
-                            })
-
                             for (var item of purchaseQuantityCorrection.items) {
-                                var deliveryOrderItem = deliveryOrderItems.find(doItem => doItem.purchaseOrderExternalNo === item.purchaseOrderExternalNo && doItem.purchaseOrderNo === item.purchaseOrderInternalNo && doItem.product === item.product.code);
-                                item.quantityCorrection = deliveryOrderItem.deliveredQuantity - item.quantity;
+                                var inv = listInvoice.find(invoice => invoice.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no && invoice.purchaseOrderNo === item.purchaseOrderInternalNo && invoice.product === item.product.code);
+                                item.quantityCorrection = inv.deliveredQuantity - item.quantity;
                                 item.priceCorrection = item.pricePerUnit;
                                 item.totalCorrection = item.quantityCorrection * item.priceCorrection;
+                                item.invoiceNo = inv.invoiceNo || "";
+                                item.invoiceVatNo = inv.invoiceVatNo;
+                                item.invoiceVat = inv.invoiceVat;
+                            }
+                            var invoiceVat = listInvoice.find(invoice => invoice.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no && invoice.invoiceVat != null);
+                            purchaseQuantityCorrection.invoiceVat = invoiceVat.invoiceVat;
+                            purchaseQuantityCorrection.invoiceVatNo = invoiceVat.invoiceVatNo;
+
+                            var definitionPPh = getDefinitionPph(purchaseQuantityCorrection, offset);
+                            var generatePdf = require('../../pdf/pdf-generator');
+                            generatePdf(definitionPPh)
+                                .then(binary => {
+                                    resolve(binary);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        })
+                })
+                .catch(e => {
+                    reject(e);
+                });
+
+        });
+    }
+
+    getPdfReturNotePPn(id, offset) {
+        return new Promise((resolve, reject) => {
+            this.getSingleById(id)
+                .then(purchaseQuantityCorrection => {
+                    var getDefinitionPpn = require('../../pdf/definitions/garment-purchase-correction-retur-ppn-note');
+                    var getPOInternal = [];
+                    var deliveryOrderItems = [];
+
+                    for (var _item of purchaseQuantityCorrection.items) {
+                        if (ObjectId.isValid(_item.purchaseOrderInternalId)) {
+                            var poId = new ObjectId(_item.purchaseOrderInternalId);
+                            getPOInternal.push(this.purchaseOrderManager.getSingleByIdOrDefault(poId, ["no", "items.product", "items.fulfillments"]));
+                        }
+                    }
+                    Promise.all(getPOInternal)
+                        .then(purchaseOrders => {
+                            var listInvoice = [];
+                            for (var purchaseOrder of purchaseOrders) {
+                                for (var item of purchaseOrder.items) {
+                                    for (var fulfillment of item.fulfillments) {
+                                        listInvoice.push({
+                                            deliveryOrderNo: fulfillment.deliveryOrderNo,
+                                            purchaseOrderNo: purchaseOrder.no,
+                                            invoiceNo: fulfillment.invoiceNo || "",
+                                            invoiceIncomeTaxNo: fulfillment.invoiceIncomeTaxNo || "",
+                                            product: item.product.code,
+                                            deliveredQuantity: fulfillment.deliveryOrderDeliveredQuantity
+                                        })
+                                    }
+                                }
                             }
 
-                            var definition = getDefinition(purchaseQuantityCorrection, offset);
+                            for (var item of purchaseQuantityCorrection.items) {
+                                var inv = listInvoice.find(invoice => invoice.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no && invoice.purchaseOrderNo === item.purchaseOrderInternalNo && invoice.product === item.product.code);
+                                item.quantityCorrection = inv.deliveredQuantity - item.quantity;
+                                item.priceCorrection = item.pricePerUnit;
+                                item.totalCorrection = (item.quantityCorrection) * item.priceCorrection;
+                                item.invoiceNo = inv.invoiceNo || "";
+                                item.invoiceIncomeTaxNo = inv.invoiceIncomeTaxNo || "";
+                            }
+
+                            var invoiceIncomeTax = listInvoice.find(invoice => invoice.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no);
+                            purchaseQuantityCorrection.invoiceIncomeTaxNo = invoiceIncomeTax.invoiceIncomeTaxNo;
+
+                            var definitionPpn = getDefinitionPpn(purchaseQuantityCorrection, offset);
                             var generatePdf = require('../../pdf/pdf-generator');
-                            generatePdf(definition)
+                            generatePdf(definitionPpn)
                                 .then(binary => {
                                     resolve(binary);
                                 })
