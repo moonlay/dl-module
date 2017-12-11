@@ -625,17 +625,23 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
         });
     }
 
-    getAllData(startdate, enddate, offset) {
-        return new Promise((resolve, reject) => {
-            var now = new Date();
-            var deleted = {
+
+getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => 
+        {
+           var now = new Date();
+           var deleted = {
                 _deleted: false
             };
+            var query = [deleted];
+
+            var jenis = {
+                       "correctionType": "Jumlah"
+            };
+            var query = [jenis];
 
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
-
-            var query = [deleted];
 
             if (startdate && enddate) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
@@ -669,57 +675,53 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 query.push(filterDateFrom);
             }
 
-            var match = { '$and': query };
-
-            this.collection.aggregate([
-                { $match: match },
-                { $unwind: "$items" },
-                {
-                    $project: {
-                        "NoNK": "$no",
-                        "TgNK": "$date",
-                        "Jenis": "$correctionType",
-                        "Ketr": "$remark",
-                        "MtUang": "$items.currency.code",
-                        "Rate": "$items.currencyRate",
-                        "KdSpl": "$deliveryOrder.supplier.code",
-                        "NmSpl": "$deliveryOrder.supplier.name",
-                        "NoSJ": "$deliveryOrder.no",
-                        "TgSJ": "$deliveryOrder.date",
-                        "TgDtg": "$deliveryOrder.supplierDoDate",
-                        "POExt": "$items.purchaseOrderExternalNo",
-                        "NoPR": "$items.purchaseRequestNo",
-                        "PlanPO": "$items.purchaseRequestRefNo",
-                        "NoRO": "$items.roNo",
-                        "KdBrg": "$items.product.code",
-                        "NmBrg": "$items.product.name",
-                        "Qty": "$items.quantity",
-                        "Satuan": "$items.uom.unit",
-                        "Harga": "$items.pricePerUnit",
-                        "Total": "$items.priceTotal",
-                        "TgIn": "$_createdDate",
-                        "UserIn": "$_createdBy",
-                        "TgEd": "$_updatedDate",
-                        "UserEd": "$_updatedBy",
-                    }
-                },
-                {
-                    $group: {
-                        _id: {
-                            "NoNK": "$NoNK", "TgNK": "$TgNK", "Jenis": "$Jenis", "Ketr": "$Ketr", "MtUang": "$MtUang",
-                            "Rate": "$Rate", "KdSpl": "$KdSpl", "NmSpl": "$NmSpl", "NoSJ": "$NoSJ", "TgSJ": "$TgSJ",
-                            "TgDtg": "$TgDtg", "POExt": "$POExt", "NoPR": "$NoPR", "PlanPO": "$PlanPO", "NoRO": "$NoRO",
-                            "KdBrg": "$KdBrg", "NmBrg": "$NmBrg", "Satuan": "$Satuan", "Qty": "$Qty", "Harga": "$Harga",
-                            "Total": "$Total", "TgIn": "$TgIn", "UserIn": "$UserIn", "TgEd": "$TgEd", "UserEd": "$UserEd"
-
-                        },
-                        "QtyNK": { $sum: "$Qty" },
-                        "TotNK": { $sum: "$Total" }
-                    }
-                }
-            ])
-                .toArray(function (err, result) {
+      var match = { '$and': query };
+            
+      this.collection.aggregate([
+      {$match: match },
+      {$unwind:"$deliveryOrder.items"},
+      {$unwind:"$deliveryOrder.items.fulfillments"},
+      {$unwind:"$items"},
+      {$project :{
+                    "NoNK":"$no",
+                    "TgNK":"$date",
+                    "Jenis":"$correctionType",
+                    "Ketr":"$remark",
+                    "MtUang" :"$items.currency.code",
+                    "Rate" : "$items.currencyRate",
+                    "KdSpl":"$deliveryOrder.supplier.code",
+                    "NmSpl":"$deliveryOrder.supplier.name",
+                    "NoSJ" : "$deliveryOrder.no",
+                    "TgSJ": "$deliveryOrder.date",
+                    "TgDtg": "$deliveryOrder.supplierDoDate",
+                    "QtySJ":"$deliveryOrder.items.fulfillments.deliveredQuantity",                    
+                    "POExt":"$items.purchaseOrderExternalNo",
+                    "NoPR":"$items.purchaseRequestNo",
+                    "PlanPO":"$items.purchaseRequestRefNo",
+                    "NoRO":"$items.roNo",
+                    "KdBrg":"$items.product.code",
+                    "NmBrg":"$items.product.name",
+                    "Qty":"$items.quantity",
+                    "Satuan":"$items.uom.unit",
+                    "Harga":"$items.pricePerUnit",
+                    "Total":"$items.priceTotal",
+                    "TgIn":"$_createdDate",
+                    "UserIn":"$_createdBy",
+                    "TgEd":"$_updatedDate",
+                    "UserEd":"$_updatedBy",
+      }}, 
+      {$group :{ _id: {"NoNK":"$NoNK","TgNK":"$TgNK","Jenis":"$Jenis","Ketr":"$Ketr","MtUang":"$MtUang",
+                      "Rate":"$Rate","KdSpl":"$KdSpl","NmSpl":"$NmSpl","NoSJ":"$NoSJ","TgSJ":"$TgSJ",
+                      "TgDtg":"$TgDtg","QtySJ":"$QtySJ","POExt":"$POExt","NoPR":"$NoPR","PlanPO":"$PlanPO",
+                      "NoRO":"$NoRO","KdBrg":"$KdBrg","NmBrg":"$NmBrg","Satuan":"$Satuan","Qty":"$Qty","Harga":"$Harga",
+                      "Total":"$Total","TgIn":"$TgIn","UserIn":"$UserIn","TgEd":"$TgEd","UserEd":"$UserEd"                     
+               }
+               }
+        } 
+      ])
+        .toArray(function (err, result) {
                     assert.equal(err, null);
+                    console.log(result);
                     resolve(result);
                 });
         });
