@@ -128,7 +128,7 @@ it('#06-1. create new purchase-order-internal', function (done) {
         .then(data => {
             data.should.be.instanceof(Array);
             return purchaseOrderManager.createMultiple([data[0]])
-        })]
+        })
         .then(listId => {
             return purchaseOrderManager.getSingleById(listId[0])
         })
