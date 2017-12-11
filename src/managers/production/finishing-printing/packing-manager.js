@@ -356,7 +356,7 @@ module.exports = class PackingManager extends BaseManager {
             })
     }
 
-    getPackingReport(info) {
+    getPackingReport(info, timezone) {
         var _defaultFilter = {
             _deleted: false
         }, NomorOrderFilter = {},
@@ -364,9 +364,18 @@ module.exports = class PackingManager extends BaseManager {
             dateFromFilter = {},
             dateToFilter = {},
             query = {};
+        
+        if(timezone < 10) {
+            timezone = "0" + timezone;
+        }
+        else {
+            timezone = timezone.toString();
+        }
 
-        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        timezone = "+" + timezone + ":00";
+
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom + "T00:00:00" + timezone)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59:59" + timezone)) : (new Date());
         var now = new Date();
 
         if (info.code && info.code != '') {
