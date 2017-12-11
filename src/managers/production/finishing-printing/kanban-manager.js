@@ -409,7 +409,8 @@ module.exports = class KanbanManager extends BaseManager {
                                 "kanban.code": kanban.code,
                                 "step._id": kanbanCurrentStepId,
                                 _deleted: false,
-                                type: "input"
+                                type: "input",
+                                "kanban.currentStepIndex": kanban.currentStepIndex
                             }, {
                                     "machine.name": 1,
                                     "input": 1,
@@ -466,7 +467,8 @@ module.exports = class KanbanManager extends BaseManager {
                                             "kanban.code": kanban.code,
                                             "step._id": kanbanCurrStepId,
                                             _deleted: false,
-                                            type: "output"
+                                            type: "output",
+                                            "kanban.currentStepIndex": currStepIndex
                                         }, {
                                                 "machine.name": 1,
                                                 "goodOutput": 1,
