@@ -150,6 +150,8 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                         errors["deliveryOrderId"] = i18n.__("PurchaseQuantityCorrection.deliveryOrder.isRequired:%s is required", i18n.__("PurchaseQuantityCorrection.deliveryOrder._:Delivery Order"));
                     else if (!valid.deliveryOrder)
                         errors["deliveryOrderId"] = i18n.__("PurchaseQuantityCorrection.deliveryOrder.isRequired:%s is required", i18n.__("PurchaseQuantityCorrection.deliveryOrder._:Delivery Order"));
+                    else if (!_deliveryOrder.hasInvoice)
+                        errors["deliveryOrderId"] = i18n.__("PurchaseQuantityCorrection.deliveryOrder.hasInvoice:%s not has invoice", i18n.__("PurchaseQuantityCorrection.deliveryOrder._:Delivery Order"));
 
                     // if (!valid.date || valid.date == '')
                     //     errors["date"] = i18n.__("PurchaseQuantityCorrection.date.isRequired:%s is required", i18n.__("PurchaseQuantityCorrection.date._:Correction Date"));
@@ -220,11 +222,13 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
         });
     }
 
-
-
     _beforeInsert(purchaseQuantityCorrection) {
         purchaseQuantityCorrection.no = generateCode();
         purchaseQuantityCorrection.date = new Date();
+
+        if (purchaseQuantityCorrection.useIncomeTax || purchaseQuantityCorrection.useVat) {
+            purchaseQuantityCorrection.returNoteNo = generateCode("returNoteNo");
+        }
         return Promise.resolve(purchaseQuantityCorrection);
     }
 
@@ -243,7 +247,6 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 return Promise.resolve(id);
             });
     }
-
 
     updateDeliveryOrder(purchaseQuantityCorrection) {
         return this.deliveryOrderManager.getSingleById(purchaseQuantityCorrection.deliveryOrderId)
@@ -403,6 +406,133 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 });
         })
     }
+
+    getPdfReturNotePph(id, offset) {
+        return new Promise((resolve, reject) => {
+            this.getSingleById(id)
+                .then(purchaseQuantityCorrection => {
+                    var getDefinitionPph = require('../../pdf/definitions/garment-purchase-correction-retur-pph-note');
+                    var getPOInternal = [];
+                    var deliveryOrderItems = [];
+
+                    for (var _item of purchaseQuantityCorrection.items) {
+                        if (ObjectId.isValid(_item.purchaseOrderInternalId)) {
+                            var poId = new ObjectId(_item.purchaseOrderInternalId);
+                            getPOInternal.push(this.purchaseOrderManager.getSingleByIdOrDefault(poId, ["no", "items.product", "items.fulfillments"]));
+                        }
+                    }
+                    Promise.all(getPOInternal)
+                        .then(purchaseOrders => {
+                            var listInvoice = [];
+                            for (var purchaseOrder of purchaseOrders) {
+                                for (var item of purchaseOrder.items) {
+                                    for (var fulfillment of item.fulfillments) {
+                                        listInvoice.push({
+                                            deliveryOrderNo: fulfillment.deliveryOrderNo,
+                                            purchaseOrderNo: purchaseOrder.no,
+                                            invoiceNo: fulfillment.invoiceNo || "",
+                                            invoiceVatNo: fulfillment.invoiceVatNo,
+                                            invoiceVat: fulfillment.invoiceVat,
+                                            product: item.product.code,
+                                            deliveredQuantity: fulfillment.deliveryOrderDeliveredQuantity
+                                        })
+                                    }
+                                }
+                            }
+
+                            for (var item of purchaseQuantityCorrection.items) {
+                                var inv = listInvoice.find(invoice => invoice.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no && invoice.purchaseOrderNo === item.purchaseOrderInternalNo && invoice.product === item.product.code);
+                                item.quantityCorrection = inv.deliveredQuantity - item.quantity;
+                                item.priceCorrection = item.pricePerUnit;
+                                item.totalCorrection = item.quantityCorrection * item.priceCorrection;
+                                item.invoiceNo = inv.invoiceNo || "";
+                                item.invoiceVatNo = inv.invoiceVatNo;
+                                item.invoiceVat = inv.invoiceVat;
+                            }
+                            var invoiceVat = listInvoice.find(invoice => invoice.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no && invoice.invoiceVat != null);
+                            purchaseQuantityCorrection.invoiceVat = invoiceVat.invoiceVat;
+                            purchaseQuantityCorrection.invoiceVatNo = invoiceVat.invoiceVatNo;
+
+                            var definitionPPh = getDefinitionPph(purchaseQuantityCorrection, offset);
+                            var generatePdf = require('../../pdf/pdf-generator');
+                            generatePdf(definitionPPh)
+                                .then(binary => {
+                                    resolve(binary);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        })
+                })
+                .catch(e => {
+                    reject(e);
+                });
+
+        });
+    }
+
+    getPdfReturNotePPn(id, offset) {
+        return new Promise((resolve, reject) => {
+            this.getSingleById(id)
+                .then(purchaseQuantityCorrection => {
+                    var getDefinitionPpn = require('../../pdf/definitions/garment-purchase-correction-retur-ppn-note');
+                    var getPOInternal = [];
+                    var deliveryOrderItems = [];
+
+                    for (var _item of purchaseQuantityCorrection.items) {
+                        if (ObjectId.isValid(_item.purchaseOrderInternalId)) {
+                            var poId = new ObjectId(_item.purchaseOrderInternalId);
+                            getPOInternal.push(this.purchaseOrderManager.getSingleByIdOrDefault(poId, ["no", "items.product", "items.fulfillments"]));
+                        }
+                    }
+                    Promise.all(getPOInternal)
+                        .then(purchaseOrders => {
+                            var listInvoice = [];
+                            for (var purchaseOrder of purchaseOrders) {
+                                for (var item of purchaseOrder.items) {
+                                    for (var fulfillment of item.fulfillments) {
+                                        listInvoice.push({
+                                            deliveryOrderNo: fulfillment.deliveryOrderNo,
+                                            purchaseOrderNo: purchaseOrder.no,
+                                            invoiceNo: fulfillment.invoiceNo || "",
+                                            invoiceIncomeTaxNo: fulfillment.invoiceIncomeTaxNo || "",
+                                            product: item.product.code,
+                                            deliveredQuantity: fulfillment.deliveryOrderDeliveredQuantity
+                                        })
+                                    }
+                                }
+                            }
+
+                            for (var item of purchaseQuantityCorrection.items) {
+                                var inv = listInvoice.find(invoice => invoice.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no && invoice.purchaseOrderNo === item.purchaseOrderInternalNo && invoice.product === item.product.code);
+                                item.quantityCorrection = inv.deliveredQuantity - item.quantity;
+                                item.priceCorrection = item.pricePerUnit;
+                                item.totalCorrection = (item.quantityCorrection) * item.priceCorrection;
+                                item.invoiceNo = inv.invoiceNo || "";
+                                item.invoiceIncomeTaxNo = inv.invoiceIncomeTaxNo || "";
+                            }
+
+                            var invoiceIncomeTax = listInvoice.find(invoice => invoice.deliveryOrderNo === purchaseQuantityCorrection.deliveryOrder.no);
+                            purchaseQuantityCorrection.invoiceIncomeTaxNo = invoiceIncomeTax.invoiceIncomeTaxNo;
+
+                            var definitionPpn = getDefinitionPpn(purchaseQuantityCorrection, offset);
+                            var generatePdf = require('../../pdf/pdf-generator');
+                            generatePdf(definitionPpn)
+                                .then(binary => {
+                                    resolve(binary);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        })
+                })
+                .catch(e => {
+                    reject(e);
+                });
+
+        });
+    }
+
     getPurchaseQuantityCorrectionReport(query, user) {
         return new Promise((resolve, reject) => {
 
@@ -495,17 +625,16 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
         });
     }
 
-getAllData(startdate, enddate, offset) {
-        return new Promise((resolve, reject) => 
-        {
-           var now = new Date();
-           var deleted = {
+    getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var now = new Date();
+            var deleted = {
                 _deleted: false
             };
             var query = [deleted];
 
             var jenis = {
-                       "correctionType": "Jumlah"
+                "correctionType": "Jumlah"
             };
             var query = [jenis];
 
@@ -544,51 +673,56 @@ getAllData(startdate, enddate, offset) {
                 query.push(filterDateFrom);
             }
 
-      var match = { '$and': query };
-            
-      this.collection.aggregate([
-      {$match: match },
-      {$unwind:"$deliveryOrder.items"},
-      {$unwind:"$deliveryOrder.items.fulfillments"},
-      {$unwind:"$items"},
-      {$project :{
-                    "NoNK":"$no",
-                    "TgNK":"$date",
-                    "Jenis":"$correctionType",
-                    "Ketr":"$remark",
-                    "MtUang" :"$items.currency.code",
-                    "Rate" : "$items.currencyRate",
-                    "KdSpl":"$deliveryOrder.supplier.code",
-                    "NmSpl":"$deliveryOrder.supplier.name",
-                    "NoSJ" : "$deliveryOrder.no",
-                    "TgSJ": "$deliveryOrder.date",
-                    "TgDtg": "$deliveryOrder.supplierDoDate",
-                    "QtySJ":"$deliveryOrder.items.fulfillments.deliveredQuantity",                    
-                    "POExt":"$items.purchaseOrderExternalNo",
-                    "NoPR":"$items.purchaseRequestNo",
-                    "PlanPO":"$items.purchaseRequestRefNo",
-                    "NoRO":"$items.roNo",
-                    "KdBrg":"$items.product.code",
-                    "NmBrg":"$items.product.name",
-                    "Qty":"$items.quantity",
-                    "Satuan":"$items.uom.unit",
-                    "Harga":"$items.pricePerUnit",
-                    "Total":"$items.priceTotal",
-                    "TgIn":"$_createdDate",
-                    "UserIn":"$_createdBy",
-                    "TgEd":"$_updatedDate",
-                    "UserEd":"$_updatedBy",
-      }}, 
-      {$group :{ _id: {"NoNK":"$NoNK","TgNK":"$TgNK","Jenis":"$Jenis","Ketr":"$Ketr","MtUang":"$MtUang",
-                      "Rate":"$Rate","KdSpl":"$KdSpl","NmSpl":"$NmSpl","NoSJ":"$NoSJ","TgSJ":"$TgSJ",
-                      "TgDtg":"$TgDtg","QtySJ":"$QtySJ","POExt":"$POExt","NoPR":"$NoPR","PlanPO":"$PlanPO",
-                      "NoRO":"$NoRO","KdBrg":"$KdBrg","NmBrg":"$NmBrg","Satuan":"$Satuan","Qty":"$Qty","Harga":"$Harga",
-                      "Total":"$Total","TgIn":"$TgIn","UserIn":"$UserIn","TgEd":"$TgEd","UserEd":"$UserEd"                     
-               }
-               }
-        } 
-      ])
-        .toArray(function (err, result) {
+            var match = { '$and': query };
+
+            this.collection.aggregate([
+                { $match: match },
+                { $unwind: "$deliveryOrder.items" },
+                { $unwind: "$deliveryOrder.items.fulfillments" },
+                { $unwind: "$items" },
+                {
+                    $project: {
+                        "NoNK": "$no",
+                        "TgNK": "$date",
+                        "Jenis": "$correctionType",
+                        "Ketr": "$remark",
+                        "MtUang": "$items.currency.code",
+                        "Rate": "$items.currencyRate",
+                        "KdSpl": "$deliveryOrder.supplier.code",
+                        "NmSpl": "$deliveryOrder.supplier.name",
+                        "NoSJ": "$deliveryOrder.no",
+                        "TgSJ": "$deliveryOrder.date",
+                        "TgDtg": "$deliveryOrder.supplierDoDate",
+                        "QtySJ": "$deliveryOrder.items.fulfillments.deliveredQuantity",
+                        "POExt": "$items.purchaseOrderExternalNo",
+                        "NoPR": "$items.purchaseRequestNo",
+                        "PlanPO": "$items.purchaseRequestRefNo",
+                        "NoRO": "$items.roNo",
+                        "KdBrg": "$items.product.code",
+                        "NmBrg": "$items.product.name",
+                        "Qty": "$items.quantity",
+                        "Satuan": "$items.uom.unit",
+                        "Harga": "$items.pricePerUnit",
+                        "Total": "$items.priceTotal",
+                        "TgIn": "$_createdDate",
+                        "UserIn": "$_createdBy",
+                        "TgEd": "$_updatedDate",
+                        "UserEd": "$_updatedBy",
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            "NoNK": "$NoNK", "TgNK": "$TgNK", "Jenis": "$Jenis", "Ketr": "$Ketr", "MtUang": "$MtUang",
+                            "Rate": "$Rate", "KdSpl": "$KdSpl", "NmSpl": "$NmSpl", "NoSJ": "$NoSJ", "TgSJ": "$TgSJ",
+                            "TgDtg": "$TgDtg", "QtySJ": "$QtySJ", "POExt": "$POExt", "NoPR": "$NoPR", "PlanPO": "$PlanPO",
+                            "NoRO": "$NoRO", "KdBrg": "$KdBrg", "NmBrg": "$NmBrg", "Satuan": "$Satuan", "Qty": "$Qty", "Harga": "$Harga",
+                            "Total": "$Total", "TgIn": "$TgIn", "UserIn": "$UserIn", "TgEd": "$TgEd", "UserEd": "$UserEd"
+                        }
+                    }
+                }
+            ])
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     console.log(result);
                     resolve(result);
@@ -620,7 +754,7 @@ getAllData(startdate, enddate, offset) {
                     item["Nomor PO Eksternal"] = data.noPOEks ? data.noPOEks : '';
                     item["No PR"] = data.noPR ? data.noPR : '';
                     item["No Ref PR"] = data.noRefPR ? data.noRefPR : '';
-                    item["No RO"] = data.noRO ? data.noRO: '';
+                    item["No RO"] = data.noRO ? data.noRO : '';
                     item["Kode Barang"] = data.itemCode ? data.itemCode : '';
                     item["Nama Barang"] = data.itemName ? data.itemName : '';
                     var correction = data.fulfillments.corrections ? data.fulfillments.corrections : data.fulfillments.correction;
