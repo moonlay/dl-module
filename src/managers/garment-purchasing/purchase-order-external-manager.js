@@ -1752,7 +1752,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             },
                             {
                                 $match: queryPR
+                            }, {
+                                $project: {
+                                    "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] }
+                                }
                             },
+                            { "$match": { "aEq": true } },
                             { $group: { _id: null, count: { $sum: 1 } } }
                         ])
                         .toArray()
@@ -1805,9 +1810,13 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                         uom: "$items.dealUom.unit",
                                         budgetPrice: "$items.budgetPrice",
                                         price: "$items.pricePerDealUnit",
-                                        overBudgetRemark: "$items.overBudgetRemark"
+                                        totalBudgetPrice: { $multiply: ["$items.budgetPrice", "$purchaseRequest.items.quantity"] },
+                                        totalPrice: { $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"] },
+                                        overBudgetRemark: "$items.overBudgetRemark",
+                                        "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] }
                                     }
-                                }
+                                },
+                                { "$match": { "aEq": true } }
                             ])
                             .toArray()
                     );
@@ -1857,9 +1866,13 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     uom: "$items.dealUom.unit",
                                     budgetPrice: "$items.budgetPrice",
                                     price: "$items.pricePerDealUnit",
-                                    overBudgetRemark: "$items.overBudgetRemark"
+                                    totalBudgetPrice: { $multiply: ["$items.budgetPrice", "$purchaseRequest.items.quantity"] },
+                                    totalPrice: { $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"] },
+                                    overBudgetRemark: "$items.overBudgetRemark",
+                                    "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] }
                                 }
-                            },
+                            }, ,
+                            { "$match": { "aEq": true } },
                             { $skip: page * size },
                             { $limit: size }
                         ])
@@ -1896,8 +1909,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         uom: data.uom,
                         budgetPrice: data.budgetPrice,
                         price: data.price,
-                        totalBudgetPrice: data.budgetPrice * data.quantity,
-                        totalPrice: data.price * data.quantity,
+                        totalBudgetPrice: data.totalBudgetPrice,
+                        totalPrice: data.totalPrice,
                         overBudgetRemark: data.overBudgetRemark
                     }
                     dataReport.push(item);
