@@ -356,7 +356,7 @@ module.exports = class PackingManager extends BaseManager {
             })
     }
 
-    getPackingReport(info, timezone) {
+    getPackingReport(info, timezone = 7) {
         var _defaultFilter = {
             _deleted: false
         }, NomorOrderFilter = {},
