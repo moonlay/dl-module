@@ -1911,6 +1911,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         price: data.price,
                         totalBudgetPrice: data.totalBudgetPrice,
                         totalPrice: data.totalPrice,
+                        overBudgetValue: (data.totalPrice - data.totalBudgetPrice)/data.totalBudgetPrice * 100,
                         overBudgetRemark: data.overBudgetRemark
                     }
                     dataReport.push(item);
@@ -1957,6 +1958,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 "Harga Beli": data.price,
                 "Total Harga Budget": data.totalBudgetPrice,
                 "Total Harga Beli": data.totalPrice,
+                "Nilai Over Budget (%)": data.overBudgetValue,
                 "Keterangan Over Budget": data.overBudgetRemark
             }
             xls.data.push(item);
@@ -1982,6 +1984,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             "Harga Total": "number",
             "Total Harga Budget": "number",
             "Total Harga Beli": "number",
+            "Nilai Over Budget (%)": "number",
             "Keterangan Over Budget": "string"
         };
         xls.options = options;
