@@ -108,7 +108,7 @@ module.exports = function (data, offset) {
             text: 'Rate',
             style: ['size08', 'bold', 'center']
         }, {
-            text: 'Total PPN (Rp)',
+            text: 'Total PPH (Rp)',
             style: ['size08', 'bold', 'center']
         }
     ];
@@ -133,7 +133,7 @@ module.exports = function (data, offset) {
             text: data.invoiceVat.rate,
             style: ['size08', 'right']
         }, {
-            text: item.totalCorrection * data.invoiceVat.rate / 100,
+            text: parseFloat(item.totalCorrection * data.invoiceVat.rate / 100).toLocaleString(locale, locale.currency),
             style: ['size08', 'right']
         }];
     });
