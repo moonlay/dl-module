@@ -1588,7 +1588,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             .map((item) => item.isOverBudget)
             .reduce((prev, curr, index) => {
                 return prev || curr
-            }, true);
+            }, false);
         if (!purchaseOrderExternal.isApproved) {
             if (purchaseOrderExternal.isOverBudget) {
                 purchaseOrderExternal.isApproved = false;
