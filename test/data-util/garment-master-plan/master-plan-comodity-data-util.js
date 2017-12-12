@@ -31,5 +31,13 @@ class MasterPlanComodityDataUtil {
         };
         return this.getSert(data);
     }
+
+    getTestData2() {
+        var data = {
+            code: "UT/MP/Comodity/02",
+            name: "MP Comodity UT 2"
+        };
+        return this.getSert(data);
+    }
 }
 module.exports = new MasterPlanComodityDataUtil();
