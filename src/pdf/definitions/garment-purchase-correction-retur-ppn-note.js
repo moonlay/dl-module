@@ -72,7 +72,7 @@ module.exports = function (data, offset) {
                     width: '33%',
                     text: data.invoiceIncomeTaxNo,
                     style: ['size08']
-                },{
+                }, {
                     width: '15%',
                     text: 'Nama Supplier',
                     style: ['size08']
@@ -127,7 +127,7 @@ module.exports = function (data, offset) {
             text: `${item.product.code} ${item.product.name}`,
             style: ['size08', 'left']
         }, {
-            text: item.totalCorrection * 0.1,
+            text: parseFloat(item.totalCorrection * 0.1).toLocaleString(locale, locale.currency),
             style: ['size08', 'right']
         }];
     });
@@ -141,7 +141,7 @@ module.exports = function (data, offset) {
             text: 'Total PPN (Rp)',
             style: ['size08', 'bold', 'right'],
             colSpan: 5
-        }, "", "", "","", {
+        }, "", "", "", "", {
             text: parseFloat(sum).toLocaleString(locale, locale.currency),
             style: ['size08', 'bold', 'right']
         }]
@@ -149,7 +149,7 @@ module.exports = function (data, offset) {
 
     var table = [{
         table: {
-            widths: ['15%', '15%', '15%', '15%','15%', '25%'],
+            widths: ['15%', '15%', '15%', '15%', '15%', '25%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot)
         }
