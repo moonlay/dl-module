@@ -365,6 +365,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         "items.productId": "$items.productId",
                         "items.defaultQuantity": "$items.defaultQuantity",
                         "items.defaultUom": "$items.defaultUom",
+                        "items.currency": "$items.currency",
                         "items.budgetPrice": "$items.budgetPrice",
                         "items.isPosted": "$items.isPosted",
                         "items.isClosed": "$items.isClosed",
