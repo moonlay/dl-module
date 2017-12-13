@@ -50,6 +50,7 @@ it(`#01.5. should success when get created data with id`, function(done) {
 
 it('#02. should success when get Monitoring Event Per Machine', function (done) {
     var info = {};
+    info.offset = 7;
     info.machineId = createdData.machineId;
 
     monitoringEventManager.getMonitoringEventReport(info)
@@ -65,6 +66,7 @@ it('#02. should success when get Monitoring Event Per Machine', function (done) 
 
 it('#03. should success when get Monitoring Event Per Machine Event', function (done) {
     var info = {};
+    info.offset = 7;
     info.machineEventCode = createdData.machineEvent.code;
 
     monitoringEventManager.getMonitoringEventReport(info)
@@ -80,6 +82,7 @@ it('#03. should success when get Monitoring Event Per Machine Event', function (
 
 it('#04. should success when get Monitoring Event Per Production Order Number', function (done) {
     var info = {};
+    info.offset = 7;
     info.productionOrderNumber = createdData.productionOrder.orderNo;
 
     monitoringEventManager.getMonitoringEventReport(info)
@@ -95,7 +98,9 @@ it('#04. should success when get Monitoring Event Per Production Order Number', 
 
 it('#05. should success when get Monitoring Event Per Date Start', function (done) {
     var info = {};
+    info.offset = 7;
     info.dateFrom = createdData.dateStart;
+    info.dateFrom.setDate(info.dateFrom.getDate() - 1);
 
     monitoringEventManager.getMonitoringEventReport(info)
         .then(result => {             
@@ -110,6 +115,7 @@ it('#05. should success when get Monitoring Event Per Date Start', function (don
 
 it('#06. should success when get Monitoring Event Per Date End', function (done) {
     var info = {};
+    info.offset = 7;
     info.dateTo = createdData.dateEnd;
 
     monitoringEventManager.getMonitoringEventReport(info)
@@ -126,11 +132,13 @@ it('#06. should success when get Monitoring Event Per Date End', function (done)
 var resultForExcelTest = {};
 it('#07. should success when get Monitoring Event using all filters', function (done) {
     var info = {};
+    info.offset = 7;
     info.machineId = createdData.machineId;
     info.machineEventCode = createdData.machineEvent.code;
     info.productionOrderNumber = createdData.productionOrder.orderNo;
     info.dateFrom = createdData.dateStart;
     info.dateTo = createdData.dateEnd;
+    info.dateFrom.setDate(info.dateFrom.getDate() - 1);
 
     monitoringEventManager.getMonitoringEventReport(info)
         .then(result => {             
