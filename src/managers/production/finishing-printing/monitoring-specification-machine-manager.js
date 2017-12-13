@@ -194,7 +194,9 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             query = {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59:59")) : (new Date());
+        dateFrom.setHours(dateFrom.getHours() - info.offset);
+        dateTo.setHours(dateTo.getHours() - info.offset);
         var now = new Date();
 
         if (info.machineId && info.machineId != '') {
@@ -238,8 +240,8 @@ module.exports = class MonitoringSpecificationMachineManager extends BaseManager
             var item = {};
             item["No"] = index;
             item["Mesin"] = monitoringSpecificationMachine.machine ? monitoringSpecificationMachine.machine.name : '';
-            item["Tanggal"] = monitoringSpecificationMachine.date ? moment(new Date(monitoringSpecificationMachine.date)).format(dateFormat) : '';
-            item["Jam"] = monitoringSpecificationMachine.time ? moment(new Date(monitoringSpecificationMachine.time)).format(timeFormat) : '';
+            item["Tanggal"] = monitoringSpecificationMachine.date ? moment(new Date(monitoringSpecificationMachine.date)).add(query.offset, 'h').format(dateFormat) : '';
+            item["Jam"] = monitoringSpecificationMachine.time ? moment(new Date(monitoringSpecificationMachine.time)).add(query.offset, 'h').format(timeFormat) : '';
             item["No Surat Order Produksi"] = monitoringSpecificationMachine.productionOrder ? monitoringSpecificationMachine.productionOrder.orderNo : '';
             item["Nomor Kereta"] = monitoringSpecificationMachine.cartNumber;
             //dinamic items

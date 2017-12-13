@@ -198,10 +198,14 @@ module.exports = class InspectionLotColorManager extends BaseManager {
         var dateString = moment(date).format('YYYY-MM-DD');
         var dateNow = new Date(dateString);
         var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+        let dateFrom = (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom)));
+        let dateTo = (!query || !query.dateTo ? date : (new Date(query.dateTo)));
+        dateFrom.setHours(dateFrom.getHours() - query.offset);
+        dateTo.setHours(dateTo.getHours() - query.offset);
         var dateQuery = {
             "date": {
-                "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
-                "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
+                "$gte": dateFrom,
+                "$lte": dateTo
             }
         };
         var fabricQcQuery = {};

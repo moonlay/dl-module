@@ -78,7 +78,7 @@ it("#04. should success when get report with date parameter", function(done) {
     var edate = moment(dateTomorrow).format('YYYY-MM-DD');
     var dateBefore = new Date().setDate(new Date().getDate() - 1);
     var sdate = moment(dateBefore).format('YYYY-MM-DD');
-    inspectionLotColorManager.getReport({dateFrom : sdate, dateTo : edate})
+    inspectionLotColorManager.getReport({dateFrom : sdate, dateTo : edate, offset: 7})
         .then((item) => {
             var lotColor = item.data;
             lotColor.should.instanceof(Array);
