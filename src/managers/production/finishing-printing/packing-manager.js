@@ -356,7 +356,7 @@ module.exports = class PackingManager extends BaseManager {
             })
     }
 
-    getPackingReport(info, timezone = 7) {
+    getPackingReport(info) {
         var _defaultFilter = {
             _deleted: false
         }, NomorOrderFilter = {},
@@ -364,18 +364,11 @@ module.exports = class PackingManager extends BaseManager {
             dateFromFilter = {},
             dateToFilter = {},
             query = {};
-        
-        if(timezone < 10) {
-            timezone = "0" + timezone;
-        }
-        else {
-            timezone = timezone.toString();
-        }
 
-        timezone = "+" + timezone + ":00";
-
-        var dateFrom = info.dateFrom ? (new Date(info.dateFrom + "T00:00:00" + timezone)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59:59" + timezone)) : (new Date());
+        var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
+        dateFrom.setHours(dateFrom.getHours() - info.offset);
+        dateTo.setHours(dateTo.getHours() - info.offset);
         var now = new Date();
 
         if (info.code && info.code != '') {
@@ -428,7 +421,7 @@ module.exports = class PackingManager extends BaseManager {
                 item["Konstruksi"] = packing.construction ? packing.construction : '';
                 item["Design/Motif"] = packing.designNumber ? packing.designNumber : '';
                 item["Warna yang diminta"] = packing.colorName ? packing.colorName : '';
-                item["Tanggal"] = packing.date ? moment(new Date(packing.date)).format(dateFormat) : '';
+                item["Tanggal"] = packing.date ? moment(new Date(packing.date)).add(query.offset, 'h').format(dateFormat) : '';
 
 
                 item["Lot"] = packingItem.lot ? packingItem.lot : '';
