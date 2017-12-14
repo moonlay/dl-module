@@ -59,7 +59,7 @@ it('#03. should success when create report', function (done) {
     info.dateFrom.setDate(info.dateFrom.getDate() - 1);
     // info.dateTo = new Date(createdData.date);
     info.dateTo = createdData.date.toISOString().split("T", "1").toString();
-    info.offset = 7;
+    info.offset = 0;
 
     packingManager.getPackingReport(info)
         .then(result => {
@@ -75,7 +75,7 @@ it('#03. should success when create report', function (done) {
 
 it('#04. should success when get data for Excel Report', function (done) {
     var query = {};
-    query.offset = 7;
+    query.offset = 0;
 
     packingManager.getXls(resultForExcelTest, query)
         .then(xlsData => {

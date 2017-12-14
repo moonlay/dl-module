@@ -191,7 +191,7 @@ module.exports = class InspectionLotColorManager extends BaseManager {
     }
 
     getReport(query) {
-        query.offset = query.offset ? query.offset : 7;
+        query.offset = query.offset ? query.offset : 0;
         var deletedQuery = {
             _deleted: false
         };

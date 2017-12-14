@@ -62,7 +62,7 @@ it('#03. should success when create report', function (done) {
     info.productionOrderId = createdData.productionOrderId;
     info.dateFrom = createdData.date;
     info.dateTo = createdData.date;
-    info.offset = 7;
+    info.offset = 0;
 
     monitoringSpecificationMachineManager.getMonitoringSpecificationMachineReport(info)
         .then(result => {
@@ -79,7 +79,7 @@ it('#03. should success when create report', function (done) {
 
 it('#04. should success when get data for Excel Report', function (done) {
     var query = {};
-    query.offset = 7;
+    query.offset = 0;
 
     monitoringSpecificationMachineManager.getXls(resultForExcelTest, query)
         .then(xlsData => {
