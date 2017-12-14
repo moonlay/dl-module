@@ -1,5 +1,5 @@
 require("should");
-var dataUtil = require("../../data-util/garment-purchasing/garment-currency-data-util");
+var dataUtil = require("../../data-util/master/kurs-budget-data-util");
 var helper = require("../../helper");
 var moment = require('moment');
 
