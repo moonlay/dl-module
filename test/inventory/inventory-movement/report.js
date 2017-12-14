@@ -57,9 +57,10 @@ it(`#02. should success when get created data with id`, function (done) {
 var resultForExcelTest = {};
 it("#03. should success when read data", function (done) {
     inventoryMovementManager.getMovementReport({
-        filter: {
-            _id: createdId
-        }
+        "filter": {
+            "_id": createdId
+        },
+        "keyword": "TEST"
     })
         .then((documents) => {
             resultForExcelTest = documents;
