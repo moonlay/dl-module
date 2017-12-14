@@ -253,8 +253,8 @@ it('#09. should error when create new data with uom but zero quantity', function
         });
 });
 
-it("#10. should success when drop all inventory data", function (done) {
-    Promise.all([inventoryDocumentManager.collection.drop(), inventoryDocumentManager.inventoryMovementManager.collection.drop(), inventoryDocumentManager.inventorySummaryManager.collection.drop()])
+it("#10. should success when remove all inventory data", function (done) {
+    Promise.all([inventoryDocumentManager.collection.remove({}), inventoryDocumentManager.inventoryMovementManager.collection.remove({}), inventoryDocumentManager.inventorySummaryManager.collection.remove({})])
         .then((results) => {
             results.should.be.Array();
             done();

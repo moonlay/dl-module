@@ -105,7 +105,7 @@ it('#04. purchase-orders supplier & currency should be the same with one in purc
             done();
         })
         .catch(e => {
-            done(e);
+            done(e); 
         });
 });
 
@@ -119,14 +119,15 @@ it('#05. should success when generate pdf purchase-order-external', function (do
         });
 });
 
-it('#06. should success when create new purchase-order-external with splitted purchase-orders', function (done) {
+var dataPOInternal = {};
+it('#06-1. create new purchase-order-internal', function (done) {
     purchaseRequestDataUtil.getNewTestData()
         .then((res) => {
             return purchaseOrderManager.purchaseRequestManager.getPurchaseRequestByTag()
         })
         .then(data => {
             data.should.be.instanceof(Array);
-            return purchaseOrderManager.createMultiple(data)
+            return purchaseOrderManager.createMultiple([data[0]])
         })
         .then(listId => {
             return purchaseOrderManager.getSingleById(listId[0])
@@ -145,32 +146,48 @@ it('#06. should success when create new purchase-order-external with splitted pu
             return purchaseOrderManager.getSingleById(id);
         })
         .then((poInternal) => {
-            purchaseOrderExternalDataUtil.getNew([poInternal])
-                .then(poe => {
-                    purchaseOrderExternal = poe;
-                    validatePO(purchaseOrderExternal);
-
-                    return purchaseOrderManager.collection.find({
-                        "no": poInternal.sourcePurchaseOrder.no,
-                        "purchaseRequest.no": poInternal.purchaseRequest.no,
-                        "items.refNo": poInternal.items[0].refNo,
-                        "items.product.code": poInternal.items[0].product.code,
-                        _deleted: false,
-                        isClosed: false
-                    }).toArray()
-                })
-                .then((listPOInternal) => {
-                    purchaseOrderExternalDataUtil.getNew(listPOInternal)
-                        .then(poe => {
-                            purchaseOrderExternal = poe;
-                            validatePO(purchaseOrderExternal);
-                            done();
-                        })
-                        .catch(e => {
-                            done(e);
-                        });
-                })
+            dataPOInternal = poInternal;
+            done();
         })
+        .catch(e => {
+            done(e);
+        });
+});
+var listPOInternal = []
+it('#06-2. should success when create new purchase-order-external with splitted purchase-orders', function (done) {
+    purchaseOrderExternalDataUtil.getNew([dataPOInternal])
+        .then(poe => {
+            purchaseOrderExternal = poe;
+            validatePO(purchaseOrderExternal);
+
+            return purchaseOrderManager.collection.find({
+                "no": dataPOInternal.sourcePurchaseOrder.no,
+                "purchaseRequest.no": dataPOInternal.purchaseRequest.no,
+                "items.refNo": dataPOInternal.items[0].refNo,
+                "items.product.code": dataPOInternal.items[0].product.code,
+                _deleted: false,
+                isClosed: false
+            }).toArray()
+        })
+        .then((_listPOInternal) => {
+            listPOInternal = _listPOInternal;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it('#06-3. should success when create new purchase-order-external with splitted purchase-orders', function (done) {
+    purchaseOrderExternalDataUtil.getNew(listPOInternal)
+        .then(poe => {
+            purchaseOrderExternal = poe;
+            validatePO(purchaseOrderExternal);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
 });
 
 it('#07. should error when create new purchase-order-external with deal price grater than budget price', function (done) {
@@ -310,7 +327,8 @@ it('#08. should error when create new purchase-order-external with isOverBudget 
         });
 });
 
-it('#09. should success when create new purchase-order-external with isOverBugted == true', function (done) {
+var overBudgetData = {};
+it('#09. should success when create new purchase-order-external with isOverBudget == true', function (done) {
     purchaseRequestDataUtil.getNewTestData()
         .then((res) => {
             return purchaseOrderManager.purchaseRequestManager.getPurchaseRequestByTag()
@@ -370,9 +388,28 @@ it('#09. should success when create new purchase-order-external with isOverBugte
             return purchaseOrderExternalManager.getSingleById(id);
         })
         .then(po => {
+            overBudgetData = po;
             done();
         })
         .catch((e) => {
+            done(e);
+        });
+});
+
+it('#10. should success when approve over budget purchase-order-external', function (done) {
+    purchaseOrderExternalManager.approve([overBudgetData])
+        .then(ids => {
+            purchaseOrderExternalManager.getSingleById(ids[0])
+                .then(poe => {
+                    purchaseOrderExternal = poe;
+                    purchaseOrderExternal.isApproved.should.equal(true);
+                    done();
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
             done(e);
         });
 });

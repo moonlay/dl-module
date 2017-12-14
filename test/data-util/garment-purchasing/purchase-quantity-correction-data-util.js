@@ -3,9 +3,63 @@ var helper = require('../../helper');
 var PurchaseQuantityCorrectionManager = require('../../../src/managers/garment-purchasing/purchase-quantity-correction-manager');
 var codeGenerator = require('../../../src/utils/code-generator');
 var deliveryOrder = require('./delivery-order-data-util');
+var invoiceNote = require('./invoice-note-data-util');
 
 class PurchaseQuantityCorrectionDataUtil {
     getNewData() {
+        return helper
+            .getManager(PurchaseQuantityCorrectionManager)
+            .then((manager) => {
+                return deliveryOrder.getNewTestData()
+                    .then((result) => {
+                        var dataDeliveryOrder = result;
+                        return invoiceNote.getNewTestData2(dataDeliveryOrder)
+                            .then(res => {
+                                var purchaseQuantityCorrectionItems = [];
+                                for (var item of dataDeliveryOrder.items) {
+                                    for (var fulfillment of item.fulfillments) {
+                                        var obj = {
+                                            purchaseOrderExternalId: item.purchaseOrderExternalId,
+                                            purchaseOrderExternalNo: item.purchaseOrderExternalNo,
+                                            purchaseOrderInternalId: fulfillment.purchaseOrderId,
+                                            purchaseOrderInternalNo: fulfillment.purchaseOrderNo,
+                                            purchaseOrderInternal: {},
+                                            purchaseRequestId: fulfillment.purchaseRequestId,
+                                            purchaseRequestNo: fulfillment.purchaseRequestNo,
+                                            roNo: fulfillment.roNo,
+                                            productId: fulfillment.productId,
+                                            product: fulfillment.product,
+                                            quantity: fulfillment.deliveredQuantity + 1,
+                                            uomId: fulfillment.product.uomId,
+                                            uom: fulfillment.purchaseOrderUom,
+                                            pricePerUnit: fulfillment.pricePerDealUnit,
+                                            priceTotal: fulfillment.pricePerDealUnit * (fulfillment.deliveredQuantity + 1),
+                                            currency: fulfillment.product.currency,
+                                            currencyRate: fulfillment.product.currency.rate
+                                        };
+
+                                        purchaseQuantityCorrectionItems.push(obj);
+                                    }
+                                }
+
+                                var data = {
+                                    no: `UT/PPC/${codeGenerator()}`,
+                                    date: new Date(),
+                                    deliveryOrderId: dataDeliveryOrder._id,
+                                    deliveryOrder: dataDeliveryOrder,
+                                    correctionType: 'Jumlah',
+                                    useIncomeTax: true,
+                                    useVat: true,
+                                    remark: 'Unit Test Purchase Quantity Correction',
+                                    items: purchaseQuantityCorrectionItems
+                                };
+                                return Promise.resolve(data);
+                            });
+                    });
+            });
+    }
+
+    getNewDataUsingDeliveryOrderHasNotInvoice() {
         return helper
             .getManager(PurchaseQuantityCorrectionManager)
             .then((manager) => {
@@ -39,7 +93,7 @@ class PurchaseQuantityCorrectionDataUtil {
                                 purchaseQuantityCorrectionItems.push(obj);
                             }
                         }
-                        
+
                         var data = {
                             no: `UT/PPC/${codeGenerator()}`,
                             date: new Date(),
@@ -59,6 +113,17 @@ class PurchaseQuantityCorrectionDataUtil {
             .getManager(PurchaseQuantityCorrectionManager)
             .then((manager) => {
                 return this.getNewData().then((data) => {
+                    return manager.create(data)
+                        .then((id) => manager.getSingleById(id));
+                });
+            });
+    }
+
+    getNewTestDataUsingDeliveryOrderHasNotInvoice() {
+        return helper
+            .getManager(PurchaseQuantityCorrectionManager)
+            .then((manager) => {
+                return this.getNewDataUsingDeliveryOrderHasNotInvoice().then((data) => {
                     return manager.create(data)
                         .then((id) => manager.getSingleById(id));
                 });

@@ -10,11 +10,11 @@ var vatDataUtil = require('../master/vat-data-util');
 var deliveryOderDataUtil = require('../garment-purchasing/delivery-order-data-util');
 
 class InvoiceNoteDataUtil {
-    getNewData() {
+    getNewData(_deliveryOder) {
         return helper
             .getManager(InvoiceNoteManager)
             .then(manager => {
-                return Promise.all([deliveryOderDataUtil.getNewTestData(), currencyDataUtil.getTestData(), vatDataUtil.getTestData()])
+                return Promise.all([_deliveryOder ? _deliveryOder : deliveryOderDataUtil.getNewTestData(), currencyDataUtil.getTestData(), vatDataUtil.getTestData()])
                     .then(results => {
                         var deliveryOder = results[0];
                         var dataCurrency = results[1];
@@ -150,6 +150,17 @@ class InvoiceNoteDataUtil {
             .getManager(InvoiceNoteManager)
             .then((manager) => {
                 return this.getNewData().then((data) => {
+                    return manager.create(data)
+                        .then((id) => manager.getSingleById(id));
+                });
+            });
+    }
+
+    getNewTestData2(deliveryOder) {
+        return helper
+            .getManager(InvoiceNoteManager)
+            .then((manager) => {
+                return this.getNewData(deliveryOder).then((data) => {
                     return manager.create(data)
                         .then((id) => manager.getSingleById(id));
                 });

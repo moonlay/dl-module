@@ -43,6 +43,34 @@ class ProcessTypeDataUtil {
                 return this.getSert(data);
             });
     }
+
+    getWhiteData() {
+        return orderType.getTestData()
+            .then(order => {
+                var data = {
+                    code: "UT/PROCESS/12",
+                    orderTypeId: order._id,
+                    orderType: order,
+                    name: "White",
+                    description: ""
+                };
+                return this.getSert(data);
+            });
+    }
+
+    getPrintingData() {
+        return orderType.getPrintingData()
+            .then(order => {
+                var data = {
+                    code: "UT/PROCESS/13",
+                    orderTypeId: order._id,
+                    orderType: order,
+                    name: "UT-PROCESS",
+                    description: ""
+                };
+                return this.getSert(data);
+            });
+    }
 }
 
 module.exports = new ProcessTypeDataUtil();

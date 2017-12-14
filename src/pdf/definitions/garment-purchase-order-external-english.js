@@ -26,6 +26,7 @@ module.exports = function (pox, offset) {
             uom: poItem.dealUom.unit,
             price: poItem.pricePerDealUnit,
             remark: poItem.remark,
+            isOverBudget: poItem.isOverBudget,
             colors: poItem.colors || []
         };
     });
@@ -62,17 +63,17 @@ module.exports = function (pox, offset) {
                 ],
                 style: ['size07', 'bold']
             }, {
-                    stack: [{
-                        text: iso,
-                        alignment: "right",
-                        style: ['size08']
-                    }, {
-                            text: `Nomor PO : ${number}`,
-                            alignment: "right",
-                            style: ['size09', 'bold']
-                        }]
+                stack: [{
+                    text: iso,
+                    alignment: "right",
+                    style: ['size08']
+                }, {
+                    text: `Nomor PO : ${number}${pox.isOverBudget ? '-OB' : ''}`,
+                    alignment: "right",
+                    style: ['size09', 'bold']
+                }]
 
-                }
+            }
 
             ]
         }, {
@@ -91,14 +92,14 @@ module.exports = function (pox, offset) {
             text: "Supplier",
             style: ['size08']
         }, {
-                width: '*',
-                text: attentionTextSupplier,
-                style: ['size08']
-            }, {
-                width: '35%',
-                text: `Sukoharjo, ${moment(pox.date).add(offset, 'h').add(offset, 'h').format("MMMM Do YYYY")} `,
-                style: ['size08']
-            }]
+            width: '*',
+            text: attentionTextSupplier,
+            style: ['size08']
+        }, {
+            width: '35%',
+            text: `Sukoharjo, ${moment(pox.date).add(offset, 'h').add(offset, 'h').format("MMMM Do YYYY")} `,
+            style: ['size08']
+        }]
     }];
 
     var openingText = [
@@ -126,18 +127,18 @@ module.exports = function (pox, offset) {
         text: 'DESCRIPTION OF GOODS',
         style: ['size08', 'bold', 'center']
     }, {
-            text: 'ARTICLE',
-            style: ['size08', 'bold', 'center']
-        }, {
-            text: 'QUANTITY',
-            style: ['size08', 'bold', 'center']
-        }, {
-            text: 'UNIT PRICE',
-            style: ['size08', 'bold', 'center']
-        }, {
-            text: 'SUB TOTAL',
-            style: ['size08', 'bold', 'center']
-        }]
+        text: 'ARTICLE',
+        style: ['size08', 'bold', 'center']
+    }, {
+        text: 'QUANTITY',
+        style: ['size08', 'bold', 'center']
+    }, {
+        text: 'UNIT PRICE',
+        style: ['size08', 'bold', 'center']
+    }, {
+        text: 'SUB TOTAL',
+        style: ['size08', 'bold', 'center']
+    }]
 
     var thead = theadOpt;
 
@@ -147,73 +148,73 @@ module.exports = function (pox, offset) {
         tbodyText = items.map(function (item) {
             return [{
                 stack: [item.productCode, item.productName, `COMPOSITION: ${item.productDesc}`, `CONTRUCTION: ${item.productProperties[0]}`, `YARN: ${item.productProperties[1]}`, `FINISH WIDTH: ${item.productProperties[2]}`, "QUALITY : EXPORT QUALITY", `DESIGN/COLOUR : ${item.colors.join(', ')}`, `Remark : ${item.remark}`, {
-                    text: `${item.prNo} - ${item.prRefNo}`,
+                    text: `${item.prNo} - ${item.prRefNo}${item.isOverBudget ? "-OB" : ""}`,
                     style: 'bold'
                 }],
                 style: ['size08']
             }, {
-                    text: item.artikel,
-                    style: ['size08', 'left']
+                text: item.artikel,
+                style: ['size08', 'left']
+            }, {
+                text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
+                style: ['size08', 'center']
+            }, {
+                columns: [{
+                    width: '25%',
+                    text: `${currency}`
                 }, {
-                    text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
-                    style: ['size08', 'center']
+                    width: '*',
+                    text: `${parseFloat(item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
+                    style: ['right']
+                }],
+                style: ['size08']
+            }, {
+                columns: [{
+                    width: '25%',
+                    text: `${currency}`
                 }, {
-                    columns: [{
-                        width: '25%',
-                        text: `${currency}`
-                    }, {
-                            width: '*',
-                            text: `${parseFloat(item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
-                            style: ['right']
-                        }],
-                    style: ['size08']
-                }, {
-                    columns: [{
-                        width: '25%',
-                        text: `${currency}`
-                    }, {
-                            width: '*',
-                            text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
-                            style: ['right']
-                        }],
-                    style: ['size08']
-                }];
+                    width: '*',
+                    text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
+                    style: ['right']
+                }],
+                style: ['size08']
+            }];
         });
     } else {
         tbodyText = items.map(function (item) {
             return [{
                 stack: [`${item.productCode} - ${item.productName}`, item.productDesc, item.remark, {
-                    text: `${item.prNo} - ${item.prRefNo}`,
+                    text: `${item.prNo} - ${item.prRefNo}${item.isOverBudget ? "-OB" : ""}`,
                     style: 'bold'
                 }],
                 style: ['size08']
             }, {
-                    text: item.artikel,
-                    style: ['size08', 'left']
+                text: item.artikel,
+                style: ['size08', 'left']
+            }, {
+                text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
+                style: ['size08', 'center']
+            }, {
+                columns: [{
+                    width: '25%',
+                    text: `${currency}`
                 }, {
-                    text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
-                    style: ['size08', 'center']
+                    width: '*',
+                    text: `${parseFloat(item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
+                    style: ['right']
+                }],
+                style: ['size08']
+            }, {
+                columns: [{
+                    width: '25%',
+                    text: `${currency}`
                 }, {
-                    columns: [{
-                        width: '25%',
-                        text: `${currency}`
-                    }, {
-                            width: '*',
-                            text: `${parseFloat(item.price).toLocaleString(locale, locale.currencyNotaItern2)}`,
-                            style: ['right']
-                        }],
-                    style: ['size08']
-                }, {
-                    columns: [{
-                        width: '25%',
-                        text: `${currency}`
-                    }, {
-                            width: '*',
-                            text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
-                            style: ['right']
-                        }],
-                    style: ['size08']
-                }];
+                    width: '*',
+                    text: `${parseFloat(item.quantity * item.price).toLocaleString(locale, locale.currency)}`,
+                    style: ['right']
+                }],
+                style: ['size08']
+            }];
         });
     }
 
@@ -252,22 +253,22 @@ module.exports = function (pox, offset) {
             text: 'TOTAL QUANTITY',
             style: ['size08', 'bold', 'right'],
         }, null, {
-                text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
-                style: ['size08', 'right']
+            text: parseFloat(totalQuantity).toLocaleString(locale, locale.decimal),
+            style: ['size08', 'right']
+        }, {
+            text: 'TOTAL',
+            style: ['size08', 'bold', 'right'],
+        }, {
+            columns: [{
+                width: '25%',
+                text: currency
             }, {
-                text: 'TOTAL',
-                style: ['size08', 'bold', 'right'],
-            }, {
-                columns: [{
-                    width: '25%',
-                    text: currency
-                }, {
-                        width: '*',
-                        text: parseFloat(sum).toLocaleString(locale, locale.currency),
-                        style: ['right']
-                    }],
-                style: ['size08']
-            }]
+                width: '*',
+                text: parseFloat(sum).toLocaleString(locale, locale.currency),
+                style: ['right']
+            }],
+            style: ['size08']
+        }]
     ];
 
     var tfoot = tfootTextImport;
@@ -288,32 +289,32 @@ module.exports = function (pox, offset) {
                     width: '40%',
                     stack: ['Delivery cost', 'Term payment']
                 }, {
-                        width: '3%',
-                        stack: [':', ':']
-                    }, {
-                        width: '*',
-                        stack: [`${pox.freightCostBy.trim() == "Penjual" ? "Seller" : "Buyer"}`, `${pox.paymentType}`]
-
-                    }]
-            }, {
-                    width: '20%',
-                    text: ''
+                    width: '3%',
+                    stack: [':', ':']
                 }, {
-                    width: '40%',
-                    columns: [{
-                        width: '45%',
-                        stack: ['Delivery date', 'Other']
-                    }, {
-                            width: '3%',
-                            stack: [':', ':']
-                        }, {
-                            width: '*',
-                            stack: [{
-                                text: `${moment(pox.expectedDeliveryDate).add(offset, 'h').format("MMMM Do YYYY")}`,
-                                style: ['bold']
-                            }, `${pox.remark}`]
-                        }]
+                    width: '*',
+                    stack: [`${pox.freightCostBy.trim() == "Penjual" ? "Seller" : "Buyer"}`, `${pox.paymentType}`]
+
                 }]
+            }, {
+                width: '20%',
+                text: ''
+            }, {
+                width: '40%',
+                columns: [{
+                    width: '45%',
+                    stack: ['Delivery date', 'Other']
+                }, {
+                    width: '3%',
+                    stack: [':', ':']
+                }, {
+                    width: '*',
+                    stack: [{
+                        text: `${moment(pox.expectedDeliveryDate).add(offset, 'h').format("MMMM Do YYYY")}`,
+                        style: ['bold']
+                    }, `${pox.remark}`]
+                }]
+            }]
         }],
         style: ['size08']
     }];

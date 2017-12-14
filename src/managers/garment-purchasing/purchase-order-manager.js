@@ -1235,7 +1235,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "Satuan Barang": data.defaultUom,
                 "Harga Budget": data.budgetPrice,
                 "Harga Satuan Beli": data.pricePerItem,
-                "Harga Total": data.pricePerItem,
+                "Harga Total": data.priceTotal,
                 "Kode Supplier": data.supplierCode,
                 "Nama Supplier": data.supplierName,
                 "Tanggal Terima PO Internal": data.poIntCreatedDate,
