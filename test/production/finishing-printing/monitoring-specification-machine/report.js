@@ -61,7 +61,7 @@ it('#03. should success when create report', function (done) {
     info.machineId = createdData.machineId;
     info.productionOrderId = createdData.productionOrderId;
     info.dateFrom = createdData.date;
-    info.dateTo = createdData.date;
+    info.dateTo = createdData.date.toISOString().split("T", "1").toString();
     info.offset = 0;
 
     monitoringSpecificationMachineManager.getMonitoringSpecificationMachineReport(info)

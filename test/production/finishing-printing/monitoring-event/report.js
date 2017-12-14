@@ -115,7 +115,7 @@ it('#05. should success when get Monitoring Event Per Date Start', function (don
 it('#06. should success when get Monitoring Event Per Date End', function (done) {
     var info = {};
     info.offset = 0;
-    info.dateTo = createdData.dateEnd;
+    info.dateTo = createdData.dateEnd.toISOString().split("T", "1").toString();
 
     monitoringEventManager.getMonitoringEventReport(info)
         .then(result => {             
@@ -136,7 +136,7 @@ it('#07. should success when get Monitoring Event using all filters', function (
     info.machineEventCode = createdData.machineEvent.code;
     info.productionOrderNumber = createdData.productionOrder.orderNo;
     info.dateFrom = createdData.dateStart;
-    info.dateTo = createdData.dateEnd;
+    info.dateTo = createdData.dateEnd.toISOString().split("T", "1").toString();
 
     monitoringEventManager.getMonitoringEventReport(info)
         .then(result => {             

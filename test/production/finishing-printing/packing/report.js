@@ -57,7 +57,7 @@ it('#03. should success when create report', function (done) {
     info.productionOrderNo = createdData.productionOrderId;
     info.dateFrom = createdData.date;
     // info.dateTo = new Date(createdData.date);
-    info.dateTo = createdData.date.toISOString().split("T", "1").toString();
+    info.dateTo = createdData.date;
     info.offset = 0;
 
     packingManager.getPackingReport(info)
