@@ -57,7 +57,8 @@ it('#03. should success when create report', function (done) {
     info.productionOrderNo = createdData.productionOrderId;
     info.dateFrom = createdData.date;
     // info.dateTo = new Date(createdData.date);
-    info.dateTo = createdData.date.toISOString().split("T", "1").toString();
+    info.dateTo = createdData.date;
+    info.offset = 0;
 
     packingManager.getPackingReport(info)
         .then(result => {
@@ -71,27 +72,9 @@ it('#03. should success when create report', function (done) {
         });
 });
 
-it('#04. should success when create report with timezone', function (done) {
-    var info = {};
-    info.code = createdData._id;
-    info.productionOrderNo = createdData.productionOrderId;
-    info.dateFrom = createdData.date;
-    // info.dateTo = new Date(createdData.date);
-    info.dateTo = createdData.date.toISOString().split("T", "1").toString();
-
-    packingManager.getPackingReport(info, 11)
-        .then(result => {
-            var packing = result.data;
-            packing.should.instanceof(Array);
-            packing.length.should.not.equal(0);
-            done();
-        }).catch(e => {
-            done(e);
-        });
-});
-
-it('#05. should success when get data for Excel Report', function (done) {
+it('#04. should success when get data for Excel Report', function (done) {
     var query = {};
+    query.offset = 0;
 
     packingManager.getXls(resultForExcelTest, query)
         .then(xlsData => {
@@ -105,7 +88,7 @@ it('#05. should success when get data for Excel Report', function (done) {
 });
 
 
-it("#06. should success when destroy all unit test data", function (done) {
+it("#05. should success when destroy all unit test data", function (done) {
     packingManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();
