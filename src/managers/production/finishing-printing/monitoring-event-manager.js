@@ -195,8 +195,10 @@ module.exports = class MonitoringEventManager extends BaseManager {
             query = {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
-
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59:59")) : (new Date());
+        dateFrom.setHours(dateFrom.getHours() - info.offset);
+        dateTo.setHours(dateTo.getHours() - info.offset);
+        
         if (info.machineId && info.machineId != '') {
             var machineId = ObjectId.isValid(info.machineId) ? new ObjectId(info.machineId) : {};
             machineFilter = {
@@ -329,7 +331,7 @@ module.exports = class MonitoringEventManager extends BaseManager {
                 machineFilter = { 'machineId': machineId };
             }
 
-            if (monitoringEvent.productionOrderNumber && monitoringEvent.productionOrderNumber != '') {
+            if (monitoringEvent.productionOrder && monitoringEvent.productionOrder.orderNo != '') {
                 productionOrderFilter = { 'productionOrder.orderNo': monitoringEvent.productionOrderNumber };
             }
 
