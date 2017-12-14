@@ -57,9 +57,10 @@ it(`#02. should success when get created data with id`, function (done) {
 var resultForExcelTest = {};
 it("#03. should success when read data", function (done) {
     inventorySummaryManager.read({
-        filter: {
-            _id: createdId
-        }
+        "filter": {
+            "_id": createdId
+        },
+        "keyword": "TEST"
     })
         .then((documents) => {
             resultForExcelTest = documents;
@@ -86,7 +87,21 @@ it('#04. should success when get data for Excel Report', function (done) {
 });
 
 
-it("#05. should success when destroy all unit test data", function (done) {
+it("#05. should success when get summary report", function (done) {
+    var info = {
+        "storageId": createdData.storageId,
+        "productId": createdData.productId,
+    }
+    inventorySummaryManager.getSummaryReport(info)
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#06. should success when destroy all unit test data", function (done) {
     inventorySummaryManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();
