@@ -2222,6 +2222,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return Promise.resolve(productionOrder)
             .then((productionOrder) => {
                 productionOrder.isClosed = true;
+                productionOrder._updatedDate = new Date();
                 return this.collection.update(productionOrder);
             })
     }
