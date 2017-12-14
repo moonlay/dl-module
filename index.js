@@ -47,7 +47,8 @@ module.exports = {
             BadOutputReasonManager: require('./src/managers/master/bad-output-reason-manager'),
             FPDurationEstimationManager: require('./src/managers/master/fp-duration-estimation-manager'),
             DealTrackingReasonManager: require('./src/managers/master/deal-tracking-reason-manager'),
-            SpinningYarnManager: require('./src/managers/master/spinning-yarn-manager')
+            SpinningYarnManager: require('./src/managers/master/spinning-yarn-manager'),
+            KursBudgetManager: require('./src/managers/master/kurs-budget-manager')
         },
         inventory: {
             finishingPrinting: {
