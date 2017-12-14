@@ -100,7 +100,6 @@ it('#05. should success when get Monitoring Event Per Date Start', function (don
     var info = {};
     info.offset = 0;
     info.dateFrom = createdData.dateStart;
-    info.dateFrom.setDate(info.dateFrom.getDate() - 1);
 
     monitoringEventManager.getMonitoringEventReport(info)
         .then(result => {             

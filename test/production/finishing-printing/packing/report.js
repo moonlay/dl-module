@@ -56,7 +56,6 @@ it('#03. should success when create report', function (done) {
     info.code = createdData._id;
     info.productionOrderNo = createdData.productionOrderId;
     info.dateFrom = createdData.date;
-    info.dateFrom.setDate(info.dateFrom.getDate() - 1);
     // info.dateTo = new Date(createdData.date);
     info.dateTo = createdData.date.toISOString().split("T", "1").toString();
     info.offset = 0;
