@@ -170,7 +170,8 @@ module.exports = {
                 badOutputReason: require('./test/data-util/master/bad-output-reason-data-util'),
                 fpDurationEstimation: require('./test/data-util/master/fp-duration-estimation-data-util'),
                 dealTrackingReason: require('./test/data-util/master/deal-tracking-reason-data-util'),
-                SpinningYarn: require('./test/data-util/master/spinning-yarn-data-util')
+                SpinningYarn: require('./test/data-util/master/spinning-yarn-data-util'),
+                kursBudget: require('./test/data-util/master/kurs-budget-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util"),
