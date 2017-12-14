@@ -139,14 +139,23 @@ module.exports = class BookingOrderManager extends BaseManager {
                     for (var i of valid.items) {
                         totalqty += i.quantity;
                     }
+                    var index=0;
                     for (var item of valid.items) {
+                        item.code= item.code? item.code: generateCode();
                         var itemError = {};
 
                         if(!item.masterPlanComodity){
                             itemError["masterPlanComodity"] = i18n.__("BookingOrder.items.masterPlanComodity.isRequired:%s is required", i18n.__("BookingOrder.items.masterPlanComodity._:MasterPlanComodity")); 
                         }
                         else{
-                            item.masterPlanComodityId=new ObjectId(item.masterPlanComodity._id)
+                            item.masterPlanComodityId=new ObjectId(item.masterPlanComodity._id);
+
+                            var existComodity = valid.items.find((test, idx) => 
+                            item.masterPlanComodityId.toString() === test.masterPlanComodity._id.toString() && item.masterPlanComodityId.toString() === test.masterPlanComodity._id.toString() && index != idx);
+                        
+                            if(existComodity)
+                                itemError["masterPlanComodity"] = i18n.__("BookingOrder.items.masterPlanComodity.isExists:%s is already choosen", i18n.__("BookingOrder.items.masterPlanComodity._:MasterPlanComodity"));
+                            
                         }
                         
                         if (!item.quantity || item.quantity <=0)
@@ -154,16 +163,18 @@ module.exports = class BookingOrderManager extends BaseManager {
                         
                         if (valid.orderQuantity != totalqty)
                             itemError["total"] = i18n.__("ProductionOrder.items.total.shouldNot:%s Total should equal Order Quantity", i18n.__("ProductionOrder.items.total._:Total"));
-
-                        if (Object.getOwnPropertyNames(itemError).length > 0)
-                            itemErrors.push(itemError);
+                        
+                        index++;
+                        itemErrors.push(itemError);
                     }
-
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            errors.items = itemErrors;
+                            break;
+                        }
+                    }
                     
                     
-                    if (itemErrors.length > 0)
-                        errors.items = itemErrors;
-
                 }
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
@@ -195,6 +206,17 @@ module.exports = class BookingOrderManager extends BaseManager {
                     );
             });
     }
+
+    // confirmBooking(booking){
+    //     return this.getSingleById(booking._id)
+    //         .then((booking) => {
+    //             booking.isConfirmed=true;
+    //             return this.update(booking)
+    //             .then((id) =>
+    //                 Promise.resolve(id)
+    //                 );
+    //         });
+    // }
 
 
     _createIndexes() {
