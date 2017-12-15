@@ -1752,7 +1752,14 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             },
                             {
                                 $match: queryPR
-                            }, {
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest.items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest.items.purchaseOrderIds", preserveNullAndEmptyArrays: true }
+                            },
+                            {
                                 $project: {
                                     "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] }
                                 }
@@ -1790,6 +1797,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 },
                                 {
                                     $match: queryPR
+                                },
+                                {
+                                    $unwind: { path: "$purchaseRequest.items", preserveNullAndEmptyArrays: true }
+                                },
+                                {
+                                    $unwind: { path: "$purchaseRequest.items.purchaseOrderIds", preserveNullAndEmptyArrays: true }
                                 },
                                 {
                                     $project: {
@@ -1848,6 +1861,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 $match: queryPR
                             },
                             {
+                                $unwind: { path: "$purchaseRequest.items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest.items.purchaseOrderIds", preserveNullAndEmptyArrays: true }
+                            },
+                            {
                                 $project: {
                                     no: 1,
                                     date: 1,
@@ -1871,7 +1890,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     overBudgetRemark: "$items.overBudgetRemark",
                                     "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] }
                                 }
-                            }, ,
+                            },
                             { "$match": { "aEq": true } },
                             { $skip: page * size },
                             { $limit: size }
@@ -1911,7 +1930,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         price: data.price,
                         totalBudgetPrice: data.totalBudgetPrice,
                         totalPrice: data.totalPrice,
-                        overBudgetValue: (data.totalPrice - data.totalBudgetPrice)/data.totalBudgetPrice * 100,
+                        overBudgetValue: (data.totalPrice - data.totalBudgetPrice) / data.totalBudgetPrice * 100,
                         overBudgetRemark: data.overBudgetRemark
                     }
                     dataReport.push(item);
