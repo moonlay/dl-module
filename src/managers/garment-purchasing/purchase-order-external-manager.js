@@ -1826,7 +1826,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                         totalBudgetPrice: { $multiply: ["$items.budgetPrice", "$purchaseRequest.items.quantity"] },
                                         totalPrice: { $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"] },
                                         overBudgetRemark: "$items.overBudgetRemark",
-                                        "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] }
+                                        "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] },
+                                        status: "$isApproved"
                                     }
                                 },
                                 { "$match": { "aEq": true } }
@@ -1888,7 +1889,8 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     totalBudgetPrice: { $multiply: ["$items.budgetPrice", "$purchaseRequest.items.quantity"] },
                                     totalPrice: { $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"] },
                                     overBudgetRemark: "$items.overBudgetRemark",
-                                    "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] }
+                                    "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] },
+                                    status: "$isApproved"
                                 }
                             },
                             { "$match": { "aEq": true } },
@@ -1930,8 +1932,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         price: data.price,
                         totalBudgetPrice: data.totalBudgetPrice,
                         totalPrice: data.totalPrice,
-                        overBudgetValue: (data.totalPrice - data.totalBudgetPrice) / data.totalBudgetPrice * 100,
-                        overBudgetRemark: data.overBudgetRemark
+                        overBudgetValue: (data.totalPrice - data.totalBudgetPrice) / data.totalBudgetPrice,
+                        overBudgetValuePercentage: (data.totalPrice - data.totalBudgetPrice) / data.totalBudgetPrice * 100,
+                        overBudgetRemark: data.overBudgetRemark,
+                        status: data.status ? "Sudah" : "Belum"
                     }
                     dataReport.push(item);
                 }
@@ -1977,8 +1981,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 "Harga Beli": data.price,
                 "Total Harga Budget": data.totalBudgetPrice,
                 "Total Harga Beli": data.totalPrice,
-                "Nilai Over Budget (%)": data.overBudgetValue,
-                "Keterangan Over Budget": data.overBudgetRemark
+                "Nilai Over Budget": data.overBudgetValue,
+                "Nilai Over Budget (%)": data.overBudgetValuePercentage,
+                "Keterangan Over Budget": data.overBudgetRemark,
+                "Status":data.status
             }
             xls.data.push(item);
         }
@@ -2003,8 +2009,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             "Harga Total": "number",
             "Total Harga Budget": "number",
             "Total Harga Beli": "number",
+            "Nilai Over Budget": "number",
             "Nilai Over Budget (%)": "number",
-            "Keterangan Over Budget": "string"
+            "Keterangan Over Budget": "string",
+            "Status": "string"
         };
         xls.options = options;
 
