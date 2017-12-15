@@ -247,7 +247,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
 getDataMonitorSpb(unitId,PRNo,noSpb,supplierId,dateFrom,dateTo,staffName , offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
-
+            var nilai={};
             qryMatch["$and"] = [
                 { "_deleted": false }];
 
@@ -282,11 +282,13 @@ getDataMonitorSpb(unitId,PRNo,noSpb,supplierId,dateFrom,dateTo,staffName , offse
                  })
             }
 
-  if (staffName!=="") {
-                qryMatch["$and"].push({
-                      "_createdBy":staffName
- 
-                 })
+//   if (staffName!=="") {
+//                 qryMatch["$and"].push({
+//                       "do_docs._createdBy":staffName
+//                 })
+//             }
+             if (staffName !== undefined && staffName !== "") {
+                    nilai ={"do_docs._createdBy": staffName};                
             }
 
 if (PRNo!=="") {
@@ -313,12 +315,51 @@ if (PRNo!=="") {
                     },      
             {
                         $unwind: "$items.unitReceiptNote.items"
-                    },      
+                    }, 
+                      
+                    {
+   $lookup:
+     {
+       from: "purchase-requests",
+       localField: "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
+       foreignField: "no",
+       as: "pr_docs"
+     }
+},     
+{
+                    $unwind:"$pr_docs"
+                },
+         {
+   $lookup:
+     {
+       from: "delivery-orders",
+       localField: "items.unitReceiptNote.deliveryOrder.no",
+       foreignField: "no",
+       as: "do_docs"
+     }
+},
+//      {
+//    $lookup:
+//      {
+//        from: "purchase-orders",
+//        localField: "items.unitReceiptNote.items.purchaseOrder.no",
+//        foreignField: "no",
+//        as: "do_docs"
+//      }
+// },
+// {
+//                     $unwind:"$do_docs"
+//                 },
+                 {$match: nilai},
+                //   {
+                //      $match: qryMatch
+                //  },
 
-             {
+ {
          $project: {
             no: "$no",
             date: "$date",
+            _createdBy: "$_createdBy",
             "items.unitReceiptNote.items.product.name": "$items.unitReceiptNote.items.product.name",
             "items.unitReceiptNote.items.deliveredQuantity": "$items.unitReceiptNote.items.deliveredQuantity",
             "items.unitReceiptNote.items.pricePerDealUnit": "$items.unitReceiptNote.items.pricePerDealUnit",
@@ -327,13 +368,20 @@ if (PRNo!=="") {
             dueDate: "$dueDate",
             "supplier.name": "$supplier.name",
             "division.name": "$division.name",
-            "namaUnit": "$items.unitReceiptNote.unit.name",
-            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
+            "useIncomeTax":"$useIncomeTax",
+            "useVat":"$useVat",
+            "vat.rate":"$vat.rate",
+            //"namaUnit": "$items.unitReceiptNote.unit.name",
+            "namaUnit": "$pr_docs.unit.name",
+           "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
             "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date",
             "items.unitReceiptNote.no":"$items.unitReceiptNote.no",
+            "staff":"$do_docs._createdBy",
+            //"staff":"$_createdBy",
             "items.unitReceiptNote.date":"$items.unitReceiptNote.date",
          }
       }      ,
+          
                       { $sort : { "date" : 1 } }
                     ]
     
