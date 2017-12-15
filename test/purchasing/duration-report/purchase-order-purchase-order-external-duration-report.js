@@ -294,6 +294,7 @@ it('#11. should success when get data with Start Date and Duration 8-14 days', f
     var query = {};
     query.dateFrom = purchaseOrder._createdDate;
     query.duration = "8-14 hari";
+    query.offset = 0;
 
     purchaseOrderExternalManager.getDurationPOData(query)
         .then(result => {

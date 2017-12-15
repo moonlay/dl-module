@@ -127,3 +127,59 @@ it('#08. should success when get data for Excel Report', function (done) {
             done(e);
         });
 });
+
+it('#08. should success when create report detail', function (done) {
+
+    query.orderType = "PRINTING";
+    query.year = moment().year();
+    query.month = moment().month();
+
+    manager.getOrderStatusDetailReport(query)
+        .then((result) => {
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
+
+it('#09. should success when create report detail', function (done) {
+
+    query.orderType = "WHITE";
+    query.year = moment().year();
+    query.month = moment().month();
+
+    manager.getOrderStatusDetailReport(query)
+        .then((result) => {
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
+
+it('#10. should success when create report detail', function (done) {
+
+    query.orderType = "";
+    query.year = moment().year();
+    query.month = moment().month();
+
+    manager.getOrderStatusDetailReport(query)
+        .then((result) => {
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
+
+it('#11. should success when create report detail', function (done) {
+
+    query.orderType = "PRINTING";
+    query.year = moment().year();
+    query.month = moment().month();
+
+    manager.getOrderStatusDetailReport(query)
+        .then((result) => {
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
