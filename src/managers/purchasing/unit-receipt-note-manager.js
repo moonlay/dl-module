@@ -1044,7 +1044,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
-    getUnitReceiptNotes(_no, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, offset,  createdBy) {
+    getUnitReceiptNotes(_no, _PRNo, _unitId, _categoryId, _supplierId, _dateFrom, _dateTo, offset,  createdBy) {
         return new Promise((resolve, reject) => {
             var query = Object.assign({});
 
@@ -1053,6 +1053,16 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             if (_no !== "undefined" && _no !== "") {
                 var no = { no: _no };
                 Object.assign(query, no);
+            }
+            if (_PRNo !== "undefined" && _PRNo !== "") {
+                var PRNo = {
+                    "items": {
+                        $elemMatch: {
+                            "purchaseOrder.purchaseRequest.no": _PRNo
+                        }
+                    }
+                };
+                Object.assign(query, PRNo);
             }
             if (_unitId !== "undefined" && _unitId !== "") {
                 var unitId = { unitId: new ObjectId(_unitId) };
