@@ -1055,7 +1055,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 Object.assign(query, no);
             }
             if (_PRNo !== "undefined" && _PRNo !== "") {
-                var PRNo = {
+                var PRNo = { 
                     "items": {
                         $elemMatch: {
                             "purchaseOrder.purchaseRequest.no": _PRNo
