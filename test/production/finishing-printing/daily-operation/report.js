@@ -198,7 +198,9 @@ it("#11. should success when get report daily machine", function (done) {
     queryDailyMachine.year = new Date().getFullYear();
     queryDailyMachine.month = monthList[new Date().getMonth()]
     queryDailyMachine.order = {
-        "_id.day": 1
+        "_id.day": 1,
+        "machineName": "asc",
+        "machineCode": "desc"
     };
 
     dailyOperationManager.getDailyMachine(queryDailyMachine)
