@@ -34,41 +34,43 @@ module.exports = class DailyOperationManager extends BaseManager {
             keywordFilter = {},
             query = {};
 
-        if (paging.keyword) {
-            var regex = new RegExp(paging.keyword, "i");
-            var orderNoFilter = {
-                "kanban.productionOrder.orderNo": {
-                    "$regex": regex
-                }
-            };
-            var colorFilter = {
-                "kanban.selectedProductionOrderDetail.color": {
-                    "$regex": regex
-                }
-            };
-            var colorTypeFilter = {
-                "kanban.selectedProductionOrderDetail.colorType.name": {
-                    "$regex": regex
-                }
-            };
-            var cartFilter = {
-                "kanban.cart.cartNumber": {
-                    "$regex": regex
-                }
-            };
-            var stepFilter = {
-                "step.process": {
-                    "$regex": regex
-                }
-            };
-            var machineFilter = {
-                "machine.name": {
-                    "$regex": regex
-                }
-            };
-            keywordFilter["$or"] = [orderNoFilter, colorFilter, colorTypeFilter, cartFilter, stepFilter, machineFilter];
-        }
-        query["$and"] = [_default, keywordFilter, pagingFilter];
+        // if (paging.keyword) {
+        //     var regex = new RegExp(paging.keyword, "i");
+        //     var orderNoFilter = {
+        //         "kanban.productionOrder.orderNo": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     var colorFilter = {
+        //         "kanban.selectedProductionOrderDetail.color": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     var colorTypeFilter = {
+        //         "kanban.selectedProductionOrderDetail.colorType.name": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     var cartFilter = {
+        //         "kanban.cart.cartNumber": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     var stepFilter = {
+        //         "step.process": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     var machineFilter = {
+        //         "machine.name": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     keywordFilter["$or"] = [orderNoFilter, colorFilter, colorTypeFilter, cartFilter, stepFilter, machineFilter];
+        // }
+        // query["$and"] = [_default, keywordFilter, pagingFilter];
+        query["$and"] = [_default, pagingFilter];
+        
         return query;
     }
 
@@ -845,11 +847,11 @@ module.exports = class DailyOperationManager extends BaseManager {
         var order = query.order;
         var temp;
 
-        if (JSON.stringify(order).includes("desc")) {
-            temp = JSON.stringify(order).replace("desc", -1);
+        if (JSON.stringify(order).includes(`"desc"`)) {
+            temp = JSON.stringify(order).replace(`"desc"`, -1);
             order = JSON.parse(temp)
-        } else if (JSON.stringify(order).includes("asc")) {
-            temp = JSON.stringify(order).replace("asc", 1);
+        } else if (JSON.stringify(order).includes(`"asc"`)) {
+            temp = JSON.stringify(order).replace(`"asc"`, 1);
             order = JSON.parse(temp)
         } else {
             order;
