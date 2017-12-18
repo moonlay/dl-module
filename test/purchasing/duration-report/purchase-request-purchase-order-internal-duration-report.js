@@ -252,6 +252,7 @@ it('#09. should success when get data with Start Date and Duration 8-14 days', f
     var query = {};
     query.dateFrom = createdDataPO.purchaseRequest.date;
     query.duration = "8-14 hari";
+    query.offset = 0;
 
     purchaseOrderManager.getDataDuration(query)
         .then(result => {
@@ -268,6 +269,7 @@ it('#10. should success when get data with Start Date, End Date and Duration 15-
     query.dateFrom = createdDataPO2.purchaseRequest.date;
     query.dateTo = createdDataPO2._createdDate;
     query.duration = "15-30 hari";
+    query.offset = 0;
 
     purchaseOrderManager.getDataDuration(query)
         .then(result => {
@@ -284,6 +286,7 @@ it('#11. should success when get data with Start Date, End Date and Duration >30
     query.dateFrom = createdDataPO3.purchaseRequest.date;
     query.dateTo = createdDataPO3._createdDate;
     query.duration = "> 30 hari";
+    query.offset = 0;
 
     purchaseOrderManager.getDataDuration(query)
         .then(result => {
@@ -383,6 +386,7 @@ it('#16. should success when get data with unit and Duration >30 days', function
     var query = {};
     query.unitId = createdDataPO3.purchaseRequest.unit._id;
     query.duration = "> 30 hari";
+    query.offset = 0;
 
     purchaseOrderManager.getDataDuration(query)
         .then(result => {

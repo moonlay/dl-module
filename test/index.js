@@ -103,6 +103,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/DEAL TRACKING REASON', './master/deal-tracking-reason');
     test('@MASTER/SPINNING YARN', './master/spinning-yarn');
     test('@MASTER/HOLIDAY', './master/holiday');
+    test('@MASTER/KURS BUDGET', './master/kurs-budget');
     
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');

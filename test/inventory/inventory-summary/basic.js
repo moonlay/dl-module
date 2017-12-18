@@ -8,4 +8,4 @@ var options = {
 };
 
 var basicTest = require("../../basic-test-factory");
-basicTest(options); 
+basicTest(options);

@@ -1012,8 +1012,8 @@ getAllData(startdate, enddate, offset) {
       {$unwind:"$items.fulfillments"},
       {$project :{
                     "NoSJ":"$no",
-                    "TgSJ":"$date",
-                    "TgDtg":"$supplierDoDate",
+                    "TgSJ":"$supplierDoDate",
+                    "TgDtg":"$date",
                     "KdSpl":"$supplier.code",
                     "NmSpl":"$supplier.name",
                     "SJDesc":"$remark",

@@ -23,7 +23,7 @@ var inventorySummary = null;
 // var MachineType = DLModels.master.MachineType;
 
 
-before('#00. connect db', function(done) {
+before('#00. connect db', function (done) {
     helper.getDb()
         .then((db) => {
             inventorySummaryManager = new InventorySummaryManager(db, {
@@ -37,7 +37,7 @@ before('#00. connect db', function(done) {
 });
 
 
-it("#01. should success when getsert inexists", function(done) {
+it("#01. should success when getsert inexists", function (done) {
 
     Promise.all([productDataUtil.getRandomTestData(), storageDataUtil.getRandomTestData(), uomDataUtil.getTestData()])
         .then(results => {
@@ -75,7 +75,7 @@ it("#01. should success when getsert inexists", function(done) {
         });
 });
 
-it("#02. should success when getsert existing", function(done) {
+it("#02. should success when getsert existing", function (done) {
 
     inventorySummaryManager.getSert(product._id, storage._id, uom._id)
         .then(data => {
