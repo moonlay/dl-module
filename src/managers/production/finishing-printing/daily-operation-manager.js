@@ -847,11 +847,11 @@ module.exports = class DailyOperationManager extends BaseManager {
         var order = query.order;
         var temp;
 
-        if (JSON.stringify(order).includes("desc")) {
-            temp = JSON.stringify(order).replace("desc", -1);
+        if (JSON.stringify(order).includes(`"desc"`)) {
+            temp = JSON.stringify(order).replace(`"desc"`, -1);
             order = JSON.parse(temp)
-        } else if (JSON.stringify(order).includes("asc")) {
-            temp = JSON.stringify(order).replace("asc", 1);
+        } else if (JSON.stringify(order).includes(`"asc"`)) {
+            temp = JSON.stringify(order).replace(`"asc"`, 1);
             order = JSON.parse(temp)
         } else {
             order;
