@@ -325,7 +325,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             if (_keyword) {
                                 _keyword = _keyword.replace("(", "\\(");
                                 _keyword = _keyword.replace(")", "\\)");
-                                var regex = new RegExp(_keyword);
+                                var regex = new RegExp(_keyword,"i");
                                 switch (j) {
                                     case 0:
                                         keywordFilters.push({

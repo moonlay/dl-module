@@ -5,3 +5,7 @@ describe("BASIC CRUD SCENARIOS", function() {
 describe("VALIDATION SCENARIOS", function() {
     require("./validate");
 });
+
+describe("CANCEL BOOKING SCENARIOS", function() {
+    require("./cancel-booking");
+});

@@ -1588,7 +1588,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             .map((item) => item.isOverBudget)
             .reduce((prev, curr, index) => {
                 return prev || curr
-            }, true);
+            }, false);
         if (!purchaseOrderExternal.isApproved) {
             if (purchaseOrderExternal.isOverBudget) {
                 purchaseOrderExternal.isApproved = false;
@@ -1753,6 +1753,18 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             {
                                 $match: queryPR
                             },
+                            {
+                                $unwind: { path: "$purchaseRequest.items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest.items.purchaseOrderIds", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $project: {
+                                    "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] }
+                                }
+                            },
+                            { "$match": { "aEq": true } },
                             { $group: { _id: null, count: { $sum: 1 } } }
                         ])
                         .toArray()
@@ -1787,6 +1799,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     $match: queryPR
                                 },
                                 {
+                                    $unwind: { path: "$purchaseRequest.items", preserveNullAndEmptyArrays: true }
+                                },
+                                {
+                                    $unwind: { path: "$purchaseRequest.items.purchaseOrderIds", preserveNullAndEmptyArrays: true }
+                                },
+                                {
                                     $project: {
                                         no: 1,
                                         date: 1,
@@ -1805,9 +1823,14 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                         uom: "$items.dealUom.unit",
                                         budgetPrice: "$items.budgetPrice",
                                         price: "$items.pricePerDealUnit",
-                                        overBudgetRemark: "$items.overBudgetRemark"
+                                        totalBudgetPrice: { $multiply: ["$items.budgetPrice", "$purchaseRequest.items.quantity"] },
+                                        totalPrice: { $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"] },
+                                        overBudgetRemark: "$items.overBudgetRemark",
+                                        "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] },
+                                        status: "$isApproved"
                                     }
-                                }
+                                },
+                                { "$match": { "aEq": true } }
                             ])
                             .toArray()
                     );
@@ -1839,6 +1862,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 $match: queryPR
                             },
                             {
+                                $unwind: { path: "$purchaseRequest.items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest.items.purchaseOrderIds", preserveNullAndEmptyArrays: true }
+                            },
+                            {
                                 $project: {
                                     no: 1,
                                     date: 1,
@@ -1857,9 +1886,14 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     uom: "$items.dealUom.unit",
                                     budgetPrice: "$items.budgetPrice",
                                     price: "$items.pricePerDealUnit",
-                                    overBudgetRemark: "$items.overBudgetRemark"
+                                    totalBudgetPrice: { $multiply: ["$items.budgetPrice", "$purchaseRequest.items.quantity"] },
+                                    totalPrice: { $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity"] },
+                                    overBudgetRemark: "$items.overBudgetRemark",
+                                    "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] },
+                                    status: "$isApproved"
                                 }
                             },
+                            { "$match": { "aEq": true } },
                             { $skip: page * size },
                             { $limit: size }
                         ])
@@ -1896,9 +1930,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         uom: data.uom,
                         budgetPrice: data.budgetPrice,
                         price: data.price,
-                        totalBudgetPrice: data.budgetPrice * data.quantity,
-                        totalPrice: data.price * data.quantity,
-                        overBudgetRemark: data.overBudgetRemark
+                        totalBudgetPrice: data.totalBudgetPrice,
+                        totalPrice: data.totalPrice,
+                        overBudgetValue: (data.totalPrice - data.totalBudgetPrice) / data.totalBudgetPrice,
+                        overBudgetValuePercentage: (data.totalPrice - data.totalBudgetPrice) / data.totalBudgetPrice * 100,
+                        overBudgetRemark: data.overBudgetRemark,
+                        status: data.status ? "Sudah" : "Belum"
                     }
                     dataReport.push(item);
                 }
@@ -1944,7 +1981,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 "Harga Beli": data.price,
                 "Total Harga Budget": data.totalBudgetPrice,
                 "Total Harga Beli": data.totalPrice,
-                "Keterangan Over Budget": data.overBudgetRemark
+                "Nilai Over Budget": data.overBudgetValue,
+                "Nilai Over Budget (%)": data.overBudgetValuePercentage,
+                "Keterangan Over Budget": data.overBudgetRemark,
+                "Status":data.status
             }
             xls.data.push(item);
         }
@@ -1969,7 +2009,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             "Harga Total": "number",
             "Total Harga Budget": "number",
             "Total Harga Beli": "number",
-            "Keterangan Over Budget": "string"
+            "Nilai Over Budget": "number",
+            "Nilai Over Budget (%)": "number",
+            "Keterangan Over Budget": "string",
+            "Status": "string"
         };
         xls.options = options;
 

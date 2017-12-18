@@ -100,3 +100,24 @@ it("#04. should error when create new data with orderQuantity not equal total qu
         });
 });
 
+it("#05. should error when create new data with double comodity", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            data.orderQuantity=1500;
+            data.items[2]=data.items[1];
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with double comodity");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("items");
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

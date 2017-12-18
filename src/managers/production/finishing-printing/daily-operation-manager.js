@@ -841,7 +841,92 @@ module.exports = class DailyOperationManager extends BaseManager {
         });
     }
 
+    getDailyMachine(query) {
+        var area = query.area;
+        var date = query.month + "," + query.year;
+        var order = query.order;
+        var temp;
 
+        if (JSON.stringify(order).includes("desc")) {
+            temp = JSON.stringify(order).replace("desc", -1);
+            order = JSON.parse(temp)
+        } else if (JSON.stringify(order).includes("asc")) {
+            temp = JSON.stringify(order).replace("asc", 1);
+            order = JSON.parse(temp)
+        } else {
+            order;
+        }
+
+        return this.collection.aggregate([
+            {
+                "$match": { "_deleted": false, "step.processArea": area, "type": "output", "dateOutput": { "$gte": new Date(date) } }
+            },
+            {
+                "$project": {
+                    "_deleted": 1,
+                    "type": 1,
+                    "dateOutput": 1,
+                    "machine.name": 1,
+                    "machine.code": 1,
+                    "goodOutput": 1,
+                    "badOutput": 1,
+                    "step.processArea": 1,
+                    "year": { "$year": "$dateOutput" },
+                    "month": { "$month": "$dateOutput" },
+                    "day": { "$dayOfMonth": "$dateOutput" },
+                }
+            },
+
+            {
+                "$group": {
+                    "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day","dateOutput":"$dateOutput" },
+                    "totalBadOutput": { "$sum": "$badOutput" },
+                    "totalGoodOutput": { "$sum": "$goodOutput" },
+                }
+            }
+        ]
+        ).sort(order).toArray()
+    }
+
+    getXlsDailyMachine(result, query) {
+
+        var area = query.area;
+        var date = query.month + "," + query.year;
+
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var daily of result) {
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["dateOutput"] = daily._id.dateOutput ? moment(new Date(daily._id.dateOutput)).format(dateFormat) : '';
+            item["Machine Name"] = daily._id.machineName ? daily._id.machineName : '';
+            item["process Area"] = daily._id.processArea ? daily._id.processArea : '';
+            item["type"] = "output";
+            item["GoodOutput"] = daily.totalBadOutput ? daily.totalBadOutput : 0;
+            item["BadOutput"] = daily.totalGoodOutput ? daily.totalGoodOutput : 0;
+
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["dateOutput"] = "string";
+        xls.options["Machine Name"] = "string";
+        xls.options["process Area"] = "string";
+        xls.options["type"] = "string";
+        xls.options["GoodOutput"] = "number";
+        xls.options["BadOutput"] = "number";
+
+        xls.name = `Daily Operation Report ${moment(new Date(date)).format(dateFormat)} - ${area}.xlsx`;
+
+        return Promise.resolve(xls);
+    }
 
     getDailyOperationBadReport(query) {
         return new Promise((resolve, reject) => {

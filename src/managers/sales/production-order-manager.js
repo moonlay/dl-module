@@ -835,12 +835,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                         }, {
                             $project:
-                            {
-                                "orderNo": "$kanban.productionOrder.orderNo",
-                                "kanbanCode": "$kanban.code",
-                                "colorCode": "$kanban.selectedProductionOrderDetail.code",
-                                "input": 1
-                            }
+                                {
+                                    "orderNo": "$kanban.productionOrder.orderNo",
+                                    "kanbanCode": "$kanban.code",
+                                    "colorCode": "$kanban.selectedProductionOrderDetail.code",
+                                    "input": 1
+                                }
                         }
                     ]).toArray());
                 })
@@ -880,11 +880,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         }
                                     }, {
                                         $project:
-                                        {
-                                            "productionOrderNo": 1,
-                                            "kanbanCode": 1,
-                                            "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
-                                        }
+                                            {
+                                                "productionOrderNo": 1,
+                                                "kanbanCode": 1,
+                                                "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
+                                            }
                                     }
                                 ]).toArray());
                             }
@@ -1106,17 +1106,17 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             // },
                             {
                                 $project:
-                                {
-                                    "orderNo": "$kanban.productionOrder.orderNo",
-                                    "kanbanCode": "$kanban.code",
-                                    "machine": "$machine.name",
-                                    "color": "$kanban.selectedProductionOrderDetail.colorRequest",
-                                    // "step": "$kanban.instruction.steps.process",
-                                    "step": "$step.process",
-                                    "area": "$step.processArea",
-                                    // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
-                                    "qty": "$input"
-                                }
+                                    {
+                                        "orderNo": "$kanban.productionOrder.orderNo",
+                                        "kanbanCode": "$kanban.code",
+                                        "machine": "$machine.name",
+                                        "color": "$kanban.selectedProductionOrderDetail.colorRequest",
+                                        // "step": "$kanban.instruction.steps.process",
+                                        "step": "$step.process",
+                                        "area": "$step.processArea",
+                                        // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
+                                        "qty": "$input"
+                                    }
                             },
                             // {
                             //     $match: { "cmp": true }
@@ -1166,11 +1166,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 { $unwind: "$fabricGradeTests" },
                                 {
                                     $group:
-                                    {
-                                        "_id": "$fabricGradeTests.grade",
-                                        "productionOrderNo": { "$first": "$productionOrderNo" },
-                                        "qty": { "$sum": "$fabricGradeTests.initLength" },
-                                    }
+                                        {
+                                            "_id": "$fabricGradeTests.grade",
+                                            "productionOrderNo": { "$first": "$productionOrderNo" },
+                                            "qty": { "$sum": "$fabricGradeTests.initLength" },
+                                        }
                                 }, {
                                     $sort: { "_id": 1 }
                                 }
@@ -1394,12 +1394,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
             },
             {
                 $lookup:
-                {
-                    from: "kanbans",
-                    localField: "orderNo",
-                    foreignField: "productionOrder.orderNo",
-                    as: "kanbans"
-                }
+                    {
+                        from: "kanbans",
+                        localField: "orderNo",
+                        foreignField: "productionOrder.orderNo",
+                        as: "kanbans"
+                    }
             },
             {
                 $project: {
@@ -2046,7 +2046,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     getShipmentDetailStatus(year, month, orderType, productionOrders) {
         var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
- 
+
         return this.fpPackingShipmentCollection.aggregate([
             {
                 "$match": {
@@ -2093,19 +2093,19 @@ module.exports = class ProductionOrderManager extends BaseManager {
         ]).toArray()
             .then((shipmentDocuments) => {
                 var shipmentDocumentData = [];
- 
+
                 if (shipmentDocuments.length > 0) {
                     for (var shipmentDocument of shipmentDocuments) {
                         var shipmentDocumentDatum = {};
- 
+
                         shipmentDocumentDatum.month = shipmentDocument.month;
- 
+
                         if (shipmentDocument.details && shipmentDocument.details.length > 0) {
                             for (var detail of shipmentDocument.details) {
-                                
+
                                 shipmentDocumentDatum.orderNo = detail.productionOrderNo;
                                 shipmentDocumentDatum.quantity = 0;
- 
+
                                 if (detail.items) {
                                     for (var item of detail.items) {
                                         if (item.packingReceiptItems && item.packingReceiptItems.length > 0) {
@@ -2119,7 +2119,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                             }
                         }
- 
+
                         shipmentDocumentData.push(shipmentDocumentDatum);
                     }
                 }
@@ -2181,4 +2181,51 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     //#endregion Detail
+
+    //#region Close SPP
+
+    close(listProductionOrders) {
+        var getProductionOrders = [];
+        return new Promise((resolve, reject) => {
+            for (var productionOrder of listProductionOrders) {
+                getProductionOrders.push(this.getSingleByIdOrDefault(productionOrder._id));
+            }
+            Promise.all(getProductionOrders)
+                .then((productionOrders) => {
+                    var _productionOrders = productionOrders || [];
+                    var updateProductionOrder = [];
+                    for (var productionOrder of listProductionOrders) {
+                        var _productionOrder = _productionOrders.find((spp) => spp._id.toString() === productionOrder._id.toString());
+                        if (_productionOrder) {
+                            updateProductionOrder.push(this.updateClose(_productionOrder))
+                        }
+                    }
+                    Promise.all(updateProductionOrder)
+                        .then((result) => {
+                            resolve(result);
+                        })
+
+                })
+        });
+    }
+
+    updateClose(productionOrder) {
+        var productionOrderError = {};
+
+        if (productionOrder.isClosed) {
+            productionOrderError["no"] = i18n.__("productionOrder.isClosed:%s already closed", i18n.__("productionOrder.isClosed._:Closed"));
+        }
+        if (Object.getOwnPropertyNames(productionOrderError).length > 0) {
+            var ValidationError = require("module-toolkit").ValidationError;
+            return Promise.reject(new ValidationError("data does not pass validation", productionOrderError));
+        }
+        return Promise.resolve(productionOrder)
+            .then((productionOrder) => {
+                productionOrder.isClosed = true;
+                productionOrder._updatedDate = new Date();
+                return this.collection.update(productionOrder);
+            })
+    }
+
+    //#endregion Close SPP
 }
