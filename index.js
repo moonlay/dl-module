@@ -124,7 +124,8 @@ module.exports = {
             StyleManager: require('./src/managers/garment-master-plan/style-manager'),
             StandardHourManager: require('./src/managers/garment-master-plan/standard-hour-manager'),
             BookingOrderManager: require('./src/managers/garment-master-plan/booking-order-manager'),
-            MasterPlanComodityManager: require('./src/managers/garment-master-plan/master-plan-comodity-manager')
+            MasterPlanComodityManager: require('./src/managers/garment-master-plan/master-plan-comodity-manager'),
+            MasterPlanManager: require('./src/managers/garment-master-plan/master-plan-manager')
         }
     },
     test: {
@@ -170,7 +171,8 @@ module.exports = {
                 badOutputReason: require('./test/data-util/master/bad-output-reason-data-util'),
                 fpDurationEstimation: require('./test/data-util/master/fp-duration-estimation-data-util'),
                 dealTrackingReason: require('./test/data-util/master/deal-tracking-reason-data-util'),
-                SpinningYarn: require('./test/data-util/master/spinning-yarn-data-util')
+                SpinningYarn: require('./test/data-util/master/spinning-yarn-data-util'),
+                kursBudget: require('./test/data-util/master/kurs-budget-data-util')
             },
             purchasing: {
                 purchaseRequest: require("./test/data-util/purchasing/purchase-request-data-util"),
@@ -238,7 +240,8 @@ module.exports = {
                 style: require("./test/data-util/garment-master-plan/style-data-util"),
                 standardHour: require("./test/data-util/garment-master-plan/standard-hour-data-util"),
                 bookingOrder: require("./test/data-util/garment-master-plan/booking-order-data-util"),
-                masterPlanComodity: require("./test/data-util/garment-master-plan/master-plan-comodity-data-util")
+                masterPlanComodity: require("./test/data-util/garment-master-plan/master-plan-comodity-data-util"),
+                masterPlan: require("./test/data-util/garment-master-plan/master-plan-data-util")
             }
         }
     },
