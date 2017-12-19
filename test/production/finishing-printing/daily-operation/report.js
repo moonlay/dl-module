@@ -191,14 +191,14 @@ it("#10. should success when get report with date parameter", function (done) {
 });
 var queryDailyMachine = {};
 var xlsDailyMachine;
+var monthList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 it("#11. should success when get report daily machine", function (done) {
 
-    var monthList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     queryDailyMachine.area = "Area Pre Treatment";
     queryDailyMachine.year = new Date().getFullYear();
     queryDailyMachine.month = monthList[new Date().getMonth()]
     queryDailyMachine.order = {
-        "_id.day": 1
+        "_id.day": 1,
     };
 
     dailyOperationManager.getDailyMachine(queryDailyMachine)
@@ -213,9 +213,43 @@ it("#11. should success when get report daily machine", function (done) {
         });
 });
 
-it("#12. should success when get report with date parameter", function (done) {
+it("#12. should success when get report daily machine with order asc", function (done) {
+    queryDailyMachine.order = {
+        "_id.day": "asc"
+    };
 
-    dailyOperationManager.getXlsDailyMachine(xlsDailyMachine,queryDailyMachine)
+    dailyOperationManager.getDailyMachine(queryDailyMachine)
+        .then((result) => {
+            result.should.instanceof(Array);
+            result.length.should.not.equal(0);
+            xlsDailyMachine = result;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#13. should success when get report daily machine with order desc", function (done) {
+    queryDailyMachine.order = {
+        "_id.day": "desc"
+    };
+
+    dailyOperationManager.getDailyMachine(queryDailyMachine)
+        .then((result) => {
+            result.should.instanceof(Array);
+            result.length.should.not.equal(0);
+            xlsDailyMachine = result;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#14. should success when get report with date parameter", function (done) {
+
+    dailyOperationManager.getXlsDailyMachine(xlsDailyMachine, queryDailyMachine)
         .then((result) => {
             result.data.should.instanceof(Array);
             result.data.length.should.not.equal(0);
@@ -227,7 +261,7 @@ it("#12. should success when get report with date parameter", function (done) {
 });
 
 
-it("#13. should success when destroy all unit test data", function (done) {
+it("#15. should success when destroy all unit test data", function (done) {
     dailyOperationManager.destroy(dailyOutput._id)
         .then((result) => {
             dailyOperationManager.destroy(dataDaily._id)
