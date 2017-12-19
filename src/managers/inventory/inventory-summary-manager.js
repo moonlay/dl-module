@@ -29,8 +29,8 @@ module.exports = class InventorySummaryManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-            _deleted: false
-        },
+                _deleted: false
+            },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -85,20 +85,17 @@ module.exports = class InventorySummaryManager extends BaseManager {
         var getProduct = valid.productId && ObjectId.isValid(valid.productId) ? this.productManager.getSingleByIdOrDefault(valid.productId) : Promise.resolve(null);
         var getStorage = valid.storageId && ObjectId.isValid(valid.storageId) ? this.storageManager.getSingleByIdOrDefault(valid.storageId) : Promise.resolve(null);
         var getUom = valid.uomId && ObjectId.isValid(valid.uomId) ? this.uomManager.getSingleByIdOrDefault(valid.uomId) : Promise.resolve(null);
-        var getSecondUom = valid.secondUomId && ObjectId.isValid(valid.secondUomId) ? this.uomManager.getSingleByIdOrDefault(valid.secondUomId) : Promise.resolve(null);
-        var getThirdUom = valid.thirdUomId && ObjectId.isValid(valid.thirdUomId) ? this.uomManager.getSingleByIdOrDefault(valid.thirdUomId) : Promise.resolve(null);
 
-        return Promise.all([getDbInventorySummary, getDuplicateInventorySummary, getProduct, getStorage, getUom, getSecondUom, getThirdUom])
-            .then((results) => {
-                var _dbInventorySummary = results[0];
+        return Promise.all([getDbInventorySummary,getDuplicateInventorySummary, getProduct, getStorage, getUom])
+            .then(results => {
+                var _dbInventorySummary = results[0]; 
                 var _dbDuplicateInventorySummary = results[1];
                 var _product = results[2];
                 var _storage = results[3];
                 var _uom = results[4];
-                var _secondUom = results[5];
-                var _thirdUom = results[6];
 
-                if (_dbInventorySummary) {
+                if (_dbInventorySummary)
+                {
                     // prevent key changes.
                     valid.code = _dbInventorySummary.code;
                 }
@@ -139,12 +136,6 @@ module.exports = class InventorySummaryManager extends BaseManager {
                 valid.uomId = _uom._id;
                 valid.uom = _uom.unit;
 
-                valid.secondUomId = _secondUom && _secondUom._id ? _secondUom._id : {};
-                valid.secondUom = _secondUom && _secondUom._id ? _secondUom.unit : "";
-
-                valid.thirdUomId = _thirdUom && _thirdUom._id ? _thirdUom._id : {};
-                valid.thirdUom = _thirdUom && _thirdUom._id ? _thirdUom.unit : "";
-
                 if (!valid.stamp) {
                     valid = new InventorySummaryModel(valid);
                 }
@@ -173,7 +164,6 @@ module.exports = class InventorySummaryManager extends BaseManager {
             });
     }
 
-
     _createIndexes() {
         var dateIndex = {
             name: `ix_${Map.inventory.collection.InventorySummary}__updatedDate`,
@@ -197,16 +187,16 @@ module.exports = class InventorySummaryManager extends BaseManager {
     getSummaryReport(info) {
         var _defaultFilter = {
             _deleted: false
-        },
+        }, 
             query = {},
             order = info.order || {};
 
         var filterSummary = {};
 
-        if (info.storageId)
+        if(info.storageId)
             filterSummary.storageId = new ObjectId(info.storageId);
 
-        if (info.productId)
+        if(info.productId)
             filterSummary.productId = new ObjectId(info.productId);
 
 
@@ -225,7 +215,7 @@ module.exports = class InventorySummaryManager extends BaseManager {
                         .order(order)
                         .execute();
             });
-
+                    
         return Promise.resolve(data);
     }
 
@@ -254,7 +244,7 @@ module.exports = class InventorySummaryManager extends BaseManager {
         xls.options["Nama Barang"] = "string";
         xls.options["Kuantiti"] = "number";
         xls.options["UOM"] = "string";
-
+        
         xls.name = `Inventory Summaries.xlsx`;
 
         return Promise.resolve(xls);
