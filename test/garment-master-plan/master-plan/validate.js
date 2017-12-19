@@ -340,7 +340,23 @@ it("#11. should success when create new data", function (done) {
         });
 });
 
-it("#12. should error when create new data with same booking order", function (done) {
+it("#12. should success when search data with filter", function (done) {
+    manager.read({
+        keyword: newData.bookingOrderNo
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#13. should error when create new data with same booking order", function (done) {
     manager.create(newData)
         .then((id) => {
             done("should error when create new data with same booking order");
@@ -354,7 +370,7 @@ it("#12. should error when create new data with same booking order", function (d
         });
 });
 
-it("#13. should success when destroy data with id", function (done) {
+it("#14. should success when destroy data with id", function (done) {
     manager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();

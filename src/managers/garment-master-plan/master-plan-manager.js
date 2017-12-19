@@ -274,52 +274,30 @@ module.exports = class MasterPlanManager extends BaseManager {
     }
 
      _afterInsert(id) {
-        return new Promise((resolve, reject) => {
-            this.getSingleById(id)
+        return this.getSingleById(id)
                 .then(data => {
-                    this.bookingOrderManager.getSingleById(data.bookingOrderId)
-                        .then(booking =>{
-                            booking.isMasterPlan = true;
-                            this.bookingOrderManager.collection.update(booking)
-                                .then(idBooking=>{
-                                    resolve(id);
-                                })
-                                .catch(e => {
-                                    reject(e);
-                                });
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
+                    return this.bookingOrderManager.getSingleById(data.bookingOrderId)
+                            .then(booking =>{
+                                booking.isMasterPlan = true;
+                                return this.bookingOrderManager.collection.update(booking)
+                                        .then(idBooking=>{
+                                            return id;
+                                        });
+                            });
                 });
-        });
     }
 
     delete(data) {
-        return new Promise((resolve, reject) => {
-            data._deleted = true;
-            this.bookingOrderManager.getSingleById(data.bookingOrderId)
-                .then(booking =>{
-                    booking.isMasterPlan = false;
-                    this.bookingOrderManager.collection.update(booking)
-                        .then(idBooking=>{
-                            this.collection.update(data)
-                                .then(id => resolve(id))
-                                .catch(e => {
-                                    reject(e);
-                                });
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
+        data._deleted = true;
+        return this.bookingOrderManager.getSingleById(data.bookingOrderId)
+                   .then(booking =>{
+                        booking.isMasterPlan = false;
+                        return this.bookingOrderManager.collection.update(booking)
+                                   .then(idBooking=>{
+                                         return this.collection.update(data)
+                                                   .then(id => {return id});
+                                   });
+                   });
     }
 
     _createIndexes() {
