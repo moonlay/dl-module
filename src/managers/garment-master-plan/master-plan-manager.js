@@ -273,6 +273,55 @@ module.exports = class MasterPlanManager extends BaseManager {
             });
     }
 
+     _afterInsert(id) {
+        return new Promise((resolve, reject) => {
+            this.getSingleById(id)
+                .then(data => {
+                    this.bookingOrderManager.getSingleById(data.bookingOrderId)
+                        .then(booking =>{
+                            booking.isMasterPlan = true;
+                            this.bookingOrderManager.collection.update(booking)
+                                .then(idBooking=>{
+                                    resolve(id);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    delete(data) {
+        return new Promise((resolve, reject) => {
+            data._deleted = true;
+            this.bookingOrderManager.getSingleById(data.bookingOrderId)
+                .then(booking =>{
+                    booking.isMasterPlan = false;
+                    this.bookingOrderManager.collection.update(booking)
+                        .then(idBooking=>{
+                            this.collection.update(data)
+                                .then(id => resolve(id))
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.garmentMasterPlan.collection.MasterPlan}__updatedDate`,
