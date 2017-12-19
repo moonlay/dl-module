@@ -80,7 +80,7 @@ it('#05. should success when create report', function (done) {
     query.orderType = "";
     query.year = moment().format('YYYY');
 
-    manager.getOrderStatusReport(query)
+    manager.getOrderStatusReport(query, 7)
         .then((result) => {
             resultForExcelTest.data = result;
             done();
@@ -94,7 +94,7 @@ it('#06. should success when create report', function (done) {
     query.orderType = "PRINTING";
     query.year = moment().format('YYYY');
 
-    manager.getOrderStatusReport(query)
+    manager.getOrderStatusReport(query, 7)
         .then((result) => {
             done();
         }).catch((e) => {
@@ -107,7 +107,7 @@ it('#07. should success when create report', function (done) {
     query.orderType = "WHITE";
     query.year = moment().format('YYYY');
 
-    manager.getOrderStatusReport(query)
+    manager.getOrderStatusReport(query, 7)
         .then((result) => {
             done();
         }).catch((e) => {
@@ -134,7 +134,7 @@ it('#08. should success when create report detail', function (done) {
     query.year = moment().year();
     query.month = moment().month();
 
-    manager.getOrderStatusDetailReport(query)
+    manager.getOrderStatusDetailReport(query, 7)
         .then((result) => {
             done();
         }).catch((e) => {
@@ -148,7 +148,7 @@ it('#09. should success when create report detail', function (done) {
     query.year = moment().year();
     query.month = moment().month();
 
-    manager.getOrderStatusDetailReport(query)
+    manager.getOrderStatusDetailReport(query, 7)
         .then((result) => {
             done();
         }).catch((e) => {
@@ -162,7 +162,7 @@ it('#10. should success when create report detail', function (done) {
     query.year = moment().year();
     query.month = moment().month();
 
-    manager.getOrderStatusDetailReport(query)
+    manager.getOrderStatusDetailReport(query, 7)
         .then((result) => {
             done();
         }).catch((e) => {
@@ -176,7 +176,7 @@ it('#11. should success when create report detail', function (done) {
     query.year = moment().year();
     query.month = moment().month();
 
-    manager.getOrderStatusDetailReport(query)
+    manager.getOrderStatusDetailReport(query, 7)
         .then((result) => {
             done();
         }).catch((e) => {
