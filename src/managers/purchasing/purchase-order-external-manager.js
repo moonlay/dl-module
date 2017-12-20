@@ -1139,6 +1139,15 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             var Query = { "$and": [date, deletedQuery, unitQuery] };
             this.collection.aggregate([
                 { $unwind: "$items" },
+                {
+                    $lookup:
+                    {
+                        from: "purchase-requests",
+                        localField: "items.purchaseRequest.no",
+                        foreignField: "no",
+                        as: "hasil_docs"
+                    }
+                },
                 { $unwind: "$items.items" },
                 { $match: Query },
                 { $redact: durationQuery },
@@ -1148,9 +1157,9 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "prDate": "$items.purchaseRequest.date",
                         "prCreatedDate": "$items.purchaseRequest._createdDate",
                         "prNo": "$items.purchaseRequest.no",
-                        "division": "$items.purchaseRequest.unit.division.name",
-                        "unit": "$items.purchaseRequest.unit.name",
-                        "budget": "$items.purchaseRequest.budget.name",
+                        "division": "$items.unit.division.name",
+                        "unit": "$items.unit.name",
+                        "budget": "$hasil_docs.budget.name",
                         "category": "$items.category.name",
                         "productCode": "$items.items.product.code",
                         "productName": "$items.items.product.name",
@@ -1392,6 +1401,15 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             var Query = { "$and": [date, deletedQuery, unitQuery] };
             this.collection.aggregate([
                 { $unwind: "$items" },
+                {
+                    $lookup:
+                    {
+                        from: "purchase-requests",
+                        localField: "items.purchaseRequest.no",
+                        foreignField: "no",
+                        as: "hasil_docs"
+                    }
+                },
                 { $unwind: "$items.items" },
                 { $match: Query },
                 { $redact: durationQuery },
@@ -1401,9 +1419,9 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "prDate": "$items.purchaseRequest.date",
                         "prCreatedDate": "$items.purchaseRequest._createdDate",
                         "prNo": "$items.purchaseRequest.no",
-                        "division": "$items.purchaseRequest.unit.division.name",
-                        "unit": "$items.purchaseRequest.unit.name",
-                        "budget": "$items.purchaseRequest.budget.name",
+                        "division": "$items.division.name",
+                        "unit": "$items.unit.name",
+                        "budget": "$hasil_docs.budget.name",
                         "category": "$items.category.name",
                         "productCode": "$items.items.product.code",
                         "productName": "$items.items.product.name",
