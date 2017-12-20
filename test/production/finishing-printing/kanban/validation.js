@@ -190,7 +190,8 @@ it('#06. should success when create new data with old kanban id', function (done
 });
 
 it('#07. should success when update IsComplete to true', function (done) {
-    kanbanManager.updateIsComplete(kanbanId.toString())
+    var isInactive = true;
+    kanbanManager.updateIsComplete(kanbanId.toString(), isInactive)
         .then((id) => {
             kanbanManager.getSingleById(kanbanId.toString())
                 .then((data) => {
