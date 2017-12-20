@@ -902,8 +902,6 @@ module.exports = class DailyOperationManager extends BaseManager {
 
     getXlsDailyMachine(result, query) {
 
-        var area = query.area;
-
         var xls = {};
         xls.data = [];
         xls.options = [];
@@ -934,7 +932,7 @@ module.exports = class DailyOperationManager extends BaseManager {
         xls.options["GoodOutput"] = "number";
         xls.options["BadOutput"] = "number";
 
-        xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)} -  ${moment(new Date(query.dateTo)).format(dateFormat)} - ${area}.xlsx`;
+        xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)} -  ${moment(new Date(query.dateTo)).format(dateFormat)} - ${query.area}.xlsx`;
 
         return Promise.resolve(xls);
     }
