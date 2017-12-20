@@ -250,7 +250,12 @@ it("#13. should success when get report daily machine with order desc", function
 
 it("#14. should success when get report with date parameter", function (done) {
 
-    dailyOperationManager.getXlsDailyMachine(xlsDailyMachine, queryDailyMachine)
+    var dataXls={}
+    dataXls={
+        info:xlsDailyMachine
+    }
+
+    dailyOperationManager.getXlsDailyMachine(dataXls, queryDailyMachine)
         .then((result) => {
             result.data.should.instanceof(Array);
             result.data.length.should.not.equal(0);
