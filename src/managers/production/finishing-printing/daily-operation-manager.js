@@ -844,12 +844,12 @@ module.exports = class DailyOperationManager extends BaseManager {
     getDailyMachine(query) {
         var area = query.area;
 
-        var date = {
-            "dateOutput": {
-                "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(query.dateFrom))),
-                "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(query.dateTo)))
-            },
-        };
+        // var date = {
+        //     "dateOutput": {
+        //         "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(query.dateFrom))),
+        //         "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(query.dateTo)))
+        //     },
+        // };
 
         var order = query.order;
         var temp;
@@ -866,7 +866,12 @@ module.exports = class DailyOperationManager extends BaseManager {
 
         return this.collection.aggregate([
             {
-                "$match": { "_deleted": false, "step.processArea": "Area Pre Treatment", "type": "output", date }
+                "$match": {
+                    "_deleted": false, "step.processArea": area, "type": "output", "dateOutput": {
+                        "$gte": new Date(query.dateFrom),
+                        "$lte":new Date(query.dateTo)
+                    }
+                }
             },
             {
                 "$project": {
@@ -884,7 +889,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                     "date": { "$substr": ["$dateOutput", 0, 10] },
                 }
             },
-        
+
             {
                 "$group": {
                     "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day", "date": "$date" },

@@ -192,11 +192,11 @@ it("#10. should success when get report with date parameter", function (done) {
 var queryDailyMachine = {};
 var xlsDailyMachine;
 it("#11. should success when get report daily machine", function (done) {
-
+    var temp = new Date().getFullYear() + 1;
     var monthList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     queryDailyMachine.area = "Area Pre Treatment";
-    queryDailyMachine.dateFrom = new Date();
-    queryDailyMachine.dateTo = new Date()
+    queryDailyMachine.dateFrom = "1900-01-01";
+    queryDailyMachine.dateTo = ""+temp+"-01-01";
     queryDailyMachine.order = {
         "_id.date": 1
     };
@@ -215,7 +215,7 @@ it("#11. should success when get report daily machine", function (done) {
 
 it("#12. should success when get report with date parameter", function (done) {
 
-    dailyOperationManager.getXlsDailyMachine(xlsDailyMachine,queryDailyMachine)
+    dailyOperationManager.getXlsDailyMachine(xlsDailyMachine, queryDailyMachine)
         .then((result) => {
             result.data.should.instanceof(Array);
             result.data.length.should.not.equal(0);
