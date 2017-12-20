@@ -903,7 +903,6 @@ module.exports = class DailyOperationManager extends BaseManager {
     getXlsDailyMachine(result, query) {
 
         var area = query.area;
-        var date = query.month + "," + query.year;
 
         var xls = {};
         xls.data = [];
@@ -913,16 +912,16 @@ module.exports = class DailyOperationManager extends BaseManager {
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
 
-        for (var daily of result) {
+        for (var daily of result.info) {
             index++;
             var item = {};
             item["No"] = index;
-            item["dateOutput"] = daily._id.dateOutput ? moment(new Date(daily._id.dateOutput)).format(dateFormat) : '';
+            item["dateOutput"] = daily._id.date ? moment(new Date(daily._id.date)).format(dateFormat) : '';
             item["Machine Name"] = daily._id.machineName ? daily._id.machineName : '';
             item["process Area"] = daily._id.processArea ? daily._id.processArea : '';
             item["type"] = "output";
-            item["GoodOutput"] = daily.totalBadOutput ? daily.totalBadOutput : 0;
-            item["BadOutput"] = daily.totalGoodOutput ? daily.totalGoodOutput : 0;
+            item["GoodOutput"] = daily.totalGoodOutput ? daily.totalGoodOutput : 0;
+            item["BadOutput"] = daily.totalBadOutput ? daily.totalBadOutput : 0;
 
             xls.data.push(item);
         }
@@ -935,7 +934,7 @@ module.exports = class DailyOperationManager extends BaseManager {
         xls.options["GoodOutput"] = "number";
         xls.options["BadOutput"] = "number";
 
-        xls.name = `Daily Operation Report ${moment(new Date(date)).format(dateFormat)} - ${area}.xlsx`;
+        xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)} -  ${moment(new Date(query.dateTo)).format(dateFormat)} - ${area}.xlsx`;
 
         return Promise.resolve(xls);
     }
