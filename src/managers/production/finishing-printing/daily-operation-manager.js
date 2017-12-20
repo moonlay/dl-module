@@ -914,12 +914,12 @@ module.exports = class DailyOperationManager extends BaseManager {
             index++;
             var item = {};
             item["No"] = index;
-            item["dateOutput"] = daily._id.date ? moment(new Date(daily._id.date)).format(dateFormat) : '';
-            item["Machine Name"] = daily._id.machineName ? daily._id.machineName : '';
-            item["process Area"] = daily._id.processArea ? daily._id.processArea : '';
+            item["dateOutput"] = moment(new Date(daily._id.date)).format(dateFormat);
+            item["Machine Name"] = daily._id.machineName;
+            item["process Area"] = daily._id.processArea;
             item["type"] = "output";
-            item["GoodOutput"] = daily.totalGoodOutput ? daily.totalGoodOutput : 0;
-            item["BadOutput"] = daily.totalBadOutput ? daily.totalBadOutput : 0;
+            item["GoodOutput"] = daily.totalGoodOutput;
+            item["BadOutput"] = daily.totalBadOutput;
 
             xls.data.push(item);
         }
