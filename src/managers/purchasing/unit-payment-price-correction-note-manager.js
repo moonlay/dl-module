@@ -716,7 +716,9 @@ getXls(result, query){
                         "items.uom",
                         "items.pricePerUnit",
                         "items.currency",
-                        "items.priceTotal"
+                        "items.priceTotal",
+                        "useIncomeTax",
+                        "useVat"
                     ];
 
                     this.collection.where(query).select(_select).execute()
