@@ -70,7 +70,6 @@ module.exports = class DailyOperationManager extends BaseManager {
         // }
         // query["$and"] = [_default, keywordFilter, pagingFilter];
         query["$and"] = [_default, pagingFilter];
-        
         return query;
     }
 
@@ -843,7 +842,14 @@ module.exports = class DailyOperationManager extends BaseManager {
 
     getDailyMachine(query) {
         var area = query.area;
-        var date = query.month + "," + query.year;
+
+        // var date = {
+        //     "dateOutput": {
+        //         "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(query.dateFrom))),
+        //         "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(query.dateTo)))
+        //     },
+        // };
+
         var order = query.order;
         var temp;
 
@@ -859,7 +865,12 @@ module.exports = class DailyOperationManager extends BaseManager {
 
         return this.collection.aggregate([
             {
-                "$match": { "_deleted": false, "step.processArea": area, "type": "output", "dateOutput": { "$gte": new Date(date) } }
+                "$match": {
+                    "_deleted": false, "step.processArea": area, "type": "output", "dateOutput": {
+                        "$gte": new Date(query.dateFrom),
+                        "$lte":new Date(query.dateTo)
+                    }
+                }
             },
             {
                 "$project": {
@@ -874,12 +885,13 @@ module.exports = class DailyOperationManager extends BaseManager {
                     "year": { "$year": "$dateOutput" },
                     "month": { "$month": "$dateOutput" },
                     "day": { "$dayOfMonth": "$dateOutput" },
+                    "date": { "$substr": ["$dateOutput", 0, 10] },
                 }
             },
 
             {
                 "$group": {
-                    "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day","dateOutput":"$dateOutput" },
+                    "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day", "date": "$date" },
                     "totalBadOutput": { "$sum": "$badOutput" },
                     "totalGoodOutput": { "$sum": "$goodOutput" },
                 }
