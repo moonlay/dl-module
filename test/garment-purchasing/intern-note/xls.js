@@ -114,3 +114,30 @@ it('#06. should success when generate data to Excel Report with date', function 
             done(e);
         });
 });
+
+var resultForExcelTest = {};
+it('#07. should success when create report', function (done) {
+    var info = {};
+
+    instanceManager.getDataMonitoringAll(info)
+        .then(result => {
+             result.should.instanceof(Object);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#08. should success when get data for Excel Report', function (done) {
+    var query = {};
+
+    instanceManager.getXlsDataMonitoringAll(resultForExcelTest, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
