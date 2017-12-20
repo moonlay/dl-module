@@ -177,6 +177,68 @@ it("#08.(2) should success create Excel with id", function (done) {
         });
 });
 
+it("#08.(3) should success create Excel with id", function (done) {
+    var _idExcel = [];
+    for (var temp of dataReport.data) {
+        temp.kanban=null;
+        temp.machine=null;
+        temp.dateInput=null;
+        temp.timeInput=null;
+        temp.input=null;
+        temp.dateOutput=null;
+        temp.timeOutput=null;
+        temp.goodOutput=null;
+        temp.badOutput=null;
+        temp.badOutputDescription=null;
+        temp.action=null;
+        _idExcel.push(temp)
+    }
+
+    dataReport.data=_idExcel;
+
+    dailyOperationManager.getXls(dataReport, { "dateFrom": moment(dateBefore).format('YYYY-MM-DD')}, 7)
+        .then((item) => {
+            item.should.have.property('data');
+            item.should.have.property('options');
+            item.should.have.property('name');
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#08.(4) should success create Excel with id", function (done) {
+    var _idExcel = [];
+    for (var temp of dataReport.data) {
+        temp.kanban=null;
+        temp.machine=null;
+        temp.dateInput=null;
+        temp.timeInput=null;
+        temp.input=null;
+        temp.dateOutput=null;
+        temp.timeOutput=null;
+        temp.goodOutput=null;
+        temp.badOutput=null;
+        temp.badOutputDescription=null;
+        temp.action=null;
+        _idExcel.push(temp)
+    }
+
+    dataReport.data=_idExcel;
+
+    dailyOperationManager.getXls(dataReport, {"dateTo": moment(dateNow).format('YYYY-MM-DD') }, 7)
+        .then((item) => {
+            item.should.have.property('data');
+            item.should.have.property('options');
+            item.should.have.property('name');
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 var dailyOutput;
 it("#09. should success when create data output", function (done) {
     dataUtil.getNewData("output")
