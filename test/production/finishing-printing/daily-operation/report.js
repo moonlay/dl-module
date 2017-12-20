@@ -195,10 +195,10 @@ it("#11. should success when get report daily machine", function (done) {
 
     var monthList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     queryDailyMachine.area = "Area Pre Treatment";
-    queryDailyMachine.year = new Date().getFullYear();
-    queryDailyMachine.month = monthList[new Date().getMonth()]
+    queryDailyMachine.dateFrom = new Date();
+    queryDailyMachine.dateTo = new Date()
     queryDailyMachine.order = {
-        "_id.day": 1
+        "_id.date": 1
     };
 
     dailyOperationManager.getDailyMachine(queryDailyMachine)
