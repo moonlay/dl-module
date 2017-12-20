@@ -462,7 +462,7 @@ module.exports = class InternNoteManager extends BaseManager {
                     var totalReceived = purchaseOrder.items
                         .map(poItem => {
                             var total = poItem.fulfillments
-                                .map(fulfillment => fulfillment.unitReceiptNoteDeliveredQuantity)
+                                .map(fulfillment => fulfillment.interNoteQuantity)
                                 .reduce((prev, curr, index) => {
                                     return prev + curr;
                                 }, 0);
@@ -535,7 +535,7 @@ module.exports = class InternNoteManager extends BaseManager {
                             var poStatus = purchaseOrder.items
                                 .map((item) => {
                                     return item.fulfillments
-                                        .map((fulfillment) => fulfillment.hasOwnProperty("unitReceiptNoteNo"))
+                                        .map((fulfillment) => fulfillment.hasOwnProperty("interNoteNo"))
                                         .reduce((prev, curr, index) => {
                                             return prev || curr
                                         }, false);
@@ -543,7 +543,7 @@ module.exports = class InternNoteManager extends BaseManager {
                                 .reduce((prev, curr, index) => {
                                     return prev || curr
                                 }, false);
-                            if (purchaseOrder.status.value <= 7) {
+                            if (purchaseOrder.status.value <= 9) {
                                 purchaseOrder.status = poStatus ? poStatusEnum.RECEIVING : (deliveryOrder.isClosed ? poStatusEnum.ARRIVED : poStatusEnum.ARRIVING);
                             }
 

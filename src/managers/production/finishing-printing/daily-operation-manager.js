@@ -70,7 +70,6 @@ module.exports = class DailyOperationManager extends BaseManager {
         // }
         // query["$and"] = [_default, keywordFilter, pagingFilter];
         query["$and"] = [_default, pagingFilter];
-
         return query;
     }
 
