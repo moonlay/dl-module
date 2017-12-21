@@ -70,7 +70,6 @@ module.exports = class DailyOperationManager extends BaseManager {
         // }
         // query["$and"] = [_default, keywordFilter, pagingFilter];
         query["$and"] = [_default, pagingFilter];
-        
         return query;
     }
 
@@ -843,7 +842,14 @@ module.exports = class DailyOperationManager extends BaseManager {
 
     getDailyMachine(query) {
         var area = query.area;
-        var date = query.month + "," + query.year;
+
+        // var date = {
+        //     "dateOutput": {
+        //         "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(query.dateFrom))),
+        //         "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(query.dateTo)))
+        //     },
+        // };
+
         var order = query.order;
         var temp;
 
@@ -859,7 +865,12 @@ module.exports = class DailyOperationManager extends BaseManager {
 
         return this.collection.aggregate([
             {
-                "$match": { "_deleted": false, "step.processArea": area, "type": "output", "dateOutput": { "$gte": new Date(date) } }
+                "$match": {
+                    "_deleted": false, "step.processArea": area, "type": "output", "dateOutput": {
+                        "$gte": new Date(query.dateFrom),
+                        "$lte":new Date(query.dateTo)
+                    }
+                }
             },
             {
                 "$project": {
@@ -874,12 +885,13 @@ module.exports = class DailyOperationManager extends BaseManager {
                     "year": { "$year": "$dateOutput" },
                     "month": { "$month": "$dateOutput" },
                     "day": { "$dayOfMonth": "$dateOutput" },
+                    "date": { "$substr": ["$dateOutput", 0, 10] },
                 }
             },
 
             {
                 "$group": {
-                    "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day","dateOutput":"$dateOutput" },
+                    "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day", "date": "$date" },
                     "totalBadOutput": { "$sum": "$badOutput" },
                     "totalGoodOutput": { "$sum": "$goodOutput" },
                 }
@@ -1080,5 +1092,54 @@ module.exports = class DailyOperationManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, deletedIndex]);
+    }
+
+    read(paging) {
+        var _paging = Object.assign({
+            page: 1,
+            size: 20,
+            order: {},
+            filter: {},
+            select: []
+        }, paging);
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                var query = this._getQuery(_paging);
+
+                this.collection
+                    .where(query)
+                    .select(_paging.select)
+                    .page(_paging.page, _paging.size)
+                    .order(_paging.order)
+
+                var q = this.collection.query();
+                var hint = {};
+
+                if(Object.getOwnPropertyNames(q.selector["$and"][1]).length ===  0) {
+                    hint._deleted = 1;    
+                }
+
+                return Promise.all([this.collection.find(q.selector).hint(hint).count(), this.collection._load(q)])
+                    .then((results) => {
+                        var count = results[0];
+                        var docs = results[1];
+            
+                        this.collection._query = null;
+                        var result = {
+                            data: docs,
+                            count: docs.length,
+                            size: q.limit,
+                            total: count,
+                            page: q.offset / q.limit + 1
+                        };
+                        if (q.fields && q.fields instanceof Array) {
+                            result.select = q.fields;
+                        }
+                        result.order = q.sort;
+                        result.filter = q.filter;
+                        return Promise.resolve(result);
+                    });
+            });
     }
 };
