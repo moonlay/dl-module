@@ -1222,7 +1222,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     //#endregion CRUD and Report
 
-    
     //#region order status xls
 
     getOrderStatusXls(result, query) {
@@ -1652,7 +1651,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                         if (kanban.currentStepIndex != kanban.instruction.steps.length) {
                             let dailyQuery = {
-                                 "_deleted": false,
+                                "_deleted": false,
                                 "kanban.code": kanban.code,
                                 "step._id": kanbanCurrentStepId,
                                 "type": "input",
@@ -1688,7 +1687,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                                     if (ObjectId.isValid(kanbanCurrStepId)) {
                                         let dailyQueryOutput = {
-                                           "_deleted": false,
+                                            "_deleted": false,
                                             "kanban.code": kanban.code,
                                             "step._id": kanbanCurrStepId,
                                             "type": "output",
