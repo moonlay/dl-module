@@ -133,6 +133,7 @@ it("#07. should success when get report with date parameter", function (done) {
         });
 });
 
+
 it("#08. should success when get data for Excel", function (done) {
     dailyOperationManager.getXls(dataReport, { "dateFrom": moment(dateBefore).format('YYYY-MM-DD'), "dateTo": moment(dateNow).format('YYYY-MM-DD') }, 7)
         .then((item) => {

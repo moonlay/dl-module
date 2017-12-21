@@ -888,7 +888,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                     "date": { "$substr": ["$dateOutput", 0, 10] },
                 }
             },
-
             {
                 "$group": {
                     "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day", "date": "$date" },
