@@ -1622,7 +1622,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 "$in": orderNumbers
             }
         };
-        
+
         let kanbanFields = {
             "code": 1,
             "currentStepIndex": 1,
@@ -1641,7 +1641,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var kanbans = kanbanResults;
 
                 let joinDailyOperations = kanbans.map((kanban) => {
-                    
+
                     kanban.currentStepIndex = Math.floor(kanban.currentStepIndex);
 
                     let currentStep = kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)];
@@ -1652,7 +1652,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                         if (kanban.currentStepIndex != kanban.instruction.steps.length) {
                             let dailyQuery = {
-                                "_deleted": false,
+                                 "_deleted": false,
                                 "kanban.code": kanban.code,
                                 "step._id": kanbanCurrentStepId,
                                 "type": "input",
@@ -1784,7 +1784,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     getShipmentDocuments(orderNumbers) {
-        
+
         return this.fpPackingShipmentCollection.aggregate([
             {
                 "$match": {
@@ -1832,12 +1832,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         }
                     }
                 }
-            
-            
+
+
                 return Promise.resolve(shipmentDocumentData);
             });
     }
 
     //#endregion New Status Order
-    
+
 }
