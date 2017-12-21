@@ -27,7 +27,6 @@ it("#01. should success when run etl dim staff", function (done) {
             done();
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });

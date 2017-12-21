@@ -586,16 +586,16 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             }
                         });
                     }
-                    /*if (createdBy !== undefined && createdBy !== "") {
-                        Object.assign(query, {
-                            _createdBy: createdBy
-                        });
-                    }
+                    // if (createdBy !== undefined && createdBy !== "") {
+                    //     Object.assign(query, {
+                    //         _createdBy: createdBy
+                    //     });
+                    // }
                     if (staffName !== undefined && staffName !== "") {
                         Object.assign(query, {
                             _createdBy: staffName
                         });
-                    }*/
+                    }
                     if (budgetId !== undefined && budgetId !== "undefined" && budgetId !== "") {
                         Object.assign(query, {
                             "purchaseRequest.budgetId": new ObjectId(budgetId)
@@ -1068,7 +1068,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             ).sort({ "_id": 1 })
                 .toArray(function (err, result) {
                     assert.equal(err, null);
-                    console.log(result);
                     resolve(result);
                 });
         });

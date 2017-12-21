@@ -23,7 +23,8 @@ module.exports = {
         quality: require('./data-util/master/quality-data-util'),
         termOfPayment: require('./data-util/master/term-of-payment-data-util'),
         company: require('./data-util/master/company-data-util'),
-        contact: require('./data-util/master/contact-data-util')
+        contact: require('./data-util/master/contact-data-util'),
+        kursBudget: require('./data-util/master/kurs-budget-data-util')
     },
     purchasing:{
         purchaseRequest: require('./data-util/purchasing/purchase-request-data-util'),

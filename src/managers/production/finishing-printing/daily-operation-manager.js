@@ -34,41 +34,42 @@ module.exports = class DailyOperationManager extends BaseManager {
             keywordFilter = {},
             query = {};
 
-        if (paging.keyword) {
-            var regex = new RegExp(paging.keyword, "i");
-            var orderNoFilter = {
-                "kanban.productionOrder.orderNo": {
-                    "$regex": regex
-                }
-            };
-            var colorFilter = {
-                "kanban.selectedProductionOrderDetail.color": {
-                    "$regex": regex
-                }
-            };
-            var colorTypeFilter = {
-                "kanban.selectedProductionOrderDetail.colorType.name": {
-                    "$regex": regex
-                }
-            };
-            var cartFilter = {
-                "kanban.cart.cartNumber": {
-                    "$regex": regex
-                }
-            };
-            var stepFilter = {
-                "step.process": {
-                    "$regex": regex
-                }
-            };
-            var machineFilter = {
-                "machine.name": {
-                    "$regex": regex
-                }
-            };
-            keywordFilter["$or"] = [orderNoFilter, colorFilter, colorTypeFilter, cartFilter, stepFilter, machineFilter];
-        }
-        query["$and"] = [_default, keywordFilter, pagingFilter];
+        // if (paging.keyword) {
+        //     var regex = new RegExp(paging.keyword, "i");
+        //     var orderNoFilter = {
+        //         "kanban.productionOrder.orderNo": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     var colorFilter = {
+        //         "kanban.selectedProductionOrderDetail.color": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     var colorTypeFilter = {
+        //         "kanban.selectedProductionOrderDetail.colorType.name": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     var cartFilter = {
+        //         "kanban.cart.cartNumber": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     var stepFilter = {
+        //         "step.process": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     var machineFilter = {
+        //         "machine.name": {
+        //             "$regex": regex
+        //         }
+        //     };
+        //     keywordFilter["$or"] = [orderNoFilter, colorFilter, colorTypeFilter, cartFilter, stepFilter, machineFilter];
+        // }
+        // query["$and"] = [_default, keywordFilter, pagingFilter];
+        query["$and"] = [_default, pagingFilter];
         return query;
     }
 
@@ -839,7 +840,104 @@ module.exports = class DailyOperationManager extends BaseManager {
         });
     }
 
+    getDailyMachine(query) {
+        var area = query.area;
 
+        // var date = {
+        //     "dateOutput": {
+        //         "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(query.dateFrom))),
+        //         "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(query.dateTo)))
+        //     },
+        // };
+
+        var order = query.order;
+        var temp;
+
+        if (JSON.stringify(order).includes(`"desc"`)) {
+            temp = JSON.stringify(order).replace(`"desc"`, -1);
+            order = JSON.parse(temp)
+        } else if (JSON.stringify(order).includes(`"asc"`)) {
+            temp = JSON.stringify(order).replace(`"asc"`, 1);
+            order = JSON.parse(temp)
+        } else {
+            order;
+        }
+
+        return this.collection.aggregate([
+            {
+                "$match": {
+                    "_deleted": false, "step.processArea": area, "type": "output", "dateOutput": {
+                        "$gte": new Date(query.dateFrom),
+                        "$lte":new Date(query.dateTo)
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_deleted": 1,
+                    "type": 1,
+                    "dateOutput": 1,
+                    "machine.name": 1,
+                    "machine.code": 1,
+                    "goodOutput": 1,
+                    "badOutput": 1,
+                    "step.processArea": 1,
+                    "year": { "$year": "$dateOutput" },
+                    "month": { "$month": "$dateOutput" },
+                    "day": { "$dayOfMonth": "$dateOutput" },
+                    "date": { "$substr": ["$dateOutput", 0, 10] },
+                }
+            },
+            {
+                "$group": {
+                    "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day", "date": "$date" },
+                    "totalBadOutput": { "$sum": "$badOutput" },
+                    "totalGoodOutput": { "$sum": "$goodOutput" },
+                }
+            }
+        ]
+        ).sort(order).toArray()
+    }
+
+    getXlsDailyMachine(result, query) {
+
+        var area = query.area;
+        var date = query.month + "," + query.year;
+
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for (var daily of result) {
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["dateOutput"] = daily._id.dateOutput ? moment(new Date(daily._id.dateOutput)).format(dateFormat) : '';
+            item["Machine Name"] = daily._id.machineName ? daily._id.machineName : '';
+            item["process Area"] = daily._id.processArea ? daily._id.processArea : '';
+            item["type"] = "output";
+            item["GoodOutput"] = daily.totalBadOutput ? daily.totalBadOutput : 0;
+            item["BadOutput"] = daily.totalGoodOutput ? daily.totalGoodOutput : 0;
+
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["dateOutput"] = "string";
+        xls.options["Machine Name"] = "string";
+        xls.options["process Area"] = "string";
+        xls.options["type"] = "string";
+        xls.options["GoodOutput"] = "number";
+        xls.options["BadOutput"] = "number";
+
+        xls.name = `Daily Operation Report ${moment(new Date(date)).format(dateFormat)} - ${area}.xlsx`;
+
+        return Promise.resolve(xls);
+    }
 
     getDailyOperationBadReport(query) {
         return new Promise((resolve, reject) => {
@@ -993,5 +1091,54 @@ module.exports = class DailyOperationManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, deletedIndex]);
+    }
+
+    read(paging) {
+        var _paging = Object.assign({
+            page: 1,
+            size: 20,
+            order: {},
+            filter: {},
+            select: []
+        }, paging);
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                var query = this._getQuery(_paging);
+
+                this.collection
+                    .where(query)
+                    .select(_paging.select)
+                    .page(_paging.page, _paging.size)
+                    .order(_paging.order)
+
+                var q = this.collection.query();
+                var hint = {};
+
+                if(Object.getOwnPropertyNames(q.selector["$and"][1]).length ===  0) {
+                    hint._deleted = 1;    
+                }
+
+                return Promise.all([this.collection.find(q.selector).hint(hint).count(), this.collection._load(q)])
+                    .then((results) => {
+                        var count = results[0];
+                        var docs = results[1];
+            
+                        this.collection._query = null;
+                        var result = {
+                            data: docs,
+                            count: docs.length,
+                            size: q.limit,
+                            total: count,
+                            page: q.offset / q.limit + 1
+                        };
+                        if (q.fields && q.fields instanceof Array) {
+                            result.select = q.fields;
+                        }
+                        result.order = q.sort;
+                        result.filter = q.filter;
+                        return Promise.resolve(result);
+                    });
+            });
     }
 };

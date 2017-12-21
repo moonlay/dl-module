@@ -36,19 +36,19 @@ it("#01. should error when create new data with empty data", function (done) {
         });
 });
 
-it("#02. should error when create new data with no details", function (done) {
+it("#02. should error when create new data with no items", function (done) {
     dataUtil.getNewData()
         .then((data) => {
-            data.details = [];
+            data.items = [];
             manager.create(data)
                 .then((id) => {
-                    done("should error when create new data with no details");
+                    done("should error when create new data with no items");
                 })
                 .catch((e) => {
                     e.name.should.equal("ValidationError");
                     e.should.have.property("errors");
                     e.errors.should.instanceof(Object);
-                    e.errors.should.have.property("details");
+                    e.errors.should.have.property("items");
                     done();
                 });
         })
@@ -79,7 +79,7 @@ it("#03. should error when create new data with deliveryDate < bookingDate ", fu
         });
 });
 
-it("#04. should error when create new data with orderQuantity not equal total quantity in details", function (done) {
+it("#04. should error when create new data with orderQuantity not equal total quantity in items", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             data.orderQuantity=2000;
@@ -100,3 +100,24 @@ it("#04. should error when create new data with orderQuantity not equal total qu
         });
 });
 
+it("#05. should error when create new data with double comodity", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            data.orderQuantity=1500;
+            data.items[2]=data.items[1];
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with double comodity");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("items");
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

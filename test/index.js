@@ -103,6 +103,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/DEAL TRACKING REASON', './master/deal-tracking-reason');
     test('@MASTER/SPINNING YARN', './master/spinning-yarn');
     test('@MASTER/HOLIDAY', './master/holiday');
+    test('@MASTER/KURS BUDGET', './master/kurs-budget');
     
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
@@ -171,5 +172,7 @@ describe('#dl-module', function (done) {
     test('@GARMENT MASTER PLAN/WORKING-HOURS-STANDARD', './garment-master-plan/working-hours-standard');
     test('@GARMENT MASTER PLAN/STYLE', './garment-master-plan/style');
     test('@GARMENT MASTER PLAN/STANDARD-HOUR', './garment-master-plan/standard-hour');
+    test('@GARMENT MASTER PLAN/MASTER PLAN COMODITY', './garment-master-plan/master-plan-comodity');
+    test('@GARMENT MASTER PLAN/MASTER PLAN', './garment-master-plan/master-plan');
 
 });

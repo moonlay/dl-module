@@ -7,22 +7,18 @@ var map = DLModels.map;
 var BookingOrder = DLModels.garmentMasterPlan.BookingOrder;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
-var StyleManager = require('./style-manager');
-var StandardHourManager = require('./standard-hour-manager');
-var WeeklyPlanManager = require('./weekly-plan-manager');
+var ComodityManager = require('./master-plan-comodity-manager');
+//var MasterPlanManager = require('./master-plan-manager');
 var GarmentBuyerManager = require('../master/garment-buyer-manager');
-var UnitManager = require('../master/unit-manager');
 var generateCode = require("../../utils/code-generator");
 
 module.exports = class BookingOrderManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentMasterPlan.collection.BookingOrder);
-        this.styleManager = new StyleManager(db, user);
-        this.standardHourManager = new StandardHourManager(db, user);
-        this.weeklyPlanManager = new WeeklyPlanManager(db, user);
+        this.comodityManager = new ComodityManager(db, user);
+        //this.masterPlanManager = new MasterPlanManager(db, user);
         this.garmentBuyerManager = new GarmentBuyerManager(db, user);
-        this.unitManager = new UnitManager(db, user);
     }
 
     _getQuery(paging) {
@@ -45,12 +41,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            var styleFilter = {
-                "style.name": {
-                    "$regex": regex
-                }
-            };
-            keywordFilter["$or"] = [codeFilter, buyerFilter, styleFilter];
+            keywordFilter["$or"] = [codeFilter, buyerFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -77,32 +68,23 @@ module.exports = class BookingOrderManager extends BaseManager {
             _deleted: false
         });
 
-        var getStyle = valid.styleId && ObjectId.isValid(valid.styleId) ? this.styleManager.getSingleByIdOrDefault(new ObjectId(valid.styleId)) : Promise.resolve(null);
+        //var getComodity = valid.styleId && ObjectId.isValid(valid.styleId) ? this.styleManager.getSingleByIdOrDefault(new ObjectId(valid.styleId)) : Promise.resolve(null);
         var getBuyer = valid.garmentBuyerId && ObjectId.isValid(valid.garmentBuyerId) ? this.garmentBuyerManager.getSingleByIdOrDefault(new ObjectId(valid.garmentBuyerId)) : Promise.resolve(null);
-        var getSH = valid.standardHourId && ObjectId.isValid(valid.standardHourId) ? this.standardHourManager.getSingleByIdOrDefault(new ObjectId(valid.standardHourId)) : Promise.resolve(null);
-
-        valid.details = valid.details || [];
-        var getWeeklyPlan = [];
-        var getUnit = [];
-        for (var detail of valid.details) {
-            if(!detail.weeklyPlanId)
-                detail.weeklyPlanId=detail.weeklyPlan && ObjectId.isValid(detail.weeklyPlan._id) ? detail.weeklyPlan._id : "";
-            var week =detail.weeklyPlan && ObjectId.isValid(detail.weeklyPlanId) ? this.weeklyPlanManager.getSingleByIdOrDefault(detail.weeklyPlanId) : Promise.resolve(null);
-            getWeeklyPlan.push(week);
-            if(!detail.unitId)
-                detail.unitId=detail.unit && ObjectId.isValid(detail.unit._id) ? detail.unit._id : "";
-            var unit = detail.unit && ObjectId.isValid(detail.unitId) ? this.unitManager.getSingleByIdOrDefault(detail.unitId) : Promise.resolve(null);
-            getUnit.push(unit);
-        }
+       
+        // valid.details = valid.details || [];
+        // var getWeeklyPlan = [];
+        // var getUnit = [];
+        // for (var detail of valid.details) {
+        //     if(!detail.weeklyPlanId)
+        //         detail.weeklyPlanId=detail.weeklyPlan && ObjectId.isValid(detail.weeklyPlan._id) ? detail.weeklyPlan._id : "";
+        //     var week =detail.weeklyPlan && ObjectId.isValid(detail.weeklyPlanId) ? this.weeklyPlanManager.getSingleByIdOrDefault(detail.weeklyPlanId) : Promise.resolve(null);
+        //     getWeeklyPlan.push(week);
+        // }
         // 2. begin: Validation.
-        return Promise.all([getBooking,getStyle,getBuyer,getSH].concat(getWeeklyPlan, getUnit))
+        return Promise.all([getBooking,getBuyer])
             .then(results => {
                 var duplicateBooking = results[0];
-                var _style=results[1];
-                var _buyer=results[2];
-                var _sh=results[3];
-                var _week = results.slice(4, 4 + getWeeklyPlan.length);
-                var _unit = results.slice(4 + getWeeklyPlan.length, results.length);
+                var _buyer=results[1];
 
 
                 if(!valid.code || valid.code === "")
@@ -116,32 +98,22 @@ module.exports = class BookingOrderManager extends BaseManager {
                 if(!valid.deliveryDate || valid.deliveryDate === '')
                     errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.isRequired:%s is required", i18n.__("BookingOrder.deliveryDate._:DeliveryDate"));
 
-                if(!valid.styleId || valid.styleId==='')
-                    errors["style"] = i18n.__("BookingOrder.style.isRequired:%s is required", i18n.__("BookingOrder.style._:Style"));
-                else if(!_style)
-                    errors["style"] = i18n.__("BookingOrder.style.isNotFound:%s is not found", i18n.__("BookingOrder.style._:Style"));
-
                 if(!valid.garmentBuyerId || valid.garmentBuyerId==='')
                     errors["buyer"] = i18n.__("BookingOrder.buyer.isRequired:%s is required", i18n.__("BookingOrder.buyer._:Buyer"));
                 else if(!_buyer)
                     errors["buyer"] = i18n.__("BookingOrder.buyer.isNotFound:%s is not found", i18n.__("BookingOrder.buyer._:Buyer"));
 
-                if(!valid.standardHourId || valid.standardHourId==='')
-                    errors["standardHour"] = i18n.__("BookingOrder.standardHour.isRequired:%s is required", i18n.__("BookingOrder.standardHour._:StandardHour"));
-                else if(!_sh)
-                    errors["standardHour"] = i18n.__("BookingOrder.standardHour.isNotFound:%s is not found", i18n.__("BookingOrder.standardHour._:StandardHour"));
-                
                 if(!valid.orderQuantity || valid.orderQuantity<=0)
                     errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.isRequired:%s is required", i18n.__("BookingOrder.orderQuantity._:OrderQuantity"));
                 else{
                     var totalqty = 0;
-                    if (valid.details.length > 0) {
-                        for (var i of valid.details) {
+                    if (valid.items.length > 0) {
+                        for (var i of valid.items) {
                             totalqty += i.quantity;
                         }
                     }
                     if (valid.orderQuantity != totalqty) {
-                        errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal SUM quantity in details", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
+                        errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal SUM quantity in items", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
 
                     }
                 }
@@ -157,61 +129,56 @@ module.exports = class BookingOrderManager extends BaseManager {
                     }
                 }
 
-                valid.details = valid.details || [];
-                if (valid.details && valid.details.length <= 0) {
-                    errors["details"] = i18n.__("BookingOrder.details.isRequired:%s is required", i18n.__("BookingOrder.details._:Details")); 
+                valid.items = valid.items || [];
+                if (valid.items && valid.items.length <= 0) {
+                    errors["items"] = i18n.__("BookingOrder.items.isRequired:%s is required", i18n.__("BookingOrder.items._:items")); 
                 }
-                else if (valid.details.length > 0) {
-                    var detailErrors = [];
+                else if (valid.items.length > 0) {
+                    var itemErrors = [];
                     var totalqty = 0;
-                    for (var i of valid.details) {
+                    for (var i of valid.items) {
                         totalqty += i.quantity;
                     }
-                    for (var detail of valid.details) {
-                        var detailError = {};
-                        if (!detail.week)
-                            detailError["week"] = i18n.__("BookingOrder.details.week.isRequired:%s is required", i18n.__("BookingOrder.details.week._:Week")); 
-                        
-                        if (!detail.weeklyPlanId ||detail.weeklyPlanId=="")
-                            detailError["weeklyPlan"] = i18n.__("BookingOrder.details.weeklyPlan.isRequired:%s is required", i18n.__("BookingOrder.details.weeklyPlan._:WeeklyPlan")); 
-                        else{
-                            if(!detail.weeklyPlanId)
-                                detail.weeklyPlanId=new ObjectId(detail.weeklyPlan._id);
-                            if(detail.weeklyPlan)
-                                detail.weeklyPlanYear=detail.weeklyPlan.year;
-                        }
-                        if (!detail.unitId||detail.unitId=="")
-                            detailError["unit"] = i18n.__("BookingOrder.details.unit.isRequired:%s is required", i18n.__("BookingOrder.details.unit._:Week")); 
+                    var index=0;
+                    for (var item of valid.items) {
+                        item.code= item.code ? item.code: generateCode();
+                        var itemError = {};
 
-                        if (!detail.quantity || detail.quantity <=0)
-                            detailError["quantity"] = i18n.__("BookingOrder.details.quantity.isRequired:%s is required", i18n.__("BookingOrder.details.quantity._:Quantity")); 
+                        if(!item.masterPlanComodity){
+                            itemError["masterPlanComodity"] = i18n.__("BookingOrder.items.masterPlanComodity.isRequired:%s is required", i18n.__("BookingOrder.items.masterPlanComodity._:MasterPlanComodity")); 
+                        }
+                        else{
+                            item.masterPlanComodityId=new ObjectId(item.masterPlanComodity._id);
+
+                            var existComodity = valid.items.find((test, idx) => 
+                            item.masterPlanComodityId.toString() === test.masterPlanComodity._id.toString() && item.masterPlanComodityId.toString() === test.masterPlanComodity._id.toString() && index != idx);
+                        
+                            if(existComodity)
+                                itemError["masterPlanComodity"] = i18n.__("BookingOrder.items.masterPlanComodity.isExists:%s is already choosen", i18n.__("BookingOrder.items.masterPlanComodity._:MasterPlanComodity"));
+                            
+                        }
+                        
+                        if (!item.quantity || item.quantity <=0)
+                            itemError["quantity"] = i18n.__("BookingOrder.items.quantity.isRequired:%s is required", i18n.__("BookingOrder.items.quantity._:Quantity")); 
                         
                         if (valid.orderQuantity != totalqty)
-                            detailError["total"] = i18n.__("ProductionOrder.details.total.shouldNot:%s Total should equal Order Quantity", i18n.__("ProductionOrder.details.total._:Total"));
-
-                        if (Object.getOwnPropertyNames(detailError).length > 0)
-                        detailErrors.push(detailError);
+                            itemError["total"] = i18n.__("ProductionOrder.items.total.shouldNot:%s Total should equal Order Quantity", i18n.__("ProductionOrder.items.total._:Total"));
+                        
+                        index++;
+                        itemErrors.push(itemError);
                     }
-
+                    for (var itemError of itemErrors) {
+                        if (Object.getOwnPropertyNames(itemError).length > 0) {
+                            errors.items = itemErrors;
+                            break;
+                        }
+                    }
                     
                     
-                    if (detailErrors.length > 0)
-                        errors.details = detailErrors;
-
                 }
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
-                }
-
-                if(_style){
-                    valid.styleId=new ObjectId(_style._id);
-                    valid.style=_style;
-                }
-
-                if(_sh){
-                    valid.standardHourId=new ObjectId(_sh._id);
-                    valid.standardHour=_sh;
                 }
 
                 if(_buyer){
@@ -229,62 +196,28 @@ module.exports = class BookingOrderManager extends BaseManager {
             });
     }
 
-    // post(listBookingOrder) {
-    //     var getBookingByIds = [];
-    //     return new Promise((resolve, reject) => {
-    //         for (var bookingOrder of listBookingOrder) {
-    //             getBookingByIds.push(this.getSingleByIdOrDefault(bookingOrder._id));
-    //         }
-    //         Promise.all(getBookingByIds)
-    //             .then(validBookingOrder => {
-    //                 var jobUpdate = [];
-    //                 for (var booking of listBookingOrder) {
-    //                     booking.isConfirmed=true;
-    //                     jobUpdate.push(this.update(booking));
-    //                 }
-    //                 Promise.all(jobUpdate)
-    //                     .then(result => {
-    //                         resolve(result);
-    //                     })
-    //                     .catch(e => {
-    //                         reject(e);
-    //                     });
-
-    //             })
-    //             .catch(e => {
-    //                 reject(e);
-    //             });
-    //     });
-
-    // }
-
-    post(listBookingOrder) {
-        var getBookingById = listBookingOrder.map((bookingOrder) => this.getSingleByIdOrDefault(bookingOrder._id));
-        return Promise.all(getBookingById)
-            .then((bookingOrders) => {
-                var jobs=[];
-                for(var booking of bookingOrders){
-                    booking.isConfirmed=true;
-                    jobs.push(this.update(booking));
-                }
-                return Promise.all(jobs)
-                    .then((results) => 
-                    Promise.resolve(results))
-                // var jobs = bookingOrders.map((_bookingOrder) => {
-                //     return this._validate(_bookingOrder)
-                //         .then((bookingOrder) => {
-                //             bookingOrder.isPosted = true;
-                //             return this.update(bookingOrder);
-                //         })
-                //         .then((bookingOrders) => {
-                //             return Promise.all(jobs);
-                //         })
-                //         .then((bookingOrderIds) => {
-                //             return Promise.resolve(bookingOrderIds);
-                //         });
-                // });
+    cancelBooking(booking){
+        return this.getSingleById(booking._id)
+            .then((booking) => {
+                booking.isCanceled=true;
+                return this.update(booking)
+                .then((id) =>
+                    Promise.resolve(id)
+                    );
             });
     }
+
+    // confirmBooking(booking){
+    //     return this.getSingleById(booking._id)
+    //         .then((booking) => {
+    //             booking.isConfirmed=true;
+    //             return this.update(booking)
+    //             .then((id) =>
+    //                 Promise.resolve(id)
+    //                 );
+    //         });
+    // }
+
 
     _createIndexes() {
         var dateIndex = {

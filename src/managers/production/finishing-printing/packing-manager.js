@@ -366,7 +366,9 @@ module.exports = class PackingManager extends BaseManager {
             query = {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo)) : (new Date());
+        dateFrom.setHours(dateFrom.getHours() - info.offset);
+        dateTo.setHours(dateTo.getHours() - info.offset);
         var now = new Date();
 
         if (info.code && info.code != '') {
@@ -419,7 +421,7 @@ module.exports = class PackingManager extends BaseManager {
                 item["Konstruksi"] = packing.construction ? packing.construction : '';
                 item["Design/Motif"] = packing.designNumber ? packing.designNumber : '';
                 item["Warna yang diminta"] = packing.colorName ? packing.colorName : '';
-                item["Tanggal"] = packing.date ? moment(new Date(packing.date)).format(dateFormat) : '';
+                item["Tanggal"] = packing.date ? moment(new Date(packing.date)).add(query.offset, 'h').format(dateFormat) : '';
 
 
                 item["Lot"] = packingItem.lot ? packingItem.lot : '';
