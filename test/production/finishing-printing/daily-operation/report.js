@@ -133,8 +133,101 @@ it("#07. should success when get report with date parameter", function (done) {
         });
 });
 
-it("#08. should success when get data for Excel", function (done) {
+// it("#08. should success when get data for Excel", function (done) {
+//     dailyOperationManager.getXls(dataReport, { "dateFrom": moment(dateBefore).format('YYYY-MM-DD'), "dateTo": moment(dateNow).format('YYYY-MM-DD') }, 7)
+//         .then((item) => {
+//             item.should.have.property('data');
+//             item.should.have.property('options');
+//             item.should.have.property('name');
+//             done();
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
+
+it("#08.(2) should success create Excel with id", function (done) {
+    var _idExcel = [];
+    for (var temp of dataReport.data) {
+        temp.kanban=null;
+        temp.machine=null;
+        temp.dateInput=null;
+        temp.timeInput=null;
+        temp.input=null;
+        temp.dateOutput=null;
+        temp.timeOutput=null;
+        temp.goodOutput=null;
+        temp.badOutput=null;
+        temp.badOutputDescription=null;
+        temp.action=null;
+        _idExcel.push(temp)
+    }
+
+    dataReport.data=_idExcel;
+
     dailyOperationManager.getXls(dataReport, { "dateFrom": moment(dateBefore).format('YYYY-MM-DD'), "dateTo": moment(dateNow).format('YYYY-MM-DD') }, 7)
+        .then((item) => {
+            item.should.have.property('data');
+            item.should.have.property('options');
+            item.should.have.property('name');
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#08.(3) should success create Excel with id", function (done) {
+    var _idExcel = [];
+    for (var temp of dataReport.data) {
+        temp.kanban=null;
+        temp.machine=null;
+        temp.dateInput=null;
+        temp.timeInput=null;
+        temp.input=null;
+        temp.dateOutput=null;
+        temp.timeOutput=null;
+        temp.goodOutput=null;
+        temp.badOutput=null;
+        temp.badOutputDescription=null;
+        temp.action=null;
+        _idExcel.push(temp)
+    }
+
+    dataReport.data=_idExcel;
+
+    dailyOperationManager.getXls(dataReport, { "dateFrom": moment(dateBefore).format('YYYY-MM-DD')}, 7)
+        .then((item) => {
+            item.should.have.property('data');
+            item.should.have.property('options');
+            item.should.have.property('name');
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#08.(4) should success create Excel with id", function (done) {
+    var _idExcel = [];
+    for (var temp of dataReport.data) {
+        temp.kanban=null;
+        temp.machine=null;
+        temp.dateInput=null;
+        temp.timeInput=null;
+        temp.input=null;
+        temp.dateOutput=null;
+        temp.timeOutput=null;
+        temp.goodOutput=null;
+        temp.badOutput=null;
+        temp.badOutputDescription=null;
+        temp.action=null;
+        _idExcel.push(temp)
+    }
+
+    dataReport.data=_idExcel;
+
+    dailyOperationManager.getXls(dataReport, {"dateTo": moment(dateNow).format('YYYY-MM-DD') }, 7)
         .then((item) => {
             item.should.have.property('data');
             item.should.have.property('options');
@@ -197,7 +290,7 @@ it("#11. should success when get report daily machine", function (done) {
     var temp = new Date().getFullYear() + 1;
     queryDailyMachine.area = "Area Pre Treatment";
     queryDailyMachine.dateFrom = "1900-01-01";
-    queryDailyMachine.dateTo = ""+temp+"-01-01";
+    queryDailyMachine.dateTo = "" + temp + "-01-01";
     queryDailyMachine.order = {
         "_id.date": 1
     };
@@ -250,7 +343,12 @@ it("#13. should success when get report daily machine with order desc", function
 
 it("#14. should success when get report with date parameter", function (done) {
 
-    dailyOperationManager.getXlsDailyMachine(xlsDailyMachine, queryDailyMachine)
+    var dataXls = {}
+    dataXls = {
+        info: xlsDailyMachine
+    }
+
+    dailyOperationManager.getXlsDailyMachine(dataXls, queryDailyMachine)
         .then((result) => {
             result.data.should.instanceof(Array);
             result.data.length.should.not.equal(0);

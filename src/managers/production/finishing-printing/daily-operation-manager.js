@@ -902,9 +902,6 @@ module.exports = class DailyOperationManager extends BaseManager {
 
     getXlsDailyMachine(result, query) {
 
-        var area = query.area;
-        var date = query.month + "," + query.year;
-
         var xls = {};
         xls.data = [];
         xls.options = [];
@@ -913,16 +910,16 @@ module.exports = class DailyOperationManager extends BaseManager {
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
 
-        for (var daily of result) {
+        for (var daily of result.info) {
             index++;
             var item = {};
             item["No"] = index;
-            item["dateOutput"] = daily._id.dateOutput ? moment(new Date(daily._id.dateOutput)).format(dateFormat) : '';
-            item["Machine Name"] = daily._id.machineName ? daily._id.machineName : '';
-            item["process Area"] = daily._id.processArea ? daily._id.processArea : '';
+            item["dateOutput"] = moment(new Date(daily._id.date)).format(dateFormat);
+            item["Machine Name"] = daily._id.machineName;
+            item["process Area"] = daily._id.processArea;
             item["type"] = "output";
-            item["GoodOutput"] = daily.totalBadOutput ? daily.totalBadOutput : 0;
-            item["BadOutput"] = daily.totalGoodOutput ? daily.totalGoodOutput : 0;
+            item["GoodOutput"] = daily.totalGoodOutput;
+            item["BadOutput"] = daily.totalBadOutput;
 
             xls.data.push(item);
         }
@@ -935,7 +932,7 @@ module.exports = class DailyOperationManager extends BaseManager {
         xls.options["GoodOutput"] = "number";
         xls.options["BadOutput"] = "number";
 
-        xls.name = `Daily Operation Report ${moment(new Date(date)).format(dateFormat)} - ${area}.xlsx`;
+        xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)} -  ${moment(new Date(query.dateTo)).format(dateFormat)} - ${query.area}.xlsx`;
 
         return Promise.resolve(xls);
     }
@@ -1019,15 +1016,15 @@ module.exports = class DailyOperationManager extends BaseManager {
             index++;
             var item = {};
             item["No"] = index;
-            item["No Order"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.orderNo : '';
+            item["No Order"] = daily.kanban ? daily.kanban.productionOrder.orderNo : '';
             item["No Kereta"] = daily.kanban ? daily.kanban.cart.cartNumber : '';
             item["Reproses"] = daily.kanban ? daily.kanban.isReprocess : '';
             item["Mesin"] = daily.machine ? daily.machine.name : '';
             item["Step Proses"] = daily.machine ? daily.step.process : '';
-            item["Material"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.material.name : '';
-            item["Warna"] = daily.kanban.selectedProductionOrderDetail ? daily.kanban.selectedProductionOrderDetail.colorType ? `${daily.kanban.selectedProductionOrderDetail.colorType.name} ${daily.kanban.selectedProductionOrderDetail.colorRequest}` : daily.kanban.selectedProductionOrderDetail.colorRequest : '';
-            item["Lebar Kain (inch)"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.materialWidth : '';
-            item["Jenis Proses"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.processType.name : '';
+            item["Material"] = daily.kanban ? daily.kanban.productionOrder.material.name : '';
+            item["Warna"] = daily.kanban ? daily.kanban.selectedProductionOrderDetail.colorType ? `${daily.kanban.selectedProductionOrderDetail.colorType.name} ${daily.kanban.selectedProductionOrderDetail.colorRequest}` : daily.kanban.selectedProductionOrderDetail.colorRequest : '';
+            item["Lebar Kain (inch)"] = daily.kanban ? daily.kanban.productionOrder.materialWidth : '';
+            item["Jenis Proses"] = daily.kanban ? daily.kanban.productionOrder.processType.name : '';
             item["Tgl Input"] = daily.dateInput ? moment(new Date(daily.dateInput)).format(dateFormat) : '';
             item["Jam Input"] = daily.timeInput ? moment(daily.timeInput).add(timezone, 'h').format('HH:mm') : '';
             item["input"] = daily.input ? daily.input : 0;
