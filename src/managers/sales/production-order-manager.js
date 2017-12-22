@@ -835,12 +835,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                         }, {
                             $project:
-                                {
-                                    "orderNo": "$kanban.productionOrder.orderNo",
-                                    "kanbanCode": "$kanban.code",
-                                    "colorCode": "$kanban.selectedProductionOrderDetail.code",
-                                    "input": 1
-                                }
+                            {
+                                "orderNo": "$kanban.productionOrder.orderNo",
+                                "kanbanCode": "$kanban.code",
+                                "colorCode": "$kanban.selectedProductionOrderDetail.code",
+                                "input": 1
+                            }
                         }
                     ]).toArray());
                 })
@@ -880,11 +880,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         }
                                     }, {
                                         $project:
-                                            {
-                                                "productionOrderNo": 1,
-                                                "kanbanCode": 1,
-                                                "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
-                                            }
+                                        {
+                                            "productionOrderNo": 1,
+                                            "kanbanCode": 1,
+                                            "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
+                                        }
                                     }
                                 ]).toArray());
                             }
@@ -897,7 +897,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         }
                         prodOrder.staffName = `${prodOrder.firstname} ${prodOrder.lastname}`;
                         prodOrder.no = no;
-                        var construction = `${prodOrder.materialName} / ${prodOrder.materialConstruction} / ${prodOrder.materialWidth}`;
+                        var construction = `${prodOrder.materialName} / ${prodOrder.materialConstruction} / ${prodOrder.materialWidth}`;
                         var designMotive = prodOrder.designMotive;
                         prodOrder.designMotive = designMotive;
                         prodOrder.construction = construction;
@@ -1106,17 +1106,17 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             // },
                             {
                                 $project:
-                                    {
-                                        "orderNo": "$kanban.productionOrder.orderNo",
-                                        "kanbanCode": "$kanban.code",
-                                        "machine": "$machine.name",
-                                        "color": "$kanban.selectedProductionOrderDetail.colorRequest",
-                                        // "step": "$kanban.instruction.steps.process",
-                                        "step": "$step.process",
-                                        "area": "$step.processArea",
-                                        // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
-                                        "qty": "$input"
-                                    }
+                                {
+                                    "orderNo": "$kanban.productionOrder.orderNo",
+                                    "kanbanCode": "$kanban.code",
+                                    "machine": "$machine.name",
+                                    "color": "$kanban.selectedProductionOrderDetail.colorRequest",
+                                    // "step": "$kanban.instruction.steps.process",
+                                    "step": "$step.process",
+                                    "area": "$step.processArea",
+                                    // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
+                                    "qty": "$input"
+                                }
                             },
                             // {
                             //     $match: { "cmp": true }
@@ -1166,11 +1166,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 { $unwind: "$fabricGradeTests" },
                                 {
                                     $group:
-                                        {
-                                            "_id": "$fabricGradeTests.grade",
-                                            "productionOrderNo": { "$first": "$productionOrderNo" },
-                                            "qty": { "$sum": "$fabricGradeTests.initLength" },
-                                        }
+                                    {
+                                        "_id": "$fabricGradeTests.grade",
+                                        "productionOrderNo": { "$first": "$productionOrderNo" },
+                                        "qty": { "$sum": "$fabricGradeTests.initLength" },
+                                    }
                                 }, {
                                     $sort: { "_id": 1 }
                                 }
