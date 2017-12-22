@@ -105,7 +105,7 @@ it('#04. purchase-orders supplier & currency should be the same with one in purc
             done();
         })
         .catch(e => {
-            done(e); 
+            done(e);
         });
 });
 
@@ -189,8 +189,8 @@ it('#06-3. should success when create new purchase-order-external with splitted 
             done(e);
         });
 });
-
-it('#07. should error when create new purchase-order-external with deal price grater than budget price', function (done) {
+var poId = {};
+it('#07-1. should error when create new purchase-order-external with deal price grater than budget price', function (done) {
     purchaseRequestDataUtil.getNewTestData()
         .then((res) => {
             return purchaseOrderManager.purchaseRequestManager.getPurchaseRequestByTag()
@@ -200,8 +200,25 @@ it('#07. should error when create new purchase-order-external with deal price gr
             return purchaseOrderManager.createMultiple(data)
         })
         .then(listId => {
-            return purchaseOrderManager.getSingleById(listId[0])
+            poId = listId[0];
+            done()
         })
+
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
+        });
+});
+
+it('#07-2. should error when create new purchase-order-external with deal price grater than budget price', function (done) {
+    purchaseOrderManager.getSingleById(poId)
         .then(poInternal => {
             var purchaseOrder = Object.assign({}, poInternal);
 
