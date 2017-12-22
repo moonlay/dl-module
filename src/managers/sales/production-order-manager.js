@@ -763,8 +763,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "orderQuantity": "$orderQuantity",
                                 "uom": "$uom.unit",
                                 "colorCode": "$details.code",
-                                // "colorTemplate": "$details.colorTemplate",
-                                // "colorRequest": "$details.colorRequest",
+                                "colorTemplate": "$details.colorTemplate",
+                                "colorRequest": "$details.colorRequest",
                                 // "colorType": "$details.colorType.name",
                                 "quantity": "$details.quantity",
                                 // "uomDetail": "$details.uom.unit",
@@ -799,8 +799,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "orderQuantity": "$orderQuantity",
                                 "uom": "$uom.unit",
                                 "colorCode": "$details.code",
-                                // "colorTemplate": "$details.colorTemplate",
-                                // "colorRequest": "$details.colorRequest",
+                                "colorTemplate": "$details.colorTemplate",
+                                "colorRequest": "$details.colorRequest",
                                 // "colorType": "$details.colorType.name",
                                 "quantity": "$details.quantity",
                                 // "uomDetail": "$details.uom.unit",
@@ -1037,14 +1037,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
         });
     }
 
-    getDetailReport(salesContractNo) {
+    getDetailReport(orderNo) {
         return new Promise((resolve, reject) => {
             var qry = Object.assign({});
             var data = {}
-            if (salesContractNo) {
+            if (orderNo) {
                 Object.assign(qry, {
-                    "salesContractNo": {
-                        "$regex": (new RegExp(salesContractNo, "i"))
+                    "orderNo": {
+                        "$regex": (new RegExp(orderNo, "i"))
                     }
                 });
             }
