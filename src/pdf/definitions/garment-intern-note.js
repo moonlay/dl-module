@@ -40,6 +40,12 @@ module.exports = function (data, offset) {
     dueDate = Math.max.apply(null, dueDates);
     paymentMethod = items[0].paymentMethod;
 
+    var usePayTax = data.items
+        .map((item) => item.isPayTax)
+        .reduce((prev, curr, index) => {
+            return prev && curr
+        }, true);
+
     var useIncomeTax = data.items
         .map((item) => item.useIncomeTax)
         .reduce((prev, curr, index) => {
@@ -180,7 +186,7 @@ module.exports = function (data, offset) {
                                 text: `${moment(dueDate).add(offset, 'h').format("DD MMM YYYY")}`,
                                 style: ['size06']
                             }]
-                        },{
+                        }, {
                             columns: [{
                                 width: '28%',
                                 text: 'Term Pembayaran',
@@ -294,8 +300,8 @@ module.exports = function (data, offset) {
         .reduce(function (prev, curr, index, arr) {
             return prev + curr;
         }, 0);
-    var incomeTaxTotal = useIncomeTax ? sumByCurrency * 0.1 : 0;
-    var vatTotal = useVat ? sumByCurrency * vatRate / 100 : 0;
+    var incomeTaxTotal = usePayTax ? (useIncomeTax ? sumByCurrency * 0.1 : 0) : 0;
+    var vatTotal = usePayTax ? (useVat ? sumByCurrency * vatRate / 100 : 0) : 0;
     var sumTotal = sumByCurrency - vatTotal + incomeTaxTotal + sumKoreksi;
 
     var subFooter = [

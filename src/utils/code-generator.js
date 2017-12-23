@@ -6,7 +6,7 @@ module.exports = function (context) {
 
     var salt = context ? context : new ObjectId().toString();
 
-    var hashids = new Hashids(salt, 8, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
+    var hashids = new Hashids(salt, 8, "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789");
     var now = moment();
     var begin = now.clone().startOf("month");
     var diff = now.diff(begin);
