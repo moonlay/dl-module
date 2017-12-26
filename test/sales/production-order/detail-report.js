@@ -53,12 +53,12 @@ it("#01. should success when delete all exist data production order", function (
         });
 });
 
-var salesContractNo;
+var orderNo;
 it("#02. should success when create new data Production Order", function (done) {
     var dataReport = [];
     dataUtil.getNewTestData(false)
         .then(dataResult => {
-            salesContractNo = dataResult.salesContractNo
+            orderNo = dataResult.orderNo
             done();
         })
         .catch(e => {
@@ -89,7 +89,7 @@ it("#04. should success when create fabric quality control", function (done) {
 });
 
 it("#05. should success get detail report", function (done) {
-    manager.getDetailReport(salesContractNo)
+    manager.getDetailReport(orderNo)
         .then(data => {
             data.should.be.instanceof(Object);
             data.productionOrders.should.be.instanceof(Array);
