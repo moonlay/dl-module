@@ -164,7 +164,7 @@ it('#10. should success when create report detail', function (done) {
 
     manager.getOrderStatusDetailReport(query, 7)
         .then((result) => {
-            resultForExcelTest = result;
+            resultForExcelTest.data = result;
             done();
         }).catch((e) => {
             done(e);
