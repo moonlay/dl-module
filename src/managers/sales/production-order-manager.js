@@ -835,12 +835,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                         }, {
                             $project:
-                            {
-                                "orderNo": "$kanban.productionOrder.orderNo",
-                                "kanbanCode": "$kanban.code",
-                                "colorCode": "$kanban.selectedProductionOrderDetail.code",
-                                "input": 1
-                            }
+                                {
+                                    "orderNo": "$kanban.productionOrder.orderNo",
+                                    "kanbanCode": "$kanban.code",
+                                    "colorCode": "$kanban.selectedProductionOrderDetail.code",
+                                    "input": 1
+                                }
                         }
                     ]).toArray());
                 })
@@ -880,11 +880,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                         }
                                     }, {
                                         $project:
-                                        {
-                                            "productionOrderNo": 1,
-                                            "kanbanCode": 1,
-                                            "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
-                                        }
+                                            {
+                                                "productionOrderNo": 1,
+                                                "kanbanCode": 1,
+                                                "orderQuantityQC": { $sum: "$fabricGradeTests.initLength" }
+                                            }
                                     }
                                 ]).toArray());
                             }
@@ -1106,17 +1106,17 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             // },
                             {
                                 $project:
-                                {
-                                    "orderNo": "$kanban.productionOrder.orderNo",
-                                    "kanbanCode": "$kanban.code",
-                                    "machine": "$machine.name",
-                                    "color": "$kanban.selectedProductionOrderDetail.colorRequest",
-                                    // "step": "$kanban.instruction.steps.process",
-                                    "step": "$step.process",
-                                    "area": "$step.processArea",
-                                    // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
-                                    "qty": "$input"
-                                }
+                                    {
+                                        "orderNo": "$kanban.productionOrder.orderNo",
+                                        "kanbanCode": "$kanban.code",
+                                        "machine": "$machine.name",
+                                        "color": "$kanban.selectedProductionOrderDetail.colorRequest",
+                                        // "step": "$kanban.instruction.steps.process",
+                                        "step": "$step.process",
+                                        "area": "$step.processArea",
+                                        // "cmp": { "$eq": ["$stepId", "$kanban.instruction.steps._id"] },
+                                        "qty": "$input"
+                                    }
                             },
                             // {
                             //     $match: { "cmp": true }
@@ -1166,11 +1166,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 { $unwind: "$fabricGradeTests" },
                                 {
                                     $group:
-                                    {
-                                        "_id": "$fabricGradeTests.grade",
-                                        "productionOrderNo": { "$first": "$productionOrderNo" },
-                                        "qty": { "$sum": "$fabricGradeTests.initLength" },
-                                    }
+                                        {
+                                            "_id": "$fabricGradeTests.grade",
+                                            "productionOrderNo": { "$first": "$productionOrderNo" },
+                                            "qty": { "$sum": "$fabricGradeTests.initLength" },
+                                        }
                                 }, {
                                     $sort: { "_id": 1 }
                                 }
@@ -1256,6 +1256,92 @@ module.exports = class ProductionOrderManager extends BaseManager {
         xls.options["Sudah Dikirim Ke Gudang"] = "number";
         xls.options["Sudah Dikirim Ke Buyer"] = "number";
         xls.options["Sisa Belum Turun Kanban"] = "number";
+        xls.options["Sisa Belum Kirim Ke Buyer"] = "number";
+
+        return Promise.resolve(xls);
+    }
+
+    getOrderStatusDetailXls(result, query) {
+        var xls = {};
+        var year = parseInt(query.year);
+        var month = query.month;
+        var orderType = query.orderType;
+        xls.data = [];
+        xls.options = [];
+        xls.name = `LAPORAN DETAIL STATUS ORDER ${orderType} BERDASARKAN DELIVERY BULAN ${month} TAHUN ${year}.xlsx`;
+
+        var grandTotal = {};
+        grandTotal["No"] = "";
+        grandTotal["Nomor SPP"] = "";
+        grandTotal["Konstruksi"] = "";
+        grandTotal["Jenis Proses"] = "";
+        grandTotal["Motif"] = "";
+        grandTotal["Warna"] = "";
+        grandTotal["Buyer"] = "";
+        grandTotal["Sales"] = "";
+        grandTotal["Tanggal Terima Order"] = "";
+        grandTotal["Permintaan Delivery"] = "Total";
+        grandTotal["Panjang SPP"] = 0;
+        grandTotal["Sisa Belum Turun Kanban"] = 0;
+        grandTotal["Belum Produksi"] = 0;
+        grandTotal["Sedang Produksi"] = 0;
+        grandTotal["Sudah Produksi"] = 0;
+        grandTotal["Sudah Dikirim Ke Gudang"] = 0;
+        grandTotal["Sudah Dikirim Ke Buyer"] = 0;
+        grandTotal["Sisa Belum Kirim Ke Buyer"] = 0;
+
+        for (var statusOrder of result.data) {
+
+            var item = {};
+            item["No"] = statusOrder.no ? statusOrder.no : '';
+            item["Nomor SPP"] = statusOrder.orderNo ? statusOrder.orderNo : '';
+            item["Konstruksi"] = statusOrder.constructionComposite ? statusOrder.constructionComposite : '';
+            item["Jenis Proses"] = statusOrder.processType ? statusOrder.processType : '';
+            item["Motif"] = statusOrder.designCode ? statusOrder.designCode : '';
+            item["Warna"] = statusOrder.colorRequest ? statusOrder.colorRequest : '';
+            item["Buyer"] = statusOrder.buyerName ? statusOrder.buyerName : '';
+            item["Sales"] = statusOrder.accountName ? statusOrder.accountName : '';
+            item["Tanggal Terima Order"] = statusOrder._createdDate ? moment(statusOrder._createdDate).format('DD/MM/YYYY') : '';
+            item["Permintaan Delivery"] = statusOrder.deliveryDate ? moment(statusOrder.deliveryDate).format('DD/MM/YYYY') : '';
+            item["Panjang SPP"] = statusOrder.orderQuantity ? Number(Number(statusOrder.orderQuantity).toFixed(2)) : 0;
+            item["Sisa Belum Turun Kanban"] = statusOrder.notInKanbanQuantity ? Number(Number(statusOrder.notInKanbanQuantity).toFixed(2)) : 0;
+            item["Belum Produksi"] = statusOrder.preProductionQuantity ? Number(Number(statusOrder.preProductionQuantity).toFixed(2)) : 0;
+            item["Sedang Produksi"] = statusOrder.onProductionQuantity ? Number(Number(statusOrder.onProductionQuantity).toFixed(2)) : 0;
+            item["Sudah Produksi"] = statusOrder.afterProductionQuantity ? Number(Number(statusOrder.afterProductionQuantity).toFixed(2)) : 0;
+            item["Sudah Dikirim Ke Gudang"] = statusOrder.storageQuantity ? Number(Number(statusOrder.storageQuantity).toFixed(2)) : 0;
+            item["Sudah Dikirim Ke Buyer"] = statusOrder.shipmentQuantity ? Number(Number(statusOrder.shipmentQuantity).toFixed(2)) : 0;
+            item["Sisa Belum Kirim Ke Buyer"] = statusOrder.diffOrderShipmentQuantity ? Number(Number(statusOrder.diffOrderShipmentQuantity).toFixed(2)) : 0;
+
+            grandTotal["Panjang SPP"] += Number(Number(statusOrder.orderQuantity).toFixed(2));
+            grandTotal["Sisa Belum Turun Kanban"] += Number(Number(statusOrder.notInKanbanQuantity).toFixed(2));
+            grandTotal["Belum Produksi"] += Number(Number(statusOrder.preProductionQuantity).toFixed(2));
+            grandTotal["Sedang Produksi"] += Number(Number(statusOrder.onProductionQuantity).toFixed(2));
+            grandTotal["Sudah Produksi"] += Number(Number(statusOrder.afterProductionQuantity).toFixed(2));
+            grandTotal["Sudah Dikirim Ke Gudang"] += Number(Number(statusOrder.storageQuantity).toFixed(2));
+            grandTotal["Sudah Dikirim Ke Buyer"] += Number(Number(statusOrder.shipmentQuantity).toFixed(2));
+            grandTotal["Sisa Belum Kirim Ke Buyer"] += Number(Number(statusOrder.diffOrderShipmentQuantity).toFixed(2));
+            xls.data.push(item);
+        }
+
+        xls.data.push(grandTotal);
+
+        xls.options["No"] = "string";
+        xls.options["Nomor SPP"] = "string";
+        xls.options["Konstruksi"] = "string";
+        xls.options["Jenis Proses"] = "string";
+        xls.options["Motif"] = "string";
+        xls.options["Warna"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Sales"] = "string";
+        xls.options["Tanggal Terima Order"] = "string";
+        xls.options["Permintaan Delivery"] = "string";
+        xls.options["Panjang SPP"] = "number";
+        xls.options["Sisa Belum Turun Kanban"] = "number";
+        xls.options["Belum Produksi"] = "number";
+        xls.options["Sedang Produksi"] = "number";
+        xls.options["Sudah Produksi"] = "number";
+        xls.options["Sudah Dikirim Ke Gudang"] = "number";
+        xls.options["Sudah Dikirim Ke Buyer"] = "number";
         xls.options["Sisa Belum Kirim Ke Buyer"] = "number";
 
         return Promise.resolve(xls);
@@ -1378,7 +1464,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                                         break;
                                                     }
                                                     case "output": {
-                                                        kanbanDailyQuantity = kanbanDaily.goodOutput;
+                                                        kanbanDailyQuantity = kanbanDaily.goodOutput + kanbanDaily.badOutput;
                                                         break;
                                                     }
                                                     case "kanban": {
@@ -1466,7 +1552,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                             datum.no = detailIndex++;
                             datum.orderNo = productionOrder.orderNo;
-                            datum.orderType = productionOrder.orderType.name;
+                            datum.constructionComposite = productionOrder.material.name + " " + productionOrder.materialConstruction.name + " - " + productionOrder.materialWidth;
                             datum.processType = productionOrder.processType.name;
 
                             if (orderType.toLowerCase() === "printing") {
@@ -1498,7 +1584,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                                 break;
                                             }
                                             case "output": {
-                                                kanbanDailyQuantity = kanbanDaily.goodOutput;
+                                                kanbanDailyQuantity = kanbanDaily.goodOutput + kanbanDaily.badOutput;
                                                 break;
                                             }
                                             case "kanban": {
@@ -1592,6 +1678,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     },
                     "orderQuantity": 1,
                     "orderNo": 1,
+                    "material.name": 1,
+                    "materialConstruction.name": 1,
+                    "materialWidth": 1,
                     "designCode": 1,
                     "details.colorRequest": 1,
                     "deliveryDate": 1,
@@ -1696,6 +1785,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                                         let dailyFieldsOutput = {
                                             "goodOutput": 1,
+                                            "badOutput": 1,
                                             "step.processArea": 1,
                                             "dateOutput": 1,
                                             "type": 1,
