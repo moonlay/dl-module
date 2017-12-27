@@ -398,6 +398,133 @@ module.exports = class PackingManager extends BaseManager {
             });
     }
 
+
+getQcgudangReport(query ){
+        return new Promise((resolve, reject) => {
+              var date = {
+                "date" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                },
+                "_deleted" : false,
+                "deliveryType" : { "$exists" : true, "$ne" : null}
+            };
+
+        this.collection.aggregate([ 
+            {$match : date},
+
+{
+    $unwind : "$items"
+},
+{
+    $group : {
+        "_id":"$date",
+        "ulanganSolid": {
+            "$sum": {
+                "$cond": [{
+                    $and :[{
+                        "$eq": ["$deliveryType", "ULANGAN"]
+                    },{
+                        $or : [{
+                            "$eq": ["$finishedProductType", "WHITE"]
+                        },{
+                            "$eq": ["$finishedProductType", "DYEING"]
+                        }]
+                    }]
+                },{
+                    $multiply : ["$items.length", "$items.quantity"]
+                }, 0]
+            }
+        },
+        "ulanganPrinting": {
+            "$sum": {
+                "$cond": [{
+                    $and :[{
+                        "$eq": ["$deliveryType", "ULANGAN"]
+                    },{
+                        $or : [{
+                            "$eq": ["$finishedProductType", "BATIK"]
+                        },{
+                            "$eq": ["$finishedProductType", "TEKSTIL"]
+                        }]
+                    }]
+                },{
+                    $multiply : ["$items.length", "$items.quantity"]
+                }, 0]
+            }
+        },
+        "white": {
+            "$sum": {
+                "$cond": [{
+                    $and :[{
+                        "$eq": ["$deliveryType", "BARU"]
+                    },{
+                        "$eq": ["$finishedProductType", "WHITE"]
+                    }]
+                },{
+                    $multiply : ["$items.length", "$items.quantity"]
+                }, 0]
+            }
+        },
+        "dyeing": {
+            "$sum": {
+                "$cond": [{
+                    $and :[{
+                        "$eq": ["$deliveryType", "BARU"]
+                    },{
+                        "$eq": ["$finishedProductType", "DYEING"]
+                    }]
+                },{
+                    $multiply : ["$items.length", "$items.quantity"]
+                }, 0]
+            }
+        },
+        "printing": {
+            "$sum": {
+                "$cond": [{
+                    $and :[{
+                        "$eq": ["$deliveryType", "BARU"]
+                    },{
+                        $or : [{
+                            "$eq": ["$finishedProductType", "BATIK"]
+                        },{
+                            "$eq": ["$finishedProductType", "TEKSTIL"]
+                        }]
+                    }]
+                },{
+                    $multiply : ["$items.length", "$items.quantity"]
+                }, 0]
+            }
+        },
+    }
+},
+
+{
+    $project : {
+        "date" : "$date",
+        "ulanganSolid" : "$ulanganSolid",
+        "white" : "$white",
+        "dyeing" : "$dyeing",
+        "ulanganPrinting" : "$ulanganPrinting",
+        "printing" : "$printing",
+        "jumlah" : { $sum: [ "$ulanganSolid", "$white", "$dyeing", "$ulanganPrinting", "$printing" ]  }
+    }
+}
+,{
+    $sort : {"_id" : 1}
+}
+
+             
+             ])
+
+            .toArray()
+            .then(result => {
+                resolve(result);
+            });
+        });
+    }
+
+
     getXls(result, query) {
         var xls = {};
         xls.data = [];
@@ -467,6 +594,53 @@ module.exports = class PackingManager extends BaseManager {
         return Promise.resolve(xls);
     }
 
+
+getXlss(result, query){
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        for(var daily of result.data){
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["Tanggal"] = daily._id ? moment(new Date(daily._id)).format(dateFormat) : '';
+            item["ulanganSolid"] = daily.ulanganSolid ? daily.ulanganSolid : '';
+            item["White"] = daily.white ? daily.white : '';
+            item["Dyeing"] = daily.dyeing ? daily.dyeing : '';
+            item["ulanganPrinting"] = daily.ulanganPrinting ? daily.ulanganPrinting : '';
+            item["Printing"] = daily.printing ? daily.printing : '';
+            item["Jumlah"] = daily.jumlah ? daily.jumlah : '';
+            xls.data.push(item);
+        }
+
+        xls.options["No"] = "number";
+        xls.options["Tanggal"] = "string";
+        xls.options["ulanganSolid"] = "string";
+        xls.options["White"] = "string";
+        xls.options["Dyeing"] = "string";
+        xls.options["ulanganPrinting"] = "string";
+        xls.options["Printing"] = "string";
+        xls.options["Jumlah"] = "string";
+
+        if(query.dateFrom && query.dateTo){
+            xls.name = `QC To Gudang Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(!query.dateFrom && query.dateTo){
+            xls.name = `QC To Gudang Report ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if(query.dateFrom && !query.dateTo){
+            xls.name = `QC To Gudang Report ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `QC To Gudang Report.xlsx`;
+
+        return Promise.resolve(xls);
+    }
 
     pdf(packing, offset) {
         return new Promise((resolve, reject) => {
