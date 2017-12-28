@@ -478,7 +478,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                         delete valid.timeOutput;
                         delete valid.goodOutput;
                         delete valid.badOutput;
-                        delete valid.action;
                         delete valid.badOutputReasons;
                     }
                     if (valid.type == "output") {
@@ -508,7 +507,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                             }
                             valid.badOutputReasons = items;
                         } else {
-                            delete valid.action;
                             delete valid.badOutputReasons;
                         }
                     }

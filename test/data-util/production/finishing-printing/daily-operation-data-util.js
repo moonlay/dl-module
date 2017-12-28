@@ -56,7 +56,7 @@ class DailyOperationDataUtil {
                                         badOutput: 2,
                                         type: "output",
                                         badOutputReasons: [{
-                                            length: 100,
+                                            length: 2,
                                             description: "Rusak",
                                             action: "Digudangkan",
                                             badOutputReasonId: reason._id,

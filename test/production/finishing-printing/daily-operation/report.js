@@ -159,7 +159,6 @@ it("#08.(2) should success create Excel with id", function (done) {
         temp.goodOutput=null;
         temp.badOutput=null;
         temp.badOutputDescription=null;
-        temp.action=null;
         _idExcel.push(temp)
     }
 
@@ -190,7 +189,6 @@ it("#08.(3) should success create Excel with id", function (done) {
         temp.goodOutput=null;
         temp.badOutput=null;
         temp.badOutputDescription=null;
-        temp.action=null;
         _idExcel.push(temp)
     }
 
@@ -221,7 +219,6 @@ it("#08.(4) should success create Excel with id", function (done) {
         temp.goodOutput=null;
         temp.badOutput=null;
         temp.badOutputDescription=null;
-        temp.action=null;
         _idExcel.push(temp)
     }
 
