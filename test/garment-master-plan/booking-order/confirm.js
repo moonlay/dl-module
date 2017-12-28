@@ -63,23 +63,23 @@ it(`#02. should success when get created data with id`, function (done) {
 });
 
 
-it("#02.5 should success when create new data masterPlan", function (done) {
-    dataUtilPlan.getNewData()
-        .then((data) => {
-        data.bookingOrderId = createdId;
-        manager.create(data)
-        .then((id) => {
-            id.should.be.Object();
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#02.5 should success when create new data masterPlan", function (done) {
+//     dataUtilPlan.getNewData()
+//         .then((data) => {
+//             data.bookingOrderId = createdId;
+//             manager.create(data)
+//             .then((id) => {
+//                 id.should.be.Object();
+//                 done();
+//             })
+//             .catch((e) => {
+//                 done(e);
+//             });
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
 it("#03. should error when confirm created data without data items", function (done) {
     createdData.type='confirm';
