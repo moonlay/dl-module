@@ -36,28 +36,28 @@ it("#01. should error when create new data with empty data", function (done) {
         });
 });
 
-it("#02. should error when create new data with no items", function (done) {
-    dataUtil.getNewData()
-        .then((data) => {
-            data.items = [];
-            manager.create(data)
-                .then((id) => {
-                    done("should error when create new data with no items");
-                })
-                .catch((e) => {
-                    e.name.should.equal("ValidationError");
-                    e.should.have.property("errors");
-                    e.errors.should.instanceof(Object);
-                    e.errors.should.have.property("items");
-                    done();
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#02. should error when create new data with no items", function (done) {
+//     dataUtil.getNewData()
+//         .then((data) => {
+//             data.items = [];
+//             manager.create(data)
+//                 .then((id) => {
+//                     done("should error when create new data with no items");
+//                 })
+//                 .catch((e) => {
+//                     e.name.should.equal("ValidationError");
+//                     e.should.have.property("errors");
+//                     e.errors.should.instanceof(Object);
+//                     e.errors.should.have.property("items");
+//                     done();
+//                 });
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
-it("#03. should error when create new data with deliveryDate < bookingDate ", function (done) {
+it("#02. should error when create new data with deliveryDate < bookingDate ", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             var targetDate=new Date();
@@ -79,23 +79,23 @@ it("#03. should error when create new data with deliveryDate < bookingDate ", fu
         });
 });
 
-it("#04. should error when create new data with orderQuantity not equal total quantity in items", function (done) {
-    dataUtil.getNewData()
-        .then((data) => {
-            data.orderQuantity=2000;
-            manager.create(data)
-                .then((id) => {
-                    done("should error when create new data with date greater than today");
-                })
-                .catch((e) => {
-                    e.name.should.equal("ValidationError");
-                    e.should.have.property("errors");
-                    e.errors.should.instanceof(Object);
-                    e.errors.should.have.property("orderQuantity");
-                    done();
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#04. should error when create new data with orderQuantity not equal total quantity in items", function (done) {
+//     dataUtil.getNewData()
+//         .then((data) => {
+//             data.orderQuantity=2000;
+//             manager.create(data)
+//                 .then((id) => {
+//                     done("should error when create new data with date greater than today");
+//                 })
+//                 .catch((e) => {
+//                     e.name.should.equal("ValidationError");
+//                     e.should.have.property("errors");
+//                     e.errors.should.instanceof(Object);
+//                     e.errors.should.have.property("orderQuantity");
+//                     done();
+//                 });
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
