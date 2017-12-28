@@ -47,18 +47,6 @@ it("#01. should success when create new data", function (done) {
         });
 });
 
-it("#01.5 should success when create new data masterPlan", function (done) {
-    dataUtilPlan.getNewData()
-        .then((data) => managerPlan.create(data))
-        .then((id) => {
-            id.should.be.Object();
-            createdId = id;
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
 
 var createdData;
 it(`#02. should success when get created data with id`, function (done) {
@@ -67,6 +55,22 @@ it(`#02. should success when get created data with id`, function (done) {
             data.should.instanceof(Object);
             validate(data);
             createdData = data;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+
+it("#02.5 should success when create new data masterPlan", function (done) {
+    dataUtilPlan.getNewData()
+        .then((data) =>{ 
+            data.bookingOrder=createdData;
+            data.bookingOrderId = createdId;
+            managerPlan.create(data)})
+        .then((id) => {
+            id.should.be.Object();
             done();
         })
         .catch((e) => {
