@@ -487,12 +487,12 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                 .reduce((prev, curr, index) => {
                                     return prev + curr;
                                 }, 0);
-                            if (purchaseOrder.status.value <= 5 && !purchaseOrder.isClosed) {
+                            if (!purchaseOrder.isClosed) {
                                 poItem.isClosed = poItem.realizationQuantity >= poItem.dealQuantity;
                             }
                         }
                     }
-                    if (purchaseOrder.status.value <= 5 && !purchaseOrder.isClosed) {
+                    if (!purchaseOrder.isClosed) {
                         purchaseOrder.isClosed = purchaseOrder.items
                             .map((item) => item.isClosed)
                             .reduce((prev, curr, index) => {
@@ -723,12 +723,12 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                         .reduce((prev, curr, index) => {
                                             return prev + curr;
                                         }, 0);
-                                    if (purchaseOrder.status.value <= 5 || !purchaseOrder.isClosed) {
+                                    if (!purchaseOrder.isClosed) {
                                         poItem.isClosed = poItem.realizationQuantity >= poItem.dealQuantity;
                                     }
                                 }
                             }
-                            if (purchaseOrder.status.value <= 5 || !purchaseOrder.isClosed) {
+                            if (!purchaseOrder.isClosed) {
                                 purchaseOrder.isClosed = purchaseOrder.items
                                     .map((item) => item.isClosed)
                                     .reduce((prev, curr, index) => {
