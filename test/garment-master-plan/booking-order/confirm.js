@@ -69,3 +69,36 @@ it("#03. should error when confirm created data without data items", function (d
                     done();
                 });
 });
+
+it("#04. should error when confirm created data with deliveryDate items more than deliveryDate", function (done) {
+    createdData.type='confirm';
+    createdData.items[0].deliveryDate=new Date(createdData.deliveryDate.setDate(createdData.deliveryDate.getDate() + 10));
+        manager.update(createdData)
+            .then((id) => {
+                    done("should error when confirm created data with deliveryDate items more than deliveryDate");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("items");
+                    done();
+                });
+});
+
+it("#05. should error when confirm created data with deliveryDate items less than today", function (done) {
+    createdData.type='confirm';
+    var today=new Date();
+    createdData.items[0].deliveryDate=new Date(today.setDate(today.getDate() - 10));
+        manager.update(createdData)
+            .then((id) => {
+                    done("should error when confirm created data with deliveryDate items less than today");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("items");
+                    done();
+                });
+});
