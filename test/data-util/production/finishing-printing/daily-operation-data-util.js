@@ -55,10 +55,10 @@ class DailyOperationDataUtil {
                                         goodOutput: 18,
                                         badOutput: 2,
                                         type: "output",
-                                        action: "Digudangkan",
                                         badOutputReasons: [{
-                                            precentage: 100,
+                                            length: 100,
                                             description: "Rusak",
+                                            action: "Digudangkan",
                                             badOutputReasonId: reason._id,
                                             badOutputReason: reason
                                         }]
