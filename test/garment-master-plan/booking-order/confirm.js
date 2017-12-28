@@ -8,12 +8,22 @@ var manager = null;
 var dataUtil =require("../../data-util/garment-master-plan/booking-order-data-util");
 var validate = require("dl-models").validator.garmentMasterPlan.bookingOrder;
 
+
+var ManagerPlan = require("../../../src/managers/garment-master-plan/master-plan-manager");
+var managerPlan = null;
+var dataUtilPlan =require("../../data-util/garment-master-plan/master-plan-data-util");
+var validatePlan = require("dl-models").validator.garmentMasterPlan.masterPlan;
+
 var moment = require('moment');
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
             manager = new Manager(db, {
+                username: 'unit-test'
+            });
+
+            managerPlan = new ManagerPlan(db, {
                 username: 'unit-test'
             });
             done();
@@ -27,6 +37,19 @@ var createdId;
 it("#01. should success when create new data", function (done) {
     dataUtil.getNewData()
         .then((data) => manager.create(data))
+        .then((id) => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#01.5 should success when create new data masterPlan", function (done) {
+    dataUtilPlan.getNewData()
+        .then((data) => managerPlan.create(data))
         .then((id) => {
             id.should.be.Object();
             createdId = id;
