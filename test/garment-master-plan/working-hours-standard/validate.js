@@ -5,7 +5,7 @@ var should = require('should');
 var helper = require("../../helper");
 var Manager = require("../../../src/managers/garment-master-plan/working-hours-standard-manager");
 var manager = null;
-var dataUtil =require("../../data-util/garment-master-plan/working-hours-standard-util");
+var dataUtil =require("../../data-util/garment-master-plan/working-hours-standard-data-util");
 var validate = require("dl-models").validator.garmentMasterPlan.workingHoursStandard;
 
 
