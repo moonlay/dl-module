@@ -79,6 +79,29 @@ it("#02. should error when create new data with deliveryDate < bookingDate ", fu
         });
 });
 
+it("#03. should error when create new data with deliveryDate < today ", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            var targetDate=new Date();
+            data.deliveryDate=new Date(targetDate.setDate(targetDate.getDate() - 5));
+            data.bookingDate=new Date(targetDate.setDate(targetDate.getDate() - 20));
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with deliveryDate < today");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("deliveryDate");
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 // it("#04. should error when create new data with orderQuantity not equal total quantity in items", function (done) {
 //     dataUtil.getNewData()
 //         .then((data) => {

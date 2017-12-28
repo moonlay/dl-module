@@ -102,3 +102,19 @@ it("#05. should error when confirm created data with deliveryDate items less tha
                     done();
                 });
 });
+
+it("#06. should error when confirm created data with quantity items more than orderQuantity", function (done) {
+    createdData.type='confirm';
+    createdData.items[0].quantity=10000;
+        manager.update(createdData)
+            .then((id) => {
+                    done("should error when confirm created data with quantity items more than orderQuantity");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("items");
+                    done();
+                });
+});
