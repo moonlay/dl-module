@@ -72,6 +72,8 @@ it("#03. should error when confirm created data without data items", function (d
 
 it("#04. should error when confirm created data with deliveryDate items more than deliveryDate", function (done) {
     createdData.type='confirm';
+    var today=new Date();
+    createdData.deliveryDate=new Date(today.setDate(today.getDate() + 10));
     createdData.items[0].deliveryDate=new Date(createdData.deliveryDate.setDate(createdData.deliveryDate.getDate() + 10));
         manager.update(createdData)
             .then((id) => {
