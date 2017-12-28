@@ -51,31 +51,7 @@ it(`#02. should success when get created data with id`, function (done) {
         });
 });
 
-it(`#03. should success when confirm created data`, function (done) {
-    createdData.type='confirm';
-        manager.update(createdData)
-            .then((id) => {
-                createdId.toString().should.equal(id.toString());
-                done();
-            })
-            .catch((e) => {
-                done(e);
-            });
-    });
-
-it(`#03. should error when confirm created data without data confirm`, function (done) {
-    createdData.type='confirm';
-        manager.update(createdData)
-            .then((id) => {
-                createdId.toString().should.equal(id.toString());
-                done();
-            })
-            .catch((e) => {
-                done(e);
-            });
-});
-
-it("#04. should error when confirm created data without data items", function (done) {
+it("#03. should error when confirm created data without data items", function (done) {
     createdData.type='confirm';
     createdData.items = [{
         quantity: 0,
