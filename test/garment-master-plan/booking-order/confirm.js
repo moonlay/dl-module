@@ -65,13 +65,16 @@ it(`#02. should success when get created data with id`, function (done) {
 
 it("#02.5 should success when create new data masterPlan", function (done) {
     dataUtilPlan.getNewData()
-        .then((data) =>{ 
-            data.bookingOrder=createdData;
-            data.bookingOrderId = createdId;
-            managerPlan.create(data)})
+        .then((data) => {
+        data.bookingOrderId = createdId;
+        manager.create(data)
         .then((id) => {
             id.should.be.Object();
             done();
+        })
+        .catch((e) => {
+            done(e);
+        });
         })
         .catch((e) => {
             done(e);
