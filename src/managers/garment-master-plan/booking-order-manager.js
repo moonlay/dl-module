@@ -5,6 +5,7 @@ require("mongodb-toolkit");
 var DLModels = require("dl-models");
 var map = DLModels.map;
 var BookingOrder = DLModels.garmentMasterPlan.BookingOrder;
+var MasterPlan = DLModels.garmentMasterPlan.MasterPlan;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var ComodityManager = require('./master-plan-comodity-manager');
@@ -16,6 +17,7 @@ module.exports = class BookingOrderManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentMasterPlan.collection.BookingOrder);
+        this.masterPlanCollection = this.db.use(map.garmentMasterPlan.collection.MasterPlan);
         this.comodityManager = new ComodityManager(db, user);
         //this.masterPlanManager = new MasterPlanManager(db, user);
         this.garmentBuyerManager = new GarmentBuyerManager(db, user);
@@ -106,16 +108,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                 if(!valid.orderQuantity || valid.orderQuantity<=0)
                     errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.isRequired:%s is required", i18n.__("BookingOrder.orderQuantity._:OrderQuantity"));
                 else{
-                    var totalqty = 0;
-                    if (valid.items.length > 0) {
-                        for (var i of valid.items) {
-                            totalqty += i.quantity;
-                        }
-                    }
-                    if (valid.orderQuantity != totalqty) {
-                        errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal SUM quantity in items", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
-
-                    }
+                   
                 }
 
                 if (!valid.deliveryDate || valid.deliveryDate === "") {
@@ -124,57 +117,82 @@ module.exports = class BookingOrderManager extends BaseManager {
                 else{
                     valid.deliveryDate=new Date(valid.deliveryDate);
                     valid.bookingDate=new Date(valid.bookingDate);
+                    var today= new Date();
                     if(valid.bookingDate>valid.deliveryDate){
                         errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
+                    }
+                    else if(today>valid.deliveryDate){
+                        errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
                     }
                 }
 
                 valid.items = valid.items || [];
-                if (valid.items && valid.items.length <= 0) {
-                    errors["items"] = i18n.__("BookingOrder.items.isRequired:%s is required", i18n.__("BookingOrder.items._:items")); 
-                }
-                else if (valid.items.length > 0) {
-                    var itemErrors = [];
-                    var totalqty = 0;
-                    for (var i of valid.items) {
-                        totalqty += i.quantity;
-                    }
-                    var index=0;
-                    for (var item of valid.items) {
-                        item.code= item.code ? item.code: generateCode();
-                        var itemError = {};
-
-                        if(!item.masterPlanComodity){
-                            itemError["masterPlanComodity"] = i18n.__("BookingOrder.items.masterPlanComodity.isRequired:%s is required", i18n.__("BookingOrder.items.masterPlanComodity._:MasterPlanComodity")); 
+                // if (valid.items && valid.items.length <= 0) {
+                //     errors["items"] = i18n.__("BookingOrder.items.isRequired:%s is required", i18n.__("BookingOrder.items._:items")); 
+                // }
+                if (valid.items.length > 0) {
+                    if (valid.type==='confirm'){
+                        var itemErrors = [];
+                        var totalqty = 0;
+                        var index=0;
+                        for (var i of valid.items) {
+                            totalqty += i.quantity;
                         }
-                        else{
-                            item.masterPlanComodityId=new ObjectId(item.masterPlanComodity._id);
+                        if (valid.orderQuantity < totalqty) {
+                            errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal or more than SUM quantity in items", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
 
-                            var existComodity = valid.items.find((test, idx) => 
-                            item.masterPlanComodityId.toString() === test.masterPlanComodity._id.toString() && item.masterPlanComodityId.toString() === test.masterPlanComodity._id.toString() && index != idx);
-                        
-                            if(existComodity)
-                                itemError["masterPlanComodity"] = i18n.__("BookingOrder.items.masterPlanComodity.isExists:%s is already choosen", i18n.__("BookingOrder.items.masterPlanComodity._:MasterPlanComodity"));
+                        }
+                        for (var item of valid.items) {
+                            item._createdDate= item._createdDate ? item._createdDate: new Date();
+                            item.code= item.code ? index.toString()+item.code: generateCode();
+                            var itemError = {};
+
+                            if(!item.masterPlanComodity){
+                                itemError["masterPlanComodity"] = i18n.__("BookingOrder.items.masterPlanComodity.isRequired:%s is required", i18n.__("BookingOrder.items.masterPlanComodity._:MasterPlanComodity")); 
+                            }
+                            else{
+                                item.masterPlanComodityId=new ObjectId(item.masterPlanComodity._id);
+
+                                // var existComodity = valid.items.find((test, idx) => 
+                                // item.masterPlanComodityId.toString() === test.masterPlanComodity._id.toString() && item.masterPlanComodityId.toString() === test.masterPlanComodity._id.toString() && index != idx);
                             
+                                // if(existComodity)
+                                //     itemError["masterPlanComodity"] = i18n.__("BookingOrder.items.masterPlanComodity.isExists:%s is already choosen", i18n.__("BookingOrder.items.masterPlanComodity._:MasterPlanComodity"));
+                                
+                            }
+                            
+                            if (!item.quantity || item.quantity <=0)
+                                itemError["quantity"] = i18n.__("BookingOrder.items.quantity.isRequired:%s is required", i18n.__("BookingOrder.items.quantity._:Quantity")); 
+                            
+                            // if (valid.orderQuantity != totalqty)
+                            //     itemError["total"] = i18n.__("ProductionOrder.items.total.shouldNot:%s Total should equal Order Quantity", i18n.__("ProductionOrder.items.total._:Total"));
+                            
+                            if (!item.deliveryDate || item.deliveryDate === "") {
+                                itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.isRequired:%s is required", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
+                            }
+                            else{
+                                item.deliveryDate=new Date(item.deliveryDate);
+                                var today= new Date();
+                                valid.deliveryDate=new Date(valid.deliveryDate);
+                                if(today>item.deliveryDate){
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
+                                }
+                                else if (valid.deliveryDate<item.deliveryDate){
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be more than booking deliveryDate date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
+                                }
+                            }
+
+                            index++;
+                            itemErrors.push(itemError);
                         }
-                        
-                        if (!item.quantity || item.quantity <=0)
-                            itemError["quantity"] = i18n.__("BookingOrder.items.quantity.isRequired:%s is required", i18n.__("BookingOrder.items.quantity._:Quantity")); 
-                        
-                        if (valid.orderQuantity != totalqty)
-                            itemError["total"] = i18n.__("ProductionOrder.items.total.shouldNot:%s Total should equal Order Quantity", i18n.__("ProductionOrder.items.total._:Total"));
-                        
-                        index++;
-                        itemErrors.push(itemError);
-                    }
-                    for (var itemError of itemErrors) {
-                        if (Object.getOwnPropertyNames(itemError).length > 0) {
-                            errors.items = itemErrors;
-                            break;
+                        for (var itemError of itemErrors) {
+                            if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                errors.items = itemErrors;
+                                break;
+                            }
                         }
+                    
                     }
-                    
-                    
                 }
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
@@ -217,6 +235,43 @@ module.exports = class BookingOrderManager extends BaseManager {
     //                 );
     //         });
     // }
+
+    _afterUpdate(id) {
+        return new Promise((resolve, reject) => {
+            var bookingId=id;
+            this.getSingleById(id)
+                .then((booking) => {
+                    var query = {
+                        "bookingOrderNo": booking.code,
+                        "_deleted":false
+                    };
+                    this.masterPlanCollection.singleOrDefault(query)
+                        .then((masterPlan) => {
+                            if(masterPlan){
+                                if(booking.isCanceled){
+                                    masterPlan.status="Booking Dibatalkan";
+                                }
+                                else{
+                                    masterPlan.status="Booking Ada Perubahan";
+                                    for(var detail of masterPlan.details){
+                                        var itemBooking = booking.items.find(select => select.code === detail.code);
+                                        if(itemBooking){
+                                            detail.isConfirmed = itemBooking.isConfirmed;
+                                        }
+                                    }
+                                }
+                                this.masterPlanCollection.update(masterPlan)
+                                    .then((id) =>
+                                        resolve(bookingId));
+                            }
+                            else{
+                                resolve(bookingId);
+                            }
+                        });
+                        //Promise.resolve(bookingId);
+                });
+        });
+    }
 
 
     _createIndexes() {
