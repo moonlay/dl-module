@@ -11,6 +11,7 @@ module.exports = function (data, offset) {
                     deliveryOrderNo: dataItem.deliveryOrderNo,
                     date: dataItem.deliveryOrderDate,
                     purchaseRequestRefNo: item.purchaseRequestRefNo,
+                    purchaseOrderExternalNo: item.purchaseOrderExternalNo,
                     product: item.product.name,
                     productDesc: item.product.description,
                     quantity: item.deliveredQuantity,
@@ -247,7 +248,7 @@ module.exports = function (data, offset) {
             text: `${moment(item.date).add(offset, 'h').format("DD MMM YYYY")}`,
             style: ['size06', 'left']
         }, {
-            text: item.purchaseRequestRefNo,
+            text: `${item.purchaseRequestRefNo} - ${item.purchaseOrderExternalNo}`,
             style: ['size06', 'left']
         }, {
             text: `${item.product};${item.productDesc}`,
@@ -276,7 +277,7 @@ module.exports = function (data, offset) {
     ];
     var table = [{
         table: {
-            widths: ['12%', '12%', '10%', '25%', '7%', '7%', '12%', '15%'],
+            widths: ['12%', '12%', '12%', '22%', '7%', '7%', '12%', '15%'],
             headerRows: 1,
             body: [].concat([thead], tbody)
         }
