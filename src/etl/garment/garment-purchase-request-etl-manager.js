@@ -65,7 +65,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return query;
     }
 
-    run(tanggal, t1, t2, page, size,buyerFilter) {
+    run(tanggal, t1, t2, page, size,buyerFilter, tahun) {
         var startedDate = new Date();
         var code;
         var buyerFilter=buyerFilter;
@@ -87,6 +87,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
 
 
         this.tgl = tanggal;
+        this.year = tahun;
 
         return new Promise((resolve, reject) => {
             var table1 = t1;
@@ -118,7 +119,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         "april", "may", "june",
                         "july", "august", "september",
                         "october", "november", "december"];
-                    var tempYear = new Date().getFullYear().toString();
+                    var tempYear = this.year;
 
                     if(buyerFilter && this.tgl.trim() == "latest"){
                         this.tgl=monthOpt[new Date().getMonth()+1]                       
