@@ -400,6 +400,14 @@ module.exports = class PackingManager extends BaseManager {
 
 
 getQcgudangReport(query ){
+
+     var dateFrom = query.dateFrom ? (new Date(query.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = query.dateTo ? (new Date(query.dateTo)) : (new Date());
+        dateFrom.setHours(dateFrom.getHours() - query.offset);
+        dateTo.setHours(dateTo.getHours() - query.offset);
+        var now = new Date();
+
+        
         return new Promise((resolve, reject) => {
               var date = {
                 "date" : {
