@@ -3,7 +3,7 @@ var options = {
     model: require("dl-models").garmentMasterPlan.WorkingHoursStandard,
     util: require("../../data-util/garment-master-plan/working-hours-standard-data-util"),
     validator: require("dl-models").validator.garmentMasterPlan.workingHoursStandard,
-    createDuplicate: false,
+    createDuplicate: true,
     keys:[]
 };
 
