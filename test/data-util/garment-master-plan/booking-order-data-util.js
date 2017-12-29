@@ -31,12 +31,14 @@ class BookingOrderDataUtil {
                     items:[{
                             masterPlanComodity:_comodity,
                             masterPlanComodityId:_comodity._id,
-                            quantity: 500
+                            quantity: 500,
+                            deliveryDate : deliveryDate
                         },
                         {
                             masterPlanComodity:_comodity2,
                             masterPlanComodityId:_comodity2._id,
-                            quantity: 500
+                            quantity: 500,
+                            deliveryDate : deliveryDate
                         }
                     ]
 
