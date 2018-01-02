@@ -159,6 +159,7 @@ var PO;
 it("#08. should success when get filter shipment ", function (done) {
     manager.filterShipmentBuyer()
         .then((result) => {
+            result.should.be.instanceof(Array);
             PO = result;
             done();
         })
@@ -175,8 +176,6 @@ it("#09. should success when create data filter shipment 1 ", function (done) {
             dataPo1 = i.orderNo;
         }
     }
-    console.log(dataPo1);
-
     FPShipmentDocumentDataUtil.getNewTestDataShipment(dataPo1)
         .then((res) => {
             done();
@@ -195,7 +194,6 @@ it("#10. should success when create data filter shipment 2 ", function (done) {
             dataPo2 = i.orderNo;
         }
     }
-    console.log(dataPo2);
     FPShipmentDocumentDataUtil.getNewTestDataShipment(dataPo2)
         .then((res) => {
             done()
@@ -211,7 +209,6 @@ it("#11. should success when create data filter shipment 3 ", function (done) {
             dataPo3 = i.orderNo;
         }
     }
-    console.log(dataPo3);
     FPShipmentDocumentDataUtil.getNewTestDataShipment(dataPo3)
         .then((res) => {
             done()
