@@ -211,7 +211,8 @@ it("#11. should success when create data filter shipment 3 ", function (done) {
         })
 });
 
-it("#12. should success when create data filter shipment 3 ", function (done) {
+var dataShiptmentDeliveryBuyer;
+it("#12. should success when get data shipment ", function (done) {
 
     var date = new Date()
     var year = date.getFullYear();
@@ -224,9 +225,31 @@ it("#12. should success when create data filter shipment 3 ", function (done) {
 
     manager.getReportShipmentBuyer(filter)
         .then((res) => {
+            dataShiptmentDeliveryBuyer=res;
             done()
         })
 });
+
+it("#13. should success when create data xls ", function (done) {
+    
+        var date = new Date()
+        var year = date.getFullYear();
+        var month = date.getMonth();
+    
+        var filter = {
+            year: parseInt(year),
+            month: month + 1,
+        }
+
+        var dataShiptment={
+            info:dataShiptmentDeliveryBuyer
+        }
+    
+        manager.getXlsDeliveryBuyer(dataShiptment,filter)
+            .then((res) => {
+                done()
+            })
+    });
 
 
 
