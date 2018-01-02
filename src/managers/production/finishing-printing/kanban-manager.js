@@ -229,7 +229,8 @@ module.exports = class KanbanManager extends BaseManager {
                 return Promise.all([getKanban])
                     .then((result) => {
                         var oldKanban = result[0];
-                        var updateOldKanban = oldKanban ? this.updateIsComplete(oldKanban._id) : Promise.resolve(null);
+                        var isInactive = true; //old kanban to be inactivated
+                        var updateOldKanban = oldKanban ? this.updateIsComplete(oldKanban._id, isInactive) : Promise.resolve(null);
                         return Promise.all([updateOldKanban])
                             .then((result) => Promise.resolve(kanbanId))
                     })
@@ -379,7 +380,7 @@ module.exports = class KanbanManager extends BaseManager {
         });
     }
 
-    updateIsComplete(id) {
+    updateIsComplete(id, isInactive) {
         var now = new Date();
         var ticks = ((now.getTime() * 10000) + 621355968000000000);
 
@@ -390,6 +391,10 @@ module.exports = class KanbanManager extends BaseManager {
             '_updatedDate': now,
             '_updateAgent': 'manager'
         };
+
+        if (isInactive) {
+            data.isInactive = true;
+        }
 
         return this.collection.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: data });
     }
@@ -404,7 +409,7 @@ module.exports = class KanbanManager extends BaseManager {
 
                     if (ObjectId.isValid(kanbanCurrentStepId)) {
                         var getDailyOperations;
-                        if(kanban.currentStepIndex != kanban.instruction.steps.length) {
+                        if (kanban.currentStepIndex != kanban.instruction.steps.length) {
                             getDailyOperations = this.dailyOperationCollection.find({
                                 "kanban.code": kanban.code,
                                 "step._id": kanbanCurrentStepId,
@@ -504,7 +509,7 @@ module.exports = class KanbanManager extends BaseManager {
                                                     },
                                                     type: "Output"
                                                 };
-                                                
+
                                                 return ob;
                                             });
 

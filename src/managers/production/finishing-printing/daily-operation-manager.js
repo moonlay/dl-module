@@ -888,7 +888,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                     "date": { "$substr": ["$dateOutput", 0, 10] },
                 }
             },
-
             {
                 "$group": {
                     "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day", "date": "$date" },
@@ -1089,5 +1088,54 @@ module.exports = class DailyOperationManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, deletedIndex]);
+    }
+
+    read(paging) {
+        var _paging = Object.assign({
+            page: 1,
+            size: 20,
+            order: {},
+            filter: {},
+            select: []
+        }, paging);
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                var query = this._getQuery(_paging);
+
+                this.collection
+                    .where(query)
+                    .select(_paging.select)
+                    .page(_paging.page, _paging.size)
+                    .order(_paging.order)
+
+                var q = this.collection.query();
+                var hint = {};
+
+                if(Object.getOwnPropertyNames(q.selector["$and"][1]).length ===  0) {
+                    hint._deleted = 1;    
+                }
+
+                return Promise.all([this.collection.find(q.selector).hint(hint).count(), this.collection._load(q)])
+                    .then((results) => {
+                        var count = results[0];
+                        var docs = results[1];
+            
+                        this.collection._query = null;
+                        var result = {
+                            data: docs,
+                            count: docs.length,
+                            size: q.limit,
+                            total: count,
+                            page: q.offset / q.limit + 1
+                        };
+                        if (q.fields && q.fields instanceof Array) {
+                            result.select = q.fields;
+                        }
+                        result.order = q.sort;
+                        result.filter = q.filter;
+                        return Promise.resolve(result);
+                    });
+            });
     }
 };

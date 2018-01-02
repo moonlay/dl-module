@@ -273,6 +273,33 @@ module.exports = class MasterPlanManager extends BaseManager {
             });
     }
 
+     _afterInsert(id) {
+        return this.getSingleById(id)
+                .then(data => {
+                    return this.bookingOrderManager.getSingleById(data.bookingOrderId)
+                            .then(booking =>{
+                                booking.isMasterPlan = true;
+                                return this.bookingOrderManager.collection.update(booking)
+                                        .then(idBooking=>{
+                                            return id;
+                                        });
+                            });
+                });
+    }
+
+    delete(data) {
+        data._deleted = true;
+        return this.bookingOrderManager.getSingleById(data.bookingOrderId)
+                   .then(booking =>{
+                        booking.isMasterPlan = false;
+                        return this.bookingOrderManager.collection.update(booking)
+                                   .then(idBooking=>{
+                                         return this.collection.update(data)
+                                                   .then(id => {return id});
+                                   });
+                   });
+    }
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.garmentMasterPlan.collection.MasterPlan}__updatedDate`,

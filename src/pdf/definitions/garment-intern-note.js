@@ -11,6 +11,7 @@ module.exports = function (data, offset) {
                     deliveryOrderNo: dataItem.deliveryOrderNo,
                     date: dataItem.deliveryOrderDate,
                     purchaseRequestRefNo: item.purchaseRequestRefNo,
+                    purchaseOrderExternalNo: item.purchaseOrderExternalNo,
                     product: item.product.name,
                     productDesc: item.product.description,
                     quantity: item.deliveredQuantity,
@@ -39,6 +40,12 @@ module.exports = function (data, offset) {
     })
     dueDate = Math.max.apply(null, dueDates);
     paymentMethod = items[0].paymentMethod;
+
+    var usePayTax = data.items
+        .map((item) => item.isPayTax)
+        .reduce((prev, curr, index) => {
+            return prev && curr
+        }, true);
 
     var useIncomeTax = data.items
         .map((item) => item.useIncomeTax)
@@ -180,7 +187,7 @@ module.exports = function (data, offset) {
                                 text: `${moment(dueDate).add(offset, 'h').format("DD MMM YYYY")}`,
                                 style: ['size06']
                             }]
-                        },{
+                        }, {
                             columns: [{
                                 width: '28%',
                                 text: 'Term Pembayaran',
@@ -241,7 +248,7 @@ module.exports = function (data, offset) {
             text: `${moment(item.date).add(offset, 'h').format("DD MMM YYYY")}`,
             style: ['size06', 'left']
         }, {
-            text: item.purchaseRequestRefNo,
+            text: `${item.purchaseRequestRefNo} - ${item.purchaseOrderExternalNo}`,
             style: ['size06', 'left']
         }, {
             text: `${item.product};${item.productDesc}`,
@@ -270,7 +277,7 @@ module.exports = function (data, offset) {
     ];
     var table = [{
         table: {
-            widths: ['12%', '12%', '10%', '25%', '7%', '7%', '12%', '15%'],
+            widths: ['12%', '12%', '12%', '22%', '7%', '7%', '12%', '15%'],
             headerRows: 1,
             body: [].concat([thead], tbody)
         }
@@ -294,8 +301,8 @@ module.exports = function (data, offset) {
         .reduce(function (prev, curr, index, arr) {
             return prev + curr;
         }, 0);
-    var incomeTaxTotal = useIncomeTax ? sumByCurrency * 0.1 : 0;
-    var vatTotal = useVat ? sumByCurrency * vatRate / 100 : 0;
+    var incomeTaxTotal = usePayTax ? (useIncomeTax ? sumByCurrency * 0.1 : 0) : 0;
+    var vatTotal = usePayTax ? (useVat ? sumByCurrency * vatRate / 100 : 0) : 0;
     var sumTotal = sumByCurrency - vatTotal + incomeTaxTotal + sumKoreksi;
 
     var subFooter = [
