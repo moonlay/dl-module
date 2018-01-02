@@ -1,6 +1,7 @@
 require("should");
 var helper = require("../../../helper");
 
+var ProductionOrderDataUtil = require("../../../data-util/sales/production-order-data-util");
 var FPShipmentDocumentManager = require("../../../../src/managers/inventory/finishing-printing/fp-shipment-document-manager");
 var FPShipmentDocumentDataUtil = require("../../../data-util/inventory/finishing-printing/fp-shipment-document-data-util");
 var manager = null;
@@ -118,3 +119,144 @@ it("#04. should error when create with duplicate order number", function (done) 
             }
         });
 });
+
+
+
+it("#05. should success when get production order data, process name white ", function (done) {
+    ProductionOrderDataUtil.getNewWhiteOrderTypeData()
+        .then((result) => {
+            console.log(result.orderNo);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#06. should success when get production order data, process type printing ", function (done) {
+    ProductionOrderDataUtil.getNewPrintingOrderTypeData()
+        .then((result) => {
+            console.log(result.orderNo);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#07. should success when get production order data, process name Dyeing ", function (done) {
+    ProductionOrderDataUtil.getNewDyeingOrderTypeData()
+        .then((result) => {
+            console.log(result.orderNo);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+var PO;
+it("#08. should success when get filter shipment ", function (done) {
+    manager.filterShipmentBuyer()
+        .then((result) => {
+            PO = result;
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+it("#09. should success when create data filter shipment 1 ", function (done) {
+    var dataPo1;
+
+    for (var i of PO) {
+        if (i.processType.name.toUpperCase() == "WHITE") {
+            dataPo1 = i.orderNo;
+        }
+    }
+    console.log(dataPo1);
+
+    FPShipmentDocumentDataUtil.getNewTestDataShipment(dataPo1)
+        .then((res) => {
+            done();
+        })
+
+
+});
+
+it("#10. should success when create data filter shipment 2 ", function (done) {
+
+    var dataPo2;
+
+    for (var i of PO) {
+
+        if (i.processType.name.toUpperCase() == "DYEING") {
+            dataPo2 = i.orderNo;
+        }
+    }
+    console.log(dataPo2);
+    FPShipmentDocumentDataUtil.getNewTestDataShipment(dataPo2)
+        .then((res) => {
+            done()
+        })
+});
+
+it("#11. should success when create data filter shipment 3 ", function (done) {
+
+    var dataPo3;
+    for (var i of PO) {
+        if (i.orderType.name.toUpperCase() == "PRINTING") {
+
+            dataPo3 = i.orderNo;
+        }
+    }
+    console.log(dataPo3);
+    FPShipmentDocumentDataUtil.getNewTestDataShipment(dataPo3)
+        .then((res) => {
+            done()
+        })
+});
+
+var dataShiptmentDeliveryBuyer;
+it("#12. should success when get data shipment ", function (done) {
+
+    var date = new Date()
+    var year = date.getFullYear();
+    var month = date.getMonth();
+
+    var filter = {
+        year: parseInt(year),
+        month: month + 1,
+    }
+
+    manager.getReportShipmentBuyer(filter)
+        .then((res) => {
+            dataShiptmentDeliveryBuyer=res;
+            done()
+        })
+});
+
+it("#13. should success when create data xls ", function (done) {
+    
+        var date = new Date()
+        var year = date.getFullYear();
+        var month = date.getMonth();
+    
+        var filter = {
+            year: parseInt(year),
+            month: month + 1,
+        }
+
+        var dataShiptment={
+            info:dataShiptmentDeliveryBuyer
+        }
+    
+        manager.getXlsDeliveryBuyer(dataShiptment,filter)
+            .then((res) => {
+                done()
+            })
+    });
+
+
+
