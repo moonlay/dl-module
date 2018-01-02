@@ -742,8 +742,8 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             {
                 "$match": {
                     $or: [{ "orderType.name": "PRINTING" },
-                    { $and: [{ "orderType.name": "SOLID" }, { "processType.name": {$regex:/WHITE/, $options: 'i'} }] },
-                    { $and: [{ "orderType.name": "SOLID" }, { "processType.name": {$regex:/DYEING/, $options: 'i'}}] }]
+                    { $and: [{ "orderType.name": "SOLID" }, { "processType.name": { $regex: /WHITE/, $options: 'i' } }] },
+                    { $and: [{ "orderType.name": "SOLID" }, { "processType.name": { $regex: /DYEING/, $options: 'i' } }] }]
                 }
             }
         ]).toArray()
@@ -758,6 +758,13 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
 
+        var max = {
+            maxPrinting: 0,
+            maxWhite: 0,
+            maxDyeing: 0,
+            maxTotal: 0,
+        }
+
         for (var data of result.info) {
             index++;
 
@@ -771,9 +778,31 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             item["Solid Dyeing (M)"] = data.dyeingQty;
             item["Jumlah (M)"] = data.total;
             xls.data.push(item);
+
+
+
+            max.maxPrinting += data.printingQty;
+            max.maxWhite += data.whiteQty;
+            max.maxDyeing += data.dyeingQty;
+            max.maxTotal += data.total;
+
+
+
         }
 
-        xls.data[result.info.length-1].No = ""; 
+        // xls.data[result.info.length-1].No = ""; 
+        var grandTotal = {};
+        grandTotal["No"] = "";
+        grandTotal["Tahun"] = "";
+        grandTotal["Bulan"] = "";
+        grandTotal["Tanggal"] = "Total Jumlah";
+        grandTotal["Printing (M)"] = max.maxPrinting;
+        grandTotal["Solid White (M)"] = max.maxWhite;
+        grandTotal["Solid Dyeing (M)"] = max.maxDyeing;
+        grandTotal["Jumlah (M)"] = max.maxTotal;
+
+        xls.data.push(grandTotal);
+
 
         xls.options["No"] = "number";
         xls.options["Tahun"] = "number";
@@ -786,7 +815,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
 
 
         xls.name = `LAPORAN PENGIRIMAN BUYER ${query.year} -  ${query.month}.xlsx`;
-        
+
 
         return Promise.resolve(xls);
     }
