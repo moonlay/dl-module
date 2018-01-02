@@ -635,13 +635,13 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 var temp = dataRes.find(o => o.day == i.day)
 
                 if (temp) {
-                    if (i.processName == "DYEING") {
+                    if (i.processName.toUpperCase() == "DYEING") {
                         temp.dyeingQty += i.qty;
                     }
-                    else if (i.processName == "WHITE") {
+                    else if (i.processName.toUpperCase() == "WHITE") {
                         temp.whiteQty += i.qty;
                     }
-                    else if (i.productionOrderType == "PRINTING") {
+                    else if (i.productionOrderType.toUpperCase() == "PRINTING") {
                         temp.printingQty += i.qty;
                     }
                     temp.total = temp.dyeingQty + temp.whiteQty + temp.printingQty;
@@ -660,13 +660,13 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     res.whiteQty = 0;
                     res.printingQty = 0;
 
-                    if (i.processName == "DYEING") {
+                    if (i.processName.toUpperCase() == "DYEING") {
                         res.dyeingQty += i.qty;
                     }
-                    else if (i.processName == "WHITE") {
+                    else if (i.processName.toUpperCase() == "WHITE") {
                         res.whiteQty += i.qty;
                     }
-                    else if (i.productionOrderType == "PRINTING") {
+                    else if (i.productionOrderType.toUpperCase() == "PRINTING") {
                         res.printingQty += i.qty;
                     }
                     res.total = res.dyeingQty + res.whiteQty + res.printingQty;
