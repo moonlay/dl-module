@@ -122,7 +122,7 @@ it("#04. should error when create with duplicate order number", function (done) 
 
 
 
-var processWhite={}
+var processWhite;
 it("#05. should success when get production order data, process name white ", function (done) {
     ProductionOrderDataUtil.getNewWhiteOrderTypeData()
         .then((result) => {
@@ -135,7 +135,7 @@ it("#05. should success when get production order data, process name white ", fu
         });
 });
 
-var prosesPrinting={}
+var prosesPrinting;
 it("#06. should success when get production order data, process type printing ", function (done) {
     ProductionOrderDataUtil.getNewPrintingOrderTypeData()
         .then((result) => {
@@ -148,7 +148,7 @@ it("#06. should success when get production order data, process type printing ",
         });
 });
 
-var processDyeing={};
+var processDyeing;
 it("#07. should success when get production order data, process name Dyeing ", function (done) {
     ProductionOrderDataUtil.getNewDyeingOrderTypeData()
         .then((result) => {
