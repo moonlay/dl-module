@@ -122,10 +122,12 @@ it("#04. should error when create with duplicate order number", function (done) 
 
 
 
+var processWhite={}
 it("#05. should success when get production order data, process name white ", function (done) {
     ProductionOrderDataUtil.getNewWhiteOrderTypeData()
         .then((result) => {
             console.log(result.orderNo);
+            processWhite=result.orderNo;
             done();
         })
         .catch(e => {
@@ -133,10 +135,12 @@ it("#05. should success when get production order data, process name white ", fu
         });
 });
 
+var prosesPrinting={}
 it("#06. should success when get production order data, process type printing ", function (done) {
     ProductionOrderDataUtil.getNewPrintingOrderTypeData()
         .then((result) => {
             console.log(result.orderNo);
+            prosesPrinting=result.orderNo;
             done();
         })
         .catch(e => {
@@ -144,10 +148,12 @@ it("#06. should success when get production order data, process type printing ",
         });
 });
 
+var processDyeing={};
 it("#07. should success when get production order data, process name Dyeing ", function (done) {
     ProductionOrderDataUtil.getNewDyeingOrderTypeData()
         .then((result) => {
             console.log(result.orderNo);
+            processDyeing=result.orderNo;
             done();
         })
         .catch(e => {
@@ -170,13 +176,13 @@ it("#08. should success when get filter shipment ", function (done) {
 });
 
 it("#09. should success when create data filter shipment 1 ", function (done) {
-    var dataPo1;
+    var dataPo1 = processWhite;
 
-    for (var i of PO) {
-        if (i.processType.name.toUpperCase() == "WHITE") {
-            dataPo1 = i.orderNo;
-        }
-    }
+    // for (var i of PO) {
+    //     if (i.processType.name.toUpperCase() == "WHITE") {
+    //         dataPo1 = i.orderNo;
+    //     }
+    // }
     FPShipmentDocumentDataUtil.getNewTestDataShipment(dataPo1)
         .then((res) => {
             done();
@@ -187,14 +193,14 @@ it("#09. should success when create data filter shipment 1 ", function (done) {
 
 it("#10. should success when create data filter shipment 2 ", function (done) {
 
-    var dataPo2;
+    var dataPo2=processDyeing;
 
-    for (var i of PO) {
+    // for (var i of PO) {
 
-        if (i.processType.name.toUpperCase() == "DYEING") {
-            dataPo2 = i.orderNo;
-        }
-    }
+    //     if (i.processType.name.toUpperCase() == "DYEING") {
+    //         dataPo2 = i.orderNo;
+    //     }
+    // }
     FPShipmentDocumentDataUtil.getNewTestDataShipment(dataPo2)
         .then((res) => {
             done()
@@ -203,13 +209,13 @@ it("#10. should success when create data filter shipment 2 ", function (done) {
 
 it("#11. should success when create data filter shipment 3 ", function (done) {
 
-    var dataPo3;
-    for (var i of PO) {
-        if (i.orderType.name.toUpperCase() == "PRINTING") {
+    var dataPo3=prosesPrinting;
+    // for (var i of PO) {
+    //     if (i.orderType.name.toUpperCase() == "PRINTING") {
 
-            dataPo3 = i.orderNo;
-        }
-    }
+    //         dataPo3 = i.orderNo;
+    //     }
+    // }
     FPShipmentDocumentDataUtil.getNewTestDataShipment(dataPo3)
         .then((res) => {
             done()
