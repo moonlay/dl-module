@@ -24,38 +24,21 @@ class MasterPlanDataUtil {
                     numItem += 1;
                     var detail = {
                         code : bookingDetail.code,
+                        shCutting : 20,
+                        shSewing : 20,
+                        shFinishing : 20,
+                        unitId : _weeklyPlan.unitId.toString(),
+                        unit : _weeklyPlan.unit,
+                        weeklyPlanId : _weeklyPlan._id.toString(),
+                        weeklyPlanYear : _weeklyPlan.year,
+                        week : _weeklyPlan.items[numItem],
                         masterPlanComodityId : bookingDetail.masterPlanComodityId.toString(),
                         masterPlanComodity : bookingDetail.masterPlanComodity,
                         quantity : bookingDetail.quantity,
-                        remark : bookingDetail.remark,
-                        isConfirmed : bookingDetail.isConfirmed,
-                        detailItems : [
-                            {
-                                shCutting : 20,
-                                shSewing : 20,
-                                shFinishing : 20,
-                                unitId : _weeklyPlan.unitId.toString(),
-                                unit : _weeklyPlan.unit,
-                                weeklyPlanId : _weeklyPlan._id.toString(),
-                                weeklyPlanYear : _weeklyPlan.year,
-                                week : _weeklyPlan.items[numItem],
-                                quantity : 250,
-                                remark : `${bookingDetail.masterPlanComodity.name} remark 1`
-                            },{
-                                shCutting : 20,
-                                shSewing : 20,
-                                shFinishing : 20,
-                                unitId : _weeklyPlan.unitId.toString(),
-                                unit : _weeklyPlan.unit,
-                                weeklyPlanId : _weeklyPlan._id.toString(),
-                                weeklyPlanYear : _weeklyPlan.year,
-                                week : _weeklyPlan.items[numItem + 1],
-                                quantity : 250,
-                                remark : `${bookingDetail.masterPlanComodity.name} remark 2`
-                            }
-                        ]
+                        remark : `remark ${bookingDetail.code}`,
+                        isConfirmed : true,
+                        deliveryDate : _bookingOrder.deliveryDate
                     }
-                    numItem += 1;
                     details.push(detail);
                 }
 
@@ -66,10 +49,11 @@ class MasterPlanDataUtil {
                     garmentBuyerId : _bookingOrder.garmentBuyerId.toString(),
                     garmentBuyerName : _bookingOrder.garmentBuyerName,
                     garmentBuyerCode : _bookingOrder.garmentBuyerCode,
-                    quantity : _bookingOrder.quantity,
+                    quantity : _bookingOrder.orderQuantity,
                     bookingDate : `${(new Date(_bookingOrder.bookingDate)).getFullYear()}-${((new Date(_bookingOrder.bookingDate)).getMonth() + 1)}-${(new Date(_bookingOrder.bookingDate)).getDate()}`,
                     deliveryDate : `${(new Date(_bookingOrder.deliveryDate)).getFullYear()}-${((new Date(_bookingOrder.deliveryDate)).getMonth() + 1)}-${(new Date(_bookingOrder.deliveryDate)).getDate()}`,
                     remark: _bookingOrder.remark,
+                    bookingItems:_bookingOrder.items,
                     details : details
                 }
 
