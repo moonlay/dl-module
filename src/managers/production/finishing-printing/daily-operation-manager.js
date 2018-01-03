@@ -896,6 +896,7 @@ module.exports = class DailyOperationManager extends BaseManager {
 
     getDailyMachine(query) {
         var area = query.area;
+        var machineId = query.machineId;
 
         // var date = {
         //     "dateOutput": {
@@ -917,14 +918,23 @@ module.exports = class DailyOperationManager extends BaseManager {
             order;
         }
 
+        var matchQuery = {
+            "_deleted": false,
+            "step.processArea": area,
+            "type": "output",
+            "dateOutput": {
+                "$gte": new Date(query.dateFrom),
+                "$lte": new Date(query.dateTo)
+            }
+        }
+
+        if (machineId) {
+            matchQuery["machineId"] = new ObjectId(machineId);
+        }
+
         return this.collection.aggregate([
             {
-                "$match": {
-                    "_deleted": false, "step.processArea": area, "type": "output", "dateOutput": {
-                        "$gte": new Date(query.dateFrom),
-                        "$lte": new Date(query.dateTo)
-                    }
-                }
+                "$match": matchQuery
             },
             {
                 "$project": {
@@ -951,6 +961,39 @@ module.exports = class DailyOperationManager extends BaseManager {
             }
         ]
         ).sort(order).toArray()
+            .then((dailyResults) => {
+
+                var data = {};
+                data["info"] = dailyResults;
+                data["summary"] = this.sumDaily(dailyResults);
+
+                return Promise.resolve(data);
+            })
+    }
+
+    sumDaily(results) {
+
+        var data = [];
+        if (results.length > 0) {
+            for ( var result of results) {
+                
+                var exist = data.find((datum) => datum && datum.machineName === result._id.machineName);
+                if (exist) {
+                    var index = data.findIndex((datum) => datum.machineName === result._id.machineName);
+                    data[index].goodOutputTotal += result.totalGoodOutput;
+                    data[index].badOutputTotal += result.totalBadOutput;
+                } else {
+                    var sumDatum = {
+                        machineName: result._id.machineName,
+                        goodOutputTotal: result.totalGoodOutput,
+                        badOutputTotal: result.totalBadOutput
+                    }
+                    data.push(sumDatum);
+                }
+            }
+        }
+
+        return data;
     }
 
     getXlsDailyMachine(result, query) {
