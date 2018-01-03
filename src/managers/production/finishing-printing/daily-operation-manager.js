@@ -905,18 +905,18 @@ module.exports = class DailyOperationManager extends BaseManager {
         //     },
         // };
 
-        var order = query.order;
-        var temp;
+        // var order = query.order;
+        // var temp;
 
-        if (JSON.stringify(order).includes(`"desc"`)) {
-            temp = JSON.stringify(order).replace(`"desc"`, -1);
-            order = JSON.parse(temp)
-        } else if (JSON.stringify(order).includes(`"asc"`)) {
-            temp = JSON.stringify(order).replace(`"asc"`, 1);
-            order = JSON.parse(temp)
-        } else {
-            order;
-        }
+        // if (JSON.stringify(order).includes(`"desc"`)) {
+        //     temp = JSON.stringify(order).replace(`"desc"`, -1);
+        //     order = JSON.parse(temp)
+        // } else if (JSON.stringify(order).includes(`"asc"`)) {
+        //     temp = JSON.stringify(order).replace(`"asc"`, 1);
+        //     order = JSON.parse(temp)
+        // } else {
+        //     order;
+        // }
 
         var matchQuery = {
             "_deleted": false,
@@ -957,15 +957,44 @@ module.exports = class DailyOperationManager extends BaseManager {
                     "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day", "date": "$date" },
                     "totalBadOutput": { "$sum": "$badOutput" },
                     "totalGoodOutput": { "$sum": "$goodOutput" },
+                    "totalBadGood": { "$sum": { "$sum": ["$goodOutput", "$badOutput"] } }
                 }
             }
         ]
-        ).sort(order).toArray()
+        ).sort({ "dateOutput": -1 }).toArray()
             .then((dailyResults) => {
 
                 var data = {};
-                data["info"] = dailyResults;
+                data["info"] = dailyResults || [];
                 data["summary"] = this.sumDaily(dailyResults);
+
+                var grandTotal = {};
+                grandTotal._id = {
+                    "machineName": "TOTAL",
+                    "processArea": ""
+                };
+                grandTotal.totalBadOutput = 0;
+                grandTotal.totalGoodOutput = 0;
+                grandTotal.totalBadGood = 0;
+                for (var datum of data.info) {
+                    grandTotal.totalBadOutput += datum.totalBadOutput;
+                    grandTotal.totalGoodOutput += datum.totalGoodOutput;
+                    grandTotal.totalBadGood += datum.totalBadGood;
+                }
+                data.info.push(grandTotal);
+
+                var grandTotalSummary = {
+                    "machineName": "TOTAL"
+                };
+                grandTotalSummary.goodOutputTotal = 0;
+                grandTotalSummary.badOutputTotal = 0;
+                grandTotalSummary.totalGoodBad = 0;
+                for (var datum of data.summary) {
+                    grandTotalSummary.goodOutputTotal += datum.goodOutputTotal;
+                    grandTotalSummary.badOutputTotal += datum.badOutputTotal;
+                    grandTotalSummary.totalGoodBad += datum.totalGoodBad;
+                }
+                data.summary.push(grandTotalSummary);
 
                 return Promise.resolve(data);
             })
@@ -975,18 +1004,20 @@ module.exports = class DailyOperationManager extends BaseManager {
 
         var data = [];
         if (results.length > 0) {
-            for ( var result of results) {
-                
+            for (var result of results) {
+
                 var exist = data.find((datum) => datum && datum.machineName === result._id.machineName);
                 if (exist) {
                     var index = data.findIndex((datum) => datum.machineName === result._id.machineName);
                     data[index].goodOutputTotal += result.totalGoodOutput;
                     data[index].badOutputTotal += result.totalBadOutput;
+                    data[index].totalGoodBad += result.totalBadGood;
                 } else {
                     var sumDatum = {
                         machineName: result._id.machineName,
                         goodOutputTotal: result.totalGoodOutput,
-                        badOutputTotal: result.totalBadOutput
+                        badOutputTotal: result.totalBadOutput,
+                        totalGoodBad: result.totalBadGood
                     }
                     data.push(sumDatum);
                 }
