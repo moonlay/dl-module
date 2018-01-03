@@ -409,11 +409,11 @@ getQcgudangReport(query ){
 
 
         return new Promise((resolve, reject) => {
-              var date = {
+               var date = {
                 "date" : {
-                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
-                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
-                },
+               $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            },
                 "_deleted" : false,
                 "deliveryType" : { "$exists" : true, "$ne" : null}
             };
