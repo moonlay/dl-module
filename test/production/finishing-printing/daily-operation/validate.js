@@ -550,7 +550,6 @@ it("#17. on index 1 step 1 : should error when create new data Output with no da
             data.machineId = machine._id;
             data.step = step1;
             data.stepId = step1._id;
-            delete data.action;
             delete data.badOutputReasons;
             dailyOperationManager.create(data)
                 .then(daily => {
@@ -558,7 +557,6 @@ it("#17. on index 1 step 1 : should error when create new data Output with no da
                 })
                 .catch((e) => {
                     try {
-                        e.errors.should.have.property('action');
                         e.errors.should.have.property('badOutputReasons');
                         done();
                     }
@@ -620,7 +618,7 @@ it("#19. on index 1 step 1 : should error when create new data Output with prece
             var items = []
             for(var a of data.badOutputReasons){
                 var item = a;
-                item.precentage = 90;
+                item.length = 90;
                 items.push(item);
             }
             data.badOutputReasons = items
@@ -658,7 +656,7 @@ it("#20. on index 1 step 1 : should error when create new data Output with dupli
             for(var a of data.badOutputReasons){
                 item = a;
             }
-            item.precentage = 50;
+            item.length = 1;
             items.push(item);
             items.push(item);
             data.badOutputReasons = items
@@ -781,7 +779,6 @@ it("#24. on index 1 step 1 : should success when update data Output", function(d
     dailyOperationManager.getSingleById(step1DailyOutputId1)
         .then(daily => {
             daily.goodOutput = 32;
-            daily.badOutput = 3;
             daily.dateOutput = '2017-01-04';
             dailyOperationManager.update(daily)
                 .then(id => {
@@ -1143,7 +1140,6 @@ it("#37. on index 2 step 2 : should success when update input with step 2", func
     dailyOperationManager.getSingleById(step2DailyOutputId1)
         .then(daily => {
             daily.goodOutput = 33;
-            daily.badOutput = 2;
             dailyOperationManager.update(daily)
                 .then(id => {
                     dailyOperationManager.getSingleById(step2DailyOutputId1)
@@ -1210,7 +1206,6 @@ it("#39. on index 3 step 1 : should success when output data with index 3 step 1
             daily.step = step1;
             daily.stepId = step1._id;
             daily.goodOutput = 35;
-            daily.badOutput = 0;
             daily.dateOutput = '2017-01-08';
             delete daily._id;
             delete daily.code;

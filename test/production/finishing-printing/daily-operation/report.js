@@ -159,7 +159,6 @@ it("#08.(2) should success create Excel with id", function (done) {
         temp.goodOutput=null;
         temp.badOutput=null;
         temp.badOutputDescription=null;
-        temp.action=null;
         _idExcel.push(temp)
     }
 
@@ -190,7 +189,6 @@ it("#08.(3) should success create Excel with id", function (done) {
         temp.goodOutput=null;
         temp.badOutput=null;
         temp.badOutputDescription=null;
-        temp.action=null;
         _idExcel.push(temp)
     }
 
@@ -221,7 +219,6 @@ it("#08.(4) should success create Excel with id", function (done) {
         temp.goodOutput=null;
         temp.badOutput=null;
         temp.badOutputDescription=null;
-        temp.action=null;
         _idExcel.push(temp)
     }
 
@@ -297,9 +294,9 @@ it("#11. should success when get report daily machine", function (done) {
 
     dailyOperationManager.getDailyMachine(queryDailyMachine)
         .then((result) => {
-            result.should.instanceof(Array);
-            result.length.should.not.equal(0);
-            xlsDailyMachine = result;
+            result.info.should.instanceof(Array);
+            result.info.length.should.not.equal(0);
+            xlsDailyMachine = result.info;
             done();
         })
         .catch((e) => {
@@ -314,9 +311,9 @@ it("#12. should success when get report daily machine with order asc", function 
 
     dailyOperationManager.getDailyMachine(queryDailyMachine)
         .then((result) => {
-            result.should.instanceof(Array);
-            result.length.should.not.equal(0);
-            xlsDailyMachine = result;
+            result.info.should.instanceof(Array);
+            result.info.length.should.not.equal(0);
+            xlsDailyMachine = result.info;
             done();
         })
         .catch((e) => {
@@ -331,9 +328,9 @@ it("#13. should success when get report daily machine with order desc", function
 
     dailyOperationManager.getDailyMachine(queryDailyMachine)
         .then((result) => {
-            result.should.instanceof(Array);
-            result.length.should.not.equal(0);
-            xlsDailyMachine = result;
+            result.info.should.instanceof(Array);
+            result.info.length.should.not.equal(0);
+            xlsDailyMachine = result.info;
             done();
         })
         .catch((e) => {

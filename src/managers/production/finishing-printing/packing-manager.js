@@ -400,12 +400,22 @@ module.exports = class PackingManager extends BaseManager {
 
 
 getQcgudangReport(query ){
+
+     var dateFrom = query.dateFrom ? (new Date(query.dateFrom)) : (new Date(1900, 1, 1));
+        var dateTo = query.dateTo ? (new Date(query.dateTo)) : (new Date());
+        dateFrom.setHours(dateFrom.getHours() - query.offset);
+        dateTo.setHours(dateTo.getHours() - query.offset);
+        var now = new Date();
+
+
         return new Promise((resolve, reject) => {
               var date = {
                 "date" : {
-                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
-                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
-                },
+                    // "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    // "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+               $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            },
                 "_deleted" : false,
                 "deliveryType" : { "$exists" : true, "$ne" : null}
             };
@@ -523,7 +533,6 @@ getQcgudangReport(query ){
             });
         });
     }
-
 
     getXls(result, query) {
         var xls = {};
