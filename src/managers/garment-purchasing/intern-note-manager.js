@@ -800,8 +800,8 @@ module.exports = class InternNoteManager extends BaseManager {
                     { "$unwind": "$items" }
                     , { "$unwind": "$items.items" }
                     , { "$unwind": "$items.items.items" }
-                    , { "$match": query }
-                    , {
+                    , { "$match": query },
+                    {
                         "$project": {
                             "_updatedDate": 1,
                             "no": "$no",
@@ -812,14 +812,15 @@ module.exports = class InternNoteManager extends BaseManager {
                             "currency": "$currency.code",
                             "paymentMethod": "$items.items.items.paymentMethod",
                             "paymentType": "$items.items.items.paymentType",
-                            "dueDate": "$dueDate",
+                            "dueDate": {$add:["$items.items.deliveryOrderDate",{$multiply:["$items.items.items.paymentDueDays",24,60,60000]}]},
                             "invoiceNo": "$items.no",
                             "invoiceDate": "$items.date",
                             "productCode": "$items.items.items.product.code",
                             "productName": "$items.items.items.product.name",
                             "qty": "$items.items.items.deliveredQuantity",
                             "uom": "$items.items.items.purchaseOrderUom.unit",
-                            "price": "$items.items.items.pricePerDealUnit"
+                            "price": "$items.items.items.pricePerDealUnit",
+                            
                         }
                     },
                     {
@@ -830,6 +831,15 @@ module.exports = class InternNoteManager extends BaseManager {
                 ])
                 .toArray()
                 .then(results => {
+                    for(var data of results){
+                        for(var data1 of results){
+                            if(data.no===data1.no){
+                                if(data.dueDate<data1.dueDate){
+                                    data.dueDate=data1.dueDate;
+                                }
+                            }
+                        }
+                    }
                     resolve(results);
                 })
                 .catch(e => {
@@ -906,7 +916,7 @@ getDataMonitoringAll(info) {
                             "currency": "$currency.code",
                             "paymentMethod": "$items.items.items.paymentMethod",
                             "paymentType": "$items.items.items.paymentType",
-                            "dueDate": "$dueDate",
+                            "dueDate": {$add:["$items.items.deliveryOrderDate",{$multiply:["$items.items.items.paymentDueDays",24,60,60000]}]},
                             "invoiceNo": "$items.no",
                             "invoiceDate": "$items.date",
                             "deliveryOrderNo": "$items.items.deliveryOrderNo",
@@ -929,6 +939,15 @@ getDataMonitoringAll(info) {
                 ])
                 .toArray()
                 .then(results => {
+                    for(var data of results){
+                        for(var data1 of results){
+                            if(data.no===data1.no){
+                                if(data.dueDate<data1.dueDate){
+                                    data.dueDate=data1.dueDate;
+                                }
+                            }
+                        }
+                    }
                     resolve(results);
                 })
                 .catch(e => {
