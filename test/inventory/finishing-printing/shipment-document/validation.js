@@ -10,7 +10,7 @@ before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
             manager = new FPShipmentDocumentManager(db, {
-                username: 'dev'
+                username: "unit-test"
             });
             done();
         })
