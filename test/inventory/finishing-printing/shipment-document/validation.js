@@ -166,6 +166,7 @@ it("#08. should success when get filter shipment ", function (done) {
     manager.filterShipmentBuyer()
         .then((result) => {
             result.should.be.instanceof(Array);
+            result.length.should.not.equal(0);
             PO = result;
             done();
         })
