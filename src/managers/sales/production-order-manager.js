@@ -1426,6 +1426,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         grandTotal.name = "Total"
                         grandTotal.preProductionQuantity = 0;
                         grandTotal.onProductionQuantity = 0;
+                        grandTotal.inspectingQuantity = 0;
                         grandTotal.afterProductionQuantity = 0;
                         grandTotal.orderQuantity = 0;
                         grandTotal.storageQuantity = 0;
@@ -1441,6 +1442,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                             datum.preProductionQuantity = 0;
                             datum.onProductionQuantity = 0;
+                            datum.inspectingQuantity = 0;
                             datum.afterProductionQuantity = 0;
                             datum.orderQuantity = 0;
                             datum.storageQuantity = 0;
@@ -1471,15 +1473,22 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                                         kanbanDailyQuantity = kanbanDaily.cart.qty;
                                                         break;
                                                     }
+                                                    case "complete": {
+                                                        kanbanDailyQuantity = kanbanDaily.goodOutput + kanban.badOutput;
+                                                        break;
+                                                    }
                                                 }
 
                                                 if (processArea.toLowerCase() === "area pre treatment") {
                                                     grandTotal.preProductionQuantity += kanbanDailyQuantity;
                                                     datum.preProductionQuantity += kanbanDailyQuantity;
-                                                } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc") {
+                                                } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc" && processArea.toLowerCase() !== "complete") {
                                                     grandTotal.onProductionQuantity += kanbanDailyQuantity;
                                                     datum.onProductionQuantity += kanbanDailyQuantity;
                                                 } else if (processArea.toLowerCase() === "area inspecting" || processArea.toLowerCase() === "area qc") {
+                                                    grandTotal.inspectingQuantity += kanbanDailyQuantity;
+                                                    datum.inspectingQuantity += kanbanDailyQuantity;
+                                                } else if (processArea.toLowerCase() === "complete") {
                                                     grandTotal.afterProductionQuantity += kanbanDailyQuantity;
                                                     datum.afterProductionQuantity += kanbanDailyQuantity;
                                                 }
@@ -1504,7 +1513,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
 
                             datum.diffOrderShipmentQuantity = datum.orderQuantity - datum.shipmentQuantity;
-                            datum.diffOrderKanbanQuantity = datum.orderQuantity - (datum.shipmentQuantity + datum.preProductionQuantity + datum.onProductionQuantity + datum.afterProductionQuantity + datum.storageQuantity);
+                            datum.diffOrderKanbanQuantity = datum.orderQuantity - (datum.shipmentQuantity + datum.preProductionQuantity + datum.onProductionQuantity + datum.inspectingQuantity + datum.afterProductionQuantity + datum.storageQuantity);
                             grandTotal.diffOrderKanbanQuantity += datum.diffOrderKanbanQuantity;
                             grandTotal.diffOrderShipmentQuantity += datum.diffOrderShipmentQuantity;
 
@@ -1571,6 +1580,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                             datum.preProductionQuantity = 0;
                             datum.onProductionQuantity = 0;
+                            datum.inspectingQuantity = 0;
                             datum.afterProductionQuantity = 0;
                             for (var kanbanDaily of kanbanAndDailyOperations) {
                                 if (kanbanDaily.productionOrder.orderNo === productionOrder.orderNo) {
@@ -1591,14 +1601,20 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                                 kanbanDailyQuantity = kanbanDaily.cart.qty;
                                                 break;
                                             }
+                                            case "complete": {
+                                                kanbanDailyQuantity = kanbanDaily.goodOutput + kanbanDaily.badOutput;
+                                                break;
+                                            }
                                         }
 
                                         if (processArea.toLowerCase() === "area pre treatment") {
                                             datum.preProductionQuantity += kanbanDailyQuantity;
-                                        } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc") {
+                                        } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc" && processArea.toLowerCase() !== "complete") {
                                             datum.onProductionQuantity += kanbanDailyQuantity;
                                         } else if (processArea.toLowerCase() === "area inspecting" || processArea.toLowerCase() === "area qc") {
-                                            datum.afterProductionQuantity += kanbanDailyQuantity;
+                                            datum.inspectingQuantity += kanbanDailyQuantity;
+                                        } else if (processArea.toLowerCase() === "complete") {
+                                            datum.afterProductionQuantity += kanbanDailyQuantity
                                         }
                                     }
                                 }
@@ -1618,7 +1634,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                             }
 
-                            datum.notInKanbanQuantity = datum.orderQuantity - (datum.preProductionQuantity + datum.onProductionQuantity + datum.afterProductionQuantity + datum.storageQuantity + datum.shipmentQuantity);
+                            datum.notInKanbanQuantity = datum.orderQuantity - (datum.preProductionQuantity + datum.onProductionQuantity + datum.inspectingQuantity + datum.afterProductionQuantity + datum.storageQuantity + datum.shipmentQuantity);
                             datum.diffOrderShipmentQuantity = datum.orderQuantity - datum.shipmentQuantity;
 
                             data.push(datum);
@@ -1705,7 +1721,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
     getKanbanAndDailyOperations(orderNumbers) {
         let kanbanQuery = {
             "_deleted": false,
-            "isComplete": false,
+            "isInactive": false,
             "productionOrder.orderNo": {
                 "$in": orderNumbers
             }
@@ -1713,6 +1729,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
         let kanbanFields = {
             "code": 1,
+            "isComplete": 1,
+            "currentQuantity": 1,
+            "goodOutput": 1,
+            "badOutput": 1,
             "currentStepIndex": 1,
             "instruction.steps._id": 1,
             "cart.cartNumber": 1,
@@ -1766,7 +1786,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 if (dailyOperation) {
                                     resolve(dailyOperation);
                                 }
-                                else if (kanban.currentStepIndex === 0) {
+                                else if (kanban.currentStepIndex === 0 || kanban.isComplete) {
                                     resolve(null);
                                 }
                                 else {
@@ -1813,6 +1833,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                             if (dailyOperation) {
                                 kanban = Object.assign(kanban, dailyOperation)
+                            } else  if (kanban.isComplete) {
+                                var step = {};
+                                step["processArea"] = "complete"
+                                kanban.step = step;
+                                kanban.type = "complete";
                             } else {
                                 var step = {};
                                 step["processArea"] = "area pre treatment"
