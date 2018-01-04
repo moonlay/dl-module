@@ -91,7 +91,6 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                 var previousSalesContractNo = previousSalesContracts.length > 0 ? previousSalesContracts[0].salesContractNo : "";
 
                 salesContract.salesContractNo = this.newCodeGenerator(previousSalesContractNo);
-                salesContract._createdDate = new Date();
                 return Promise.resolve(salesContract);
             })
     }
@@ -110,19 +109,14 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
             var oldMonth = parseInt(dateStructure[0]);
             var oldYear = parseInt(dateStructure[1]);
 
-            if (oldYear === yearNow) {
-                if (oldMonth === monthNow) {
-                    number += 1;
-                    codeStructure[0] = this.pad(number, 4);
-                    newSalesContractNo = codeStructure.join("/");
-                } else {
-                    codeStructure[0] = "0001";
-                    newSalesContractNo = codeStructure.join("/");
-                }
-            } else {
-                newSalesContractNo = `0001/SFP/${this.pad(monthNow, 2)}.${this.pad(yearNow, 4)}`;
+            if (oldYear === yearNow && oldMonth === monthNow) {
+                number += 1;
+                codeStructure[0] = this.pad(number, 4);
+                newSalesContractNo = codeStructure.join("/");
             }
-        } else {
+        }
+
+        if (!newSalesContractNo) {
             newSalesContractNo = `0001/SFP/${this.pad(monthNow, 2)}.${this.pad(yearNow, 4)}`;
         }
 
