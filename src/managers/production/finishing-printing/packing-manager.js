@@ -612,12 +612,13 @@ getXlss(result, query){
 
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
 
         for(var daily of result.data){
             index++;
             var item = {};
             item["No"] = index;
-            item["Tanggal"] = daily._id ? moment(new Date(daily._id)).format(dateFormat) : '';
+            item["Tanggal"] = daily._id ? moment(new Date(daily._id)).add(query.offset, 'h').format(dateFormat) : '';
             item["ulanganSolid"] = daily.ulanganSolid ? daily.ulanganSolid : '';
             item["White"] = daily.white ? daily.white : '';
             item["Dyeing"] = daily.dyeing ? daily.dyeing : '';
