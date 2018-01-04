@@ -741,9 +741,9 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             },
             {
                 "$match": {
-                    $or: [{ "orderType.name": "PRINTING" },
-                    { $and: [{ "orderType.name": "SOLID" }, { "processType.name": { "$regex": /WHITE/, "$options": 'i' } }] },
-                    { $and: [{ "orderType.name": "SOLID" }, { "processType.name": { "$regex": /DYEING/, "$options": 'i' } }] }]
+                    "$or": [{ "orderType.name": "PRINTING" },
+                    { "$and": [{ "orderType.name": "SOLID" }, { "processType.name": { "$regex": /WHITE/, "$options": 'i' } }] },
+                    { "$and": [{ "orderType.name": "SOLID" }, { "processType.name": { "$regex": /DYEING/, "$options": 'i' } }] }]
                 }
             }
         ]).toArray()
