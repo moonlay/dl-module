@@ -37,7 +37,7 @@ class ProcessTypeDataUtil {
                     code: "UT/PROCESS/01",
                     orderTypeId: order._id,
                     orderType: order,
-                    name: "Solid",
+                    name: "SOLID",
                     description: ""
                 };
                 return this.getSert(data);
@@ -45,13 +45,27 @@ class ProcessTypeDataUtil {
     }
 
     getWhiteData() {
-        return orderType.getTestData()
+        return orderType.getSolidData()
             .then(order => {
                 var data = {
                     code: "UT/PROCESS/12",
                     orderTypeId: order._id,
                     orderType: order,
-                    name: "White",
+                    name: "WHITE",
+                    description: "test"
+                };
+                return this.getSert(data);
+            });
+    }
+
+    getDyeingData() {
+        return orderType.getSolidData()
+            .then(order => {
+                var data = {
+                    code: "UT/Dyeing/12",
+                    orderTypeId: order._id,
+                    orderType: order,
+                    name: "DYEING",
                     description: ""
                 };
                 return this.getSert(data);
