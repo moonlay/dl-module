@@ -14,7 +14,7 @@ var Models = require("dl-models");
 var Map = Models.map;
 var FpShipmentDocumentModel = Models.inventory.finishingPrinting.FPShipmentDocument;
 var FpPackingReceiptModel = Models.inventory.finishingPrinting.FPPackingReceipt;
-
+var ProductionOrderManager = require('../../sales/production-order-manager');
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var moment = require("moment");
@@ -29,6 +29,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
         this.inventoryDocumentManager = new InventoryDocumentManager(db, user);
         this.inventorySummaryManager = new InventorySummaryManager(db, user);
         this.packingReceiptManager = new PackingReceiptManager(db, user);
+        this.productionOrderManager = new ProductionOrderManager(db, user);
     }
 
     _getQuery(paging) {
@@ -519,6 +520,304 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     .where(query)
                     .execute();
             });
+    }
+
+
+    getReportShipmentBuyer(dateFilter) {
+
+        return new Promise((resolve, reject) => {
+
+            var getDataProductionOrder = this.filterShipmentBuyer();
+
+            Promise.all([getDataProductionOrder]).then((result) => {
+
+                var dataProductionOrder = result[0];
+
+                var filter = [];
+
+                for (var code of dataProductionOrder) {
+                    filter.push(code.orderNo);
+                }
+
+                this.getShipmentData(dateFilter, filter).then((result) => {
+                    var data = [];
+
+                    for (var i of result) {
+                        var temp = dataProductionOrder.find(o => o.orderNo == i.details.productionOrderNo);
+                        var dataTemp = {};
+                        dataTemp.year = i.year;
+                        dataTemp.month = i.month;
+
+
+                        dataTemp.productionOrderNo = i.details.productionOrderNo;
+                        dataTemp.productionOrderType = i.details.productionOrderType;
+
+                        if (temp) {
+                            dataTemp.processName = temp.processType.name;
+                            // i.details.processName = temp.processType.name;
+                        }
+
+                        var sumQty = 0;
+                        for (var item of i.details.items) {
+
+                            if (Array.isArray(item.packingReceiptItems)) {
+
+                                for (var packingReceiptItem of item.packingReceiptItems) {
+                                    sumQty += (packingReceiptItem.quantity * packingReceiptItem.length);
+                                }
+
+                            } else {
+                                sumQty += (item.quantity * item.length);
+                            }
+                        }
+
+                        dataTemp.day = i.day;
+                        dataTemp.items = i.details.items;
+                        dataTemp.qty = sumQty;
+                        Promise.resolve(data.push(dataTemp));
+                    }
+
+                    Promise.all(data).then((shipmentData) => {
+
+
+                        var result = [];
+                        // var arr = [
+                        //   { name: "Test", lastName: "A", qty: 50 },
+                        //   { name: "Test", lastName: "A", qty: 100 },
+                        //   { name: "Test", lastName: "B", qty: 50 }
+                        // ];
+
+                        shipmentData.reduce(function (res, value) {
+                            let id = value.day + "-" + value.processName;
+                            // let id = value.day;
+                            if (!res[id]) {
+                                res[id] = {
+                                    Id: id,
+                                    year: "",
+                                    month: "",
+                                    day: "",
+                                    productionOrderNo: "",
+                                    productionOrderType: "",
+                                    processName: "",
+                                    qty: 0,
+
+                                };
+                                result.push(res[id])
+                            }
+                            res[id].year = value.year;
+                            res[id].month = value.month;
+                            res[id].day = value.day;
+                            res[id].productionOrderNo = value.productionOrderNo;
+                            res[id].productionOrderType = value.productionOrderType;
+                            res[id].processName = value.processName;
+                            res[id].qty = value.qty;
+                            return res;
+                        }, {});
+
+                        this.shipmentDataMap(result).then((res) => {
+                            resolve(res);
+                        })
+
+                    })
+
+                });
+            });
+        })
+    }
+
+    shipmentDataMap(result) {
+
+        return new Promise((resolve, reject) => {
+            var dataRes = [];
+            var no = 0;
+            for (var i of result) {
+
+                var temp = dataRes.find(o => o.day == i.day)
+
+                if (temp) {
+                    if (i.processName.toUpperCase() == "DYEING") {
+                        temp.dyeingQty += i.qty;
+                    }
+                    else if (i.processName.toUpperCase() == "WHITE") {
+                        temp.whiteQty += i.qty;
+                    }
+                    else if (i.productionOrderType.toUpperCase() == "PRINTING") {
+                        temp.printingQty += i.qty;
+                    }
+                    temp.total = temp.dyeingQty + temp.whiteQty + temp.printingQty;
+                } else {
+                    var res = {}
+                    no++;
+                    res.no = no;
+                    res.year = i.year;
+                    res.month = i.month;
+                    res.day = i.day;
+                    res.processName = i.processName;
+                    res.productionOrderNo = i.productionOrderNo;
+                    res.productionOrderType = i.productionOrderType;
+                    res.qty = i.qty;
+                    res.dyeingQty = 0;
+                    res.whiteQty = 0;
+                    res.printingQty = 0;
+
+                    if (i.processName.toUpperCase() == "DYEING") {
+                        res.dyeingQty += i.qty;
+                    }
+                    else if (i.processName.toUpperCase() == "WHITE") {
+                        res.whiteQty += i.qty;
+                    }
+                    else if (i.productionOrderType.toUpperCase() == "PRINTING") {
+                        res.printingQty += i.qty;
+                    }
+                    res.total = res.dyeingQty + res.whiteQty + res.printingQty;
+                    dataRes.push(res);
+                }
+            }
+
+            // var max = {
+            //     maxPrinting: 0,
+            //     maxWhite: 0,
+            //     maxDyeing: 0,
+            //     maxTotal: 0,
+            // }
+            // for (var i of dataRes) {
+            //     max.maxPrinting += i.printingQty;
+            //     max.maxWhite += i.whiteQty;
+            //     max.maxDyeing += i.dyeingQty;
+            //     max.maxTotal += i.total;
+            // }
+
+            // var grandTotal = {
+            //     no: "",
+            //     year: "",
+            //     month: "",
+            //     day: "Total Jumlah",
+            //     dyeingQty: max.maxDyeing,
+            //     whiteQty: max.maxWhite,
+            //     printingQty: max.maxPrinting,
+            //     total: max.maxTotal,
+            // }
+
+            // dataRes.push(grandTotal)
+
+            resolve(dataRes);
+        })
+    }
+
+
+    getShipmentData(dateFilter, filter) {
+
+        return this.collection.aggregate([
+            { $unwind: "$details" },
+            {
+                "$project": {
+                    "_deleted": 1,
+                    "deliveryDate": 1,
+                    "details.productionOrderNo": 1,
+                    "details.productionOrderType": 1,
+                    "details.items": 1,
+                    "year": { "$year": "$deliveryDate" },
+                    "month": { "$month": "$deliveryDate" },
+                    "day": { "$dayOfMonth": "$deliveryDate" }
+                }
+            },
+            {
+                "$match": {
+                    "_deleted": false, "year": parseInt(dateFilter.year), "month": parseInt(dateFilter.month), "details.productionOrderNo": { "$in": filter }
+                }
+            }
+        ]).toArray()
+    }
+
+    filterShipmentBuyer() {
+
+        return this.productionOrderManager.collection.aggregate([
+            {
+                "$project": {
+                    "orderNo": 1,
+                    "orderType.name": 1,
+                    "processType.name": 1,
+                }
+            },
+            {
+                "$match": {
+                    "$or": [{ "orderType.name": "PRINTING" },
+                    { "$and": [{ "orderType.name": "SOLID" }, { "processType.name": { "$regex": /WHITE/, "$options": 'i' } }] },
+                    { "$and": [{ "orderType.name": "SOLID" }, { "processType.name": { "$regex": /DYEING/, "$options": 'i' } }] }]
+                }
+            }
+        ]).toArray()
+    }
+
+    getXlsDeliveryBuyer(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+
+        var max = {
+            maxPrinting: 0,
+            maxWhite: 0,
+            maxDyeing: 0,
+            maxTotal: 0,
+        }
+
+        for (var data of result.info) {
+            index++;
+
+            var item = {};
+            item["No"] = index;
+            item["Tahun"] = data.year;
+            item["Bulan"] = data.month;
+            item["Tanggal"] = data.day;
+            item["Printing (M)"] = data.printingQty;
+            item["Solid White (M)"] = data.whiteQty;
+            item["Solid Dyeing (M)"] = data.dyeingQty;
+            item["Jumlah (M)"] = data.total;
+            xls.data.push(item);
+
+
+
+            max.maxPrinting += data.printingQty;
+            max.maxWhite += data.whiteQty;
+            max.maxDyeing += data.dyeingQty;
+            max.maxTotal += data.total;
+
+
+
+        }
+
+        // xls.data[result.info.length-1].No = ""; 
+        var grandTotal = {};
+        grandTotal["No"] = "";
+        grandTotal["Tahun"] = "";
+        grandTotal["Bulan"] = "";
+        grandTotal["Tanggal"] = "Total Jumlah";
+        grandTotal["Printing (M)"] = max.maxPrinting;
+        grandTotal["Solid White (M)"] = max.maxWhite;
+        grandTotal["Solid Dyeing (M)"] = max.maxDyeing;
+        grandTotal["Jumlah (M)"] = max.maxTotal;
+
+        xls.data.push(grandTotal);
+
+
+        xls.options["No"] = "number";
+        xls.options["Tahun"] = "number";
+        xls.options["Bulan"] = "number";
+        xls.options["Tanggal"] = "number";
+        xls.options["Printing (M)"] = "number";
+        xls.options["Solid White (M)"] = "number";
+        xls.options["Solid Dyeing (M)"] = "number";
+        xls.options["Jumlah (M)"] = "number";
+
+
+        xls.name = `LAPORAN PENGIRIMAN BUYER ${query.year} -  ${query.month}.xlsx`;
+
+
+        return Promise.resolve(xls);
     }
 
     getXls(result, query) {
