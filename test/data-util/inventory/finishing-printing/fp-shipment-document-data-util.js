@@ -46,17 +46,17 @@ class FPShipmentDocumentDataUtil {
                         var shipmentDocumentPackingReceiptItems = products.map((product) => {
                             var packingReceiptItem = packingReceipt.items.find((item) => item.product.toString() === product.name.toString());
                             return {
-                                        productId: product._id,
-                                        productCode: product.code,
-                                        productName: product.name,
-                                        designCode: product.properties.designCode,
-                                        designNumber: product.properties.designNumber,
-                                        colorType: product.properties.colorName,
-                                        uomId: product.uomId,
-                                        uomUnit: product.uom.unit,
-                                        quantity: packingReceiptItem.quantity,
-                                        length: packingReceiptItem.length,
-                                        weight: packingReceiptItem.weight
+                                productId: product._id,
+                                productCode: product.code,
+                                productName: product.name,
+                                designCode: product.properties.designCode,
+                                designNumber: product.properties.designNumber,
+                                colorType: product.properties.colorName,
+                                uomId: product.uomId,
+                                uomUnit: product.uom.unit,
+                                quantity: packingReceiptItem.quantity,
+                                length: packingReceiptItem.length,
+                                weight: packingReceiptItem.weight
                             }
                         })
 
@@ -136,17 +136,17 @@ class FPShipmentDocumentDataUtil {
                         var shipmentDocumentPackingReceiptItems = products.map((product) => {
                             var packingReceiptItem = packingReceipt.items.find((item) => item.product.toString() === product.name.toString());
                             return {
-                                        productId: product._id,
-                                        productCode: product.code,
-                                        productName: product.name,
-                                        designCode: product.properties.designCode,
-                                        designNumber: product.properties.designNumber,
-                                        colorType: product.properties.colorName,
-                                        uomId: product.uomId,
-                                        uomUnit: product.uom.unit,
-                                        quantity: packingReceiptItem.quantity,
-                                        length: packingReceiptItem.length,
-                                        weight: packingReceiptItem.weight
+                                productId: product._id,
+                                productCode: product.code,
+                                productName: product.name,
+                                designCode: product.properties.designCode,
+                                designNumber: product.properties.designNumber,
+                                colorType: product.properties.colorName,
+                                uomId: product.uomId,
+                                uomUnit: product.uom.unit,
+                                quantity: packingReceiptItem.quantity,
+                                length: packingReceiptItem.length,
+                                weight: packingReceiptItem.weight
                             }
                         })
 
@@ -226,17 +226,17 @@ class FPShipmentDocumentDataUtil {
                         var shipmentDocumentPackingReceiptItems = products.map((product) => {
                             var packingReceiptItem = packingReceipt.items.find((item) => item.product.toString() === product.name.toString());
                             return {
-                                        productId: product._id,
-                                        productCode: product.code,
-                                        productName: product.name,
-                                        designCode: product.properties.designCode,
-                                        designNumber: product.properties.designNumber,
-                                        colorType: product.properties.colorName,
-                                        uomId: product.uomId,
-                                        uomUnit: product.uom.unit,
-                                        quantity: packingReceiptItem.quantity,
-                                        length: packingReceiptItem.length,
-                                        weight: packingReceiptItem.weight
+                                productId: product._id,
+                                productCode: product.code,
+                                productName: product.name,
+                                designCode: product.properties.designCode,
+                                designNumber: product.properties.designNumber,
+                                colorType: product.properties.colorName,
+                                uomId: product.uomId,
+                                uomUnit: product.uom.unit,
+                                quantity: packingReceiptItem.quantity,
+                                length: packingReceiptItem.length,
+                                weight: packingReceiptItem.weight
                             }
                         })
 
@@ -396,17 +396,17 @@ class FPShipmentDocumentDataUtil {
                         var shipmentDocumentPackingReceiptItems = products.map((product) => {
                             var packingReceiptItem = packingReceipt.items.find((item) => item.product.toString() === product.name.toString());
                             return {
-                                        productId: product._id,
-                                        productCode: product.code,
-                                        productName: product.name,
-                                        designCode: product.properties.designCode,
-                                        designNumber: product.properties.designNumber,
-                                        colorType: product.properties.colorName,
-                                        uomId: product.uomId,
-                                        uomUnit: product.uom.unit,
-                                        quantity: packingReceiptItem.quantity,
-                                        length: packingReceiptItem.length,
-                                        weight: packingReceiptItem.weight
+                                productId: product._id,
+                                productCode: product.code,
+                                productName: product.name,
+                                designCode: product.properties.designCode,
+                                designNumber: product.properties.designNumber,
+                                colorType: product.properties.colorName,
+                                uomId: product.uomId,
+                                uomUnit: product.uom.unit,
+                                quantity: packingReceiptItem.quantity,
+                                length: packingReceiptItem.length,
+                                weight: packingReceiptItem.weight
                             }
                         })
 
@@ -457,6 +457,40 @@ class FPShipmentDocumentDataUtil {
                         return Promise.resolve(data);
                     })
             })
+    }
+
+    getDataTest() {
+        var data = [
+            {
+                day: 2,
+                Id: "2-White",
+                month: 1,
+                processName: "White",
+                productionOrderNo: "orderNo/5GEMEZQB",
+                productionOrderType: "SOLID",
+                qty: 0,
+                year: 2018
+            }, {
+                day: 2,
+                Id: "2-Dyeing",
+                month: 1,
+                processName: "Dyeing",
+                productionOrderNo: "orderNo/2LGX965J",
+                productionOrderType: "SOLID",
+                qty: 0,
+                year: 2018
+            }, {
+                day: 2,
+                Id: "2-UT-PROCESS",
+                month: 1,
+                processName: "UT-PROCESS",
+                productionOrderNo: "orderNo/3D1LRMPB",
+                productionOrderType: "PRINTING",
+                qty: 0,
+                year: 2018,
+            }
+        ]
+        return Promise.resolve(data)
     }
 }
 module.exports = new FPShipmentDocumentDataUtil();

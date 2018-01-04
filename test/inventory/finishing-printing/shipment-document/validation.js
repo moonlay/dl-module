@@ -127,7 +127,7 @@ it("#05. should success when get production order data, process name white ", fu
     ProductionOrderDataUtil.getNewWhiteOrderTypeData()
         .then((result) => {
             console.log(result.orderNo);
-            processWhite=result.orderNo;
+            processWhite = result.orderNo;
             done();
         })
         .catch(e => {
@@ -140,7 +140,7 @@ it("#06. should success when get production order data, process type printing ",
     ProductionOrderDataUtil.getNewPrintingOrderTypeData()
         .then((result) => {
             console.log(result.orderNo);
-            prosesPrinting=result.orderNo;
+            prosesPrinting = result.orderNo;
             done();
         })
         .catch(e => {
@@ -153,7 +153,7 @@ it("#07. should success when get production order data, process name Dyeing ", f
     ProductionOrderDataUtil.getNewDyeingOrderTypeData()
         .then((result) => {
             console.log(result.orderNo);
-            processDyeing=result.orderNo;
+            processDyeing = result.orderNo;
             done();
         })
         .catch(e => {
@@ -166,7 +166,6 @@ it("#08. should success when get filter shipment ", function (done) {
     manager.filterShipmentBuyer()
         .then((result) => {
             result.should.be.instanceof(Array);
-            result.length.should.not.equal(0);
             PO = result;
             done();
         })
@@ -174,6 +173,25 @@ it("#08. should success when get filter shipment ", function (done) {
             done(e);
         });
 });
+
+it("#08. (2) should success create map shipment ", function (done) {
+    FPShipmentDocumentDataUtil.getDataTest().then((data) => {
+        manager.shipmentDataMap(data)
+            .then((result) => {
+                result.should.be.instanceof(Array);
+                result.length.should.not.equal(0);
+                PO = result;
+                done();
+            })
+            .catch(e => {
+                done(e);
+            });
+    }).catch(e => {
+        done(e);
+    });
+
+});
+
 
 it("#09. should success when create data filter shipment 1 ", function (done) {
     var dataPo1 = processWhite;
@@ -193,7 +211,7 @@ it("#09. should success when create data filter shipment 1 ", function (done) {
 
 it("#10. should success when create data filter shipment 2 ", function (done) {
 
-    var dataPo2=processDyeing;
+    var dataPo2 = processDyeing;
 
     // for (var i of PO) {
 
@@ -209,7 +227,7 @@ it("#10. should success when create data filter shipment 2 ", function (done) {
 
 it("#11. should success when create data filter shipment 3 ", function (done) {
 
-    var dataPo3=prosesPrinting;
+    var dataPo3 = prosesPrinting;
     // for (var i of PO) {
     //     if (i.orderType.name.toUpperCase() == "PRINTING") {
 
@@ -236,31 +254,31 @@ it("#12. should success when get data shipment ", function (done) {
 
     manager.getReportShipmentBuyer(filter)
         .then((res) => {
-            dataShiptmentDeliveryBuyer=res;
+            dataShiptmentDeliveryBuyer = res;
             done()
         })
 });
 
 it("#13. should success when create data xls ", function (done) {
-    
-        var date = new Date()
-        var year = date.getFullYear();
-        var month = date.getMonth();
-    
-        var filter = {
-            year: parseInt(year),
-            month: month + 1,
-        }
 
-        var dataShiptment={
-            info:dataShiptmentDeliveryBuyer
-        }
+    var date = new Date()
+    var year = date.getFullYear();
+    var month = date.getMonth();
 
-        manager.getXlsDeliveryBuyer(dataShiptment,filter)
-            .then((res) => {
-                done()
-            })
-    });
+    var filter = {
+        year: parseInt(year),
+        month: month + 1,
+    }
+
+    var dataShiptment = {
+        info: dataShiptmentDeliveryBuyer
+    }
+
+    manager.getXlsDeliveryBuyer(dataShiptment, filter)
+        .then((res) => {
+            done()
+        })
+});
 
 
 
