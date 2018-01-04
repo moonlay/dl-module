@@ -90,17 +90,53 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
             .then((previousSalesContracts) => {
                 var previousSalesContractNo = previousSalesContracts.length > 0 ? previousSalesContracts[0].salesContractNo : "";
 
-                salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : this.newCodeGenerator(previousSalesContractNo);
+                salesContract.salesContractNo = this.newCodeGenerator(previousSalesContractNo);
                 salesContract._createdDate = new Date();
                 return Promise.resolve(salesContract);
             })
     }
 
     newCodeGenerator(oldSalesContractNo) {
+        var newSalesContractNo = "";
+
         var monthNow = parseInt(moment().format("MM"));
         var yearNow = parseInt(moment().format("YYYY"));
-        
-        var numberStructure = oldSalesContractNo.split("/")
+
+        var codeStructure = oldSalesContractNo.split("/");
+        var number = parseInt(codeStructure)
+
+        if (codeStructure.length === 3) {
+            var dateStructure = codeStructure[2].split(".");
+            var oldMonth = parseInt(dateStructure[0]);
+            var oldYear = parseInt(dateStructure[1]);
+
+            if (oldYear === yearNow) {
+                if (oldMonth === monthNow) {
+                    number += 1;
+                    codeStructure[0] = this.pad(number, 4);
+                    newSalesContractNo = codeStructure.join("/");
+                } else {
+                    codeStructure[0] = "0001";
+                    newSalesContractNo = codeStructure.join("/");
+                }
+            } else {
+                newSalesContractNo = `0001/SFP/${this.pad(monthNow, 2)}.${this.pad(yearNow, 4)}`;
+            }
+        } else {
+            newSalesContractNo = `0001/SFP/${this.pad(monthNow, 2)}.${this.pad(yearNow, 4)}`;
+        }
+
+        return newSalesContractNo;
+    }
+
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
     _validate(salesContract) {
