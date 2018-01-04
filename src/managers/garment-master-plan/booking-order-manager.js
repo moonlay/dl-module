@@ -125,23 +125,27 @@ module.exports = class BookingOrderManager extends BaseManager {
                         errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
                     }
                 }
+                if(valid.items){
+                    var totalqty = 0;
+                    for (var i of valid.items) {
+                        totalqty += i.quantity;
+                    }
+                    if (valid.orderQuantity < totalqty) {
+                        errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal or more than SUM quantity in items", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
+                        errors["totalQuantity"]= i18n.__("BookingOrder.totalQuantity.shouldNot:%s should equal or less than booking order quantity", i18n.__("BookingOrder.totalQuantity._:TotalQuantity")); 
+                    }
+                }
 
                 valid.items = valid.items || [];
                 // if (valid.items && valid.items.length <= 0) {
                 //     errors["items"] = i18n.__("BookingOrder.items.isRequired:%s is required", i18n.__("BookingOrder.items._:items")); 
                 // }
-                if (valid.items.length > 0) {
-                    if (valid.type==='confirm'){
+                
+                if (valid.type==='confirm'){
+                    if (valid.items.length > 0) {
                         var itemErrors = [];
-                        var totalqty = 0;
                         var index=0;
-                        for (var i of valid.items) {
-                            totalqty += i.quantity;
-                        }
-                        if (valid.orderQuantity < totalqty) {
-                            errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal or more than SUM quantity in items", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
-
-                        }
+                        
                         for (var item of valid.items) {
                             item._createdDate= item._createdDate ? item._createdDate: new Date();
                             item.code= item.code ? index.toString()+item.code: generateCode();
@@ -173,12 +177,19 @@ module.exports = class BookingOrderManager extends BaseManager {
                             else{
                                 item.deliveryDate=new Date(item.deliveryDate);
                                 var today= new Date();
+                                if(item._createdDate!='' && item._createdDate){
+                                    today=new Date(item._createdDate);
+                                }
                                 valid.deliveryDate=new Date(valid.deliveryDate);
+                                valid.bookingDate= new Date(valid.bookingDate);
                                 if(today>item.deliveryDate){
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
                                 }
                                 else if (valid.deliveryDate<item.deliveryDate){
-                                    itemError["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be more than booking deliveryDate date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
+                                }
+                                else if(valid.bookingDate>item.deliveryDate){
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
                                 }
                             }
 
@@ -193,6 +204,9 @@ module.exports = class BookingOrderManager extends BaseManager {
                         }
                     
                     }
+                    else 
+                        errors["detail"] = i18n.__("BookingOrder.detail.mustHaveItem:%s must have at least 1 item", i18n.__("BookingOrder.detail._:Detail"));
+                
                 }
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
@@ -290,5 +304,24 @@ module.exports = class BookingOrderManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
+    }
+
+    delete(data) {
+        data._deleted = true;
+        return this.masterPlanCollection.singleOrDefault({ "bookingOrderNo": data.code,"_deleted":false })
+                   .then(masterPlan =>{
+                       if(masterPlan){
+                        masterPlan.status="Booking Dihapus";
+                        return this.masterPlanCollection.update(masterPlan)
+                                   .then(idMasterPlan=>{
+                                         return this.collection.update(data)
+                                                   .then(id => {return id});
+                                   });
+                                }
+                                else{
+                                    return this.collection.update(data)
+                                                   .then(id => {return id});
+                                }
+                   });
     }
 }
