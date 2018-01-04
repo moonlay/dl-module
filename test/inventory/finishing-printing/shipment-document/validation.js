@@ -256,6 +256,8 @@ it("#13. should success when create data xls ", function (done) {
             info:dataShiptmentDeliveryBuyer
         }
     
+        console.log(dataShiptmentDeliveryBuyer[0].code)
+
         manager.getXlsDeliveryBuyer(dataShiptment,filter)
             .then((res) => {
                 done()
