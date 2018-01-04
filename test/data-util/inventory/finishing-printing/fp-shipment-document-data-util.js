@@ -485,7 +485,7 @@ class FPShipmentDocumentDataUtil {
                 month: 1,
                 processName: "UT-PROCESS",
                 productionOrderNo: "orderNo/3D1LRMPB",
-                productionOrderType: "PRINTING",
+                productionOrderType: "Printing",
                 qty: 0,
                 year: 2018,
             }

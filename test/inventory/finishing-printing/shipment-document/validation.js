@@ -166,7 +166,6 @@ it("#08. should success when get filter shipment ", function (done) {
     manager.filterShipmentBuyer()
         .then((result) => {
             result.should.be.instanceof(Array);
-            PO = result;
             done();
         })
         .catch(e => {
@@ -271,7 +270,7 @@ it("#13. should success when create data xls ", function (done) {
     }
 
     var dataShiptment = {
-        info: dataShiptmentDeliveryBuyer
+        info: PO
     }
 
     manager.getXlsDeliveryBuyer(dataShiptment, filter)
