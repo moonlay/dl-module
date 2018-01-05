@@ -1513,7 +1513,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
 
                             datum.diffOrderShipmentQuantity = datum.orderQuantity - datum.shipmentQuantity;
-                            datum.diffOrderKanbanQuantity = datum.orderQuantity - (datum.shipmentQuantity + datum.preProductionQuantity + datum.onProductionQuantity + datum.inspectingQuantity + datum.afterProductionQuantity + datum.storageQuantity);
+                            datum.diffOrderKanbanQuantity = datum.orderQuantity - (datum.afterProductionQuantity + datum.preProductionQuantity + datum.onProductionQuantity + datum.inspectingQuantity);
                             grandTotal.diffOrderKanbanQuantity += datum.diffOrderKanbanQuantity;
                             grandTotal.diffOrderShipmentQuantity += datum.diffOrderShipmentQuantity;
 
@@ -1634,7 +1634,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                             }
 
-                            datum.notInKanbanQuantity = datum.orderQuantity - (datum.preProductionQuantity + datum.onProductionQuantity + datum.inspectingQuantity + datum.afterProductionQuantity + datum.storageQuantity + datum.shipmentQuantity);
+                            datum.notInKanbanQuantity = datum.orderQuantity - (datum.afterProductionQuantity + datum.preProductionQuantity + datum.onProductionQuantity + datum.inspectingQuantity);
                             datum.diffOrderShipmentQuantity = datum.orderQuantity - datum.shipmentQuantity;
 
                             data.push(datum);
@@ -1833,7 +1833,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                             if (dailyOperation) {
                                 kanban = Object.assign(kanban, dailyOperation)
-                            } else  if (kanban.isComplete) {
+                            } else if (kanban.isComplete) {
                                 var step = {};
                                 step["processArea"] = "complete"
                                 kanban.step = step;
