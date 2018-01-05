@@ -44,18 +44,13 @@ it("#01. should error when create new data with not exsisst booking order", func
         });
 });
 
-it("#02. should error when create new data with no item in detail", function (done) {
+it("#02. should error when create new data with no detail", function (done) {
     dataUtil.getNewData()
         .then((data) => {
-            var details = [];
-            for(var detail of data.details){
-                detail.detailItems = [];
-                details.push(detail);
-            }
-            data.details = details;
+            data.details = [];
             manager.create(data)
                 .then((id) => {
-                    done("should error when create new data with no item in detail");
+                    done("should error when create new data with no detail");
                 })
                 .catch((e) => {
                     e.name.should.equal("ValidationError");
@@ -70,18 +65,18 @@ it("#02. should error when create new data with no item in detail", function (do
         });
 });
 
-it("#03. should error when create new data with different detail beetwen booking order and master plan", function (done) {
+it("#03. should error when create new data with comodity not exist", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             var details = [];
             for(var detail of data.details){
-                detail.code = "code";
+                detail.masterPlanComodityId = "code";
                 details.push(detail);
             }
             data.details = details;
             manager.create(data)
                 .then((id) => {
-                    done("should error when create new data with different detail beetwen booking order and master plan");
+                    done("should error when create new data with comodity not exist");
                 })
                 .catch((e) => {
                     e.name.should.equal("ValidationError");
@@ -101,13 +96,37 @@ it("#03. should error when create new data with different detail beetwen booking
         });
 });
 
-it("#04. should error when create new data with 0 value on shCutting, shSewing, shFinishing and quantity", function (done) {
+it("#04. should error when create new data with confirmed and no comodity data", function (done) {
     dataUtil.getNewData()
         .then((data) => {
-            data.details[0].detailItems[0].shCutting = 0;
-            data.details[0].detailItems[0].shSewing = 0;
-            data.details[0].detailItems[0].shFinishing = 0;
-            data.details[0].detailItems[0].quantity = 0;
+            delete data.details[0].masterPlanComodityId;
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with confirmed and no comodity data");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("details");
+                    e.errors.details.should.instanceOf(Array);
+                    e.errors.details[0].should.instanceof(Object);
+                    e.errors.details[0].should.have.property("masterPlanComodity");
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#05. should error when create new data with 0 value on shCutting, shSewing, shFinishing and quantity", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            data.details[0].shCutting = 0;
+            data.details[0].shSewing = 0;
+            data.details[0].shFinishing = 0;
+            data.details[0].quantity = 0;
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with 0 value on shCutting, shSewing, shFinishing and quantity");
@@ -118,37 +137,9 @@ it("#04. should error when create new data with 0 value on shCutting, shSewing, 
                     e.errors.should.instanceof(Object);
                     e.errors.should.have.property("details");
                     e.errors.details.should.instanceOf(Array);
-                    e.errors.details[0].should.instanceof(Object);
-                    e.errors.details[0].should.have.property("detailItems");
-                    e.errors.details[0].detailItems.should.instanceOf(Array);
-                    e.errors.details[0].detailItems[0].should.instanceof(Object);
-                    e.errors.details[0].detailItems[0].should.have.property("shCutting");
-                    e.errors.details[0].detailItems[0].should.have.property("shSewing");
-                    e.errors.details[0].detailItems[0].should.have.property("shFinishing");
-                    e.errors.details[0].detailItems[0].should.have.property("quantity");
-                    done();
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-
-it("#05. should error when create new data with quantity master plan more than quantity booking", function (done) {
-    dataUtil.getNewData()
-        .then((data) => {
-            data.details[0].detailItems[0].quantity = 1000;
-            manager.create(data)
-                .then((id) => {
-                    done("should error when create new data with quantity master plan more than quantity booking");
-                })
-                .catch((e) => {
-                    e.name.should.equal("ValidationError");
-                    e.should.have.property("errors");
-                    e.errors.should.instanceof(Object);
-                    e.errors.should.have.property("details");
-                    e.errors.details.should.instanceOf(Array);
-                    e.errors.details[0].should.instanceof(Object);
+                    e.errors.details[0].should.have.property("shCutting");
+                    e.errors.details[0].should.have.property("shSewing");
+                    e.errors.details[0].should.have.property("shFinishing");
                     e.errors.details[0].should.have.property("quantity");
                     done();
                 });
@@ -158,13 +149,32 @@ it("#05. should error when create new data with quantity master plan more than q
         });
 });
 
-it("#06. should error when create new data with no data unit (1)", function (done) {
+it("#06. should error when create new data with quantity master plan more than quantity booking", function (done) {
     dataUtil.getNewData()
         .then((data) => {
-            data.details[0].detailItems[0].unitId = "";
-            data.details[0].detailItems[1].unitId = "";
-            data.details[1].detailItems[0].unitId = "unitId";
-            data.details[1].detailItems[1].unitId = "unitId";
+            data.details[0].quantity = 1000;
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with quantity master plan more than quantity booking");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("detail");
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#07. should error when create new data with no data unit (1)", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            data.details[0].unitId = "";
+            data.details[1].unitId = "unitId";
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with no data unit (1)");
@@ -177,18 +187,8 @@ it("#06. should error when create new data with no data unit (1)", function (don
                     e.errors.details.should.instanceOf(Array);
                     e.errors.details[0].should.instanceof(Object);
                     e.errors.details[1].should.instanceof(Object);
-                    e.errors.details[0].should.have.property("detailItems");
-                    e.errors.details[1].should.have.property("detailItems");
-                    e.errors.details[0].detailItems.should.instanceOf(Array);
-                    e.errors.details[1].detailItems.should.instanceOf(Array);
-                    e.errors.details[0].detailItems[0].should.instanceof(Object);
-                    e.errors.details[0].detailItems[1].should.instanceof(Object);
-                    e.errors.details[1].detailItems[0].should.instanceof(Object);
-                    e.errors.details[1].detailItems[1].should.instanceof(Object);
-                    e.errors.details[0].detailItems[0].should.have.property("unit");
-                    e.errors.details[0].detailItems[1].should.have.property("unit");
-                    e.errors.details[1].detailItems[0].should.have.property("unit");
-                    e.errors.details[1].detailItems[1].should.have.property("unit");
+                    e.errors.details[0].should.have.property("unit");
+                    e.errors.details[1].should.have.property("unit");
                     done();
                 });
         })
@@ -197,10 +197,10 @@ it("#06. should error when create new data with no data unit (1)", function (don
         });
 });
 
-it("#07. should error when create new data with no data unit (2)", function (done) {
+it("#08. should error when create new data with no data unit (2)", function (done) {
     dataUtil.getNewData()
         .then((data) => {
-            data.details[0].detailItems[0].unitId = "unitId";
+            data.details[0].unitId = "unitId";
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with no data unit (2)");
@@ -212,10 +212,7 @@ it("#07. should error when create new data with no data unit (2)", function (don
                     e.errors.should.have.property("details");
                     e.errors.details.should.instanceOf(Array);
                     e.errors.details[0].should.instanceof(Object);
-                    e.errors.details[0].should.have.property("detailItems");
-                    e.errors.details[0].detailItems.should.instanceOf(Array);
-                    e.errors.details[0].detailItems[0].should.instanceof(Object);
-                    e.errors.details[0].detailItems[0].should.have.property("unit");
+                    e.errors.details[0].should.have.property("unit");
                     done();
                 });
         })
@@ -224,13 +221,11 @@ it("#07. should error when create new data with no data unit (2)", function (don
         });
 });
 
-it("#08. should error when create new data with no data year (1)", function (done) {
+it("#09. should error when create new data with no data year (1)", function (done) {
     dataUtil.getNewData()
         .then((data) => {
-            data.details[0].detailItems[0].weeklyPlanYear = 0;
-            data.details[0].detailItems[1].weeklyPlanYear = 0;
-            data.details[1].detailItems[0].weeklyPlanYear = 1000;
-            data.details[1].detailItems[1].weeklyPlanYear = 1000;
+            data.details[0].weeklyPlanYear = 0;
+            data.details[1].weeklyPlanYear = 1000;
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with no data year (1)");
@@ -243,18 +238,8 @@ it("#08. should error when create new data with no data year (1)", function (don
                     e.errors.details.should.instanceOf(Array);
                     e.errors.details[0].should.instanceof(Object);
                     e.errors.details[1].should.instanceof(Object);
-                    e.errors.details[0].should.have.property("detailItems");
-                    e.errors.details[1].should.have.property("detailItems");
-                    e.errors.details[0].detailItems.should.instanceOf(Array);
-                    e.errors.details[1].detailItems.should.instanceOf(Array);
-                    e.errors.details[0].detailItems[0].should.instanceof(Object);
-                    e.errors.details[0].detailItems[1].should.instanceof(Object);
-                    e.errors.details[1].detailItems[0].should.instanceof(Object);
-                    e.errors.details[1].detailItems[1].should.instanceof(Object);
-                    e.errors.details[0].detailItems[0].should.have.property("weeklyPlanYear");
-                    e.errors.details[0].detailItems[1].should.have.property("weeklyPlanYear");
-                    e.errors.details[1].detailItems[0].should.have.property("weeklyPlanYear");
-                    e.errors.details[1].detailItems[1].should.have.property("weeklyPlanYear");
+                    e.errors.details[0].should.have.property("weeklyPlanYear");
+                    e.errors.details[1].should.have.property("weeklyPlanYear");
                     done();
                 });
         })
@@ -263,10 +248,10 @@ it("#08. should error when create new data with no data year (1)", function (don
         });
 });
 
-it("#09. should error when create new data with no data year (2)", function (done) {
+it("#10. should error when create new data with no data year (2)", function (done) {
     dataUtil.getNewData()
         .then((data) => {
-            data.details[0].detailItems[0].weeklyPlanId = "weeklyPlanId";
+            data.details[0].weeklyPlanId = "weeklyPlanId";
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with no data year (2)");
@@ -278,10 +263,7 @@ it("#09. should error when create new data with no data year (2)", function (don
                     e.errors.should.have.property("details");
                     e.errors.details.should.instanceOf(Array);
                     e.errors.details[0].should.instanceof(Object);
-                    e.errors.details[0].should.have.property("detailItems");
-                    e.errors.details[0].detailItems.should.instanceOf(Array);
-                    e.errors.details[0].detailItems[0].should.instanceof(Object);
-                    e.errors.details[0].detailItems[0].should.have.property("weeklyPlanYear");
+                    e.errors.details[0].should.have.property("weeklyPlanYear");
                     done();
                 });
         })
@@ -290,11 +272,11 @@ it("#09. should error when create new data with no data year (2)", function (don
         });
 });
 
-it("#10. should error when create new data with no data week", function (done) {
+it("#11. should error when create new data with no data week", function (done) {
     dataUtil.getNewData()
         .then((data) => {
-            delete data.details[0].detailItems[0].week; 
-            data.details[0].detailItems[1].week.month = 12;
+            delete data.details[0].week; 
+            data.details[1].week.month = 12;
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with no data week");
@@ -306,12 +288,9 @@ it("#10. should error when create new data with no data week", function (done) {
                     e.errors.should.have.property("details");
                     e.errors.details.should.instanceOf(Array);
                     e.errors.details[0].should.instanceof(Object);
-                    e.errors.details[0].should.have.property("detailItems");
-                    e.errors.details[0].detailItems.should.instanceOf(Array);
-                    e.errors.details[0].detailItems[0].should.instanceof(Object);
-                    e.errors.details[0].detailItems[1].should.instanceof(Object);
-                    e.errors.details[0].detailItems[0].should.have.property("week");
-                    e.errors.details[0].detailItems[1].should.have.property("week");
+                    e.errors.details[1].should.instanceof(Object);
+                    e.errors.details[0].should.have.property("week");
+                    e.errors.details[1].should.have.property("week");
                     done();
                 });
         })
@@ -322,7 +301,7 @@ it("#10. should error when create new data with no data week", function (done) {
 
 var newData;
 var createdId;
-it("#11. should success when create new data", function (done) {
+it("#12. should success when create new data", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             newData = data;
@@ -340,7 +319,35 @@ it("#11. should success when create new data", function (done) {
         });
 });
 
-it("#12. should error when create new data with same booking order", function (done) {
+it("#13. should success when search data with filter", function (done) {
+    manager.read({
+        keyword: newData.bookingOrderNo
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#14. should success when get preview", function (done) {
+    manager.getPreview(newData.details[0].week.month, newData.details[0].weeklyPlanYear)
+        .then((documents) => {
+            documents.should.be.instanceof(Array);
+            documents.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#15. should error when create new data with same booking order", function (done) {
     manager.create(newData)
         .then((id) => {
             done("should error when create new data with same booking order");
@@ -354,7 +361,7 @@ it("#12. should error when create new data with same booking order", function (d
         });
 });
 
-it("#13. should success when destroy data with id", function (done) {
+it("#16. should success when destroy data with id", function (done) {
     manager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();

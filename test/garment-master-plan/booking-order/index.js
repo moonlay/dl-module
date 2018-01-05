@@ -9,3 +9,7 @@ describe("VALIDATION SCENARIOS", function() {
 describe("CANCEL BOOKING SCENARIOS", function() {
     require("./cancel-booking");
 });
+
+describe("CONFIRM BOOKING SCENARIOS", function() {
+    require("./confirm");
+});

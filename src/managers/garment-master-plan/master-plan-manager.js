@@ -13,7 +13,7 @@ var i18n = require("dl-i18n");
 var WeeklyPlanManager = require('./weekly-plan-manager');
 var GarmentBuyerManager = require('../master/garment-buyer-manager');
 var BookingOrderManager = require('./booking-order-manager');
-var MasterPlanComodity = require('./master-plan-comodity-manager');
+var MasterPlanComodityManager = require('./master-plan-comodity-manager');
 var UnitManager = require('../master/unit-manager');
 var generateCode = require("../../utils/code-generator");
 
@@ -25,7 +25,7 @@ module.exports = class MasterPlanManager extends BaseManager {
         this.garmentBuyerManager = new GarmentBuyerManager(db, user);
         this.unitManager = new UnitManager(db, user);
         this.bookingOrderManager = new BookingOrderManager(db, user);
-        this.masterPlanComodity = new MasterPlanComodity(db, user);
+        this.masterPlanComodityManager = new MasterPlanComodityManager(db, user);
     }
 
     _getQuery(paging) {
@@ -80,32 +80,32 @@ module.exports = class MasterPlanManager extends BaseManager {
         });
         var units = [];
         var weeks = [];
+        var comodities = [];
         if(valid.details && valid.details.length > 0){
             for(var detail of valid.details){
-                if(detail.detailItems && detail.detailItems.length > 0){
-                    for(var item of detail.detailItems){
-                        if(item.unitId && ObjectId.isValid(item.unitId))
-                            units.push(new ObjectId(item.unitId));
-                        if(item.weeklyPlanYear)
-                            weeks.push(item.weeklyPlanYear);
-                    }
-                }
+                if(detail.unitId && ObjectId.isValid(detail.unitId))
+                    units.push(new ObjectId(detail.unitId));
+                if(detail.weeklyPlanYear)
+                    weeks.push(detail.weeklyPlanYear);
+                if(detail.masterPlanComodityId && ObjectId.isValid(detail.masterPlanComodityId))
+                    comodities.push(new ObjectId(detail.masterPlanComodityId));
             }
         }
         var getBuyer = valid.garmentBuyerId && ObjectId.isValid(valid.garmentBuyerId) ? this.garmentBuyerManager.getSingleByIdOrDefault(new ObjectId(valid.garmentBuyerId)) : Promise.resolve(null);
         var getBookingOrder = valid.bookingOrderId && ObjectId.isValid(valid.bookingOrderId) ? this.bookingOrderManager.getSingleByIdOrDefault(new ObjectId(valid.bookingOrderId)) : Promise.resolve(null);
         var getUnits = units.length > 0 ? this.unitManager.collection.find({ "_id": { "$in": units } }).toArray() : Promise.resolve([]);
         var getWeeklyPlan = weeks.length > 0 ? this.weeklyPlanManager.collection.find({ "year": { "$in": weeks } }).toArray() : Promise.resolve([]);
-        
+        var getComodity = comodities.length > 0 ? this.masterPlanComodityManager.collection.find({ "_id": { "$in": comodities } }).toArray() : Promise.resolve([]);
+
         // 2. begin: Validation.
-        return Promise.all([getMasterPlan,getBuyer,getBookingOrder,getUnits,getWeeklyPlan])
+        return Promise.all([getMasterPlan,getBuyer,getBookingOrder,getUnits,getWeeklyPlan, getComodity])
             .then(results => {
                 var _masterPlan = results[0];
                 var _buyer = results[1];
                 var _bookingOrder=results[2];
                 var _units=results[3];
                 var _weeklyPlan = results[4];
-
+                var _comodities = results[5];
 
                 if(!valid.bookingOrderNo || valid.bookingOrderNo === "")
                     errors["bookingOrderNo"] = i18n.__("MasterPlan.bookingOrderNo.isRequired:%s is required", i18n.__("MasterPlan.bookingOrderNo._:BookingOrderNo"));
@@ -114,82 +114,66 @@ module.exports = class MasterPlanManager extends BaseManager {
                 else if (!_bookingOrder)
                     errors["bookingOrderNo"] = i18n.__("MasterPlan.bookingOrderNo.isNotExists:%s is not exists", i18n.__("MasterPlan.bookingOrderNo._:BookingOrderNo"));
 
-                var isHaveItem = false;
-                if(valid.details){
-                    for(var detail of valid.details){
-                        if(detail.detailItems && detail.detailItems.length > 0){
-                            isHaveItem = true;
-                            break;
-                        }
-                    }
-                }
-                if(isHaveItem){
+                if(!valid.details || valid.details.length === 0)
+                    errors["detail"] = "detail must have 1 item";
+                else{
                     var detailErrors = [];
+                    var totalDetail = 0;
                     for(var detail of valid.details){
                         var detailError = {};
-                        var itemErrors = [];
-                        if(_bookingOrder){
-                            var detailBooking = _bookingOrder.items.find(item => item.code === detail.code);
-                            if(!detailBooking)
-                                detailError["masterPlanComodity"] = i18n.__("MasterPlan.details.masterPlanComodity.isDeleted:%s is deleted from Booking Order by MD", i18n.__("MasterPlan.details.masterPlanComodity._:MasterPlanComodity"));
+                        totalDetail += (!detail.quantity ? 0 : detail.quantity);
+                        if(!detail.shCutting || detail.shCutting === 0)
+                            detailError["shCutting"] = i18n.__("MasterPlan.details.shCutting.mustGreater:%s must greater than 0", i18n.__("MasterPlan.details.shCutting._:Sh Cutting"));
+                        if(!detail.shSewing || detail.shSewing === 0)
+                            detailError["shSewing"] = i18n.__("MasterPlan.details.shSewing.mustGreater:%s must greater than 0", i18n.__("MasterPlan.details.shSewing._:Sh Sewing"));
+                        if(!detail.shFinishing || detail.shFinishing === 0)
+                            detailError["shFinishing"] = i18n.__("MasterPlan.details.shFinishing.mustGreater:%s must greater than 0", i18n.__("MasterPlan.details.shFinishing._:Sh Finishing"));
+                        if(!detail.quantity || detail.quantity === 0)
+                            detailError["quantity"] = i18n.__("MasterPlan.details.quantity.mustGreater:%s must greater than 0", i18n.__("MasterPlan.details.quantity._:Quantity"));
+                        
+                        if((detail.isConfirmed && !detail.masterPlanComodityId) || (detail.isConfirmed && detail.masterPlanComodityId === "") )
+                            detailError["masterPlanComodity"] = i18n.__("MasterPlan.details.masterPlanComodity.isRequired:%s is required", i18n.__("MasterPlan.details.masterPlanComodity._:Master Plan Comodity"));
+                        else if(detail.masterPlanComodityId){
+                            var id = ObjectId.isValid(detail.masterPlanComodityId) && typeof(detail.masterPlanComodityId) === 'object' ? detail.masterPlanComodityId.toString() : detail.masterPlanComodityId;
+                            var comoditySelected = _comodities.find(select => select._id.toString() === id);
+                            if(!comoditySelected)
+                                detailError["masterPlanComodity"] = i18n.__("MasterPlan.details.masterPlanComodity.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.masterPlanComodity._:Master Plan Comodity"));
                         }
-                        var totalDetail = 0;
-                        if(detail.detailItems && detail.detailItems.length > 0){
-                            for(var item of detail.detailItems){
-                                var itemError = {};
 
-                                totalDetail += (!item.quantity ? 0 : item.quantity);
-                                
-                                if(!item.shCutting || item.shCutting === 0)
-                                    itemError["shCutting"] = i18n.__("MasterPlan.details.detailItems.shCutting.mustGreater:%s must greater than 0", i18n.__("MasterPlan.details.detailItems.shCutting._:Sh Cutting"));
-                                if(!item.shSewing || item.shSewing === 0)
-                                    itemError["shSewing"] = i18n.__("MasterPlan.details.detailItems.shSewing.mustGreater:%s must greater than 0", i18n.__("MasterPlan.details.detailItems.shSewing._:Sh Sewing"));
-                                if(!item.shFinishing || item.shFinishing === 0)
-                                    itemError["shFinishing"] = i18n.__("MasterPlan.details.detailItems.shFinishing.mustGreater:%s must greater than 0", i18n.__("MasterPlan.details.detailItems.shFinishing._:Sh Finishing"));
-                                if(!item.quantity || item.quantity === 0)
-                                    itemError["quantity"] = i18n.__("MasterPlan.details.detailItems.quantity.mustGreater:%s must greater than 0", i18n.__("MasterPlan.details.detailItems.quantity._:Quantity"));
+                        
+                        if(!detail.deliveryDate || detail.deliveryDate === '')
+                            detailError["deliveryDate"] = i18n.__("MasterPlan.details.deliveryDate.isRequired:%s is required", i18n.__("MasterPlan.details.deliveryDate._:DeliveryDate"));
 
-                                if(!item.unitId || item.unitId === "")
-                                    itemError["unit"] = i18n.__("MasterPlan.details.detailItems.unit.isRequired:%s is required", i18n.__("MasterPlan.details.detailItems.unit._:Unit"));
-                                else if(!_units || _units.length === 0)
-                                    itemError["unit"] = i18n.__("MasterPlan.details.detailItems.unit.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.detailItems.unit._:Unit"));
-                                else{
-                                    var id = ObjectId.isValid(item.unitId) && typeof(item.unitId) === 'object' ? item.unitId.toString() : item.unitId;
-                                    var unitSelected = _units.find(select => select._id.toString() === id);
-                                    if(!unitSelected)
-                                        itemError["unit"] = i18n.__("MasterPlan.details.detailItems.unit.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.detailItems.unit._:Unit"));
-                                }
+                        if(!detail.unitId || detail.unitId === "")
+                            detailError["unit"] = i18n.__("MasterPlan.details.unit.isRequired:%s is required", i18n.__("MasterPlan.details.unit._:Unit"));
+                        else if(!_units || _units.length === 0)
+                            detailError["unit"] = i18n.__("MasterPlan.details.unit.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.unit._:Unit"));
+                        else{
+                            var id = ObjectId.isValid(detail.unitId) && typeof(detail.unitId) === 'object' ? detail.unitId.toString() : detail.unitId;
+                            var unitSelected = _units.find(select => select._id.toString() === id);
+                            if(!unitSelected)
+                                detailError["unit"] = i18n.__("MasterPlan.details.unit.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.unit._:Unit"));
+                        }
 
-                                if(!item.weeklyPlanYear || item.weeklyPlanYear === "" || item.weeklyPlanYear === 0 || !item.weeklyPlanId || item.weeklyPlanId === "")
-                                    itemError["weeklyPlanYear"] = i18n.__("MasterPlan.details.detailItems.weeklyPlanYear.isRequired:%s is required", i18n.__("MasterPlan.details.detailItems.weeklyPlanYear._:Weekly Plan Year"));
-                                else if(!_weeklyPlan || _weeklyPlan.length === 0)
-                                    itemError["weeklyPlanYear"] = i18n.__("MasterPlan.details.detailItems.weeklyPlanYear.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.detailItems.weeklyPlanYear._:Weekly Plan Year"));
-                                else{
-                                    var id = ObjectId.isValid(item.weeklyPlanId) && typeof(item.weeklyPlanId) === 'object' ? item.weeklyPlanId.toString() : item.weeklyPlanId;
-                                    var weeklyPlan = _weeklyPlan.find(select => select._id.toString() === id);
-                                    if(!weeklyPlan)
-                                        itemError["weeklyPlanYear"] = i18n.__("MasterPlan.details.detailItems.weeklyPlanYear.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.detailItems.weeklyPlanYear._:Weekly Plan Year"));
-                                    else{
-                                        if(!item.week)
-                                            itemError["week"] = i18n.__("MasterPlan.details.detailItems.week.isRequired:%s is required", i18n.__("MasterPlan.details.detailItems.week._:Week"));
-                                        else {
-                                            var weekDay = weeklyPlan.items.find(select => select.weekNumber === item.week.weekNumber && select.month === item.week.month && select.efficiency === item.week.efficiency && select.operator === item.week.operator);
-                                            if(!weekDay)
-                                                itemError["week"] = i18n.__("MasterPlan.details.detailItems.week.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.detailItems.week._:Week"));
-                                        }
-                                    }
-                                }
-                                itemErrors.push(itemError);
-                            }
-                            for (var error of itemErrors) {
-                                if (Object.getOwnPropertyNames(error).length > 0) {
-                                    detailError["detailItems"] = itemErrors;
-                                    break;
+                        if(!detail.weeklyPlanYear || detail.weeklyPlanYear === "" || detail.weeklyPlanYear === 0 || !detail.weeklyPlanId || detail.weeklyPlanId === "")
+                            detailError["weeklyPlanYear"] = i18n.__("MasterPlan.details.weeklyPlanYear.isRequired:%s is required", i18n.__("MasterPlan.details.weeklyPlanYear._:Weekly Plan Year"));
+                        else if(!_weeklyPlan || _weeklyPlan.length === 0)
+                            detailError["weeklyPlanYear"] = i18n.__("MasterPlan.details.weeklyPlanYear.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.weeklyPlanYear._:Weekly Plan Year"));
+                        else{
+                            var id = ObjectId.isValid(detail.weeklyPlanId) && typeof(detail.weeklyPlanId) === 'object' ? detail.weeklyPlanId.toString() : detail.weeklyPlanId;
+                            var weeklyPlan = _weeklyPlan.find(select => select._id.toString() === id);
+                            if(!weeklyPlan)
+                                detailError["weeklyPlanYear"] = i18n.__("MasterPlan.details.weeklyPlanYear.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.weeklyPlanYear._:Weekly Plan Year"));
+                            else{
+                                if(!detail.week)
+                                    detailError["week"] = i18n.__("MasterPlan.details.week.isRequired:%s is required", i18n.__("MasterPlan.details.week._:Week"));
+                                else{ 
+                                    var weekDay = weeklyPlan.items.find(select => select.weekNumber === detail.week.weekNumber && select.month === detail.week.month && select.efficiency === detail.week.efficiency && select.operator === detail.week.operator);
+                                    if(!weekDay)
+                                        detailError["week"] = i18n.__("MasterPlan.details.week.isNotExists:%s is not Exists", i18n.__("MasterPlan.details.week._:Week"));
                                 }
                             }
                         }
-                        if(totalDetail > detail.quantity)
-                            detailError["quantity"] = `Quantity can not be more than ${detail.quantity}`;
                         detailErrors.push(detailError);
                     }
                     for (var error of detailErrors) {
@@ -198,9 +182,10 @@ module.exports = class MasterPlanManager extends BaseManager {
                             break;
                         }
                     }
-                } else 
-                    errors["detail"] = i18n.__("MasterPlan.detail.mustHaveItem:%s must have 1 item", i18n.__("MasterPlan.detail._:Detail"));
-                
+                    if(totalDetail > valid.quantity)
+                        errors["detail"] = `Quantity can not be more than ${valid.quantity}`;
+                }
+              
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
@@ -212,50 +197,47 @@ module.exports = class MasterPlanManager extends BaseManager {
                     valid.bookingDate = _bookingOrder.bookingDate;
                     valid.deliveryDate = _bookingOrder.deliveryDate;
                     valid.quantity = _bookingOrder.orderQuantity;
-                    var details = [];
-                    for(var detail of valid.details){
-                        var items = [];
-                        var itemBooking = _bookingOrder.items.find(select => select.code === detail.code);
-                        if(itemBooking){
-                            detail.masterPlanComodityId = itemBooking.masterPlanComodityId;
-                            detail.masterPlanComodity = itemBooking.masterPlanComodity;
-                            detail.quantity = itemBooking.quantity;
-                            detail.remark = itemBooking.remark;
-                            detail.isConfirmed = itemBooking.isConfirmed;
-                        }
-                        if(detail.detailItems.length > 0){
-                            for(var item of detail.detailItems){
-                                var unitSelected = _units.find(select => select._id.toString() === item.unitId);
-                                if(unitSelected){
-                                    item.unitId = unitSelected._id;
-                                    item.unit = unitSelected;
-                                }
-                                var weeklyPlan = _weeklyPlan.find(select => select._id.toString() === item.weeklyPlanId);
-                                if(weeklyPlan){
-                                    item.weeklyPlanId = weeklyPlan._id;
-                                    item.weeklyPlanYear = weeklyPlan.year;
-                                    var weekDay = weeklyPlan.items.find(select => select.weekNumber === item.week.weekNumber && select.month === item.week.month && select.efficiency === item.week.efficiency && select.operator === item.week.operator);
-                                    if(weekDay)
-                                        item.week = weekDay;
-                                }
-                                if (!item.stamp) {
-                                    item = new MasterPlanDetailItem(item);
-                                }
-                                item._createdDate = valid._createdDate;
-                                item.stamp(this.user.username, "manager");
-                                items.push(item);
-                            }
-                        }
-                        detail.detailItems = items;
-                        if (!detail.stamp) {
-                            detail = new MasterPlanDetail(detail);
-                        }
-                        detail._createdDate = valid._createdDate;
-                        detail.stamp(this.user.username, "manager");
-                        details.push(detail);
-                    }
-                    valid.details = details;
+                    valid.remark = _bookingOrder.remark;
+                    valid.bookingItems = _bookingOrder.items;
                 }
+                var details =[];
+                for(var detail of valid.details){
+                    detail.code = !detail.code ? generateCode() : detail.code;
+                    var unitId = ObjectId.isValid(detail.unitId) && typeof(detail.unitId) === 'object' ? detail.unitId.toString() : detail.unitId;
+                    var unitSelected = _units.find(select => select._id.toString() === unitId);
+                    if(unitSelected){
+                        detail.unitId = unitSelected._id;
+                        detail.unit = unitSelected;
+                    }
+                    var weeklyPlanId = ObjectId.isValid(detail.weeklyPlanId) && typeof(detail.weeklyPlanId) === 'object' ? detail.weeklyPlanId.toString() : detail.weeklyPlanId;
+                    var weeklyPlan = _weeklyPlan.find(select => select._id.toString() === weeklyPlanId);
+                    if(weeklyPlan){
+                        detail.weeklyPlanId = weeklyPlan._id;
+                        detail.weeklyPlanYear = weeklyPlan.year;
+                        var weekDay = weeklyPlan.items.find(select => select.weekNumber === detail.week.weekNumber && select.month === detail.week.month && select.efficiency === detail.week.efficiency && select.operator === detail.week.operator);
+                        if(weekDay)
+                            detail.week = weekDay;
+                    }
+                    if(detail.masterPlanComodityId){
+                        var masterPlanComodityId = ObjectId.isValid(detail.masterPlanComodityId) && typeof(detail.masterPlanComodityId) === 'object' ? detail.masterPlanComodityId.toString() : detail.masterPlanComodityId;
+                        var masterPlanComodity = _comodities.find(select => select._id.toString() === masterPlanComodityId);
+                        if(masterPlanComodity){
+                            detail.masterPlanComodityId = masterPlanComodity._id;
+                            detail.masterPlanComodity = masterPlanComodity;
+                        }
+                    }else{
+                        detail.masterPlanComodityId = null;
+                        detail.masterPlanComodity = null;
+                    }
+                    detail.deliveryDate = new Date(detail.deliveryDate);
+                    if (!detail.stamp) {
+                        detail = new MasterPlanDetail(detail);
+                    }
+                    detail._createdDate = valid._createdDate;
+                    detail.stamp(this.user.username, "manager");
+                    details.push(detail);
+                }
+                valid.details = details;
                 if(_buyer){
                     valid.garmentBuyerId = _buyer._id;
                     valid.garmentBuyerName = _buyer.name;
@@ -271,6 +253,104 @@ module.exports = class MasterPlanManager extends BaseManager {
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
             });
+    }
+    
+    _afterInsert(id) {
+        return new Promise((resolve, reject) => {
+            this.getSingleById(id)
+                .then(data => {
+                    this.bookingOrderManager.getSingleById(data.bookingOrderId)
+                        .then(booking =>{
+                            booking.isMasterPlan = true;
+                            this.bookingOrderManager.collection.update(booking)
+                                .then(idBooking=>{
+                                    resolve(id);
+                                })
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    delete(data) {
+        return new Promise((resolve, reject) => {
+            data._deleted = true;
+            this.bookingOrderManager.getSingleById(data.bookingOrderId)
+                .then(booking =>{
+                    booking.isMasterPlan = false;
+                    this.bookingOrderManager.collection.update(booking)
+                        .then(idBooking=>{
+                            this.collection.update(data)
+                                .then(id => resolve(id))
+                                .catch(e => {
+                                    reject(e);
+                                });
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    getPreview(month, year){
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                _deleted: false
+            };
+            var stringDate = month > 10 ? `${year}-${month - 1}-01` : `${year}-0${month - 1}-01`;
+            var thisDate = new Date(stringDate);
+            var nextDate = new Date(thisDate.setMonth(thisDate.getMonth() + 6));
+            var nextMonth = nextDate.getMonth();
+            var nextYear = nextDate.getFullYear();
+            var dateQuery = {
+                "$and" : [
+                    {"details.week.month" : {"$gte" : (month - 1)}},
+                    {"details.weeklyPlanYear" : {"$gte" : year}},
+                    {"details.week.month" : {"$lte" : nextMonth}},
+                    {"details.weeklyPlanYear" : {"$lte" : nextYear}}
+                ]
+            };
+            this.collection
+            .aggregate([
+                { "$unwind": "$details" },
+                { "$match": dateQuery }, 
+                {
+                    "$project": {
+                        "month": "details.week.month",
+                        "week": "details.week.weekNumber",
+                        "year": "details.weeklyPlanYear",
+                        "unitCode": "$details.unit.code",
+                        "sh":"$details.shSewing"
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": { "month": "$month", "week": "$week", "year": "$year", "unitCode": "$unitCode" },
+                        "sh": { "$sum": "$sh" }
+                    }
+                }
+
+            ])
+            .toArray()
+            .then(results => {
+                resolve(results);
+            })
+            .catch(e => {
+                reject(e);
+            });
+        });
     }
 
     _createIndexes() {

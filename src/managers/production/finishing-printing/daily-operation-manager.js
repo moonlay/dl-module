@@ -70,7 +70,6 @@ module.exports = class DailyOperationManager extends BaseManager {
         // }
         // query["$and"] = [_default, keywordFilter, pagingFilter];
         query["$and"] = [_default, pagingFilter];
-        
         return query;
     }
 
@@ -382,20 +381,18 @@ module.exports = class DailyOperationManager extends BaseManager {
                         //     }
                         // }
 
-                        var badOutput = valid.badOutput && valid.badOutput !== '' ? valid.badOutput : 0;
+                        var badOutput = valid.badOutput && valid.badOutput !== '' ? parseInt(valid.badOutput) : 0;
                         //var goodOutput = valid.goodOutput && valid.goodOutput !== '' ? valid.goodOutput : 0; 
 
                         if ((!valid.goodOutput || valid.goodOutput === '') && (!valid.badOutput || valid.badOutput === '')) {
                             errors["goodOutput"] = i18n.__("Harus diisi", i18n.__("DailyOperation.goodOutput._:Good Output")); //"nilai good output tidak boleh kosong";
                             errors["badOutput"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutput._:Bad Output")); //"nilai bad output tidak boleh kosong";
                         } else if (badOutput > 0) {
-                            if (!valid.action || valid.action === "")
-                                errors["action"] = i18n.__("Harus diisi", i18n.__("DailyOperation.action._:Action")); //"keterangan bad output tidak boleh kosong";
                             if (!valid.badOutputReasons || valid.badOutputReasons.length < 1)
                                 errors["badOutputReasons"] = i18n.__("Harus diisi minimal 1 Keterangan", i18n.__("DailyOperation.badOutputReasons._:BadOutputReasons")); //"keterangan bad output tidak boleh kosong";
                             else {
                                 var itemErrors = [];
-                                var precentageTotal = 0;
+                                var lengthTotal = 0;
                                 var valueArr = valid.badOutputReasons.map(function (item) { return item.badOutputReasonId ? item.badOutputReasonId.toString() : "" });
 
                                 var itemDuplicateErrors = new Array(valueArr.length);
@@ -414,10 +411,12 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 for (var a of valid.badOutputReasons) {
                                     var itemError = {};
                                     var _index = valid.badOutputReasons.indexOf(a);
-                                    var precentage = !a.precentage || a.precentage === "" ? 0 : a.precentage;
-                                    precentageTotal += precentage;
-                                    if (precentage < 1)
-                                        itemError["precentage"] = i18n.__("Harus lebih dari 0", i18n.__("DailyOperation.badOutputReasons.precentage._:Precentage")); //"keterangan bad output tidak boleh kosong";
+                                    var length = !a.length || a.length === "" ? 0 : parseInt(a.length);
+                                    lengthTotal += length;
+                                    if (length < 1)
+                                        itemError["length"] = i18n.__("Harus lebih dari 0", i18n.__("DailyOperation.badOutputReasons.length._:Panjang")); //"keterangan bad output tidak boleh kosong";
+                                    if (!a.action || a.action === "")
+                                        itemError["action"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.action._:Action")); //"keterangan bad output tidak boleh kosong";
                                     if (!a.description || a.description === "")
                                         itemError["description"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.description._:Description")); //"keterangan bad output tidak boleh kosong";
                                     function searchItem(params) {
@@ -433,8 +432,8 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     }
                                     itemErrors.push(itemError);
                                 }
-                                if (precentageTotal !== 100)
-                                    errors["badOutputReasons"] = i18n.__("Total persentase harus 100", i18n.__("DailyOperation.badOutputReasons._:BadOutputReasons")); //"keterangan bad output tidak boleh kosong";
+                                if (lengthTotal !== badOutput)
+                                    errors["badOutputReasons"] = i18n.__("Total Panjang harus sama dengan Total BadOutput", i18n.__("DailyOperation.badOutputReasons._:BadOutputReasons")); //"keterangan bad output tidak boleh kosong";
                                 else {
                                     for (var itemError of itemErrors) {
                                         if (Object.getOwnPropertyNames(itemError).length > 0) {
@@ -479,7 +478,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                         delete valid.timeOutput;
                         delete valid.goodOutput;
                         delete valid.badOutput;
-                        delete valid.action;
                         delete valid.badOutputReasons;
                     }
                     if (valid.type == "output") {
@@ -497,7 +495,8 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 }
                                 var dataBadOutput = _badOutput.find(searchItem);
                                 var data = new BadOutputReasonItem({
-                                    precentage: a.precentage,
+                                    length: a.length,
+                                    action: a.action,
                                     description: a.description,
                                     badOutputReasonId: new ObjectId(dataBadOutput._id),
                                     badOutputReason: dataBadOutput
@@ -508,7 +507,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                             }
                             valid.badOutputReasons = items;
                         } else {
-                            delete valid.action;
                             delete valid.badOutputReasons;
                         }
                     }
@@ -764,14 +762,41 @@ module.exports = class DailyOperationManager extends BaseManager {
                 "dateInput": -1
             };
             var QueryInput = { "$and": [date, machineQuery, kanbanQuery, { "type": "input" }] };
+
+            var selectedFields = {
+                "code": 1,
+                "kanban.productionOrder.orderNo": 1,
+                "kanban.cart.cartNumber": 1,
+                "kanban.isReprocess": 1,
+                "machine.name": 1,
+                "step.process": 1,
+                "kanban.productionOrder.material.name": 1,
+                "kanban.selectedProductionOrderDetail.colorRequest": 1,
+                "kanban.productionOrder.finishWidth": 1,
+                "kanban.productionOrder.processType.name": 1,
+                "dateInput": 1,
+                "timeInput": 1,
+                "input": 1,
+                "dateOutput": 1,
+                "timeOutput": 1,
+                "goodOutput": 1,
+                "badOutput": 1,
+                "badOutputDescription": 1,
+                "action": 1,
+                "badOutputReasons.badOutputReason.reason": 1,
+                "badOutputReasons.precentage": 1,
+                "badOutputReasons.length": 1,
+                "badOutputReasons.action": 1
+            }
+
             this.collection
-                .find({ $query: QueryInput, $orderby: order })
+                .find({ $query: QueryInput, $orderby: order }, selectedFields)
                 .toArray()
                 .then(input => {
                     var itemCode = input.map(function (item) { return item.code });
                     var QueryOutput = { "$and": [{ "code": { "$in": itemCode } }, { "type": "output" }, { "_deleted": false }] };
                     this.collection
-                        .find({ $query: QueryOutput, $orderby: order })
+                        .find({ $query: QueryOutput, $orderby: order }, selectedFields)
                         .toArray()
                         .then(output => {
                             var data = {
@@ -793,31 +818,59 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     tamp.goodOutput = dataOutput.goodOutput;
                                     tamp.dateOutput = dataOutput.dateOutput;
                                     tamp.timeOutput = dataOutput.timeOutput;
-                                    if (tamp.hasOwnProperty("action"))
-                                        tamp.action = dataOutput.action ? dataOutput.action : "";
-                                    else
-                                        tamp["action"] = dataOutput.action ? dataOutput.action : "";
-                                    if (tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
-                                        tamp.badOutputDescription = dataOutput.badOutputDescription;
-                                    else if (!tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
-                                        tamp["badOutputDescription"] = dataOutput.badOutputDescription;
-                                    else if (tamp.hasOwnProperty("badOutputDescription") && !dataOutput.hasOwnProperty("badOutputDescription")) {
-                                        var description = ""
-                                        if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
-                                            for (var a of dataOutput.badOutputReasons) {
-                                                description += `${a.badOutputReason.reason}, `
+                                    tamp.action = dataOutput.action ? dataOutput.action : "";
+
+                                    // if (tamp.hasOwnProperty("action"))
+                                    //     tamp.action = dataOutput.action ? dataOutput.action : "";
+                                    // else
+                                    //     tamp["action"] = dataOutput.action ? dataOutput.action : "";
+
+                                    tamp.badOutputDescription = dataOutput.badOutputDescription ? dataOutput.badOutputDescription : "";
+                                    if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
+                                        var index = 0;
+                                        var description = "";
+                                        for (var reason of dataOutput.badOutputReasons) {
+                                            index++;
+                                            if (index === dataOutput.badOutputReasons.length) {
+                                                description += `${index}. ${reason.badOutputReason.reason ? reason.badOutputReason.reason : ""} ${reason.length ? reason.length + "(m)" : reason.precentage ? reason.precentage + "(%)" : 0} ${tamp.action ? tamp.action : reason.action ? reason.action : ""}`;
+                                            } else {
+                                                description += `${index}. ${reason.badOutputReason.reason ? reason.badOutputReason.reason : ""} ${reason.length ? reason.length + "(m)" : reason.precentage ? reason.precentage + "(%)" : 0} ${tamp.action ? tamp.action : reason.action ? reason.action : ""}\n`;
                                             }
                                         }
                                         tamp.badOutputDescription = description;
-                                    } else {
-                                        var description = ""
-                                        if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
-                                            for (var a of dataOutput.badOutputReasons) {
-                                                description += `${a.badOutputReason.reason}, `
-                                            }
-                                        }
-                                        tamp["badOutputDescription"] = description;
                                     }
+
+                                    // if (tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
+                                    //     tamp.badOutputDescription = dataOutput.badOutputDescription;
+                                    // else if (!tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
+                                    //     tamp["badOutputDescription"] = dataOutput.badOutputDescription;
+                                    // else if (tamp.hasOwnProperty("badOutputDescription") && !dataOutput.hasOwnProperty("badOutputDescription")) {
+                                    //     var description = ""
+                                    //     if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
+                                    //         var index = 0;
+                                    //         for (var a of dataOutput.badOutputReasons) {
+                                    //             index++;
+                                    //             if (index === dataOutput.badOutputReasons.length) {
+                                    //                 description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}`;
+                                    //             }
+                                    //             description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}\n`;
+                                    //         }
+                                    //     }
+                                    //     tamp.badOutputDescription = description;
+                                    // } else {
+                                    //     var description = ""
+                                    //     if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
+                                    //         var index = 0;
+                                    //         for (var a of dataOutput.badOutputReasons) {
+                                    //             index++;
+                                    //             if (index === dataOutput.badOutputReasons.length) {
+                                    //                 description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}`;
+                                    //             }
+                                    //             description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}\n`;
+                                    //         }
+                                    //     }
+                                    //     tamp["badOutputDescription"] = description;
+                                    // }
                                 }
                                 // for(var b of output){
                                 //     if(tamp.code === b.code){
@@ -843,23 +896,45 @@ module.exports = class DailyOperationManager extends BaseManager {
 
     getDailyMachine(query) {
         var area = query.area;
-        var date = query.month + "," + query.year;
-        var order = query.order;
-        var temp;
+        var machineId = query.machineId;
 
-        if (JSON.stringify(order).includes(`"desc"`)) {
-            temp = JSON.stringify(order).replace(`"desc"`, -1);
-            order = JSON.parse(temp)
-        } else if (JSON.stringify(order).includes(`"asc"`)) {
-            temp = JSON.stringify(order).replace(`"asc"`, 1);
-            order = JSON.parse(temp)
-        } else {
-            order;
+        // var date = {
+        //     "dateOutput": {
+        //         "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(query.dateFrom))),
+        //         "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(query.dateTo)))
+        //     },
+        // };
+
+        // var order = query.order;
+        // var temp;
+
+        // if (JSON.stringify(order).includes(`"desc"`)) {
+        //     temp = JSON.stringify(order).replace(`"desc"`, -1);
+        //     order = JSON.parse(temp)
+        // } else if (JSON.stringify(order).includes(`"asc"`)) {
+        //     temp = JSON.stringify(order).replace(`"asc"`, 1);
+        //     order = JSON.parse(temp)
+        // } else {
+        //     order;
+        // }
+
+        var matchQuery = {
+            "_deleted": false,
+            "step.processArea": area,
+            "type": "output",
+            "dateOutput": {
+                "$gte": new Date(query.dateFrom),
+                "$lte": new Date(query.dateTo)
+            }
+        }
+
+        if (machineId) {
+            matchQuery["machineId"] = new ObjectId(machineId);
         }
 
         return this.collection.aggregate([
             {
-                "$match": { "_deleted": false, "step.processArea": area, "type": "output", "dateOutput": { "$gte": new Date(date) } }
+                "$match": matchQuery
             },
             {
                 "$project": {
@@ -874,24 +949,85 @@ module.exports = class DailyOperationManager extends BaseManager {
                     "year": { "$year": "$dateOutput" },
                     "month": { "$month": "$dateOutput" },
                     "day": { "$dayOfMonth": "$dateOutput" },
+                    "date": { "$substr": ["$dateOutput", 0, 10] },
                 }
             },
-
             {
                 "$group": {
-                    "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day","dateOutput":"$dateOutput" },
+                    "_id": { "machineName": "$machine.name", "machineCode": "$machine.code", "processArea": "$step.processArea", "year": "$year", "month": "$month", "day": "$day", "date": "$date" },
                     "totalBadOutput": { "$sum": "$badOutput" },
                     "totalGoodOutput": { "$sum": "$goodOutput" },
+                    "totalBadGood": { "$sum": { "$sum": ["$goodOutput", "$badOutput"] } }
                 }
             }
         ]
-        ).sort(order).toArray()
+        ).sort({ "dateOutput": -1 }).toArray()
+            .then((dailyResults) => {
+
+                var data = {};
+                data["info"] = dailyResults || [];
+                data["summary"] = this.sumDaily(dailyResults);
+
+                var grandTotal = {};
+                grandTotal._id = {
+                    "machineName": "TOTAL",
+                    "processArea": ""
+                };
+                grandTotal.totalBadOutput = 0;
+                grandTotal.totalGoodOutput = 0;
+                grandTotal.totalBadGood = 0;
+                for (var datum of data.info) {
+                    grandTotal.totalBadOutput += datum.totalBadOutput;
+                    grandTotal.totalGoodOutput += datum.totalGoodOutput;
+                    grandTotal.totalBadGood += datum.totalBadGood;
+                }
+                data.info.push(grandTotal);
+
+                var grandTotalSummary = {
+                    "machineName": "TOTAL"
+                };
+                grandTotalSummary.goodOutputTotal = 0;
+                grandTotalSummary.badOutputTotal = 0;
+                grandTotalSummary.totalGoodBad = 0;
+                for (var datum of data.summary) {
+                    grandTotalSummary.goodOutputTotal += datum.goodOutputTotal;
+                    grandTotalSummary.badOutputTotal += datum.badOutputTotal;
+                    grandTotalSummary.totalGoodBad += datum.totalGoodBad;
+                }
+                data.summary.push(grandTotalSummary);
+
+                return Promise.resolve(data);
+            })
+    }
+
+    sumDaily(results) {
+
+        var data = [];
+        if (results.length > 0) {
+            for (var result of results) {
+
+                var exist = data.find((datum) => datum && datum.machineName === result._id.machineName);
+                if (exist) {
+                    var index = data.findIndex((datum) => datum.machineName === result._id.machineName);
+                    data[index].goodOutputTotal += result.totalGoodOutput;
+                    data[index].badOutputTotal += result.totalBadOutput;
+                    data[index].totalGoodBad += result.totalBadGood;
+                } else {
+                    var sumDatum = {
+                        machineName: result._id.machineName,
+                        goodOutputTotal: result.totalGoodOutput,
+                        badOutputTotal: result.totalBadOutput,
+                        totalGoodBad: result.totalBadGood
+                    }
+                    data.push(sumDatum);
+                }
+            }
+        }
+
+        return data;
     }
 
     getXlsDailyMachine(result, query) {
-
-        var area = query.area;
-        var date = query.month + "," + query.year;
 
         var xls = {};
         xls.data = [];
@@ -901,16 +1037,16 @@ module.exports = class DailyOperationManager extends BaseManager {
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
 
-        for (var daily of result) {
+        for (var daily of result.info) {
             index++;
             var item = {};
             item["No"] = index;
-            item["dateOutput"] = daily._id.dateOutput ? moment(new Date(daily._id.dateOutput)).format(dateFormat) : '';
-            item["Machine Name"] = daily._id.machineName ? daily._id.machineName : '';
-            item["process Area"] = daily._id.processArea ? daily._id.processArea : '';
+            item["dateOutput"] = moment(new Date(daily._id.date)).format(dateFormat);
+            item["Machine Name"] = daily._id.machineName;
+            item["process Area"] = daily._id.processArea;
             item["type"] = "output";
-            item["GoodOutput"] = daily.totalBadOutput ? daily.totalBadOutput : 0;
-            item["BadOutput"] = daily.totalGoodOutput ? daily.totalGoodOutput : 0;
+            item["GoodOutput"] = daily.totalGoodOutput;
+            item["BadOutput"] = daily.totalBadOutput;
 
             xls.data.push(item);
         }
@@ -923,7 +1059,7 @@ module.exports = class DailyOperationManager extends BaseManager {
         xls.options["GoodOutput"] = "number";
         xls.options["BadOutput"] = "number";
 
-        xls.name = `Daily Operation Report ${moment(new Date(date)).format(dateFormat)} - ${area}.xlsx`;
+        xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)} -  ${moment(new Date(query.dateTo)).format(dateFormat)} - ${query.area}.xlsx`;
 
         return Promise.resolve(xls);
     }
@@ -1007,15 +1143,15 @@ module.exports = class DailyOperationManager extends BaseManager {
             index++;
             var item = {};
             item["No"] = index;
-            item["No Order"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.orderNo : '';
+            item["No Order"] = daily.kanban ? daily.kanban.productionOrder.orderNo : '';
             item["No Kereta"] = daily.kanban ? daily.kanban.cart.cartNumber : '';
             item["Reproses"] = daily.kanban ? daily.kanban.isReprocess : '';
             item["Mesin"] = daily.machine ? daily.machine.name : '';
             item["Step Proses"] = daily.machine ? daily.step.process : '';
-            item["Material"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.material.name : '';
-            item["Warna"] = daily.kanban.selectedProductionOrderDetail ? daily.kanban.selectedProductionOrderDetail.colorType ? `${daily.kanban.selectedProductionOrderDetail.colorType.name} ${daily.kanban.selectedProductionOrderDetail.colorRequest}` : daily.kanban.selectedProductionOrderDetail.colorRequest : '';
-            item["Lebar Kain (inch)"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.materialWidth : '';
-            item["Jenis Proses"] = daily.kanban.productionOrder ? daily.kanban.productionOrder.processType.name : '';
+            item["Material"] = daily.kanban ? daily.kanban.productionOrder.material.name : '';
+            item["Warna"] = daily.kanban ? daily.kanban.selectedProductionOrderDetail.colorType ? `${daily.kanban.selectedProductionOrderDetail.colorType.name} ${daily.kanban.selectedProductionOrderDetail.colorRequest}` : daily.kanban.selectedProductionOrderDetail.colorRequest : '';
+            item["Lebar Kain (inch)"] = daily.kanban ? daily.kanban.productionOrder.materialWidth : '';
+            item["Jenis Proses"] = daily.kanban ? daily.kanban.productionOrder.processType.name : '';
             item["Tgl Input"] = daily.dateInput ? moment(new Date(daily.dateInput)).format(dateFormat) : '';
             item["Jam Input"] = daily.timeInput ? moment(daily.timeInput).add(timezone, 'h').format('HH:mm') : '';
             item["input"] = daily.input ? daily.input : 0;
@@ -1024,7 +1160,6 @@ module.exports = class DailyOperationManager extends BaseManager {
             item["BQ"] = daily.goodOutput ? daily.goodOutput : 0;
             item["BS"] = daily.badOutput ? daily.badOutput : 0;
             item["Keterangan BQ"] = daily.badOutputDescription ? daily.badOutputDescription : '';
-            item["Tindakan"] = daily.action ? daily.action : 0;
 
             xls.data.push(item);
         }
@@ -1047,7 +1182,6 @@ module.exports = class DailyOperationManager extends BaseManager {
         xls.options["BQ"] = "number";
         xls.options["BS"] = "number";
         xls.options["Keterangan BQ"] = "string";
-        xls.options["Tindakan"] = "string";
 
         if (query.dateFrom && query.dateTo) {
             xls.name = `Daily Operation Report ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
@@ -1080,5 +1214,54 @@ module.exports = class DailyOperationManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, deletedIndex]);
+    }
+
+    read(paging) {
+        var _paging = Object.assign({
+            page: 1,
+            size: 20,
+            order: {},
+            filter: {},
+            select: []
+        }, paging);
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                var query = this._getQuery(_paging);
+
+                this.collection
+                    .where(query)
+                    .select(_paging.select)
+                    .page(_paging.page, _paging.size)
+                    .order(_paging.order)
+
+                var q = this.collection.query();
+                var hint = {};
+
+                if (Object.getOwnPropertyNames(q.selector["$and"][1]).length === 0) {
+                    hint._deleted = 1;
+                }
+
+                return Promise.all([this.collection.find(q.selector).hint(hint).count(), this.collection._load(q)])
+                    .then((results) => {
+                        var count = results[0];
+                        var docs = results[1];
+
+                        this.collection._query = null;
+                        var result = {
+                            data: docs,
+                            count: docs.length,
+                            size: q.limit,
+                            total: count,
+                            page: q.offset / q.limit + 1
+                        };
+                        if (q.fields && q.fields instanceof Array) {
+                            result.select = q.fields;
+                        }
+                        result.order = q.sort;
+                        result.filter = q.filter;
+                        return Promise.resolve(result);
+                    });
+            });
     }
 };
