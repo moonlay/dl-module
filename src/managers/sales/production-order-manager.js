@@ -102,9 +102,57 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     _beforeInsert(productionOrder) {
-        productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
-        productionOrder._createdDate = new Date();
-        return Promise.resolve(productionOrder);
+        var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
+        var regex = new RegExp(`${type}/`, "i");
+        return this.collection
+            .find({ "orderNo": regex }, { "orderNo": 1 })
+            .sort({ "_createdDate": -1 })
+            .limit(1)
+            .toArray()
+            .then((previousProductionOrders) => {
+                var previousOrderNo = previousProductionOrders.length > 0 ? previousProductionOrders[0].orderNo : "";
+
+                productionOrder.orderNo = this.newCodeGenerator(previousOrderNo, type);
+                return Promise.resolve(productionOrder);
+            })
+    }
+
+    newCodeGenerator(oldOrderNo, type) {
+        var newOrderNo = "";
+
+        var yearNow = parseInt(moment().format("YY"));
+
+        var codeStructure = oldOrderNo.split("/");
+        var number = parseInt(codeStructure[2]);
+
+        if (codeStructure.length === 3) {
+            var oldYear = parseInt(codeStructure[1]);
+
+            if (oldYear === yearNow) {
+                number += 1;
+
+                codeStructure[2] = this.pad(number, 4);
+                codeStructure[1] = this.pad(yearNow, 2);
+
+                newOrderNo = codeStructure.join("/");
+            }
+        }
+
+        if (!newOrderNo) {
+            newOrderNo = `${type}/${this.pad(yearNow, 2)}/0001`;
+        }
+
+        return newOrderNo;
+    }
+
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
     _validate(productionOrder) {
@@ -1239,7 +1287,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
             item["Target Kirim Ke Buyer"] = statusOrder.orderQuantity ? Number(statusOrder.orderQuantity) : 0;
             item["Belum Produksi"] = statusOrder.preProductionQuantity ? Number(statusOrder.preProductionQuantity) : 0;
             item["Sedang Produksi"] = statusOrder.onProductionQuantity ? Number(statusOrder.onProductionQuantity) : 0;
-            item["Sedang Inspeksi"] = statusOrder.inspectingQuantity ? Number(statusOrder.inspectingQuantity) : 0;
             item["Sudah Produksi"] = statusOrder.afterProductionQuantity ? Number(statusOrder.afterProductionQuantity) : 0;
             item["Sudah Dikirim Ke Gudang"] = statusOrder.storageQuantity ? Number(statusOrder.storageQuantity) : 0;
             item["Sudah Dikirim Ke Buyer"] = statusOrder.shipmentQuantity ? Number(statusOrder.shipmentQuantity) : 0;
@@ -1253,7 +1300,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
         xls.options["Target Kirim Ke Buyer"] = "number";
         xls.options["Belum Produksi"] = "number";
         xls.options["Sedang Produksi"] = "number";
-        xls.options["Sedang Inspeksi"] = "number";
         xls.options["Sudah Produksi"] = "number";
         xls.options["Sudah Dikirim Ke Gudang"] = "number";
         xls.options["Sudah Dikirim Ke Buyer"] = "number";

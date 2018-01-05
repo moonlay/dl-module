@@ -104,7 +104,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
         var yearNow = parseInt(moment().format("YYYY"));
 
         var codeStructure = oldSalesContractNo.split("/");
-        var number = parseInt(codeStructure)
+        var number = parseInt(codeStructure[0])
 
         if (codeStructure.length === 3) {
             var dateStructure = codeStructure[2].split(".");
