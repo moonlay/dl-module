@@ -74,9 +74,61 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
     }
 
     _beforeInsert(salesContract) {
-        salesContract.salesContractNo = salesContract.salesContractNo === "" ? generateCode() : salesContract.salesContractNo;
-        salesContract._createdDate = new Date();
-        return Promise.resolve(salesContract);
+        var type = salesContract && salesContract.buyer && salesContract.buyer.type && (salesContract.buyer.type.toString().toLowerCase() === "ekspor" || salesContract.buyer.type.toString().toLowerCase() === "export") ? "WVE" : "WVL";
+        var regex = new RegExp(`/${type}/`, "i");
+        return this.collection
+            .find({ "salesContractNo": regex }, { "salesContractNo": 1 })
+            .sort({ "_createdDate": -1 })
+            .limit(1)
+            .toArray()
+            .then((previousSalesContracts) => {
+                var previousSalesContractNo = previousSalesContracts.length > 0 ? previousSalesContracts[0].salesContractNo : "";
+
+                salesContract.salesContractNo = this.newCodeGenerator(previousSalesContractNo, type);
+                return Promise.resolve(salesContract);
+            })
+    }
+
+    newCodeGenerator(oldSalesContractNo, type) {
+        var newSalesContractNo = "";
+
+        var monthNow = parseInt(moment().format("MM"));
+        var yearNow = parseInt(moment().format("YYYY"));
+
+        var codeStructure = oldSalesContractNo.split("/");
+        var number = parseInt(codeStructure)
+
+        if (codeStructure.length === 3) {
+            var dateStructure = codeStructure[2].split(".");
+            var oldYear = parseInt(dateStructure[1]);
+
+            if (oldYear === yearNow) {
+                number += 1;
+
+                var dateNowStructure = [this.pad(monthNow, 2), this.pad(yearNow, 4)];
+                codeStructure[2] = dateNowStructure.join(".");
+
+                codeStructure[0] = this.pad(number, 4);
+
+                newSalesContractNo = codeStructure.join("/");
+            }
+        }
+
+        if (!newSalesContractNo) {
+            newSalesContractNo = `0001/${type}/${this.pad(monthNow, 2)}.${this.pad(yearNow, 4)}`;
+        }
+
+        return newSalesContractNo;
+    }
+
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
     _validate(salesContract) {
@@ -182,7 +234,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
 
                 if (!valid.deliverySchedule || valid.deliverySchedule === "") {
                     errors["deliverySchedule"] = i18n.__("WeavingSalesContract.deliverySchedule.isRequired:%s is required", i18n.__("WeavingSalesContract.deliverySchedule._:deliverySchedule")); //"deliverySchedule tidak boleh kosong";
-                } 
+                }
                 //else {
 
                 //     valid.deliverySchedule = new Date(valid.deliverySchedule);
