@@ -311,8 +311,12 @@ module.exports = class DeliveryOrderManager extends BaseManager {
         return this.getSingleById(id)
             .then((deliveryOrder) => this.getRealization(deliveryOrder))
             .then((realizations) => this.updatePurchaseRequest(realizations))
-            .then((realizations) => this.updatePurchaseOrder(realizations))
-            .then((realizations) => this.updatePurchaseOrderExternal(realizations))
+            .then((realizations) => {
+                return this.updatePurchaseOrder(realizations)
+                    .then((purchaseOrderList) => {
+                        return this.updatePurchaseOrderExternal(realizations, purchaseOrderList)
+                    })
+            })
             .then(() => {
                 return Promise.resolve(id)
             })
@@ -333,8 +337,12 @@ module.exports = class DeliveryOrderManager extends BaseManager {
         return this.getSingleById(id)
             .then((deliveryOrder) => this.getRealization(deliveryOrder))
             .then((realizations) => this.updatePurchaseRequestUpdateDO(realizations))
-            .then((realizations) => this.updatePurchaseOrderUpdateDO(realizations))
-            .then((realizations) => this.updatePurchaseOrderExternalUpdateDO(realizations))
+            .then((realizations) => {
+                return this.updatePurchaseOrderUpdateDO(realizations)
+                    .then((purchaseOrderList) => {
+                        return this.updatePurchaseOrderExternalUpdateDO(realizations, purchaseOrderList)
+                    })
+            })
             .then(() => {
                 return Promise.resolve(id)
             })
@@ -398,9 +406,11 @@ module.exports = class DeliveryOrderManager extends BaseManager {
         }
 
         var jobs = [];
+        var purchaseOrderList = [];
         map.forEach((realizations, purchaseOrderId) => {
             var job = this.purchaseOrderManager.getSingleById(purchaseOrderId)
                 .then((purchaseOrder) => {
+                    purchaseOrderList.push(purchaseOrder);
                     for (var realization of realizations) {
                         var productId = realization.productId;
                         var poItem = purchaseOrder.items.find(item => item.product._id.toString() === productId.toString());
@@ -449,11 +459,11 @@ module.exports = class DeliveryOrderManager extends BaseManager {
         })
 
         return Promise.all(jobs).then((results) => {
-            return Promise.resolve(realizations);
+            return Promise.resolve(purchaseOrderList);
         })
     }
 
-    updatePurchaseOrderExternal(realizations) {
+    updatePurchaseOrderExternal(realizations, purchaseOrderList) {
         var map = new Map();
         for (var realization of realizations) {
             var key = realization.purchaseOrderExternalId.toString();
@@ -468,12 +478,48 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 .then((purchaseOrderExternal) => {
                     for (var realization of realizations) {
                         var item = purchaseOrderExternal.items.find(item => item.prId.toString() === realization.purchaseRequestId.toString() && item.product._id.toString() === realization.productId.toString());
+                        var purchaseOrder = purchaseOrderList.find(po => po._id.toString() === item.poId.toString())
+                        var poItem = {};
+                        if (purchaseOrder) {
+                            poItem = purchaseOrder.items.find(_poItem => _poItem.purchaseOrderExternalId.toString() === purchaseOrderExternal._id.toString() && _poItem.product._id.toString() === item.product._id.toString())
+                        }
+                        var correctionQty = 0;
+                        if (poItem) {
+                            if (poItem.fulfillments) {
+                                correctionQty = poItem.fulfillments
+                                    .map(itemFulfillmentsPO => {
+                                        if (itemFulfillmentsPO.corrections) {
+                                            var cQty = itemFulfillmentsPO.corrections
+                                                .map(c => {
+                                                    if (c.correctionType) {
+                                                        if (c.correctionType === "Koreksi Jumlah") {
+                                                            return c.oldCorrectionQuantity - c.newCorrectionQuantity;
+                                                        } else {
+                                                            return 0;
+                                                        }
+                                                    } else {
+                                                        return 0;
+                                                    }
+                                                })
+                                                .reduce((prev, curr, index) => {
+                                                    return prev + curr;
+                                                }, 0);
+                                            return cQty;
+                                        } else {
+                                            return 0;
+                                        }
+                                    })
+                                    .reduce((prev, curr, index) => {
+                                        return prev + curr;
+                                    }, 0);
+                            }
+                        }
                         item.realizations = item.realizations || [];
                         item.realizations.push({ "deliveryOrderNo": realization.deliveryOrder.no, "deliveredQuantity": realization.deliveredQuantity })
-                        item.isClosed = item.realizations.map(item => item.deliveredQuantity)
+                        item.isClosed = (item.realizations.map(item => item.deliveredQuantity)
                             .reduce((prev, curr, index) => {
                                 return prev + curr;
-                            }, 0) >= item.dealQuantity
+                            }, 0) - correctionQty) >= item.dealQuantity
                     }
 
                     purchaseOrderExternal.isClosed = purchaseOrderExternal.items
@@ -596,9 +642,11 @@ module.exports = class DeliveryOrderManager extends BaseManager {
         return this.getSingleById(realization.deliveryOrder._id)
             .then((oldDeliveryOrder) => {
                 var jobs = [];
+                var purchaseOrderList = [];
                 map.forEach((realizations, purchaseOrderId) => {
                     var job = this.purchaseOrderManager.getSingleById(purchaseOrderId)
                         .then((purchaseOrder) => {
+                            purchaseOrderList.push(purchaseOrder);
                             for (var realization of realizations) {
                                 var productId = realization.productId;
                                 var poItem = purchaseOrder.items.find(item => item.product._id.toString() === productId.toString());
@@ -660,12 +708,12 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 })
 
                 return Promise.all(jobs).then((results) => {
-                    return Promise.resolve(realizations);
+                    return Promise.resolve(purchaseOrderList);
                 })
             })
     }
 
-    updatePurchaseOrderExternalUpdateDO(realizations) {
+    updatePurchaseOrderExternalUpdateDO(realizations, purchaseOrderList) {
         var map = new Map();
         for (var realization of realizations) {
             var key = realization.purchaseOrderExternalId.toString();
@@ -684,10 +732,46 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         if (index !== -1) {
                             item.realizations[index] = { "deliveryOrderNo": realization.deliveryOrder.no, "deliveredQuantity": realization.deliveredQuantity };
                         }
-                        item.isClosed = item.realizations.map(item => item.deliveredQuantity)
+                        var purchaseOrder = purchaseOrderList.find(po => po._id.toString() === item.poId.toString())
+                        var poItem = {};
+                        if (purchaseOrder) {
+                            poItem = purchaseOrder.items.find(_poItem => _poItem.purchaseOrderExternalId.toString() === purchaseOrderExternal._id.toString() && _poItem.product._id.toString() === item.product._id.toString())
+                        }
+                        var correctionQty = 0;
+                        if (poItem) {
+                            if (poItem.fulfillments) {
+                                correctionQty = poItem.fulfillments
+                                    .map(itemFulfillmentsPO => {
+                                        if (itemFulfillmentsPO.corrections) {
+                                            var cQty = itemFulfillmentsPO.corrections
+                                                .map(c => {
+                                                    if (c.correctionType) {
+                                                        if (c.correctionType === "Koreksi Jumlah") {
+                                                            return c.oldCorrectionQuantity - c.newCorrectionQuantity;
+                                                        } else {
+                                                            return 0;
+                                                        }
+                                                    } else {
+                                                        return 0;
+                                                    }
+                                                })
+                                                .reduce((prev, curr, index) => {
+                                                    return prev + curr;
+                                                }, 0);
+                                            return cQty;
+                                        } else {
+                                            return 0;
+                                        }
+                                    })
+                                    .reduce((prev, curr, index) => {
+                                        return prev + curr;
+                                    }, 0);
+                            }
+                        }
+                        item.isClosed = (item.realizations.map(item => item.deliveredQuantity)
                             .reduce((prev, curr, index) => {
                                 return prev + curr;
-                            }, 0) >= item.dealQuantity
+                            }, 0) - correctionQty) >= item.dealQuantity
                     }
 
                     purchaseOrderExternal.isClosed = purchaseOrderExternal.items
@@ -981,79 +1065,85 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             });
     }*/
 
-getAllData(startdate, enddate, offset) {
+    getAllData(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
-            
+
             var now = new Date();
             var deleted = {
                 _deleted: false
             };
-        
+
             var query = [deleted];
 
             if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
                 var validStartDate = new Date(startdate);
                 var validEndDate = new Date(enddate);
                 query.push(
-                     {
-                          "date": {
-                                   $gte: validStartDate,
-                                   $lte: validEndDate
-                                  }
+                    {
+                        "date": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
                     }
-                    )
+                )
             }
 
-      var match = { "$and": query };
-           
-      this.collection.aggregate([
-      {$match: match },
-      {$unwind:"$items"},
-      {$unwind:"$items.fulfillments"},
-      {$project :{
-                    "NoSJ":"$no",
-                    "TgSJ":"$supplierDoDate",
-                    "TgDtg":"$date",
-                    "KdSpl":"$supplier.code",
-                    "NmSpl":"$supplier.name",
-                    "SJDesc":"$remark",
-                    "TipeSJ":"$shipmentType",
-                    "NoKirim":"$shipmentNo",
-                    "PunyaInv":"$hasInvoice",
-                    "CekBon":"$isClosed",
-                    "POID":"$items.fulfillments.purchaseRequestRefNo",
-                    "PlanPO":"$items.fulfillments.purchaseRequestRefNo",
-                    "QtyDtg": "$items.fulfillments.deliveredQuantity",
-                    "SatDtg": "$items.fulfillments.purchaseOrderUom.unit",
-                    "SatKnv": "$items.fulfillments.uomConversion.unit",
-                    "Konversi": "$items.fulfillments.conversion",
-                    "Tempo":"$items.paymentDueDays",
-                    "MtUang": "$items.fulfillments.currency.code",
-                    "Rate": "$items.fulfillments.currency.rate",
-                    "UserIn":"$_createdBy",
-                    "TgIn":"$_createdDate",
-                    "UserEd":"$_updatedBy",
-                    "TgEd":"$_updatedDate"                   
-      }}, 
-      {$project :{
-                  "NoSJ":"$NoSJ","TgSJ":"$TgSJ","TgDtg":"$TgDtg","KdSpl":"$KdSpl","NmSpl":"$NmSpl",
-                  "SJDesc":"$SJDesc","TipeSJ":"$TipeSJ","NoKirim":"$NoKirim","PunyaInv":"$PunyaInv",
-                  "CekBon":"$CekBon","POID":"$POID","PlanPO":"$PlanPO","QtyDtg": "$QtyDtg","SatDtg": "$SatDtg",
-                  "SatKnv": "$SatKnv","Konversi": "$Konversi","Tempo":"$Tempo","MtUang": "$MtUang",
-                  "Rate": "$Rate","UserIn":"$UserIn","TgIn":"$TgIn","UserEd":"$UserEd","TgEd":"$TgEd"
-                 }
-      },
-      {$group :{ _id: { "NoSJ":"$NoSJ","TgSJ":"$TgSJ","TgDtg":"$TgDtg","KdSpl":"$KdSpl",
-                        "NmSpl":"$NmSpl","SJDesc":"$SJDesc","TipeSJ":"$TipeSJ","NoKirim":"$NoKirim",
-                        "PunyaInv":"$PunyaInv","CekBon":"$CekBon","POID":"$POID","PlanPO":"$PlanPO",
-                        "QtyDtg": "$QtyDtg","SatDtg": "$SatDtg","SatKnv": "$SatKnv","Konversi": "$Konversi",
-                        "Tempo":"$Tempo","MtUang": "$MtUang","Rate": "$Rate",
-                        "UserIn":"$UserIn","TgIn":"$TgIn","UserEd":"$UserEd","TgEd":"$TgEd"
-                     }
-               }
-        } 
-      ])
-        .toArray(function (err, result) {
+            var match = { "$and": query };
+
+            this.collection.aggregate([
+                { $match: match },
+                { $unwind: "$items" },
+                { $unwind: "$items.fulfillments" },
+                {
+                    $project: {
+                        "NoSJ": "$no",
+                        "TgSJ": "$supplierDoDate",
+                        "TgDtg": "$date",
+                        "KdSpl": "$supplier.code",
+                        "NmSpl": "$supplier.name",
+                        "SJDesc": "$remark",
+                        "TipeSJ": "$shipmentType",
+                        "NoKirim": "$shipmentNo",
+                        "PunyaInv": "$hasInvoice",
+                        "CekBon": "$isClosed",
+                        "POID": "$items.fulfillments.purchaseRequestRefNo",
+                        "PlanPO": "$items.fulfillments.purchaseRequestRefNo",
+                        "QtyDtg": "$items.fulfillments.deliveredQuantity",
+                        "SatDtg": "$items.fulfillments.purchaseOrderUom.unit",
+                        "SatKnv": "$items.fulfillments.uomConversion.unit",
+                        "Konversi": "$items.fulfillments.conversion",
+                        "Tempo": "$items.paymentDueDays",
+                        "MtUang": "$items.fulfillments.currency.code",
+                        "Rate": "$items.fulfillments.currency.rate",
+                        "UserIn": "$_createdBy",
+                        "TgIn": "$_createdDate",
+                        "UserEd": "$_updatedBy",
+                        "TgEd": "$_updatedDate"
+                    }
+                },
+                {
+                    $project: {
+                        "NoSJ": "$NoSJ", "TgSJ": "$TgSJ", "TgDtg": "$TgDtg", "KdSpl": "$KdSpl", "NmSpl": "$NmSpl",
+                        "SJDesc": "$SJDesc", "TipeSJ": "$TipeSJ", "NoKirim": "$NoKirim", "PunyaInv": "$PunyaInv",
+                        "CekBon": "$CekBon", "POID": "$POID", "PlanPO": "$PlanPO", "QtyDtg": "$QtyDtg", "SatDtg": "$SatDtg",
+                        "SatKnv": "$SatKnv", "Konversi": "$Konversi", "Tempo": "$Tempo", "MtUang": "$MtUang",
+                        "Rate": "$Rate", "UserIn": "$UserIn", "TgIn": "$TgIn", "UserEd": "$UserEd", "TgEd": "$TgEd"
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            "NoSJ": "$NoSJ", "TgSJ": "$TgSJ", "TgDtg": "$TgDtg", "KdSpl": "$KdSpl",
+                            "NmSpl": "$NmSpl", "SJDesc": "$SJDesc", "TipeSJ": "$TipeSJ", "NoKirim": "$NoKirim",
+                            "PunyaInv": "$PunyaInv", "CekBon": "$CekBon", "POID": "$POID", "PlanPO": "$PlanPO",
+                            "QtyDtg": "$QtyDtg", "SatDtg": "$SatDtg", "SatKnv": "$SatKnv", "Konversi": "$Konversi",
+                            "Tempo": "$Tempo", "MtUang": "$MtUang", "Rate": "$Rate",
+                            "UserIn": "$UserIn", "TgIn": "$TgIn", "UserEd": "$UserEd", "TgEd": "$TgEd"
+                        }
+                    }
+                }
+            ])
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -1299,7 +1389,7 @@ getAllData(startdate, enddate, offset) {
             };
 
             query = { '$and': [_defaultFilter, doNoFilter, supplierFilter, filterDate, userFilter, poEksFilter] };
-           
+
             return this.collection
                 .aggregate([
                     { "$unwind": "$items" }
