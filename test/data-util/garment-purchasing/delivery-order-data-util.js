@@ -8,8 +8,8 @@ var supplier = require('../master/garment-supplier-data-util');
 var poExternal = require('../garment-purchasing/purchase-order-external-data-util');
 
 class DeliveryOrderDataUtil {
-    getNewData() {
-        var getPoe = poExternal.getPosted();
+    getNewData(dataPurchaseOrderExternal) {
+        var getPoe = dataPurchaseOrderExternal ? Promise.resolve(dataPurchaseOrderExternal) : poExternal.getPosted();
 
         return helper
             .getManager(DeliveryOrderManager)
