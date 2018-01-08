@@ -109,7 +109,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
 
                 var documentNumbersData = {
                     type: type,
-                    documentNumber: salesContractDocumentNumber,
+                    documentNumber: salesContract.documentNumber,
                     number: number,
                     year: yearNow
                 }

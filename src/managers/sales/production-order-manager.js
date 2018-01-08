@@ -103,7 +103,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     _beforeInsert(productionOrder) {
-        productionOrder.orderNo = generateCode();
+        productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
         var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
         return this.documentNumbers
             .find({ "type": type }, { "number": 1, "year": 1 })
