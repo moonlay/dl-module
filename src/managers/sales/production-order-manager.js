@@ -52,6 +52,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         this.StandardTestManager = new StandardTestManager(db, user);
         this.AccountManager = new AccountManager(db, user);
         this.fpSalesContractManager = new FPSalesContractManager(db, user);
+        this.documentNumbers = this.db.collection("document-numbers");
     }
 
     _getQuery(paging) {
@@ -102,48 +103,72 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     _beforeInsert(productionOrder) {
+        productionOrder.orderNo = generateCode();
         var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
-        var regex = new RegExp(`${type}/`, "i");
-        return this.collection
-            .find({ "orderNo": regex }, { "orderNo": 1 })
-            .sort({ "_createdDate": -1 })
+        return this.documentNumbers
+            .find({ "type": type }, { "number": 1, "year": 1 })
+            .sort({ "year": -1, "number": -1 })
             .limit(1)
             .toArray()
-            .then((previousProductionOrders) => {
-                var previousOrderNo = previousProductionOrders.length > 0 ? previousProductionOrders[0].orderNo : "";
+            .then((previousDocumentNumbers) => {
 
-                productionOrder.orderNo = this.newCodeGenerator(previousOrderNo, type);
-                return Promise.resolve(productionOrder);
+                var yearNow = parseInt(moment().format("YY"));
+                var monthNow = moment().format("MM");
+
+                var number = 1;
+
+                if (previousDocumentNumbers.length > 0) {
+
+                    var oldYear = previousDocumentNumbers[0].year;
+                    number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+
+                    productionOrder.documentNumber = `${type}/${yearNow}/${this.pad(number, 4)}`;
+                } else {
+                    productionOrder.documentNumber = `${type}/${yearNow}/0001`;
+                }
+
+                var documentNumbersData = {
+                    type: type,
+                    documentNumber: productionOrder.documentNumber,
+                    number: number,
+                    year: yearNow
+                }
+
+                return this.documentNumbers
+                    .insert(documentNumbersData)
+                    .then((id) => {
+                        return Promise.resolve(productionOrder)
+                    })
             })
     }
 
-    newCodeGenerator(oldOrderNo, type) {
-        var newOrderNo = "";
+    // newCodeGenerator(oldOrderNo, type) {
+    //     var newOrderNo = "";
 
-        var yearNow = parseInt(moment().format("YY"));
+    //     var yearNow = parseInt(moment().format("YY"));
 
-        var codeStructure = oldOrderNo.split("/");
-        var number = parseInt(codeStructure[2]);
+    //     var codeStructure = oldOrderNo.split("/");
+    //     var number = parseInt(codeStructure[2]);
 
-        if (codeStructure.length === 3) {
-            var oldYear = parseInt(codeStructure[1]);
+    //     if (codeStructure.length === 3) {
+    //         var oldYear = parseInt(codeStructure[1]);
 
-            if (oldYear === yearNow) {
-                number += 1;
+    //         if (oldYear === yearNow) {
+    //             number += 1;
 
-                codeStructure[2] = this.pad(number, 4);
-                codeStructure[1] = this.pad(yearNow, 2);
+    //             codeStructure[2] = this.pad(number, 4);
+    //             codeStructure[1] = this.pad(yearNow, 2);
 
-                newOrderNo = codeStructure.join("/");
-            }
-        }
+    //             newOrderNo = codeStructure.join("/");
+    //         }
+    //     }
 
-        if (!newOrderNo) {
-            newOrderNo = `${type}/${this.pad(yearNow, 2)}/0001`;
-        }
+    //     if (!newOrderNo) {
+    //         newOrderNo = `${type}/${this.pad(yearNow, 2)}/0001`;
+    //     }
 
-        return newOrderNo;
-    }
+    //     return newOrderNo;
+    // }
 
     pad(number, length) {
 

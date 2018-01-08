@@ -45,6 +45,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
         this.QualityManager = new QualityManager(db, user);
         this.AccountBankManager = new AccountBankManager(db, user);
         this.TermOfPaymentManager = new TermOfPaymentManager(db, user);
+        this.documentNumbers = this.db.collection("document-numbers");
     }
 
     _getQuery(paging) {
@@ -82,52 +83,76 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
     }
 
     _beforeInsert(salesContract) {
+        salesContract.salesContractNo = generateCode();
         var type = salesContract && salesContract.buyer && salesContract.buyer.type && (salesContract.buyer.type.toString().toLowerCase() === "ekspor" || salesContract.buyer.type.toString().toLowerCase() === "export") ? "FPE" : "FPL";
-        var regex = new RegExp(`/${type}/`, "i");
-        return this.collection
-            .find({ "salesContractNo": regex }, { "salesContractNo": 1 })
-            .sort({ "_createdDate": -1 })
+        return this.documentNumbers
+            .find({ "type": type }, { "number": 1, "year": 1 })
+            .sort({ "year": -1, "number": -1 })
             .limit(1)
             .toArray()
-            .then((previousSalesContracts) => {
-                var previousSalesContractNo = previousSalesContracts.length > 0 ? previousSalesContracts[0].salesContractNo : "";
+            .then((previousDocumentNumbers) => {
 
-                salesContract.salesContractNo = this.newCodeGenerator(previousSalesContractNo, type);
-                return Promise.resolve(salesContract);
+                var yearNow = parseInt(moment().format("YYYY"));
+                var monthNow = moment().format("MM");
+
+                var number = 1;
+
+                if (previousDocumentNumbers.length > 0) {
+
+                    var oldYear = previousDocumentNumbers[0].year;
+                    number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+
+                    salesContract.documentNumber = `${this.pad(number, 4)}/${type}/${monthNow}.${yearNow}`;
+                } else {
+                    salesContract.documentNumber = `0001/${type}/${monthNow}.${yearNow}`;
+                }
+
+                var documentNumbersData = {
+                    type: type,
+                    documentNumber: salesContractDocumentNumber,
+                    number: number,
+                    year: yearNow
+                }
+
+                return this.documentNumbers
+                    .insert(documentNumbersData)
+                    .then((id) => {
+                        return Promise.resolve(salesContract)
+                    })
             })
     }
 
-    newCodeGenerator(oldSalesContractNo, type) {
-        var newSalesContractNo = "";
+    // newCodeGenerator(oldSalesContractNo, type) {
+    //     var newSalesContractNo = "";
 
-        var monthNow = parseInt(moment().format("MM"));
-        var yearNow = parseInt(moment().format("YYYY"));
+    //     var monthNow = parseInt(moment().format("MM"));
+    //     var yearNow = parseInt(moment().format("YYYY"));
 
-        var codeStructure = oldSalesContractNo.split("/");
-        var number = parseInt(codeStructure[0])
+    //     var codeStructure = oldSalesContractNo.split("/");
+    //     var number = parseInt(codeStructure[0])
 
-        if (codeStructure.length === 3) {
-            var dateStructure = codeStructure[2].split(".");
-            var oldYear = parseInt(dateStructure[1]);
+    //     if (codeStructure.length === 3) {
+    //         var dateStructure = codeStructure[2].split(".");
+    //         var oldYear = parseInt(dateStructure[1]);
 
-            if (oldYear === yearNow) {
-                number += 1;
+    //         if (oldYear === yearNow) {
+    //             number += 1;
 
-                var dateNowStructure = [this.pad(monthNow, 2), this.pad(yearNow, 4)];
-                codeStructure[2] = dateNowStructure.join(".");
+    //             var dateNowStructure = [this.pad(monthNow, 2), this.pad(yearNow, 4)];
+    //             codeStructure[2] = dateNowStructure.join(".");
 
-                codeStructure[0] = this.pad(number, 4);
+    //             codeStructure[0] = this.pad(number, 4);
 
-                newSalesContractNo = codeStructure.join("/");
-            }
-        }
+    //             newSalesContractNo = codeStructure.join("/");
+    //         }
+    //     }
 
-        if (!newSalesContractNo) {
-            newSalesContractNo = `0001/${type}/${this.pad(monthNow, 2)}.${this.pad(yearNow, 4)}`;
-        }
+    //     if (!newSalesContractNo) {
+    //         newSalesContractNo = `0001/${type}/${this.pad(monthNow, 2)}.${this.pad(yearNow, 4)}`;
+    //     }
 
-        return newSalesContractNo;
-    }
+    //     return newSalesContractNo;
+    // }
 
     pad(number, length) {
 
