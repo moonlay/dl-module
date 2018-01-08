@@ -215,3 +215,28 @@ it("#12. should success when create new data", function (done) {
             done(e);
         });
 });
+
+it(`#13. should success when get created data with id`, function (done) {
+    deliveryOrderManager.getSingleById(createdId)
+        .then((data) => {
+            data.should.instanceof(Object);
+            validate(data);
+            createdData = data;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#14. should success when update data`, function (done) {
+    createdData.remark = "#test"
+    deliveryOrderManager.updateCollectionDeliveryOrder(createdData)
+        .then((id) => {
+            id.toString().should.equal(createdId.toString());
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
