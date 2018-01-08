@@ -392,7 +392,7 @@ module.exports = function (salesContract, offset) {
                 style: ['center']
             }, {
                 width: '50%',
-                stack: ['PT DANLIRIS', '\n\n\n\n', '(    RUDY KURNIAWAN   )', 'Marketing Manager'],
+                stack: ['PT DANLIRIS', '\n\n\n\n', '(    SRI HENDRATNO   )', 'Marketing Textile'],
                 style: ['center']
             }],
             style: ['size10']
@@ -474,7 +474,7 @@ module.exports = function (salesContract, offset) {
                     style: ['center']
                 }, {
                     width: '50%',
-                    stack: ['PT DANLIRIS', '\n\n\n\n', '(    RUDY KURNIAWAN   )', 'Marketing Manager'],
+                    stack: ['PT DANLIRIS', '\n\n\n\n', '(    SRI HENDRATNO   )', 'Marketing Textile'],
                     style: ['center']
                 }],
                 style: ['size10']
@@ -812,7 +812,7 @@ module.exports = function (salesContract, offset) {
                 style: ['center']
             }, {
                 width: '50%',
-                stack: ['Hormat Kami,', '\n\n\n\n', '(   RUDY KURNIAWAN  )', 'Kadiv. Penjualan Tekstil'],
+                stack: ['Hormat Kami,', '\n\n\n\n', '(   SRI HENDRATNO  )', 'Penjualan Tekstil'],
                 style: ['center']
             }],
             style: ['size10']
