@@ -523,7 +523,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
     }
 
 
-    getReportShipmentBuyer(dateFilter) {
+    getReportShipmentBuyer(dateFilter, timezone) {
 
         return new Promise((resolve, reject) => {
 
@@ -539,7 +539,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     filter.push(code.orderNo);
                 }
 
-                this.getShipmentData(dateFilter, filter).then((result) => {
+                this.getShipmentData(dateFilter, filter, timezone).then((result) => {
                     var data = [];
 
                     for (var i of result) {
@@ -635,13 +635,13 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 var temp = dataRes.find(o => o.day == i.day)
 
                 if (temp) {
-                    if (i.processName.toUpperCase() == "DYEING") {
+                    if (i.processName == "DYEING") {
                         temp.dyeingQty += i.qty;
                     }
-                    else if (i.processName.toUpperCase() == "WHITE") {
+                    else if (i.processName == "WHITE") {
                         temp.whiteQty += i.qty;
                     }
-                    else if (i.productionOrderType.toUpperCase() == "PRINTING") {
+                    else if (i.productionOrderType == "PRINTING") {
                         temp.printingQty += i.qty;
                     }
                     temp.total = temp.dyeingQty + temp.whiteQty + temp.printingQty;
@@ -660,13 +660,13 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     res.whiteQty = 0;
                     res.printingQty = 0;
 
-                    if (i.processName.toUpperCase() == "DYEING") {
+                    if (i.processName == "DYEING") {
                         res.dyeingQty += i.qty;
                     }
-                    else if (i.processName.toUpperCase() == "WHITE") {
+                    else if (i.processName == "WHITE") {
                         res.whiteQty += i.qty;
                     }
-                    else if (i.productionOrderType.toUpperCase() == "PRINTING") {
+                    else if (i.productionOrderType == "PRINTING") {
                         res.printingQty += i.qty;
                     }
                     res.total = res.dyeingQty + res.whiteQty + res.printingQty;
@@ -705,7 +705,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
     }
 
 
-    getShipmentData(dateFilter, filter) {
+    getShipmentData(dateFilter, filter, timezone) {
 
         return this.collection.aggregate([
             { $unwind: "$details" },
@@ -716,9 +716,22 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     "details.productionOrderNo": 1,
                     "details.productionOrderType": 1,
                     "details.items": 1,
-                    "year": { "$year": "$deliveryDate" },
-                    "month": { "$month": "$deliveryDate" },
-                    "day": { "$dayOfMonth": "$deliveryDate" }
+                    "year": {
+                        "$year": {
+                            "$add": ["$deliveryDate",timezone]
+                        }
+                    },
+                    "month": {
+                        "$month": {
+                            "$add": ["$deliveryDate",timezone]
+                        }
+                    },
+                    "day": {
+                        "$dayOfMonth": {
+                            "$add": ["$deliveryDate",timezone]
+                        }
+                    }
+
                 }
             },
             {
@@ -741,9 +754,9 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             },
             {
                 "$match": {
-                    "$or": [{ "orderType.name": "PRINTING" },
-                    { "$and": [{ "orderType.name": "SOLID" }, { "processType.name": { "$regex": /WHITE/, "$options": 'i' } }] },
-                    { "$and": [{ "orderType.name": "SOLID" }, { "processType.name": { "$regex": /DYEING/, "$options": 'i' } }] }]
+                    $or: [{ "orderType.name": "PRINTING" },
+                    { $and: [{ "orderType.name": "SOLID" }, { "processType.name": { $regex: /WHITE/, $options: 'i' } }] },
+                    { $and: [{ "orderType.name": "SOLID" }, { "processType.name": { $regex: /DYEING/, $options: 'i' } }] }]
                 }
             }
         ]).toArray()
