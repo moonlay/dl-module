@@ -75,7 +75,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
     }
 
     _beforeInsert(salesContract) {
-        salesContract.salesContractNo = generateCode();
+        salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
         var type = salesContract && salesContract.buyer && salesContract.buyer.type && (salesContract.buyer.type.toString().toLowerCase() === "ekspor" || salesContract.buyer.type.toString().toLowerCase() === "export") ? "WVE" : "WVL";
         return this.documentNumbers
             .find({ "type": type }, { "number": 1, "year": 1 })
