@@ -3,14 +3,20 @@
 var should = require('should');
 var helper = require("../../helper");
 var DeliveryOrderManager = require("../../../src/managers/garment-purchasing/delivery-order-manager");
+var PurchaseQuantityCorrectionManager = require("../../../src/managers/garment-purchasing/purchase-quantity-correction-manager");
 var deliveryOrderManager = null;
+var purchaseQuantityCorrectionManager = null;
 var deliveryOrderDataUtil = require("../../data-util/garment-purchasing/delivery-order-data-util");
+var purchaseQuantityCorrectionDataUtil = require("../../data-util/garment-purchasing/purchase-price-correction-data-util");
 var validate = require("dl-models").validator.garmentPurchasing.garmentDeliveryOrder;
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then(db => {
             deliveryOrderManager = new DeliveryOrderManager(db, {
+                username: 'unit-test'
+            });
+            purchaseQuantityCorrectionManager = new PurchaseQuantityCorrectionManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -168,5 +174,44 @@ it('#09. should error when create new delivery order with invalid conversion val
             catch (ex) {
                 done(e);
             }
+        });
+});
+
+var correctionData;
+it("#10. should success when create new data quantity correction", function (done) {
+    purchaseQuantityCorrectionDataUtil.getNewTestData()
+        .then((data) => {
+            data.should.instanceof(Object);
+            correctionData = data;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+var dataPurchaseOrderExternal;
+it(`#11. should success when get created data with id`, function (done) {
+    deliveryOrderManager.purchaseOrderExternalManager.getSingleById(correctionData.items[0].purchaseOrderExternalId)
+        .then((data) => {
+            data.should.instanceof(Object);
+            dataPurchaseOrderExternal = data;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#12. should success when create new data", function (done) {
+    deliveryOrderDataUtil.getNewData(dataPurchaseOrderExternal)
+        .then((data) => deliveryOrderManager.create(data))
+        .then((id) => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
         });
 });
