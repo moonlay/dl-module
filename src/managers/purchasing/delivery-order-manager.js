@@ -177,9 +177,9 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 },
-                    { _deleted: false },
-                    { no: valid.no },
-                    { supplierId: new ObjectId(valid.supplierId) }
+                { _deleted: false },
+                { no: valid.no },
+                { supplierId: new ObjectId(valid.supplierId) }
                 ]
             });
             var getDeliveryderByRefNoPromise = this.collection.singleOrDefault({
@@ -188,8 +188,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        "refNo": valid.refNo
-                    }]
+                    "refNo": valid.refNo
+                }]
             });
             var getSupplier = valid.supplier && ObjectId.isValid(valid.supplier._id) ? this.supplierManager.getSingleByIdOrDefault(valid.supplier._id) : Promise.resolve(null);
             var getPoExternal = [];
@@ -487,18 +487,46 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                 .reduce((prev, curr, index) => {
                                     return prev + curr;
                                 }, 0);
-                            if (!purchaseOrder.isClosed) {
-                                poItem.isClosed = poItem.realizationQuantity >= poItem.dealQuantity;
-                            }
+
+                            var correctionQty = poItem.fulfillments
+                                .map(itemFulfillmentsPO => {
+                                    if (itemFulfillmentsPO.correction) {
+                                        var cQty = itemFulfillmentsPO.correction
+                                            .map(c => {
+                                                if (c.correctionRemark) {
+                                                    if (c.correctionRemark === "Koreksi Jumlah") {
+                                                        return c.correctionQuantity;
+                                                    } else {
+                                                        return 0;
+                                                    }
+                                                } else {
+                                                    return 0;
+                                                }
+                                            })
+                                            .reduce((prev, curr, index) => {
+                                                return prev + curr;
+                                            }, 0);
+                                        return cQty;
+                                    } else {
+                                        return 0;
+                                    }
+                                })
+                                .reduce((prev, curr, index) => {
+                                    return prev + curr;
+                                }, 0);
+
+                            // if (!purchaseOrder.isClosed) {
+                            poItem.isClosed = (poItem.realizationQuantity + correctionQty) >= poItem.dealQuantity;
+                            // }
                         }
                     }
-                    if (!purchaseOrder.isClosed) {
-                        purchaseOrder.isClosed = purchaseOrder.items
-                            .map((item) => item.isClosed)
-                            .reduce((prev, curr, index) => {
-                                return prev && curr
-                            }, true);
-                    }
+                    // if (!purchaseOrder.isClosed) {
+                    purchaseOrder.isClosed = purchaseOrder.items
+                        .map((item) => item.isClosed)
+                        .reduce((prev, curr, index) => {
+                            return prev && curr
+                        }, true);
+                    // }
                     if (purchaseOrder.status.value <= 5) {
                         purchaseOrder.status = purchaseOrder.isClosed ? poStatusEnum.ARRIVED : poStatusEnum.ARRIVING;
                     }
@@ -723,18 +751,45 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                         .reduce((prev, curr, index) => {
                                             return prev + curr;
                                         }, 0);
-                                    if (!purchaseOrder.isClosed) {
-                                        poItem.isClosed = poItem.realizationQuantity >= poItem.dealQuantity;
-                                    }
+                                    var correctionQty = poItem.fulfillments
+                                        .map(itemFulfillmentsPO => {
+                                            if (itemFulfillmentsPO.correction) {
+                                                var cQty = itemFulfillmentsPO.correction
+                                                    .map(c => {
+                                                        if (c.correctionRemark) {
+                                                            if (c.correctionRemark === "Koreksi Jumlah") {
+                                                                return c.correctionQuantity;
+                                                            } else {
+                                                                return 0;
+                                                            }
+                                                        } else {
+                                                            return 0;
+                                                        }
+                                                    })
+                                                    .reduce((prev, curr, index) => {
+                                                        return prev + curr;
+                                                    }, 0);
+                                                return cQty;
+                                            } else {
+                                                return 0;
+                                            }
+                                        })
+                                        .reduce((prev, curr, index) => {
+                                            return prev + curr;
+                                        }, 0);
+
+                                    // if (!purchaseOrder.isClosed) {
+                                    poItem.isClosed = (poItem.realizationQuantity + correctionQty) >= poItem.dealQuantity;
+                                    // }
                                 }
                             }
-                            if (!purchaseOrder.isClosed) {
-                                purchaseOrder.isClosed = purchaseOrder.items
-                                    .map((item) => item.isClosed)
-                                    .reduce((prev, curr, index) => {
-                                        return prev && curr
-                                    }, true);
-                            }
+                            // if (!purchaseOrder.isClosed) {
+                            purchaseOrder.isClosed = purchaseOrder.items
+                                .map((item) => item.isClosed)
+                                .reduce((prev, curr, index) => {
+                                    return prev && curr
+                                }, true);
+                            // }
                             if (purchaseOrder.status.value <= 5) {
                                 purchaseOrder.status = purchaseOrder.isClosed ? poStatusEnum.ARRIVED : poStatusEnum.ARRIVING;
                             }
