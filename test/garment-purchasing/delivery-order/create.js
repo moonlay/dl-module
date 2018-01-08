@@ -231,7 +231,7 @@ it(`#13. should success when get created data with id`, function (done) {
 
 it(`#14. should success when update data`, function (done) {
     createdData.remark = "#test"
-    deliveryOrderManager.updateCollectionDeliveryOrder(createdData)
+    deliveryOrderManager.update(createdData)
         .then((id) => {
             id.toString().should.equal(createdId.toString());
             done();
