@@ -74,6 +74,7 @@ var dataBeforeLoad
 it("#04. should success when delete all data", function (done) {
     instanceManager.beforeLoad(transfrom)
         .then((result) => {
+            dataBeforeLoad=result;
             done();
 
         })
@@ -109,29 +110,29 @@ it("#06. should success when find data", function (done) {
         });
 });
 
-it("#07. should success when delete data", function (done) {
-    instanceManager.delete([extractedData.Ro])
-        .then((result) => {
-            done();
+// it("#07. should success when delete data", function (done) {
+//     instanceManager.delete([extractedData.Ro])
+//         .then((result) => {
+//             done();
 
-        })
-        .catch((e) => {
-            console.log(e);
-            done(e);
-        });
-});
+//         })
+//         .catch((e) => {
+//             console.log(e);
+//             done(e);
+//         });
+// });
 
-it("#08. should success when insert data", function (done) {
-    instanceManager.delete([extractedData.Ro])
-        .then((result) => {
-            done();
+// it("#08. should success when insert data", function (done) {
+//     instanceManager.delete([extractedData.Ro])
+//         .then((result) => {
+//             done();
 
-        })
-        .catch((e) => {
-            console.log(e);
-            done(e);
-        });
-});
+//         })
+//         .catch((e) => {
+//             console.log(e);
+//             done(e);
+//         });
+// });
 
 it("#09. should success when get data all embeded data", function (done) {
     instanceManager.getDataUnit([extractedData.Konf])

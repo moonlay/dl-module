@@ -819,7 +819,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             this.findData(roNoArr).then((result) => {
                 dataTemp = result;
 
-                if (dataTemp) {
+                if (dataTemp.length !=0) {
                     // for (var data of dataTemp) {
                         existingData = dataTemp;
                     //     var _id = data._id;
