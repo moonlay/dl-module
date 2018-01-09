@@ -96,9 +96,36 @@ it("#05. should success when load all data", function (done) {
         .catch((e) => {
             done(e);
         });
+
+});it("#06. should success when delete all data", function (done) {
+    instanceManager.beforeLoad(transfrom)
+        .then((result) => {
+            dataBeforeLoad=result;
+            done();
+
+        })
+        .catch((e) => {
+            done(e);
+        });
 });
 
-it("#06. should success when find data", function (done) {
+it("#07. should success when load all data", function (done) {
+    instanceManager.load(transfrom, dataBeforeLoad)
+        .then((result) => {
+
+            var data = result.processed;
+            data.should.instanceof(Array);
+            data.length.should.not.equal(0);
+            done();
+
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+
+it("#08. should success when find data", function (done) {
     instanceManager.findData([extractedData.Ro])
         .then((result) => {
             done();
