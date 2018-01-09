@@ -523,7 +523,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
     }
 
 
-    getReportShipmentBuyer(dateFilter, timezone) {
+    getReportShipmentBuyer(dateFilter) {
 
         return new Promise((resolve, reject) => {
 
@@ -539,7 +539,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     filter.push(code.orderNo);
                 }
 
-                this.getShipmentData(dateFilter, filter, timezone).then((result) => {
+                this.getShipmentData(dateFilter, filter).then((result) => {
                     var data = [];
 
                     for (var i of result) {
@@ -705,7 +705,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
     }
 
 
-    getShipmentData(dateFilter, filter, timezone) {
+    getShipmentData(dateFilter, filter) {
 
         return this.collection.aggregate([
             { $unwind: "$details" },
@@ -716,19 +716,16 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     "details.productionOrderNo": 1,
                     "details.productionOrderType": 1,
                     "details.items": 1,
-                    "year": {
-                        "$year":
-                        { $year: "$deliveryDate" }
+                    "year": { $year: "$deliveryDate" },
+                    "month": { $month: "$deliveryDate" },
 
-                    },
-                    "month": { $month: "$deliveryDate" }
-                },
-                "day": {
-                    "$dayOfMonth": {
-                        "$add": ["$deliveryDate", timezone]
+                    "day": {
+                        "$dayOfMonth": {
+                            "$add": ["$deliveryDate", dateFilter.timezone]
+                        }
                     }
-                }
-
+                    // "day": { $dayOfMonth: "$deliveryDate" }
+                },
 
             },
             {
