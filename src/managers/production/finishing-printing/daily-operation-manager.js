@@ -417,8 +417,8 @@ module.exports = class DailyOperationManager extends BaseManager {
                                         itemError["length"] = i18n.__("Harus lebih dari 0", i18n.__("DailyOperation.badOutputReasons.length._:Panjang")); //"keterangan bad output tidak boleh kosong";
                                     if (!a.action || a.action === "")
                                         itemError["action"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.action._:Action")); //"keterangan bad output tidak boleh kosong";
-                                    if (!a.description || a.description === "")
-                                        itemError["description"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.description._:Description")); //"keterangan bad output tidak boleh kosong";
+                                    // if (!a.description || a.description === "")
+                                    //     itemError["description"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.description._:Description")); //"keterangan bad output tidak boleh kosong";
                                     function searchItem(params) {
                                         return !params ? null : params.code === a.badOutputReason.code;
                                     }
