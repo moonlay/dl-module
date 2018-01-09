@@ -251,7 +251,9 @@ it("#12. should success when get data shipment ", function (done) {
         month: month + 1,
     }
 
-    manager.getReportShipmentBuyer(filter)
+    var timezone = 7 * 60 * 60000;
+
+    manager.getReportShipmentBuyer(filter, timezone)
         .then((res) => {
             dataShiptmentDeliveryBuyer = res;
             done()
