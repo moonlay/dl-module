@@ -143,7 +143,13 @@ module.exports = class MasterPlanManager extends BaseManager {
                         
                         if(!detail.deliveryDate || detail.deliveryDate === '')
                             detailError["deliveryDate"] = i18n.__("MasterPlan.details.deliveryDate.isRequired:%s is required", i18n.__("MasterPlan.details.deliveryDate._:DeliveryDate"));
-
+                        else{
+                            _bookingOrder.bookingDate=new Date(_bookingOrder.bookingDate);
+                            detail.deliveryDate=new Date (detail.deliveryDate);
+                            if(detail.deliveryDate<_bookingOrder.bookingDate){
+                                detailError["deliveryDate"] = i18n.__("MasterPlan.details.deliveryDate.shouldNot:%s should not be less than booking order date", i18n.__("MasterPlan.details.deliveryDate._:DeliveryDate"));
+                            }
+                        }
                         if(!detail.unitId || detail.unitId === "")
                             detailError["unit"] = i18n.__("MasterPlan.details.unit.isRequired:%s is required", i18n.__("MasterPlan.details.unit._:Unit"));
                         else if(!_units || _units.length === 0)
@@ -328,9 +334,9 @@ module.exports = class MasterPlanManager extends BaseManager {
                 { "$match": dateQuery }, 
                 {
                     "$project": {
-                        "month": "details.week.month",
-                        "week": "details.week.weekNumber",
-                        "year": "details.weeklyPlanYear",
+                        "month": "$details.week.month",
+                        "week": "$details.week.weekNumber",
+                        "year": "$details.weeklyPlanYear",
                         "unitCode": "$details.unit.code",
                         "sh":"$details.shSewing"
                     }
