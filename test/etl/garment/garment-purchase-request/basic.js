@@ -24,7 +24,7 @@ before("#00. connect db", function (done) {
 });
 
 it("#01. should success when get time stamp", function (done) {
-    testTable="Budget"
+    testTable = "Budget"
     instanceManager.getTimeStamp(testTable)
         .then((result) => {
             // var data = result.processed;
@@ -71,10 +71,10 @@ it("#03. should success when transfrom all data", function (done) {
 });
 
 var dataBeforeLoad
-it("#04. should success when delete all data", function (done) {
+it("#04. should success before Load", function (done) {
     instanceManager.beforeLoad(transfrom)
         .then((result) => {
-            dataBeforeLoad=result;
+            dataBeforeLoad = result;
             done();
 
         })
@@ -97,10 +97,12 @@ it("#05. should success when load all data", function (done) {
             done(e);
         });
 
-});it("#06. should success when delete all data", function (done) {
+});
+
+it("#06. should success before Load", function (done) {
     instanceManager.beforeLoad(transfrom)
         .then((result) => {
-            dataBeforeLoad=result;
+            dataBeforeLoad = result;
             done();
 
         })
@@ -165,18 +167,18 @@ it("#09. should success when get data all embeded data", function (done) {
     instanceManager.getDataUnit([extractedData.Konf])
         .then((result) => {
             instanceManager.getDataBuyer([extractedData.Buyer])
-            .then((result) => {
-                instanceManager.getDataUom([extractedData.Satb])
                 .then((result) => {
-                    instanceManager.getDataProduct([extractedData.Kodeb])
-                    .then((result) => {
-                        instanceManager.getDataCategory([extractedData.Cat])
+                    instanceManager.getDataUom([extractedData.Satb])
                         .then((result) => {
-                            done();
+                            instanceManager.getDataProduct([extractedData.Kodeb])
+                                .then((result) => {
+                                    instanceManager.getDataCategory([extractedData.Cat])
+                                        .then((result) => {
+                                            done();
+                                        })
+                                })
                         })
-                    })
                 })
-            })
         })
         .catch((e) => {
             console.log(e);
