@@ -180,6 +180,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                                 if(item._createdDate!='' && item._createdDate){
                                     today=new Date(item._createdDate);
                                 }
+                                today.setHours(0,0,0,0);
                                 valid.deliveryDate=new Date(valid.deliveryDate);
                                 valid.bookingDate= new Date(valid.bookingDate);
                                 if(today>item.deliveryDate){
