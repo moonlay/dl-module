@@ -24,7 +24,7 @@ before("#00. connect db", function (done) {
 });
 
 it("#01. should success when get time stamp", function (done) {
-    testTable="Budget"
+    testTable = "Budget"
     instanceManager.getTimeStamp(testTable)
         .then((result) => {
             // var data = result.processed;
@@ -71,9 +71,10 @@ it("#03. should success when transfrom all data", function (done) {
 });
 
 var dataBeforeLoad
-it("#04. should success when delete all data", function (done) {
+it("#04. should success before Load", function (done) {
     instanceManager.beforeLoad(transfrom)
         .then((result) => {
+            dataBeforeLoad = result;
             done();
 
         })
@@ -95,34 +96,47 @@ it("#05. should success when load all data", function (done) {
         .catch((e) => {
             done(e);
         });
+
 });
 
-it("#06. should success when find data", function (done) {
-    instanceManager.findData([extractedData.Ro])
+it("#06. should success before Load", function (done) {
+    instanceManager.beforeLoad(transfrom)
         .then((result) => {
+            dataBeforeLoad = result;
             done();
 
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
 
-it("#07. should success when delete data", function (done) {
-    instanceManager.delete([extractedData.Ro])
+it("#07. should success when load all data", function (done) {
+    instanceManager.load(transfrom, dataBeforeLoad)
         .then((result) => {
+
+            var data = result.processed;
+            data.should.instanceof(Array);
+            data.length.should.not.equal(0);
             done();
 
         })
         .catch((e) => {
-            console.log(e);
             done(e);
         });
 });
 
-it("#08. should success when insert data", function (done) {
-    instanceManager.delete([extractedData.Ro])
+
+it("#08. should success when find data", function (done) {
+    var temp = transfrom;
+    var roNoArr = [];
+
+    for (var i of temp) {
+        roNoArr.push(i[0].roNo);
+    }
+
+
+    instanceManager.findData(roNoArr)
         .then((result) => {
             done();
 
@@ -137,18 +151,18 @@ it("#09. should success when get data all embeded data", function (done) {
     instanceManager.getDataUnit([extractedData.Konf])
         .then((result) => {
             instanceManager.getDataBuyer([extractedData.Buyer])
-            .then((result) => {
-                instanceManager.getDataUom([extractedData.Satb])
                 .then((result) => {
-                    instanceManager.getDataProduct([extractedData.Kodeb])
-                    .then((result) => {
-                        instanceManager.getDataCategory([extractedData.Cat])
+                    instanceManager.getDataUom([extractedData.Satb])
                         .then((result) => {
-                            done();
+                            instanceManager.getDataProduct([extractedData.Kodeb])
+                                .then((result) => {
+                                    instanceManager.getDataCategory([extractedData.Cat])
+                                        .then((result) => {
+                                            done();
+                                        })
+                                })
                         })
-                    })
                 })
-            })
         })
         .catch((e) => {
             console.log(e);

@@ -249,13 +249,18 @@ it("#12. should success when get data shipment ", function (done) {
     var filter = {
         year: parseInt(year),
         month: month + 1,
+        timezone:0
     }
+
+
 
     manager.getReportShipmentBuyer(filter)
         .then((res) => {
             dataShiptmentDeliveryBuyer = res;
             done()
-        })
+        }).catch(e => {
+            done(e);
+        });
 });
 
 it("#13. should success when create data xls ", function (done) {
