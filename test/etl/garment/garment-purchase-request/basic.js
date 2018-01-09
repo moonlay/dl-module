@@ -128,7 +128,15 @@ it("#07. should success when load all data", function (done) {
 
 
 it("#08. should success when find data", function (done) {
-    instanceManager.findData([extractedData.Ro])
+    var temp = transfrom;
+    var roNoArr = [];
+
+    for (var i of temp) {
+        roNoArr.push(i[0].roNo);
+    }
+
+
+    instanceManager.findData(roNoArr)
         .then((result) => {
             done();
 
@@ -138,30 +146,6 @@ it("#08. should success when find data", function (done) {
             done(e);
         });
 });
-
-// it("#07. should success when delete data", function (done) {
-//     instanceManager.delete([extractedData.Ro])
-//         .then((result) => {
-//             done();
-
-//         })
-//         .catch((e) => {
-//             console.log(e);
-//             done(e);
-//         });
-// });
-
-// it("#08. should success when insert data", function (done) {
-//     instanceManager.delete([extractedData.Ro])
-//         .then((result) => {
-//             done();
-
-//         })
-//         .catch((e) => {
-//             console.log(e);
-//             done(e);
-//         });
-// });
 
 it("#09. should success when get data all embeded data", function (done) {
     instanceManager.getDataUnit([extractedData.Konf])
