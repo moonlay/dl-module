@@ -879,7 +879,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                             newItems=temp.items;
                             for(var i of data.items){
                                 var existingItemsTemp= temp.items.find(o=>o.refNo == i.refNo );
-                                if(!temp){
+                                if(!existingItemsTemp){
                                     // console.log(i.itemCode);
                                     newItems.push(i)
                                 }
