@@ -114,7 +114,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
     //         })
     // }
 
-    beforeInsert(salesContract) {
+    _beforeInsert(salesContract) {
         salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
         return Promise.resolve(salesContract);
     }
