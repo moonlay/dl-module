@@ -102,44 +102,49 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return query;
     }
 
+    // _beforeInsert(productionOrder) {
+    //     productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
+    //     var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
+    //     return this.documentNumbers
+    //         .find({ "type": type }, { "number": 1, "year": 1 })
+    //         .sort({ "year": -1, "number": -1 })
+    //         .limit(1)
+    //         .toArray()
+    //         .then((previousDocumentNumbers) => {
+
+    //             var yearNow = parseInt(moment().format("YY"));
+    //             var monthNow = moment().format("MM");
+
+    //             var number = 1;
+
+    //             if (previousDocumentNumbers.length > 0) {
+
+    //                 var oldYear = previousDocumentNumbers[0].year;
+    //                 number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+
+    //                 productionOrder.documentNumber = `${type}/${yearNow}/${this.pad(number, 4)}`;
+    //             } else {
+    //                 productionOrder.documentNumber = `${type}/${yearNow}/0001`;
+    //             }
+
+    //             var documentNumbersData = {
+    //                 type: type,
+    //                 documentNumber: productionOrder.documentNumber,
+    //                 number: number,
+    //                 year: yearNow
+    //             }
+
+    //             return this.documentNumbers
+    //                 .insert(documentNumbersData)
+    //                 .then((id) => {
+    //                     return Promise.resolve(productionOrder)
+    //                 })
+    //         })
+    // }
+
     _beforeInsert(productionOrder) {
-        productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
-        var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
-        return this.documentNumbers
-            .find({ "type": type }, { "number": 1, "year": 1 })
-            .sort({ "year": -1, "number": -1 })
-            .limit(1)
-            .toArray()
-            .then((previousDocumentNumbers) => {
-
-                var yearNow = parseInt(moment().format("YY"));
-                var monthNow = moment().format("MM");
-
-                var number = 1;
-
-                if (previousDocumentNumbers.length > 0) {
-
-                    var oldYear = previousDocumentNumbers[0].year;
-                    number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
-
-                    productionOrder.documentNumber = `${type}/${yearNow}/${this.pad(number, 4)}`;
-                } else {
-                    productionOrder.documentNumber = `${type}/${yearNow}/0001`;
-                }
-
-                var documentNumbersData = {
-                    type: type,
-                    documentNumber: productionOrder.documentNumber,
-                    number: number,
-                    year: yearNow
-                }
-
-                return this.documentNumbers
-                    .insert(documentNumbersData)
-                    .then((id) => {
-                        return Promise.resolve(productionOrder)
-                    })
-            })
+        productionOrder.orderNo = productionOrder.orderNo ? productionOrder.orderNo : generateCode();
+        return Promise.resolve(productionOrder);
     }
 
     // newCodeGenerator(oldOrderNo, type) {

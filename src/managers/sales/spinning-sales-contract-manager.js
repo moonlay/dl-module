@@ -67,44 +67,49 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
         return query;
     }
 
-    _beforeInsert(salesContract) {
+    // _beforeInsert(salesContract) {
+    //     salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
+    //     var type = salesContract && salesContract.buyer && salesContract.buyer.type && (salesContract.buyer.type.toString().toLowerCase() === "ekspor" || salesContract.buyer.type.toString().toLowerCase() === "export") ? "SPE" : "SPL";
+    //     return this.documentNumbers
+    //         .find({ "type": type }, { "number": 1, "year": 1 })
+    //         .sort({ "year": -1, "number": -1 })
+    //         .limit(1)
+    //         .toArray()
+    //         .then((previousDocumentNumbers) => {
+
+    //             var yearNow = parseInt(moment().format("YYYY"));
+    //             var monthNow = moment().format("MM");
+
+    //             var number = 1;
+
+    //             if (previousDocumentNumbers.length > 0) {
+
+    //                 var oldYear = previousDocumentNumbers[0].year;
+    //                 number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+
+    //                 salesContract.documentNumber = `${this.pad(number, 4)}/${type}/${monthNow}.${yearNow}`;
+    //             } else {
+    //                 salesContract.documentNumber = `0001/${type}/${monthNow}.${yearNow}`;
+    //             }
+
+    //             var documentNumbersData = {
+    //                 type: type,
+    //                 documentNumber: salesContract.documentNumber,
+    //                 number: number,
+    //                 year: yearNow
+    //             }
+
+    //             return this.documentNumbers
+    //                 .insert(documentNumbersData)
+    //                 .then((id) => {
+    //                     return Promise.resolve(salesContract)
+    //                 })
+    //         })
+    // }
+
+    beforeInsert(salesContract) {
         salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
-        var type = salesContract && salesContract.buyer && salesContract.buyer.type && (salesContract.buyer.type.toString().toLowerCase() === "ekspor" || salesContract.buyer.type.toString().toLowerCase() === "export") ? "SPE" : "SPL";
-        return this.documentNumbers
-            .find({ "type": type }, { "number": 1, "year": 1 })
-            .sort({ "year": -1, "number": -1 })
-            .limit(1)
-            .toArray()
-            .then((previousDocumentNumbers) => {
-
-                var yearNow = parseInt(moment().format("YYYY"));
-                var monthNow = moment().format("MM");
-
-                var number = 1;
-
-                if (previousDocumentNumbers.length > 0) {
-
-                    var oldYear = previousDocumentNumbers[0].year;
-                    number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
-
-                    salesContract.documentNumber = `${this.pad(number, 4)}/${type}/${monthNow}.${yearNow}`;
-                } else {
-                    salesContract.documentNumber = `0001/${type}/${monthNow}.${yearNow}`;
-                }
-
-                var documentNumbersData = {
-                    type: type,
-                    documentNumber: salesContract.documentNumber,
-                    number: number,
-                    year: yearNow
-                }
-
-                return this.documentNumbers
-                    .insert(documentNumbersData)
-                    .then((id) => {
-                        return Promise.resolve(salesContract)
-                    })
-            })
+        return Promise.resolve(salesContract);
     }
 
     // newCodeGenerator(oldSalesContractNo, type) {
