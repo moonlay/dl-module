@@ -13,3 +13,7 @@ describe("CANCEL BOOKING SCENARIOS", function() {
 describe("CONFIRM BOOKING SCENARIOS", function() {
     require("./confirm");
 });
+
+describe("MONITORING BOOKING SCENARIOS", function() {
+    require("./report");
+});
