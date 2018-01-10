@@ -34,6 +34,15 @@ class OrderTypeDataUtil {
         return this.getSert(data);
     }
 
+    getSolidData() {
+        var data = {
+            code : "ORDTP-UT-01",
+            name: "SOLID",
+            remark:"remark for SOLID"
+        };
+        return this.getSert(data);
+    }
+
     getPrintingData() {
         var data = {
             code : "ORDTP-UT-01",

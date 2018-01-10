@@ -29,6 +29,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
         this.ComodityManager = new ComodityManager(db, user);
         this.QualityManager = new QualityManager(db, user);
         this.AccountBankManager = new AccountBankManager(db, user);
+        this.documentNumbers = this.db.collection("document-numbers");
     }
 
     _getQuery(paging) {
@@ -67,9 +68,85 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
     }
 
     _beforeInsert(salesContract) {
-        salesContract.salesContractNo = salesContract.salesContractNo === "" ? generateCode() : salesContract.salesContractNo;
-        salesContract._createdDate = new Date();
-        return Promise.resolve(salesContract);
+        salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
+        var type = salesContract && salesContract.buyer && salesContract.buyer.type && (salesContract.buyer.type.toString().toLowerCase() === "ekspor" || salesContract.buyer.type.toString().toLowerCase() === "export") ? "SPE" : "SPL";
+        return this.documentNumbers
+            .find({ "type": type }, { "number": 1, "year": 1 })
+            .sort({ "year": -1, "number": -1 })
+            .limit(1)
+            .toArray()
+            .then((previousDocumentNumbers) => {
+
+                var yearNow = parseInt(moment().format("YYYY"));
+                var monthNow = moment().format("MM");
+
+                var number = 1;
+
+                if (previousDocumentNumbers.length > 0) {
+
+                    var oldYear = previousDocumentNumbers[0].year;
+                    number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+
+                    salesContract.documentNumber = `${this.pad(number, 4)}/${type}/${monthNow}.${yearNow}`;
+                } else {
+                    salesContract.documentNumber = `0001/${type}/${monthNow}.${yearNow}`;
+                }
+
+                var documentNumbersData = {
+                    type: type,
+                    documentNumber: salesContract.documentNumber,
+                    number: number,
+                    year: yearNow
+                }
+
+                return this.documentNumbers
+                    .insert(documentNumbersData)
+                    .then((id) => {
+                        return Promise.resolve(salesContract)
+                    })
+            })
+    }
+
+    // newCodeGenerator(oldSalesContractNo, type) {
+    //     var newSalesContractNo = "";
+
+    //     var monthNow = parseInt(moment().format("MM"));
+    //     var yearNow = parseInt(moment().format("YYYY"));
+
+    //     var codeStructure = oldSalesContractNo.split("/");
+    //     var number = parseInt(codeStructure[0])
+
+    //     if (codeStructure.length === 3) {
+    //         var dateStructure = codeStructure[2].split(".");
+    //         var oldYear = parseInt(dateStructure[1]);
+
+    //         if (oldYear === yearNow) {
+    //             number += 1;
+
+    //             var dateNowStructure = [this.pad(monthNow, 2), this.pad(yearNow, 4)];
+    //             codeStructure[2] = dateNowStructure.join(".");
+
+    //             codeStructure[0] = this.pad(number, 4);
+
+    //             newSalesContractNo = codeStructure.join("/");
+    //         }
+    //     }
+
+    //     if (!newSalesContractNo) {
+    //         newSalesContractNo = `0001/${type}/${this.pad(monthNow, 2)}.${this.pad(yearNow, 4)}`;
+    //     }
+
+    //     return newSalesContractNo;
+    // }
+
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
     _validate(salesContract) {
@@ -265,7 +342,7 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
             query = {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo+"T23:59")) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
         var now = new Date();
 
         if (info.buyerId && info.buyerId != '') {

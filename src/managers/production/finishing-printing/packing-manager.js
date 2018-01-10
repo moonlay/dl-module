@@ -411,9 +411,11 @@ getQcgudangReport(query ){
         return new Promise((resolve, reject) => {
               var date = {
                 "date" : {
-                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
-                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
-                },
+                    // "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    // "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+               $gte: new Date(dateFrom),
+                $lte: new Date(dateTo)
+            },
                 "_deleted" : false,
                 "deliveryType" : { "$exists" : true, "$ne" : null}
             };
@@ -532,7 +534,6 @@ getQcgudangReport(query ){
         });
     }
 
-
     getXls(result, query) {
         var xls = {};
         xls.data = [];
@@ -611,12 +612,13 @@ getXlss(result, query){
 
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
+        var timeFormat = "HH : mm";
 
         for(var daily of result.data){
             index++;
             var item = {};
             item["No"] = index;
-            item["Tanggal"] = daily._id ? moment(new Date(daily._id)).format(dateFormat) : '';
+            item["Tanggal"] = daily._id ? moment(new Date(daily._id)).add(query.offset, 'h').format(dateFormat) : '';
             item["ulanganSolid"] = daily.ulanganSolid ? daily.ulanganSolid : '';
             item["White"] = daily.white ? daily.white : '';
             item["Dyeing"] = daily.dyeing ? daily.dyeing : '';
