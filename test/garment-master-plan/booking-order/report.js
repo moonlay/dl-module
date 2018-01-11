@@ -7,15 +7,15 @@ var BookingOrderManager = require("../../../src/managers/garment-master-plan/boo
 var bookingOrderManager = null;
 var bookingOrderManager = require("../../data-util/garment-master-plan/booking-order-data-util");
 var moment = require('moment');
-var dateNow="2018-01-05T00:00:00.000+07:00"
-var dateBefore="2018-01-05T00:00:00.000+07:00";
+var dateNow=new Date("2018-01-05")
+var dateBefore=new Date("2018-01-05");
 var comodity="comodity";
 var buyer="buyer";
 var code ="code";
 var isconfirmState="isConfirmed";
 var notconfirmState="notConfirmed";
 var bookingOrderBooking="Booking";
-var bookingOrderMasterPlan="Sudah Dibuat Master Plan";
+var bookingOrderMasterPlan="Sudah Dibuat MasterPlan";
 var bookingOrderCanceled="Booking Dibatalkan";
 var offset=7;
 
@@ -47,7 +47,7 @@ it("#01. should success when get report with parameter code", function (done) {
 });
 
 it("#02. should success when get report with parameter buyer", function (done) {
-    bookingOrderManager.getBookingOrderReport({"code" : buyer},offset)
+    bookingOrderManager.getBookingOrderReport({"buyer" : buyer},offset)
         .then((data) => {
             data.should.instanceof(Array);
             done();
