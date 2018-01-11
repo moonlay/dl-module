@@ -13,7 +13,7 @@ describe('#dl-module', function (done) {
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
-    // // Migration Log
+    // Migration Log
     test('@Migration Log/Migration Log', './migration-log/migration-log');
 
     //Etl

@@ -162,8 +162,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                 .then((transformed) => {
                                     var transformed = transformed;
                                     this.beforeLoad(transformed)
-                                        .then((deleted) => {
-                                            this.load(transformed, deleted)
+                                        .then((existingData) => {
+                                            this.load(transformed, existingData)
                                                 .then((result) => {
                                                     res(result);
                                                 })
@@ -780,21 +780,21 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         });
     }
 
-    delete(ro) {
-        return new Promise((resolve, reject) => {
-            this.collection.deleteMany({ roNo: { $in: ro } }).then((result) => {
-                resolve(result);
-            })
-        });
-    }
+    // delete(ro) {
+    //     return new Promise((resolve, reject) => {
+    //         this.collection.deleteMany({ roNo: { $in: ro } }).then((result) => {
+    //             resolve(result);
+    //         })
+    //     });
+    // }
 
-    insert(data) {
-        return new Promise((resolve, reject) => {
-            this.collection.insertMany(data).then((result) => {
-                resolve(result);
-            })
-        });
-    }
+    // insert(data) {
+    //     return new Promise((resolve, reject) => {
+    //         this.collection.insertMany(data).then((result) => {
+    //             resolve(result);
+    //         })
+    //     });
+    // }
 
     beforeLoad(dataTransform) {
         var dataArr = [];
@@ -803,7 +803,8 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         return new Promise((resolve, reject) => {
 
 
-            var deleteProcess = [];
+            // var deleteProcess = [];
+            var existingData=[]
             var tempProcess = [];
             var roNoArr = [];
             var dataTemp = [];
@@ -818,25 +819,25 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
             this.findData(roNoArr).then((result) => {
                 dataTemp = result;
 
-                if (dataTemp) {
-                    for (var data of dataTemp) {
+                if (dataTemp.length !=0) {
+                    // for (var data of dataTemp) {
+                        existingData = dataTemp;
+                    //     var _id = data._id;
+                    //     var i = {
+                    //         _id: data._id,
+                    //         roNo: data.roNo,
+                    //         no:data.no,
+                    //     }
+                    //     tempProcess.push((i));
 
-                        var _id = data._id;
-                        var i = {
-                            _id: data._id,
-                            roNo: data.roNo,
-                            no:data.no,
-                        }
-                        tempProcess.push((i));
+                        // deleteProcess.push((data.roNo))
 
-                        deleteProcess.push((data.roNo))
+                    // }
 
-                    }
-
-                    this.delete(deleteProcess).then((deleted) => {
-                        console.log(deleted.deletedCount)
-                        resolve(tempProcess);
-                    })
+                    // this.delete(deleteProcess).then((deleted) => {
+                    //     console.log(deleted.deletedCount)
+                        resolve(existingData);
+                    // })
 
                 } else {
                     resolve([])
@@ -847,7 +848,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
         });
     }
 
-    load(dataTransform, deletedData) {
+    load(dataTransform, existingData) {
         var dataArr = [];
         dataArr = dataTransform;
 
@@ -869,11 +870,22 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 }
     
                 for (var data of dataRo) {
-                    if (deletedData) {
-                        var temp = deletedData.find(o => o.roNo == data.roNo);
+                    if (existingData.length != 0) {
+                        var temp = existingData.find(o => o.roNo == data.roNo);
                         if (temp) {
-                            data._id = temp._id;
-                            data.no=temp.no;
+                            // data._id = temp._id;
+                            // data.no=temp.no;
+                            var newItems=[];
+                            newItems=temp.items;
+                            for(var i of data.items){
+                                var existingItemsTemp= temp.items.find(o=>o.refNo == i.refNo );
+                                if(!existingItemsTemp){
+                                    // console.log(i.itemCode);
+                                    newItems.push(i)
+                                }
+                            }
+
+                            data.items = newItems;
                         }
                     }
     
@@ -886,15 +898,24 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         data.migrated = true;
                     }
     
-                    // processed.push(this.collection.insert(data));
-                    processed.push((data));
+                    processed.push(this.collection.updateOne({ "roNo": data.roNo }, { $set: data }, { upsert: true }));
+                    
+                    // processed.push((data));
                 }
     
-                this.insert(processed).then((resultProcess) => {
+                // this.insert(processed).then((resultProcess) => {
+                //     var dataProcessed = {};
+                //     dataProcessed.processed = resultProcess.ops;
+                //     dataProcessed.MigratedFalse = falseData;
+                //     resolve(dataProcessed);
+                // })
+
+                Promise.all(processed).then((resultProcess)=>{
                     var dataProcessed = {};
-                    dataProcessed.processed = resultProcess.ops;
-                    dataProcessed.MigratedFalse = falseData;
-                    resolve(dataProcessed);
+                        dataProcessed.processed = resultProcess;
+                        dataProcessed.MigratedFalse = falseData;
+                        resolve(dataProcessed);
+
                 })
             }else{
                 var dataProcessed = {};

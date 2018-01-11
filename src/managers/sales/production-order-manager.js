@@ -52,6 +52,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         this.StandardTestManager = new StandardTestManager(db, user);
         this.AccountManager = new AccountManager(db, user);
         this.fpSalesContractManager = new FPSalesContractManager(db, user);
+        this.documentNumbers = this.db.collection("document-numbers");
     }
 
     _getQuery(paging) {
@@ -101,10 +102,87 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return query;
     }
 
+    // _beforeInsert(productionOrder) {
+    //     productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
+    //     var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
+    //     return this.documentNumbers
+    //         .find({ "type": type }, { "number": 1, "year": 1 })
+    //         .sort({ "year": -1, "number": -1 })
+    //         .limit(1)
+    //         .toArray()
+    //         .then((previousDocumentNumbers) => {
+
+    //             var yearNow = parseInt(moment().format("YY"));
+    //             var monthNow = moment().format("MM");
+
+    //             var number = 1;
+
+    //             if (previousDocumentNumbers.length > 0) {
+
+    //                 var oldYear = previousDocumentNumbers[0].year;
+    //                 number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+
+    //                 productionOrder.documentNumber = `${type}/${yearNow}/${this.pad(number, 4)}`;
+    //             } else {
+    //                 productionOrder.documentNumber = `${type}/${yearNow}/0001`;
+    //             }
+
+    //             var documentNumbersData = {
+    //                 type: type,
+    //                 documentNumber: productionOrder.documentNumber,
+    //                 number: number,
+    //                 year: yearNow
+    //             }
+
+    //             return this.documentNumbers
+    //                 .insert(documentNumbersData)
+    //                 .then((id) => {
+    //                     return Promise.resolve(productionOrder)
+    //                 })
+    //         })
+    // }
+
     _beforeInsert(productionOrder) {
-        productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
-        productionOrder._createdDate = new Date();
+        productionOrder.orderNo = productionOrder.orderNo ? productionOrder.orderNo : generateCode();
         return Promise.resolve(productionOrder);
+    }
+
+    // newCodeGenerator(oldOrderNo, type) {
+    //     var newOrderNo = "";
+
+    //     var yearNow = parseInt(moment().format("YY"));
+
+    //     var codeStructure = oldOrderNo.split("/");
+    //     var number = parseInt(codeStructure[2]);
+
+    //     if (codeStructure.length === 3) {
+    //         var oldYear = parseInt(codeStructure[1]);
+
+    //         if (oldYear === yearNow) {
+    //             number += 1;
+
+    //             codeStructure[2] = this.pad(number, 4);
+    //             codeStructure[1] = this.pad(yearNow, 2);
+
+    //             newOrderNo = codeStructure.join("/");
+    //         }
+    //     }
+
+    //     if (!newOrderNo) {
+    //         newOrderNo = `${type}/${this.pad(yearNow, 2)}/0001`;
+    //     }
+
+    //     return newOrderNo;
+    // }
+
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
     _validate(productionOrder) {
@@ -1426,6 +1504,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         grandTotal.name = "Total"
                         grandTotal.preProductionQuantity = 0;
                         grandTotal.onProductionQuantity = 0;
+                        grandTotal.inspectingQuantity = 0;
                         grandTotal.afterProductionQuantity = 0;
                         grandTotal.orderQuantity = 0;
                         grandTotal.storageQuantity = 0;
@@ -1441,6 +1520,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                             datum.preProductionQuantity = 0;
                             datum.onProductionQuantity = 0;
+                            datum.inspectingQuantity = 0;
                             datum.afterProductionQuantity = 0;
                             datum.orderQuantity = 0;
                             datum.storageQuantity = 0;
@@ -1471,15 +1551,22 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                                         kanbanDailyQuantity = kanbanDaily.cart.qty;
                                                         break;
                                                     }
+                                                    case "complete": {
+                                                        kanbanDailyQuantity = kanbanDaily.goodOutput + kanban.badOutput;
+                                                        break;
+                                                    }
                                                 }
 
                                                 if (processArea.toLowerCase() === "area pre treatment") {
                                                     grandTotal.preProductionQuantity += kanbanDailyQuantity;
                                                     datum.preProductionQuantity += kanbanDailyQuantity;
-                                                } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc") {
+                                                } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc" && processArea.toLowerCase() !== "complete") {
                                                     grandTotal.onProductionQuantity += kanbanDailyQuantity;
                                                     datum.onProductionQuantity += kanbanDailyQuantity;
                                                 } else if (processArea.toLowerCase() === "area inspecting" || processArea.toLowerCase() === "area qc") {
+                                                    grandTotal.inspectingQuantity += kanbanDailyQuantity;
+                                                    datum.inspectingQuantity += kanbanDailyQuantity;
+                                                } else if (processArea.toLowerCase() === "complete") {
                                                     grandTotal.afterProductionQuantity += kanbanDailyQuantity;
                                                     datum.afterProductionQuantity += kanbanDailyQuantity;
                                                 }
@@ -1504,7 +1591,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
 
                             datum.diffOrderShipmentQuantity = datum.orderQuantity - datum.shipmentQuantity;
-                            datum.diffOrderKanbanQuantity = datum.orderQuantity - (datum.shipmentQuantity + datum.preProductionQuantity + datum.onProductionQuantity + datum.afterProductionQuantity + datum.storageQuantity);
+                            datum.diffOrderKanbanQuantity = datum.orderQuantity - (datum.afterProductionQuantity + datum.preProductionQuantity + datum.onProductionQuantity + datum.inspectingQuantity);
                             grandTotal.diffOrderKanbanQuantity += datum.diffOrderKanbanQuantity;
                             grandTotal.diffOrderShipmentQuantity += datum.diffOrderShipmentQuantity;
 
@@ -1571,6 +1658,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                             datum.preProductionQuantity = 0;
                             datum.onProductionQuantity = 0;
+                            datum.inspectingQuantity = 0;
                             datum.afterProductionQuantity = 0;
                             for (var kanbanDaily of kanbanAndDailyOperations) {
                                 if (kanbanDaily.productionOrder.orderNo === productionOrder.orderNo) {
@@ -1591,14 +1679,20 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                                 kanbanDailyQuantity = kanbanDaily.cart.qty;
                                                 break;
                                             }
+                                            case "complete": {
+                                                kanbanDailyQuantity = kanbanDaily.goodOutput + kanbanDaily.badOutput;
+                                                break;
+                                            }
                                         }
 
                                         if (processArea.toLowerCase() === "area pre treatment") {
                                             datum.preProductionQuantity += kanbanDailyQuantity;
-                                        } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc") {
+                                        } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc" && processArea.toLowerCase() !== "complete") {
                                             datum.onProductionQuantity += kanbanDailyQuantity;
                                         } else if (processArea.toLowerCase() === "area inspecting" || processArea.toLowerCase() === "area qc") {
-                                            datum.afterProductionQuantity += kanbanDailyQuantity;
+                                            datum.inspectingQuantity += kanbanDailyQuantity;
+                                        } else if (processArea.toLowerCase() === "complete") {
+                                            datum.afterProductionQuantity += kanbanDailyQuantity
                                         }
                                     }
                                 }
@@ -1618,7 +1712,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 }
                             }
 
-                            datum.notInKanbanQuantity = datum.orderQuantity - (datum.preProductionQuantity + datum.onProductionQuantity + datum.afterProductionQuantity + datum.storageQuantity + datum.shipmentQuantity);
+                            datum.notInKanbanQuantity = datum.orderQuantity - (datum.afterProductionQuantity + datum.preProductionQuantity + datum.onProductionQuantity + datum.inspectingQuantity);
                             datum.diffOrderShipmentQuantity = datum.orderQuantity - datum.shipmentQuantity;
 
                             data.push(datum);
@@ -1705,7 +1799,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
     getKanbanAndDailyOperations(orderNumbers) {
         let kanbanQuery = {
             "_deleted": false,
-            "isComplete": false,
+            "isInactive": false,
             "productionOrder.orderNo": {
                 "$in": orderNumbers
             }
@@ -1713,6 +1807,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
         let kanbanFields = {
             "code": 1,
+            "isComplete": 1,
+            "currentQuantity": 1,
+            "goodOutput": 1,
+            "badOutput": 1,
             "currentStepIndex": 1,
             "instruction.steps._id": 1,
             "cart.cartNumber": 1,
@@ -1766,7 +1864,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 if (dailyOperation) {
                                     resolve(dailyOperation);
                                 }
-                                else if (kanban.currentStepIndex === 0) {
+                                else if (kanban.currentStepIndex === 0 || kanban.isComplete) {
                                     resolve(null);
                                 }
                                 else {
@@ -1813,6 +1911,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                             if (dailyOperation) {
                                 kanban = Object.assign(kanban, dailyOperation)
+                            } else if (kanban.isComplete) {
+                                var step = {};
+                                step["processArea"] = "complete"
+                                kanban.step = step;
+                                kanban.type = "complete";
                             } else {
                                 var step = {};
                                 step["processArea"] = "area pre treatment"
