@@ -75,7 +75,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
     }
 
     _beforeInsert(salesContract) {
-        salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
+        // salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
         var type = salesContract && salesContract.buyer && salesContract.buyer.type && (salesContract.buyer.type.toString().toLowerCase() === "ekspor" || salesContract.buyer.type.toString().toLowerCase() === "export") ? "WVE" : "WVL";
         return this.documentNumbers
             .find({ "type": type }, { "number": 1, "year": 1 })
@@ -89,19 +89,21 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
 
                 var number = 1;
 
-                if (previousDocumentNumbers.length > 0) {
+                if (!salesContract.salesContractNo) {
+                    if (previousDocumentNumbers.length > 0) {
 
-                    var oldYear = previousDocumentNumbers[0].year;
-                    number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+                        var oldYear = previousDocumentNumbers[0].year;
+                        number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
 
-                    salesContract.documentNumber = `${this.pad(number, 4)}/${type}/${monthNow}.${yearNow}`;
-                } else {
-                    salesContract.documentNumber = `0001/${type}/${monthNow}.${yearNow}`;
+                        salesContract.salesContractNo = `${this.pad(number, 4)}/${type}/${monthNow}.${yearNow}`;
+                    } else {
+                        salesContract.salesContractNo = `0001/${type}/${monthNow}.${yearNow}`;
+                    }
                 }
 
                 var documentNumbersData = {
                     type: type,
-                    documentNumber: salesContract.documentNumber,
+                    documentNumber: salesContract.salesContractNo,
                     number: number,
                     year: yearNow
                 }
@@ -113,6 +115,11 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                     })
             })
     }
+
+    // _beforeInsert(salesContract) {
+    //     salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
+    //     return Promise.resolve(salesContract);
+    // }
 
     // newCodeGenerator(oldSalesContractNo, type) {
     //     var newSalesContractNo = "";

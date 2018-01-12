@@ -103,7 +103,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     _beforeInsert(productionOrder) {
-        productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
+        // productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
         var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
         return this.documentNumbers
             .find({ "type": type }, { "number": 1, "year": 1 })
@@ -117,19 +117,21 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                 var number = 1;
 
-                if (previousDocumentNumbers.length > 0) {
+                if (!productionOrder.orderNo) {
+                    if (previousDocumentNumbers.length > 0) {
 
-                    var oldYear = previousDocumentNumbers[0].year;
-                    number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+                        var oldYear = previousDocumentNumbers[0].year;
+                        number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
 
-                    productionOrder.documentNumber = `${type}/${yearNow}/${this.pad(number, 4)}`;
-                } else {
-                    productionOrder.documentNumber = `${type}/${yearNow}/0001`;
+                        productionOrder.orderNo = `${type}/${yearNow}/${this.pad(number, 4)}`;
+                    } else {
+                        productionOrder.orderNo = `${type}/${yearNow}/0001`;
+                    }
+
                 }
-
                 var documentNumbersData = {
                     type: type,
-                    documentNumber: productionOrder.documentNumber,
+                    documentNumber: productionOrder.orderNo,
                     number: number,
                     year: yearNow
                 }
@@ -141,6 +143,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     })
             })
     }
+
+    // _beforeInsert(productionOrder) {
+    //     productionOrder.orderNo = productionOrder.orderNo ? productionOrder.orderNo : generateCode();
+    //     return Promise.resolve(productionOrder);
+    // }
 
     // newCodeGenerator(oldOrderNo, type) {
     //     var newOrderNo = "";
