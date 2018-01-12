@@ -5,17 +5,17 @@ var validator = require('dl-models').validator.master;
 var validatorMasterPlan = require('dl-models').validator.garmentMasterPlan;
 var BookingOrderManager = require("../../../src/managers/garment-master-plan/booking-order-manager");
 var bookingOrderManager = null;
-var bookingOrderManager = require("../../data-util/garment-master-plan/booking-order-data-util");
+var bookingOrderDataUtil = require("../../data-util/garment-master-plan/booking-order-data-util");
 var moment = require('moment');
-var dateNow=new Date("2018-01-05")
-var dateBefore=new Date("2018-01-05");
+var dateFrom=new Date("2018-01-02")
+var dateTo=new Date("2018-01-10");
 var comodity="comodity";
 var buyer="buyer";
-var code ="code";
-var isconfirmState="isConfirmed";
-var notconfirmState="notConfirmed";
+var code ="CODES";
+var isconfirmState="Sudah DiKonfirmasi";
+var notconfirmState="Belum DiKonfirmasi";
 var bookingOrderBooking="Booking";
-var bookingOrderMasterPlan="Sudah Dibuat MasterPlan";
+var bookingOrderMasterPlan="Sudah Dibuat Master Plan";
 var bookingOrderCanceled="Booking Dibatalkan";
 var offset=7;
 
@@ -117,74 +117,59 @@ it("#08. should success when get report with parameter booking order state : Boo
             done(e);
         });
 });
-it("#09. should success when get report with parameter dateFrom", function (done) {
-    bookingOrderManager.getBookingOrderReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD')})
-        .then((data) => {
-            data.should.instanceof(Array);
-            var result = {
-                data : data
-            };
-            bookingOrderManager.getBookingOrderReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD')})
-                .then(xls => {
-                    xls.should.instanceof(Object);
-                    xls.should.have.property('data');
-                    xls.should.have.property('options');
-                    xls.should.have.property('name');
-                    done();
-                })
-                .catch((e) => {
-                    done(e);
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-it("#10. should success when get report with parameter dateFrom and dateTo", function (done) {
-    bookingOrderManager.getBookingOrderReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')},offset)
-        .then((data) => {
-            data.should.instanceof(Array);
-            var result = {
-                data : data
-            };
-            bookingOrderManager.getBookingOrderReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')})
-                .then(xls => {
-                    xls.should.instanceof(Object);
-                    xls.should.have.property('data');
-                    xls.should.have.property('options');
-                    xls.should.have.property('name');
-                    done();
-                })
-                .catch((e) => {
-                    done(e);
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
+
+it("#09. should success when get report with parameter datefrom and dateTo", function (done) {
+    bookingOrderDataUtil.getReportData()
+    .then((datas)=>{
+        bookingOrderManager.getBookingOrderReport({dateFrom,dateTo},offset)
+            .then((data) => {
+                data.should.instanceof(Array);
+                var result = {
+                    data : data
+                };
+                bookingOrderManager.getBookingOrderReportXls(result, {dateFrom, dateTo},offset)
+                    .then(xls => {
+                        xls.should.instanceof(Object);
+                        xls.should.have.property('data');
+                        xls.should.have.property('options');
+                        xls.should.have.property('name');
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            })
+            .catch((e) => {
+                done(e);
+            });
+    });
+
 });
 
-it("#11. should success when get report with no parameter and get excel", function (done) {
-    bookingOrderManager.getBookingOrderReport({})
-        .then((data) => {
-           
-            data.should.instanceof(Array);
-            var result = {
-                data : data
-            };
-            bookingOrderManager.getBookingOrderReportXls(result, {})
-                .then(xls => {
-                    xls.should.instanceof(Object);
-                    xls.should.have.property('data');
-                    xls.should.have.property('options');
-                    xls.should.have.property('name');
-                    done();
-                })
-                .catch((e) => {
-                    done(e);
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
+it("#10. should success when get report with no parameter and get excel", function (done) {
+    bookingOrderDataUtil.getReportData()
+    .then((datas)=>{
+        bookingOrderManager.getBookingOrderReport({},offset)
+            .then((data) => {
+                data.should.instanceof(Array);
+                var result = {
+                    data : data
+                };
+                bookingOrderManager.getBookingOrderReportXls(result, {},offset)
+                    .then(xls => {
+                        xls.should.instanceof(Object);
+                        xls.should.have.property('data');
+                        xls.should.have.property('options');
+                        xls.should.have.property('name');
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            })
+            .catch((e) => {
+                done(e);
+            });
+    });
+
 });
