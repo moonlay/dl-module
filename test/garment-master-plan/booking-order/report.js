@@ -7,8 +7,8 @@ var BookingOrderManager = require("../../../src/managers/garment-master-plan/boo
 var bookingOrderManager = null;
 var bookingOrderDataUtil = require("../../data-util/garment-master-plan/booking-order-data-util");
 var moment = require('moment');
-var dateFrom=new Date("2018-01-03")
-var dateTo=new Date("2018-01-06");
+var dateFrom=new Date("2018-01-02")
+var dateTo=new Date("2018-01-10");
 var comodity="comodity";
 var buyer="buyer";
 var code ="CODES";
@@ -121,7 +121,7 @@ it("#08. should success when get report with parameter booking order state : Boo
 it("#09. should success when get report with parameter datefrom and dateTo", function (done) {
     bookingOrderDataUtil.getReportData()
     .then((datas)=>{
-        bookingOrderManager.getBookingOrderReport({ dateFrom,dateTo},offset)
+        bookingOrderManager.getBookingOrderReport({dateFrom,dateTo},offset)
             .then((data) => {
                 data.should.instanceof(Array);
                 var result = {
