@@ -873,7 +873,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                     if (existingData.length != 0) {
                         var temp = existingData.find(o => o.roNo == data.roNo);
                         if (temp) {
-                            // data._id = temp._id;
+                            
                             // data.no=temp.no;
                             var newItems=[];
                             newItems=temp.items;
@@ -884,7 +884,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                                     newItems.push(i)
                                 }
                             }
-
+                            data.no=temp.no;
                             data.items = newItems;
                         }
                     }
