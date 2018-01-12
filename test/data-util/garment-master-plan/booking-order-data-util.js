@@ -47,7 +47,43 @@ class BookingOrderDataUtil {
                 return Promise.resolve(data);
             });
     }
-
+    getReportData() {
+        return Promise.all([ Buyer.getTestData(),Comodity.getTestData(),Comodity.getTestData2()])
+             .then((results) => {
+                 var _buyer = results[0];
+                 var _comodity = results[1];
+                 var _comodity2 = results[2];
+                 var date = new Date("2018-01-05");
+                 var targetDate=new Date();
+                 var deliveryDate=new Date(targetDate.setDate(targetDate.getDate() + 10));
+             
+                 var code = generateCode();
+                 var data = {
+                     code : code,
+                     bookingDate : date,
+                     deliveryDate : deliveryDate,
+                     orderQuantity: 1000,
+                     _deleted : false,
+                     garmentBuyerId : _buyer._id,
+                     items:[{
+                             masterPlanComodity:_comodity,
+                             masterPlanComodityId:_comodity._id,
+                             quantity: 500,
+                             deliveryDate : deliveryDate
+                         },
+                         {
+                             masterPlanComodity:_comodity2,
+                             masterPlanComodityId:_comodity2._id,
+                             quantity: 500,
+                             deliveryDate : deliveryDate
+                         }
+                     ]
+ 
+                 }
+ 
+                 return Promise.resolve(data);
+             });
+     }
     getNewTestData() {
         return helper
             .getManager(BookingOrderManager)
