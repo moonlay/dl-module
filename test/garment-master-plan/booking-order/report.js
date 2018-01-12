@@ -11,7 +11,7 @@ var dateFrom=new Date("2018-01-03")
 var dateTo=new Date("2018-01-06");
 var comodity="comodity";
 var buyer="buyer";
-var code ="code";
+var code ="CODES";
 var isconfirmState="Sudah DiKonfirmasi";
 var notconfirmState="Belum DiKonfirmasi";
 var bookingOrderBooking="Booking";
@@ -118,10 +118,10 @@ it("#08. should success when get report with parameter booking order state : Boo
         });
 });
 
-it("#9. should success when get report with parameter datefrom and dateTo", function (done) {
+it("#09. should success when get report with parameter datefrom and dateTo", function (done) {
     bookingOrderDataUtil.getReportData()
     .then((datas)=>{
-        bookingOrderManager.getBookingOrderReport({dateFrom, dateTo},offset)
+        bookingOrderManager.getBookingOrderReport({ dateFrom,dateTo},offset)
             .then((data) => {
                 data.should.instanceof(Array);
                 var result = {
