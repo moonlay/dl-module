@@ -15,7 +15,7 @@ var code ="code";
 var isconfirmState="isConfirmed";
 var notconfirmState="notConfirmed";
 var bookingOrderBooking="Booking";
-var bookingOrderMasterPlan="Sudah Dibuat MasterPlan";
+var bookingOrderMasterPlan="Sudah Dibuat Master Plan";
 var bookingOrderCanceled="Booking Dibatalkan";
 var offset=7;
 
