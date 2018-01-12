@@ -35,88 +35,88 @@ before('#00. connect db', function (done) {
         })
 });
 
-// it("#01. should success when get report with parameter code", function (done) {
-//     bookingOrderManager.getBookingOrderReport({"code" : code},offset)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+it("#01. should success when get report with parameter code", function (done) {
+    bookingOrderManager.getBookingOrderReport({"code" : code},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
 
-// it("#02. should success when get report with parameter buyer", function (done) {
-//     bookingOrderManager.getBookingOrderReport({"buyer" : buyer},offset)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
-// it("#03. should success when get report with parameter comodity", function (done) {
-//     bookingOrderManager.getBookingOrderReport({"comodity" : comodity},offset)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+it("#02. should success when get report with parameter buyer", function (done) {
+    bookingOrderManager.getBookingOrderReport({"buyer" : buyer},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+it("#03. should success when get report with parameter comodity", function (done) {
+    bookingOrderManager.getBookingOrderReport({"comodity" : comodity},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
 
-// it("#04. should success when get report with parameter isconfirmstate", function (done) {
-//     bookingOrderManager.getBookingOrderReport({"confirmState" : isconfirmState},offset)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
-// it("#05. should success when get report with parameter notconfirmstate", function (done) {
-//     bookingOrderManager.getBookingOrderReport({"confirmState" : notconfirmState},offset)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
-// it("#06. should success when get report with parameter booking order state :Booking", function (done) {
-//     bookingOrderManager.getBookingOrderReport({"bookingOrderState" : bookingOrderBooking},offset)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
-// it("#07. should success when get report with parameter booking order state : Sudah dibuat Master Plan", function (done) {
-//     bookingOrderManager.getBookingOrderReport({"bookingOrderState" : bookingOrderMasterPlan},offset)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
-// it("#08. should success when get report with parameter booking order state : Booking Dibatalkan", function (done) {
-//     bookingOrderManager.getBookingOrderReport({"bookingOrderState" : bookingOrderCanceled},offset)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+it("#04. should success when get report with parameter isconfirmstate", function (done) {
+    bookingOrderManager.getBookingOrderReport({"confirmState" : isconfirmState},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+it("#05. should success when get report with parameter notconfirmstate", function (done) {
+    bookingOrderManager.getBookingOrderReport({"confirmState" : notconfirmState},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+it("#06. should success when get report with parameter booking order state :Booking", function (done) {
+    bookingOrderManager.getBookingOrderReport({"bookingOrderState" : bookingOrderBooking},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+it("#07. should success when get report with parameter booking order state : Sudah dibuat Master Plan", function (done) {
+    bookingOrderManager.getBookingOrderReport({"bookingOrderState" : bookingOrderMasterPlan},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+it("#08. should success when get report with parameter booking order state : Booking Dibatalkan", function (done) {
+    bookingOrderManager.getBookingOrderReport({"bookingOrderState" : bookingOrderCanceled},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
 
 it("#9. should success when get report with parameter datefrom and dateTo", function (done) {
     bookingOrderDataUtil.getReportData()
