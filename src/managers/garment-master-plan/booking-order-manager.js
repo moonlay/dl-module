@@ -336,7 +336,7 @@ module.exports = class BookingOrderManager extends BaseManager {
             var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
             
             var dateQuery={};
-            if (query.dateFrom !== "undefined" && query.dateFrom !== "null" && query.dateFrom !== "" && query.dateTo !== "undefined" && query.dateTo !== "null" && query.dateTo !== "")
+            if (query.dateFrom !== undefined && query.dateFrom !== "" && query.dateTo !== undefined  && query.dateTo !== "")
             {
                 var dateFrom = new Date(query.dateFrom);
                 var dateTo = new Date(query.dateTo);
