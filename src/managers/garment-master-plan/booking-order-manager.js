@@ -371,11 +371,11 @@ module.exports = class BookingOrderManager extends BaseManager {
             }
 
             var confirmStateQuery = {};
-            if (query.confirmState === "Sudah DiKonfirmasi") {
+            if (query.confirmState === "Sudah Dikonfirmasi") {
                 confirmStateQuery = {
                     "deliveryDateConfirm":{$ne:"" }
                 }
-            }else  if (query.confirmState === "Belum DiKonfirmasi") 
+            }else  if (query.confirmState === "Belum Dikonfirmasi") 
             {
                 confirmStateQuery = {
                     "deliveryDateConfirm":  ""
@@ -414,13 +414,14 @@ module.exports = class BookingOrderManager extends BaseManager {
                             "isCanceled":"$isCanceled",
                             "comodity":"$items.masterPlanComodity.name",
                             "isMasterPlan":"$isMasterPlan",
-                            "_deleted":"$_deleted"
+                            "_deleted":"$_deleted",
+                            "_createdDate":"$_createdDate"
                         }
                     },
                     { "$match": Query },
                     {
                         "$sort": {
-                            "_createdDate": 1,
+                            "_createdDate": -1,
                         }
                     }
                 ])
@@ -456,7 +457,6 @@ module.exports = class BookingOrderManager extends BaseManager {
             }
             for (var data of dataReport.data) {
                 var item = {};
-                var item = {};
                 var confirmstate="";
                 var bookingOrderState="";
                 if(data.deliveryDateConfirm=="")
@@ -471,20 +471,20 @@ module.exports = class BookingOrderManager extends BaseManager {
                     bookingOrderState="Booking Dibatalkan";
                 }else if(data.isMasterPlan ==true)
                 {
-                    bookingOrderState="Sudah Dibuat MasterPlan";   
+                    bookingOrderState="Sudah Dibuat Master Plan";   
                 }else if(data.isMasterPlan == false && data.isCanceled==false)
                 {
                     bookingOrderState="Booking";
                 }
                
                 item["Kode Booking"] = data.bookingCode;
-                item["Tanggal Booking"] = data.bookingDate ? moment(new Date(data.bookingDate)).add(7, 'h').format(dateFormat) : '';
+                item["Tanggal Booking"] = data.bookingDate ? moment(new Date(data.bookingDate)).add(offset, 'h').format(dateFormat) : '';
                 item["Buyer"] = data.buyer ? data.buyer : '';
                 item["Jumlah Order"] = data.totalOrderQty ? data.totalOrderQty : '';
-                item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking && data.deliveryDateBooking !="" ? moment(data.deliveryDateBooking ).format(dateFormat) : '';
+                item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking && data.deliveryDateBooking !="" ? moment(data.deliveryDateBooking ).add(offset, 'h').format(dateFormat) : '';
                 item["Komoditi"]=data.comodity ? data.comodity : '';
                 item["Jumlah Confirm"] = data.orderQty ? data.orderQty : '';
-                item["Tanggal Pengiriman(Confirm)"] = data.deliveryDateConfirm && data.deliveryDateConfirm !="" ? moment(new Date(data.deliveryDateConfirm)).add(7, 'h').format(dateFormat) : '';
+                item["Tanggal Pengiriman(Confirm)"] = data.deliveryDateConfirm && data.deliveryDateConfirm !="" ? moment(new Date(data.deliveryDateConfirm)).add(offset, 'h').format(dateFormat) : '';
                 item["Keterangan"] = data.remark ? data.remark : '';
                 item["Status Confirm"] =  confirmstate ? confirmstate : '';
                 item["Status Booking Order"] =  bookingOrderState ? bookingOrderState : '';
