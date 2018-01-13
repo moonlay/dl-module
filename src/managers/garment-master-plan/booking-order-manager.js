@@ -388,7 +388,8 @@ module.exports = class BookingOrderManager extends BaseManager {
                 }
             }else  if (query.bookingOrderState === "Sudah Dibuat Master Plan") {
                 bookingOrderStateQuery = {
-                    "isMasterPlan": true
+                    "isMasterPlan": true,
+                    "isCanceled":false
                 }
             }else  if (query.bookingOrderState === "Booking") {
                 bookingOrderStateQuery = {
@@ -478,13 +479,13 @@ module.exports = class BookingOrderManager extends BaseManager {
                 }
                
                 item["Kode Booking"] = data.bookingCode;
-                item["Tanggal Booking"] = data.bookingDate ? moment(new Date(data.bookingDate)).add(offset, 'h').format(dateFormat) : '';
+                item["Tanggal Booking"] = data.bookingDate ? moment(new Date(data.bookingDate)).add(7, 'h').format(dateFormat) : '';
                 item["Buyer"] = data.buyer ? data.buyer : '';
                 item["Jumlah Order"] = data.totalOrderQty ? data.totalOrderQty : '';
-                item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking && data.deliveryDateBooking !="" ? moment(data.deliveryDateBooking ).add(offset, 'h').format(dateFormat) : '';
+                item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking && data.deliveryDateBooking !="" ? moment(data.deliveryDateBooking ).add(7, 'h').format(dateFormat) : '';
                 item["Komoditi"]=data.comodity ? data.comodity : '';
                 item["Jumlah Confirm"] = data.orderQty ? data.orderQty : '';
-                item["Tanggal Pengiriman(Confirm)"] = data.deliveryDateConfirm && data.deliveryDateConfirm !="" ? moment(new Date(data.deliveryDateConfirm)).add(offset, 'h').format(dateFormat) : '';
+                item["Tanggal Pengiriman(Confirm)"] = data.deliveryDateConfirm && data.deliveryDateConfirm !="" ? moment(new Date(data.deliveryDateConfirm)).add(7, 'h').format(dateFormat) : '';
                 item["Keterangan"] = data.remark ? data.remark : '';
                 item["Status Confirm"] =  confirmstate ? confirmstate : '';
                 item["Status Booking Order"] =  bookingOrderState ? bookingOrderState : '';
