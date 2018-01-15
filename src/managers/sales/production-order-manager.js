@@ -465,9 +465,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         errors.details = detailErrors;
 
                 }
-                if (!valid.orderNo || valid.orderNo === '') {
-                    valid.orderNo = generateCode();
-                }
                 if (_buyer) {
                     valid.buyerId = new ObjectId(_buyer._id);
                 }
