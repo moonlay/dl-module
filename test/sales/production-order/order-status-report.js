@@ -197,3 +197,15 @@ it('#12. should success when get data detail for Excel Report', function (done) 
             done(e);
         });
 });
+
+it("#13. should success when read data", function (done) {
+    manager.read({
+        "keyword": "TEST"
+    })
+        .then((documents) => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
