@@ -374,7 +374,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                             //"namaUnit": "$items.unitReceiptNote.unit.name",
                             "namaUnit": "$pr_docs.unit.name",
                             "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
-                            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date",
+                            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$pr_docs.date",
                             "items.unitReceiptNote.no": "$items.unitReceiptNote.no",
                             "staff": "$do_docs._createdBy",
                             //"staff":"$_createdBy",

@@ -119,6 +119,32 @@ it('#05. should success when generate pdf purchase-order-external', function (do
         });
 });
 
+it('#06. delete collection', function (done) {
+    if (purchaseOrderExternalManager.db.databaseName !== "dl-dev" && purchaseOrderExternalManager.db.databaseName !== "dl-uat" && purchaseOrderExternalManager.db.databaseName !== "danliris-prd") {
+        purchaseOrderExternalManager.collection.remove({})
+            .then(results => {
+                purchaseOrderExternalManager.purchaseRequestManager.collection.remove({})
+                    .then(results => {
+                        purchaseOrderExternalManager.purchaseOrderManager.collection.remove({})
+                            .then(results => {
+                                done();
+                            })
+                            .catch(e => {
+                                done(e);
+                            });
+                    })
+                    .catch(e => {
+                        done(e);
+                    });
+            })
+            .catch(e => {
+                done(e);
+            });
+    } else {
+        done();
+    }
+});
+
 var dataPOInternal = {};
 it('#06-1. create new purchase-order-internal', function (done) {
     purchaseRequestDataUtil.getNewTestData()
