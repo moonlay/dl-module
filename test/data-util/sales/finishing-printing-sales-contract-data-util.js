@@ -12,10 +12,12 @@ var material = require('../master/product-data-util');
 var yarnMaterial = require('../master/yarn-material-data-util');
 var materialConstruction = require('../master/material-construction-data-util');
 var bankAccount = require('../master/account-bank-data-util');
+var termOfPayment = require('../master/term-of-payment-data-util');
+var motive = require('../master/design-motive-data-util');
 
 class FinishingPrintingSalesContractDataUtil {
     getNewData() {
-        return Promise.all([uom.getTestData(), buyer.getTestData(), quality.getTestData(), processType.getTestData(), material.getTestData(), comodity.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), bankAccount.getTestData()])
+        return Promise.all([uom.getTestData(), buyer.getTestData(), quality.getTestData(), processType.getTestData(), material.getTestData(), comodity.getTestData(), yarnMaterial.getTestData(), materialConstruction.getTestData(), bankAccount.getTestData(),termOfPayment.getTestData(),motive.getTestData()])
             .then((results) => {
                 var _uom = results[0];
                 var _buyer = results[1];
@@ -26,6 +28,9 @@ class FinishingPrintingSalesContractDataUtil {
                 var _yarn=results[6];
                 var _construction=results[7];
                 var _bank=results[8];
+                var _agent=results[1];
+                var _payment=results[9];
+                var _motive=results[10];
 
                 var data = {
                     
@@ -51,20 +56,27 @@ class FinishingPrintingSalesContractDataUtil {
                     yarnMaterialId:_yarn._id,
                     comodity:_comodity,
                     comodityId:_comodity._id,
-                    orderQuantity:30,
+                    termOfPaymentId:_payment._id,
+                    termOfPayment:_payment,
+                    orderQuantity:50,
                     shippingQuantityTolerance:5,
                     materialWidth:'Width',
-
+                    designMotive:_motive,
+                    designMotiveId:_motive._id,
+                    pointSystem:10,
+                    termOfShipment:"test",
+                    amount:1,
+                    remainingQuantity:50,
                     paymentMethod:`Telegraphic Transfer (TT)`,
-                    paymentRequirement:`Payment Requirement`,
                     rollLength:`length`,
                     packing:`pack`,
                     deliverySchedule:new Date(),
+                    deliveredTo:'City-Country',
                     remark:`desc`,
-                    useIncomeTax:false,
+                    useIncomeTax:true,
                     transportFee:'Fee',
-                    deliveredTo:'DeliveredTo',
-                    agent:'Agent',
+                    agentId:_agent._id,
+                    agent:_agent,
                     comission:200,
                     condition:'Condition',
                     attachment:'attachment',
@@ -72,11 +84,15 @@ class FinishingPrintingSalesContractDataUtil {
                     details: [{
                         color:`Purple`,
                         price:1000,
-                        useIncomeTax:false,
+                        useIncomeTax:true,
+                        currencyId:_bank.currency._id,
+                        currency: _bank.currency
                     }, {
                         color:`Purple`,
                         price:1000,
-                        useIncomeTax:false
+                        useIncomeTax:false,
+                        currencyId:_bank.currency._id,
+                        currency: _bank.currency
                     }]
                 };
                 return Promise.resolve(data);

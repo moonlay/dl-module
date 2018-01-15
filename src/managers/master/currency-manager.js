@@ -19,8 +19,8 @@ module.exports = class CurrencyManager extends BaseManager {
 
     _getQuery(paging) {
         var _default = {
-                _deleted: false
-            },
+            _deleted: false
+        },
             pagingFilter = paging.filter || {},
             keywordFilter = {},
             query = {};
@@ -51,7 +51,8 @@ module.exports = class CurrencyManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -77,12 +78,13 @@ module.exports = class CurrencyManager extends BaseManager {
                 }
 
                 valid = new Currency(currency);
+                valid.rate = Number(valid.rate);
                 valid.stamp(this.user.username, 'manager');
                 return Promise.resolve(valid);
             })
     }
 
-     getCurrency() {
+    getCurrency() {
         return new Promise((resolve, reject) => {
             var query = {
                 _deleted: false
@@ -109,7 +111,12 @@ module.exports = class CurrencyManager extends BaseManager {
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
-                            data.push({ "code": dataFile[i][0], "symbol": dataFile[i][1], "rate": dataFile[i][2], "description": dataFile[i][3] });
+                            data.push({
+                                "code": dataFile[i][0].trim(),
+                                "symbol": dataFile[i][1].trim(),
+                                "rate": dataFile[i][2].trim(),
+                                "description": dataFile[i][3].trim()
+                            });
                         }
                     }
                     var dataError = [], errorMessage;
@@ -142,7 +149,7 @@ module.exports = class CurrencyManager extends BaseManager {
                             if (currency[j]["code"] === data[i]["code"]) {
                                 errorMessage = errorMessage + "Kode tidak boleh duplikat, ";
                             }
-                             if (currency[j]["description"] === data[i]["description"]) {
+                            if (currency[j]["description"] === data[i]["description"]) {
                                 errorMessage = errorMessage + "Keterangan tidak boleh duplikat";
                             }
                         }
@@ -154,8 +161,10 @@ module.exports = class CurrencyManager extends BaseManager {
                         var newCurrency = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Currency(data[i]);
-                            valid.rate = parseInt(valid.rate);
+                            var now = new Date();
+                            valid.rate = Number(valid.rate);
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
@@ -190,8 +199,7 @@ module.exports = class CurrencyManager extends BaseManager {
             name: `ix_${map.master.collection.Currency}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         }
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

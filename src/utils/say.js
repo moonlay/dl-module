@@ -5,11 +5,20 @@ var ribuan = ["", "ribu", "juta", "milyar", "triliyun", "kuadrilyun", "kuintiliu
 
 function terbilang(d, f) {
     var strHasil = "";
-    var frac = d - Math.trunc(d);
+    var isNegative = Number(d) < 0;
+    d = parseFloat(Math.round(d * 100) / 100).toFixed(2)
+    if (isNegative) {
+        d = d * -1;
+    }
 
-    if (frac != 0)
-        strHasil = terbilang(Math.round(frac * 100), true);
-    strHasil = `${f? f :"rupiah"} ${strHasil}`.trim();
+    if (d.toString().indexOf(".") !== -1) {
+        var a = Number(d.toString().substr(d.toString().indexOf(".") + 1));
+        if (a !== 0) {
+            strHasil = terbilangKoma(d);
+        }
+        d = Number(d.toString().slice(0, d.toString().indexOf(".")));
+    }
+
     var nDigit = 0;
     var nPosisi = 0;
 
@@ -57,7 +66,19 @@ function terbilang(d, f) {
                         strHasil = satuan[nDigit] + " ratus " + strHasil;
                 break;
         }
+
     }
+    if (f === "koma") {
+        strHasil = `${f} ${strHasil}`.trim();
+    } else {
+        strHasil = ` ${strHasil} ${f ? f : "rupiah"}`.trim();
+    }
+    if (strTemp.length > 0) {
+        if (isNegative) {
+            strHasil = `minus ${strHasil}`;
+        }
+    }
+
     strHasil = strHasil.trim().toLowerCase();
     if (strHasil.length > 0) {
         strHasil = strHasil.substr(0, 1).toUpperCase() +
@@ -67,5 +88,20 @@ function terbilang(d, f) {
     return strHasil;
 }
 
+function terbilangKoma(frac) {
+    var a = frac.toString().substr(frac.toString().indexOf(".") + 1);
+    var fixNumber = "";
+    if (a.length > 4) {
+        fixNumber = (frac.toFixed(4)).toString().substr((frac.toFixed(4)).toString().indexOf(".") + 1);
+    } else {
+        fixNumber = a;
+    }
+    var strHasil = "koma";
+    for (var i = 0; i < fixNumber.length; i++) {
+        var temp = Number(fixNumber[i]);
+        strHasil = strHasil + " " + satuan[temp];
+    }
+    return strHasil;
+}
 
 module.exports = terbilang;

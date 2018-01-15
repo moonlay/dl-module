@@ -52,7 +52,8 @@ module.exports = class ComodityManager extends BaseManager {
                 '$ne': new ObjectId(valid._id)
             },
             code: valid.code,
-            name: valid.name
+            name: valid.name,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -69,6 +70,9 @@ module.exports = class ComodityManager extends BaseManager {
 
                 if (!valid.name || valid.name == '')
                     errors["name"] = i18n.__("Comodity.name.isRequired:%s is required", i18n.__("Comodity.name._:Name")); //"Nama Harus diisi";
+                
+                if (!valid.type || valid.type == '')
+                    errors["type"] = i18n.__("Comodity.type.isRequired:%s is required", i18n.__("Comodity.type._:Type")); //"type Harus diisi";
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
@@ -94,8 +98,7 @@ module.exports = class ComodityManager extends BaseManager {
             key: {
                 code: 1,
                 name:1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

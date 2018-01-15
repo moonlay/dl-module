@@ -21,6 +21,7 @@ class ComodityDataUtil {
 
         data.code = code;
         data.name = `Comodity[${code}]`;
+        data.type = 'Finishing Printing';
 
         return Promise.resolve(data);
     }
@@ -28,7 +29,8 @@ class ComodityDataUtil {
     getTestData() {
         var data = {
             code: "UT/COMODITY/01",
-            name: "100 % COTTON FABRIC"
+            name: "100 % COTTON FABRIC",
+            type: "Finishing Printing"
         };
         return this.getSert(data);
     }

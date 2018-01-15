@@ -6,6 +6,14 @@ describe("CREATE SCENARIOS", function() {
     require("./create");
 });
 
-// describe("POST SCENARIOS", function() {
-//     require("./post");
-// });
+describe("VALIDATION", function() {
+    require("./validator");
+});
+
+describe("LAPORAN SKEMA", function() {
+    require("./report");
+});
+
+describe("PDF SCENARIOS", function() {
+    require("./pdf");
+});

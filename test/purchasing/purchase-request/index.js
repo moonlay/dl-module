@@ -13,3 +13,11 @@ describe("POST SCENARIOS", function() {
 describe("UNPOST SCENARIOS", function() {
     require("./unpost");
 });
+
+describe("REPORT SCENARIOS", function() {
+    require("./report");
+});
+
+describe("PDF SCENARIOS", function() {
+    require("./pdf");
+});

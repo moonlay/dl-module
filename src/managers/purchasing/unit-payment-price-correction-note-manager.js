@@ -12,6 +12,7 @@ var UnitPaymentOrderManager = require('./unit-payment-order-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
 var UnitReceiptNoteManager = require('./unit-receipt-note-manager');
+var moment = require('moment');
 
 module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager {
     constructor(db, user) {
@@ -22,6 +23,33 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
     }
 
+getDataKoreksiHarga(query){
+        return new Promise((resolve, reject) => {
+           
+            var date = {
+                "date" : {
+                    "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                },
+                "_deleted" : false,
+                // "correctionType" :"Harga Satuan"
+                // "correctionType":"Harga Total"
+  
+                "correctionType":{$ne:"Jumlah"}
+               
+            };
+           
+        this.collection.aggregate([ 
+                {"$match" : date},{"$unwind" :"$items"}
+               
+             ])
+    
+            .toArray()
+            .then(result => {
+                resolve(result);
+            });
+        });
+    }
     _validate(unitPaymentQuantityCorrectionNote) {
         var errors = {};
         return new Promise((resolve, reject) => {
@@ -89,33 +117,36 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                                         itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.isRequired:%s is required", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
                                     }
                                     for (var _unitReceiptNote of _unitPaymentOrder.items) {
-                                        for (var _unitReceiptNoteItem of _unitReceiptNote.unitReceiptNote.items) {
-                                            if (_unitReceiptNoteItem.product._id.toString() === item.product._id.toString()) {
-                                                if (_unitReceiptNoteItem.correction.length > 0) {
-                                                    if (valid.correctionType === "Harga Satuan") {
-                                                        if (item.pricePerUnit === _unitReceiptNoteItem.correction[_unitReceiptNoteItem.correction.length - 1].correctionPricePerUnit) {
-                                                            itemError["pricePerUnit"] = i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit._:Price Per Unit"));
+                                        if (_unitReceiptNote.unitReceiptNote.no === item.unitReceiptNoteNo) {
+                                            for (var _unitReceiptNoteItem of _unitReceiptNote.unitReceiptNote.items) {
+                                                if (_unitReceiptNoteItem.product._id.toString() === item.product._id.toString()) {
+                                                    if (_unitReceiptNoteItem.correction.length > 0) {
+                                                        if (valid.correctionType === "Harga Satuan") {
+                                                            if (item.pricePerUnit === _unitReceiptNoteItem.correction[_unitReceiptNoteItem.correction.length - 1].correctionPricePerUnit) {
+                                                                itemError["pricePerUnit"] = i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit._:Price Per Unit"));
+                                                            }
+                                                        }
+                                                        else if (valid.correctionType === "Harga Total") {
+                                                            if (item.priceTotal === _unitReceiptNoteItem.correction[_unitReceiptNoteItem.correction.length - 1].correctionPriceTotal) {
+                                                                itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
+                                                            }
+                                                        }
+                                                    } else {
+                                                        if (valid.correctionType === "Harga Satuan") {
+                                                            if (item.pricePerUnit === _unitReceiptNoteItem.pricePerDealUnit) {
+                                                                itemError["pricePerUnit"] = i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit._:Price Per Unit"));
+                                                            }
+                                                        }
+                                                        else if (valid.correctionType === "Harga Total") {
+                                                            if (item.priceTotal === _unitReceiptNoteItem.pricePerDealUnit * item.quantity) {
+                                                                itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
+                                                            }
                                                         }
                                                     }
-                                                    else if (valid.correctionType === "Harga Total") {
-                                                        if (item.priceTotal === _unitReceiptNoteItem.correction[_unitReceiptNoteItem.correction.length - 1].correctionPriceTotal) {
-                                                            itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
-                                                        }
-                                                    }
-                                                } else {
-                                                    if (valid.correctionType === "Harga Satuan") {
-                                                        if (item.pricePerUnit === _unitReceiptNoteItem.pricePerDealUnit) {
-                                                            itemError["pricePerUnit"] = i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.pricePerUnit._:Price Per Unit"));
-                                                        }
-                                                    }
-                                                    else if (valid.correctionType === "Harga Total") {
-                                                        if (item.priceTotal === _unitReceiptNoteItem.pricePerDealUnit * item.quantity) {
-                                                            itemError["priceTotal"] = i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal.noChanges:%s doesn't change", i18n.__("unitPaymentQuantityCorrectionNote.items.priceTotal._:Total Price"));
-                                                        }
-                                                    }
+                                                    break;
                                                 }
-                                                break;
                                             }
+                                            break;
                                         }
                                     }
                                     itemErrors.push(itemError);
@@ -180,7 +211,7 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                                             item.uomId = new ObjectId(_unitReceiptNoteItem.deliveredUom._id);
                                             item.uom._id = new ObjectId(_unitReceiptNoteItem.deliveredUom._id);
                                             item.currency = _unitReceiptNoteItem.currency;
-                                            item.currencyRate = _unitReceiptNoteItem.currencyRate;
+                                            item.currencyRate = Number(_unitReceiptNoteItem.currencyRate);
                                             break;
                                         }
                                     }
@@ -188,6 +219,9 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                                 }
                             }
                         }
+                        item.quantity = Number(item.quantity);
+                        item.pricePerUnit = Number(item.pricePerUnit);
+                        item.priceTotal = Number(item.priceTotal);
                     }
 
                     if (!valid.stamp)
@@ -246,7 +280,7 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
         return query;
     }
 
-    pdf(id) {
+    pdf(id, offset) {
         return new Promise((resolve, reject) => {
 
             this.getSingleById(id)
@@ -303,7 +337,7 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                         _item.priceTotal = priceTotal;
 
                     }
-                    var definition = getDefinition(unitPaymentQuantityCorrectionNote);
+                    var definition = getDefinition(unitPaymentQuantityCorrectionNote, offset);
                     var generatePdf = require('../../pdf/pdf-generator');
                     generatePdf(definition)
                         .then(binary => {
@@ -320,11 +354,11 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
         });
     }
 
-    _beforeInsert(unitPaymentQuantityCorrectionNote) {
-        unitPaymentQuantityCorrectionNote.no = generateCode();
-        if (unitPaymentQuantityCorrectionNote.unitPaymentOrder.useIncomeTax)
-            unitPaymentQuantityCorrectionNote.returNoteNo = generateCode();
-        return Promise.resolve(unitPaymentQuantityCorrectionNote)
+    _beforeInsert(unitPaymentPriceCorrectionNote) {
+        unitPaymentPriceCorrectionNote.no = generateCode("correctionQuantity");
+        if (unitPaymentPriceCorrectionNote.unitPaymentOrder.useIncomeTax)
+            unitPaymentPriceCorrectionNote.returNoteNo = generateCode("returCode");
+        return Promise.resolve(unitPaymentPriceCorrectionNote)
     }
 
     _afterInsert(id) {
@@ -383,8 +417,8 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                             var _correction = {};
                             _correction.correctionDate = unitPaymentQuantityCorrectionNote.date;
                             _correction.correctionNo = unitPaymentQuantityCorrectionNote.no;
-                            _correction.correctionQuantity = correction.quantity;
-                            _correction.correctionPriceTotal = correctionPriceTotal;
+                            _correction.correctionQuantity = Number(correction.quantity);
+                            _correction.correctionPriceTotal = Number(correctionPriceTotal);
                             _correction.correctionRemark = `Koreksi ${unitPaymentQuantityCorrectionNote.correctionType}`;
                             fulfillment.correction.push(_correction);
                         }
@@ -428,9 +462,9 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                                     var _correction = {
                                         correctionDate: unitPaymentQuantityCorrectionNote.date,
                                         correctionNo: unitPaymentQuantityCorrectionNote.no,
-                                        correctionQuantity: realization.quantity,
-                                        correctionPricePerUnit: realization.pricePerUnit,
-                                        correctionPriceTotal: realization.priceTotal,
+                                        correctionQuantity: Number(realization.quantity),
+                                        correctionPricePerUnit: Number(realization.pricePerUnit),
+                                        correctionPriceTotal: Number(realization.priceTotal),
                                         correctionRemark: `Koreksi ${unitPaymentQuantityCorrectionNote.correctionType}`
                                     };
                                     item.correction.push(_correction);
@@ -516,6 +550,78 @@ module.exports = class unitPaymentPriceCorrectionNoteManager extends BaseManager
                     })
             })
     }
+
+getXls(result, query){
+         var xls = {};
+         xls.data = [];
+         xls.options = [];
+         xls.name = '';
+
+         var index = 0;
+         var dateFormat = "DD/MM/YYYY";
+
+         for(var corhrg of result.data){
+            index++;
+             var item = {};
+             item["NO"] = index;
+             item["NOMOR"] = corhrg.no ? corhrg.no : '';
+             item["TANGGAL"] = corhrg.date ? moment(new Date(corhrg.date)).format(dateFormat) : '';
+             item["NO SPB"] = corhrg.unitPaymentOrder? corhrg.unitPaymentOrder.no : '';
+             item["NO PO EXTERNAL"] = corhrg.items.purchaseOrder.purchaseOrderExternal? corhrg.items.purchaseOrder.purchaseOrderExternal.no : '';
+             item["NO PURCHASE REQUEST"] = corhrg.items.purchaseOrder.purchaseRequest? corhrg.items.purchaseOrder.purchaseRequest.no : '';
+             item["FAKTUR PAJAK PPN"] = corhrg.incomeTaxCorrectionNo? corhrg.incomeTaxCorrectionNo : '';
+             item["TANGGAL FAKTUR PAJAK PPN"] = corhrg.incomeTaxCorrectionDate? moment(new Date(corhrg.incomeTaxCorrectionDate)).format(dateFormat) : '';
+             item["SUPPLIER"] = corhrg.unitPaymentOrder.supplier? corhrg.unitPaymentOrder.supplier.name : '';
+             item["JENIS KOREKSI"] = corhrg.correctionType? corhrg.correctionType : '';
+             item["KODE"] = corhrg.items.product? corhrg.items.product.code : '';
+             item["NAMA"] = corhrg.items.product? corhrg.items.product.name : '';
+
+                var k= corhrg.items.quantity.toFixed(2).toString().split('.');
+                var k1=k[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                var quantity= k1 + '.' + k[1];
+
+             item["JUMLAH"] = quantity;
+             item["SATUAN"] = corhrg.items.uom.unit? corhrg.items.uom.unit : '';
+
+                var a= corhrg.items.pricePerUnit.toFixed(4).toString().split('.');
+                var a1=a[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                var harga= a1 + '.' + a[1];
+
+                var g= corhrg.items.priceTotal.toFixed(2).toString().split('.');
+                var g1=g[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                var total= g1 + '.' + g[1];
+
+             item["HARGA SATUAN"] = harga;
+             item["HARGA TOTAL"] = total;
+             item["USER INPUT"] = corhrg._createdBy? corhrg._createdBy : '';
+
+             xls.data.push(item);
+         }
+
+         xls.options["NO"] = "number";
+         xls.options["NOMOR"] = "string";
+         xls.options["TANGGAL"] = "date";
+         xls.options["NO SPB"] = "string";
+         xls.options["NO PO EXTERNAL"] = "string";
+         xls.options["NO PURCHASE REQUEST"] = "string";
+         xls.options["FAKTUR PAJAK PPN"] = "string";
+         xls.options["TANGGAL FAKTUR PAJAK PPN"] = "string";
+         xls.options["SUPPLIER"] = "string";
+         xls.options["JENIS KOREKSI"] = "string";
+         xls.options["KODE"] = "string";
+         xls.options["NAMA"] = "string";
+         xls.options["JUMLAH"] = "number";
+         xls.options["SATUAN"] = "string";
+         xls.options["HARGA SATUAN"] = "number";
+         xls.options["HARGA TOTAL"] = "number";
+         xls.options["USER INPUT"] = "string";
+
+         if(query.dateFrom && query.dateTo){
+             xls.name = `Monitoring Koreksi Harga ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+         }
+         
+         return Promise.resolve(xls);
+     }
 
     _createIndexes() {
         var dateIndex = {

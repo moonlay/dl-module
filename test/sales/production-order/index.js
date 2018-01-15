@@ -10,3 +10,18 @@ describe("REPORT SCENARIOS", function() {
     require("./report");
 });
 
+describe("DETAIL REPORT SCENARIOS", function() {
+    require("./detail-report");
+});
+
+describe("VALIDATION SCENARIOS", function() {
+    require("./validator");
+});
+
+describe("PDF SCENARIOS", function() {
+    require("./pdf");
+});
+
+describe("ORDER STATUS REPORT SCENARIOS", function() {
+    require("./order-status-report");
+});

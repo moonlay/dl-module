@@ -46,6 +46,7 @@ module.exports = class UomManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
+            _deleted: false,
             unit: valid.unit
         }) : Promise.resolve(null);
 
@@ -66,7 +67,7 @@ module.exports = class UomManager extends BaseManager {
                     return Promise.reject(new ValidationError('data does not pass validation', errors));
                 }
 
-                valid = new Uom(uom);
+                valid = new Uom(valid);
                 valid.stamp(this.user.username, 'manager');
                 return Promise.resolve(valid);
             });
@@ -90,8 +91,6 @@ module.exports = class UomManager extends BaseManager {
         });
     }
 
-
-
     insert(dataFile) {
         return new Promise((resolve, reject) => {
             var uom;
@@ -101,7 +100,7 @@ module.exports = class UomManager extends BaseManager {
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
-                            data.push({ "unit": dataFile[i][0] });
+                            data.push({ "unit": dataFile[i][0].trim() });
                         }
                     }
                     var dataError = [], errorMessage;
@@ -124,7 +123,9 @@ module.exports = class UomManager extends BaseManager {
                         var newUOM = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Uom(data[i]);
+                            var now = new Date();
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
@@ -160,8 +161,7 @@ module.exports = class UomManager extends BaseManager {
             name: `ix_${map.master.collection.uom}_unit`,
             key: {
                 unit: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, unitIndex]);

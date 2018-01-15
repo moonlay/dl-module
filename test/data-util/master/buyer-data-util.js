@@ -26,18 +26,20 @@ class BuyerDataUtil {
         data.city = `city[${code}]`;
         data.NPWP = `NPWP[${code}]`;
         data.tempo = "30";
-        data.type = "Export";
+        data.type = "Ekspor";
         return Promise.resolve(data);
     }
 
-    getTestData() {
+    getTestData() {        
         var data = {
             code: "UT/BUY/01",
             name: "Buyer 01",
             address: "152 La Sierra Street Land O Lakes, FL 34639",
             country: "US",
+            city: "test",
             contact: "Mr. John Doe.",
-            tempo: "30"
+            tempo: "30",
+            type: "Ekspor",
         };
         return this.getSert(data);
     }

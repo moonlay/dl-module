@@ -27,8 +27,7 @@ it('#01. should error when create with empty data ', function (done) {
         })
         .catch(e => {
             try {
-                e.errors.should.have.property('dateStart');
-                e.errors.should.have.property('timeInMillisStart');
+                e.errors.should.have.property('dateStart'); 
                 e.errors.should.have.property('machine');
                 e.errors.should.have.property('productionOrder');
                 e.errors.should.have.property('selectedProductionOrderDetail');
@@ -67,39 +66,7 @@ it('#02. should error when create new data with dateStart greater than today', f
             done(e);
         });
 });
-
-it('#03. should error when create new data with timeStart greater than today', function (done) {
-    MonitoringEvent.getNewData()
-        .then(me => {
-            var dateNow = moment().format('YYYY-MM-DD');
-            var timeInMillisNow = (function(){
-                var setupMoment = moment();
-                setupMoment.set('year', 1970);
-                setupMoment.set('month', 0);
-                setupMoment.set('date', 1);  
-                return Number(setupMoment.format('x'));
-            })();
-            me.dateStart = dateNow;
-            me.timeInMillisStart = timeInMillisNow + 60000;
-
-            monitoringEventManager.create(me)
-                .then(id => {
-                    done("should error when create new data with timeStart greater than toda");
-                })
-                .catch(e => {
-                    try {
-                        e.errors.should.have.property('timeInMillisStart');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+ 
 
 it('#04. should error when create new data with dateEnd greater than today', function (done) {
     MonitoringEvent.getNewData()
@@ -126,39 +93,7 @@ it('#04. should error when create new data with dateEnd greater than today', fun
             done(e);
         });
 });
-
-it('#05. should error when create new data with timeEnd greater than today', function (done) {
-    MonitoringEvent.getNewData()
-        .then(me => {
-            var dateNow = moment().format('YYYY-MM-DD');
-            var timeInMillisNow = (function(){
-                var setupMoment = moment();
-                setupMoment.set('year', 1970);
-                setupMoment.set('month', 0);
-                setupMoment.set('date', 1);  
-                return Number(setupMoment.format('x'));
-            })();
-            me.dateEnd = dateNow;
-            me.timeInMillisEnd = timeInMillisNow + 60000;
-
-            monitoringEventManager.create(me)
-                .then(id => {
-                    done("should error when create new data with timeEnd greater than toda");
-                })
-                .catch(e => {
-                    try {
-                        e.errors.should.have.property('timeInMillisEnd');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+ 
 
 it('#06. should error when create new data with dateStart greater than dateEnd', function (done) {
     MonitoringEvent.getNewData()
@@ -185,82 +120,7 @@ it('#06. should error when create new data with dateStart greater than dateEnd',
             done(e);
         });
 });
-
-it('#07. should error when create new data with timeStart greater than timeEnd in same date', function (done) {
-    MonitoringEvent.getNewData()
-        .then(me => {
-            me.dateStart = '2017-01-01';
-            me.dateEnd = '2017-01-01';
-            me.timeInMillisStart = 10000;
-            me.timeInMillisEnd = 5000;
-
-            monitoringEventManager.create(me)
-                .then(id => {
-                    done("should error when create new data with timeStart greater than timeEnd in same date");
-                })
-                .catch(e => {
-                    try {
-                        e.errors.should.have.property('timeInMillisStart');
-                        e.errors.should.have.property('timeInMillisEnd');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
-
-it('#08. should error when create new data with dateEnd without timeEnd', function (done) {
-    MonitoringEvent.getNewData()
-        .then(me => {
-            delete me.timeInMillisEnd;
-
-            monitoringEventManager.create(me)
-                .then(id => {
-                    done("should error when create new data with dateEnd without timeEnd");
-                })
-                .catch(e => {
-                    try {
-                        e.errors.should.have.property('timeInMillisEnd');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
-
-it('#09. should error when create new data with timeEnd without dateEnd', function (done) {
-    MonitoringEvent.getNewData()
-        .then(me => {
-            delete me.dateEnd;
-
-            monitoringEventManager.create(me)
-                .then(id => {
-                    done("should error when create new data with timeEnd without dateEnd");
-                })
-                .catch(e => {
-                    try {
-                        e.errors.should.have.property('dateEnd');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch(e => {
-            done(e);
-        });
-});
+   
 
 it('#10. should success when create new data without both dateEnd and timeEnd', function (done) {
     MonitoringEvent.getNewData()
@@ -273,7 +133,7 @@ it('#10. should success when create new data without both dateEnd and timeEnd', 
                     done();
                 })
                 .catch(e => {
-                    done(x);
+                    done(e);
                 });
         })
         .catch(e => {

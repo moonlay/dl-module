@@ -4,49 +4,216 @@ var DailyOperationManager = require('../../../../src/managers/production/finishi
 var codeGenerator = require('../../../../src/utils/code-generator');
 var kanbanDataUtil = require('./kanban-data-util');
 var machineDataUtil = require('../../master/machine-data-util');
+var badOutputReasonDataUtil = require('../../master/bad-output-reason-data-util');
 var moment = require('moment');
 
 class DailyOperationDataUtil {
-    getNewData() {
+    getNewData(type) {
         return Promise.all([kanbanDataUtil.getNewTestData()])
-                    .then(kanban => {
-                        var _kanban = kanban[0];
-                        return Promise.all([machineDataUtil.getTestData()])
-                                .then((machine) => {
-                                    var _machine = machine[0];
-                                    var dataSteps = [];
-                                    var code = codeGenerator();
-                                    var dateNow = new Date();
-                                    var dateNowString = moment(dateNow).format('YYYY-MM-DD');
-                                    var data = {
-                                        kanbanId : _kanban._id,
-                                        kanban : _kanban,
-                                        shift : `shift ${code}`,
-                                        machineId : _machine._id,
-                                        machine : _machine,
-                                        dateInput : dateNowString,
-                                        timeInput : 10000,
-                                        input : 20,
-                                        dateOutput : dateNowString,
-                                        timeOutput : 12000,
-                                        goodOutput : 18,
-                                        badOutput : 2,
-                                        badOutputDescription : code
+            .then(kanban => {
+                var _kanban = kanban[0];
+                return Promise.all([machineDataUtil.getTestData()])
+                    .then((machine) => {
+                        return badOutputReasonDataUtil.getTestData()
+                            .then(reason => {
+                                var dailyType = type ? type : "input";
+                                var _machine = machine[0];
+                                var tempStep = {};
+                                for (var a of _machine.steps) {
+                                    tempStep = a.step;
+                                    break;
+                                }
+                                var code = codeGenerator();
+                                var dateNow = new Date();
+                                var dateNowString = '2017-01-01';
+                                var data = {};
+                                if (dailyType === "input") {
+                                    data = {
+                                        kanbanId: _kanban._id,
+                                        kanban: _kanban,
+                                        shift: `shift ${code}`,
+                                        machineId: _machine._id,
+                                        machine: _machine,
+                                        stepId: tempStep._id,
+                                        step: tempStep,
+                                        dateInput: dateNowString,
+                                        timeInput: 10000,
+                                        input: 20,
+                                        type: "input"
                                     };
-                                    return Promise.resolve(data);
-                                });
+                                } else {
+                                    data = {
+                                        kanbanId: _kanban._id,
+                                        kanban: _kanban,
+                                        shift: `shift ${code}`,
+                                        machineId: _machine._id,
+                                        machine: _machine,
+                                        stepId: tempStep._id,
+                                        step: tempStep,
+                                        dateOutput: dateNowString,
+                                        timeOutput: 12000,
+                                        goodOutput: 18,
+                                        badOutput: 2,
+                                        type: "output",
+                                        action: "Digudangkan",
+                                        badOutputReasons: [{
+                                            precentage: 100,
+                                            description: "Rusak",
+                                            badOutputReasonId: reason._id,
+                                            badOutputReason: reason
+                                        }]
+                                    };
+                                }
+                                return Promise.resolve(data);
+                            });
                     });
+            });
     }
-    
-    getNewTestData() {
+
+    getWhiteOrderTypeData(type) {
+        return Promise.all([kanbanDataUtil.getNewWhiteOrderTypeData(), machineDataUtil.getTestData(), badOutputReasonDataUtil.getTestData()])
+            .then((results) => {
+                var _kanban = results[0];
+                var dailyType = type ? type : "input";
+                var _machine = results[1];
+                var reason = results[2];
+                var tempStep = {};
+
+                for (var a of _machine.steps) {
+                    tempStep = a.step;
+                    break;
+                }
+
+                var code = codeGenerator();
+                var dateNow = new Date();
+                var dateNowString = '2017-01-01';
+                var data = {};
+
+                if (dailyType === "input") {
+                    data = {
+                        kanbanId: _kanban._id,
+                        kanban: _kanban,
+                        shift: `shift ${code}`,
+                        machineId: _machine._id,
+                        machine: _machine,
+                        stepId: tempStep._id,
+                        step: tempStep,
+                        dateInput: dateNowString,
+                        timeInput: 10000,
+                        input: 20,
+                        type: "input"
+                    };
+                } else {
+                    data = {
+                        kanbanId: _kanban._id,
+                        kanban: _kanban,
+                        shift: `shift ${code}`,
+                        machineId: _machine._id,
+                        machine: _machine,
+                        stepId: tempStep._id,
+                        step: tempStep,
+                        dateOutput: dateNowString,
+                        timeOutput: 12000,
+                        goodOutput: 20,
+                        badOutput: 0,
+                        type: "output",
+                    };
+                }
+                return Promise.resolve(data);
+            });
+    }
+
+    getPrintingOrderTypeData(type) {
+        return Promise.all([kanbanDataUtil.getNewPrintingOrderTypeData(), machineDataUtil.getTestData(), badOutputReasonDataUtil.getTestData()])
+            .then((results) => {
+                var _kanban = results[0];
+                var dailyType = type ? type : "input";
+                var _machine = results[1];
+                var reason = results[2];
+                var tempStep = {};
+
+                for (var a of _machine.steps) {
+                    tempStep = a.step;
+                    break;
+                }
+
+                var code = codeGenerator();
+                var dateNow = new Date();
+                var dateNowString = '2017-01-01';
+                var data = {};
+
+                if (dailyType === "input") {
+                    data = {
+                        kanbanId: _kanban._id,
+                        kanban: _kanban,
+                        shift: `shift ${code}`,
+                        machineId: _machine._id,
+                        machine: _machine,
+                        stepId: tempStep._id,
+                        step: tempStep,
+                        dateInput: dateNowString,
+                        timeInput: 13000,
+                        input: 20,
+                        type: "input"
+                    };
+                } else {
+                    data = {
+                        kanbanId: _kanban._id,
+                        kanban: _kanban,
+                        shift: `shift ${code}`,
+                        machineId: _machine._id,
+                        machine: _machine,
+                        stepId: tempStep._id,
+                        step: tempStep,
+                        dateOutput: dateNowString,
+                        timeOutput: 15000,
+                        goodOutput: 20,
+                        badOutput: 0,
+                        type: "output",
+                    };
+                }
+                return Promise.resolve(data);
+            });
+    }
+
+    getNewWhiteOrderTypeData(type) {
         return helper
             .getManager(DailyOperationManager)
             .then((manager) => {
-                return this.getNewData().then((data) => {
+                var a = type ? type : "input";
+                return this.getWhiteOrderTypeData(a).then((data) => {
                     return manager.create(data)
                         .then((id) => {
                             return manager.getSingleById(id)
-                            });
+                        });
+                });
+            });
+    }
+
+    getNewPrintingOrderTypeData(type) {
+        return helper
+            .getManager(DailyOperationManager)
+            .then((manager) => {
+                var a = type ? type : "input";
+                return this.getPrintingOrderTypeData(a).then((data) => {
+                    return manager.create(data)
+                        .then((id) => {
+                            return manager.getSingleById(id)
+                        });
+                });
+            });
+    }
+
+    getNewTestData(type) {
+        return helper
+            .getManager(DailyOperationManager)
+            .then((manager) => {
+                var a = type ? type : "input";
+                return this.getNewData(a).then((data) => {
+                    return manager.create(data)
+                        .then((id) => {
+                            return manager.getSingleById(id)
+                        });
                 });
             });
     }

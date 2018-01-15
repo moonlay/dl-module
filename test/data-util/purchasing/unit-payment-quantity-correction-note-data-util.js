@@ -20,14 +20,14 @@ class UnitPaymentQuantityCorrectionNoteDataUtil {
                                     purchaseOrder: unitReceiptNoteItem.purchaseOrder,
                                     productId: unitReceiptNoteItem.product._id,
                                     product: unitReceiptNoteItem.product,
-                                    quantity: unitReceiptNoteItem.deliveredQuantity-1,
+                                    quantity: unitReceiptNoteItem.deliveredQuantity - 1,
                                     uomId: unitReceiptNoteItem.deliveredUom._id,
                                     uom: unitReceiptNoteItem.deliveredUom,
                                     pricePerUnit: unitReceiptNoteItem.pricePerDealUnit,
                                     priceTotal: (unitReceiptNoteItem.pricePerDealUnit * unitReceiptNoteItem.deliveredQuantity),
                                     currency: unitReceiptNoteItem.currency,
                                     currencyRate: unitReceiptNoteItem.currencyRate,
-                                    unitReceiptNoteNo : unitPaymentOrder.unitReceiptNote.no,
+                                    unitReceiptNoteNo: unitPaymentOrder.unitReceiptNote.no,
                                     remark: ''
                                 }
                             })
@@ -44,6 +44,8 @@ class UnitPaymentQuantityCorrectionNoteDataUtil {
                             invoiceCorrectionDate: new Date(),
                             incomeTaxCorrectionNo: `UT/UPPCN/PPN/${codeGenerator()}`,
                             incomeTaxCorrectionDate: new Date(),
+                            useVat: false,
+                            useIncomeTax: false,
                             vatTaxCorrectionNo: `UT/UPPCN/PPH/${codeGenerator()}`,
                             vatTaxCorrectionDate: new Date(),
                             unitCoverLetterNo: `UT/UPPCN/Letter/${codeGenerator()}`,
@@ -64,6 +66,20 @@ class UnitPaymentQuantityCorrectionNoteDataUtil {
                 return this.getNewData().then((data) => {
                     return manager.create(data)
                         .then((id) => manager.getSingleById(id));
+                });
+            });
+    }
+
+    getNewTestDataInsertTwice() {
+        return helper
+            .getManager(UnitPaymentQuantityCorrectionNote)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    return manager.create(data)
+                        .then((id) => {
+                                return manager.create(data)
+                                    .then((id) => manager.getSingleById(id));
+                        });
                 });
             });
     }

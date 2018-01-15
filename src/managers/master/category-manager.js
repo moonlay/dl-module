@@ -51,7 +51,8 @@ module.exports = class CategoryManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code
+            code: valid.code,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -96,8 +97,6 @@ module.exports = class CategoryManager extends BaseManager {
         });
     }
 
-
-
     insert(dataFile) {
         return new Promise((resolve, reject) => {
             var category;
@@ -107,7 +106,12 @@ module.exports = class CategoryManager extends BaseManager {
                     var data = [];
                     if (dataFile != "") {
                         for (var i = 1; i < dataFile.length; i++) {
-                            data.push({ "code": dataFile[i][0], "name": dataFile[i][1], "codeRequirement": dataFile[i][2] });
+                            data.push({
+                                "code": dataFile[i][0].trim(),
+                                "name": dataFile[i][1].trim(),
+                                "codeRequirement": dataFile[i][2].trim(),
+                                
+                            });
                         }
                     }
                     var dataError = [], errorMessage;
@@ -135,8 +139,10 @@ module.exports = class CategoryManager extends BaseManager {
                         var newCategory = [];
                         for (var i = 0; i < data.length; i++) {
                             var valid = new Category(data[i]);
+                            var now = new Date();
                             j += 1;
                             valid.stamp(this.user.username, 'manager');
+                            valid._createdDate = now;
                             this.collection.insert(valid)
                                 .then(id => {
                                     this.getSingleById(id)
@@ -171,8 +177,7 @@ module.exports = class CategoryManager extends BaseManager {
             name: `ix_${map.master.collection.Category}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         }
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

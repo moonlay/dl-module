@@ -52,7 +52,8 @@ module.exports = class QualityManager extends BaseManager {
                 '$ne': new ObjectId(valid._id)
             },
             code: valid.code,
-            name: valid.name
+            name: valid.name,
+            _deleted: false
         });
 
         // 2. begin: Validation.
@@ -94,8 +95,7 @@ module.exports = class QualityManager extends BaseManager {
             key: {
                 code: 1,
                 name:1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

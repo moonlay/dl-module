@@ -5,3 +5,11 @@ describe("BASIC CRUD SCENARIOS", function() {
 describe("CREATE SCENARIOS", function() {
     require("./create");
 });
+
+describe("UPDATE SCENARIOS", function() {
+    require("./update");
+});
+
+describe("PDF SCENARIOS", function() {
+    require("./pdf");
+});

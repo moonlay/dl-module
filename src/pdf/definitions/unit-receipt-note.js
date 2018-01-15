@@ -1,10 +1,10 @@
 var global = require('../../global');
 
-module.exports = function (unitReceiptNote) {
+module.exports = function (unitReceiptNote, offset) {
 
     var items = [].concat.apply([], unitReceiptNote.items);
 
-    var iso = "FM-PB-00-06-010";
+    var iso = "FM-PB-00-06-010/R1";
     var number = unitReceiptNote.no;
 
     var locale = global.config.locale;
@@ -61,7 +61,7 @@ module.exports = function (unitReceiptNote) {
                             text: ':'
                         }, {
                             width: '*',
-                            text: `${moment(unitReceiptNote.date).format(locale.date.format)}`
+                            text: `${moment(unitReceiptNote.date).add(offset,'h').format(locale.date.format)}`
                         }]
                 }, {
                         columns: [{
@@ -183,7 +183,7 @@ module.exports = function (unitReceiptNote) {
     var footer = [
         '\n', {
             stack: [{
-                text: `Sukoharjo, ${moment(unitReceiptNote.date).format(locale.date.format)}`,
+                text: `Sukoharjo, ${moment(unitReceiptNote.date).add(offset,'h').format(locale.date.format)}`,
                 alignment: "right"
             }, {
                     columns: [{

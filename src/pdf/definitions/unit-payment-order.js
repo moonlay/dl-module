@@ -1,7 +1,7 @@
 var say = require('../../utils/say');
 var global = require('../../global');
 
-module.exports = function (unitPaymentOrder) {
+module.exports = function (unitPaymentOrder, offset) {
 
     var items = unitPaymentOrder.items.map(unitPaymentOrderItem => {
         return unitPaymentOrderItem.unitReceiptNote.items.map(receiptNoteItem => {
@@ -23,7 +23,7 @@ module.exports = function (unitPaymentOrder) {
     })
     var maxReceiptNoteDate = Math.max.apply(null, receiptNoteDates);
 
-    var iso = "FM-PB-00-06-014";
+    var iso = "FM-PB-00-06-014/R1";
     var number = unitPaymentOrder.no;
     var currency = unitPaymentOrder.currency.code;
     var locale = global.config.locale;
@@ -78,7 +78,7 @@ module.exports = function (unitPaymentOrder) {
                         style: ['size08']
                     }, {
                             alignment: "left",
-                            text: 'SUKOHARJO, ' + `${moment(unitPaymentOrder.date).format(locale.date.format)}`,
+                            text: 'SUKOHARJO, ' + `${moment(unitPaymentOrder.date).add(offset,'h').format(locale.date.format)}`,
                             style: ['size08']
                         }, {
                             alignment: "left",
@@ -198,17 +198,17 @@ module.exports = function (unitPaymentOrder) {
                 style: ['size08', 'right']
             }, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: `${currency}`
                 }, {
                         width: '*',
-                        text: parseFloat(item.price).toLocaleString(locale, locale.currencyNotaItern),
+                        text: item.price.toLocaleString(locale, locale.currencyNotaItern2),
                         style: ['right']
                     }],
                 style: ['size08']
             }, {
                 columns: [{
-                    width: '10%',
+                    width: '20%',
                     text: `${currency}`
                 }, {
                         width: '*',
@@ -235,7 +235,7 @@ module.exports = function (unitPaymentOrder) {
 
     var table = [{
         table: {
-            widths: ['5%', '25%', '10%', '15%', '17%', '15%', '13%'],
+            widths: ['4%', '25%', '10%', '17%', '20%', '12%', '12%'],
             headerRows: 1,
             body: [].concat([thead], tbody)
         }
@@ -262,7 +262,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.useVat ? parseFloat(vat).toLocaleString(locale, locale.currencyNotaItern) : "",
+                                    text: unitPaymentOrder.useVat ? parseFloat(Math.round(vat * 100) / 100).toLocaleString(locale, locale.currencyNotaItern) : "",
                                     style: 'right'
                                 }]
                         }, {
@@ -280,7 +280,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.useVat ? parseFloat((sum + incomeTax) - vat).toLocaleString(locale, locale.currencyNotaItern) : "",
+                                    text: unitPaymentOrder.useVat ?parseFloat(Math.round(((sum + incomeTax) - vat) * 100) / 100).toLocaleString(locale, locale.currencyNotaItern) : "",
                                     style: 'right'
                                 }]
                         }]
@@ -303,7 +303,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: parseFloat(sum).toLocaleString(locale, locale.currencyNotaItern),
+                                    text: parseFloat(Math.round(sum * 100) / 100).toLocaleString(locale, locale.currencyNotaItern),
                                     style: 'right'
                                 }]
                         }, {
@@ -317,7 +317,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.useIncomeTax ? parseFloat(incomeTax).toLocaleString(locale, locale.currencyNotaItern) : '',
+                                    text: unitPaymentOrder.useIncomeTax ? parseFloat(Math.round(incomeTax * 100) / 100).toLocaleString(locale, locale.currencyNotaItern) : '',
                                     style: 'right'
                                 }]
                         }, {
@@ -331,7 +331,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: parseFloat(sum + incomeTax).toLocaleString(locale, locale.currencyNotaItern),
+                                    text: parseFloat(Math.round((sum + incomeTax) * 100) / 100).toLocaleString(locale, locale.currencyNotaItern),
                                     style: 'right'
                                 }]
                         }]
@@ -360,7 +360,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: moment(unitPaymentOrder.dueDate).format(locale.date.format)
+                                    text: moment(unitPaymentOrder.dueDate).add(offset,'h').format(locale.date.format)
                                 }]
                         }, {
                             columns: [{
@@ -373,7 +373,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: unitPaymentOrder.invoceNo + ', ' + moment(unitPaymentOrder.invoceDate).format(locale.date.format) || '-'
+                                    text: unitPaymentOrder.invoceNo + ', ' + moment(unitPaymentOrder.invoceDate).add(offset,'h').format(locale.date.format) || '-'
                                 }]
                         }, {
                             columns: [{
@@ -408,7 +408,7 @@ module.exports = function (unitPaymentOrder) {
                                 },
                                 {
                                     width: '*',
-                                    text: moment(maxReceiptNoteDate).format(locale.date.format)
+                                    text: moment(maxReceiptNoteDate).add(offset,'h').format(locale.date.format)
                                 }]
                         }, {
                             columns: [{

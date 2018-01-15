@@ -59,7 +59,8 @@ module.exports = class UnitManager extends BaseManager {
                 _id: {
                     '$ne': new ObjectId(valid._id)
                 },
-                code: valid.code
+                code: valid.code,
+                _deleted: false
             });
             var getDivision = ObjectId.isValid(valid.divisionId) ? this.divisionManager.getSingleByIdOrDefault(new ObjectId(valid.divisionId)) : Promise.resolve(null);
 
@@ -130,10 +131,15 @@ module.exports = class UnitManager extends BaseManager {
                             var data = [];
                             if (dataFile != "") {
                                 for (var i = 1; i < dataFile.length; i++) {
-                                    data.push({ "code": dataFile[i][0], "division": dataFile[i][1], "name": dataFile[i][2], "description": dataFile[i][3] });
+                                    data.push({
+                                        "code": dataFile[i][0].trim(),
+                                        "division": dataFile[i][1].trim(),
+                                        "name": dataFile[i][2].trim(),
+                                        "description": dataFile[i][3].trim()
+                                    });
                                 }
                             }
-                            var dataError = [], errorMessage; 
+                            var dataError = [], errorMessage;
                             var flag = false;
                             for (var i = 0; i < data.length; i++) {
                                 errorMessage = "";
@@ -173,11 +179,13 @@ module.exports = class UnitManager extends BaseManager {
                                 var newUnit = [];
                                 for (var i = 0; i < data.length; i++) {
                                     var valid = new Unit(data[i]);
+                                    var now = new Date();
                                     for (var j = 0; j < div.length; j++) {
                                         if (data[i]["division"] == div[j]["name"]) {
                                             valid.divisionId = new ObjectId(div[j]["_id"]);
                                             valid.division = div[j];
                                             valid.stamp(this.user.username, 'manager');
+                                            valid._createdDate = now;
                                             this.collection.insert(valid)
                                                 .then(id => {
                                                     this.getSingleById(id)
@@ -217,8 +225,7 @@ module.exports = class UnitManager extends BaseManager {
             name: `ix_${map.master.collection.Unit}_code`,
             key: {
                 code: 1
-            },
-            unique: true
+            }
         }
 
         return this.collection.createIndexes([dateIndex, codeIndex]);

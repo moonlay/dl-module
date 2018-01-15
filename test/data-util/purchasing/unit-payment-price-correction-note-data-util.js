@@ -42,6 +42,8 @@ class UnitPaymentPriceCorrectionNoteDataUtil {
                             unitPaymentOrder: dataUnitPaymentOrder,
                             invoiceCorrectionNo: `UT/UPPCN/Invoice/${codeGenerator()}`,
                             invoiceCorrectionDate: new Date(),
+                            useVat: true,
+                            useIncomeTax: true,
                             incomeTaxCorrectionNo: `UT/UPPCN/PPN/${codeGenerator()}`,
                             incomeTaxCorrectionDate: new Date(),
                             vatTaxCorrectionNo: `UT/UPPCN/PPH/${codeGenerator()}`,

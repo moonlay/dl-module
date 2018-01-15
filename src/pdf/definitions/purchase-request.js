@@ -1,10 +1,10 @@
 var global = require('../../global');
 
-module.exports = function (purchaseRequest) {
+module.exports = function (purchaseRequest, offset) {
 
     var items = [].concat.apply([], purchaseRequest.items);
 
-    var iso = "FM-PB-00-06-006";
+    var iso = "FM-PB-00-06-006/R1";
     var number = purchaseRequest.no;
 
     var locale = global.config.locale; 
@@ -87,7 +87,7 @@ module.exports = function (purchaseRequest) {
                 width: '30%',
                 columns: [{
                     width: '*',
-                    stack: [`Sukoharjo, ${moment(purchaseRequest.date).format(locale.date.format)} `],
+                    stack: [`Sukoharjo, ${moment(purchaseRequest.date).add(offset,'h').format(locale.date.format)} `],
                     alignment: "right"
                 }],
                 style: ['size08']
@@ -156,13 +156,13 @@ module.exports = function (purchaseRequest) {
 
     var table = [{
         table: {
-            widths: ['5%', '13%', '40%', '17%', '25%'],
+            widths: ['5%', '19%', '39%', '17%', '20%'],
             headerRows: 1,
             body: [].concat([thead], tbody, tfoot)
         }
     }];
 
-    var getDateexpected= purchaseRequest.expectedDeliveryDate && purchaseRequest.expectedDeliveryDate.toString().trim() != '' ?  moment(purchaseRequest.expectedDeliveryDate).format(locale.date.format) : '-';
+    var getDateexpected= purchaseRequest.expectedDeliveryDate && purchaseRequest.expectedDeliveryDate.toString().trim() != '' ?  moment(purchaseRequest.expectedDeliveryDate).add(offset,'h').format(locale.date.format) : '-';
 
     var footer = [
         '\n', {
