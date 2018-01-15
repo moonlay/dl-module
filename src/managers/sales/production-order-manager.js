@@ -1992,7 +1992,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "_deleted": false,
                     "details.productionOrderNo": {
                         "$in": orderNumbers
-                    }
+                    },
+                    "isVoid": false
                 }
             },
             {
