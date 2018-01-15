@@ -13,7 +13,7 @@ describe('#dl-module', function (done) {
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
 
-    // // Migration Log
+    // Migration Log
     test('@Migration Log/Migration Log', './migration-log/migration-log');
 
     //Etl
@@ -103,6 +103,7 @@ describe('#dl-module', function (done) {
     test('@MASTER/DEAL TRACKING REASON', './master/deal-tracking-reason');
     test('@MASTER/SPINNING YARN', './master/spinning-yarn');
     test('@MASTER/HOLIDAY', './master/holiday');
+    test('@MASTER/KURS BUDGET', './master/kurs-budget');
     
     //Purchasing 
     test('@PURCHASING/PURCHASE REQUEST', './purchasing/purchase-request');
@@ -147,6 +148,7 @@ describe('#dl-module', function (done) {
     test('@PRODUCTION/FINISHING-PRINTING/MONITORING-SPECIFICATION-MACHINE', './production/finishing-printing/monitoring-specification-machine');
     test('@PRODUCTION/FINISHING-PRINTING/MONITORING-EVENT', './production/finishing-printing/monitoring-event');
     test('@PRODUCTION/INSPECTION LOT COLOR', './production/finishing-printing/inspection-lot-color');
+    test('@PRODUCTION/MACHINE QUEUE', './production/finishing-printing/machine-queue');
 
     // test('@production/winding-quality-sampling-manager', './production/spinning/winding/winding-quality-sampling-manager-test');
     // test('@production/winding-production-output-manager', './production/spinning/winding/winding-production-output-manager-test');
@@ -172,5 +174,6 @@ describe('#dl-module', function (done) {
     test('@GARMENT MASTER PLAN/STYLE', './garment-master-plan/style');
     test('@GARMENT MASTER PLAN/STANDARD-HOUR', './garment-master-plan/standard-hour');
     test('@GARMENT MASTER PLAN/MASTER PLAN COMODITY', './garment-master-plan/master-plan-comodity');
+    test('@GARMENT MASTER PLAN/MASTER PLAN', './garment-master-plan/master-plan');
 
 });

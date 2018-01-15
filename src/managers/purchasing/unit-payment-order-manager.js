@@ -70,8 +70,8 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        "no": valid.no
-                    }]
+                    "no": valid.no
+                }]
             });
 
             Promise.all([getUnitPaymentOrderPromise].concat(getUnitReceiptNote))
@@ -244,101 +244,149 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         });
     }
 
-getDataMonitorSpb(unitId,PRNo,noSpb,supplierId,dateFrom,dateTo,staffName , offset) {
+    getDataMonitorSpb(unitId, PRNo, noSpb, supplierId, dateFrom, dateTo, staffName, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
-
+            var nilai = {};
             qryMatch["$and"] = [
                 { "_deleted": false }];
 
             if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
                 var validStartDate = new Date(dateFrom);
                 var validEndDate = new Date(dateTo);
-               // validStartDate.setHours(validStartDate.getHours() - offset);
+                // validStartDate.setHours(validStartDate.getHours() - offset);
                 //validEndDate.setHours(validEndDate.getHours() - offset);
-  qryMatch["$and"].push(
+                qryMatch["$and"].push(
                     {
                         "date": {
-                             $gte: validStartDate,
-                             $lte: validEndDate
+                            $gte: validStartDate,
+                            $lte: validEndDate
 
                         }
                     }
-                   
-                    )
-            }
-            
-               if (unitId!=="") {
-                qryMatch["$and"].push({
-                      "items.unitReceiptNote.unitId":new ObjectId(unitId)
- 
-                 })
+
+                )
             }
 
-                if (supplierId!=="") {
+            if (unitId !== "") {
                 qryMatch["$and"].push({
-                      "supplierId":new ObjectId(supplierId)
- 
-                 })
+                    "items.unitReceiptNote.unitId": new ObjectId(unitId)
+
+                })
             }
 
-  if (staffName!=="") {
+            if (supplierId !== "") {
                 qryMatch["$and"].push({
-                      "_createdBy":staffName
- 
-                 })
+                    "supplierId": new ObjectId(supplierId)
+
+                })
             }
 
-if (PRNo!=="") {
-                qryMatch["$and"].push({
-                      "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no":PRNo
- 
-                 })
+            //   if (staffName!=="") {
+            //                 qryMatch["$and"].push({
+            //                       "do_docs._createdBy":staffName
+            //                 })
+            //             }
+            if (staffName !== undefined && staffName !== "") {
+                nilai = { "do_docs._createdBy": staffName };
             }
 
-            if (noSpb!=="") {
+            if (PRNo !== "") {
                 qryMatch["$and"].push({
-                      "no":noSpb
- 
-                 })
+                    "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": PRNo
+
+                })
+            }
+
+            if (noSpb !== "") {
+                qryMatch["$and"].push({
+                    "no": noSpb
+
+                })
             }
 
             this.collection.aggregate(
                 [
                     {
-                    $match: qryMatch
-                },
-                 {
+                        $match: qryMatch
+                    },
+                    {
                         $unwind: "$items"
-                    },      
-            {
+                    },
+                    {
                         $unwind: "$items.unitReceiptNote.items"
-                    },      
+                    },
 
-             {
-         $project: {
-            no: "$no",
-            date: "$date",
-            "items.unitReceiptNote.items.product.name": "$items.unitReceiptNote.items.product.name",
-            "items.unitReceiptNote.items.deliveredQuantity": "$items.unitReceiptNote.items.deliveredQuantity",
-            "items.unitReceiptNote.items.pricePerDealUnit": "$items.unitReceiptNote.items.pricePerDealUnit",
-            invoceDate: "$invoceDate",
-            invoceNo: "$invoceNo",
-            dueDate: "$dueDate",
-            "supplier.name": "$supplier.name",
-            "division.name": "$division.name",
-            "namaUnit": "$items.unitReceiptNote.unit.name",
-            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
-            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date",
-            "items.unitReceiptNote.no":"$items.unitReceiptNote.no",
-            "items.unitReceiptNote.date":"$items.unitReceiptNote.date",
-         }
-      }      ,
-                      { $sort : { "date" : 1 } }
-                    ]
-    
+                    {
+                        $lookup:
+                            {
+                                from: "purchase-requests",
+                                localField: "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
+                                foreignField: "no",
+                                as: "pr_docs"
+                            }
+                    },
+                    {
+                        $unwind: "$pr_docs"
+                    },
+                    {
+                        $lookup:
+                            {
+                                from: "delivery-orders",
+                                localField: "items.unitReceiptNote.deliveryOrder.no",
+                                foreignField: "no",
+                                as: "do_docs"
+                            }
+                    },
+                    //      {
+                    //    $lookup:
+                    //      {
+                    //        from: "purchase-orders",
+                    //        localField: "items.unitReceiptNote.items.purchaseOrder.no",
+                    //        foreignField: "no",
+                    //        as: "do_docs"
+                    //      }
+                    // },
+                    // {
+                    //                     $unwind:"$do_docs"
+                    //                 },
+                    { $match: nilai },
+                    //   {
+                    //      $match: qryMatch
+                    //  },
+
+                    {
+                        $project: {
+                            no: "$no",
+                            date: "$date",
+                            _createdBy: "$_createdBy",
+                            "items.unitReceiptNote.items.product.name": "$items.unitReceiptNote.items.product.name",
+                            "items.unitReceiptNote.items.deliveredQuantity": "$items.unitReceiptNote.items.deliveredQuantity",
+                            "items.unitReceiptNote.items.pricePerDealUnit": "$items.unitReceiptNote.items.pricePerDealUnit",
+                            invoceDate: "$invoceDate",
+                            invoceNo: "$invoceNo",
+                            dueDate: "$dueDate",
+                            "supplier.name": "$supplier.name",
+                            "division.name": "$division.name",
+                            "useIncomeTax": "$useIncomeTax",
+                            "useVat": "$useVat",
+                            "vat.rate": "$vat.rate",
+                            //"namaUnit": "$items.unitReceiptNote.unit.name",
+                            "namaUnit": "$pr_docs.unit.name",
+                            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
+                            "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$pr_docs.date",
+                            "items.unitReceiptNote.no": "$items.unitReceiptNote.no",
+                            "staff": "$do_docs._createdBy",
+                            //"staff":"$_createdBy",
+                            "items.unitReceiptNote.date": "$items.unitReceiptNote.date",
+                        }
+                    },
+
+                    { $sort: { "date": 1 } }
+                ]
+
             )
-                .toArray(function(err, result) {
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
@@ -482,8 +530,7 @@ if (PRNo!=="") {
                         })
                 });
         }
-        else
-        { return Promise.resolve(newUnitPaymentOrder) }
+        else { return Promise.resolve(newUnitPaymentOrder) }
     }
 
     updatePurchaseOrder(realizations) {
@@ -528,7 +575,7 @@ if (PRNo!=="") {
                     var isFull = purchaseOrder.items
                         .map((item) => {
                             return item.fulfillments
-                                .map((fulfillment) => fulfillment.hasOwnProperty("interNoteNo"))
+                                .map((fulfillment) => fulfillment.hasOwnProperty("invoiceNo"))
                                 .reduce((prev, curr, index) => {
                                     return prev && curr
                                 }, true);
@@ -714,13 +761,13 @@ if (PRNo!=="") {
                     var isPaid = purchaseOrder.items
                         .map((item) => {
                             return item.fulfillments
-                                .map((fulfillment) => fulfillment.hasOwnProperty("interNoteNo"))
+                                .map((fulfillment) => fulfillment.hasOwnProperty("invoiceNo"))
                                 .reduce((prev, curr, index) => {
                                     return prev || curr
                                 }, false);
                         })
                         .reduce((prev, curr, index) => {
-                            return prev && curr
+                            return prev || curr
                         }, false);
 
                     purchaseOrder.status = isPaid ? poStatusEnum.PAYMENT : (purchaseOrder.isClosed ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING);

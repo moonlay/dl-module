@@ -263,6 +263,7 @@ it('#11. should success when get data with unit and Duration >90 days', function
     var query = {};
     query.unitId=createdDO3.items[0].fulfillments[0].purchaseOrder.unit._id;
     query.duration = "> 90 hari";
+    query.offset = 0;
 
     purchaseOrderManager.getDurationPOEksDoData(query)
         .then(result => {

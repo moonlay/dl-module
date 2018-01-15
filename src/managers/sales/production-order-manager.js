@@ -25,8 +25,11 @@ var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var generateCode = require("../../utils/code-generator");
 var assert = require('assert');
+var moment = require('moment');
 
 module.exports = class ProductionOrderManager extends BaseManager {
+    //#region CRUD and Report
+
     constructor(db, user) {
         super(db, user);
 
@@ -35,6 +38,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         this.fabricQualityControlCollection = this.db.use(map.production.finishingPrinting.qualityControl.defect.collection.FabricQualityControl);
         this.fpPackingReceiptCollection = this.db.use(map.inventory.finishingPrinting.collection.FPPackingReceipt);
         this.fpPackingShipmentCollection = this.db.use(map.inventory.finishingPrinting.collection.FPPackingShipmentDocument);
+        this.kanbanCollection = this.db.use(map.production.finishingPrinting.collection.Kanban);
         this.LampStandardManager = new LampStandardManager(db, user);
         this.BuyerManager = new BuyerManager(db, user);
         this.UomManager = new UomManager(db, user);
@@ -48,6 +52,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         this.StandardTestManager = new StandardTestManager(db, user);
         this.AccountManager = new AccountManager(db, user);
         this.fpSalesContractManager = new FPSalesContractManager(db, user);
+        this.documentNumbers = this.db.collection("document-numbers");
     }
 
     _getQuery(paging) {
@@ -97,10 +102,87 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return query;
     }
 
+    // _beforeInsert(productionOrder) {
+    //     productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
+    //     var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
+    //     return this.documentNumbers
+    //         .find({ "type": type }, { "number": 1, "year": 1 })
+    //         .sort({ "year": -1, "number": -1 })
+    //         .limit(1)
+    //         .toArray()
+    //         .then((previousDocumentNumbers) => {
+
+    //             var yearNow = parseInt(moment().format("YY"));
+    //             var monthNow = moment().format("MM");
+
+    //             var number = 1;
+
+    //             if (previousDocumentNumbers.length > 0) {
+
+    //                 var oldYear = previousDocumentNumbers[0].year;
+    //                 number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+
+    //                 productionOrder.documentNumber = `${type}/${yearNow}/${this.pad(number, 4)}`;
+    //             } else {
+    //                 productionOrder.documentNumber = `${type}/${yearNow}/0001`;
+    //             }
+
+    //             var documentNumbersData = {
+    //                 type: type,
+    //                 documentNumber: productionOrder.documentNumber,
+    //                 number: number,
+    //                 year: yearNow
+    //             }
+
+    //             return this.documentNumbers
+    //                 .insert(documentNumbersData)
+    //                 .then((id) => {
+    //                     return Promise.resolve(productionOrder)
+    //                 })
+    //         })
+    // }
+
     _beforeInsert(productionOrder) {
-        productionOrder.orderNo = productionOrder.orderNo === "" ? generateCode() : productionOrder.orderNo;
-        productionOrder._createdDate = new Date();
+        productionOrder.orderNo = productionOrder.orderNo ? productionOrder.orderNo : generateCode();
         return Promise.resolve(productionOrder);
+    }
+
+    // newCodeGenerator(oldOrderNo, type) {
+    //     var newOrderNo = "";
+
+    //     var yearNow = parseInt(moment().format("YY"));
+
+    //     var codeStructure = oldOrderNo.split("/");
+    //     var number = parseInt(codeStructure[2]);
+
+    //     if (codeStructure.length === 3) {
+    //         var oldYear = parseInt(codeStructure[1]);
+
+    //         if (oldYear === yearNow) {
+    //             number += 1;
+
+    //             codeStructure[2] = this.pad(number, 4);
+    //             codeStructure[1] = this.pad(yearNow, 2);
+
+    //             newOrderNo = codeStructure.join("/");
+    //         }
+    //     }
+
+    //     if (!newOrderNo) {
+    //         newOrderNo = `${type}/${this.pad(yearNow, 2)}/0001`;
+    //     }
+
+    //     return newOrderNo;
+    // }
+
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
     _validate(productionOrder) {
@@ -759,8 +841,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "orderQuantity": "$orderQuantity",
                                 "uom": "$uom.unit",
                                 "colorCode": "$details.code",
-                                // "colorTemplate": "$details.colorTemplate",
-                                // "colorRequest": "$details.colorRequest",
+                                "colorTemplate": "$details.colorTemplate",
+                                "colorRequest": "$details.colorRequest",
                                 // "colorType": "$details.colorType.name",
                                 "quantity": "$details.quantity",
                                 // "uomDetail": "$details.uom.unit",
@@ -795,8 +877,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "orderQuantity": "$orderQuantity",
                                 "uom": "$uom.unit",
                                 "colorCode": "$details.code",
-                                // "colorTemplate": "$details.colorTemplate",
-                                // "colorRequest": "$details.colorRequest",
+                                "colorTemplate": "$details.colorTemplate",
+                                "colorRequest": "$details.colorRequest",
                                 // "colorType": "$details.colorType.name",
                                 "quantity": "$details.quantity",
                                 // "uomDetail": "$details.uom.unit",
@@ -893,7 +975,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         }
                         prodOrder.staffName = `${prodOrder.firstname} ${prodOrder.lastname}`;
                         prodOrder.no = no;
-                        var construction = `${prodOrder.materialName} / ${prodOrder.materialConstruction} / ${prodOrder.materialWidth}`;
+                        var construction = `${prodOrder.materialName} / ${prodOrder.materialConstruction} / ${prodOrder.materialWidth}`;
                         var designMotive = prodOrder.designMotive;
                         prodOrder.designMotive = designMotive;
                         prodOrder.construction = construction;
@@ -1033,14 +1115,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
         });
     }
 
-    getDetailReport(salesContractNo) {
+    getDetailReport(orderNo) {
         return new Promise((resolve, reject) => {
             var qry = Object.assign({});
             var data = {}
-            if (salesContractNo) {
+            if (orderNo) {
                 Object.assign(qry, {
-                    "salesContractNo": {
-                        "$regex": (new RegExp(salesContractNo, "i"))
+                    "orderNo": {
+                        "$regex": (new RegExp(orderNo, "i"))
                     }
                 });
             }
@@ -1216,427 +1298,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return newArr;
     }
 
-    getOrderStatusReport(info) {
+    //#endregion CRUD and Report
 
-        var year = parseInt(info.year);
-        var orderType = info.orderType;
-
-        var getDailyOperationStatus = this.getDailyOperationStatus(year, orderType);
-        var getProductionOrderStatus = this.getProductionOrderStatus(year, orderType);
-        var getPackingReceiptStatus = this.getPackingReceiptStatus(year, orderType);
-        var getShipmentStatus = this.getShipmentStatus(year, orderType);
-
-        return Promise.all([getProductionOrderStatus, getDailyOperationStatus, getPackingReceiptStatus, getShipmentStatus])
-            .then((results) => {
-                var productionOrders = results[0];
-                var dailyOperations = results[1];
-                var packingReceipts = results[2];
-                var packingShipments = results[3];
-
-                var data = [];
-                var monthName = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
-
-                var grandTotal = {};
-                grandTotal.name = "TOTAL"
-                grandTotal.preProductionQuantity = 0;
-                grandTotal.onProductionQuantity = 0;
-                grandTotal.orderQuantity = 0;
-                grandTotal.storageQuantity = 0;
-                grandTotal.shipmentQuantity = 0;
-                for (var i = 0; i < 12; i++) {
-                    var datum = {};
-                    datum.name = monthName[i];
-
-                    datum.preProductionQuantity = 0;
-                    datum.onProductionQuantity = 0;
-                    for (var dailyOperation of dailyOperations) {
-                        if (dailyOperation.month - 1 === i) {
-                            if (dailyOperation.processArea.toString().toLowerCase() === "area pre treatment") {
-                                grandTotal.preProductionQuantity += dailyOperation.quantity;
-                                datum.preProductionQuantity += dailyOperation.quantity;
-                            } else if (dailyOperation.processArea.toString().toLowerCase() !== "area pre treatment" && dailyOperation.processArea.toString().toLowerCase() !== "area inspecting") {
-                                grandTotal.onProductionQuantity += dailyOperation.quantity;
-                                datum.onProductionQuantity += dailyOperation.quantity;
-                            }
-                        }
-                    }
-
-                    datum.orderQuantity = 0;
-                    for (var productionOrder of productionOrders) {
-                        if (productionOrder.month - 1 === i) {
-                            grandTotal.orderQuantity += productionOrder.quantity;
-                            datum.orderQuantity += productionOrder.quantity;
-                        }
-                    }
-
-                    datum.storageQuantity = 0;
-                    for (var packingReceipt of packingReceipts) {
-                        if (packingReceipt.month - 1 === i) {
-                            grandTotal.storageQuantity += packingReceipt.quantity;
-                            datum.storageQuantity += packingReceipt.quantity;
-                        }
-                    }
-
-                    datum.shipmentQuantity = 0;
-                    for (var packingShipment of packingShipments) {
-                        if (packingShipment.month - 1 === i) {
-                            grandTotal.shipmentQuantity += packingShipment.quantity;
-                            datum.shipmentQuantity += packingShipment.quantity;
-                        }
-                    }
-
-                    data.push(datum);
-                }
-
-                data.push(grandTotal);
-
-                return Promise.resolve(data)
-            })
-
-    }
-
-    getShipmentStatus(year, orderType) {
-        var query = {}
-        if (orderType.toString().toLowerCase() === "printing" || orderType.toString().toLowerCase() === "yarn dyed") {
-            query = {
-                "_deleted": false,
-                "processType.orderType.name": orderType,
-                "year": year
-            }
-        } else if (orderType.toString().toLowerCase() === "white" || orderType.toString().toLowerCase() === "dyeing") {
-            query = {
-                "_deleted": false,
-                "processType.name": orderType,
-                "year": year
-            }
-        } else {
-            query = {
-                "_deleted": false,
-                "year": year
-            }
-        }
-
-        return this.collection.aggregate([
-            {
-                "$project": {
-                    "_deleted": 1,
-                    "processType": 1,
-                    "orderNo": 1,
-                    "year": {
-                        "$year": "$deliveryDate"
-                    }
-                }
-            },
-            {
-                "$match": query
-            }
-        ]).toArray()
-            .then((productionOrders) => {
-
-                var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
-
-                return this.fpPackingShipmentCollection.aggregate([
-                    {
-                        "$project": {
-                            "_deleted": 1,
-                            "year": {
-                                "$year": "$deliveryDate"
-                            },
-                            "month": {
-                                "$month": "$deliveryDate"
-                            }
-                        }
-                    },
-                    {
-                        "$match": {
-                            "_deleted": false,
-                            "productionOrderNo": {
-                                "$in": orderNumbers
-                            },
-                            "year": year
-                        }
-                    }
-                ]).toArray()
-                    .then((shipmentDocuments) => {
-                        var shipmentDocumentData = [];
-
-                        if (shipmentDocuments.length > 0) {
-                            for (var shipmentDocument of shipmentDocuments) {
-                                var shipmentDocumentDatum = {};
-
-                                shipmentDocumentDatum.month = shipmentDocument.month;
-
-                                shipmentDocumentDatum.quantity = 0;
-                                if (shipmentDocument.details && shipmentDocument.details.length > 0) {
-                                    for (var detail of shipmentDocument.details) {
-                                        var orderNumber = orderNumbers.find((orderNo) => orderNo.toString() === detail.productionOrderNo.toString());
-
-                                        if (orderNumber) {
-                                            for (var item of detail.items) {
-                                                if (item.packingReceiptItems && item.packingReceiptItems.length > 0) {
-                                                    for (var packingReceiptItem of item.packingReceiptItems) {
-                                                        shipmentDocumentDatum.quantity += packingReceiptItem.quantity ? packingReceiptItem.quantity : 0;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                shipmentDocumentData.push(shipmentDocumentDatum);
-                            }
-                        }
-
-
-                        return Promise.resolve(shipmentDocumentData);
-                    })
-            })
-    }
-
-    getProductionOrderStatus(year, orderType) {
-        var query = {}
-        if (orderType.toString().toLowerCase() === "printing" || orderType.toString().toLowerCase() === "yarn dyed") {
-            query = {
-                "_deleted": false,
-                "processType.orderType.name": orderType,
-                "year": year
-            }
-        } else if (orderType.toString().toLowerCase() === "white" || orderType.toString().toLowerCase() === "dyeing") {
-            query = {
-                "_deleted": false,
-                "processType.name": orderType,
-                "year": year
-            }
-        } else {
-            query = {
-                "_deleted": false,
-                "year": year
-            }
-        }
-
-        return this.collection.aggregate([
-            {
-                "$project": {
-                    "_deleted": 1,
-                    "processType": 1,
-                    "orderQuantity": 1,
-                    "year": {
-                        "$year": "$deliveryDate"
-                    },
-                    "month": {
-                        "$month": "$deliveryDate"
-                    }
-                }
-            },
-            {
-                "$match": query
-            },
-            {
-                "$group": {
-                    "_id": { "month": "$month" },
-                    "total": { "$sum": "$orderQuantity" },
-                }
-            }
-        ]).toArray()
-            .then((productionOrders) => {
-                var productionOrderData = [];
-
-                if (productionOrders.length > 0) {
-                    for (var productionOrder of productionOrders) {
-                        var productionOrderDatum = {};
-
-                        productionOrderDatum.month = productionOrder._id.month;
-
-                        productionOrderDatum.quantity = productionOrder.total;
-
-                        productionOrderData.push(productionOrderDatum);
-                    }
-                }
-
-                return Promise.resolve(productionOrderData);
-            })
-    }
-
-    getDailyOperationStatus(year, orderType) {
-        var query = {}
-        if (orderType.toString().toLowerCase() === "printing" || orderType.toString().toLowerCase() === "yarn dyed") {
-            query = {
-                "_deleted": false,
-                "step.processArea": {
-                    "$exists": true
-                },
-                "kanban.productionOrder.processType.orderType.name": orderType,
-                "$and": [{ "type": { "$exists": true } }],
-                "type": "output"
-            }
-        } else if (orderType.toString().toLowerCase() === "white" || orderType.toString().toLowerCase() === "dyeing") {
-            query = {
-                "_deleted": false,
-                "step.processArea": {
-                    "$exists": true
-                },
-                "kanban.productionOrder.processType.name": orderType,
-                "$and": [{ "type": { "$exists": true } }],
-                "type": "output"
-            }
-        } else {
-            query = {
-                "_deleted": false,
-                "step.processArea": {
-                    "$exists": true
-                },
-                "$and": [{ "type": { "$exists": true } }],
-                "type": "output"
-            }
-        }
-
-        return this.dailyOperationCollection.find(
-            query,
-            {
-                "code": 1
-            }
-        ).toArray()
-            .then((dailyOps) => {
-                var dailyCodes = dailyOps.map((dailyOp) => dailyOp.code);
-
-                delete query.type;
-                query.code = {
-                    "$nin": dailyCodes
-                };
-
-                return this.dailyOperationCollection.aggregate([
-                    {
-                        "$match": query
-                    },
-                    {
-                        "$project": {
-                            "input": 1,
-                            "step.processArea": 1,
-                            "month": { "$month": "$dateInput" },
-                            "year": { "$year": "$dateInput" }
-                        }
-                    },
-                    {
-                        "$match": {
-                            "year": year
-                        }
-                    },
-                    {
-                        "$group": {
-                            "_id": { "month": "$month", "processArea": "$step.processArea" },
-                            "total": { "$sum": "$input" }
-                        }
-                    }
-                ]).toArray()
-                    .then((dailyOperations) => {
-                        var dailyOperationData = [];
-
-                        if (dailyOperations.length > 0) {
-                            for (var dailyOperation of dailyOperations) {
-                                var dailyOperationDatum = {};
-
-                                dailyOperationDatum.month = dailyOperation._id.month;
-                                dailyOperationDatum.processArea = dailyOperation._id.processArea;
-
-                                dailyOperationDatum.quantity = dailyOperation.total;
-
-                                dailyOperationData.push(dailyOperationDatum);
-                            }
-                        }
-
-                        return Promise.resolve(dailyOperationData);
-                    })
-            })
-    }
-
-    getPackingReceiptStatus(year, orderType) {
-        var query = {}
-        if (orderType.toString().toLowerCase() === "printing" || orderType.toString().toLowerCase() === "yarn dyed") {
-            query = {
-                "_deleted": false,
-                "processType.orderType.name": orderType,
-                "year": year
-            }
-        } else if (orderType.toString().toLowerCase() === "white" || orderType.toString().toLowerCase() === "dyeing") {
-            query = {
-                "_deleted": false,
-                "processType.name": orderType,
-                "year": year
-            }
-        } else {
-            query = {
-                "_deleted": false,
-                "year": year
-            }
-        }
-
-        return this.collection.aggregate([
-            {
-                "$project": {
-                    "_deleted": 1,
-                    "procesType": 1,
-                    "orderNo": 1,
-                    "year": {
-                        "$year": "$deliveryDate"
-                    }
-                }
-            },
-            {
-                "$match": query
-            }
-        ]).toArray()
-            .then((productionOrders) => {
-
-                var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
-
-                return this.fpPackingReceiptCollection.aggregate([
-                    {
-                        "$project": {
-                            "_deleted": 1,
-                            "isVoid": 1,
-                            "items": 1,
-                            "year": {
-                                "$year": "$date"
-                            },
-                            "month": {
-                                "$month": "$date"
-                            }
-                        }
-                    },
-                    {
-                        "$match": {
-                            "_deleted": false,
-                            "productionOrderNo": {
-                                "$in": orderNumbers
-                            },
-                            "year": year
-                        }
-                    }
-                ]).toArray()
-                    .then((packingReceipts) => {
-                        var packingReceiptData = [];
-
-                        if (packingReceipts.length > 0) {
-                            for (var packingReceipt of packingReceipts) {
-                                var packingReceiptDatum = {};
-
-                                packingReceiptDatum.month = packingReceipt.month;
-
-                                packingReceiptDatum.quantity = 0;
-                                if (packingReceipt.items && packingReceipt.items.length > 0) {
-                                    for (var item of packingReceipt.items) {
-                                        packingReceiptDatum.quantity += item.availableQuantity ? item.availableQuantity : 0;
-                                    }
-                                }
-
-                                packingReceiptData.push(packingReceiptDatum);
-                            }
-                        }
-
-                        return Promise.resolve(packingReceiptData);
-                    })
-            })
-    }
+    //#region order status xls
 
     getOrderStatusXls(result, query) {
         var xls = {};
@@ -1650,22 +1314,722 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
             var item = {};
             item["Bulan"] = statusOrder.name ? statusOrder.name : '';
-            item["Belum Produksi"] = statusOrder.preProductionQuantity ? Number(statusOrder.preProductionQuantity.toFixed(2)) : 0;
-            item["Sudah Produksi"] = statusOrder.onProductionQuantity ? Number(statusOrder.onProductionQuantity.toFixed(2)) : 0;
-            item["Total"] = statusOrder.orderQuantity ? Number(statusOrder.orderQuantity.toFixed(2)) : 0;
-            item["Sudah Dikirim Ke Gudang"] = statusOrder.storageQuantity ? Number(statusOrder.storageQuantity.toFixed(2)) : 0;
-            item["Sudah Dikirim Ke Buyer"] = statusOrder.shipmentQuantity ? Number(statusOrder.shipmentQuantity.toFixed(2)) : 0;
+            item["Target Kirim Ke Buyer"] = statusOrder.orderQuantity ? Number(statusOrder.orderQuantity) : 0;
+            item["Belum Produksi"] = statusOrder.preProductionQuantity ? Number(statusOrder.preProductionQuantity) : 0;
+            item["Sedang Produksi"] = statusOrder.onProductionQuantity ? Number(statusOrder.onProductionQuantity) : 0;
+            item["Sudah Produksi"] = statusOrder.afterProductionQuantity ? Number(statusOrder.afterProductionQuantity) : 0;
+            item["Sudah Dikirim Ke Gudang"] = statusOrder.storageQuantity ? Number(statusOrder.storageQuantity) : 0;
+            item["Sudah Dikirim Ke Buyer"] = statusOrder.shipmentQuantity ? Number(statusOrder.shipmentQuantity) : 0;
+            item["Sisa Belum Turun Kanban"] = statusOrder.diffOrderKanbanQuantity ? Number(statusOrder.diffOrderKanbanQuantity) : 0;
+            item["Sisa Belum Kirim Ke Buyer"] = statusOrder.diffOrderShipmentQuantity ? Number(statusOrder.diffOrderShipmentQuantity) : 0;
 
             xls.data.push(item);
         }
 
         xls.options["Bulan"] = "string";
+        xls.options["Target Kirim Ke Buyer"] = "number";
         xls.options["Belum Produksi"] = "number";
+        xls.options["Sedang Produksi"] = "number";
         xls.options["Sudah Produksi"] = "number";
-        xls.options["Total"] = "number";
         xls.options["Sudah Dikirim Ke Gudang"] = "number";
         xls.options["Sudah Dikirim Ke Buyer"] = "number";
+        xls.options["Sisa Belum Turun Kanban"] = "number";
+        xls.options["Sisa Belum Kirim Ke Buyer"] = "number";
 
         return Promise.resolve(xls);
     }
+
+    getOrderStatusDetailXls(result, query) {
+        var xls = {};
+        var year = parseInt(query.year);
+        var month = query.month;
+        var orderType = query.orderType;
+        xls.data = [];
+        xls.options = [];
+        xls.name = `LAPORAN DETAIL STATUS ORDER ${orderType} BERDASARKAN DELIVERY BULAN ${month} TAHUN ${year}.xlsx`;
+
+        var grandTotal = {};
+        grandTotal["No"] = "";
+        grandTotal["Nomor SPP"] = "";
+        grandTotal["Konstruksi"] = "";
+        grandTotal["Jenis Proses"] = "";
+        grandTotal["Motif"] = "";
+        grandTotal["Warna"] = "";
+        grandTotal["Buyer"] = "";
+        grandTotal["Sales"] = "";
+        grandTotal["Tanggal Terima Order"] = "";
+        grandTotal["Permintaan Delivery"] = "Total";
+        grandTotal["Panjang SPP"] = 0;
+        grandTotal["Sisa Belum Turun Kanban"] = 0;
+        grandTotal["Belum Produksi"] = 0;
+        grandTotal["Sedang Produksi"] = 0;
+        grandTotal["Sudah Produksi"] = 0;
+        grandTotal["Sudah Dikirim Ke Gudang"] = 0;
+        grandTotal["Sudah Dikirim Ke Buyer"] = 0;
+        grandTotal["Sisa Belum Kirim Ke Buyer"] = 0;
+
+        for (var statusOrder of result.data) {
+
+            var item = {};
+            item["No"] = statusOrder.no ? statusOrder.no : '';
+            item["Nomor SPP"] = statusOrder.orderNo ? statusOrder.orderNo : '';
+            item["Konstruksi"] = statusOrder.constructionComposite ? statusOrder.constructionComposite : '';
+            item["Jenis Proses"] = statusOrder.processType ? statusOrder.processType : '';
+            item["Motif"] = statusOrder.designCode ? statusOrder.designCode : '';
+            item["Warna"] = statusOrder.colorRequest ? statusOrder.colorRequest : '';
+            item["Buyer"] = statusOrder.buyerName ? statusOrder.buyerName : '';
+            item["Sales"] = statusOrder.accountName ? statusOrder.accountName : '';
+            item["Tanggal Terima Order"] = statusOrder._createdDate ? moment(statusOrder._createdDate).format('DD/MM/YYYY') : '';
+            item["Permintaan Delivery"] = statusOrder.deliveryDate ? moment(statusOrder.deliveryDate).format('DD/MM/YYYY') : '';
+            item["Panjang SPP"] = statusOrder.orderQuantity ? Number(Number(statusOrder.orderQuantity).toFixed(2)) : 0;
+            item["Sisa Belum Turun Kanban"] = statusOrder.notInKanbanQuantity ? Number(Number(statusOrder.notInKanbanQuantity).toFixed(2)) : 0;
+            item["Belum Produksi"] = statusOrder.preProductionQuantity ? Number(Number(statusOrder.preProductionQuantity).toFixed(2)) : 0;
+            item["Sedang Produksi"] = statusOrder.onProductionQuantity ? Number(Number(statusOrder.onProductionQuantity).toFixed(2)) : 0;
+            item["Sudah Produksi"] = statusOrder.afterProductionQuantity ? Number(Number(statusOrder.afterProductionQuantity).toFixed(2)) : 0;
+            item["Sudah Dikirim Ke Gudang"] = statusOrder.storageQuantity ? Number(Number(statusOrder.storageQuantity).toFixed(2)) : 0;
+            item["Sudah Dikirim Ke Buyer"] = statusOrder.shipmentQuantity ? Number(Number(statusOrder.shipmentQuantity).toFixed(2)) : 0;
+            item["Sisa Belum Kirim Ke Buyer"] = statusOrder.diffOrderShipmentQuantity ? Number(Number(statusOrder.diffOrderShipmentQuantity).toFixed(2)) : 0;
+
+            grandTotal["Panjang SPP"] += Number(Number(statusOrder.orderQuantity).toFixed(2));
+            grandTotal["Sisa Belum Turun Kanban"] += Number(Number(statusOrder.notInKanbanQuantity).toFixed(2));
+            grandTotal["Belum Produksi"] += Number(Number(statusOrder.preProductionQuantity).toFixed(2));
+            grandTotal["Sedang Produksi"] += Number(Number(statusOrder.onProductionQuantity).toFixed(2));
+            grandTotal["Sudah Produksi"] += Number(Number(statusOrder.afterProductionQuantity).toFixed(2));
+            grandTotal["Sudah Dikirim Ke Gudang"] += Number(Number(statusOrder.storageQuantity).toFixed(2));
+            grandTotal["Sudah Dikirim Ke Buyer"] += Number(Number(statusOrder.shipmentQuantity).toFixed(2));
+            grandTotal["Sisa Belum Kirim Ke Buyer"] += Number(Number(statusOrder.diffOrderShipmentQuantity).toFixed(2));
+            xls.data.push(item);
+        }
+
+        xls.data.push(grandTotal);
+
+        xls.options["No"] = "string";
+        xls.options["Nomor SPP"] = "string";
+        xls.options["Konstruksi"] = "string";
+        xls.options["Jenis Proses"] = "string";
+        xls.options["Motif"] = "string";
+        xls.options["Warna"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Sales"] = "string";
+        xls.options["Tanggal Terima Order"] = "string";
+        xls.options["Permintaan Delivery"] = "string";
+        xls.options["Panjang SPP"] = "number";
+        xls.options["Sisa Belum Turun Kanban"] = "number";
+        xls.options["Belum Produksi"] = "number";
+        xls.options["Sedang Produksi"] = "number";
+        xls.options["Sudah Produksi"] = "number";
+        xls.options["Sudah Dikirim Ke Gudang"] = "number";
+        xls.options["Sudah Dikirim Ke Buyer"] = "number";
+        xls.options["Sisa Belum Kirim Ke Buyer"] = "number";
+
+        return Promise.resolve(xls);
+    }
+
+    //#endregion order status xls
+
+    //#region Close SPP
+
+    close(listProductionOrders) {
+        var getProductionOrders = [];
+        return new Promise((resolve, reject) => {
+            for (var productionOrder of listProductionOrders) {
+                getProductionOrders.push(this.getSingleByIdOrDefault(productionOrder._id));
+            }
+            Promise.all(getProductionOrders)
+                .then((productionOrders) => {
+                    var _productionOrders = productionOrders || [];
+                    var updateProductionOrder = [];
+                    for (var productionOrder of listProductionOrders) {
+                        var _productionOrder = _productionOrders.find((spp) => spp._id.toString() === productionOrder._id.toString());
+                        if (_productionOrder) {
+                            updateProductionOrder.push(this.updateClose(_productionOrder))
+                        }
+                    }
+                    Promise.all(updateProductionOrder)
+                        .then((result) => {
+                            resolve(result);
+                        })
+
+                })
+        });
+    }
+
+    updateClose(productionOrder) {
+        var productionOrderError = {};
+
+        if (productionOrder.isClosed) {
+            productionOrderError["no"] = i18n.__("productionOrder.isClosed:%s already closed", i18n.__("productionOrder.isClosed._:Closed"));
+        }
+        if (Object.getOwnPropertyNames(productionOrderError).length > 0) {
+            var ValidationError = require("module-toolkit").ValidationError;
+            return Promise.reject(new ValidationError("data does not pass validation", productionOrderError));
+        }
+        return Promise.resolve(productionOrder)
+            .then((productionOrder) => {
+                productionOrder.isClosed = true;
+                productionOrder._updatedDate = new Date();
+                return this.collection.update(productionOrder);
+            })
+    }
+
+    //#endregion Close SPP
+
+    //#region New Status Order
+
+    getOrderStatusReport(info, timeOffset) {
+        var year = parseInt(info.year);
+        var orderType = info.orderType;
+        var timeOffsetInMilli = timeOffset * 60 * 60000;
+
+        return this.getProductionOrders(orderType, year, null, timeOffsetInMilli)
+            .then((productionOrders) => {
+
+                var productionOrders = productionOrders;
+                var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
+
+                var getKanbanAndDailyOperations = this.getKanbanAndDailyOperations(orderNumbers);
+                var getPackingReceipts = this.getPackingReceipts(orderNumbers);
+                var getShipmentDocuments = this.getShipmentDocuments(orderNumbers);
+
+                return Promise.all([getKanbanAndDailyOperations, getPackingReceipts, getShipmentDocuments])
+                    .then((results) => {
+                        var kanbanAndDailyOperations = results[0];
+                        var packingReceipts = results[1];
+                        var packingShipments = results[2];
+
+                        var data = [];
+                        var monthName = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+
+                        var grandTotal = {};
+                        grandTotal.name = "Total"
+                        grandTotal.preProductionQuantity = 0;
+                        grandTotal.onProductionQuantity = 0;
+                        grandTotal.inspectingQuantity = 0;
+                        grandTotal.afterProductionQuantity = 0;
+                        grandTotal.orderQuantity = 0;
+                        grandTotal.storageQuantity = 0;
+                        grandTotal.shipmentQuantity = 0;
+                        grandTotal.diffOrderKanbanQuantity = 0;
+                        grandTotal.diffOrderShipmentQuantity = 0;
+
+                        for (var i = 0; i < 12; i++) {
+
+                            var datum = {};
+
+                            datum.name = monthName[i];
+
+                            datum.preProductionQuantity = 0;
+                            datum.onProductionQuantity = 0;
+                            datum.inspectingQuantity = 0;
+                            datum.afterProductionQuantity = 0;
+                            datum.orderQuantity = 0;
+                            datum.storageQuantity = 0;
+                            datum.shipmentQuantity = 0;
+
+                            for (var productionOrder of productionOrders) {
+                                if (productionOrder.month - 1 === i) {
+
+                                    grandTotal.orderQuantity += productionOrder.orderQuantity;
+                                    datum.orderQuantity += productionOrder.orderQuantity;
+
+                                    for (var kanbanDaily of kanbanAndDailyOperations) {
+                                        if (kanbanDaily.productionOrder.orderNo === productionOrder.orderNo) {
+                                            let kanbanDailyQuantity;
+                                            let processArea = kanbanDaily.step ? kanbanDaily.step.processArea : null;
+
+                                            if (processArea) {
+                                                switch (kanbanDaily.type.toLowerCase()) {
+                                                    case "input": {
+                                                        kanbanDailyQuantity = kanbanDaily.input;
+                                                        break;
+                                                    }
+                                                    case "output": {
+                                                        kanbanDailyQuantity = kanbanDaily.goodOutput + kanbanDaily.badOutput;
+                                                        break;
+                                                    }
+                                                    case "kanban": {
+                                                        kanbanDailyQuantity = kanbanDaily.cart.qty;
+                                                        break;
+                                                    }
+                                                    case "complete": {
+                                                        kanbanDailyQuantity = kanbanDaily.goodOutput + kanban.badOutput;
+                                                        break;
+                                                    }
+                                                }
+
+                                                if (processArea.toLowerCase() === "area pre treatment") {
+                                                    grandTotal.preProductionQuantity += kanbanDailyQuantity;
+                                                    datum.preProductionQuantity += kanbanDailyQuantity;
+                                                } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc" && processArea.toLowerCase() !== "complete") {
+                                                    grandTotal.onProductionQuantity += kanbanDailyQuantity;
+                                                    datum.onProductionQuantity += kanbanDailyQuantity;
+                                                } else if (processArea.toLowerCase() === "area inspecting" || processArea.toLowerCase() === "area qc") {
+                                                    grandTotal.inspectingQuantity += kanbanDailyQuantity;
+                                                    datum.inspectingQuantity += kanbanDailyQuantity;
+                                                } else if (processArea.toLowerCase() === "complete") {
+                                                    grandTotal.afterProductionQuantity += kanbanDailyQuantity;
+                                                    datum.afterProductionQuantity += kanbanDailyQuantity;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    for (var packingReceipt of packingReceipts) {
+                                        if (packingReceipt.orderNo === productionOrder.orderNo) {
+                                            grandTotal.storageQuantity += packingReceipt.quantity;
+                                            datum.storageQuantity += packingReceipt.quantity;
+                                        }
+                                    }
+
+                                    for (var packingShipment of packingShipments) {
+                                        if (packingShipment.orderNo === productionOrder.orderNo) {
+                                            grandTotal.shipmentQuantity += packingShipment.quantity;
+                                            datum.shipmentQuantity += packingShipment.quantity;
+                                        }
+                                    }
+                                }
+                            }
+
+                            datum.diffOrderShipmentQuantity = datum.orderQuantity - datum.shipmentQuantity;
+                            datum.diffOrderKanbanQuantity = datum.orderQuantity - (datum.afterProductionQuantity + datum.preProductionQuantity + datum.onProductionQuantity + datum.inspectingQuantity);
+                            grandTotal.diffOrderKanbanQuantity += datum.diffOrderKanbanQuantity;
+                            grandTotal.diffOrderShipmentQuantity += datum.diffOrderShipmentQuantity;
+
+                            data.push(datum);
+                        }
+
+                        data.push(grandTotal);
+
+                        return Promise.resolve(data)
+                    });
+            });
+    }
+
+    getOrderStatusDetailReport(info, timeOffset) {
+        var year = parseInt(info.year);
+        var orderType = info.orderType;
+        var month = info.month;
+        var timeOffset = timeOffset;
+        var timeOffsetInMilli = timeOffset * 60 * 60000;
+
+        return this.getProductionOrders(orderType, year, month, timeOffsetInMilli)
+            .then((productionOrders) => {
+
+                var productionOrders = productionOrders;
+                var orderNumbers = productionOrders.map((productionOrder) => productionOrder.orderNo);
+
+                var getKanbanAndDailyOperations = this.getKanbanAndDailyOperations(orderNumbers);
+                var getPackingReceipts = this.getPackingReceipts(orderNumbers);
+                var getShipmentDocuments = this.getShipmentDocuments(orderNumbers);
+
+                // return Promise.all([Promise.resolve([]), Promise.resolve([]), Promise.resolve([]), getProductionOrderNotInKanban])
+                return Promise.all([getKanbanAndDailyOperations, getPackingReceipts, getShipmentDocuments])
+                    .then((results) => {
+                        var kanbanAndDailyOperations = results[0];
+                        var packingReceipts = results[1];
+                        var packingShipments = results[2];
+
+                        var data = [];
+
+                        let detailIndex = 1;
+
+                        for (var productionOrder of productionOrders) {
+
+                            var datum = {};
+
+                            datum.no = detailIndex++;
+                            datum.orderNo = productionOrder.orderNo;
+                            datum.constructionComposite = productionOrder.material.name + " " + productionOrder.materialConstruction.name + " - " + productionOrder.materialWidth;
+                            datum.processType = productionOrder.processType.name;
+
+                            if (orderType.toLowerCase() === "printing") {
+                                datum.designCode = productionOrder.designCode;
+                                datum.colorRequest = "";
+                            } else if (orderType.toLowerCase() === "dyeing") {
+                                datum.designCode = "";
+                                datum.colorRequest = productionOrder.details[0].colorRequest;
+                            }
+
+                            datum.buyerName = productionOrder.buyer.name;
+                            datum.accountName = productionOrder.account.name;
+                            datum._createdDate = productionOrder._createdDate;
+                            datum.deliveryDate = productionOrder.deliveryDate;
+                            datum.orderQuantity = productionOrder.orderQuantity;
+
+                            datum.preProductionQuantity = 0;
+                            datum.onProductionQuantity = 0;
+                            datum.inspectingQuantity = 0;
+                            datum.afterProductionQuantity = 0;
+                            for (var kanbanDaily of kanbanAndDailyOperations) {
+                                if (kanbanDaily.productionOrder.orderNo === productionOrder.orderNo) {
+                                    let kanbanDailyQuantity;
+                                    let processArea = kanbanDaily.step ? kanbanDaily.step.processArea : null;
+
+                                    if (processArea) {
+                                        switch (kanbanDaily.type.toLowerCase()) {
+                                            case "input": {
+                                                kanbanDailyQuantity = kanbanDaily.input;
+                                                break;
+                                            }
+                                            case "output": {
+                                                kanbanDailyQuantity = kanbanDaily.goodOutput + kanbanDaily.badOutput;
+                                                break;
+                                            }
+                                            case "kanban": {
+                                                kanbanDailyQuantity = kanbanDaily.cart.qty;
+                                                break;
+                                            }
+                                            case "complete": {
+                                                kanbanDailyQuantity = kanbanDaily.goodOutput + kanbanDaily.badOutput;
+                                                break;
+                                            }
+                                        }
+
+                                        if (processArea.toLowerCase() === "area pre treatment") {
+                                            datum.preProductionQuantity += kanbanDailyQuantity;
+                                        } else if (processArea.toLowerCase() !== "area pre treatment" && processArea.toLowerCase() !== "area inspecting" && processArea.toLowerCase() !== "area qc" && processArea.toLowerCase() !== "complete") {
+                                            datum.onProductionQuantity += kanbanDailyQuantity;
+                                        } else if (processArea.toLowerCase() === "area inspecting" || processArea.toLowerCase() === "area qc") {
+                                            datum.inspectingQuantity += kanbanDailyQuantity;
+                                        } else if (processArea.toLowerCase() === "complete") {
+                                            datum.afterProductionQuantity += kanbanDailyQuantity
+                                        }
+                                    }
+                                }
+                            }
+
+                            datum.storageQuantity = 0;
+                            for (var packingReceipt of packingReceipts) {
+                                if (packingReceipt.orderNo === productionOrder.orderNo) {
+                                    datum.storageQuantity += packingReceipt.quantity;
+                                }
+                            }
+
+                            datum.shipmentQuantity = 0;
+                            for (var packingShipment of packingShipments) {
+                                if (packingShipment.orderNo === productionOrder.orderNo) {
+                                    datum.shipmentQuantity += packingShipment.quantity;
+                                }
+                            }
+
+                            datum.notInKanbanQuantity = datum.orderQuantity - (datum.afterProductionQuantity + datum.preProductionQuantity + datum.onProductionQuantity + datum.inspectingQuantity);
+                            datum.diffOrderShipmentQuantity = datum.orderQuantity - datum.shipmentQuantity;
+
+                            data.push(datum);
+                        }
+
+                        return Promise.resolve(data)
+                    });
+            });
+    }
+
+    getProductionOrders(orderType, year, month, timeOffset) {
+
+        let query = {
+            "_deleted": false,
+            "year": year,
+            "isClosed": false
+        };
+
+        if (month) {
+            var monthName = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            var month = monthName.indexOf(month) + 1;
+            query["month"] = month
+        }
+
+        switch (orderType.toString().toLowerCase()) {
+            case "yarn dyed":
+            case "printing": {
+                query["orderType.name"] = orderType;
+                break;
+            }
+            case "dyeing":
+            case "white": {
+                query["processType.name"] = orderType;
+                break;
+            }
+            default: {
+                query["$or"] = [
+                    { "orderType.name": { "$in": ["PRINTING", "YARN DYED"] } },
+                    { "processType.name": { "$in": ["WHITE", "DYEING"] } }
+                ];
+            }
+        }
+
+        return this.collection.aggregate([
+            {
+                "$project": {
+                    "_createdDate": 1,
+                    "_deleted": 1,
+                    "isClosed": 1,
+                    "buyer.name": 1,
+                    "account.name": 1,
+                    "processType.name": {
+                        "$toUpper": "$processType.name"
+                    },
+                    "orderType.name": {
+                        "$toUpper": "$orderType.name"
+                    },
+                    "orderQuantity": 1,
+                    "orderNo": 1,
+                    "material.name": 1,
+                    "materialConstruction.name": 1,
+                    "materialWidth": 1,
+                    "designCode": 1,
+                    "details.colorRequest": 1,
+                    "deliveryDate": 1,
+                    "year": {
+                        "$year": {
+                            "$add": ["$deliveryDate", timeOffset]
+                        }
+                    },
+                    "month": {
+                        "$month": {
+                            "$add": ["$deliveryDate", timeOffset]
+                        }
+                    }
+                }
+            },
+            {
+                "$match": query
+            }
+        ]).toArray()
+    }
+
+    getKanbanAndDailyOperations(orderNumbers) {
+        let kanbanQuery = {
+            "_deleted": false,
+            "isInactive": false,
+            "productionOrder.orderNo": {
+                "$in": orderNumbers
+            }
+        };
+
+        let kanbanFields = {
+            "code": 1,
+            "isComplete": 1,
+            "currentQuantity": 1,
+            "goodOutput": 1,
+            "badOutput": 1,
+            "currentStepIndex": 1,
+            "instruction.steps._id": 1,
+            "cart.cartNumber": 1,
+            "cart.qty": 1,
+            "_createdDate": 1,
+            "productionOrder.orderNo": 1
+        };
+
+        var kanbans = [];
+
+        return this.kanbanCollection.find(kanbanQuery, kanbanFields).toArray()
+            .then((kanbanResults) => {
+
+                var kanbans = kanbanResults;
+
+                let joinDailyOperations = kanbans.map((kanban) => {
+
+                    kanban.currentStepIndex = Math.floor(kanban.currentStepIndex);
+
+                    let currentStep = kanban.instruction.steps[Math.abs(kanban.currentStepIndex === kanban.instruction.steps.length ? kanban.currentStepIndex - 1 : kanban.currentStepIndex)];
+                    let kanbanCurrentStepId = kanban.instruction && kanban.instruction.steps.length > 0 && currentStep && currentStep._id ? currentStep._id : null;
+
+                    if (ObjectId.isValid(kanbanCurrentStepId)) {
+                        let getDailyOperations;
+
+                        if (kanban.currentStepIndex != kanban.instruction.steps.length) {
+                            let dailyQuery = {
+                                "_deleted": false,
+                                "kanban.code": kanban.code,
+                                "step._id": kanbanCurrentStepId,
+                                "type": "input",
+                                "kanban.currentStepIndex": kanban.currentStepIndex
+                            };
+
+                            let dailyFields = {
+                                "input": 1,
+                                "step.processArea": 1,
+                                "dateInput": 1,
+                                "type": 1,
+                                "kanban.code": 1
+                            };
+
+                            getDailyOperations = this.dailyOperationCollection.findOne(dailyQuery, dailyFields)
+                        }
+                        else {
+                            getDailyOperations = Promise.resolve(null);
+                        }
+
+                        return new Promise((resolve, reject) => {
+                            getDailyOperations.then((dailyOperation) => {
+                                if (dailyOperation) {
+                                    resolve(dailyOperation);
+                                }
+                                else if (kanban.currentStepIndex === 0 || kanban.isComplete) {
+                                    resolve(null);
+                                }
+                                else {
+                                    let currStepIndex = kanban.currentStepIndex - 1;
+                                    let currStep = kanban.instruction.steps[currStepIndex];
+                                    let kanbanCurrStepId = kanban.instruction && kanban.instruction.steps.length > 0 && currStep && currStep._id ? currStep._id : null;
+
+                                    if (ObjectId.isValid(kanbanCurrStepId)) {
+                                        let dailyQueryOutput = {
+                                            "_deleted": false,
+                                            "kanban.code": kanban.code,
+                                            "step._id": kanbanCurrStepId,
+                                            "type": "output",
+                                            "kanban.currentStepIndex": currStepIndex
+                                        };
+
+                                        let dailyFieldsOutput = {
+                                            "goodOutput": 1,
+                                            "badOutput": 1,
+                                            "step.processArea": 1,
+                                            "dateOutput": 1,
+                                            "type": 1,
+                                            "kanban.code": 1
+                                        };
+
+                                        let getDailyOpOutput = this.dailyOperationCollection.findOne(dailyQueryOutput, dailyFieldsOutput);
+
+                                        getDailyOpOutput.then((dailyOpOutput) => {
+                                            resolve(dailyOpOutput);
+                                        });
+                                    }
+                                    else
+                                        resolve(null);
+                                }
+                            });
+                        });
+                    }
+                });
+
+                return Promise.all(joinDailyOperations)
+                    .then(((dailyOperations) => {
+                        return kanbans.filter((kanban) => {
+                            var dailyOperation = dailyOperations.find((dailyOperation) => dailyOperation && dailyOperation.kanban.code.toString() === kanban.code.toString())
+
+                            if (dailyOperation) {
+                                kanban = Object.assign(kanban, dailyOperation)
+                            } else if (kanban.isComplete) {
+                                var step = {};
+                                step["processArea"] = "complete"
+                                kanban.step = step;
+                                kanban.type = "complete";
+                            } else {
+                                var step = {};
+                                step["processArea"] = "area pre treatment"
+                                kanban.step = step;
+                                kanban.type = "kanban";
+                            }
+
+                            return kanban;
+                        });
+                    }));
+            });
+    }
+
+    getPackingReceipts(orderNumbers) {
+        return this.fpPackingReceiptCollection.aggregate([
+            {
+                "$project": {
+                    "_deleted": 1,
+                    "productionOrderNo": 1,
+                    "isVoid": 1,
+                    "items": 1,
+                    "date": 1
+                }
+            },
+            {
+                "$match": {
+                    "_deleted": false,
+                    "isVoid": false,
+                    "productionOrderNo": {
+                        "$in": orderNumbers
+                    }
+                }
+            }
+        ]).toArray()
+            .then((packingReceipts) => {
+                var packingReceiptData = [];
+
+                if (packingReceipts.length > 0) {
+                    for (var packingReceipt of packingReceipts) {
+                        var packingReceiptDatum = {};
+
+                        packingReceiptDatum.date = packingReceipt.date;
+                        packingReceiptDatum.orderNo = packingReceipt.productionOrderNo;
+
+                        packingReceiptDatum.quantity = 0;
+                        if (packingReceipt.items && packingReceipt.items.length > 0) {
+                            for (var item of packingReceipt.items) {
+                                packingReceiptDatum.quantity += item.availableQuantity && item.length ? (item.availableQuantity * item.length) : 0;
+                            }
+                        }
+
+                        packingReceiptData.push(packingReceiptDatum);
+                    }
+                }
+
+                return Promise.resolve(packingReceiptData);
+            });
+    }
+
+    getShipmentDocuments(orderNumbers) {
+
+        return this.fpPackingShipmentCollection.aggregate([
+            {
+                "$match": {
+                    "_deleted": false,
+                    "details.productionOrderNo": {
+                        "$in": orderNumbers
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_deleted": 1,
+                    "deliveryDate": 1,
+                    "details.productionOrderNo": 1,
+                    "details.items": 1
+                }
+            }
+        ]).toArray()
+            .then((shipmentDocuments) => {
+                var shipmentDocumentData = [];
+
+                if (shipmentDocuments.length > 0) {
+                    for (var shipmentDocument of shipmentDocuments) {
+
+                        if (shipmentDocument.details && shipmentDocument.details.length > 0) {
+                            for (var detail of shipmentDocument.details) {
+                                var shipmentDocumentDatum = {};
+
+                                shipmentDocumentDatum.orderNo = detail.productionOrderNo;
+                                shipmentDocumentDatum.date = shipmentDocument.deliveryDate;
+                                shipmentDocumentDatum.quantity = 0;
+                                if (detail.items) {
+                                    for (var item of detail.items) {
+                                        if (item.packingReceiptItems && item.packingReceiptItems.length > 0) {
+                                            for (var packingReceiptItem of item.packingReceiptItems) {
+                                                shipmentDocumentDatum.quantity = shipmentDocumentDatum.quantity + (packingReceiptItem.quantity && packingReceiptItem.length ? (packingReceiptItem.quantity * packingReceiptItem.length) : 0);
+                                            }
+                                        } else if (item.quantity) {
+                                            shipmentDocumentDatum.quantity = shipmentDocumentDatum.quantity + (item.quantity && item.length ? (item.quantity * item.length) : 0);
+                                        }
+                                    }
+                                }
+                                shipmentDocumentData.push(shipmentDocumentDatum);
+                            }
+                        }
+                    }
+                }
+
+
+                return Promise.resolve(shipmentDocumentData);
+            });
+    }
+
+    //#endregion New Status Order
+
 }

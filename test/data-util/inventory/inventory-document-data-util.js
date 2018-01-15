@@ -14,14 +14,12 @@ var InventoryMovementModel = Models.inventory.InventoryMovement;
 
 class InventoryDocumentDataUtil {
     getNewData() {
-        return Promise.all([productDataUtil.getTestData(), productDataUtil.getTestData2(), storageDataUtil.getTestData(), uomDataUtil.getTestData(), uomDataUtil.getSecondTestData(), uomDataUtil.getThirdTestData()])
+        return Promise.all([productDataUtil.getTestData(), productDataUtil.getTestData2(), storageDataUtil.getTestData(), uomDataUtil.getTestData()])
             .then(result => {
                 var product = result[0];
                 var product2 = result[1];
                 var storage = result[2];
                 var uom = result[3];
-                var secondUom = result[4];
-                var thirdUom = result[5];
 
                 var code = codeGenerator()
                 var data = {
@@ -34,19 +32,11 @@ class InventoryDocumentDataUtil {
                     items: [{
                         productId: product._id,
                         quantity: 1000,
-                        uomId: uom._id,
-                        secondUomId: secondUom._id,
-                        secondQuantity: 5000,
-                        thirdUomId: thirdUom._id,
-                        thirdQuantity: 10000
+                        uomId: uom._id
                     }, {
                         productId: product2._id,
-                        quantity: 2000,
-                        uomId: uom._id,
-                        secondUomId: secondUom._id,
-                        secondQuantity: 6000,
-                        thirdUomId: thirdUom._id,
-                        thirdQuantity: 11000
+                        quantity: 1000,
+                        uomId: uom._id
                     }]
                 };
 

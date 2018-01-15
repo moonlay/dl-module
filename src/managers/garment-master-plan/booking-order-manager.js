@@ -5,24 +5,23 @@ require("mongodb-toolkit");
 var DLModels = require("dl-models");
 var map = DLModels.map;
 var BookingOrder = DLModels.garmentMasterPlan.BookingOrder;
+var MasterPlan = DLModels.garmentMasterPlan.MasterPlan;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
-var StyleManager = require('./style-manager');
-var StandardHourManager = require('./standard-hour-manager');
-var WeeklyPlanManager = require('./weekly-plan-manager');
+var ComodityManager = require('./master-plan-comodity-manager');
+//var MasterPlanManager = require('./master-plan-manager');
 var GarmentBuyerManager = require('../master/garment-buyer-manager');
-var UnitManager = require('../master/unit-manager');
 var generateCode = require("../../utils/code-generator");
+var moment = require('moment');
 
 module.exports = class BookingOrderManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentMasterPlan.collection.BookingOrder);
-        this.styleManager = new StyleManager(db, user);
-        this.standardHourManager = new StandardHourManager(db, user);
-        this.weeklyPlanManager = new WeeklyPlanManager(db, user);
+        this.masterPlanCollection = this.db.use(map.garmentMasterPlan.collection.MasterPlan);
+        this.comodityManager = new ComodityManager(db, user);
+        //this.masterPlanManager = new MasterPlanManager(db, user);
         this.garmentBuyerManager = new GarmentBuyerManager(db, user);
-        this.unitManager = new UnitManager(db, user);
     }
 
     _getQuery(paging) {
@@ -45,12 +44,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                     "$regex": regex
                 }
             };
-            var styleFilter = {
-                "style.name": {
-                    "$regex": regex
-                }
-            };
-            keywordFilter["$or"] = [codeFilter, buyerFilter, styleFilter];
+            keywordFilter["$or"] = [codeFilter, buyerFilter];
         }
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
@@ -77,32 +71,23 @@ module.exports = class BookingOrderManager extends BaseManager {
             _deleted: false
         });
 
-        var getStyle = valid.styleId && ObjectId.isValid(valid.styleId) ? this.styleManager.getSingleByIdOrDefault(new ObjectId(valid.styleId)) : Promise.resolve(null);
+        //var getComodity = valid.styleId && ObjectId.isValid(valid.styleId) ? this.styleManager.getSingleByIdOrDefault(new ObjectId(valid.styleId)) : Promise.resolve(null);
         var getBuyer = valid.garmentBuyerId && ObjectId.isValid(valid.garmentBuyerId) ? this.garmentBuyerManager.getSingleByIdOrDefault(new ObjectId(valid.garmentBuyerId)) : Promise.resolve(null);
-        var getSH = valid.standardHourId && ObjectId.isValid(valid.standardHourId) ? this.standardHourManager.getSingleByIdOrDefault(new ObjectId(valid.standardHourId)) : Promise.resolve(null);
-
-        valid.details = valid.details || [];
-        var getWeeklyPlan = [];
-        var getUnit = [];
-        for (var detail of valid.details) {
-            if(!detail.weeklyPlanId)
-                detail.weeklyPlanId=detail.weeklyPlan && ObjectId.isValid(detail.weeklyPlan._id) ? detail.weeklyPlan._id : "";
-            var week =detail.weeklyPlan && ObjectId.isValid(detail.weeklyPlanId) ? this.weeklyPlanManager.getSingleByIdOrDefault(detail.weeklyPlanId) : Promise.resolve(null);
-            getWeeklyPlan.push(week);
-            if(!detail.unitId)
-                detail.unitId=detail.unit && ObjectId.isValid(detail.unit._id) ? detail.unit._id : "";
-            var unit = detail.unit && ObjectId.isValid(detail.unitId) ? this.unitManager.getSingleByIdOrDefault(detail.unitId) : Promise.resolve(null);
-            getUnit.push(unit);
-        }
+       
+        // valid.details = valid.details || [];
+        // var getWeeklyPlan = [];
+        // var getUnit = [];
+        // for (var detail of valid.details) {
+        //     if(!detail.weeklyPlanId)
+        //         detail.weeklyPlanId=detail.weeklyPlan && ObjectId.isValid(detail.weeklyPlan._id) ? detail.weeklyPlan._id : "";
+        //     var week =detail.weeklyPlan && ObjectId.isValid(detail.weeklyPlanId) ? this.weeklyPlanManager.getSingleByIdOrDefault(detail.weeklyPlanId) : Promise.resolve(null);
+        //     getWeeklyPlan.push(week);
+        // }
         // 2. begin: Validation.
-        return Promise.all([getBooking,getStyle,getBuyer,getSH].concat(getWeeklyPlan, getUnit))
+        return Promise.all([getBooking,getBuyer])
             .then(results => {
                 var duplicateBooking = results[0];
-                var _style=results[1];
-                var _buyer=results[2];
-                var _sh=results[3];
-                var _week = results.slice(4, 4 + getWeeklyPlan.length);
-                var _unit = results.slice(4 + getWeeklyPlan.length, results.length);
+                var _buyer=results[1];
 
 
                 if(!valid.code || valid.code === "")
@@ -116,34 +101,15 @@ module.exports = class BookingOrderManager extends BaseManager {
                 if(!valid.deliveryDate || valid.deliveryDate === '')
                     errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.isRequired:%s is required", i18n.__("BookingOrder.deliveryDate._:DeliveryDate"));
 
-                if(!valid.styleId || valid.styleId==='')
-                    errors["style"] = i18n.__("BookingOrder.style.isRequired:%s is required", i18n.__("BookingOrder.style._:Style"));
-                else if(!_style)
-                    errors["style"] = i18n.__("BookingOrder.style.isNotFound:%s is not found", i18n.__("BookingOrder.style._:Style"));
-
                 if(!valid.garmentBuyerId || valid.garmentBuyerId==='')
                     errors["buyer"] = i18n.__("BookingOrder.buyer.isRequired:%s is required", i18n.__("BookingOrder.buyer._:Buyer"));
-                else if(!_buyer)
-                    errors["buyer"] = i18n.__("BookingOrder.buyer.isNotFound:%s is not found", i18n.__("BookingOrder.buyer._:Buyer"));
+                // if(!_buyer)
+                //     errors["buyer"] = i18n.__("BookingOrder.buyer.isNotFound:%s is not found", i18n.__("BookingOrder.buyer._:Buyer"));
 
-                if(!valid.standardHourId || valid.standardHourId==='')
-                    errors["standardHour"] = i18n.__("BookingOrder.standardHour.isRequired:%s is required", i18n.__("BookingOrder.standardHour._:StandardHour"));
-                else if(!_sh)
-                    errors["standardHour"] = i18n.__("BookingOrder.standardHour.isNotFound:%s is not found", i18n.__("BookingOrder.standardHour._:StandardHour"));
-                
                 if(!valid.orderQuantity || valid.orderQuantity<=0)
                     errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.isRequired:%s is required", i18n.__("BookingOrder.orderQuantity._:OrderQuantity"));
                 else{
-                    var totalqty = 0;
-                    if (valid.details.length > 0) {
-                        for (var i of valid.details) {
-                            totalqty += i.quantity;
-                        }
-                    }
-                    if (valid.orderQuantity != totalqty) {
-                        errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal SUM quantity in details", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
-
-                    }
+                   
                 }
 
                 if (!valid.deliveryDate || valid.deliveryDate === "") {
@@ -152,66 +118,101 @@ module.exports = class BookingOrderManager extends BaseManager {
                 else{
                     valid.deliveryDate=new Date(valid.deliveryDate);
                     valid.bookingDate=new Date(valid.bookingDate);
+                    var today= new Date();
                     if(valid.bookingDate>valid.deliveryDate){
                         errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
                     }
+                    else if(today>valid.deliveryDate){
+                        errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
+                    }
                 }
-
-                valid.details = valid.details || [];
-                if (valid.details && valid.details.length <= 0) {
-                    errors["details"] = i18n.__("BookingOrder.details.isRequired:%s is required", i18n.__("BookingOrder.details._:Details")); 
-                }
-                else if (valid.details.length > 0) {
-                    var detailErrors = [];
+                if(valid.items){
                     var totalqty = 0;
-                    for (var i of valid.details) {
+                    for (var i of valid.items) {
                         totalqty += i.quantity;
                     }
-                    for (var detail of valid.details) {
-                        var detailError = {};
-                        if (!detail.week)
-                            detailError["week"] = i18n.__("BookingOrder.details.week.isRequired:%s is required", i18n.__("BookingOrder.details.week._:Week")); 
-                        
-                        if (!detail.weeklyPlanId ||detail.weeklyPlanId=="")
-                            detailError["weeklyPlan"] = i18n.__("BookingOrder.details.weeklyPlan.isRequired:%s is required", i18n.__("BookingOrder.details.weeklyPlan._:WeeklyPlan")); 
-                        else{
-                            if(!detail.weeklyPlanId)
-                                detail.weeklyPlanId=new ObjectId(detail.weeklyPlan._id);
-                            if(detail.weeklyPlan)
-                                detail.weeklyPlanYear=detail.weeklyPlan.year;
-                        }
-                        if (!detail.unitId||detail.unitId=="")
-                            detailError["unit"] = i18n.__("BookingOrder.details.unit.isRequired:%s is required", i18n.__("BookingOrder.details.unit._:Week")); 
-
-                        if (!detail.quantity || detail.quantity <=0)
-                            detailError["quantity"] = i18n.__("BookingOrder.details.quantity.isRequired:%s is required", i18n.__("BookingOrder.details.quantity._:Quantity")); 
-                        
-                        if (valid.orderQuantity != totalqty)
-                            detailError["total"] = i18n.__("ProductionOrder.details.total.shouldNot:%s Total should equal Order Quantity", i18n.__("ProductionOrder.details.total._:Total"));
-
-                        if (Object.getOwnPropertyNames(detailError).length > 0)
-                        detailErrors.push(detailError);
+                    if (valid.orderQuantity < totalqty) {
+                        errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal or more than SUM quantity in items", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
+                        errors["totalQuantity"]= i18n.__("BookingOrder.totalQuantity.shouldNot:%s should equal or less than booking order quantity", i18n.__("BookingOrder.totalQuantity._:TotalQuantity")); 
                     }
+                }
 
-                    
-                    
-                    if (detailErrors.length > 0)
-                        errors.details = detailErrors;
+                valid.items = valid.items || [];
+                // if (valid.items && valid.items.length <= 0) {
+                //     errors["items"] = i18n.__("BookingOrder.items.isRequired:%s is required", i18n.__("BookingOrder.items._:items")); 
+                // }
+                
+                if (valid.type==='confirm'){
+                    if (valid.items.length > 0) {
+                        var itemErrors = [];
+                        var index=0;
+                        
+                        for (var item of valid.items) {
+                            item._createdDate= item._createdDate ? item._createdDate: new Date();
+                            item.code= item.code ? index.toString()+item.code: generateCode();
+                            var itemError = {};
 
+                            if(!item.masterPlanComodity){
+                                itemError["masterPlanComodity"] = i18n.__("BookingOrder.items.masterPlanComodity.isRequired:%s is required", i18n.__("BookingOrder.items.masterPlanComodity._:MasterPlanComodity")); 
+                            }
+                            else{
+                                item.masterPlanComodityId=new ObjectId(item.masterPlanComodity._id);
+
+                                // var existComodity = valid.items.find((test, idx) => 
+                                // item.masterPlanComodityId.toString() === test.masterPlanComodity._id.toString() && item.masterPlanComodityId.toString() === test.masterPlanComodity._id.toString() && index != idx);
+                            
+                                // if(existComodity)
+                                //     itemError["masterPlanComodity"] = i18n.__("BookingOrder.items.masterPlanComodity.isExists:%s is already choosen", i18n.__("BookingOrder.items.masterPlanComodity._:MasterPlanComodity"));
+                                
+                            }
+                            
+                            if (!item.quantity || item.quantity <=0)
+                                itemError["quantity"] = i18n.__("BookingOrder.items.quantity.isRequired:%s is required", i18n.__("BookingOrder.items.quantity._:Quantity")); 
+                            
+                            // if (valid.orderQuantity != totalqty)
+                            //     itemError["total"] = i18n.__("ProductionOrder.items.total.shouldNot:%s Total should equal Order Quantity", i18n.__("ProductionOrder.items.total._:Total"));
+                            
+                            if (!item.deliveryDate || item.deliveryDate === "") {
+                                itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.isRequired:%s is required", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
+                            }
+                            else{
+                                item.deliveryDate=new Date(item.deliveryDate);
+                                var today= new Date();
+                                if(item._createdDate!='' && item._createdDate){
+                                    today=new Date(item._createdDate);
+                                }
+                                today.setHours(0,0,0,0);
+                                valid.deliveryDate=new Date(valid.deliveryDate);
+                                valid.bookingDate= new Date(valid.bookingDate);
+                                if(today>item.deliveryDate){
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
+                                }
+                                else if (valid.deliveryDate<item.deliveryDate){
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
+                                }
+                                else if(valid.bookingDate>item.deliveryDate){
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
+                                }
+                            }
+
+                            index++;
+                            itemErrors.push(itemError);
+                        }
+                        for (var itemError of itemErrors) {
+                            if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                errors.items = itemErrors;
+                                break;
+                            }
+                        }
+                    
+                    }
+                    else 
+                        errors["detail"] = i18n.__("BookingOrder.detail.mustHaveItem:%s must have at least 1 item", i18n.__("BookingOrder.detail._:Detail"));
+                
                 }
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
-                }
-
-                if(_style){
-                    valid.styleId=new ObjectId(_style._id);
-                    valid.style=_style;
-                }
-
-                if(_sh){
-                    valid.standardHourId=new ObjectId(_sh._id);
-                    valid.standardHour=_sh;
                 }
 
                 if(_buyer){
@@ -229,62 +230,65 @@ module.exports = class BookingOrderManager extends BaseManager {
             });
     }
 
-    // post(listBookingOrder) {
-    //     var getBookingByIds = [];
-    //     return new Promise((resolve, reject) => {
-    //         for (var bookingOrder of listBookingOrder) {
-    //             getBookingByIds.push(this.getSingleByIdOrDefault(bookingOrder._id));
-    //         }
-    //         Promise.all(getBookingByIds)
-    //             .then(validBookingOrder => {
-    //                 var jobUpdate = [];
-    //                 for (var booking of listBookingOrder) {
-    //                     booking.isConfirmed=true;
-    //                     jobUpdate.push(this.update(booking));
-    //                 }
-    //                 Promise.all(jobUpdate)
-    //                     .then(result => {
-    //                         resolve(result);
-    //                     })
-    //                     .catch(e => {
-    //                         reject(e);
-    //                     });
-
-    //             })
-    //             .catch(e => {
-    //                 reject(e);
-    //             });
-    //     });
-
-    // }
-
-    post(listBookingOrder) {
-        var getBookingById = listBookingOrder.map((bookingOrder) => this.getSingleByIdOrDefault(bookingOrder._id));
-        return Promise.all(getBookingById)
-            .then((bookingOrders) => {
-                var jobs=[];
-                for(var booking of bookingOrders){
-                    booking.isConfirmed=true;
-                    jobs.push(this.update(booking));
-                }
-                return Promise.all(jobs)
-                    .then((results) => 
-                    Promise.resolve(results))
-                // var jobs = bookingOrders.map((_bookingOrder) => {
-                //     return this._validate(_bookingOrder)
-                //         .then((bookingOrder) => {
-                //             bookingOrder.isPosted = true;
-                //             return this.update(bookingOrder);
-                //         })
-                //         .then((bookingOrders) => {
-                //             return Promise.all(jobs);
-                //         })
-                //         .then((bookingOrderIds) => {
-                //             return Promise.resolve(bookingOrderIds);
-                //         });
-                // });
+    cancelBooking(booking){
+        return this.getSingleById(booking._id)
+            .then((booking) => {
+                booking.isCanceled=true;
+                return this.update(booking)
+                .then((id) =>
+                    Promise.resolve(id)
+                    );
             });
     }
+
+    // confirmBooking(booking){
+    //     return this.getSingleById(booking._id)
+    //         .then((booking) => {
+    //             booking.isConfirmed=true;
+    //             return this.update(booking)
+    //             .then((id) =>
+    //                 Promise.resolve(id)
+    //                 );
+    //         });
+    // }
+
+    _afterUpdate(id) {
+        return new Promise((resolve, reject) => {
+            var bookingId=id;
+            this.getSingleById(id)
+                .then((booking) => {
+                    var query = {
+                        "bookingOrderNo": booking.code,
+                        "_deleted":false
+                    };
+                    this.masterPlanCollection.singleOrDefault(query)
+                        .then((masterPlan) => {
+                            if(masterPlan){
+                                if(booking.isCanceled){
+                                    masterPlan.status="Booking Dibatalkan";
+                                }
+                                else{
+                                    masterPlan.status="Booking Ada Perubahan";
+                                    for(var detail of masterPlan.details){
+                                        var itemBooking = booking.items.find(select => select.code === detail.code);
+                                        if(itemBooking){
+                                            detail.isConfirmed = itemBooking.isConfirmed;
+                                        }
+                                    }
+                                }
+                                this.masterPlanCollection.update(masterPlan)
+                                    .then((id) =>
+                                        resolve(bookingId));
+                            }
+                            else{
+                                resolve(bookingId);
+                            }
+                        });
+                        //Promise.resolve(bookingId);
+                });
+        });
+    }
+
 
     _createIndexes() {
         var dateIndex = {
@@ -302,5 +306,209 @@ module.exports = class BookingOrderManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
+    }
+
+    delete(data) {
+        data._deleted = true;
+        return this.masterPlanCollection.singleOrDefault({ "bookingOrderNo": data.code,"_deleted":false })
+                   .then(masterPlan =>{
+                       if(masterPlan){
+                        masterPlan.status="Booking Dihapus";
+                        return this.masterPlanCollection.update(masterPlan)
+                                   .then(idMasterPlan=>{
+                                         return this.collection.update(data)
+                                                   .then(id => {return id});
+                                   });
+                                }
+                                else{
+                                    return this.collection.update(data)
+                                                   .then(id => {return id});
+                                }
+                   });
+    }
+    getBookingOrderReport(query,offset) {
+        return new Promise((resolve, reject) => {
+
+            var deletedQuery = { _deleted: false };
+           
+            var date = new Date();
+            var dateString = moment(date).format('YYYY-MM-DD');
+            var dateNow = new Date(dateString);
+            var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            
+            var dateQuery={};
+            if (query.dateFrom !== "undefined" && query.dateFrom !== "null" && query.dateFrom !== "" && query.dateTo !== "undefined" && query.dateTo !== "null" && query.dateTo !== "")
+            {
+                var dateFrom = new Date(query.dateFrom);
+                var dateTo = new Date(query.dateTo);
+                dateFrom.setHours(dateFrom.getHours() - offset);
+                dateTo.setHours(dateTo.getHours() - offset);
+
+                dateQuery = {
+                    "bookingDate": {
+                        "$gte": dateFrom,
+                        "$lte": dateTo
+                    }
+                };
+            }
+            var codeQuery = {};
+            if (query.code) {
+                codeQuery = {
+                    "bookingCode": query.code
+                };
+            }
+            var buyerQuery = {};
+            if (query.buyer) {
+                buyerQuery = {
+                    "buyer": query.buyer
+                };
+            }
+
+            var comodityQuery = {};
+            if (query.comodity) {
+                comodityQuery = {
+                    "comodity": query.comodity
+                };
+            }
+
+            var confirmStateQuery = {};
+            if (query.confirmState === "isConfirmed") {
+                confirmStateQuery = {
+                    "deliveryDateConfirm":{$ne:"" }
+                }
+            }else  if (query.confirmState === "notConfirmed") 
+            {
+                confirmStateQuery = {
+                    "deliveryDateConfirm":  ""
+                }  
+            }
+            var bookingOrderStateQuery ={};
+            if (query.bookingOrderState === "Booking Dibatalkan") {
+                bookingOrderStateQuery = {
+                    "isCanceled": true
+                }
+            }else  if (query.bookingOrderState === "Sudah Dibuat MasterPlan") {
+                bookingOrderStateQuery = {
+                    "isMasterPlan": true
+                }
+            }else  if (query.bookingOrderState === "Booking") {
+                bookingOrderStateQuery = {
+                    "isMasterPlan": false ,
+                    "isCanceled":false
+                }
+            }
+
+            var Query = { "$and": [ dateQuery, deletedQuery, buyerQuery, comodityQuery, confirmStateQuery, bookingOrderStateQuery, codeQuery] };
+            this.collection
+                .aggregate( [
+                    { "$unwind": "$items" },
+                   
+                    {
+                        "$project": {
+                            "bookingCode": "$code",
+                            "bookingDate":"$bookingDate",
+                            "buyer": "$garmentBuyerName",
+                            "totalOrderQty" :"$orderQuantity",
+                            "deliveryDateBooking":"$deliveryDate",
+                            "orderQty":"$items.quantity",
+                            "deliveryDateConfirm":{"$ifNull":["$items.deliveryDate",""]},
+                            "remark" :"$items.remark",
+                            "isCanceled":"$isCanceled",
+                            "comodity":"$items.masterPlanComodity.name",
+                            "isMasterPlan":"$isMasterPlan",
+                            "_deleted":"$_deleted"
+                        }
+                    },
+                    { "$match": Query },
+                    {
+                        "$sort": {
+                            "bookingDate": 1,
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+
+    getBookingOrderReportXls(dataReport, query) {
+
+        return new Promise((resolve, reject) => {
+            var xls = {};
+            xls.data = [];
+            xls.options = [];
+            xls.name = '';
+
+            var dateFormat = "DD/MM/YYYY";
+
+            for (var data of dataReport.data) {
+                var item = {};
+                var confirmstate="";
+                var bookingOrderState="";
+                if(data.deliveryDateConfirm=="")
+                {
+                    confirmstate="Belum Dikonfirmasi";
+                }else
+                {
+                    confirmstate="Sudah Dikonfirmasi";
+                }
+                if(data.isCanceled==true)
+                {
+                    bookingOrderState="Booking Dibatalkan";
+                }else if(data.isMasterPlan ==true)
+                {
+                    bookingOrderState="Sudah Dibuat MasterPlan";   
+                }else if(data.isMasterPlan == false && data.isCanceled==false)
+                {
+                    bookingOrderState="Booking";
+                }
+                item["Kode Booking"] = data.code;
+                item["Tanggal Booking"] = data.bookingDate ? moment(data.bookingDate).format(dateFormat) : '';
+                item["Buyer"] = data.buyer ? data.buyer : '';
+                item["Jumlah Order"] = data.totalOrderQty ? data.totalOrderQty : '';
+                item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking && data.deliveryDateBooking !="" ? moment(data.deliveryDateBooking ).format(dateFormat) : '';
+                item["Komoditi"]=data.comodity ? data.comodity : '';
+                item["Jumlah Confirm"] = data.orderQty ? data.orderQty : '';
+                item["Tanggal Pengiriman(Confirm)"] = data.deliveryDateConfirm && data.deliveryDateConfirm !="" ? moment(data.deliveryDateConfirm ).format(dateFormat) : '';
+                item["Keterangan"] = data.remark ? data.remark : '';
+                item["Status Confirm"] =  confirmstate ? confirmstate : '';
+                item["Status Booking Order"] =  bookingOrderState ? bookingOrderState : '';
+                item["Sisa Order(Belum Confirm)"] =  data.totalOrderQty-data.orderQty ?  data.totalOrderQty-data.orderQty : '';
+                xls.data.push(item);
+
+            }
+
+            xls.options["Kode Booking"] = "string";
+            xls.options["Tanggal Booking"] = "string";
+            xls.options["Buyer"] = "string";
+            xls.options["Jumlah Order"] = "string";
+            xls.options["Tanggal Pengiriman(Booking)"] = "string";
+            xls.options["Komoditi"] = "string";
+            xls.options["Tanggal Pengiriman(Confirm)"] = "string";
+            xls.options["Keterangan"] = "string";
+            xls.options["Status Confirm"] = "string";
+            xls.options["Status Booking Order"] = "string";
+            xls.options["Sisa Order(Belum Confirm)"] = "string";
+
+            if (query.dateFrom && query.dateTo) {
+                xls.name = `Booking Order ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            }
+            else if (!query.dateFrom && query.dateTo) {
+                xls.name = `Booking Order ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            }
+            else if (query.dateFrom && !query.dateTo) {
+                xls.name = `Booking Order ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+            }
+            else
+                xls.name = `Booking Order Report.xlsx`;
+
+            resolve(xls);
+        });
     }
 }

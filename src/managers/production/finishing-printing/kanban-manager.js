@@ -12,6 +12,7 @@ var UomManager = require('../../master/uom-manager');
 var Kanban = DLModels.production.finishingPrinting.Kanban;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
+var moment = require("moment");
 
 module.exports = class KanbanManager extends BaseManager {
     constructor(db, user) {
@@ -229,7 +230,8 @@ module.exports = class KanbanManager extends BaseManager {
                 return Promise.all([getKanban])
                     .then((result) => {
                         var oldKanban = result[0];
-                        var updateOldKanban = oldKanban ? this.updateIsComplete(oldKanban._id) : Promise.resolve(null);
+                        var isInactive = true; //old kanban to be inactivated
+                        var updateOldKanban = oldKanban ? this.updateIsComplete(oldKanban._id, isInactive) : Promise.resolve(null);
                         return Promise.all([updateOldKanban])
                             .then((result) => Promise.resolve(kanbanId))
                     })
@@ -379,7 +381,7 @@ module.exports = class KanbanManager extends BaseManager {
         });
     }
 
-    updateIsComplete(id) {
+    updateIsComplete(id, isInactive) {
         var now = new Date();
         var ticks = ((now.getTime() * 10000) + 621355968000000000);
 
@@ -390,6 +392,10 @@ module.exports = class KanbanManager extends BaseManager {
             '_updatedDate': now,
             '_updateAgent': 'manager'
         };
+
+        if (isInactive) {
+            data.isInactive = true;
+        }
 
         return this.collection.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: data });
     }
@@ -404,12 +410,13 @@ module.exports = class KanbanManager extends BaseManager {
 
                     if (ObjectId.isValid(kanbanCurrentStepId)) {
                         var getDailyOperations;
-                        if(kanban.currentStepIndex != kanban.instruction.steps.length) {
+                        if (kanban.currentStepIndex != kanban.instruction.steps.length) {
                             getDailyOperations = this.dailyOperationCollection.find({
                                 "kanban.code": kanban.code,
                                 "step._id": kanbanCurrentStepId,
                                 _deleted: false,
-                                type: "input"
+                                type: "input",
+                                "kanban.currentStepIndex": kanban.currentStepIndex
                             }, {
                                     "machine.name": 1,
                                     "input": 1,
@@ -466,7 +473,8 @@ module.exports = class KanbanManager extends BaseManager {
                                             "kanban.code": kanban.code,
                                             "step._id": kanbanCurrStepId,
                                             _deleted: false,
-                                            type: "output"
+                                            type: "output",
+                                            "kanban.currentStepIndex": currStepIndex
                                         }, {
                                                 "machine.name": 1,
                                                 "goodOutput": 1,
@@ -502,7 +510,7 @@ module.exports = class KanbanManager extends BaseManager {
                                                     },
                                                     type: "Output"
                                                 };
-                                                
+
                                                 return ob;
                                             });
 
@@ -525,5 +533,224 @@ module.exports = class KanbanManager extends BaseManager {
                         return result;
                     }));
             });
+    }
+
+    
+    getMachineQueueReport(query) {
+        return new Promise((resolve, reject) => {
+            moment.locale("id");
+
+            let data = {};
+
+            let SPP_FIELDS = {
+                "orderNo": 1
+            };
+
+            let SPP_FILTER = {
+                _deleted: false,
+                isClosed: false
+            };
+
+            if (query.orderType != "") {
+                switch (query.orderType) {
+                    case "WHITE": {
+                        SPP_FILTER["orderType.name"] = "SOLID";
+                        SPP_FILTER["processType.name"] = query.orderType;
+                        break;
+                    }
+                    case "DYEING": {
+                        SPP_FILTER["orderType.name"] = "SOLID";
+                        SPP_FILTER["processType.name"] = { "$ne": "WHITE" };
+                        break;
+                    }
+                    default: {
+                        SPP_FILTER["orderType.name"] = query.orderType;
+                        break;
+                    }
+                }
+            }
+
+            this.productionOrderManager.collection
+                .find(SPP_FILTER, SPP_FIELDS)
+                .toArray()
+                .then((productionOrders) => {
+                    let orderNo = productionOrders.map((obj) => obj.orderNo);
+                    let KANBAN_FIELDS = {
+                        "currentStepIndex": 1,
+                        "code": 1,
+                        "cart.qty": 1,
+                        "instruction.steps.machine.name": 1,
+                        "instruction.steps._id": 1,
+                        "productionOrder.deliveryDate": 1,
+                        "productionOrder.orderType.name": 1
+                    };
+
+                    let KANBAN_FILTER = {
+                        _deleted: false,
+                        isComplete: false,
+                        "productionOrder.orderNo": { "$in": orderNo }
+                    };
+
+                    if (query.machine) {
+                        KANBAN_FILTER["instruction.steps.machine.name"] = query.machine;
+                    }
+
+                    this.collection
+                        .find(KANBAN_FILTER, KANBAN_FIELDS)
+                        .toArray()
+                        .then((kanbans) => {
+                            let promises = kanbans.map((kanban) => {
+                                if (kanban.currentStepIndex != kanban.instruction.steps.length) {
+                                    let currentStep = kanban.instruction.steps[kanban.currentStepIndex];
+                                    let steps = kanban.instruction.steps.slice(kanban.currentStepIndex + 1, kanban.instruction.steps.length); /* Ambil semua step di atas Current Step Index */
+                                    let month = moment(kanban.productionOrder.deliveryDate).format("MMM");
+                                    let orderType = kanban.productionOrder.orderType.name;
+
+                                    for (let step of steps) {
+                                        if (step.machine) {
+                                            let machineName = step.machine.name;
+
+                                            if (!data[machineName + orderType]) {
+                                                data[machineName + orderType] = {
+                                                    machine: machineName, orderType: orderType,
+                                                    Jan: 0, Feb: 0, Mar: 0, Apr: 0,
+                                                    Mei: 0, Jun: 0, Jul: 0, Ags: 0,
+                                                    Sep: 0, Okt: 0, Nov: 0, Des: 0
+                                                };
+                                            }
+                                            data[machineName + orderType][month] += kanban.cart.qty;
+                                        }
+                                    }
+
+                                    if (query.machine) {
+                                        if (!currentStep.machine || currentStep.machine.name !== query.machine)
+                                            return Promise.resolve();
+                                    }
+
+
+                                    let DAILY_OPERATION_FIELDS = {
+                                        code: 1
+                                    };
+
+                                    let DAILY_OPERATION_FILTER = {
+                                        _deleted: false,
+                                        "kanban.code": kanban.code,
+                                        "step._id": currentStep._id,
+                                        type: "input",
+                                        "kanban.currentStepIndex": kanban.currentStepIndex
+                                    };
+
+                                    return this.dailyOperationCollection
+                                        .findOne(DAILY_OPERATION_FILTER, DAILY_OPERATION_FIELDS)
+                                        .then((result) => {
+                                            if (result && currentStep.machine) {
+                                                if (!data[currentStep.machine.name + orderType]) {
+                                                    data[currentStep.machine.name + orderType] = {
+                                                        machine: currentStep.machine.name, orderType: orderType,
+                                                        Jan: 0, Feb: 0, Mar: 0, Apr: 0,
+                                                        Mei: 0, Jun: 0, Jul: 0, Ags: 0,
+                                                        Sep: 0, Okt: 0, Nov: 0, Des: 0
+                                                    };
+                                                }
+
+                                                data[currentStep.machine.name + orderType][month] += kanban.cart.qty;
+                                            }
+
+                                            return Promise.resolve();
+                                        });
+                                }
+                                else
+                                    return Promise.resolve();
+                            });
+
+                            Promise.all(promises)
+                                .then(() => {
+                                    let resultData = [];
+                                    let propertyNames = Object.getOwnPropertyNames(data);
+                                    for (let i = 0; i < propertyNames.length; i++) {
+                                        let d = data[propertyNames[i]];
+                                        d.total = d.Jan + d.Feb + d.Mar + d.Apr + d.Mei + d.Jun + d.Jul + d.Ags + d.Sep + d.Okt + d.Nov + d.Des;
+                                        resultData.push(data[propertyNames[i]]);
+                                    }
+
+                                    if (query.machine) {
+                                        resultData = resultData.filter((r) => r.machine === query.machine);
+                                    }
+
+                                    resolve(resultData);
+                                });
+                        });
+                });
+        });
+    }
+
+    getMachineQueueXls(result) {
+        let xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        let index = 1;
+
+        for (let data of result.data) {
+            let item = {};
+            
+            item["No"] = index++;
+            item["Jenis Order"] = data.orderType;
+            item["Mesin"] = data.machine;
+            item["Jumlah (M)"] = data.total;
+            item["Januari"] = data.Jan;
+            item["Februari"] = data.Feb;
+            item["Maret"] = data.Mar;
+            item["April"] = data.Apr;
+            item["Mei"] = data.Mei;
+            item["Juni"] = data.Jun;
+            item["Juli"] = data.Jul;
+            item["Agustus"] = data.Ags;
+            item["September"] = data.Sep;
+            item["Oktober"] = data.Okt;
+            item["November"] = data.Nov;
+            item["Desember"] = data.Des;
+
+            xls.data.push(item);
+        }
+
+        xls.data.push({
+            "No": "", "Jenis Order": "", "Mesin": "Total", "Jumlah (M)": this.sumMachineQueueMonth(result.data, "total"),
+            "Januari": this.sumMachineQueueMonth(result.data, "Jan"), "Februari": this.sumMachineQueueMonth(result.data, "Feb"), "Maret": this.sumMachineQueueMonth(result.data, "Mar"), "April": this.sumMachineQueueMonth(result.data, "Apr"),
+            "Mei": this.sumMachineQueueMonth(result.data, "Mei"), "Juni": this.sumMachineQueueMonth(result.data, "Jun"), "Juli": this.sumMachineQueueMonth(result.data, "Jul"), "Agustus": this.sumMachineQueueMonth(result.data, "Ags"),
+            "September": this.sumMachineQueueMonth(result.data, "Sep"), "Oktober": this.sumMachineQueueMonth(result.data, "Okt"), "November": this.sumMachineQueueMonth(result.data, "Nov"), "Desember": this.sumMachineQueueMonth(result.data, "Des")
+        });
+
+        xls.options["No"] = "number";
+        xls.options["Jenis Order"] = "string";
+        xls.options["Mesin"] = "string";
+        xls.options["Jumlah (M)"] = "number";
+        xls.options["Januari"] = "number";
+        xls.options["Februari"] = "number";
+        xls.options["Maret"] = "number";
+        xls.options["April"] = "number";
+        xls.options["Mei"] = "number";
+        xls.options["Juni"] = "number";
+        xls.options["Juli"] = "number";
+        xls.options["Agustus"] = "number";
+        xls.options["September"] = "number";
+        xls.options["Oktober"] = "number";
+        xls.options["November"] = "number";
+        xls.options["Desember"] = "number";
+
+        xls.name = `Laporan Order Belum Diproduksi Mesin.xlsx`;
+
+        return Promise.resolve(xls);
+    }
+
+    sumMachineQueueMonth(data, field) {
+        let sum = 0;
+
+        for(let d of data) {
+            sum += d[field];
+        }
+
+        return sum;
     }
 };

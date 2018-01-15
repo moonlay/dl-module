@@ -1588,7 +1588,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             .map((item) => item.isOverBudget)
             .reduce((prev, curr, index) => {
                 return prev || curr
-            }, true);
+            }, false);
         if (!purchaseOrderExternal.isApproved) {
             if (purchaseOrderExternal.isOverBudget) {
                 purchaseOrderExternal.isApproved = false;
@@ -1650,6 +1650,13 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             "items.isOverBudget": true
         };
         var queryPR = {};
+
+        if (parseInt(info.isApproved) !== -1) {
+
+            Object.assign(query, {
+                "isApproved": info.isApproved == 1
+            });
+        }
 
         if (info.prNo && info.prNo !== "") {
             Object.assign(queryItem, {
@@ -1741,6 +1748,18 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             {
                                 $lookup:
                                     {
+                                        from: "kurs-budgets",
+                                        localField: "currency.code",
+                                        foreignField: "code",
+                                        as: "kursBudget"
+                                    }
+                            },
+                            {
+                                $unwind: { path: "$kursBudget", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $lookup:
+                                    {
                                         from: "garment-purchase-requests",
                                         localField: "items.prNo",
                                         foreignField: "no",
@@ -1753,6 +1772,18 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             {
                                 $match: queryPR
                             },
+                            {
+                                $unwind: { path: "$purchaseRequest.items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest.items.purchaseOrderIds", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $project: {
+                                    "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] }
+                                }
+                            },
+                            { "$match": { "aEq": true } },
                             { $group: { _id: null, count: { $sum: 1 } } }
                         ])
                         .toArray()
@@ -1774,6 +1805,18 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 {
                                     $lookup:
                                         {
+                                            from: "kurs-budgets",
+                                            localField: "currency.code",
+                                            foreignField: "code",
+                                            as: "kursBudget"
+                                        }
+                                },
+                                {
+                                    $unwind: { path: "$kursBudget", preserveNullAndEmptyArrays: true }
+                                },
+                                {
+                                    $lookup:
+                                        {
                                             from: "garment-purchase-requests",
                                             localField: "items.prNo",
                                             foreignField: "no",
@@ -1785,6 +1828,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 },
                                 {
                                     $match: queryPR
+                                },
+                                {
+                                    $unwind: { path: "$purchaseRequest.items", preserveNullAndEmptyArrays: true }
+                                },
+                                {
+                                    $unwind: { path: "$purchaseRequest.items.purchaseOrderIds", preserveNullAndEmptyArrays: true }
                                 },
                                 {
                                     $project: {
@@ -1804,10 +1853,15 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                         quantity: "$items.dealQuantity",
                                         uom: "$items.dealUom.unit",
                                         budgetPrice: "$items.budgetPrice",
-                                        price: "$items.pricePerDealUnit",
-                                        overBudgetRemark: "$items.overBudgetRemark"
+                                        price: { $multiply: ["$items.pricePerDealUnit", "$kursBudget.rate"] },
+                                        totalBudgetPrice: { $multiply: ["$items.budgetPrice", "$purchaseRequest.items.quantity"] },
+                                        totalPrice: { $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$kursBudget.rate"] },
+                                        overBudgetRemark: "$items.overBudgetRemark",
+                                        "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] },
+                                        status: "$isApproved"
                                     }
-                                }
+                                },
+                                { "$match": { "aEq": true } }
                             ])
                             .toArray()
                     );
@@ -1826,6 +1880,18 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             {
                                 $lookup:
                                     {
+                                        from: "kurs-budgets",
+                                        localField: "currency.code",
+                                        foreignField: "code",
+                                        as: "kursBudget"
+                                    }
+                            },
+                            {
+                                $unwind: { path: "$kursBudget", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $lookup:
+                                    {
                                         from: "garment-purchase-requests",
                                         localField: "items.prNo",
                                         foreignField: "no",
@@ -1837,6 +1903,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             },
                             {
                                 $match: queryPR
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest.items", preserveNullAndEmptyArrays: true }
+                            },
+                            {
+                                $unwind: { path: "$purchaseRequest.items.purchaseOrderIds", preserveNullAndEmptyArrays: true }
                             },
                             {
                                 $project: {
@@ -1856,10 +1928,15 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                     quantity: "$items.dealQuantity",
                                     uom: "$items.dealUom.unit",
                                     budgetPrice: "$items.budgetPrice",
-                                    price: "$items.pricePerDealUnit",
-                                    overBudgetRemark: "$items.overBudgetRemark"
+                                    price: { $multiply: ["$items.pricePerDealUnit", "$kursBudget.rate"] },
+                                    totalBudgetPrice: { $multiply: ["$items.budgetPrice", "$purchaseRequest.items.quantity"] },
+                                    totalPrice: { $multiply: ["$items.pricePerDealUnit", "$items.dealQuantity", "$kursBudget.rate"] },
+                                    overBudgetRemark: "$items.overBudgetRemark",
+                                    "aEq": { "$eq": ["$items.poId", "$purchaseRequest.items.purchaseOrderIds"] },
+                                    status: "$isApproved"
                                 }
                             },
+                            { "$match": { "aEq": true } },
                             { $skip: page * size },
                             { $limit: size }
                         ])
@@ -1896,9 +1973,12 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         uom: data.uom,
                         budgetPrice: data.budgetPrice,
                         price: data.price,
-                        totalBudgetPrice: data.budgetPrice * data.quantity,
-                        totalPrice: data.price * data.quantity,
-                        overBudgetRemark: data.overBudgetRemark
+                        totalBudgetPrice: data.totalBudgetPrice,
+                        totalPrice: data.totalPrice,
+                        overBudgetValue: data.totalPrice - data.totalBudgetPrice,
+                        overBudgetValuePercentage: this.fixDecimal(((data.totalPrice - data.totalBudgetPrice) / data.totalBudgetPrice * 100)),
+                        overBudgetRemark: data.overBudgetRemark,
+                        status: data.status ? "Sudah" : "Belum"
                     }
                     dataReport.push(item);
                 }
@@ -1944,7 +2024,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 "Harga Beli": data.price,
                 "Total Harga Budget": data.totalBudgetPrice,
                 "Total Harga Beli": data.totalPrice,
-                "Keterangan Over Budget": data.overBudgetRemark
+                "Nilai Over Budget": data.overBudgetValue,
+                "Nilai Over Budget (%)": data.overBudgetValuePercentage,
+                "Keterangan Over Budget": data.overBudgetRemark,
+                "Status Approve": data.status
             }
             xls.data.push(item);
         }
@@ -1969,7 +2052,10 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             "Harga Total": "number",
             "Total Harga Budget": "number",
             "Total Harga Beli": "number",
-            "Keterangan Over Budget": "string"
+            "Nilai Over Budget": "number",
+            "Nilai Over Budget (%)": "number",
+            "Keterangan Over Budget": "string",
+            "Status Approve": "string"
         };
         xls.options = options;
 
@@ -1986,5 +2072,17 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             xls.name = `Laporan Purchase Order External Over Budget.xlsx`;
 
         return Promise.resolve(xls);
+    }
+
+    fixDecimal(num) {
+        var count = 0;
+        if (Math.floor(num) === num) count = 0
+        else count = num.toString().split(".")[1].length || 0
+
+        if (count >= 4) {
+            return num.toFixed(4);
+        } else {
+            return num;
+        }
     }
 };

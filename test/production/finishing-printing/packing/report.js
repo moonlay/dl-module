@@ -57,7 +57,8 @@ it('#03. should success when create report', function (done) {
     info.productionOrderNo = createdData.productionOrderId;
     info.dateFrom = createdData.date;
     // info.dateTo = new Date(createdData.date);
-    info.dateTo = createdData.date.toISOString().split("T", "1").toString();
+    info.dateTo = createdData.date;
+    info.offset = 0;
 
     packingManager.getPackingReport(info)
         .then(result => {
@@ -71,9 +72,9 @@ it('#03. should success when create report', function (done) {
         });
 });
 
-
 it('#04. should success when get data for Excel Report', function (done) {
     var query = {};
+    query.offset = 0;
 
     packingManager.getXls(resultForExcelTest, query)
         .then(xlsData => {
@@ -86,8 +87,39 @@ it('#04. should success when get data for Excel Report', function (done) {
         });
 });
 
+it('#05. should success when get data for Excel Report', function (done) {
+    var query = {};
 
-it("#05. should success when destroy all unit test data", function (done) {
+    packingManager.getXlss(resultForExcelTest, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+var resultForExcelTestt = {};
+it('#06. should success when create report', function (done) {
+    var query = {};
+    query.dateFrom = createdData.date;
+
+    query.dateTo = createdData.date.toISOString().split("T", "1").toString();
+
+    packingManager.getQcgudangReport(query)
+        .then(result => {
+        
+            result.should.instanceof(Array);
+
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+
+it("#07. should success when destroy all unit test data", function (done) {
     packingManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();

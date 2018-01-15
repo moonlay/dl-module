@@ -303,8 +303,8 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
             })
     }
 
-    updatePurchaseOrder(unitPaymentPriceCorrectionNote) {
-        var realizations = unitPaymentPriceCorrectionNote.items.map((item) => {
+    updatePurchaseOrder(unitPaymentQuantityCorrectionNote) {
+        var realizations = unitPaymentQuantityCorrectionNote.items.map((item) => {
             return {
                 purchaseOrderId: item.purchaseOrderId,
                 productId: item.productId,
@@ -332,7 +332,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                     for (var realization of realizations) {
                         var productId = realization.productId;
                         var poItem = purchaseOrder.items.find(item => item.product._id.toString() === productId.toString());
-                        var fulfillment = poItem.fulfillments.find((fulfillment) => realization.unitReceiptNoteNo === fulfillment.unitReceiptNoteNo && unitPaymentPriceCorrectionNote.unitPaymentOrder.no === fulfillment.interNoteNo)
+                        var fulfillment = poItem.fulfillments.find((fulfillment) => realization.unitReceiptNoteNo === fulfillment.unitReceiptNoteNo && unitPaymentQuantityCorrectionNote.unitPaymentOrder.no === fulfillment.interNoteNo)
 
                         if (fulfillment) {
                             var _correction = {};
@@ -351,9 +351,9 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                                 }
                                 correctionQty = realization.quantity * -1;
 
-                                _correction.correctionDate = unitPaymentPriceCorrectionNote.date;
-                                _correction.correctionNo = unitPaymentPriceCorrectionNote.no;
-                                _correction.correctionRemark = `Koreksi ${unitPaymentPriceCorrectionNote.correctionType}`;
+                                _correction.correctionDate = unitPaymentQuantityCorrectionNote.date;
+                                _correction.correctionNo = unitPaymentQuantityCorrectionNote.no;
+                                _correction.correctionRemark = `Koreksi ${unitPaymentQuantityCorrectionNote.correctionType}`;
                                 _correction.correctionQuantity = Number(correctionQty);
                                 _correction.correctionPriceTotal = correctionQty * realization.pricePerUnit * realization.currency.rate;
 
@@ -367,7 +367,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         })
 
         return Promise.all(jobs).then((results) => {
-            return Promise.resolve(unitPaymentPriceCorrectionNote);
+            return Promise.resolve(unitPaymentQuantityCorrectionNote);
         })
     }
 

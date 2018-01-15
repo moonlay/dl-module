@@ -80,7 +80,7 @@ it('#05. should success when create report', function (done) {
     query.orderType = "";
     query.year = moment().format('YYYY');
 
-    manager.getOrderStatusReport(query)
+    manager.getOrderStatusReport(query, 7)
         .then((result) => {
             resultForExcelTest.data = result;
             done();
@@ -94,7 +94,7 @@ it('#06. should success when create report', function (done) {
     query.orderType = "PRINTING";
     query.year = moment().format('YYYY');
 
-    manager.getOrderStatusReport(query)
+    manager.getOrderStatusReport(query, 7)
         .then((result) => {
             done();
         }).catch((e) => {
@@ -107,7 +107,7 @@ it('#07. should success when create report', function (done) {
     query.orderType = "WHITE";
     query.year = moment().format('YYYY');
 
-    manager.getOrderStatusReport(query)
+    manager.getOrderStatusReport(query, 7)
         .then((result) => {
             done();
         }).catch((e) => {
@@ -118,6 +118,76 @@ it('#07. should success when create report', function (done) {
 it('#08. should success when get data for Excel Report', function (done) {
 
     manager.getOrderStatusXls(resultForExcelTest, query)
+        .then((xlsData) => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#08. should success when create report detail', function (done) {
+
+    query.orderType = "PRINTING";
+    query.year = moment().year();
+    query.month = moment().month();
+
+    manager.getOrderStatusDetailReport(query, 7)
+        .then((result) => {
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
+
+it('#09. should success when create report detail', function (done) {
+
+    query.orderType = "WHITE";
+    query.year = moment().year();
+    query.month = moment().month();
+
+    manager.getOrderStatusDetailReport(query, 7)
+        .then((result) => {
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
+
+it('#10. should success when create report detail', function (done) {
+
+    query.orderType = "";
+    query.year = moment().year();
+    query.month = moment().month();
+
+    manager.getOrderStatusDetailReport(query, 7)
+        .then((result) => {
+            resultForExcelTest.data = result;
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
+
+it('#11. should success when create report detail', function (done) {
+
+    query.orderType = "PRINTING";
+    query.year = moment().year();
+    query.month = moment().month();
+
+    manager.getOrderStatusDetailReport(query, 7)
+        .then((result) => {
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
+
+it('#12. should success when get data detail for Excel Report', function (done) {
+
+    manager.getOrderStatusDetailXls(resultForExcelTest, query)
         .then((xlsData) => {
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
