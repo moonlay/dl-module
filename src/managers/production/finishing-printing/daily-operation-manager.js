@@ -965,9 +965,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                             "$add": ["$dateOutput", timeOffset]
                         }
                     },
-                    "date": {
-                        "$add": ["$dateOutput", timeOffset]
-                    },
+                    "date": "$dateOutput"
                 }
             },
             {
