@@ -416,7 +416,9 @@ module.exports = class BookingOrderManager extends BaseManager {
                             "comodity":"$items.masterPlanComodity.name",
                             "isMasterPlan":"$isMasterPlan",
                             "_deleted":"$_deleted",
-                            "_createdDate":"$_createdDate"
+                            "_createdDate":"$_createdDate",
+                            "confirmDate":{"$ifNull":["$items._createdDate",""]},
+
                         }
                     },
                     { "$match": Query },
@@ -486,6 +488,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                 item["Komoditi"]=data.comodity ? data.comodity : '';
                 item["Jumlah Confirm"] = data.orderQty ? data.orderQty : '';
                 item["Tanggal Pengiriman(Confirm)"] = data.deliveryDateConfirm && data.deliveryDateConfirm !="" ? moment(new Date(data.deliveryDateConfirm)).add(7, 'h').format(dateFormat) : '';
+                item["Tanggal Confirm"] = data.confirmDate && data.confirmDate !="" ? moment(new Date(data.confirmDate)).add(7, 'h').format(dateFormat) : '';
                 item["Keterangan"] = data.remark ? data.remark : '';
                 item["Status Confirm"] =  confirmstate ? confirmstate : '';
                 item["Status Booking Order"] =  bookingOrderState ? bookingOrderState : '';
@@ -510,6 +513,7 @@ module.exports = class BookingOrderManager extends BaseManager {
             xls.options["Tanggal Pengiriman(Booking)"] = "string";
             xls.options["Komoditi"] = "string";
             xls.options["Tanggal Pengiriman(Confirm)"] = "string";
+            xls.options["Tanggal Confirm"] = "string";
             xls.options["Keterangan"] = "string";
             xls.options["Status Confirm"] = "string";
             xls.options["Status Booking Order"] = "string";
