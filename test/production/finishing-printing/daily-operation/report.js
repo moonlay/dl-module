@@ -292,7 +292,7 @@ it("#11. should success when get report daily machine", function (done) {
         "_id.date": 1
     };
 
-    dailyOperationManager.getDailyMachine(queryDailyMachine)
+    dailyOperationManager.getDailyMachine(queryDailyMachine, 7)
         .then((result) => {
             result.info.should.instanceof(Array);
             result.info.length.should.not.equal(0);
@@ -309,7 +309,7 @@ it("#12. should success when get report daily machine with order asc", function 
         "_id.day": "asc"
     };
 
-    dailyOperationManager.getDailyMachine(queryDailyMachine)
+    dailyOperationManager.getDailyMachine(queryDailyMachine, 7)
         .then((result) => {
             result.info.should.instanceof(Array);
             result.info.length.should.not.equal(0);
@@ -326,7 +326,7 @@ it("#13. should success when get report daily machine with order desc", function
         "_id.day": "desc"
     };
 
-    dailyOperationManager.getDailyMachine(queryDailyMachine)
+    dailyOperationManager.getDailyMachine(queryDailyMachine, 7)
         .then((result) => {
             result.info.should.instanceof(Array);
             result.info.length.should.not.equal(0);
