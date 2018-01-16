@@ -1552,7 +1552,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                                         break;
                                                     }
                                                     case "complete": {
-                                                        kanbanDailyQuantity = kanbanDaily.goodOutput + kanban.badOutput;
+                                                        kanbanDailyQuantity = kanbanDaily.goodOutput + kanbanDaily.badOutput;
                                                         break;
                                                     }
                                                 }
