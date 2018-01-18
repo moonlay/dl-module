@@ -894,9 +894,11 @@ module.exports = class DailyOperationManager extends BaseManager {
         });
     }
 
-    getDailyMachine(query) {
+    getDailyMachine(query, timeOffset) {
         var area = query.area;
         var machineId = query.machineId;
+
+        timeOffset = timeOffset * 60 * 60000;
 
         // var date = {
         //     "dateOutput": {
@@ -934,7 +936,9 @@ module.exports = class DailyOperationManager extends BaseManager {
 
         return this.collection.aggregate([
             {
-                "$match": matchQuery
+                "$match": {
+                    "type": "output"
+                }
             },
             {
                 "$project": {
@@ -946,11 +950,26 @@ module.exports = class DailyOperationManager extends BaseManager {
                     "goodOutput": 1,
                     "badOutput": 1,
                     "step.processArea": 1,
-                    "year": { "$year": "$dateOutput" },
-                    "month": { "$month": "$dateOutput" },
-                    "day": { "$dayOfMonth": "$dateOutput" },
-                    "date": { "$substr": ["$dateOutput", 0, 10] },
+                    "year": {
+                        "$year": {
+                            "$add": ["$dateOutput", timeOffset]
+                        }
+                    },
+                    "month": {
+                        "$month": {
+                            "$add": ["$dateOutput", timeOffset]
+                        }
+                    },
+                    "day": {
+                        "$dayOfMonth": {
+                            "$add": ["$dateOutput", timeOffset]
+                        }
+                    },
+                    "date": "$dateOutput"
                 }
+            },
+            {
+                "$match": matchQuery
             },
             {
                 "$group": {

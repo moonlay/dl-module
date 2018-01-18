@@ -22,20 +22,11 @@ before('#00. connect db', function (done) {
         });
 });
 
-// it("#01. should success when get all data", function (done) {
-//     Promise.all([dailyOperationDataUtil.getNewWhiteOrderTypeData("input"), dailyOperationDataUtil.getNewPrintingOrderTypeData("input"), shipmentDocumentDataUtil.getNewWhiteOrderTypeData(), shipmentDocumentDataUtil.getNewPrintingOrderTypeData()])
-//         .then((results) => {
-//             done();
-//         })
-//         .catch(e => {
-//             done(e);
-//         });
-// });
-
-
+var productionOrderNo;
 it("#01. should success when get daily operation data", function (done) {
     dailyOperationDataUtil.getNewWhiteOrderTypeData("input")
         .then((result) => {
+            productionOrderNo = result.kanban.productionOrder.orderNo;
             done();
         })
         .catch(e => {
@@ -194,6 +185,44 @@ it('#12. should success when get data detail for Excel Report', function (done) 
             xlsData.should.have.property('name');
             done();
         }).catch(e => {
+            done(e);
+        });
+});
+
+it('#13. should success when create report detail', function (done) {
+
+    query.orderNo = productionOrderNo;
+
+    manager.getOrderStatusKanbanDetailReport(query)
+        .then((result) => {
+            resultForExcelTest.data = result;
+            done();
+        }).catch((e) => {
+            done(e);
+        });
+});
+
+it('#14. should success when get data detail for Excel Report', function (done) {
+
+    manager.getOrderStatusKanbanDetailXls(resultForExcelTest, query)
+        .then((xlsData) => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it("#15. should success when read data", function (done) {
+    manager.read({
+        "keyword": "TEST"
+    })
+        .then((documents) => {
+            done();
+        })
+        .catch((e) => {
             done(e);
         });
 });

@@ -181,7 +181,6 @@ module.exports = class BookingOrderManager extends BaseManager {
                                 if(item._createdDate!='' && item._createdDate){
                                     today=new Date(item._createdDate);
                                 }
-                                today.setHours(0,0,0,0);
                                 valid.deliveryDate=new Date(valid.deliveryDate);
                                 valid.bookingDate= new Date(valid.bookingDate);
                                 if(today>item.deliveryDate){
@@ -337,7 +336,7 @@ module.exports = class BookingOrderManager extends BaseManager {
             var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
             
             var dateQuery={};
-            if (query.dateFrom !== "undefined" && query.dateFrom !== "null" && query.dateFrom !== "" && query.dateTo !== "undefined" && query.dateTo !== "null" && query.dateTo !== "")
+            if (query.dateFrom !== undefined && query.dateFrom !== "" && query.dateTo !== undefined  && query.dateTo !== "")
             {
                 var dateFrom = new Date(query.dateFrom);
                 var dateTo = new Date(query.dateTo);
@@ -372,11 +371,11 @@ module.exports = class BookingOrderManager extends BaseManager {
             }
 
             var confirmStateQuery = {};
-            if (query.confirmState === "isConfirmed") {
+            if (query.confirmState === "Sudah Dikonfirmasi") {
                 confirmStateQuery = {
                     "deliveryDateConfirm":{$ne:"" }
                 }
-            }else  if (query.confirmState === "notConfirmed") 
+            }else  if (query.confirmState === "Belum Dikonfirmasi") 
             {
                 confirmStateQuery = {
                     "deliveryDateConfirm":  ""
@@ -387,9 +386,10 @@ module.exports = class BookingOrderManager extends BaseManager {
                 bookingOrderStateQuery = {
                     "isCanceled": true
                 }
-            }else  if (query.bookingOrderState === "Sudah Dibuat MasterPlan") {
+            }else  if (query.bookingOrderState === "Sudah Dibuat Master Plan") {
                 bookingOrderStateQuery = {
-                    "isMasterPlan": true
+                    "isMasterPlan": true,
+                    "isCanceled":false
                 }
             }else  if (query.bookingOrderState === "Booking") {
                 bookingOrderStateQuery = {
@@ -398,11 +398,10 @@ module.exports = class BookingOrderManager extends BaseManager {
                 }
             }
 
-            var Query = { "$and": [ dateQuery, deletedQuery, buyerQuery, comodityQuery, confirmStateQuery, bookingOrderStateQuery, codeQuery] };
+             var Query = { "$and": [ dateQuery, deletedQuery, buyerQuery, comodityQuery, confirmStateQuery, bookingOrderStateQuery, codeQuery] };
             this.collection
                 .aggregate( [
-                    { "$unwind": "$items" },
-                   
+                    { "$unwind": {path: "$items", preserveNullAndEmptyArrays: true} },
                     {
                         "$project": {
                             "bookingCode": "$code",
@@ -416,13 +415,16 @@ module.exports = class BookingOrderManager extends BaseManager {
                             "isCanceled":"$isCanceled",
                             "comodity":"$items.masterPlanComodity.name",
                             "isMasterPlan":"$isMasterPlan",
-                            "_deleted":"$_deleted"
+                            "_deleted":"$_deleted",
+                            "_createdDate":"$_createdDate",
+                            "confirmDate":{"$ifNull":["$items._createdDate",""]},
+
                         }
                     },
                     { "$match": Query },
                     {
                         "$sort": {
-                            "bookingDate": 1,
+                            "_createdDate": -1,
                         }
                     }
                 ])
@@ -437,16 +439,25 @@ module.exports = class BookingOrderManager extends BaseManager {
     }
 
 
-    getBookingOrderReportXls(dataReport, query) {
+    getBookingOrderReportXls(dataReport, query,offset) {
 
         return new Promise((resolve, reject) => {
             var xls = {};
             xls.data = [];
             xls.options = [];
             xls.name = '';
-
+            var remain=0;
+            var temp=dataReport.data;
+            this.temp=[];
+            var temps={};
             var dateFormat = "DD/MM/YYYY";
 
+            
+            for (var pr of dataReport.data) {
+                temps.bookingCode=pr.bookingCode;
+                temps.orderQty=pr.orderQty;
+                this.temp.push(temps);
+            }
             for (var data of dataReport.data) {
                 var item = {};
                 var confirmstate="";
@@ -463,23 +474,34 @@ module.exports = class BookingOrderManager extends BaseManager {
                     bookingOrderState="Booking Dibatalkan";
                 }else if(data.isMasterPlan ==true)
                 {
-                    bookingOrderState="Sudah Dibuat MasterPlan";   
+                    bookingOrderState="Sudah Dibuat Master Plan";   
                 }else if(data.isMasterPlan == false && data.isCanceled==false)
                 {
                     bookingOrderState="Booking";
                 }
-                item["Kode Booking"] = data.code;
-                item["Tanggal Booking"] = data.bookingDate ? moment(data.bookingDate).format(dateFormat) : '';
+               
+                item["Kode Booking"] = data.bookingCode;
+                item["Tanggal Booking"] = data.bookingDate ? moment(new Date(data.bookingDate)).add(7, 'h').format(dateFormat) : '';
                 item["Buyer"] = data.buyer ? data.buyer : '';
                 item["Jumlah Order"] = data.totalOrderQty ? data.totalOrderQty : '';
-                item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking && data.deliveryDateBooking !="" ? moment(data.deliveryDateBooking ).format(dateFormat) : '';
+                item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking && data.deliveryDateBooking !="" ? moment(data.deliveryDateBooking ).add(7, 'h').format(dateFormat) : '';
                 item["Komoditi"]=data.comodity ? data.comodity : '';
                 item["Jumlah Confirm"] = data.orderQty ? data.orderQty : '';
-                item["Tanggal Pengiriman(Confirm)"] = data.deliveryDateConfirm && data.deliveryDateConfirm !="" ? moment(data.deliveryDateConfirm ).format(dateFormat) : '';
+                item["Tanggal Pengiriman(Confirm)"] = data.deliveryDateConfirm && data.deliveryDateConfirm !="" ? moment(new Date(data.deliveryDateConfirm)).add(7, 'h').format(dateFormat) : '';
+                item["Tanggal Confirm"] = data.confirmDate && data.confirmDate !="" ? moment(new Date(data.confirmDate)).add(7, 'h').format(dateFormat) : '';
                 item["Keterangan"] = data.remark ? data.remark : '';
                 item["Status Confirm"] =  confirmstate ? confirmstate : '';
                 item["Status Booking Order"] =  bookingOrderState ? bookingOrderState : '';
-                item["Sisa Order(Belum Confirm)"] =  data.totalOrderQty-data.orderQty ?  data.totalOrderQty-data.orderQty : '';
+                for(var items of  temp)
+                    {
+                        if(data.bookingCode == items.bookingCode)
+                        {
+                            remain = remain + items.orderQty;
+                            item["Sisa Order(Belum Confirm)"]=remain ? data.totalOrderQty-remain :data.totalOrderQty;
+                        }
+                      
+                    }
+                    remain=0;
                 xls.data.push(item);
 
             }
@@ -491,6 +513,7 @@ module.exports = class BookingOrderManager extends BaseManager {
             xls.options["Tanggal Pengiriman(Booking)"] = "string";
             xls.options["Komoditi"] = "string";
             xls.options["Tanggal Pengiriman(Confirm)"] = "string";
+            xls.options["Tanggal Confirm"] = "string";
             xls.options["Keterangan"] = "string";
             xls.options["Status Confirm"] = "string";
             xls.options["Status Booking Order"] = "string";
@@ -511,4 +534,5 @@ module.exports = class BookingOrderManager extends BaseManager {
             resolve(xls);
         });
     }
+
 }

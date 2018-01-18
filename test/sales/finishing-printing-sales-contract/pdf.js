@@ -54,3 +54,15 @@ it("#03. should success when destroy all unit test data", function (done) {
             done(e);
         });
 });
+
+it("#04. should success when read data", function (done) {
+    fpSalesContractRequestManager.read({
+        "keyword": "TEST"
+    })
+        .then((documents) => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

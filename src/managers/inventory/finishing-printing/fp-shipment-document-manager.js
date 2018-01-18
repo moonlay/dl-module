@@ -718,7 +718,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     "details.items": 1,
                     "year": { $year: "$deliveryDate" },
                     "month": { $month: "$deliveryDate" },
-
+                    "isVoid": 1,
                     "day": {
                         "$dayOfMonth": {
                             "$add": ["$deliveryDate", dateFilter.timezone]
@@ -730,7 +730,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
             },
             {
                 "$match": {
-                    "_deleted": false, "year": parseInt(dateFilter.year), "month": parseInt(dateFilter.month), "details.productionOrderNo": { "$in": filter }
+                    "_deleted": false, "isVoid": false, "year": parseInt(dateFilter.year), "month": parseInt(dateFilter.month), "details.productionOrderNo": { "$in": filter }
                 }
             },
             { "$sort": { "day": 1 } }
