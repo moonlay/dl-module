@@ -75,15 +75,3 @@ it('#03. should success when get data Kanban', function (done) {
         });
 
 });
-
-it('#04. should success when get data Kanban', function (done) {
-    var query = { "year": moment().format("YYYY") };
-    kanbanManager.getMachineQueueReport(query)
-        .then(kanban => {
-            kanban.data.should.instanceof(Array);
-            done();
-        }).catch(e => {
-            done(e);
-        });
-
-});
