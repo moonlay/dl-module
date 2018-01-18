@@ -945,6 +945,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                     "_deleted": 1,
                     "type": 1,
                     "dateOutput": 1,
+                    "machineId": 1,
                     "machine.name": 1,
                     "machine.code": 1,
                     "goodOutput": 1,
