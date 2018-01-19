@@ -150,6 +150,9 @@ module.exports = class MasterPlanManager extends BaseManager {
                                 if(detail.deliveryDate<_bookingOrder.bookingDate){
                                     detailError["deliveryDate"] = i18n.__("MasterPlan.details.deliveryDate.shouldNot:%s should not be less than booking order date", i18n.__("MasterPlan.details.deliveryDate._:DeliveryDate"));
                                 }
+                                if(detail.deliveryDate>_bookingOrder.deliveryDate){
+                                    detailError["deliveryDate"] = i18n.__("MasterPlan.details.deliveryDates.shouldNot:%s should not be more than booking order delivery date", i18n.__("MasterPlan.details.deliveryDate._:DeliveryDate"));
+                                }
                             }
                         }
                         if(!detail.unitId || detail.unitId === "")
