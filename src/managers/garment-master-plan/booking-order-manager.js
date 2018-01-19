@@ -126,16 +126,16 @@ module.exports = class BookingOrderManager extends BaseManager {
                         errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
                     }
                 }
-                if(valid.items){
-                    var totalqty = 0;
-                    for (var i of valid.items) {
-                        totalqty += i.quantity;
-                    }
-                    if (valid.orderQuantity < totalqty) {
-                        errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal or more than SUM quantity in items", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
-                        errors["totalQuantity"]= i18n.__("BookingOrder.totalQuantity.shouldNot:%s should equal or less than booking order quantity", i18n.__("BookingOrder.totalQuantity._:TotalQuantity")); 
-                    }
-                }
+                // if(valid.items){
+                //     var totalqty = 0;
+                //     for (var i of valid.items) {
+                //         totalqty += i.quantity;
+                //     }
+                //     if (valid.orderQuantity < totalqty) {
+                //         errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal or more than SUM quantity in items", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
+                //         errors["totalQuantity"]= i18n.__("BookingOrder.totalQuantity.shouldNot:%s should equal or less than booking order quantity", i18n.__("BookingOrder.totalQuantity._:TotalQuantity")); 
+                //     }
+                // }
 
                 valid.items = valid.items || [];
                 // if (valid.items && valid.items.length <= 0) {
