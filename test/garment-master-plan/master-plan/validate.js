@@ -344,7 +344,7 @@ it("#13. should error when create new data with detail delivery date < data book
         });
 });
 
-it("#13. should error when create new data with detail delivery date > data delivery date", function (done) {
+it("#14. should error when create new data with detail delivery date > data delivery date", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             var targetDate=new Date(data.deliveryDate);
@@ -369,7 +369,7 @@ it("#13. should error when create new data with detail delivery date > data deli
 
 var newData;
 var createdId;
-it("#14. should success when create new data", function (done) {
+it("#15. should success when create new data", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             newData = data;
@@ -387,7 +387,7 @@ it("#14. should success when create new data", function (done) {
         });
 });
 
-it("#15. should success when search data with filter", function (done) {
+it("#16. should success when search data with filter", function (done) {
     manager.read({
         keyword: newData.bookingOrderNo
     })
@@ -403,7 +403,7 @@ it("#15. should success when search data with filter", function (done) {
         });
 });
 
-it("#16. should success when get preview", function (done) {
+it("#17. should success when get preview", function (done) {
     manager.getPreview(newData.details[0].week.month, newData.details[0].weeklyPlanYear)
         .then((documents) => {
             documents.should.be.instanceof(Array);
@@ -415,7 +415,7 @@ it("#16. should success when get preview", function (done) {
         });
 });
 
-it("#17. should error when create new data with same booking order", function (done) {
+it("#18. should error when create new data with same booking order", function (done) {
     manager.create(newData)
         .then((id) => {
             done("should error when create new data with same booking order");
@@ -429,7 +429,7 @@ it("#17. should error when create new data with same booking order", function (d
         });
 });
 
-it("#18. should success when destroy data with id", function (done) {
+it("#19. should success when destroy data with id", function (done) {
     manager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();

@@ -102,6 +102,54 @@ it("#03. should error when create new data with deliveryDate < today ", function
         });
 });
 
+var newData;
+var createdId;
+it("#04. should success when create new data", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            newData = data;
+            manager.create(data)
+                .then((id) => {
+                    createdId = id;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#05. should success when search data with filter", function (done) {
+    manager.read({
+        keyword: newData.garmentBuyerName
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#06. should success when destroy data with id", function (done) {
+    manager.destroy(createdId)
+        .then((result) => {
+            result.should.be.Boolean();
+            result.should.equal(true);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 // it("#04. should error when create new data with orderQuantity not equal total quantity in items", function (done) {
 //     dataUtil.getNewData()
 //         .then((data) => {
