@@ -104,8 +104,9 @@ it("#03. should error when confirm created data without data items", function (d
 it("#04. should error when confirm created data with deliveryDate items more than deliveryDate", function (done) {
     createdData.type='confirm';
     var today=new Date();
-    createdData.deliveryDate=new Date(today.setDate(today.getDate() + 10));
-    createdData.items[0].deliveryDate=new Date(createdData.deliveryDate.setDate(createdData.deliveryDate.getDate() + 10));
+    //createdData.deliveryDate=new Date(today.setDate(today.getDate() + 10));
+    var date=new Date(createdData.deliveryDate);
+    createdData.items[0].deliveryDate=new Date(date.setDate(date.getDate() + 10));
         manager.update(createdData)
             .then((id) => {
                     done("should error when confirm created data with deliveryDate items more than deliveryDate");
@@ -154,8 +155,9 @@ it("#05. should error when confirm created data with deliveryDate items less tha
 
 it("#06. should error when confirm created data with deliveryDate items less than booking date", function (done) {
     createdData.type='confirm';
-    var today=new Date(createdData.bookingDate);
-    createdData.items[0].deliveryDate=new Date(today.setDate(today.getDate() - 10));
+    //var today=new Date(createdData.bookingDate);
+    var date=new Date(createdData.bookingDate);
+    createdData.items[0].deliveryDate=new Date(date.setDate(date.getDate() - 10));
         manager.update(createdData)
             .then((id) => {
                     done("should error when confirm created data with deliveryDate items less than booking date");
