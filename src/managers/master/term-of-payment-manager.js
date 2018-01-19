@@ -58,11 +58,10 @@ module.exports = class TermOfPaymentManager extends BaseManager {
             .then(results => {
                 var _termOfPayment = results[0];
 
-                if (_termOfPayment)
-                    errors["termOfPayment"] = i18n.__("TermOfPayment.termOfPayment.isExists:%s is exists", i18n.__("TermOfPayment.termOfPayment._:termOfPayment"));
-                if(!valid.termOfPayment || valid.termOfPayment==""){
+                if(!valid.termOfPayment || valid.termOfPayment=="")
                     errors["termOfPayment"] = i18n.__("TermOfPayment.termOfPayment.isRequired:%s is required", i18n.__("TermOfPayment.termOfPayment._:termOfPayment"));
-                }
+                else if (_termOfPayment)
+                    errors["termOfPayment"] = i18n.__("TermOfPayment.termOfPayment.isExists:%s is exists", i18n.__("TermOfPayment.termOfPayment._:termOfPayment"));
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
