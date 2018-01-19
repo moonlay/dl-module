@@ -344,6 +344,29 @@ it("#13. should error when create new data with detail delivery date < data book
         });
 });
 
+it("#13. should error when create new data with detail delivery date > data delivery date", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            var targetDate=new Date(data.deliveryDate);
+            data.details[0].deliveryDate=new Date(targetDate.setDate(targetDate.getDate() + 5));
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with detail delivery date > data delivery date");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("details");
+                    e.errors.details.should.instanceOf(Array);
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 var newData;
 var createdId;
 it("#14. should success when create new data", function (done) {
