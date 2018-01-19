@@ -96,8 +96,7 @@ module.exports = class MaterialConstructionManager extends BaseManager {
             name: `ix_${map.master.collection.MaterialConstruction}_name`,
             key: {
                 name: 1
-            },
-            unique: true
+            }
         };
 
         return this.collection.createIndexes([dateIndex, nameIndex]);
