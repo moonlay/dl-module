@@ -156,7 +156,7 @@ it("#05. should error when confirm created data with deliveryDate items less tha
 it("#06. should error when confirm created data with deliveryDate items less than booking date", function (done) {
     createdData.type='confirm';
     //var today=new Date(createdData.bookingDate);
-    var date=new Date(createdData.bookingDate);
+    var date=new Date(createdData.bookingDate.setDate(createdData.bookingDate.getDate() + 10));
     createdData.items[0].deliveryDate=new Date(date.setDate(date.getDate() - 10));
         manager.update(createdData)
             .then((id) => {
