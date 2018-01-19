@@ -1,6 +1,7 @@
 require("should");
 var DailyOperation = require('../../../data-util/production/finishing-printing/daily-operation-data-util');
 var helper = require("../../../helper");
+var moment = require("moment");
 
 var KanbanManager = require("../../../../src/managers/production/finishing-printing/kanban-manager");
 var kanbanManager = null;
@@ -24,6 +25,7 @@ it("#01. should success when get Machine Queue Report", function (done) {
         .then((data) => {
             let info = {
                 orderType: "",
+                year: moment().format('YYYY'),
                 machine: data.kanban.instruction.steps[0].machine.name
             };
 
