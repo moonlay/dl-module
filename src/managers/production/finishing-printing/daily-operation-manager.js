@@ -922,7 +922,6 @@ module.exports = class DailyOperationManager extends BaseManager {
 
         var matchQuery = {
             "_deleted": false,
-            "step.processArea": area,
             "type": "output",
             "dateOutput": {
                 "$gte": new Date(query.dateFrom),
@@ -932,6 +931,10 @@ module.exports = class DailyOperationManager extends BaseManager {
 
         if (machineId) {
             matchQuery["machineId"] = new ObjectId(machineId);
+        }
+
+        if (area.toLowerCase() !== "all area") {
+            matchQuery["step.processArea"] = area;
         }
 
         return this.collection.aggregate([
@@ -978,6 +981,11 @@ module.exports = class DailyOperationManager extends BaseManager {
                     "totalBadOutput": { "$sum": "$badOutput" },
                     "totalGoodOutput": { "$sum": "$goodOutput" },
                     "totalBadGood": { "$sum": { "$sum": ["$goodOutput", "$badOutput"] } }
+                }
+            },
+            {
+                "$sort": {
+                    "_id.date": 1
                 }
             }
         ]
