@@ -635,14 +635,14 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                 var temp = dataRes.find(o => o.day == i.day)
 
                 if (temp) {
-                    if (i.processName == "DYEING") {
-                        temp.dyeingQty += i.qty;
+                    if (i.productionOrderType == "PRINTING") {
+                        temp.printingQty += i.qty;
                     }
-                    else if (i.processName == "WHITE") {
+                    else if (i.productionOrderType == "SOLID" && i.processName == "WHITE") {
                         temp.whiteQty += i.qty;
                     }
-                    else if (i.productionOrderType == "PRINTING") {
-                        temp.printingQty += i.qty;
+                    else {
+                        temp.dyeingQty += i.qty;
                     }
                     temp.total = temp.dyeingQty + temp.whiteQty + temp.printingQty;
                 } else {
@@ -660,14 +660,14 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     res.whiteQty = 0;
                     res.printingQty = 0;
 
-                    if (i.processName == "DYEING") {
-                        res.dyeingQty += i.qty;
+                    if (i.productionOrderType == "PRINTING") {
+                        temp.printingQty += i.qty;
                     }
-                    else if (i.processName == "WHITE") {
-                        res.whiteQty += i.qty;
+                    else if (i.productionOrderType == "SOLID" && i.processName == "WHITE") {
+                        temp.whiteQty += i.qty;
                     }
-                    else if (i.productionOrderType == "PRINTING") {
-                        res.printingQty += i.qty;
+                    else {
+                        temp.dyeingQty += i.qty;
                     }
                     res.total = res.dyeingQty + res.whiteQty + res.printingQty;
                     dataRes.push(res);
@@ -745,13 +745,14 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     "orderNo": 1,
                     "orderType.name": 1,
                     "processType.name": 1,
+                    "isClosed": 1,
+                    "_deleted": 1
                 }
             },
             {
                 "$match": {
-                    $or: [{ "orderType.name": "PRINTING" },
-                    { $and: [{ "orderType.name": "SOLID" }, { "processType.name": { $regex: /WHITE/, $options: 'i' } }] },
-                    { $and: [{ "orderType.name": "SOLID" }, { "processType.name": { $regex: /DYEING/, $options: 'i' } }] }]
+                    "isClosed": false,
+                    "_deleted": false
                 }
             }
         ]).toArray()
