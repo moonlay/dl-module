@@ -4,6 +4,7 @@
 var BaseManager = require('module-toolkit').BaseManager;
 
 const DESCRIPTION = "Dim Garment Supplier from MongoDB to Azure DWH";
+var moment = require('moment');
 
 // internal deps 
 require('mongodb-toolkit');

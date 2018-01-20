@@ -661,13 +661,13 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                     res.printingQty = 0;
 
                     if (i.productionOrderType == "PRINTING") {
-                        temp.printingQty += i.qty;
+                        res.printingQty += i.qty;
                     }
                     else if (i.productionOrderType == "SOLID" && i.processName == "WHITE") {
-                        temp.whiteQty += i.qty;
+                        res.whiteQty += i.qty;
                     }
                     else {
-                        temp.dyeingQty += i.qty;
+                        res.dyeingQty += i.qty;
                     }
                     res.total = res.dyeingQty + res.whiteQty + res.printingQty;
                     dataRes.push(res);
