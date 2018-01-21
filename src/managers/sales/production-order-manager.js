@@ -122,9 +122,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         var oldYear = previousDocumentNumbers[0].year;
                         number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
 
-                        productionOrder.orderNo = `${type}/${yearNow}/${this.pad(number, 4)}`;
+                        productionOrder.orderNo = `${type}${yearNow}${this.pad(number, 4)}`;
                     } else {
-                        productionOrder.orderNo = `${type}/${yearNow}/0001`;
+                        productionOrder.orderNo = `${type}${yearNow}0001`;
                     }
 
                 }
@@ -1415,12 +1415,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
             xls.data.push(item);
         }
 
-       xls.options["No"] = "number";
-       xls.options["Nomor Kereta"] = "string";
-       xls.options["Proses"] = "string";
-       xls.options["Area"] = "string";
-       xls.options["Kuantiti (m)"] = "number";
-       xls.options["Status"] = "string";
+        xls.options["No"] = "number";
+        xls.options["Nomor Kereta"] = "string";
+        xls.options["Proses"] = "string";
+        xls.options["Area"] = "string";
+        xls.options["Kuantiti (m)"] = "number";
+        xls.options["Status"] = "string";
 
         return Promise.resolve(xls);
     }
@@ -1644,16 +1644,16 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                             datum.designCode = "";
                             datum.colorRequest = "";
-                            if (productionOrder.orderType.name.toLowerCase() === "printing") {
-                                datum.designCode = `${productionOrder.designCode} - ${productionOrder.details[0].colorTemplate}`;
-                                datum.colorRequest = "";
-                            } else if (productionOrder.orderType.name.toLowerCase() === "dyeing") {
+                            if (productionOrder.orderType.name.toLowerCase() === "printing") { //Printing
+                                datum.designCode = `${productionOrder.designCode}`; //Motif
+                                datum.colorRequest = `${productionOrder.details[0].colorRequest} - ${productionOrder.details[0].colorTemplate}`; //Warna
+                            } else {
                                 datum.designCode = "";
                                 datum.colorRequest = `${productionOrder.details[0].colorRequest} - ${productionOrder.details[0].colorTemplate}`;
                             }
 
                             datum.buyerName = productionOrder.buyer.name;
-                            datum.accountName = productionOrder.account.name;
+                            datum.accountName = productionOrder.account.username;
                             datum._createdDate = productionOrder._createdDate;
                             datum.deliveryDate = productionOrder.deliveryDate;
                             datum.orderQuantity = productionOrder.orderQuantity;
@@ -1817,7 +1817,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     "_deleted": 1,
                     "isClosed": 1,
                     "buyer.name": 1,
-                    "account.name": 1,
+                    "account.username": 1,
                     "processType.name": {
                         "$toUpper": "$processType.name"
                     },

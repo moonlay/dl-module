@@ -3,6 +3,7 @@
 var ObjectId = require("mongodb").ObjectId;
 require("mongodb-toolkit");
 var DLModels = require("dl-models");
+var generateCode = require("../../utils/code-generator");
 var map = DLModels.map;
 var TermOfPayment = DLModels.master.TermOfPayment;
 var BaseManager = require("module-toolkit").BaseManager;
@@ -41,12 +42,6 @@ module.exports = class TermOfPaymentManager extends BaseManager {
         return query;
     }
 
-    _beforeInsert(termOfPayment) {
-        termOfPayment.code = termOfPayment.code === "" ? generateCode() : termOfPayment.code;
-        termOfPayment._createdDate=new Date();
-        return Promise.resolve(termOfPayment);
-    }
-
     _validate(termOfPayment) {
         var errors = {};
         var valid = termOfPayment;
@@ -55,7 +50,7 @@ module.exports = class TermOfPaymentManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: valid.code,
+            termOfPayment: valid.termOfPayment,
             _deleted: false
         });
 
@@ -63,11 +58,10 @@ module.exports = class TermOfPaymentManager extends BaseManager {
             .then(results => {
                 var _termOfPayment = results[0];
 
-                if (_termOfPayment)
-                    errors["code"] = i18n.__("TermOfPayment.code.isExists:%s is exists", i18n.__("TermOfPayment.code._:code"));
-                if(!valid.termOfPayment || valid.termOfPayment==""){
-                    errors["termOfPayment"] = i18n.__("TermOfPayment.termOfPayment.isExists:%s is exists", i18n.__("TermOfPayment.termOfPayment._:TermOfPayment"));
-                }
+                if(!valid.termOfPayment || valid.termOfPayment=="")
+                    errors["termOfPayment"] = i18n.__("TermOfPayment.termOfPayment.isRequired:%s is required", i18n.__("TermOfPayment.termOfPayment._:termOfPayment"));
+                else if (_termOfPayment)
+                    errors["termOfPayment"] = i18n.__("TermOfPayment.termOfPayment.isExists:%s is exists", i18n.__("TermOfPayment.termOfPayment._:termOfPayment"));
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
@@ -78,6 +72,11 @@ module.exports = class TermOfPaymentManager extends BaseManager {
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
             });
+    }
+
+    _beforeInsert(termOfPayment) {
+        termOfPayment.code = termOfPayment.code === "" ? generateCode() : termOfPayment.code;
+        return Promise.resolve(termOfPayment);
     }
 
     _createIndexes() {

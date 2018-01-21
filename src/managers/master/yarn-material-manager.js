@@ -18,7 +18,7 @@ module.exports = class YarnMaterialManager extends BaseManager {
     }
 
     
-    _beforeUpdate(data) {
+    _beforeInsert(data) {
         if(!data.code)
             data.code = generateCode();
         return Promise.resolve(data);
