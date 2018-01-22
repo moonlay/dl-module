@@ -75,7 +75,7 @@ module.exports = class DimGarmentSupplierEtlManager extends BaseManager {
             _updatedDate: {
                 "$gt": timestamp
             }
-        }).toArray();
+        }, { "code": 1, "name": 1 }).toArray();
     }
 
     transform(data) {
@@ -116,6 +116,7 @@ module.exports = class DimGarmentSupplierEtlManager extends BaseManager {
 
                         var sqlQuery = '';
 
+                        var count = 1;
                         for (var item of data) {
                             if (item) {
                                 var queryString = `insert into DL_Dim_Garment_Supplier_Temp(Kode_Supplier, Nama_Supplier) values(${item.supplierCode}, ${item.supplierName});\n`;
@@ -125,6 +126,7 @@ module.exports = class DimGarmentSupplierEtlManager extends BaseManager {
                                     sqlQuery = "";
                                 }
                                 console.log(`add data to query  : ${count}`);
+                                count++;
                             }
                         }
 
