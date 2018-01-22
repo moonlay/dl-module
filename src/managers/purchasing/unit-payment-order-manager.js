@@ -38,6 +38,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             "items.correction",
             "items.purchaseOrderId",
             "items.purchaseOrder._id",
+            "items.purchaseOrder.purchaseOrderExternal.paymentDueDays",
             "items.purchaseOrder.purchaseOrderExternal.no",
             "items.purchaseOrder.purchaseOrderExternal._id",
             "items.purchaseOrder.currency._id",
@@ -125,9 +126,9 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     else if (!valid.category) {
                         errors["category"] = i18n.__("UnitPaymentOrder.category.isRequired:%s name is required", i18n.__("UnitPaymentOrder.category._:Category")); //"Category tidak boleh kosong";
                     }
-                    if (!valid.dueDate || valid.dueDate == '') {
-                        errors["dueDate"] = i18n.__("UnitPaymentOrder.dueDate.isRequired:%s is required", i18n.__("UnitPaymentOrder.dueDate._:DueDate")); //tanggal jatuh tempo tidak boleh kosong";
-                    }
+                    // if (!valid.dueDate || valid.dueDate == '') {
+                    //     errors["dueDate"] = i18n.__("UnitPaymentOrder.dueDate.isRequired:%s is required", i18n.__("UnitPaymentOrder.dueDate._:DueDate")); //tanggal jatuh tempo tidak boleh kosong";
+                    // }
                     if (!valid.paymentMethod || valid.paymentMethod == '') {
                         errors["paymentMethod"] = i18n.__("UnitPaymentOrder.paymentMethod.isRequired:%s is required", i18n.__("UnitPaymentOrder.paymentMethod._:PaymentMethod")); //Term pembayaran tidak boleh kosong";
                     }
@@ -202,12 +203,13 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     }
                     valid.divisionId = new ObjectId(valid.divisionId);
                     valid.division = valid.division;
+                    valid.pibNo = valid.pibNo;
                     valid.division._id = new ObjectId(valid.division._id);
                     valid.supplierId = new ObjectId(valid.supplierId);
                     valid.supplier._id = new ObjectId(valid.supplierId);
                     valid.date = new Date(valid.date);
                     valid.invoceDate = new Date(valid.invoceDate);
-                    valid.dueDate = new Date(valid.dueDate);
+                    //valid.dueDate = new Date(valid.dueDate);
 
                     if (valid.category != null) {
                         valid.categoryId = new ObjectId(valid.categoryId);

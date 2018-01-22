@@ -11,7 +11,8 @@ module.exports = function (unitPaymentOrder, offset) {
                 unitReceiptNoteNo: unitPaymentOrderItem.unitReceiptNote.no,
                 quantity: receiptNoteItem.deliveredQuantity,
                 uom: receiptNoteItem.deliveredUom.unit,
-                price: receiptNoteItem.pricePerDealUnit
+                price: receiptNoteItem.pricePerDealUnit,
+                duedays: receiptNoteItem.purchaseOrder.purchaseOrderExternal.paymentDueDays
             };
         });
     });
@@ -22,6 +23,11 @@ module.exports = function (unitPaymentOrder, offset) {
         return new Date(unitPaymentOrderItem.unitReceiptNote.date)
     })
     var maxReceiptNoteDate = Math.max.apply(null, receiptNoteDates);
+
+    var test = items.map(function (item, index) {
+    dueDate = new Date(maxReceiptNoteDate);
+    dueDate.setDate(dueDate.getDate() + item.duedays)
+    })
 
     var iso = "FM-PB-00-06-014/R1";
     var number = unitPaymentOrder.no;
@@ -360,7 +366,7 @@ module.exports = function (unitPaymentOrder, offset) {
                                 },
                                 {
                                     width: '*',
-                                    text: moment(unitPaymentOrder.dueDate).add(offset,'h').format(locale.date.format)
+                                    text: moment(unitPaymentOrder.dueDate || dueDate).add(offset,'h').format(locale.date.format)
                                 }]
                         }, {
                             columns: [{
@@ -375,7 +381,22 @@ module.exports = function (unitPaymentOrder, offset) {
                                     width: '*',
                                     text: unitPaymentOrder.invoceNo + ', ' + moment(unitPaymentOrder.invoceDate).add(offset,'h').format(locale.date.format) || '-'
                                 }]
-                        }, {
+                        },
+                        {
+                            columns: [{
+                                width: '40%',
+                                text: "No PIB"
+                            },
+                                {
+                                    width: '5%',
+                                    text: ":"
+                                },
+                                {
+                                    width: '*',
+                                     text: unitPaymentOrder.pibNo || '-'
+                                }]
+                        }, 
+                        {
                             columns: [{
                                 width: '40%',
                                 text: "Ket."
