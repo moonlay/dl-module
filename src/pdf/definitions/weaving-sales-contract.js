@@ -202,27 +202,11 @@ module.exports = function (salesContract, offset) {
                     },
                     {
                         width: '*',
-                        text: salesContract.dispositionNumber,
+                        text: salesContract.salesContractNo,
                         style: ['size10']
                     }]
-            }, {
-
-                columns: [
-                    {
-                        width: '25%',
-                        text: 'Code',
-                        style: ['size10']
-                    }, {
-                        width: '3%',
-                        text: ':',
-                        style: ['size10']
-                    },
-                    {
-                        width: '*',
-                        text: no,
-                        style: ['size10']
-                    }]
-            }, {
+            },
+            {
 
                 columns: [
                     {
@@ -574,22 +558,6 @@ module.exports = function (salesContract, offset) {
             alignment: "left"
         }, '\n',
         {
-            columns: [
-                {
-                    width: '25%',
-                    text: 'No. Order',
-                    style: ['size10']
-                }, {
-                    width: '3%',
-                    text: ':',
-                    style: ['size10']
-                },
-                {
-                    width: '*',
-                    text: salesContract.dispositionNumber,
-                    style: ['size10']
-                }]
-        }, {
             columns: [
                 {
                     width: '25%',
