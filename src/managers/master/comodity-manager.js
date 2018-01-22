@@ -58,7 +58,7 @@ module.exports = class ComodityManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code,
+            // code: valid.code,
             name: valid.name,
             _deleted: false
         });
@@ -71,7 +71,7 @@ module.exports = class ComodityManager extends BaseManager {
                 // if (!valid.code || valid.code == '')
                 //     errors["code"] = i18n.__("Comodity.code.isRequired:%s is required", i18n.__("Comodity.code._:Code")); //"Nama Comodity Tidak Boleh Kosong";
                 if (_comodity) {
-                    errors["code"] = i18n.__("Comodity.code.isExists:%s is already exists", i18n.__("Comodity.code._:Code")); //"kode Comodity sudah terdaftar";
+                    // errors["code"] = i18n.__("Comodity.code.isExists:%s is already exists", i18n.__("Comodity.code._:Code")); //"kode Comodity sudah terdaftar";
                     errors["name"] = i18n.__("Comodity.name.isExists:%s is already exists", i18n.__("Comodity.name._:Name")); //"Nama Comodity sudah terdaftar";
                 }
 
