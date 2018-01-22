@@ -293,6 +293,9 @@ module.exports = {
             factDealTrackingActivity: require("./src/etl/sales/fact-deal-tracking-activity-etl-manager")
         },
         garment: {
+            dim: {
+                dimGarmentSupplier: require("./src/etl/garment/dim/dim-garment-supplier-etl-manager")
+            },
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
             factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager"),
         },
