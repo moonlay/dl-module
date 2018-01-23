@@ -18,6 +18,12 @@ module.exports = class OrderTypeManager extends BaseManager {
         this.collection = this.db.use(map.master.collection.OrderType);
     }
 
+    _beforeInsert(data) {
+        if(!data.code)
+            data.code = generateCode();
+        return Promise.resolve(data);
+    }
+
     _getQuery(paging) {
         var _default = {
                 _deleted: false
@@ -47,12 +53,13 @@ module.exports = class OrderTypeManager extends BaseManager {
     _validate(order) {
         var errors = {};
         var valid = order;
+        
         // 1. begin: Declare promises.
         var getorderPromise = this.collection.singleOrDefault({
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code,
+            name: valid.name,
             _deleted: false
         });
 
@@ -61,14 +68,14 @@ module.exports = class OrderTypeManager extends BaseManager {
             .then(results => {
                 var _order = results[0];
 
-                if (!valid.code || valid.code == "")
-                    errors["code"] = i18n.__("OrderType.code.isRequired:%s is required", i18n.__("OrderType.code._:Code"));//"code Jenis order tidak boleh kosong";
+                if (!valid.name || valid.name == "")
+                    errors["name"] = i18n.__("OrderType.name.isRequired:%s is required", i18n.__("OrderType.name._:Name"));//"nama Jenis order tidak boleh kosong";
                 else if (_order) {
-                    errors["code"] = i18n.__("OrderType.code.isExists:%s is already exists", i18n.__("OrderType.code._:Code")); 
+                    errors["name"] = i18n.__("OrderType.name.isExists:%s is already exists", i18n.__("OrderType.name._:Name")); 
                 }
 
-                if (!valid.name || valid.name == "")
-                    errors["name"] = i18n.__("OrderType.name.isRequired:%s is required", i18n.__("OrderType.name._:Name")); //"Nama Jenis order tidak boleh kosong";
+                // if (!valid.name || valid.name == "")
+                //     errors["name"] = i18n.__("OrderType.name.isRequired:%s is required", i18n.__("OrderType.name._:Name")); //"Nama Jenis order tidak boleh kosong";
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
