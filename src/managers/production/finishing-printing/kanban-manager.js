@@ -654,7 +654,7 @@ module.exports = class KanbanManager extends BaseManager {
                                     return this.dailyOperationCollection
                                         .findOne(DAILY_OPERATION_FILTER, DAILY_OPERATION_FIELDS)
                                         .then((result) => {
-                                            if (result && currentStep.machine && currentStep.deadline) {
+                                            if (!result && currentStep.machine && currentStep.deadline) {
                                                 let month = moment(currentStep.deadline).format("MMM");
                                                 let year = moment(currentStep.deadline).format("YYYY");
 
