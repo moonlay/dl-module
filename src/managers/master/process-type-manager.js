@@ -83,12 +83,13 @@ module.exports = class ProcessTypeManager extends BaseManager {
                 }
 
                 if (!_order) {
-                    errors["orderTypeId"] = i18n.__("ProcessType.orderType.isRequired:%s is not exists", i18n.__("ProcessType.orderType._:OrderType"));
+                    errors["order"] = i18n.__("ProcessType.order.isRequired:%s is not exists", i18n.__("ProcessType.order._:orderType"));
                 }
 
                 if (!valid.name || valid.name == "")
                     errors["name"] = i18n.__("ProcessType.name.isRequired:%s is required", i18n.__("ProcessType.name._:Name")); //"Nama Jenis proses tidak boleh kosong";
 
+               
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
