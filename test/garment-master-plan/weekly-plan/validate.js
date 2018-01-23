@@ -128,7 +128,41 @@ it("#05. should error when create new data with no data unit", function (done) {
         });
 });
 
-it(`#06. should success when remove all data`, function(done) {
+var newData;
+it("#06. should success when create new data for search", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            newData = data;
+            manager.create(data)
+                .then((id) => {
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#07. should success when search data with filter", function (done) {
+    manager.read({
+        keyword: newData.unit.name
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#08. should success when remove all data`, function(done) {
     manager.collection.remove({})
         .then((result) => {
             done();
