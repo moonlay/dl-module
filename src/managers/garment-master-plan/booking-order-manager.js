@@ -12,7 +12,8 @@ var ComodityManager = require('./master-plan-comodity-manager');
 //var MasterPlanManager = require('./master-plan-manager');
 var GarmentBuyerManager = require('../master/garment-buyer-manager');
 var generateCode = require("../../utils/code-generator");
-var moment = require('moment');
+var assert = require('assert');
+var moment = require("moment");
 
 module.exports = class BookingOrderManager extends BaseManager {
     constructor(db, user) {
@@ -22,6 +23,7 @@ module.exports = class BookingOrderManager extends BaseManager {
         this.comodityManager = new ComodityManager(db, user);
         //this.masterPlanManager = new MasterPlanManager(db, user);
         this.garmentBuyerManager = new GarmentBuyerManager(db, user);
+        this.documentNumbers = this.db.collection("document-numbers");
     }
 
     _getQuery(paging) {
@@ -50,16 +52,16 @@ module.exports = class BookingOrderManager extends BaseManager {
         return query;
     }
 
-    _beforeInsert(bookingOrder){
-        bookingOrder.code = !bookingOrder.code ? generateCode() : bookingOrder.code;
-        bookingOrder._active = true;
-        bookingOrder._createdDate= new Date();
-        return Promise.resolve(bookingOrder);
-    }
+    // _beforeInsert(bookingOrder){
+    //     bookingOrder.code = !bookingOrder.code ? generateCode() : bookingOrder.code;
+    //     bookingOrder._active = true;
+    //     bookingOrder._createdDate= new Date();
+    //     return Promise.resolve(bookingOrder);
+    // }
 
     _validate(bookingOrder) {
         var errors = {};
-        bookingOrder.code = !bookingOrder.code ? generateCode() : bookingOrder.code;
+        //bookingOrder.code = !bookingOrder.code ? generateCode() : bookingOrder.code;
         var valid = bookingOrder;
         // 1. begin: Declare promises.
         
@@ -90,8 +92,8 @@ module.exports = class BookingOrderManager extends BaseManager {
                 var _buyer=results[1];
 
 
-                if(!valid.code || valid.code === "")
-                    errors["code"] = i18n.__("BookingOrder.code.isRequired:%s is required", i18n.__("BookingOrder.code._:Code"));
+                // if(!valid.code || valid.code === "")
+                //     errors["code"] = i18n.__("BookingOrder.code.isRequired:%s is required", i18n.__("BookingOrder.code._:Code"));
                 if (duplicateBooking) {
                     errors["code"] = i18n.__("BookingOrder.code.isExists:%s is already exists", i18n.__("BookingOrder.code._:Code"));
                 }
@@ -108,9 +110,7 @@ module.exports = class BookingOrderManager extends BaseManager {
 
                 if(!valid.orderQuantity || valid.orderQuantity<=0)
                     errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.isRequired:%s is required", i18n.__("BookingOrder.orderQuantity._:OrderQuantity"));
-                else{
-                   
-                }
+                
 
                 if (!valid.deliveryDate || valid.deliveryDate === "") {
                      errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.isRequired:%s is required", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
@@ -126,16 +126,16 @@ module.exports = class BookingOrderManager extends BaseManager {
                         errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
                     }
                 }
-                if(valid.items){
-                    var totalqty = 0;
-                    for (var i of valid.items) {
-                        totalqty += i.quantity;
-                    }
-                    if (valid.orderQuantity < totalqty) {
-                        errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal or more than SUM quantity in items", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
-                        errors["totalQuantity"]= i18n.__("BookingOrder.totalQuantity.shouldNot:%s should equal or less than booking order quantity", i18n.__("BookingOrder.totalQuantity._:TotalQuantity")); 
-                    }
-                }
+                // if(valid.items){
+                //     var totalqty = 0;
+                //     for (var i of valid.items) {
+                //         totalqty += i.quantity;
+                //     }
+                //     if (valid.orderQuantity < totalqty) {
+                //         errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.shouldNot:%s should equal or more than SUM quantity in items", i18n.__("BookingOrder.orderQuantity._:OrderQuantity")); 
+                //         errors["totalQuantity"]= i18n.__("BookingOrder.totalQuantity.shouldNot:%s should equal or less than booking order quantity", i18n.__("BookingOrder.totalQuantity._:TotalQuantity")); 
+                //     }
+                // }
 
                 valid.items = valid.items || [];
                 // if (valid.items && valid.items.length <= 0) {
@@ -188,7 +188,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
                                 }
                                 else if (valid.deliveryDate<item.deliveryDate){
-                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDated.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
                                 }
                                 else if(valid.bookingDate>item.deliveryDate){
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
@@ -239,6 +239,58 @@ module.exports = class BookingOrderManager extends BaseManager {
                     Promise.resolve(id)
                     );
             });
+    }
+
+    _beforeInsert(data) {
+        // salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
+        var type = data.garmentBuyerCode  ? "BOOKING/" + data.garmentBuyerCode : "";
+        return this.documentNumbers
+            .find({ "type": type }, { "number": 1, "year": 1 })
+            .sort({ "year": -1, "number": -1 })
+            .limit(1)
+            .toArray()
+            .then((previousDocumentNumbers) => {
+
+                var yearNow = parseInt(moment().format("YYYY"));
+                var monthNow = moment().format("MM");
+
+                var number = 1;
+
+                if (!data.code) {
+                    if (previousDocumentNumbers.length > 0) {
+
+                        var oldYear = previousDocumentNumbers[0].year;
+                        number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+
+                        data.code = `${type}/${monthNow}.${yearNow}/${this.pad(number, 4)}`;
+                    } else {
+                        data.code = `${type}/${monthNow}.${yearNow}/0001`;
+                    }
+                }
+
+                var documentNumbersData = {
+                    type: type,
+                    documentNumber: data.code,
+                    number: number,
+                    year: yearNow
+                }
+
+                return this.documentNumbers
+                    .insert(documentNumbersData)
+                    .then((id) => {
+                        return Promise.resolve(data)
+                    })
+            })
+    }
+
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
     // confirmBooking(booking){
@@ -326,6 +378,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                                 }
                    });
     }
+
     getBookingOrderReport(query,offset) {
         return new Promise((resolve, reject) => {
 
@@ -337,7 +390,7 @@ module.exports = class BookingOrderManager extends BaseManager {
             var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
             
             var dateQuery={};
-            if (query.dateFrom !== "undefined" && query.dateFrom !== "null" && query.dateFrom !== "" && query.dateTo !== "undefined" && query.dateTo !== "null" && query.dateTo !== "")
+            if (query.dateFrom !== undefined && query.dateFrom !== "" && query.dateTo !== undefined  && query.dateTo !== "")
             {
                 var dateFrom = new Date(query.dateFrom);
                 var dateTo = new Date(query.dateTo);
@@ -372,11 +425,11 @@ module.exports = class BookingOrderManager extends BaseManager {
             }
 
             var confirmStateQuery = {};
-            if (query.confirmState === "isConfirmed") {
+            if (query.confirmState === "Sudah Dikonfirmasi") {
                 confirmStateQuery = {
                     "deliveryDateConfirm":{$ne:"" }
                 }
-            }else  if (query.confirmState === "notConfirmed") 
+            }else  if (query.confirmState === "Belum Dikonfirmasi") 
             {
                 confirmStateQuery = {
                     "deliveryDateConfirm":  ""
@@ -387,9 +440,10 @@ module.exports = class BookingOrderManager extends BaseManager {
                 bookingOrderStateQuery = {
                     "isCanceled": true
                 }
-            }else  if (query.bookingOrderState === "Sudah Dibuat MasterPlan") {
+            }else  if (query.bookingOrderState === "Sudah Dibuat Master Plan") {
                 bookingOrderStateQuery = {
-                    "isMasterPlan": true
+                    "isMasterPlan": true,
+                    "isCanceled":false
                 }
             }else  if (query.bookingOrderState === "Booking") {
                 bookingOrderStateQuery = {
@@ -398,11 +452,10 @@ module.exports = class BookingOrderManager extends BaseManager {
                 }
             }
 
-            var Query = { "$and": [ dateQuery, deletedQuery, buyerQuery, comodityQuery, confirmStateQuery, bookingOrderStateQuery, codeQuery] };
+             var Query = { "$and": [ dateQuery, deletedQuery, buyerQuery, comodityQuery, confirmStateQuery, bookingOrderStateQuery, codeQuery] };
             this.collection
                 .aggregate( [
-                    { "$unwind": "$items" },
-                   
+                    { "$unwind": {path: "$items", preserveNullAndEmptyArrays: true} },
                     {
                         "$project": {
                             "bookingCode": "$code",
@@ -416,13 +469,16 @@ module.exports = class BookingOrderManager extends BaseManager {
                             "isCanceled":"$isCanceled",
                             "comodity":"$items.masterPlanComodity.name",
                             "isMasterPlan":"$isMasterPlan",
-                            "_deleted":"$_deleted"
+                            "_deleted":"$_deleted",
+                            "_createdDate":"$_createdDate",
+                            "confirmDate":{"$ifNull":["$items._createdDate",""]},
+
                         }
                     },
                     { "$match": Query },
                     {
                         "$sort": {
-                            "bookingDate": 1,
+                            "_createdDate": -1,
                         }
                     }
                 ])
@@ -437,16 +493,25 @@ module.exports = class BookingOrderManager extends BaseManager {
     }
 
 
-    getBookingOrderReportXls(dataReport, query) {
+    getBookingOrderReportXls(dataReport, query,offset) {
 
         return new Promise((resolve, reject) => {
             var xls = {};
             xls.data = [];
             xls.options = [];
             xls.name = '';
-
+            var remain=0;
+            var temp=dataReport.data;
+            this.temp=[];
+            var temps={};
             var dateFormat = "DD/MM/YYYY";
 
+            
+            for (var pr of dataReport.data) {
+                temps.bookingCode=pr.bookingCode;
+                temps.orderQty=pr.orderQty;
+                this.temp.push(temps);
+            }
             for (var data of dataReport.data) {
                 var item = {};
                 var confirmstate="";
@@ -463,23 +528,34 @@ module.exports = class BookingOrderManager extends BaseManager {
                     bookingOrderState="Booking Dibatalkan";
                 }else if(data.isMasterPlan ==true)
                 {
-                    bookingOrderState="Sudah Dibuat MasterPlan";   
+                    bookingOrderState="Sudah Dibuat Master Plan";   
                 }else if(data.isMasterPlan == false && data.isCanceled==false)
                 {
                     bookingOrderState="Booking";
                 }
-                item["Kode Booking"] = data.code;
-                item["Tanggal Booking"] = data.bookingDate ? moment(data.bookingDate).format(dateFormat) : '';
+               
+                item["Kode Booking"] = data.bookingCode;
+                item["Tanggal Booking"] = data.bookingDate ? moment(new Date(data.bookingDate)).add(7, 'h').format(dateFormat) : '';
                 item["Buyer"] = data.buyer ? data.buyer : '';
                 item["Jumlah Order"] = data.totalOrderQty ? data.totalOrderQty : '';
-                item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking && data.deliveryDateBooking !="" ? moment(data.deliveryDateBooking ).format(dateFormat) : '';
+                item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking && data.deliveryDateBooking !="" ? moment(data.deliveryDateBooking ).add(7, 'h').format(dateFormat) : '';
                 item["Komoditi"]=data.comodity ? data.comodity : '';
                 item["Jumlah Confirm"] = data.orderQty ? data.orderQty : '';
-                item["Tanggal Pengiriman(Confirm)"] = data.deliveryDateConfirm && data.deliveryDateConfirm !="" ? moment(data.deliveryDateConfirm ).format(dateFormat) : '';
+                item["Tanggal Pengiriman(Confirm)"] = data.deliveryDateConfirm && data.deliveryDateConfirm !="" ? moment(new Date(data.deliveryDateConfirm)).add(7, 'h').format(dateFormat) : '';
+                item["Tanggal Confirm"] = data.confirmDate && data.confirmDate !="" ? moment(new Date(data.confirmDate)).add(7, 'h').format(dateFormat) : '';
                 item["Keterangan"] = data.remark ? data.remark : '';
                 item["Status Confirm"] =  confirmstate ? confirmstate : '';
                 item["Status Booking Order"] =  bookingOrderState ? bookingOrderState : '';
-                item["Sisa Order(Belum Confirm)"] =  data.totalOrderQty-data.orderQty ?  data.totalOrderQty-data.orderQty : '';
+                for(var items of  temp)
+                    {
+                        if(data.bookingCode == items.bookingCode)
+                        {
+                            remain = remain + items.orderQty;
+                            item["Sisa Order(Belum Confirm)"]=remain ? data.totalOrderQty-remain :data.totalOrderQty;
+                        }
+                      
+                    }
+                    remain=0;
                 xls.data.push(item);
 
             }
@@ -491,6 +567,7 @@ module.exports = class BookingOrderManager extends BaseManager {
             xls.options["Tanggal Pengiriman(Booking)"] = "string";
             xls.options["Komoditi"] = "string";
             xls.options["Tanggal Pengiriman(Confirm)"] = "string";
+            xls.options["Tanggal Confirm"] = "string";
             xls.options["Keterangan"] = "string";
             xls.options["Status Confirm"] = "string";
             xls.options["Status Booking Order"] = "string";
@@ -511,4 +588,5 @@ module.exports = class BookingOrderManager extends BaseManager {
             resolve(xls);
         });
     }
+
 }

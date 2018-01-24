@@ -9,12 +9,19 @@ var map = DLModels.map;
 var Comodity = DLModels.master.Comodity;
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
+var generateCode = require("../../utils/code-generator");
 
 module.exports = class ComodityManager extends BaseManager {
 
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.master.collection.Comodity);
+    }
+
+    _beforeInsert(data) {
+        if(!data.code)
+            data.code = generateCode();
+        return Promise.resolve(data);
     }
 
     _getQuery(paging) {
@@ -51,7 +58,7 @@ module.exports = class ComodityManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code,
+            // code: valid.code,
             name: valid.name,
             _deleted: false
         });
@@ -61,18 +68,18 @@ module.exports = class ComodityManager extends BaseManager {
             .then(results => {
                 var _comodity = results[0];
 
-                if (!valid.code || valid.code == '')
-                    errors["code"] = i18n.__("Comodity.code.isRequired:%s is required", i18n.__("Comodity.code._:Code")); //"Nama Comodity Tidak Boleh Kosong";
+                // if (!valid.code || valid.code == '')
+                //     errors["code"] = i18n.__("Comodity.code.isRequired:%s is required", i18n.__("Comodity.code._:Code")); //"Nama Comodity Tidak Boleh Kosong";
                 if (_comodity) {
-                    errors["code"] = i18n.__("Comodity.code.isExists:%s is already exists", i18n.__("Comodity.code._:Code")); //"kode Comodity sudah terdaftar";
+                    // errors["code"] = i18n.__("Comodity.code.isExists:%s is already exists", i18n.__("Comodity.code._:Code")); //"kode Comodity sudah terdaftar";
                     errors["name"] = i18n.__("Comodity.name.isExists:%s is already exists", i18n.__("Comodity.name._:Name")); //"Nama Comodity sudah terdaftar";
                 }
 
                 if (!valid.name || valid.name == '')
                     errors["name"] = i18n.__("Comodity.name.isRequired:%s is required", i18n.__("Comodity.name._:Name")); //"Nama Harus diisi";
                 
-                if (!valid.type || valid.type == '')
-                    errors["type"] = i18n.__("Comodity.type.isRequired:%s is required", i18n.__("Comodity.type._:Type")); //"type Harus diisi";
+                // if (!valid.type || valid.type == '')
+                //     errors["type"] = i18n.__("Comodity.type.isRequired:%s is required", i18n.__("Comodity.type._:Type")); //"type Harus diisi";
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;

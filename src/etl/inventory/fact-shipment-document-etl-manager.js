@@ -27,7 +27,19 @@ const SELECTED_FIELDS = {
     "details.items.productName": 1,
     "details.items.quantity": 1,
     "details.items.uomUnit": 1,
-    "details.items.weight": 1
+    "details.items.weight": 1,
+    "details.items.packingReceiptCode": 1,
+    "details.items.storageCode": 1,
+    "details.items.storageName": 1,
+    "details.items.referenceNo": 1,
+    "details.items.referenceType": 1,
+    "details.items.packingReceiptItems.colorType": 1,
+    "details.items.packingReceiptItems.length": 1,
+    "details.items.packingReceiptItems.productCode": 1,
+    "details.items.packingReceiptItems.productName": 1,
+    "details.items.packingReceiptItems.quantity": 1,
+    "details.items.packingReceiptItems.uomUnit": 1,
+    "details.items.packingReceiptItems.weight": 1
 };
 
 module.exports = class FPShipmentDocumentEtlManager extends BaseManager {
@@ -86,41 +98,55 @@ module.exports = class FPShipmentDocumentEtlManager extends BaseManager {
         var time = times.length > 0 ? times[0].start : "1970-01-01";
         var timestamp = new Date(time);
         return this.fpShipmentDocumentManager.collection.find({
-            _updatedDate: {
-                $gt: timestamp
+            "_updatedDate": {
+                "$gt": timestamp
             }
         }, SELECTED_FIELDS).toArray();
     }
 
     transform(shipments) {
-        var result = shipments.map((shipment) => {
-            var results = shipment.details.map((detail) => {
-                var resultss = detail.items.map((item) => {
-                    return {
-                        buyerCode: shipment.buyerCode ? `'${shipment.buyerCode}'` : null,
-                        buyerName: shipment.buyerName ? `'${shipment.buyerName}'` : null,
-                        buyerType: shipment.buyerType ? `'${shipment.buyerType}'` : null,
-                        shipmentCode: shipment.code ? `'${shipment.code}'` : null,
-                        deliveryDate: shipment.deliveryDate ? `'${moment(shipment.deliveryDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
-                        isVoid: `'${shipment.isVoid}'`,
-                        designCode: detail.designCode ? `'${detail.designCode}'` : null,
-                        designNumber: detail.designNumber ? `'${detail.designNumber}'` : null,
-                        productionOrderNo: detail.productionOrderNo ? `'${detail.productionOrderNo}'` : null,
-                        productionOrderType: detail.productionOrderType ? `'${detail.productionOrderType}'` : null,
-                        colorType: item.colorType ? `'${item.colorType}'` : null,
-                        length: item.length ? `${item.length}` : null,
-                        productCode: item.productCode ? `'${item.productCode}'` : null,
-                        productName: item.productName ? `'${item.productName}'` : null,
-                        quantity: item.quantity ? `${item.quantity}` : null,
-                        uomUnit: item.uomUnit ? `'${item.uomUnit}'` : null,
-                        weight: item.weight ? `${item.weight}` : null
+
+        var result = [];
+
+        for (var shipment of shipments) {
+
+            if (shipment.details && shipment.details.length > 0) {
+                for (var detail of shipment.details) {
+
+                    if (detail.items && detail.items.length > 0) {
+                        for (var item of detail.items) {
+                            if (item.packingReceiptItems && item.packingReceiptItems.length > 0) {
+                                for (var packingReceiptItem of item.packingReceiptItems) {
+                                    var obj = {
+                                        buyerCode: shipment.buyerCode ? `'${shipment.buyerCode}'` : null,
+                                        buyerName: shipment.buyerName ? `'${shipment.buyerName}'` : null,
+                                        buyerType: shipment.buyerType ? `'${shipment.buyerType}'` : null,
+                                        shipmentCode: shipment.code ? `'${shipment.code}'` : null,
+                                        deliveryDate: shipment.deliveryDate ? `'${moment(shipment.deliveryDate).format("YYYY-MM-DD")}'` : null,
+                                        isVoid: `'${shipment.isVoid}'`,
+                                        designCode: detail.designCode ? `'${detail.designCode}'` : null,
+                                        designNumber: detail.designNumber ? `'${detail.designNumber}'` : null,
+                                        productionOrderNo: detail.productionOrderNo ? `'${detail.productionOrderNo}'` : null,
+                                        productionOrderType: detail.productionOrderType ? `'${detail.productionOrderType}'` : null,
+                                        colorType: packingReceiptItem.colorType ? `'${packingReceiptItem.colorType}'` : null,
+                                        length: packingReceiptItem.length ? `${packingReceiptItem.length}` : null,
+                                        productCode: packingReceiptItem.productCode ? `'${packingReceiptItem.productCode}'` : null,
+                                        productName: packingReceiptItem.productName ? `'${packingReceiptItem.productName}'` : null,
+                                        quantity: packingReceiptItem.quantity ? `${packingReceiptItem.quantity}` : null,
+                                        uomUnit: packingReceiptItem.uomUnit ? `'${packingReceiptItem.uomUnit}'` : null,
+                                        weight: packingReceiptItem.weight ? `${packingReceiptItem.weight}` : null
+                                    }
+
+                                    result.push(obj);
+                                }
+                            }
+                        }
                     }
-                });
-                return [].concat.apply([], resultss);
-            });
-            return [].concat.apply([], results);
-        })
-        return Promise.resolve([].concat.apply([], result));
+                }
+            }
+        }
+
+        return Promise.resolve(result);
     };
 
     insertQuery(sql, query) {
@@ -148,7 +174,7 @@ module.exports = class FPShipmentDocumentEtlManager extends BaseManager {
 
                         var command = [];
 
-                        var sqlQuery = 'INSERT INTO [DL_Fact_Shipment_Document] ';
+                        var sqlQuery = 'INSERT INTO [DL_Fact_Shipment_Document_Temp] ';
 
                         var count = 1;
 
@@ -158,8 +184,8 @@ module.exports = class FPShipmentDocumentEtlManager extends BaseManager {
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 === 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
-                                    command.push(this.insertQuery(request, sqlQuery));
-                                    sqlQuery = "";
+                                    command.push(this.insertQuery(request, `${sqlQuery}`));
+                                    sqlQuery = "INSERT INTO [DL_Fact_Shipment_Document_Temp] ";
                                 }
                                 console.log(`add data to query  : ${count}`);
                                 count++;
