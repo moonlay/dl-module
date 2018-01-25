@@ -55,7 +55,8 @@ module.exports = class DesignMotiveManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code,
+            
+            name:valid.name,
             _deleted: false
         });
 
@@ -64,12 +65,12 @@ module.exports = class DesignMotiveManager extends BaseManager {
             .then(results => {
                 var _motive = results[0];
 
-                if (!valid.name || !valid.name=="")
+                if (!valid.name || valid.name=="")
                     errors["name"] = i18n.__("DesignMotive.name.isRequired:%s is required", i18n.__("DesignMotive.name._:Name")); //"Nama DesignMotive Tidak Boleh Kosong";
                 else if (_motive) {
                     errors["name"] = i18n.__("DesignMotive.name.isExists:%s is already exists", i18n.__("DesignMotive.name._:Name")); //"Nama DesignMotive sudah terdaftar";
                 }
-
+              
                  if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
                     return Promise.reject(new ValidationError('data does not pass validation', errors));
