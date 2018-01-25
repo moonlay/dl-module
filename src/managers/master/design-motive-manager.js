@@ -64,10 +64,10 @@ module.exports = class DesignMotiveManager extends BaseManager {
             .then(results => {
                 var _motive = results[0];
 
-                if (!valid)
-                    errors["name"] = i18n.__("DesignMotive.name.isRequired:%s is required", i18n.__("DesignMotive.code._:Name")); //"Nama DesignMotive Tidak Boleh Kosong";
+                if (!valid.name || !valid.name=="")
+                    errors["name"] = i18n.__("DesignMotive.name.isRequired:%s is required", i18n.__("DesignMotive.name._:Name")); //"Nama DesignMotive Tidak Boleh Kosong";
                 else if (_motive) {
-                    errors["name"] = i18n.__("DesignMotive.name.isExists:%s is already exists", i18n.__("DesignMotive.code._:Name")); //"Nama DesignMotive sudah terdaftar";
+                    errors["name"] = i18n.__("DesignMotive.name.isExists:%s is already exists", i18n.__("DesignMotive.name._:Name")); //"Nama DesignMotive sudah terdaftar";
                 }
 
                  if (Object.getOwnPropertyNames(errors).length > 0) {
