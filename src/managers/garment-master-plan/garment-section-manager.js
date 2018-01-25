@@ -54,14 +54,8 @@ module.exports = class GarmentSectionManager extends BaseManager {
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: {
-                // search code with ignore case string
-                "$regex": new RegExp(valid.code, "i")
-            },
-            name: {
-                // search name with ignore case string
-                "$regex": new RegExp(valid.name, "i")
-            },
+            code: valid.code,
+            name: valid.name,
             _deleted: false
         });
         
