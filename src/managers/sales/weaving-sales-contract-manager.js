@@ -116,7 +116,7 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 };
 
                 return this.documentNumbers
-                    .update(query, documentNumbersData, options)
+                    .updateOne(query, documentNumbersData, options)
                     .then((id) => {
                         return Promise.resolve(salesContract)
                     })
