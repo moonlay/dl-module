@@ -45,12 +45,23 @@ module.exports = class GarmentSectionManager extends BaseManager {
         var valid = garmentSection;
 
         // 1. begin: Declare promises.
+
+        // trim string for code and name
+        valid.code = valid.code ? valid.code.trim() : "";
+        valid.name = valid.name ? valid.name.trim() : "";
+
         var getGarmentSection = this.collection.singleOrDefault({
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
-            code: valid.code,
-            name: valid.name,
+            code: {
+                // search code with ignore case string
+                "$regex": new RegExp(valid.code, "i")
+            },
+            name: {
+                // search name with ignore case string
+                "$regex": new RegExp(valid.name, "i")
+            },
             _deleted: false
         });
         
