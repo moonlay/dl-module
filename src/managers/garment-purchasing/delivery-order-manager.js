@@ -1065,85 +1065,101 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             });
     }*/
 
-    getAllData(startdate, enddate, offset) {
+ getAllData(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
-
+            
             var now = new Date();
             var deleted = {
                 _deleted: false
             };
-
+        
             var query = [deleted];
 
-            if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
-                var validStartDate = new Date(startdate);
-                var validEndDate = new Date(enddate);
-                query.push(
-                    {
-                        "date": {
-                            $gte: validStartDate,
-                            $lte: validEndDate
-                        }
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+            
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "supplierDoDate": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
                     }
-                )
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "supplierDoDate": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "supplierDoDate": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
             }
 
-            var match = { "$and": query };
-
-            this.collection.aggregate([
-                { $match: match },
-                { $unwind: "$items" },
-                { $unwind: "$items.fulfillments" },
-                {
-                    $project: {
-                        "NoSJ": "$no",
-                        "TgSJ": "$supplierDoDate",
-                        "TgDtg": "$date",
-                        "KdSpl": "$supplier.code",
-                        "NmSpl": "$supplier.name",
-                        "SJDesc": "$remark",
-                        "TipeSJ": "$shipmentType",
-                        "NoKirim": "$shipmentNo",
-                        "PunyaInv": "$hasInvoice",
-                        "CekBon": "$isClosed",
-                        "POID": "$items.fulfillments.purchaseRequestRefNo",
-                        "PlanPO": "$items.fulfillments.purchaseRequestRefNo",
-                        "QtyDtg": "$items.fulfillments.deliveredQuantity",
-                        "SatDtg": "$items.fulfillments.purchaseOrderUom.unit",
-                        "SatKnv": "$items.fulfillments.uomConversion.unit",
-                        "Konversi": "$items.fulfillments.conversion",
-                        "Tempo": "$items.paymentDueDays",
-                        "MtUang": "$items.fulfillments.currency.code",
-                        "Rate": "$items.fulfillments.currency.rate",
-                        "UserIn": "$_createdBy",
-                        "TgIn": "$_createdDate",
-                        "UserEd": "$_updatedBy",
-                        "TgEd": "$_updatedDate"
-                    }
-                },
-                {
-                    $project: {
-                        "NoSJ": "$NoSJ", "TgSJ": "$TgSJ", "TgDtg": "$TgDtg", "KdSpl": "$KdSpl", "NmSpl": "$NmSpl",
-                        "SJDesc": "$SJDesc", "TipeSJ": "$TipeSJ", "NoKirim": "$NoKirim", "PunyaInv": "$PunyaInv",
-                        "CekBon": "$CekBon", "POID": "$POID", "PlanPO": "$PlanPO", "QtyDtg": "$QtyDtg", "SatDtg": "$SatDtg",
-                        "SatKnv": "$SatKnv", "Konversi": "$Konversi", "Tempo": "$Tempo", "MtUang": "$MtUang",
-                        "Rate": "$Rate", "UserIn": "$UserIn", "TgIn": "$TgIn", "UserEd": "$UserEd", "TgEd": "$TgEd"
-                    }
-                },
-                {
-                    $group: {
-                        _id: {
-                            "NoSJ": "$NoSJ", "TgSJ": "$TgSJ", "TgDtg": "$TgDtg", "KdSpl": "$KdSpl",
-                            "NmSpl": "$NmSpl", "SJDesc": "$SJDesc", "TipeSJ": "$TipeSJ", "NoKirim": "$NoKirim",
-                            "PunyaInv": "$PunyaInv", "CekBon": "$CekBon", "POID": "$POID", "PlanPO": "$PlanPO",
-                            "QtyDtg": "$QtyDtg", "SatDtg": "$SatDtg", "SatKnv": "$SatKnv", "Konversi": "$Konversi",
-                            "Tempo": "$Tempo", "MtUang": "$MtUang", "Rate": "$Rate",
-                            "UserIn": "$UserIn", "TgIn": "$TgIn", "UserEd": "$UserEd", "TgEd": "$TgEd"
-                        }
-                    }
-                }
-            ])
-                .toArray(function (err, result) {
+      var match = { "$and": query };
+           
+      this.collection.aggregate([
+      {$match: match },
+      {$unwind:"$items"},
+      {$unwind:"$items.fulfillments"},
+      {$project :{
+                    "NoSJ":"$no",
+                    "TgSJ":"$supplierDoDate",
+                    "TgDtg":"$date",
+                    "KdSpl":"$supplier.code",
+                    "NmSpl":"$supplier.name",
+                    "SJDesc":"$remark",
+                    "TipeSJ":"$shipmentType",
+                    "NoKirim":"$shipmentNo",
+                    "PunyaInv":"$hasInvoice",
+                    "CekBon":"$isClosed",
+                    "POID":"$items.fulfillments.purchaseRequestRefNo",
+                    "PlanPO":"$items.fulfillments.purchaseRequestRefNo",
+                    "QtyDtg": "$items.fulfillments.deliveredQuantity",
+                    "SatDtg": "$items.fulfillments.purchaseOrderUom.unit",
+                    "SatKnv": "$items.fulfillments.uomConversion.unit",
+                    "Konversi": "$items.fulfillments.conversion",
+                    "Tempo":"$items.paymentDueDays",
+                    "MtUang": "$items.fulfillments.currency.code",
+                    "Rate": "$items.fulfillments.currency.rate",
+                    "UserIn":"$_createdBy",
+                    "TgIn":"$_createdDate",
+                    "UserEd":"$_updatedBy",
+                    "TgEd":"$_updatedDate"                   
+      }}, 
+      {$project :{
+                  "NoSJ":"$NoSJ","TgSJ":"$TgSJ","TgDtg":"$TgDtg","KdSpl":"$KdSpl","NmSpl":"$NmSpl",
+                  "SJDesc":"$SJDesc","TipeSJ":"$TipeSJ","NoKirim":"$NoKirim","PunyaInv":"$PunyaInv",
+                  "CekBon":"$CekBon","POID":"$POID","PlanPO":"$PlanPO","QtyDtg": "$QtyDtg","SatDtg": "$SatDtg",
+                  "SatKnv": "$SatKnv","Konversi": "$Konversi","Tempo":"$Tempo","MtUang": "$MtUang",
+                  "Rate": "$Rate","UserIn":"$UserIn","TgIn":"$TgIn","UserEd":"$UserEd","TgEd":"$TgEd"
+                 }
+      },
+      {$group :{ _id: { "NoSJ":"$NoSJ","TgSJ":"$TgSJ","TgDtg":"$TgDtg","KdSpl":"$KdSpl",
+                        "NmSpl":"$NmSpl","SJDesc":"$SJDesc","TipeSJ":"$TipeSJ","NoKirim":"$NoKirim",
+                        "PunyaInv":"$PunyaInv","CekBon":"$CekBon","POID":"$POID","PlanPO":"$PlanPO",
+                        "QtyDtg": "$QtyDtg","SatDtg": "$SatDtg","SatKnv": "$SatKnv","Konversi": "$Konversi",
+                        "Tempo":"$Tempo","MtUang": "$MtUang","Rate": "$Rate",
+                        "UserIn":"$UserIn","TgIn":"$TgIn","UserEd":"$UserEd","TgEd":"$TgEd"
+                     }
+               }
+        } 
+      ])
+        .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
