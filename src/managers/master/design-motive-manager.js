@@ -8,6 +8,7 @@ var DLModels = require('dl-models');
 var map = DLModels.map;
 var DesignMotive = DLModels.master.DesignMotive;
 var BaseManager = require('module-toolkit').BaseManager;
+var generateCode = require('../../utils/code-generator');
 var i18n = require('dl-i18n');
 
 module.exports = class DesignMotiveManager extends BaseManager {
@@ -42,7 +43,10 @@ module.exports = class DesignMotiveManager extends BaseManager {
         query["$and"] = [_default, keywordFilter, pagingFilter];
         return query;
     }
-
+    _beforeInsert(motive) {
+        motive.code = motive.code === "" ? generateCode() : motive.code;
+        return Promise.resolve(motive);
+    }
     _validate(motive) {
         var errors = {};
         var valid = motive;
@@ -51,7 +55,8 @@ module.exports = class DesignMotiveManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code,
+            
+            name:valid.name,
             _deleted: false
         });
 
@@ -60,16 +65,13 @@ module.exports = class DesignMotiveManager extends BaseManager {
             .then(results => {
                 var _motive = results[0];
 
-                if (!valid.code || valid.code == '')
-                    errors["code"] = i18n.__("DesignMotive.code.isRequired:%s is required", i18n.__("DesignMotive.code._:Code")); //"Nama DesignMotive Tidak Boleh Kosong";
+                if (!valid.name || valid.name=="")
+                    errors["name"] = i18n.__("DesignMotive.name.isRequired:%s is required", i18n.__("DesignMotive.name._:Name")); //"Nama DesignMotive Tidak Boleh Kosong";
                 else if (_motive) {
-                    errors["code"] = i18n.__("DesignMotive.code.isExists:%s is already exists", i18n.__("DesignMotive.code._:Code")); //"Nama DesignMotive sudah terdaftar";
+                    errors["name"] = i18n.__("DesignMotive.name.isExists:%s is already exists", i18n.__("DesignMotive.name._:Name")); //"Nama DesignMotive sudah terdaftar";
                 }
-
-                if (!valid.name || valid.name == '')
-                    errors["name"] = i18n.__("DesignMotive.name.isRequired:%s is required", i18n.__("DesignMotive.name._:Name")); //"Nama Harus diisi";
-
-                if (Object.getOwnPropertyNames(errors).length > 0) {
+              
+                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require('module-toolkit').ValidationError;
                     return Promise.reject(new ValidationError('data does not pass validation', errors));
                 }
