@@ -135,6 +135,7 @@ describe('#dl-module', function (done) {
     test('@GARMENT MASTER PLAN/STANDARD-HOUR', './garment-master-plan/standard-hour');
     test('@GARMENT MASTER PLAN/MASTER PLAN COMODITY', './garment-master-plan/master-plan-comodity');
     test('@GARMENT MASTER PLAN/MASTER PLAN', './garment-master-plan/master-plan');
+    test('@GARMENT MASTER PLAN/GARMENT SECTION', './garment-master-plan/garment-section');
 
      //Etl
      test('@ETL/DIM-BUYER', './etl/dim/dim-buyer');
