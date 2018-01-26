@@ -100,16 +100,16 @@ module.exports = class StandardHourManager extends BaseManager {
                 else{
                     var date = new Date(valid.date);
                     var dateNow = new Date();
-                    if(date > dateNow)
-                        errors["date"] = i18n.__(`StandardHour.date.notGreater:%s not greater than today`, i18n.__("StandardHour.date._:Date"));
-                    else if(standardHourArr && standardHourArr.data.length > 0){
-                        var _standardHour = standardHourArr.data[0]
-                        if(date <= _standardHour.date){
+                    // if(date > dateNow)
+                    //     errors["date"] = i18n.__(`StandardHour.date.notGreater:%s not greater than today`, i18n.__("StandardHour.date._:Date"));
+                    // else if(standardHourArr && standardHourArr.data.length > 0){
+                    //     var _standardHour = standardHourArr.data[0]
+                    //     if(date <= _standardHour.date){
 
-                            var dateHour = moment(new Date(_standardHour.date)).format("DD-MM-YYYY");
-                            errors["date"] = `Date must be greater than ${dateHour}`;
-                        }
-                    }
+                    //         var dateHour = moment(new Date(_standardHour.date)).format("DD-MM-YYYY");
+                    //         errors["date"] = `Date must be greater than ${dateHour}`;
+                    //     }
+                    // }
                 }
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {

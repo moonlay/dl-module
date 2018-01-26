@@ -191,6 +191,22 @@ it("#06. should success when create new data", function (done) {
         });
 });
 
+it("#07. should success when search data with filter", function (done) {
+    manager.read({
+        keyword: createdData.garmentBuyerName
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 // it("#06. should error when create new data with date greater date data last save", function (done) {
 //     dataUtil.getNewData()
 //         .then((data) => {
@@ -239,7 +255,7 @@ it("#06. should success when create new data", function (done) {
 //         });
 // });
 
-it("#07. should success when destroy data with id", function (done) {
+it("#08. should success when destroy data with id", function (done) {
     manager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();
@@ -251,7 +267,7 @@ it("#07. should success when destroy data with id", function (done) {
         });
 });
 
-it(`#08. should null when get destroyed data`, function (done) {
+it(`#09. should null when get destroyed data`, function (done) {
     manager.getSingleByIdOrDefault(createdId)
         .then((data) => {
             should.equal(data, null);
@@ -262,7 +278,7 @@ it(`#08. should null when get destroyed data`, function (done) {
         });
 });
 
-it(`#09. should success when remove all data`, function(done) {
+it(`#10. should success when remove all data`, function(done) {
     manager.collection.remove({})
         .then((result) => {
             done();
