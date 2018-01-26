@@ -6,7 +6,6 @@ var DLModels = require("dl-models");
 var map = DLModels.map;
 var StandardHour = DLModels.garmentMasterPlan.StandardHour;
 var BaseManager = require("module-toolkit").BaseManager;
-// var StyleManager = require('./style-manager');
 var GarmentBuyerManager = require('../master/garment-buyer-manager');
 var ComodityManager = require('./master-plan-comodity-manager');
 var i18n = require("dl-i18n");
@@ -18,7 +17,6 @@ module.exports = class StandardHourManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentMasterPlan.collection.StandardHour);
-        // this.styleManager = new StyleManager(db, user);
         this.garmentBuyerManager = new GarmentBuyerManager(db, user);
         this.comodityManager = new ComodityManager(db, user);
     }
@@ -82,27 +80,11 @@ module.exports = class StandardHourManager extends BaseManager {
                 var _buyer = results[1];
                 var _comodities = results[2];
                 
-                // if(!valid.styleId || valid.styleId==='')
-                //     errors["style"] = i18n.__("StandardHour.style.isRequired:%s is required", i18n.__("StandardHour.style._:Style"));
-                // else if(!_style)
-                //     errors["style"] = i18n.__("StandardHour.style.isNotFound:%s is not found", i18n.__("StandardHour.style._:Style"));
-                // if (_buyer) {
-                //     errors["buyer"] = i18n.__("StandardHour.garmentBuyerId.isExists:%s is already exists", i18n.__("StandardHour.garmentBuyerId._:Buyer")); 
-                // }
-
-                // if (_comodities) {
-                //     errors["comodity"] = i18n.__("StandardHour.comodityId.isExists:%s is already exists", i18n.__("StandardHour.comodityId._:Comodity")); 
-                // }
-
                 if(!valid.garmentBuyerId || valid.garmentBuyerId==='')
                     errors["buyer"] = i18n.__("StandardHour.garmentBuyerId.isRequired:%s is required", i18n.__("StandardHour.garmentBuyerId._:Buyer"));
-                // else if(!_buyer)
-                //     errors["garmentBuyerId"] = i18n.__("StandardHour.garmentBuyerId.isNotFound:%s is not found", i18n.__("StandardHour.garmentBuyerId._:Buyer"));
                     
                 if(!valid.masterplanComodityId || valid.masterplanComodityId==='')
                     errors["comodity"] = i18n.__("StandardHour.comodityId.isRequired:%s is required", i18n.__("StandardHour.comodityId._:Comodity"));
-                // else if(!_comodities)
-                //     errors["comodityId"] = i18n.__("StandardHour.comodityId.isNotFound:%s is not found", i18n.__("StandardHour.comodityId._:Comodity"));
                 
                 if(!valid.shCutting || valid.shCutting <= 0)
                     errors["shCutting"] = i18n.__("StandardHour.shCutting.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.shCutting._:ShCutting"));
@@ -134,11 +116,6 @@ module.exports = class StandardHourManager extends BaseManager {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
                 }
-
-                // if(_style){
-                //     valid.styleId = _style._id;
-                //     valid.style = _style;
-                // }
 
                 if(_buyer){
                     valid.garmentBuyerId = new ObjectId(_buyer._id);
