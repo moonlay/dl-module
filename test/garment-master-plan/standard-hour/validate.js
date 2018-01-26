@@ -148,32 +148,32 @@ it("#04. should error when create new data with SH Cutting 0, SH Sewing 0, SH Fi
         });
 });
 
-it("#05. should error when create new data with date greater than today", function (done) {
-    dataUtil.getNewData()
-        .then((data) => {
-            var dateAfter = new Date();
-            dateAfter = new Date(dateAfter.setDate(dateAfter.getDate() + 2));
-            data.date = `${dateAfter.getFullYear()}-${(dateAfter.getMonth() + 1)}-${dateAfter.getDate()}`;
-            manager.create(data)
-                .then((id) => {
-                    done("should error when create new data with date greater than today");
-                })
-                .catch((e) => {
-                    e.name.should.equal("ValidationError");
-                    e.should.have.property("errors");
-                    e.errors.should.instanceof(Object);
-                    e.errors.should.have.property("date");
-                    done();
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#05. should error when create new data with date greater than today", function (done) {
+//     dataUtil.getNewData()
+//         .then((data) => {
+//             var dateAfter = new Date();
+//             dateAfter = new Date(dateAfter.setDate(dateAfter.getDate() + 2));
+//             data.date = `${dateAfter.getFullYear()}-${(dateAfter.getMonth() + 1)}-${dateAfter.getDate()}`;
+//             manager.create(data)
+//                 .then((id) => {
+//                     done("should error when create new data with date greater than today");
+//                 })
+//                 .catch((e) => {
+//                     e.name.should.equal("ValidationError");
+//                     e.should.have.property("errors");
+//                     e.errors.should.instanceof(Object);
+//                     e.errors.should.have.property("date");
+//                     done();
+//                 });
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
 var createdId;
 var createdData;
-it("#06. should success when create new data", function (done) {
+it("#05. should success when create new data", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             createdData=data;
@@ -191,7 +191,7 @@ it("#06. should success when create new data", function (done) {
         });
 });
 
-it("#07. should success when search data with filter", function (done) {
+it("#06. should success when search data with filter", function (done) {
     manager.read({
         keyword: createdData.garmentBuyerName
     })
@@ -255,7 +255,7 @@ it("#07. should success when search data with filter", function (done) {
 //         });
 // });
 
-it("#08. should success when destroy data with id", function (done) {
+it("#07. should success when destroy data with id", function (done) {
     manager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();
@@ -267,7 +267,7 @@ it("#08. should success when destroy data with id", function (done) {
         });
 });
 
-it(`#09. should null when get destroyed data`, function (done) {
+it(`#08. should null when get destroyed data`, function (done) {
     manager.getSingleByIdOrDefault(createdId)
         .then((data) => {
             should.equal(data, null);
@@ -278,7 +278,7 @@ it(`#09. should null when get destroyed data`, function (done) {
         });
 });
 
-it(`#10. should success when remove all data`, function(done) {
+it(`#09. should success when remove all data`, function(done) {
     manager.collection.remove({})
         .then((result) => {
             done();
