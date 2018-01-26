@@ -29,9 +29,7 @@ module.exports = class WeeklyPlanManager extends BaseManager {
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
             var yearFilter = {
-                "year": {
-                    "$regex": regex
-                }
+                "$where" : "function() { return this.year.toString().match(/"+ paging.keyword +"/) != null; }"
             };
             var unitFilter = {
                 "unit.name": {
