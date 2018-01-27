@@ -27,6 +27,8 @@ var generateCode = require("../../utils/code-generator");
 var assert = require('assert');
 var moment = require('moment');
 
+const NUMBER_DESCRIPTION = "SPP Finishing Printing"
+
 module.exports = class ProductionOrderManager extends BaseManager {
     //#region CRUD and Report
 
@@ -103,13 +105,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     _beforeInsert(productionOrder) {
+
         var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
+        var query = { "type": type, "description": NUMBER_DESCRIPTION };
+        var fields = { "number": 1, "year": 1 };
+
         return this.documentNumbers
-            .find({ "type": type }, { "number": 1, "year": 1 })
-            .sort({ "year": -1, "number": -1 })
-            .limit(1)
-            .toArray()
-            .then((previousDocumentNumbers) => {
+            .findOne(query, fields)
+            .then((previousDocumentNumber) => {
 
                 var yearNow = parseInt(moment().format("YY"));
                 var monthNow = moment().format("MM");
@@ -117,10 +120,10 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var number = 1;
 
                 if (!productionOrder.orderNo) {
-                    if (previousDocumentNumbers.length > 0) {
+                    if (previousDocumentNumber) {
 
-                        var oldYear = previousDocumentNumbers[0].year;
-                        number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+                        var oldYear = previousDocumentNumber.year;
+                        number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
                         productionOrder.orderNo = `${type}${yearNow}${this.pad(number, 4)}`;
                     } else {
@@ -128,15 +131,19 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     }
 
                 }
+
                 var documentNumbersData = {
                     type: type,
                     documentNumber: productionOrder.orderNo,
                     number: number,
-                    year: yearNow
-                }
+                    year: yearNow,
+                    description: NUMBER_DESCRIPTION
+                };
+
+                var options = { "upsert": true };
 
                 return this.documentNumbers
-                    .insert(documentNumbersData)
+                    .updateOne(query, documentNumbersData, options)
                     .then((id) => {
                         return Promise.resolve(productionOrder)
                     })
