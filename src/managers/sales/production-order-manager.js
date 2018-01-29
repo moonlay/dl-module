@@ -114,8 +114,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             .findOne(query, fields)
             .then((previousDocumentNumber) => {
 
-                var yearNow = parseInt(moment().format("YY"));
-                var monthNow = moment().format("MM");
+                var yearNow = parseInt(moment().format("YYYY"));
 
                 var number = 1;
 
@@ -125,9 +124,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                        productionOrder.orderNo = `${type}${yearNow}${this.pad(number, 4)}`;
+                        productionOrder.orderNo = `${type}${moment().format("YY")}${this.pad(number, 4)}`;
                     } else {
-                        productionOrder.orderNo = `${type}${yearNow}0001`;
+                        productionOrder.orderNo = `${type}${moment().format("YY")}0001`;
                     }
 
                 }
@@ -136,7 +135,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     type: type,
                     documentNumber: productionOrder.orderNo,
                     number: number,
-                    year: yearNow,
+                    year: parseInt(moment().format("YYYY")),
                     description: NUMBER_DESCRIPTION
                 };
 
