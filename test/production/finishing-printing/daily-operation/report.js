@@ -345,7 +345,7 @@ it("#14. should success when get report with date parameter", function (done) {
         info: xlsDailyMachine
     }
 
-    dailyOperationManager.getXlsDailyMachine(dataXls, queryDailyMachine)
+    dailyOperationManager.getXlsDailyMachine(dataXls, queryDailyMachine, 7)
         .then((result) => {
             result.data.should.instanceof(Array);
             result.data.length.should.not.equal(0);

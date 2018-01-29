@@ -6,17 +6,19 @@ var BookingOrderManager = require("../../../src/managers/garment-master-plan/boo
 var generateCode = require("../../../src/utils/code-generator");
 var Comodity = require("./master-plan-comodity-data-util");
 var Buyer = require("../master/garment-buyer-data-util");
+var Section = require("../garment-master-plan/garment-section-data-util");
 
 var Models = require("dl-models");
 var Map = Models.map;
 
 class BookingOrderDataUtil {
     getNewData() {
-       return Promise.all([ Buyer.getTestData(),Comodity.getTestData(),Comodity.getTestData2()])
+       return Promise.all([ Buyer.getTestData(),Section.getTestData(),Comodity.getTestData(),Comodity.getTestData2()])
             .then((results) => {
                 var _buyer = results[0];
-                var _comodity = results[1];
-                var _comodity2 = results[2];
+                var _section = results[1];
+                var _comodity = results[2];
+                var _comodity2 = results[3];
                 var date = new Date();
                 var targetDate=new Date();
                 var deliveryDate=new Date(targetDate.setDate(targetDate.getDate() + 10));
@@ -28,6 +30,7 @@ class BookingOrderDataUtil {
                     deliveryDate : deliveryDate,
                     orderQuantity: 1000,
                     garmentBuyerId : _buyer._id,
+                    garmentSectionId : _section._id,
                     items:[{
                             masterPlanComodity:_comodity,
                             masterPlanComodityId:_comodity._id,

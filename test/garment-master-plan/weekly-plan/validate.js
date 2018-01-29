@@ -77,7 +77,27 @@ it("#03. should error when create new data with invalid month", function (done) 
         });
 });
 
-it("#04. should error when create new data with invalid efficiency, operator and AH", function (done) {
+it("#04. should error when create new data with invalid year", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            data.year = "year";
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with invalid month");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#05. should error when create new data with invalid efficiency, operator and AH", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             data.items[0].efficiency = 0;
@@ -107,7 +127,7 @@ it("#04. should error when create new data with invalid efficiency, operator and
         });
 });
 
-it("#05. should error when create new data with no data unit", function (done) {
+it("#06. should error when create new data with no data unit", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             data.unitId = "unitId";
@@ -129,7 +149,7 @@ it("#05. should error when create new data with no data unit", function (done) {
 });
 
 var newData;
-it("#06. should success when create new data for search", function (done) {
+it("#07. should success when create new data for search", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             newData = data;
@@ -146,7 +166,7 @@ it("#06. should success when create new data for search", function (done) {
         });
 });
 
-it("#07. should success when search data with filter", function (done) {
+it("#08. should success when search data with filter", function (done) {
     manager.read({
         keyword: newData.unit.name
     })
@@ -162,7 +182,7 @@ it("#07. should success when search data with filter", function (done) {
         });
 });
 
-it(`#08. should success when remove all data`, function(done) {
+it(`#09. should success when remove all data`, function(done) {
     manager.collection.remove({})
         .then((result) => {
             done();

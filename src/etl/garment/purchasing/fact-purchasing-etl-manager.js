@@ -184,17 +184,17 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                 "$nin": ["dev", "unit-test"]
             },
             _updatedDate: {
-                "$gt": timestamp
+                "$gte": timestamp
             }
         }, { "purchaseRequest.no": 1, "purchaseRequestId": 1 }).toArray()
     }
 
-    getPRNumbersFromPOInternal(purchaseOrders) { //Mengambil Nomor Purchase Request dari PO Internal Terbaru
-        var purchaseRequestNumbers = purchaseOrders.map((purchaseOrder) => {
-            return purchaseOrder.purchaseRequest.no;
-        })
-        return Promise.all(purchaseRequestNumbers)
-    }
+    // getPRNumbersFromPOInternal(purchaseOrders) { //Mengambil Nomor Purchase Request dari PO Internal Terbaru
+    //     var purchaseRequestNumbers = purchaseOrders.map((purchaseOrder) => {
+    //         return purchaseOrder.purchaseRequest.no;
+    //     })
+    //     return Promise.all(purchaseRequestNumbers)
+    // }
 
     extract(times) {
         var timestamp = times.length > 0 ? new Date(times[0].start) : new Date("1970-01-01");
@@ -334,8 +334,8 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
                                 purchaseOrderExternalNo: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal.no) ? `'${poItem.purchaseOrderExternal.no}'` : null, // Nomor PO Eksternal
                                 purchaseOrderExternalDate: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal._createdDate) ? `'${moment(poItem.purchaseOrderExternal._createdDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal PO Eksternal
-                                deliveryOrderDays: null, //Jumlah Selisih Hari DO-PO Eksternal
-                                deliveryOrderDaysRange: null, //Selisih Hari DO-PO Eksternal
+                                deliveryOrderDays: poFulfillment.deliveryOrderDate ? `${doDays}` : null, //Jumlah Selisih Hari DO-PO Eksternal
+                                deliveryOrderDaysRange: poFulfillment.deliveryOrderDate ? `${this.getRangeMonth(doDays)}` : null, //Selisih Hari DO-PO Eksternal
                                 supplierCode: (poItem.purchaseOrderExternal && poItem.supplier && poItem.supplier.code !== "") ? `'${poItem.supplier.code}'` : null, //Kode Supplier
                                 supplierName: (poItem.purchaseOrderExternal && poItem.supplier && poItem.supplier.name !== "") ? `'${poItem.supplier.name}'` : null, //Nama Supplier
                                 currencyCode: (poItem.purchaseOrderExternal && poItem.currency && poItem.currency.code !== "") ? `'${poItem.currency.code}'` : null, //Kode Mata Uang
