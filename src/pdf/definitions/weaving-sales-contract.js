@@ -821,7 +821,7 @@ module.exports = function (salesContract, offset) {
     var Sc = {
         pageSize: 'A4',
         pageOrientation: 'portrait',
-        pageMargins: [40, 120, 40, 10],
+        pageMargins: [40, 110, 40, 20],
         content: [].concat(header, subheader, body, sign, remark, footer),
         styles: {
             size06: {
