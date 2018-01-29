@@ -603,7 +603,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     for (var item of splittedPurchaseOrder.items) {
                                         var sourceItem = sourcePurchaseOrder.items.find((_sourceItem) => item.product._id.toString() === _sourceItem.product._id.toString());
                                         if (sourceItem) {
-                                            sourceItem.defaultQuantity = sourceItem.defaultQuantity - item.defaultQuantity;
+                                            sourceItem.defaultQuantity = parseFloat((sourceItem.defaultQuantity - item.defaultQuantity).toFixed(2));
                                         }
                                     }
                                     sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
