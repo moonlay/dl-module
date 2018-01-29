@@ -125,7 +125,8 @@ module.exports = {
             StandardHourManager: require('./src/managers/garment-master-plan/standard-hour-manager'),
             BookingOrderManager: require('./src/managers/garment-master-plan/booking-order-manager'),
             MasterPlanComodityManager: require('./src/managers/garment-master-plan/master-plan-comodity-manager'),
-            MasterPlanManager: require('./src/managers/garment-master-plan/master-plan-manager')
+            MasterPlanManager: require('./src/managers/garment-master-plan/master-plan-manager'),
+            GarmentSectionManager: require('./src/managers/garment-master-plan/garment-section-manager'),
         }
     },
     test: {
@@ -241,7 +242,8 @@ module.exports = {
                 standardHour: require("./test/data-util/garment-master-plan/standard-hour-data-util"),
                 bookingOrder: require("./test/data-util/garment-master-plan/booking-order-data-util"),
                 masterPlanComodity: require("./test/data-util/garment-master-plan/master-plan-comodity-data-util"),
-                masterPlan: require("./test/data-util/garment-master-plan/master-plan-data-util")
+                masterPlan: require("./test/data-util/garment-master-plan/master-plan-data-util"),
+                garmentSection: require("./test/data-util/garment-master-plan/garment-section-data-util"),
             }
         }
     },
@@ -293,6 +295,9 @@ module.exports = {
             factDealTrackingActivity: require("./src/etl/sales/fact-deal-tracking-activity-etl-manager")
         },
         garment: {
+            dim: {
+                dimGarmentSupplier: require("./src/etl/garment/dim/dim-garment-supplier-etl-manager")
+            },
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
             factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager"),
         },

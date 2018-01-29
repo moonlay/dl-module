@@ -299,9 +299,77 @@ it("#11. should error when create new data with no data week", function (done) {
         });
 });
 
+it("#12. should error when create new data with no detail delivery date", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            delete data.details[0].deliveryDate; 
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with no detail delivery date");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("details");
+                    e.errors.details.should.instanceOf(Array);
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#13. should error when create new data with detail delivery date < data booking date", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            var targetDate=new Date(data.bookingDate);
+            data.details[0].deliveryDate=new Date(targetDate.setDate(targetDate.getDate() - 5));
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with detail delivery date < data booking date");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("details");
+                    e.errors.details.should.instanceOf(Array);
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#14. should error when create new data with detail delivery date > data delivery date", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            var targetDate=new Date(data.deliveryDate);
+            data.details[0].deliveryDate=new Date(targetDate.setDate(targetDate.getDate() + 5));
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with detail delivery date > data delivery date");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("details");
+                    e.errors.details.should.instanceOf(Array);
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 var newData;
 var createdId;
-it("#12. should success when create new data", function (done) {
+it("#15. should success when create new data", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             newData = data;
@@ -319,7 +387,7 @@ it("#12. should success when create new data", function (done) {
         });
 });
 
-it("#13. should success when search data with filter", function (done) {
+it("#16. should success when search data with filter", function (done) {
     manager.read({
         keyword: newData.bookingOrderNo
     })
@@ -335,7 +403,7 @@ it("#13. should success when search data with filter", function (done) {
         });
 });
 
-it("#14. should success when get preview", function (done) {
+it("#17. should success when get preview", function (done) {
     manager.getPreview(newData.details[0].week.month, newData.details[0].weeklyPlanYear)
         .then((documents) => {
             documents.should.be.instanceof(Array);
@@ -347,7 +415,7 @@ it("#14. should success when get preview", function (done) {
         });
 });
 
-it("#15. should error when create new data with same booking order", function (done) {
+it("#18. should error when create new data with same booking order", function (done) {
     manager.create(newData)
         .then((id) => {
             done("should error when create new data with same booking order");
@@ -361,7 +429,7 @@ it("#15. should error when create new data with same booking order", function (d
         });
 });
 
-it("#16. should success when destroy data with id", function (done) {
+it("#19. should success when destroy data with id", function (done) {
     manager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();

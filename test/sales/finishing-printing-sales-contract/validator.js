@@ -1,14 +1,14 @@
 require("should");
-var FinishingPrintingSalesContractDataUtil =  require("../../data-util/sales/finishing-printing-sales-contract-data-util");
+var FinishingPrintingSalesContractDataUtil = require("../../data-util/sales/finishing-printing-sales-contract-data-util");
 var helper = require("../../helper");
-var validate =require("dl-models").validator.sales.finishingPrintingSalesContract;
+var validate = require("dl-models").validator.sales.finishingPrintingSalesContract;
 var moment = require('moment');
 
 var FinishingPrintingSalesContractManager = require("../../../src/managers/sales/finishing-printing-sales-contract-manager");
 var finishingPrintingSalesContractManager = null;
 
 var buyerDataUtil = require("../../data-util/master/buyer-data-util");
-var BuyerManager= require("../../../src/managers/master/buyer-manager");
+var BuyerManager = require("../../../src/managers/master/buyer-manager");
 var buyerManager;
 
 before('#00. connect db', function (done) {
@@ -50,7 +50,7 @@ it('#01. should error when create with empty data ', function (done) {
 //     FinishingPrintingSalesContractDataUtil.getNewData()
 //         .then(me => {
 //             var dateYesterday = new Date().setDate(new Date().getDate() -1);
-            
+
 //             me.deliverySchedule = moment(dateYesterday).format('YYYY-MM-DD');
 
 //             finishingPrintingSalesContractManager.create(me)
@@ -137,24 +137,40 @@ it('#03. should error when create new data with non existent quality, comodity, 
 
 var createdDataBuyer;
 var createdDataBuyerId;
-it("#04. should success when create new data export buyer", function(done) {
+it("#04. should success when create new data export buyer", function (done) {
     buyerDataUtil.getNewData()
-    .then((data) =>{
-        data.type="Ekspor";
-        createdDataBuyer=data;
-        buyerManager.create(data)
-        .then((id) => {
-            id.should.be.Object();
-            createdDataBuyerId = id;
+        .then((data) => {
+            data.type = "Ekspor";
+            createdDataBuyer = data;
+            buyerManager.create(data)
+                .then((id) => {
+                    id.should.be.Object();
+                    createdDataBuyerId = id;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        });
+});
+
+it("#05. should success when search data with filter", function (done) {
+    buyerManager.read({
+        keyword: createdDataBuyer.buyer
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
             done();
         })
         .catch((e) => {
             done(e);
         });
-    });
 });
 
-it('#05. it should error when create new data with export buyer with agent without comission, amount, term of shipment', function (done) {
+it('#06. it should error when create new data with export buyer with agent without comission, amount, term of shipment', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
 
@@ -185,11 +201,11 @@ it('#05. it should error when create new data with export buyer with agent witho
         });
 });
 
-it('#06. it should error when create new data with poitSystem=4 and pointLimit=0', function (done) {
+it('#07. it should error when create new data with poitSystem=4 and pointLimit=0', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
-            sc.pointSystem=4;
-            sc.pointLimit=0;
+            sc.pointSystem = 4;
+            sc.pointLimit = 0;
 
             finishingPrintingSalesContractManager.create(sc)
                 .then(id => {
@@ -210,14 +226,14 @@ it('#06. it should error when create new data with poitSystem=4 and pointLimit=0
         });
 });
 
-it('#07. it should error when create new data without detail', function (done) {
+it('#08. it should error when create new data without detail', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
-            sc.details= [{
-                        color:'',
-                        price:0,
-                        useIncomeTax:true
-                    }];
+            sc.details = [{
+                color: '',
+                price: 0,
+                useIncomeTax: true
+            }];
 
             finishingPrintingSalesContractManager.create(sc)
                 .then(id => {

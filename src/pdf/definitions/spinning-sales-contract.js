@@ -18,45 +18,45 @@ module.exports = function (salesContract) {
     var footer = [];
     var detailprice = "";
 
-    var uom="";
-    var convertion=0;
-    if(salesContract.uom.unit.toLowerCase()=="ball"){
-        uom="BALES";
-        convertion=parseFloat(salesContract.orderQuantity ) * parseFloat(181.44);
+    var uom = "";
+    var convertion = 0;
+    if (salesContract.uom.unit.toLowerCase() == "ball") {
+        uom = "BALES";
+        convertion = parseFloat(salesContract.orderQuantity) * parseFloat(181.44);
     }
-    else{
-        uom=salesContract.uom.unit;
-        convertion=salesContract.orderQuantity;
+    else {
+        uom = salesContract.uom.unit;
+        convertion = salesContract.orderQuantity;
     }
 
-    var appx="";
-    var appxLocal="";
-    var date=parseInt(salesContract.deliverySchedule.getDate());
-    if(date>=1 && date<=10){
-        appx="EARLY";
-        appxLocal="AWAL";
+    var appx = "";
+    var appxLocal = "";
+    var date = parseInt(salesContract.deliverySchedule.getDate());
+    if (date >= 1 && date <= 10) {
+        appx = "EARLY";
+        appxLocal = "AWAL";
     }
-    else if(date>=11 && date<=20){
-        appx="MIDDLE";
-        appxLocal="PERTENGAHAN";
+    else if (date >= 11 && date <= 20) {
+        appx = "MIDDLE";
+        appxLocal = "PERTENGAHAN";
     }
-    else if(date>=21 && date<=31){
-        appx="END";
-        appxLocal="AKHIR";
+    else if (date >= 21 && date <= 31) {
+        appx = "END";
+        appxLocal = "AKHIR";
     }
 
     var ppn = salesContract.incomeTax;
-    if(ppn=="Include PPn"){
-        ppn="Include PPn 10%";
+    if (ppn == "Include PPn") {
+        ppn = "Include PPn 10%";
     }
 
-    var price=`${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}`;
+    var price = `${parseFloat(salesContract.price).toLocaleString(locale, locale.currency)}`;
 
     var amount = salesContract.price * convertion;
-    var amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
-    var amountDec1=parseFloat(amount.toFixed(3));
-    var amountDec=amountDec1.toString().split('.');
-    var spellAmount=amount;
+    var amountbyCurrency = `${parseFloat(amount).toLocaleString(locale, locale.currency)}`;
+    var amountDec1 = parseFloat(amount.toFixed(3));
+    var amountDec = amountDec1.toString().split('.');
+    var spellAmount = amount;
 
     // if(salesContract.accountBank.currency.code.toLowerCase()=="usd"){
     //     amountbyCurrency=`${parseFloat(amount).toLocaleString(locale, locale.currencySalesContract)}`;
@@ -70,27 +70,27 @@ module.exports = function (salesContract) {
     //     else if(amountDec[1].length===2){
     //         spellAmount=amount.toFixed(2);
     //     }
-        // else if(amountDec[1].length>=3 ){
-        //     spellAmount=amount.toFixed(3);
-        // }
+    // else if(amountDec[1].length>=3 ){
+    //     spellAmount=amount.toFixed(3);
+    // }
     // }
     // else if(amount % 1 !=0){
-        amountDec1=parseFloat(amount.toFixed(2));
-        amountDec=amountDec1.toString().split('.');
-        if(!amountDec[1]){
-            spellAmount=amount;
-        }
-        else if(amountDec[1].length===1){
-            spellAmount=amount.toFixed(1);
-        }
-        else if(amountDec[1].length>=2){
-            spellAmount=amount.toFixed(2);
-        }
+    amountDec1 = parseFloat(amount.toFixed(2));
+    amountDec = amountDec1.toString().split('.');
+    if (!amountDec[1]) {
+        spellAmount = amount;
+    }
+    else if (amountDec[1].length === 1) {
+        spellAmount = amount.toFixed(1);
+    }
+    else if (amountDec[1].length >= 2) {
+        spellAmount = amount.toFixed(2);
+    }
     // }
 
     var detail = salesContract.accountBank.currency.symbol + " " + price + ' / KG' + "\n";
     detailprice = salesContract.accountBank.currency.symbol + " " + price + ' / ' + salesContract.uom.unit + ' ' + ppn;
-    
+
 
     var comoDesc = "";
     if (salesContract.comodityDescription != "") {
@@ -98,34 +98,34 @@ module.exports = function (salesContract) {
     }
     var code = salesContract.salesContractNo;
 
-    var quantity= salesContract.orderQuantity;
-    var qtyDec=parseFloat(salesContract.orderQuantity.toFixed(2));
-    var quantityDec=qtyDec.toString().split('.');
-    var spellQuantity=quantity;
-    if(salesContract.orderQuantity % 1 !=0){
-        quantity=parseFloat(salesContract.orderQuantity.toFixed(2));
-        if(!quantityDec[1]){
-            spellQuantity=parseFloat(salesContract.orderQuantity);
+    var quantity = salesContract.orderQuantity;
+    var qtyDec = parseFloat(salesContract.orderQuantity.toFixed(2));
+    var quantityDec = qtyDec.toString().split('.');
+    var spellQuantity = quantity;
+    if (salesContract.orderQuantity % 1 != 0) {
+        quantity = parseFloat(salesContract.orderQuantity.toFixed(2));
+        if (!quantityDec[1]) {
+            spellQuantity = parseFloat(salesContract.orderQuantity);
         }
-        else if(quantityDec[1].length===1){
-            spellQuantity=parseFloat(salesContract.orderQuantity.toFixed(1));
+        else if (quantityDec[1].length === 1) {
+            spellQuantity = parseFloat(salesContract.orderQuantity.toFixed(1));
         }
-        else if(quantityDec[1].length>=2){
-            spellQuantity=parseFloat(salesContract.orderQuantity.toFixed(2));
+        else if (quantityDec[1].length >= 2) {
+            spellQuantity = parseFloat(salesContract.orderQuantity.toFixed(2));
         }
     }
 
-    var sayQty= say(spellQuantity,")");
+    var sayQty = say(spellQuantity, ")");
     var lastIndex = sayQty.lastIndexOf(" ");
-    var lastword=sayQty.substr(0,lastIndex);
-    var lastIndex1=lastword.lastIndexOf(" ");
-    var words=lastword.substr(lastIndex1,lastword.length);
-    var Qtystr = say(spellQuantity,")");
-    if(words===" nol"){
+    var lastword = sayQty.substr(0, lastIndex);
+    var lastIndex1 = lastword.lastIndexOf(" ");
+    var words = lastword.substr(lastIndex1, lastword.length);
+    var Qtystr = say(spellQuantity, ")");
+    if (words === " nol") {
         Qtystr = lastword.substr(0, lastIndex1) + " )";
     }
 
-    var shipmentDesc=salesContract.shipmentDescription ? '\n' + salesContract.shipmentDescription : '';
+    var shipmentDesc = salesContract.shipmentDescription ? '\n' + salesContract.shipmentDescription : '';
 
     if (salesContract.buyer.type.toLowerCase() == "export" || salesContract.buyer.type.toLowerCase() == "ekspor") {
         moment.locale('en-EN');
@@ -141,16 +141,16 @@ module.exports = function (salesContract) {
                     text: 'Date, ' + `${moment(salesContract._createdDate).format('MMMM DD,YYYY')}`,
                     style: ['size09'],
                     alignment: "right"
-                },{
-                        columns: [{
-                            width: '40%',
-                            stack: [{
-                                text:'MESSRS,\n'+ salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country.toUpperCase() + '\n' + salesContract.buyer.contact,
-                                style: ['size10'],
-                                alignment: "left"
-                            }]
+                }, {
+                    columns: [{
+                        width: '40%',
+                        stack: [{
+                            text: 'MESSRS,\n' + salesContract.buyer.name + '\n' + salesContract.buyer.address + '\n' + salesContract.buyer.country.toUpperCase() + '\n' + salesContract.buyer.contact,
+                            style: ['size10'],
+                            alignment: "left"
                         }]
-                    },'\n', {
+                    }]
+                }, '\n', {
                     text: 'SALES CONTRACT',
                     style: ['size11', 'bold'],
                     alignment: "center"
@@ -188,28 +188,11 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.dispositionNumber,
+                        text: salesContract.salesContractNo,
                         style: ['size09']
                     }]
             },
             {
-
-                columns: [
-                    {
-                        width: '25%',
-                        text: 'Code',
-                        style: ['size09']
-                    }, {
-                        width: '3%',
-                        text: ':',
-                        style: ['size09']
-                    },
-                    {
-                        width: '*',
-                        text: no,
-                        style: ['size09']
-                    }]
-            },{
 
                 columns: [
                     {
@@ -255,7 +238,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:"ABOUT : "+ parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" " + uom +" ( ABOUT : "+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+" KG )",
+                        text: "ABOUT : " + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " " + uom + " ( ABOUT : " + parseFloat(convertion).toLocaleString(locale, locale.decimal) + " KG )",
                         style: ['size09']
                     }]
             }, {
@@ -287,7 +270,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text: salesContract.accountBank.currency.symbol + " " + amountbyCurrency+" ( "+ `${numSpell(spellAmount)}`+" "+ salesContract.accountBank.currency.description+" ) (APPROXIMATELLY)" ,
+                        text: salesContract.accountBank.currency.symbol + " " + amountbyCurrency + " ( " + `${numSpell(spellAmount)}` + " " + salesContract.accountBank.currency.description + " ) (APPROXIMATELLY)",
                         style: ['size09']
                     }]
             }, {
@@ -303,7 +286,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:appx+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}` + shipmentDesc,
+                        text: appx + " " + `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}` + shipmentDesc,
                         style: ['size09']
                     }]
             }, {
@@ -351,7 +334,7 @@ module.exports = function (salesContract) {
                     },
                     {
                         width: '*',
-                        text:'- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- '+ salesContract.shippingQuantityTolerance +'% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - CARTON BOX (NET WEIGHT : 1.89 / CONE, 1 BOX: 18 CONE). \n'+ salesContract.condition,
+                        text: '- THIS CONTRACT IS IRREVOCABLE UNLESS AGREED UPON BY THE TWO PARTIES, THE BUYER AND SELLER. \n - +/- ' + salesContract.shippingQuantityTolerance + '% FROM QUANTITY ORDER SHOULD BE ACCEPTABLE. \n - CARTON BOX (NET WEIGHT : 1.89 / CONE, 1 BOX: 18 CONE). \n' + salesContract.condition,
                         style: ['size09']
                     }]
             }];
@@ -371,35 +354,35 @@ module.exports = function (salesContract) {
         remark = [{
             columns: [{
                 width: '*',
-                stack: [ {
+                stack: [{
                     text: 'REMARK :',
                     style: ['size09'],
                     alignment: "left"
-                }, 
-                    { 
-                        ul:[
-                            {
-                                text: 'All instructions regarding sticker, shipping marks etc. to be received 1 (one) month prior to shipment.',
-                                style: ['size10'],
-                                alignment: "justify"
-                            },{
-                                text: 'Beneficiary : P.T. DAN LIRIS KELURAHAN BANARAN, KECAMATAN GROGOL SUKOHARJO - INDONESIA (Phone No. 0271-740888 / 714400). \n'+'Payment Transferred to: \n' + 'PAYMENT TO BE TRANSFERRED TO BANK '+ salesContract.accountBank.bankName + '\n' + salesContract.accountBank.bankAddress + '\n' + 'ACCOUNT NAME : ' + salesContract.accountBank.accountName + '\n' + 'ACCOUNT NO : ' + salesContract.accountBank.accountNumber + ' SWIFT CODE : ' + salesContract.accountBank.swiftCode ,
-                                style: ['size10'],
-                                alignment: "justify"
-                            },{
-                                text:salesContract.termOfPayment.termOfPayment+' to be negotiable with BANK '+ salesContract.accountBank.bankName,
-                                style: ['size10'],
-                                alignment: "justify"
-                            },{
-                                text: 'Please find enclosed some Indonesia Banking Regulations.',
-                                style: ['size10'],
-                                alignment: "justify"
-                            },{
-                                text: 'If you find anything not order, please let us know immediately.',
-                                style: ['size10'],
-                                alignment: "justify"
-                            }]
+                },
+                {
+                    ul: [
+                        {
+                            text: 'All instructions regarding sticker, shipping marks etc. to be received 1 (one) month prior to shipment.',
+                            style: ['size10'],
+                            alignment: "justify"
+                        }, {
+                            text: 'Beneficiary : P.T. DAN LIRIS KELURAHAN BANARAN, KECAMATAN GROGOL SUKOHARJO - INDONESIA (Phone No. 0271-740888 / 714400). \n' + 'Payment Transferred to: \n' + 'PAYMENT TO BE TRANSFERRED TO BANK ' + salesContract.accountBank.bankName + '\n' + salesContract.accountBank.bankAddress + '\n' + 'ACCOUNT NAME : ' + salesContract.accountBank.accountName + '\n' + 'ACCOUNT NO : ' + salesContract.accountBank.accountNumber + ' SWIFT CODE : ' + salesContract.accountBank.swiftCode,
+                            style: ['size10'],
+                            alignment: "justify"
+                        }, {
+                            text: salesContract.termOfPayment.termOfPayment + ' to be negotiable with BANK ' + salesContract.accountBank.bankName,
+                            style: ['size10'],
+                            alignment: "justify"
+                        }, {
+                            text: 'Please find enclosed some Indonesia Banking Regulations.',
+                            style: ['size10'],
+                            alignment: "justify"
+                        }, {
+                            text: 'If you find anything not order, please let us know immediately.',
+                            style: ['size10'],
+                            alignment: "justify"
                         }]
+                }]
             }]
 
         }];
@@ -425,7 +408,7 @@ module.exports = function (salesContract) {
 
             var subheader2 = [{
                 stack: ['\n', {
-                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal)+" ( "+`${numSpell(spellQuantity)}` +")" + ' ' + uom + ' ( ABOUT: '+ parseFloat(convertion).toLocaleString(locale, locale.decimal)+ ' KG ) of' + '\n' + salesContract.comodity.name + comoDesc,
+                    text: 'This is to confirm that your order for ' + salesContract.buyer.name + ' concerning ' + parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " + `${numSpell(spellQuantity)}` + ")" + ' ' + uom + ' ( ABOUT: ' + parseFloat(convertion).toLocaleString(locale, locale.decimal) + ' KG ) of' + '\n' + salesContract.comodity.name + comoDesc,
                     style: ['size09'],
                     alignment: "justify"
                 }, '\n', {
@@ -545,24 +528,8 @@ module.exports = function (salesContract) {
             text: 'Dengan Hormat,\n' + 'Sesuai dengan pesanan/ order Bapak/Ibu kepada kami, maka bersama ini kami kirimkan surat persetujuan pesanan dengan ketentuan dan syarat-syarat di bawah ini :',
             style: ['size09'],
             alignment: "left"
-        },'\n',
+        }, '\n',
         {
-            columns: [
-                {
-                    width: '25%',
-                    text: 'No. Order',
-                    style: ['size09']
-                }, {
-                    width: '3%',
-                    text: ':',
-                    style: ['size09']
-                },
-                {
-                    width: '*',
-                    text: salesContract.dispositionNumber,
-                    style: ['size09']
-                }]
-        }, {
             columns: [
                 {
                     width: '25%',
@@ -591,7 +558,7 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " +Qtystr +" "+ salesContract.uom.unit,
+                    text: parseFloat(salesContract.orderQuantity).toLocaleString(locale, locale.decimal) + " ( " + Qtystr + " " + salesContract.uom.unit,
                     style: ['size09']
                 }]
         }, {
@@ -703,7 +670,7 @@ module.exports = function (salesContract) {
                 },
                 {
                     width: '*',
-                    text:appxLocal+" "+ `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
+                    text: appxLocal + " " + `${moment(salesContract.deliverySchedule).format('MMMM YYYY').toUpperCase()}`,
                     style: ['size09']
                 }]
         }, {
@@ -738,7 +705,7 @@ module.exports = function (salesContract) {
                     text: salesContract.remark,
                     style: ['size09']
                 }]
-        },'\n', {
+        }, '\n', {
 
             text: 'Demikian konfirmasi order ini kami sampaikan untuk diketahui dan dipergunakan seperlunya. Tembusan surat ini mohon dikirim kembali setelah ditanda tangani dan dibubuhi cap perusahaan.',
             style: ['size09'],
@@ -796,7 +763,7 @@ module.exports = function (salesContract) {
     var Sc = {
         pageSize: 'A4',
         pageOrientation: 'portrait',
-        pageMargins: [40, 110, 40, 20],
+        pageMargins: [40, 120, 40, 10],
         content: [].concat(header, subheader, body, sign, remark, footer),
         styles: {
             size06: {

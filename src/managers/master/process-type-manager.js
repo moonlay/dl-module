@@ -20,6 +20,12 @@ module.exports = class ProcessTypeManager extends BaseManager {
         this.orderManager = new OrderTypeManager(db, user);
     }
 
+    _beforeInsert(data) {
+        if(!data.code)
+            data.code = generateCode();
+        return Promise.resolve(data);
+    }
+
     _getQuery(paging) {
         var _default = {
                 _deleted: false
@@ -60,7 +66,7 @@ module.exports = class ProcessTypeManager extends BaseManager {
             _id: {
                 '$ne': new ObjectId(valid._id)
             },
-            code: valid.code,
+            name: valid.name,
             _deleted: false
         });
 
@@ -72,19 +78,18 @@ module.exports = class ProcessTypeManager extends BaseManager {
                 var _process= results[0];
                 var _order = results[1];
 
-                if (!valid.code || valid.code == "")
-                    errors["code"] = i18n.__("ProcessType.code.isRequired:%s is required", i18n.__("ProcessType.code._:Code"));//"code Jenis proses tidak boleh kosong";
-                else if (_process) {
-                    errors["code"] = i18n.__("ProcessType.code.isExists:%s is already exists", i18n.__("ProcessType.code._:Code")); 
+                if (_process) {
+                    errors["name"] = i18n.__("ProcessType.name.isExists:%s is already exists", i18n.__("ProcessType.name._:Name")); 
                 }
 
                 if (!_order) {
-                    errors["orderTypeId"] = i18n.__("ProcessType.orderType.isRequired:%s is not exists", i18n.__("ProcessType.orderType._:OrderType"));
+                    errors["order"] = i18n.__("ProcessType.order.isRequired:%s is not exists", i18n.__("ProcessType.order._:orderType"));
                 }
 
                 if (!valid.name || valid.name == "")
                     errors["name"] = i18n.__("ProcessType.name.isRequired:%s is required", i18n.__("ProcessType.name._:Name")); //"Nama Jenis proses tidak boleh kosong";
 
+               
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));

@@ -202,27 +202,11 @@ module.exports = function (salesContract, offset) {
                     },
                     {
                         width: '*',
-                        text: salesContract.dispositionNumber,
+                        text: salesContract.salesContractNo,
                         style: ['size10']
                     }]
-            }, {
-
-                columns: [
-                    {
-                        width: '25%',
-                        text: 'Code',
-                        style: ['size10']
-                    }, {
-                        width: '3%',
-                        text: ':',
-                        style: ['size10']
-                    },
-                    {
-                        width: '*',
-                        text: no,
-                        style: ['size10']
-                    }]
-            }, {
+            },
+            {
 
                 columns: [
                     {
@@ -577,22 +561,6 @@ module.exports = function (salesContract, offset) {
             columns: [
                 {
                     width: '25%',
-                    text: 'No. Order',
-                    style: ['size10']
-                }, {
-                    width: '3%',
-                    text: ':',
-                    style: ['size10']
-                },
-                {
-                    width: '*',
-                    text: salesContract.dispositionNumber,
-                    style: ['size10']
-                }]
-        }, {
-            columns: [
-                {
-                    width: '25%',
                     text: 'Jenis',
                     style: ['size10']
                 }, {
@@ -853,7 +821,7 @@ module.exports = function (salesContract, offset) {
     var Sc = {
         pageSize: 'A4',
         pageOrientation: 'portrait',
-        pageMargins: [40, 110, 40, 20],
+        pageMargins: [40, 120, 40, 10],
         content: [].concat(header, subheader, body, sign, remark, footer),
         styles: {
             size06: {

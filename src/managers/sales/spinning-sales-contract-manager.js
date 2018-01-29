@@ -18,6 +18,8 @@ var generateCode = require("../../utils/code-generator");
 var assert = require('assert');
 var moment = require("moment");
 
+const NUMBER_DESCRIPTION = "SC Spinning"
+
 module.exports = class SpinningSalesContractManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
@@ -68,76 +70,52 @@ module.exports = class SpinningSalesContractManager extends BaseManager {
     }
 
     _beforeInsert(salesContract) {
-        salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
+
         var type = salesContract && salesContract.buyer && salesContract.buyer.type && (salesContract.buyer.type.toString().toLowerCase() === "ekspor" || salesContract.buyer.type.toString().toLowerCase() === "export") ? "SPE" : "SPL";
+
+        var query = { "type": type, "description": NUMBER_DESCRIPTION };
+        var fields = { "number": 1, "year": 1 };
+
         return this.documentNumbers
-            .find({ "type": type }, { "number": 1, "year": 1 })
-            .sort({ "year": -1, "number": -1 })
-            .limit(1)
-            .toArray()
-            .then((previousDocumentNumbers) => {
+            .findOne(query, fields)
+            .then((previousDocumentNumber) => {
 
                 var yearNow = parseInt(moment().format("YYYY"));
                 var monthNow = moment().format("MM");
 
                 var number = 1;
 
-                if (previousDocumentNumbers.length > 0) {
+                if (!salesContract.saleContractNo) {
+                    if (previousDocumentNumber) {
 
-                    var oldYear = previousDocumentNumbers[0].year;
-                    number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+                        var oldYear = previousDocumentNumber.year;
+                        number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                    salesContract.documentNumber = `${this.pad(number, 4)}/${type}/${monthNow}.${yearNow}`;
-                } else {
-                    salesContract.documentNumber = `0001/${type}/${monthNow}.${yearNow}`;
+                        salesContract.salesContractNo = `${this.pad(number, 4)}/${type}/${monthNow}.${yearNow}`;
+                    } else {
+                        salesContract.saleContractNo = `0001/${type}/${monthNow}.${yearNow}`;
+                    }
                 }
 
                 var documentNumbersData = {
                     type: type,
-                    documentNumber: salesContract.documentNumber,
+                    documentNumber: salesContract.salesContractNo,
                     number: number,
-                    year: yearNow
-                }
+                    year: yearNow,
+                    description: NUMBER_DESCRIPTION
+                };
+
+                var options = {
+                    "upsert": true
+                };
 
                 return this.documentNumbers
-                    .insert(documentNumbersData)
+                    .updateOne(query, documentNumbersData, options)
                     .then((id) => {
                         return Promise.resolve(salesContract)
                     })
             })
     }
-
-    // newCodeGenerator(oldSalesContractNo, type) {
-    //     var newSalesContractNo = "";
-
-    //     var monthNow = parseInt(moment().format("MM"));
-    //     var yearNow = parseInt(moment().format("YYYY"));
-
-    //     var codeStructure = oldSalesContractNo.split("/");
-    //     var number = parseInt(codeStructure[0])
-
-    //     if (codeStructure.length === 3) {
-    //         var dateStructure = codeStructure[2].split(".");
-    //         var oldYear = parseInt(dateStructure[1]);
-
-    //         if (oldYear === yearNow) {
-    //             number += 1;
-
-    //             var dateNowStructure = [this.pad(monthNow, 2), this.pad(yearNow, 4)];
-    //             codeStructure[2] = dateNowStructure.join(".");
-
-    //             codeStructure[0] = this.pad(number, 4);
-
-    //             newSalesContractNo = codeStructure.join("/");
-    //         }
-    //     }
-
-    //     if (!newSalesContractNo) {
-    //         newSalesContractNo = `0001/${type}/${this.pad(monthNow, 2)}.${this.pad(yearNow, 4)}`;
-    //     }
-
-    //     return newSalesContractNo;
-    // }
 
     pad(number, length) {
 
