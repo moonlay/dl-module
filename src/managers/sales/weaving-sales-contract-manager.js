@@ -22,6 +22,8 @@ var assert = require('assert');
 
 var moment = require('moment');
 
+const NUMBER_DESCRIPTION = "SC Weaving";
+
 module.exports = class WeavingSalesContractManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
@@ -75,14 +77,14 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
     }
 
     _beforeInsert(salesContract) {
-        // salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
+
         var type = salesContract && salesContract.buyer && salesContract.buyer.type && (salesContract.buyer.type.toString().toLowerCase() === "ekspor" || salesContract.buyer.type.toString().toLowerCase() === "export") ? "WVE" : "WVL";
+        var query = { "type": type, "description": NUMBER_DESCRIPTION };
+        var fields = { "number": 1, "year": 1 };
+
         return this.documentNumbers
-            .find({ "type": type }, { "number": 1, "year": 1 })
-            .sort({ "year": -1, "number": -1 })
-            .limit(1)
-            .toArray()
-            .then((previousDocumentNumbers) => {
+            .findOne(query, fields)
+            .then((previousDocumentNumber) => {
 
                 var yearNow = parseInt(moment().format("YYYY"));
                 var monthNow = moment().format("MM");
@@ -90,10 +92,10 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 var number = 1;
 
                 if (!salesContract.salesContractNo) {
-                    if (previousDocumentNumbers.length > 0) {
+                    if (previousDocumentNumber) {
 
-                        var oldYear = previousDocumentNumbers[0].year;
-                        number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
+                        var oldYear = previousDocumentNumber.year;
+                        number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
                         salesContract.salesContractNo = `${this.pad(number, 4)}/${type}/${monthNow}.${yearNow}`;
                     } else {
@@ -105,11 +107,16 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                     type: type,
                     documentNumber: salesContract.salesContractNo,
                     number: number,
-                    year: yearNow
-                }
+                    year: yearNow,
+                    description: NUMBER_DESCRIPTION
+                };
+                
+                var options = {
+                    "upsert": true
+                };
 
                 return this.documentNumbers
-                    .insert(documentNumbersData)
+                    .updateOne(query, documentNumbersData, options)
                     .then((id) => {
                         return Promise.resolve(salesContract)
                     })

@@ -29,9 +29,7 @@ module.exports = class WeeklyPlanManager extends BaseManager {
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
             var yearFilter = {
-                "year": {
-                    "$regex": regex
-                }
+                "$where" : "function() { return this.year.toString().match(/"+ paging.keyword +"/) != null; }"
             };
             var unitFilter = {
                 "unit.name": {
@@ -98,6 +96,8 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                             itemError["efficiency"] = i18n.__("WeeklyPlan.items.efficiency.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.efficiency._:Efficiency"));
                         if(!item.operator || item.operator <= 0)
                             itemError["operator"] = i18n.__("WeeklyPlan.items.operator.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.operator._:Operator"));
+                        if(!item.AH || item.AH <= 0)
+                            itemError["AH"] = i18n.__("WeeklyPlan.items.AH.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.AH._:AH"));
                         itemErrors.push(itemError);
                     }
 

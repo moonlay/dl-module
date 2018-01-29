@@ -125,7 +125,12 @@ module.exports = {
             StandardHourManager: require('./src/managers/garment-master-plan/standard-hour-manager'),
             BookingOrderManager: require('./src/managers/garment-master-plan/booking-order-manager'),
             MasterPlanComodityManager: require('./src/managers/garment-master-plan/master-plan-comodity-manager'),
+<<<<<<< HEAD
             SewingBlockingPlanManager: require('./src/managers/garment-master-plan/sewing-blocking-plan-manager')
+=======
+            MasterPlanManager: require('./src/managers/garment-master-plan/master-plan-manager'),
+            GarmentSectionManager: require('./src/managers/garment-master-plan/garment-section-manager'),
+>>>>>>> upstream/dev
         }
     },
     test: {
@@ -241,7 +246,12 @@ module.exports = {
                 standardHour: require("./test/data-util/garment-master-plan/standard-hour-data-util"),
                 bookingOrder: require("./test/data-util/garment-master-plan/booking-order-data-util"),
                 masterPlanComodity: require("./test/data-util/garment-master-plan/master-plan-comodity-data-util"),
+<<<<<<< HEAD
                 sewingBlockingPlan: require("./test/data-util/garment-master-plan/sewing-blocking-plan-data-util")
+=======
+                masterPlan: require("./test/data-util/garment-master-plan/master-plan-data-util"),
+                garmentSection: require("./test/data-util/garment-master-plan/garment-section-data-util"),
+>>>>>>> upstream/dev
             }
         }
     },
