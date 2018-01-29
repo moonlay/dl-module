@@ -1055,7 +1055,7 @@ module.exports = class DailyOperationManager extends BaseManager {
         return data;
     }
 
-    getXlsDailyMachine(result, query) {
+    getXlsDailyMachine(result, query, offset) {
 
         var xls = {};
         xls.data = [];
@@ -1069,7 +1069,7 @@ module.exports = class DailyOperationManager extends BaseManager {
             index++;
             var item = {};
             item["No"] = index;
-            item["dateOutput"] = moment(new Date(daily._id.date)).format(dateFormat);
+            item["dateOutput"] = daily._id && daily._id.date ? moment(daily._id.date).add(offset, "h").format(dateFormat) : "";
             item["Machine Name"] = daily._id.machineName;
             item["process Area"] = daily._id.processArea;
             item["type"] = "output";
