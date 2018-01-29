@@ -50,30 +50,37 @@ module.exports = class GarmentSectionManager extends BaseManager {
         valid.code = valid.code ? valid.code.trim() : "";
         valid.name = valid.name ? valid.name.trim() : "";
 
-        var getGarmentSection = this.collection.singleOrDefault({
+        var getGarmentSectionByCode = this.collection.singleOrDefault({
             _id: {
                 "$ne": new ObjectId(valid._id)
             },
             code: valid.code,
+            _deleted: false
+        });
+        
+        var getGarmentSectionByName = this.collection.singleOrDefault({
+            _id: {
+                "$ne": new ObjectId(valid._id)
+            },
             name: valid.name,
             _deleted: false
         });
         
         // 2. begin: Validation.
-        return Promise.all([getGarmentSection])
+        return Promise.all([getGarmentSectionByCode, getGarmentSectionByName])
             .then(results => {
-                var duplicateGarmentSection = results[0];
+                var duplicateGarmentSectionByCode = results[0];
+                var duplicateGarmentSectionByName = results[1];
 
                 if(!valid.code || valid.code === "")
                     errors["code"] = i18n.__("GarmentSection.code.isRequired:%s is required", i18n.__("GarmentSection.code._:Code"));
-
+                else if (duplicateGarmentSectionByCode)
+                    errors["code"] = i18n.__("GarmentSection.name.isExists:%s already exists", i18n.__("GarmentSection.code._:Code"));
+    
                 if(!valid.name || valid.name === "")
                     errors["name"] = i18n.__("GarmentSection.name.isRequired:%s is required", i18n.__("GarmentSection.name._:Name"));
-
-                if (duplicateGarmentSection) {
-                    errors["code"] = i18n.__("GarmentSection.name.isDuplicate:Duplicate %s and %s", i18n.__("GarmentSection.name._:Name"), i18n.__("GarmentSection.code._:Code"));
-                    errors["name"] = i18n.__("GarmentSection.name.isDuplicate:Duplicate %s and %s", i18n.__("GarmentSection.name._:Name"), i18n.__("GarmentSection.code._:Code"));
-                }
+                else if (duplicateGarmentSectionByName)
+                    errors["name"] = i18n.__("GarmentSection.name.isExists:%s already exists", i18n.__("GarmentSection.name._:Name"));
 
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;

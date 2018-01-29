@@ -1,18 +1,8 @@
 "use strict";
-var _getSert = require("../getsert");
+var helper = require("../../helper");
 var generateCode = require("../../../src/utils/code-generator");
 
 class GarmentSectionDataUtil {
-    getSert(input) {
-        var Manager = require("../../../src/managers/garment-master-plan/garment-section-manager");
-        return _getSert(input, Manager, (data) => {
-            return {
-                code: data.code,
-                name: data.name,
-            };
-        });
-    }
-
     getNewData() {
         var Model = require("dl-models").garmentMasterPlan.GarmentSection;
         var data = new Model();
@@ -26,19 +16,18 @@ class GarmentSectionDataUtil {
     }
 
     getTestData() {
-        var data = {
-            code: "A",
-            name: "Alpha"
-        };
-        return this.getSert(data);
+        var Manager = require("../../../src/managers/garment-master-plan/garment-section-manager");
+        return helper
+            .getManager(Manager)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    return manager.create(data)
+                        .then((id) => {
+                            return manager.getSingleById(id)
+                    });
+                });
+            });
     }
 
-    getTestData2() {
-        var data = {
-            code: "B",
-            name: "Beta"
-        };
-        return this.getSert(data);
-    }
 }
 module.exports = new GarmentSectionDataUtil();
