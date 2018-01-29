@@ -147,7 +147,7 @@ it("#04. should success when create new data export buyer", function(done) {
 });
 
 it("#05. should success when search data with filter", function (done) {
-    manager.read({
+    buyerManager.read({
         keyword: createdDataBuyer.buyer
     })
         .then((documents) => {
