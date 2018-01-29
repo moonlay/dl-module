@@ -21,7 +21,7 @@ before('#00. connect db', function (done) {
 
 var productionOrder;
 it('#01. should success when create new data', function (done) {
-    ProductionOrder.getNewTestData()
+    ProductionOrderDataUtil.getNewTestData()
         .then((spp) => {
             productionOrder = spp;
             validate(productionOrder);
