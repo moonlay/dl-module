@@ -87,13 +87,13 @@ module.exports = class StandardHourManager extends BaseManager {
                     errors["comodity"] = i18n.__("StandardHour.comodityId.isRequired:%s is required", i18n.__("StandardHour.comodityId._:Comodity"));
                 
                 if(!valid.shCutting || valid.shCutting <= 0)
-                    errors["shCutting"] = i18n.__("StandardHour.shCutting.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVCutting._:shCutting"));
+                    errors["shCutting"] = i18n.__("StandardHour.shCutting.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVCutting._:SMVCutting"));
 
                 if(!valid.shSewing || valid.shSewing <= 0)
-                    errors["shSewing"] = i18n.__("StandardHour.shSewing.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVSewing._:shSewing"));
+                    errors["shSewing"] = i18n.__("StandardHour.shSewing.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVSewing._:SMVSewing"));
 
                 if(!valid.shFinishing || valid.shFinishing <= 0)
-                    errors["shFinishing"] = i18n.__("StandardHour.shFinishing.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVFinishing._:shFinishing"));
+                    errors["shFinishing"] = i18n.__("StandardHour.shFinishing.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVFinishing._:SMVFinishingy"));
 
                 if(!valid.date || valid.date === '')
                     errors["date"] = i18n.__("StandardHour.date.isRequired:%s is required", i18n.__("StandardHour.date._:Date"));
