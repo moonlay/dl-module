@@ -580,7 +580,9 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         if (_newRealizations.length > 0) {
                             var job = this.updatePurchaseRequest(_newRealizations)
                                 .then((_newRealizations) => this.updatePurchaseOrder(_newRealizations))
-                                .then((_newRealizations) => this.updatePurchaseOrderExternal(_newRealizations))
+                                .then((purchaseOrderLists) => {
+                                    return this.updatePurchaseOrderExternal(_newRealizations, purchaseOrderLists)
+                                })
                                 .then(() => {
                                     return Promise.resolve(newDeliveryOrder);
                                 });
