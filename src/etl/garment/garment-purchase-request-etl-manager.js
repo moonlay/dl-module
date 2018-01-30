@@ -441,7 +441,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         } else if (unique.Konf.trim() == "K.4") {
                             unitCode = "C1A"
                         } else if (unique.Konf.trim() == "K.5") {
-                            unitCode = "C2A"
+                            unitCode = "C1B"
                         } else {
                             unitCode = unique.Konf.trim();
                         }
