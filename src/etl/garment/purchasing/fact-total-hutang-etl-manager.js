@@ -182,7 +182,7 @@ module.exports = class FactTotalHutangManager extends BaseManager {
     }
 
     extract(times) {
-        var timestamp = times.length > 0 ? new Date(times[0].start) : new Date("1970-01-01");
+        var timestamp = new Date("1970-01-01");
         return this.extractInternNote(timestamp)
             .then((internNotes) => {
                 return this.joinPurchaseRequest(internNotes)
@@ -213,6 +213,7 @@ module.exports = class FactTotalHutangManager extends BaseManager {
             return {
                 deleted: `'${internNote._deleted}'`,
                 internNoteNo: internNote && internNote.no ? `'${internNote.no}'` : null,
+                date: internNote && internNote.date ? `'${moment(internNote.date).add(7, "h").format("YYYY-MM-DD")}'` : null,
                 suppllierName: internNote && internNote.supplier && internNote.supplier.name ? `'${internNote.supplier.name.replace(/'/g, '"')}'` : null,
                 categoryType: purchaseRequest && purchaseRequest.items && purchaseRequest.items.category && purchaseRequest.items.category.name ? `'${this.getCategoryType(purchaseRequest.items.category.code)}'` : null,
                 invoicePrice: internNote && internNote.items && internNote.items.items && internNote.items.items.items.pricePerDealUnit ? `${internNote.items.items.items.pricePerDealUnit}` : null,
@@ -258,7 +259,7 @@ module.exports = class FactTotalHutangManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `\nSELECT ${item.deleted}, ${item.internNoteNo}, ${item.suppllierName}, ${item.categoryType}, ${item.invoicePrice}, ${item.deliveredQuantity}, ${item.dealRate}, ${item.totalPrice}, ${item.totalPayment}, ${item.categoryName}, ${item.divisionName}, ${item.unitName} UNION ALL `;
+                                var queryString = `\nSELECT ${item.deleted}, ${item.internNoteNo}, ${item.suppllierName}, ${item.categoryType}, ${item.invoicePrice}, ${item.deliveredQuantity}, ${item.dealRate}, ${item.totalPrice}, ${item.totalPayment}, ${item.categoryName}, ${item.divisionName}, ${item.unitName}, ${item.date} UNION ALL `;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     sqlQuery = sqlQuery.substring(0, sqlQuery.length - 10);
@@ -277,16 +278,16 @@ module.exports = class FactTotalHutangManager extends BaseManager {
 
                         this.sql.multiple = true;
 
-                        // var fs = require("fs");
-                        // var path = "C:\\Users\\leslie.aula\\Desktop\\order.txt";
+                        var fs = require("fs");
+                        var path = "C:\\Users\\leslie.aula\\Desktop\\order.txt";
 
-                        // fs.writeFile(path, sqlQuery, function (error) {
-                        //     if (error) {
-                        //         console.log("write error:  " + error.message);
-                        //     } else {
-                        //         console.log("Successful Write to " + path);
-                        //     }
-                        // });
+                        fs.writeFile(path, sqlQuery, function (error) {
+                            if (error) {
+                                console.log("write error:  " + error.message);
+                            } else {
+                                console.log("Successful Write to " + path);
+                            }
+                        });
 
                         return Promise.all(command)
                             .then((results) => {
