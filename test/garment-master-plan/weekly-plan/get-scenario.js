@@ -83,6 +83,21 @@ it(`#03. should success when get week by filter from created data`, function (do
     });
 });
 
+it(`#03.5. should success when get week by filter from created data`, function (done) {
+    var key=createdData.name;
+    var filter={};
+    filter.year=createdData.year;
+    filter.unit=createdData.unit.code;
+    filter.weekNumber=createdData.items[1].weekNumber;
+    manager.getWeek(key,filter).then(
+        week => {
+            week.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+    });
+});
+
 it(`#04. should success when destroy data with id`, function(done) {
     manager.destroy(createdId)
         .then((result) => {
