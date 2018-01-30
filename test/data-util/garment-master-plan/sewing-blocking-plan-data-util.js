@@ -1,7 +1,7 @@
 "use strict";
 var helper = require("../../helper");
 var _getSert = require("../getsert");
-var MasterPlanManager = require("../../../src/managers/garment-master-plan/master-plan-manager");
+var SewingBlockingPlanManager = require("../../../src/managers/garment-master-plan/sewing-blocking-plan-manager");
 
 var generateCode = require("../../../src/utils/code-generator");
 var BookingOrder = require("./booking-order-data-util");
@@ -10,7 +10,7 @@ var WeeklyPlan = require("./weekly-plan-data-util");
 var Models = require("dl-models");
 var Map = Models.map;
 
-class MasterPlanDataUtil {
+class SewingBlockingPlanDataUtil {
     getNewData() {
        return Promise.all([BookingOrder.getNewTestData(), WeeklyPlan.getTestData()])
             .then((results) => {
@@ -24,9 +24,7 @@ class MasterPlanDataUtil {
                     numItem += 1;
                     var detail = {
                         code : bookingDetail.code,
-                        shCutting : 20,
                         shSewing : 20,
-                        shFinishing : 20,
                         unitId : _weeklyPlan.unitId.toString(),
                         unit : _weeklyPlan.unit,
                         weeklyPlanId : _weeklyPlan._id.toString(),
@@ -37,7 +35,9 @@ class MasterPlanDataUtil {
                         quantity : bookingDetail.quantity,
                         remark : `remark ${bookingDetail.code}`,
                         isConfirmed : true,
-                        deliveryDate : _bookingOrder.deliveryDate
+                        deliveryDate : _bookingOrder.deliveryDate,
+                        efficiency:52,
+                        ehBooking:500
                     }
                     details.push(detail);
                 }
@@ -63,7 +63,7 @@ class MasterPlanDataUtil {
 
     getNewTestData() {
         return helper
-            .getManager(MasterPlanManager)
+            .getManager(SewingBlockingPlanManager)
             .then((manager) => {
                 return this.getNewData().then((data) => {
                     return manager.create(data)
@@ -74,4 +74,4 @@ class MasterPlanDataUtil {
             });
     }
 }
-module.exports = new MasterPlanDataUtil();
+module.exports = new SewingBlockingPlanDataUtil();
