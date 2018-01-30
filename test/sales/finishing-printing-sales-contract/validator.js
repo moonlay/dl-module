@@ -154,7 +154,23 @@ it("#04. should success when create new data export buyer", function (done) {
         });
 });
 
-it('#05. it should error when create new data with export buyer with agent without comission, amount, term of shipment', function (done) {
+it("#05. should success when search data with filter", function (done) {
+    buyerManager.read({
+        keyword: createdDataBuyer.buyer
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it('#06. it should error when create new data with export buyer with agent without comission, amount, term of shipment', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
 
@@ -185,7 +201,7 @@ it('#05. it should error when create new data with export buyer with agent witho
         });
 });
 
-it('#06. it should error when create new data with poitSystem=4 and pointLimit=0', function (done) {
+it('#07. it should error when create new data with poitSystem=4 and pointLimit=0', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
             sc.pointSystem = 4;
@@ -210,7 +226,7 @@ it('#06. it should error when create new data with poitSystem=4 and pointLimit=0
         });
 });
 
-it('#07. it should error when create new data without detail', function (done) {
+it('#08. it should error when create new data without detail', function (done) {
     FinishingPrintingSalesContractDataUtil.getNewData()
         .then(sc => {
             sc.details = [{

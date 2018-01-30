@@ -9,9 +9,9 @@ var dataUtil =require("../../data-util/garment-master-plan/booking-order-data-ut
 var validate = require("dl-models").validator.garmentMasterPlan.bookingOrder;
 
 
-var ManagerPlan = require("../../../src/managers/garment-master-plan/master-plan-manager");
+var ManagerPlan = require("../../../src/managers/garment-master-plan/sewing-blocking-plan-manager");
 var managerPlan = null;
-var dataUtilPlan =require("../../data-util/garment-master-plan/master-plan-data-util");
+var dataUtilPlan =require("../../data-util/garment-master-plan/sewing-blocking-plan-data-util");
 var validatePlan = require("dl-models").validator.garmentMasterPlan.masterPlan;
 
 var moment = require('moment');

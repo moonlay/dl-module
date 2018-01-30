@@ -146,7 +146,23 @@ it("#04. should success when create new data export buyer", function(done) {
         });
 });
 
-it('#05. it should error when create new data with export buyer with agent without comission, term of shipment', function (done) {
+it("#05. should success when search data with filter", function (done) {
+    buyerManager.read({
+        keyword: createdDataBuyer.buyer
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it('#06. it should error when create new data with export buyer with agent without comission, term of shipment', function (done) {
     SpinningSalesContractDataUtil.getNewData()
         .then(sc => {
 
