@@ -298,6 +298,9 @@ module.exports = {
             dim: {
                 dimGarmentSupplier: require("./src/etl/garment/dim/dim-garment-supplier-etl-manager")
             },
+            garment: {
+                factTotalHutangGarment: require("./src/etl/garment/purchasing/fact-total-hutang-etl-manager")
+            },
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
             factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager"),
         },
