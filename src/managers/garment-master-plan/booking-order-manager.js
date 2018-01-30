@@ -5,7 +5,7 @@ require("mongodb-toolkit");
 var DLModels = require("dl-models");
 var map = DLModels.map;
 var BookingOrder = DLModels.garmentMasterPlan.BookingOrder;
-var MasterPlan = DLModels.garmentMasterPlan.MasterPlan;
+var SewingBlockingPlan = DLModels.garmentMasterPlan.SewingBlockingPlan;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var ComodityManager = require('./master-plan-comodity-manager');
@@ -19,7 +19,7 @@ module.exports = class BookingOrderManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentMasterPlan.collection.BookingOrder);
-        this.masterPlanCollection = this.db.use(map.garmentMasterPlan.collection.MasterPlan);
+        this.sewingBlockingPlanCollection = this.db.use(map.garmentMasterPlan.collection.SewingBlockingPlan);
         this.comodityManager = new ComodityManager(db, user);
         //this.masterPlanManager = new MasterPlanManager(db, user);
         this.garmentBuyerManager = new GarmentBuyerManager(db, user);
@@ -182,17 +182,21 @@ module.exports = class BookingOrderManager extends BaseManager {
                                     today=new Date(item._createdDate);
                                 }
                                 today.setHours(0,0,0,0);
+                                item.deliveryDate.setHours(0,0,0,0);
                                 valid.deliveryDate=new Date(valid.deliveryDate);
                                 valid.bookingDate= new Date(valid.bookingDate);
-                                if(today>item.deliveryDate){
+                                valid.bookingDate.setHours(0,0,0,0);
+                                valid.deliveryDate.setHours(0,0,0,0);
+                                if(valid.bookingDate>item.deliveryDate){
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
+                                }
+                                else if(today>item.deliveryDate){
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
                                 }
                                 else if (valid.deliveryDate<item.deliveryDate){
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDated.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
                                 }
-                                else if(valid.bookingDate>item.deliveryDate){
-                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
-                                }
+                                
                             }
 
                             index++;
@@ -313,22 +317,22 @@ module.exports = class BookingOrderManager extends BaseManager {
                         "bookingOrderNo": booking.code,
                         "_deleted":false
                     };
-                    this.masterPlanCollection.singleOrDefault(query)
-                        .then((masterPlan) => {
-                            if(masterPlan){
+                    this.sewingBlockingPlanCollection.singleOrDefault(query)
+                        .then((sewingBlockingPlan) => {
+                            if(sewingBlockingPlan){
                                 if(booking.isCanceled){
-                                    masterPlan.status="Booking Dibatalkan";
+                                    sewingBlockingPlan.status="Booking Dibatalkan";
                                 }
                                 else{
-                                    masterPlan.status="Booking Ada Perubahan";
-                                    for(var detail of masterPlan.details){
+                                    sewingBlockingPlan.status="Booking Ada Perubahan";
+                                    for(var detail of sewingBlockingPlan.details){
                                         var itemBooking = booking.items.find(select => select.code === detail.code);
                                         if(itemBooking){
                                             detail.isConfirmed = itemBooking.isConfirmed;
                                         }
                                     }
                                 }
-                                this.masterPlanCollection.update(masterPlan)
+                                this.sewingBlockingPlanCollection.update(sewingBlockingPlan)
                                     .then((id) =>
                                         resolve(bookingId));
                             }
@@ -362,12 +366,12 @@ module.exports = class BookingOrderManager extends BaseManager {
 
     delete(data) {
         data._deleted = true;
-        return this.masterPlanCollection.singleOrDefault({ "bookingOrderNo": data.code,"_deleted":false })
-                   .then(masterPlan =>{
-                       if(masterPlan){
-                        masterPlan.status="Booking Dihapus";
-                        return this.masterPlanCollection.update(masterPlan)
-                                   .then(idMasterPlan=>{
+        return this.sewingBlockingPlanCollection.singleOrDefault({ "bookingOrderNo": data.code,"_deleted":false })
+                   .then(sewingBlockingPlan =>{
+                       if(sewingBlockingPlan){
+                        sewingBlockingPlan.status="Booking Dihapus";
+                        return this.sewingBlockingPlanCollection.update(sewingBlockingPlan)
+                                   .then(idSewingBlockingPlan=>{
                                          return this.collection.update(data)
                                                    .then(id => {return id});
                                    });

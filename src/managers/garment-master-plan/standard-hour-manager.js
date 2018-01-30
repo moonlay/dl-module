@@ -180,4 +180,28 @@ module.exports = class StandardHourManager extends BaseManager {
     //             });
     //     });
     // }
+
+    getStandardHourByBuyerComodity(buyerCode, comodityCode){
+        return new Promise((resolve, reject) => {
+            this.collection.aggregate(
+                [
+                    { $match: { "masterplanComodityCode":comodityCode , garmentBuyerCode:buyerCode} },
+                    { $sort: { date:-1, _updatedDate:-1 } },
+                    {
+                    $group:
+                        {
+                        _id:{ "masterplanComodityCode":comodityCode , garmentBuyerCode:buyerCode},
+                        firstSHSewing: { $first: "$shSewing" },
+                        shId: { $first: "$_id" }
+                        //shId: "$_id"
+                        }
+                    }
+                    //{ $match: { _id:styleCode } }
+                ]
+                )
+                .toArray(function (err, result) {
+                    resolve(result);
+                });
+        });
+    }
 }

@@ -3,10 +3,10 @@
 var ObjectId = require("mongodb").ObjectId;
 var should = require('should');
 var helper = require("../../helper");
-var Manager = require("../../../src/managers/garment-master-plan/master-plan-manager");
+var Manager = require("../../../src/managers/garment-master-plan/sewing-blocking-plan-manager");
 var manager = null;
-var dataUtil =require("../../data-util/garment-master-plan/master-plan-data-util");
-var validate = require("dl-models").validator.garmentMasterPlan.masterPlan;
+var dataUtil =require("../../data-util/garment-master-plan/sewing-blocking-plan-data-util");
+var validate = require("dl-models").validator.garmentMasterPlan.sewingBlockingPlan;
 
 var moment = require('moment');
 
@@ -23,13 +23,13 @@ before('#00. connect db', function (done) {
         })
 });
 
-it("#01. should error when create new data with not exsisst booking order", function (done) {
+it("#01. should error when create new data with not exsist booking order", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             data.bookingOrderId = "bookingOrderId";
             manager.create(data)
                 .then((id) => {
-                    done("should error when create new data with not exsisst booking order");
+                    done("should error when create new data with not exsist booking order");
                 })
                 .catch((e) => {
                     e.name.should.equal("ValidationError");
@@ -70,7 +70,8 @@ it("#03. should error when create new data with comodity not exist", function (d
         .then((data) => {
             var details = [];
             for(var detail of data.details){
-                detail.masterPlanComodityId = "code";
+                detail.masterPlanComodityId = "masterPlanComodityId";
+                detail.masterPlanComodity._id = "masterPlanComodityId";
                 details.push(detail);
             }
             data.details = details;
@@ -120,16 +121,16 @@ it("#04. should error when create new data with confirmed and no comodity data",
         });
 });
 
-it("#05. should error when create new data with 0 value on shCutting, shSewing, shFinishing and quantity", function (done) {
+it("#05. should error when create new data with 0 value on  shSewing and quantity", function (done) {
     dataUtil.getNewData()
         .then((data) => {
-            data.details[0].shCutting = 0;
+            //data.details[0].shCutting = 0;
             data.details[0].shSewing = 0;
-            data.details[0].shFinishing = 0;
+            //data.details[0].shFinishing = 0;
             data.details[0].quantity = 0;
             manager.create(data)
                 .then((id) => {
-                    done("should error when create new data with 0 value on shCutting, shSewing, shFinishing and quantity");
+                    done("should error when create new data with 0 value on  shSewing and quantity");
                 })
                 .catch((e) => {
                     e.name.should.equal("ValidationError");
@@ -137,9 +138,9 @@ it("#05. should error when create new data with 0 value on shCutting, shSewing, 
                     e.errors.should.instanceof(Object);
                     e.errors.should.have.property("details");
                     e.errors.details.should.instanceOf(Array);
-                    e.errors.details[0].should.have.property("shCutting");
+                    // e.errors.details[0].should.have.property("shCutting");
                     e.errors.details[0].should.have.property("shSewing");
-                    e.errors.details[0].should.have.property("shFinishing");
+                    // e.errors.details[0].should.have.property("shFinishing");
                     e.errors.details[0].should.have.property("quantity");
                     done();
                 });
