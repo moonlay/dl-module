@@ -310,7 +310,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                     mp.week.remainingAH+=mp.ehBooking;
                     mp.week.usedAH-=mp.ehBooking;
                 }
-                this.collection.update(masterPlan);
+                return this.collection.update(masterPlan);
             })
             .then((result) => {
                 return Promise.resolve(data);
