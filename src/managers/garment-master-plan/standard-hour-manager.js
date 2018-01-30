@@ -93,7 +93,7 @@ module.exports = class StandardHourManager extends BaseManager {
                     errors["shSewing"] = i18n.__("StandardHour.shSewing.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVSewing._:SMVSewing"));
 
                 if(!valid.shFinishing || valid.shFinishing <= 0)
-                    errors["shFinishing"] = i18n.__("StandardHour.shFinishing.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVFinishing._:SMVFinishing"));
+                    errors["shFinishing"] = i18n.__("StandardHour.shFinishing.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVFinishing._:SMVFinishingy"));
 
                 if(!valid.date || valid.date === '')
                     errors["date"] = i18n.__("StandardHour.date.isRequired:%s is required", i18n.__("StandardHour.date._:Date"));
@@ -180,4 +180,28 @@ module.exports = class StandardHourManager extends BaseManager {
     //             });
     //     });
     // }
+
+    getStandardHourByBuyerComodity(buyerCode, comodityCode){
+        return new Promise((resolve, reject) => {
+            this.collection.aggregate(
+                [
+                    { $match: { "masterplanComodityCode":comodityCode , garmentBuyerCode:buyerCode} },
+                    { $sort: { date:-1, _updatedDate:-1 } },
+                    {
+                    $group:
+                        {
+                        _id:{ "masterplanComodityCode":comodityCode , garmentBuyerCode:buyerCode},
+                        firstSHSewing: { $first: "$shSewing" },
+                        shId: { $first: "$_id" }
+                        //shId: "$_id"
+                        }
+                    }
+                    //{ $match: { _id:styleCode } }
+                ]
+                )
+                .toArray(function (err, result) {
+                    resolve(result);
+                });
+        });
+    }
 }
