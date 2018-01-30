@@ -335,7 +335,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                                 purchaseOrderExternalNo: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal.no) ? `'${poItem.purchaseOrderExternal.no}'` : null, // Nomor PO Eksternal
                                 purchaseOrderExternalDate: (poItem.purchaseOrderExternal && poItem.purchaseOrderExternal._createdDate) ? `'${moment(poItem.purchaseOrderExternal._createdDate).add(7, "h").format('YYYY-MM-DD')}'` : null, //Tanggal PO Eksternal
                                 deliveryOrderDays: poFulfillment.deliveryOrderDate ? `${doDays}` : null, //Jumlah Selisih Hari DO-PO Eksternal
-                                deliveryOrderDaysRange: poFulfillment.deliveryOrderDate ? `${this.getRangeMonth(doDays)}` : null, //Selisih Hari DO-PO Eksternal
+                                deliveryOrderDaysRange: poFulfillment.deliveryOrderDate ? `'${this.getRangeMonth(doDays)}'` : null, //Selisih Hari DO-PO Eksternal
                                 supplierCode: (poItem.purchaseOrderExternal && poItem.supplier && poItem.supplier.code !== "") ? `'${poItem.supplier.code}'` : null, //Kode Supplier
                                 supplierName: (poItem.purchaseOrderExternal && poItem.supplier && poItem.supplier.name !== "") ? `'${poItem.supplier.name}'` : null, //Nama Supplier
                                 currencyCode: (poItem.purchaseOrderExternal && poItem.currency && poItem.currency.code !== "") ? `'${poItem.currency.code}'` : null, //Kode Mata Uang
