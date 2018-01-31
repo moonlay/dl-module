@@ -150,26 +150,26 @@ it("#05. should error when create new data with 0 value on  shSewing and quantit
         });
 });
 
-it("#06. should error when create new data with quantity master plan more than quantity booking", function (done) {
-    dataUtil.getNewData()
-        .then((data) => {
-            data.details[0].quantity = 1000;
-            manager.create(data)
-                .then((id) => {
-                    done("should error when create new data with quantity master plan more than quantity booking");
-                })
-                .catch((e) => {
-                    e.name.should.equal("ValidationError");
-                    e.should.have.property("errors");
-                    e.errors.should.instanceof(Object);
-                    e.errors.should.have.property("detail");
-                    done();
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#06. should error when create new data with quantity master plan more than quantity booking", function (done) {
+//     dataUtil.getNewData()
+//         .then((data) => {
+//             data.details[0].quantity = 1000;
+//             manager.create(data)
+//                 .then((id) => {
+//                     done("should error when create new data with quantity master plan more than quantity booking");
+//                 })
+//                 .catch((e) => {
+//                     e.name.should.equal("ValidationError");
+//                     e.should.have.property("errors");
+//                     e.errors.should.instanceof(Object);
+//                     e.errors.should.have.property("detail");
+//                     done();
+//                 });
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
 it("#07. should error when create new data with no data unit (1)", function (done) {
     dataUtil.getNewData()
