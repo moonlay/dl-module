@@ -128,7 +128,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                         // if(!detail.shCutting || detail.shCutting === 0)
                         //     detailError["shCutting"] = i18n.__("SewingBlockingPlan.details.shCutting.mustGreater:%s must greater than 0", i18n.__("SewingBlockingPlan.details.shCutting._:Sh Cutting"));
                         if(!detail.shSewing || detail.shSewing === 0)
-                            detailError["shSewing"] = i18n.__("SewingBlockingPlan.details.shSewing.mustGreater:%s must greater than 0", i18n.__("SewingBlockingPlan.details.shSewing._:Sh Sewing"));
+                            detailError["shSewing"] = i18n.__("SewingBlockingPlan.details.smvSewing.mustGreater:%s must greater than 0", i18n.__("SewingBlockingPlan.details.smvSewing._:SMV Sewing"));
                         // if(!detail.shFinishing || detail.shFinishing === 0)
                         //     detailError["shFinishing"] = i18n.__("SewingBlockingPlan.details.shFinishing.mustGreater:%s must greater than 0", i18n.__("SewingBlockingPlan.details.shFinishing._:Sh Finishing"));
                         if(!detail.quantity || detail.quantity === 0)
@@ -202,8 +202,8 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                             break;
                         }
                     }
-                    if(totalDetail > valid.quantity)
-                        errors["detail"] = `Quantity can not be more than ${valid.quantity}`;
+                    // if(totalDetail > valid.quantity)
+                    //     errors["detail"] = `Quantity can not be more than ${valid.quantity}`;
                 }
               
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -306,15 +306,44 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
     _beforeUpdate(data) {
         return this.getSingleById(data._id)
             .then(masterPlan => {
-                for(var mp of masterPlan.details){
-                    mp.week.remainingAH+=mp.ehBooking;
-                    mp.week.usedAH-=mp.ehBooking;
+                var weeks=[];
+                for(var detail of masterPlan.details){
+                    weeks.push(this.weeklyPlanManager.getSingleById(detail.weeklyPlanId));
                 }
-                return this.collection.update(masterPlan);
+                 return Promise.all(weeks)
+                .then(weeklyPlans=>{
+                    var updateWeek=[];
+                    for(var mp of masterPlan.details){
+                        for(var w of weeklyPlans){
+                            if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
+                                mp.week.remainingAH+=mp.ehBooking;
+                                mp.week.usedAH-=mp.ehBooking;
+                                w.items[mp.week.weekNumber-1]= mp.week;  
+                                break;                                      
+                            }
+                        }
+                        updateWeek.push(this.weeklyPlanManager.collection.update(w));
+                        for(var detail of data.details){
+                            if(mp.masterPlanComodityId.toString()===detail.masterPlanComodityId.toString() && mp.unitId.toString() === detail.unitId.toString() && mp.weeklyPlanYear===detail.weeklyPlanYear){
+                                if(detail.week){
+                                    if(detail.week.weekNumber===mp.week.weekNumber){
+                                        detail.week=mp.week;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    return Promise.all(updateWeek)
+                    .then(result=>{
+                        return this.collection.update(masterPlan);
+                    })
+                    .then(() => {
+                        return Promise.resolve(data);
+                    })
+                })
             })
-            .then((result) => {
-                return Promise.resolve(data);
-            })
+            
     }
 
     _afterUpdate(id) {
