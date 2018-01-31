@@ -93,7 +93,7 @@ module.exports = class StandardHourManager extends BaseManager {
                     errors["shSewing"] = i18n.__("StandardHour.shSewing.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVSewing._:SMVSewing"));
 
                 if(!valid.shFinishing || valid.shFinishing <= 0)
-                    errors["shFinishing"] = i18n.__("StandardHour.shFinishing.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVFinishing._:SMVFinishingy"));
+                    errors["shFinishing"] = i18n.__("StandardHour.shFinishing.mustBeGreater:%s must be greater than 0", i18n.__("StandardHour.SMVFinishing._:SMVFinishing"));
 
                 if(!valid.date || valid.date === '')
                     errors["date"] = i18n.__("StandardHour.date.isRequired:%s is required", i18n.__("StandardHour.date._:Date"));
