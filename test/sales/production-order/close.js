@@ -1,5 +1,5 @@
 require("should");
-var ProductionOrder = require('../../data-util/sales/production-order-data-util');
+var ProductionOrderDataUtil = require('../../data-util/sales/production-order-data-util');
 var helper = require("../../helper");
 var validate = require("dl-models").validator.sales.productionOrder;
 
@@ -21,7 +21,7 @@ before('#00. connect db', function (done) {
 
 var productionOrder;
 it('#01. should success when create new data', function (done) {
-    ProductionOrder.getNewTestData()
+    ProductionOrderDataUtil.getNewTestData()
         .then((spp) => {
             productionOrder = spp;
             validate(productionOrder);
@@ -50,4 +50,37 @@ it('#02. should success when close', function (done) {
         .catch((e) => {
             done(e);
         });
+});
+
+var dataUtil;
+it('#03. should success when get data util', (done) => {
+    ProductionOrderDataUtil.getNewData(null)
+        .then((data) => {
+            delete data.orderNo;
+            dataUtil = data;
+            done()
+        })
+        .catch((e) => {
+            done(e);
+        })
+});
+
+it('#04. should success when create data', (done) => {
+    productionOrderManager.create(dataUtil)
+        .then((id) => {
+            done()
+        })
+        .catch((e) => {
+            done(e);
+        })
+});
+
+it('#05. should success when create data', (done) => {
+    productionOrderManager.create(dataUtil)
+        .then((id) => {
+            done()
+        })
+        .catch((e) => {
+            done(e);
+        })
 });

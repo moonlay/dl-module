@@ -240,3 +240,13 @@ it(`#14. should success when update data`, function (done) {
             done(e);
         });
 });
+
+it("#15. should success when read data", function (done) {
+    deliveryOrderManager.read({ "keyword": "test" })
+        .then((data) => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
