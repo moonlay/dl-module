@@ -121,9 +121,9 @@ it('#08. should success when get data for Excel Report', function (done) {
 
 it('#08. should success when create report detail', function (done) {
 
-    query.orderType = "PRINTING";
+    query.orderType = "";
     query.year = moment().year();
-    query.month = moment().month();
+    // query.month = moment().month();
 
     manager.getOrderStatusDetailReport(query, 7)
         .then((result) => {
