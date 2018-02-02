@@ -440,11 +440,11 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                                     if (Object.getOwnPropertyNames(items.uomConversion).length > 0 && Object.getOwnPropertyNames(items.dealUom).length > 0) {
                                                         if (items.uomConversion.unit.toString() === items.dealUom.unit.toString()) {
                                                             if (items.conversion !== 1) {
-                                                                itemError["conversion"] = i18n.__("PurchaseOrderExternal.items.conversion.mustOne:%s must be 1", i18n.__("PurchaseOrderExternal.items.conversion._:Conversion"));
+                                                                // itemError["conversion"] = i18n.__("PurchaseOrderExternal.items.conversion.mustOne:%s must be 1", i18n.__("PurchaseOrderExternal.items.conversion._:Conversion"));
                                                             }
                                                         } else {
                                                             if (items.conversion === 1) {
-                                                                itemError["conversion"] = i18n.__("PurchaseOrderExternal.items.conversion.mustNotOne:%s must not be 1", i18n.__("PurchaseOrderExternal.items.conversion._:Conversion"));
+                                                                // itemError["conversion"] = i18n.__("PurchaseOrderExternal.items.conversion.mustNotOne:%s must not be 1", i18n.__("PurchaseOrderExternal.items.conversion._:Conversion"));
                                                             }
                                                         }
                                                     } else {
