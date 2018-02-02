@@ -171,11 +171,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                                 if (Object.getOwnPropertyNames(item.uomConversion).length > 0 && Object.getOwnPropertyNames(item.deliveredUom).length > 0) {
                                     if (item.uomConversion.unit.toString() === item.deliveredUom.unit.toString()) {
                                         if (item.conversion !== 1) {
-                                            itemError["conversion"] = i18n.__("UnitReceiptNote.items.conversion.isRequired:%s must be 1", i18n.__("UnitReceiptNote.items.conversion._:Conversion"));
+                                            // itemError["conversion"] = i18n.__("UnitReceiptNote.items.conversion.isRequired:%s must be 1", i18n.__("UnitReceiptNote.items.conversion._:Conversion"));
                                         }
                                     } else {
                                         if (item.conversion === 1) {
-                                            itemError["conversion"] = i18n.__("UnitReceiptNote.items.conversion.isRequired:%s must not be 1", i18n.__("UnitReceiptNote.items.conversion._:Conversion"));
+                                            // itemError["conversion"] = i18n.__("UnitReceiptNote.items.conversion.isRequired:%s must not be 1", i18n.__("UnitReceiptNote.items.conversion._:Conversion"));
                                         }
                                     }
                                 } else {
