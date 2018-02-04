@@ -96,7 +96,7 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
         var timestamp = new Date(time);
         return this.kanbanManager.collection.find({
             "_updatedDate": {
-                $gte: timestamp
+                "$gte": timestamp
             }
         }, SELECTED_FIELDS).toArray();
     }
@@ -184,7 +184,7 @@ module.exports = class FactMonitoringKanbanEtlManager extends BaseManager {
                         orderType: kanban.productionOrder && kanban.productionOrder.orderType && kanban.productionOrder.orderType.name ? `'${kanban.productionOrder.orderType.name}'` : null,
                         isBadOutput: kanban.isBadOutput != undefined ? `'${kanban.isBadOutput}'` : null,
                         isReprocess: kanban.isReprocess != undefined ? `'${kanban.isReprocess}'` : null,
-                        oldKanbanId: kanban.oldKanban != undefined && kanban.oldKanban && kanban.oldKanban._id ? `'${kanban.oldKanban._id }'` : null,
+                        oldKanbanId: kanban.oldKanban != undefined && kanban.oldKanban && kanban.oldKanban._id ? `'${kanban.oldKanban._id}'` : null,
                         id: `'${kanban._id}'`
                     }
                 });

@@ -115,7 +115,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
         var inputArr = [];
         return this.dailyOperationManager.collection.find({
             _updatedDate: {
-                $gte: timestamp
+                "$gte": timestamp
             }
         }, {
                 "code": 1
@@ -318,9 +318,9 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
                         this.sql.multiple = true;
 
                         // var fs = require("fs");
-                        // var path = "C:\\Users\\jacky.rusly\\Desktop\\daily.txt";
+                        // var path = "C:\\Users\\leslie.aula\\Desktop\\daily.txt";
 
-                        // fs.writeFile(path, sqlQueryReason, function (error) {
+                        // fs.writeFile(path, sqlQuery, function (error) {
                         //     if (error) {
                         //         console.log("write error:  " + error.message);
                         //     } else {
