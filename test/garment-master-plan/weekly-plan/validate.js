@@ -97,12 +97,12 @@ it("#04. should error when create new data with invalid year", function (done) {
         });
 });
 
-it("#05. should error when create new data with invalid efficiency, operator and AH", function (done) {
+it("#05. should error when create new data with invalid efficiency, operator and workingHours", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             data.items[0].efficiency = 0;
             data.items[0].operator = 0;
-            data.items[0].AH = 0;
+            data.items[0].workingHours = 0;
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with invalid month");
@@ -116,7 +116,7 @@ it("#05. should error when create new data with invalid efficiency, operator and
                         if (Object.getOwnPropertyNames(item).length > 0) {
                             item.should.have.property('efficiency');
                             item.should.have.property('operator');
-                            item.should.have.property('AH');
+                            item.should.have.property('workingHours');
                         }
                     }
                     done();
