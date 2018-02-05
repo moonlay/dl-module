@@ -96,8 +96,8 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                             itemError["efficiency"] = i18n.__("WeeklyPlan.items.efficiency.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.efficiency._:Efficiency"));
                         if(!item.operator || item.operator <= 0)
                             itemError["operator"] = i18n.__("WeeklyPlan.items.operator.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.operator._:Operator"));
-                        if(!item.AH || item.AH <= 0)
-                            itemError["AH"] = i18n.__("WeeklyPlan.items.AH.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.AH._:AH"));
+                        if(!item.workingHours || item.workingHours <= 0)
+                            itemError["workingHours"] = i18n.__("WeeklyPlan.items.workingHours.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.workingHours._:WorkingHours"));
                         itemErrors.push(itemError);
                     }
 
