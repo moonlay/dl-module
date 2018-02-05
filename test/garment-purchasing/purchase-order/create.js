@@ -56,6 +56,27 @@ it('#03. should success when create new purchase-order', function (done) {
         });
 });
 
+it('#03.(2)should error when create purchase-order with same id', function (done) {
+    purchaseOrderManager.createMultiple(listPurchaseOrder)
+        .then(data => {
+            // data.should.be.instanceof(Array);
+            // createdId = data[0];
+            // done();
+            done("Should not be able to create with empty same id");
+        })
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
+        });
+});
+
 var createdData;
 var categoryId;
 it(`#04. should success when get created data with id`, function (done) {

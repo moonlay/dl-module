@@ -119,6 +119,31 @@ it("#04. should success when get report with parameter dateFrom and dateTo", fun
         });
 });
 
+
+it("#04. (2) should success when get report with parameter dateFrom and dateTo", function (done) {
+    instanceManager.getPOExtReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')})
+        .then((data) => {
+            data.should.instanceof(Array);
+            var result = {
+                data : [{}]
+            };
+            instanceManager.getPOExtReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')})
+                .then(xls => {
+                    xls.should.instanceof(Object);
+                    xls.should.have.property('data');
+                    xls.should.have.property('options');
+                    xls.should.have.property('name');
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 it('#05. should success when generate data to Excel Report with date', function (done) {
     var startdate = null;
     var enddate   = null;
