@@ -860,8 +860,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 var processed = [];
                 var deleteProcess = [];
                 var tempProcess = [];
-                var roNoArr = [];
-    
+                var roNoArr = [];    
                 var dataRo = [];
     
                 for (var i of dataArr) {

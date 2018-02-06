@@ -21,7 +21,7 @@ class WeeklyPlanDataUtil {
                         month: startDate.getMonth(),
                         efficiency : 10,
                         operator : 100,
-                        AH : 40,
+                        workingHours : 40,
                     })
                 }
                 var data = {
@@ -71,7 +71,7 @@ class WeeklyPlanDataUtil {
                         month: startDate.getMonth(),
                         efficiency : 10,
                         operator : 100,
-                        AH : 40,
+                        workingHours : 40,
                     })
                 }
                 var data = {

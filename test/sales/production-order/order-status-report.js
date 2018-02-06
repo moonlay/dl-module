@@ -121,9 +121,9 @@ it('#08. should success when get data for Excel Report', function (done) {
 
 it('#08. should success when create report detail', function (done) {
 
-    query.orderType = "PRINTING";
+    query.orderType = "";
     query.year = moment().year();
-    query.month = moment().month();
+    // query.month = moment().month();
 
     manager.getOrderStatusDetailReport(query, 7)
         .then((result) => {
@@ -188,6 +188,21 @@ it('#12. should success when get data detail for Excel Report', function (done) 
             done(e);
         });
 });
+
+it('#12. should success when get data detail for Excel Report', function (done) {
+    var test={
+        data:[{}]
+    }
+        manager.getOrderStatusDetailXls(test, query)
+            .then((xlsData) => {
+                xlsData.should.have.property('data');
+                xlsData.should.have.property('options');
+                xlsData.should.have.property('name');
+                done();
+            }).catch(e => {
+                done(e);
+            });
+    });
 
 it('#13. should success when create report detail', function (done) {
 

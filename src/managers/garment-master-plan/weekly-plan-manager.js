@@ -96,8 +96,8 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                             itemError["efficiency"] = i18n.__("WeeklyPlan.items.efficiency.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.efficiency._:Efficiency"));
                         if(!item.operator || item.operator <= 0)
                             itemError["operator"] = i18n.__("WeeklyPlan.items.operator.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.operator._:Operator"));
-                        if(!item.AH || item.AH <= 0)
-                            itemError["AH"] = i18n.__("WeeklyPlan.items.AH.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.AH._:AH"));
+                        if(!item.workingHours || item.workingHours <= 0)
+                            itemError["workingHours"] = i18n.__("WeeklyPlan.items.workingHours.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.workingHours._:WorkingHours"));
                         itemErrors.push(itemError);
                     }
 
@@ -161,17 +161,28 @@ module.exports = class WeeklyPlanManager extends BaseManager {
     getWeek(keyword, filter){
         return new Promise((resolve, reject) => {
             var regex = new RegExp(keyword, "i");
+            var query={};
+            if(filter.weekNumber){
+                query={
+                    "year": filter.year,
+                    "unit.code":filter.unit,
+                    "items.weekNumber":filter.weekNumber,
+                    _deleted:false
+                }
+            }
+            else{
+                query={
+                    "year": filter.year,
+                    "unit.code":filter.unit,
+                    _deleted:false
+                }
+            }
             this.collection.aggregate(
                 [
                      {$unwind:"$items"},
                     {
                    
-                    $match: {
-                        "year": filter.year,
-                        "unit.code":filter.unit,
-                        _deleted:false
-
-                    }
+                    $match: query
                 },
             {$project: {'items':"$items"}}
                 ]
