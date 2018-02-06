@@ -129,7 +129,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                     valid.bookingDate.setHours(0,0,0,0);
                     valid.deliveryDate.setHours(0,0,0,0);
                     var today= new Date();
-                    today.setHours(0,0,0,0);
+                    today.setHours(-7,0,0,0);
                     if(valid.bookingDate>valid.deliveryDate){
                         errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
                     }
@@ -192,7 +192,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                                 if(item._createdDate!='' && item._createdDate){
                                     today=new Date(item._createdDate);
                                 }
-                                today.setHours(0,0,0,0);
+                                today.setHours(-7,0,0,0);
                                 item.deliveryDate.setHours(0,0,0,0);
                                 valid.deliveryDate=new Date(valid.deliveryDate);
                                 valid.bookingDate= new Date(valid.bookingDate);
