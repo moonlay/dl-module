@@ -57,7 +57,26 @@ it("#01. should error when create new data with empty data", function (done) {
 //         });
 // });
 
-it("#02. should error when create new data with deliveryDate < bookingDate ", function (done) {
+it("#02. should success when create new data with bookingDate = deliveryDate", function (done){
+    dataUtil.getNewData()
+        .then((data) => {
+            var targetDate=new Date();
+            data.deliveryDate=new Date();
+            data.bookingDate=new Date();
+            manager.create(data)
+                .then((id) => {
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+            })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#03. should error when create new data with deliveryDate < bookingDate ", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             var targetDate=new Date();
@@ -79,12 +98,12 @@ it("#02. should error when create new data with deliveryDate < bookingDate ", fu
         });
 });
 
-it("#03. should error when create new data with deliveryDate < today ", function (done) {
+it("#04. should error when create new data with deliveryDate < today ", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             var targetDate=new Date();
             data.deliveryDate=new Date(targetDate.setDate(targetDate.getDate() - 5));
-            data.bookingDate=new Date(targetDate.setDate(targetDate.getDate() - 20));
+            data.bookingDate=new Date();
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with deliveryDate < today");
@@ -104,7 +123,7 @@ it("#03. should error when create new data with deliveryDate < today ", function
 
 var newData;
 var createdId;
-it("#04. should success when create new data", function (done) {
+it("#05. should success when create new data", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             newData = data;
@@ -122,7 +141,7 @@ it("#04. should success when create new data", function (done) {
         });
 });
 
-it("#05. should success when search data with filter", function (done) {
+it("#06. should success when search data with filter", function (done) {
     manager.read({
         keyword: newData.garmentBuyerName
     })
@@ -138,7 +157,7 @@ it("#05. should success when search data with filter", function (done) {
         });
 });
 
-it("#06. should success when destroy data with id", function (done) {
+it("#07. should success when destroy data with id", function (done) {
     manager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();
