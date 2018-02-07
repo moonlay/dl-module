@@ -171,20 +171,24 @@ it("#06. should error when confirm created data with deliveryDate items less tha
                 });
 });
 
-it("#08. should success when confirm data with bookingDate = deliveryDate item", function (done){
+it("#07. should error when confirm data with deliveryDate item = today", function (done){
     createdData.type='confirm';
     var date=new Date();
     createdData.items[0].deliveryDate=new Date();          
     manager.update(createdData)
-            .then((id) => {
-                done();
-            })
-            .catch((e) => {
-                done(e);
+        .then((id) => {
+            done("should error when confirm data with deliveryDate item = today");
+        })
+        .catch((e) => {
+            e.name.should.equal("ValidationError");
+            e.should.have.property("errors");
+            e.errors.should.instanceof(Object);
+            e.errors.should.have.property("items");
+            done();
             });
 });
 
-it("#07. should error when confirm created data without data items", function (done) {
+it("#08. should error when confirm created data without data items", function (done) {
     createdData.type='confirm';
     createdData.items = [];
         manager.update(createdData)
