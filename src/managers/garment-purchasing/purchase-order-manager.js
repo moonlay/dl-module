@@ -1235,7 +1235,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "Unit": data.unit,
                 "Divisi": data.division,
                 "No Ref Purchase Request": data.refNo,
-                "No. RO": data.roNo,
+                "No RO": data.roNo,
                 "Shipment Garment": data.shipmentDate,
                 "Artikel": data.artikel,
                 "Kategori": data.category,
@@ -1298,7 +1298,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "Unit": "string",
             "Divisi": "string",
             "No Ref Purchase Request": "string",
-            "No. RO": "string",
+            "No RO": "string",
             "Shipment Garment": "string",
             "Artikel": "string",
             "Kategori": "string",
@@ -1718,6 +1718,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         data.correction = {};
                     }
                     index++;
+                    if (!data.supplier) {
+                        data.supplier = {
+                            code: "",
+                            name: ""
+                        }
+                    }
                     var item = {
                         no: index,
                         prDate: data.prDate ? moment(new Date(data.prDate)).add(offset, 'h').format(dateFormat) : "-",
@@ -1811,7 +1817,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "Unit": data.unit,
                 "Divisi": data.division,
                 "No Ref Purchase Request": data.refNo,
-                "No. RO": data.roNo,
+                "No RO": data.roNo,
                 "Shipment Garment": data.shipmentDate,
                 "Artikel": data.artikel,
                 "Kategori": data.category,
@@ -1875,7 +1881,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "Unit": "string",
             "Divisi": "string",
             "No Ref Purchase Request": "string",
-            "No. RO": "string",
+            "No RO": "string",
             "Shipment Garment": "string",
             "Artikel": "string",
             "Kategori": "string",
