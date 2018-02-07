@@ -266,11 +266,15 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
         }
     };
 
-    getCategoryType(catType) {
-        if (catType === "BAHAN BAKU") {
-            return "BAHAN BAKU";
+    getCategoryType(categoryCode) {
+        var categoryList = ["emb", "wsh", "pls", "prn", "tes", "qlt"];
+        var found = categoryList.find((category) => category === categoryCode.toString().toLowerCase());
+        if (categoryCode.toString().toLowerCase() === "fab") {
+            return "Bahan Baku";
+        } else if (found) {
+            return "Jasa";
         } else {
-            return "NON BAHAN BAKU";
+            return "Accessories";
         }
     }
 
@@ -315,7 +319,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                                 divisionName: (purchaseRequest.unit && purchaseRequest.unit.division && purchaseRequest.unit.division.name) ? `'${purchaseRequest.unit.division.name.replace(/'/g, '"')}'` : null, //Nama Divisi
                                 categoryCode: (poItem.category && poItem.category.code) ? `'${poItem.category.code.replace(/'/g, '"')}'` : null, //Kode Kategori
                                 categoryName: (poItem.category && poItem.category.name) ? `'${poItem.category.name.replace(/'/g, '"')}'` : null, //Nama Kategori
-                                categoryType: (poItem.category && poItem.category.name) ? `'${poItem.category.name.toString().replace(/'/g, '"').toLowerCase() === "bahan baku" ? "BAHAN BAKU" : "NON BAHAN BAKU"}'` : null, //Jenis Kategori
+                                categoryType: (poItem.category && poItem.category.code) ? `'${this.getCategoryType(poItem.category.code.replace(/'/g, '"'))}'` : null, //Jenis Kategori
                                 productCode: (poItem.product && poItem.product.code) ? `'${poItem.product.code}'` : null, //Kode Produk
                                 productName: (poItem.product && poItem.product.name) ? `'${poItem.product.name.replace(/'/g, '"')}'` : null, //Nama Produk
                                 purchaseRequestDays: `${poIntDays}`, //Jumlah Selisih Hari PR-PO Internal
@@ -386,7 +390,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                             divisionName: (purchaseRequest.unit && purchaseRequest.unit.division && purchaseRequest.unit.division.name) ? `'${purchaseRequest.unit.division.name.replace(/'/g, '"')}'` : null, //Nama Divisi
                             categoryCode: (poItem.category && poItem.category.code) ? `'${poItem.category.code.replace(/'/g, '"')}'` : null, //Kode Kategori
                             categoryName: (poItem.category && poItem.category.name) ? `'${poItem.category.name.replace(/'/g, '"')}'` : null, //Nama Kategori
-                            categoryType: (poItem.category && poItem.category.name) ? `'${poItem.category.name.toString().replace(/'/g, '"').toLowerCase() === "bahan baku" ? "BAHAN BAKU" : "NON BAHAN BAKU"}'` : null, //Jenis Kategori
+                            categoryType: (poItem.category && poItem.category.code) ? `'${this.getCategoryType(poItem.category.code.replace(/'/g, '"'))}'` : null, //Jenis Kategori
                             productCode: (poItem.product && poItem.product.code) ? `'${poItem.product.code}'` : null, //Kode Produk
                             productName: (poItem.product && poItem.product.name) ? `'${poItem.product.name.replace(/'/g, '"')}'` : null, //Nama Produk
                             purchaseRequestDays: `${poIntDays}`, //Jumlah Selisih Hari PR-PO Internal
@@ -459,7 +463,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                         divisionName: (purchaseRequest.unit && purchaseRequest.unit.division && purchaseRequest.unit.division.name) ? `'${purchaseRequest.unit.division.name.replace(/'/g, '"')}'` : null, //Nama Divisi
                         categoryCode: (poItem.category && poItem.category.code) ? `'${poItem.category.code.replace(/'/g, '"')}'` : null, //Kode Kategori
                         categoryName: (poItem.category && poItem.category.name) ? `'${poItem.category.name.replace(/'/g, '"')}'` : null, //Nama Kategori
-                        categoryType: (poItem.category && poItem.category.name) ? `'${poItem.category.name.toString().replace(/'/g, '"').toLowerCase() === "bahan baku" ? "BAHAN BAKU" : "NON BAHAN BAKU"}'` : null, //Jenis Kategori
+                        categoryType: (poItem.category && poItem.category.code) ? `'${this.getCategoryType(poItem.category.code.replace(/'/g, '"'))}'` : null, //Jenis Kategori
                         productCode: (poItem.product && poItem.product.code) ? `'${poItem.product.code}'` : null, //Kode Produk
                         productName: (poItem.product && poItem.product.name) ? `'${poItem.product.name.replace(/'/g, '"')}'` : null, //Nama Produk
                         purchaseRequestDays: null, //Jumlah Selisih Hari PR-PO Internal
