@@ -127,14 +127,15 @@ module.exports = class BookingOrderManager extends BaseManager {
                     valid.deliveryDate=new Date(valid.deliveryDate);
                     valid.bookingDate=new Date(valid.bookingDate);
                     valid.bookingDate.setHours(0,0,0,0);
-                    valid.deliveryDate.setHours(7,0,0,0);
+                    valid.deliveryDate.setHours(0,0,0,0);
                     var today= new Date();
                     today.setHours(0,0,0,0);
-                    if(valid.bookingDate>valid.deliveryDate){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
-                    }
-                    else if(today>valid.deliveryDate){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
+                    if(valid.bookingDate!=valid.deliveryDate){
+                        if(valid.bookingDate>valid.deliveryDate){
+                            errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
+                        }
+                    } else if(today>valid.deliveryDate){
+                            errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
                     }
                 }
                 // if(valid.items){
@@ -193,21 +194,22 @@ module.exports = class BookingOrderManager extends BaseManager {
                                     today=new Date(item._createdDate);
                                 }
                                 today.setHours(0,0,0,0);
-                                item.deliveryDate.setHours(7,0,0,0);
+                                item.deliveryDate.setHours(0,0,0,0);
                                 valid.deliveryDate=new Date(valid.deliveryDate);
                                 valid.bookingDate= new Date(valid.bookingDate);
                                 valid.bookingDate.setHours(0,0,0,0);
-                                valid.deliveryDate.setHours(7,0,0,0);
-                                if(valid.bookingDate>item.deliveryDate){
-                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
+                                valid.deliveryDate.setHours(0,0,0,0);
+                                if(valid.bookingDate!=item.deliveryDate){
+                                    if(valid.bookingDate>item.deliveryDate){
+                                        itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
+                                    }
                                 }
                                 else if(today>item.deliveryDate){
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
                                 }
                                 else if (valid.deliveryDate<item.deliveryDate){
-                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDated.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
-                                }
-                                
+                                        itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDated.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
+                                }        
                             }
 
                             index++;
