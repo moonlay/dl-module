@@ -175,7 +175,7 @@ it("#08. should success when confirm data with bookingDate = deliveryDate item",
     createdData.type='confirm';
     var date=new Date();
     createdData.items[0].deliveryDate=new Date();          
-        manager.create(data)
+    manager.update(createdData)
             .then((id) => {
                 done();
             })
