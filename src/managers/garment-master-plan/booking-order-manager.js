@@ -203,11 +203,11 @@ module.exports = class BookingOrderManager extends BaseManager {
                                     if(valid.bookingDate>item.deliveryDate){
                                         itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
                                     }
-                                    else if(today>item.deliveryDate){
-                                        itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
-                                    }
                                 }
-                                if (valid.deliveryDate<item.deliveryDate){
+                                else if(today>item.deliveryDate){
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
+                                }
+                                else if (valid.deliveryDate<item.deliveryDate){
                                         itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDated.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
                                 }        
                             }
