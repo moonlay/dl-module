@@ -84,7 +84,7 @@ it("#03. should error when create new data with deliveryDate < today ", function
         .then((data) => {
             var targetDate=new Date();
             data.deliveryDate=new Date(targetDate.setDate(targetDate.getDate() - 5));
-            data.bookingDate=new Date(targetDate.setDate(targetDate.getDate() - 20));
+            data.bookingDate=new Date();
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with deliveryDate < today");
