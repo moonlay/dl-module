@@ -186,3 +186,21 @@ it("#07. should error when confirm created data without data items", function (d
                     done();
                 });
 });
+
+it("#08. should success when confirm data with bookingDate = deliveryDate item", function (done){
+    dataUtil.getNewData()
+        .then((data) => {
+            var date=new Date();
+            createdData.items[0].deliveryDate=new Date();
+            manager.create(data)
+                .then((id) => {
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+            })
+        .catch((e) => {
+            done(e);
+        });
+});
