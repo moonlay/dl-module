@@ -171,6 +171,19 @@ it("#06. should error when confirm created data with deliveryDate items less tha
                 });
 });
 
+it("#08. should success when confirm data with bookingDate = deliveryDate item", function (done){
+    createdData.type='confirm';
+    var date=new Date();
+    createdData.items[0].deliveryDate=new Date();          
+        manager.create(data)
+            .then((id) => {
+                done();
+            })
+            .catch((e) => {
+                done(e);
+            });
+});
+
 it("#07. should error when confirm created data without data items", function (done) {
     createdData.type='confirm';
     createdData.items = [];
@@ -187,21 +200,3 @@ it("#07. should error when confirm created data without data items", function (d
                 });
 });
 
-it("#08. should success when confirm data with bookingDate = deliveryDate item", function (done){
-    createdData.type='confirm';
-    manager.update(createdData)
-        .then((data) => {
-            var date=new Date();
-            createdData.items[0].deliveryDate=new Date();
-            manager.create(data)
-                .then((id) => {
-                    done();
-                })
-                .catch((e) => {
-                    done(e);
-                });
-            })
-        .catch((e) => {
-            done(e);
-        });
-});
