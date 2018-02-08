@@ -144,10 +144,10 @@ it("#05. should error when create new data with deliveryDate < today ", function
         });
 });
 
-it("#06. should error when create new data with orderQuantity is null", function (done){
+it("#06. should error when create new data with orderQuantity is 0", function (done){
     dataUtil.getNewData()
         .then((data) => {
-            data.orderQuantity=null;
+            data.orderQuantity=0;
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with orderQuantity is null");
