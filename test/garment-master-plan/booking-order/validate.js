@@ -144,13 +144,13 @@ it("#05. should error when create new data with deliveryDate < today ", function
         });
 });
 
-it("#06. should error when create new data with garmentBuyerId is null", function (done){
+it("#06. should error when create new data with orderQuantity is null", function (done){
     dataUtil.getNewData()
         .then((data) => {
-            data.garmentBuyerId=null;
+            data.orderQuantity=null;
             manager.create(data)
                 .then((id) => {
-                    done("should error when create new data with deliveryDate is null");
+                    done("should error when create new data with orderQuantity is null");
                 })
                 .catch((e) => {
                     e.name.should.equal("ValidationError");
