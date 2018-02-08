@@ -144,6 +144,27 @@ it("#05. should error when create new data with deliveryDate < today ", function
         });
 });
 
+it("#06. should error when create new data with garmentBuyerId is null", function (done){
+    dataUtil.getNewData()
+        .then((data) => {
+            data.garmentBuyerId=null;
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with deliveryDate is null");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    e.errors.should.have.property("deliveryDate");
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 var newData;
 var createdId;
 it("#06. should success when create new data", function (done) {
