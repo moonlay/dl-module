@@ -1142,6 +1142,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     } else {
                         data.correction = {};
                     }
+                    if (!data.supplier) {
+                        data.supplier = {
+                            code: "",
+                            name: ""
+                        }
+                    }
                     index++;
                     var item = {
                         no: index,
@@ -1381,7 +1387,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         }
         if (info.user && info.user !== "" ) {
             Object.assign(query, {      
-                "_createdBy": info.user.username
+                "_createdBy": info.user
             });
         }
         if (info.unitId && info.unitId !== "") {
