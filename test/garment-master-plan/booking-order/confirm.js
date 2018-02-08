@@ -171,7 +171,24 @@ it("#06. should error when confirm created data with deliveryDate items less tha
                 });
 });
 
-it("#07. should error when confirm created data without data items", function (done) {
+it("#07. should error when confirm data with deliveryDate item is null", function (done){
+    createdData.type='confirm';
+    var date=new Date();
+    createdData.items[0].deliveryDate=null;          
+    manager.update(createdData)
+        .then((id) => {
+            done("should error when confirm data with deliveryDate item is null");
+        })
+        .catch((e) => {
+            e.name.should.equal("ValidationError");
+            e.should.have.property("errors");
+            e.errors.should.instanceof(Object);
+            e.errors.should.have.property("items");
+            done();
+            });
+});
+
+it("#08. should error when confirm created data without data items", function (done) {
     createdData.type='confirm';
     createdData.items = [];
         manager.update(createdData)
@@ -185,4 +202,20 @@ it("#07. should error when confirm created data without data items", function (d
                     e.errors.should.have.property("detail");
                     done();
                 });
+});
+
+it("#09. should success when search data with filter", function (done) {
+    manager.read({
+        keyword: createdData.garmentBuyerName
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
 });
