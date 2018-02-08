@@ -57,24 +57,24 @@ it("#01. should error when create new data with empty data", function (done) {
 //         });
 // });
 
-it("#02. should success when create new data with bookingDate = deliveryDate", function (done){
-    dataUtil.getNewData()
-        .then((data) => {
-            var targetDate=new Date();
-            data.deliveryDate=new Date();
-            data.bookingDate=new Date();
-            manager.create(data)
-                .then((id) => {
-                    done();
-                })
-                .catch((e) => {
-                    done(e);
-                });
-            })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#02. should success when create new data with bookingDate = deliveryDate", function (done){
+//     dataUtil.getNewData()
+//         .then((data) => {
+//             var targetDate=new Date();
+//             data.deliveryDate=new Date();
+//             data.bookingDate=new Date();
+//             manager.create(data)
+//                 .then((id) => {
+//                     done();
+//                 })
+//                 .catch((e) => {
+//                     done(e);
+//                 });
+//             })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
 it("#03. should success when create new data with deliveryDate > bookingDate", function (done){
     dataUtil.getNewData()
