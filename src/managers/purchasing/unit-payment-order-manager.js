@@ -1016,7 +1016,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         "items.unitReceiptNote.no",
                         "items.unitReceiptNote.date",
                         "items.unitReceiptNote.items.purchaseOrder.purchaseOrderExternal.no",
-                        "items.unitReceiptNote.items.purchaseOrder.purchaseOrderExternal.paymentDueDays",
+                   
                         "items.unitReceiptNote.items.purchaseOrder.items.product",
                         "items.unitReceiptNote.items.purchaseOrder.items.useIncomeTax",
                         "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
