@@ -125,7 +125,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                 }
                 else{
                     valid.deliveryDate=new Date(valid.deliveryDate);
-                    valid.bookingDate=new Date();
+                    valid.bookingDate=new Date(valid.bookingDate);
                     valid.bookingDate.setHours(0,0,0,0);
                     valid.deliveryDate.setHours(0,0,0,0);
                     var today= new Date();
@@ -196,7 +196,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                                 today.setHours(0,0,0,0);
                                 item.deliveryDate.setHours(0,0,0,0);
                                 valid.deliveryDate=new Date(valid.deliveryDate);
-                                valid.bookingDate= new Date();
+                                valid.bookingDate= new Date(valid.bookingDate);
                                 valid.bookingDate.setHours(0,0,0,0);
                                 valid.deliveryDate.setHours(0,0,0,0);
                                 // if(valid.bookingDate!=item.deliveryDate){
