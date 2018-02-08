@@ -204,3 +204,18 @@ it("#08. should error when confirm created data without data items", function (d
                 });
 });
 
+it("#09. should success when search data with filter", function (done) {
+    manager.read({
+        keyword: createdData.garmentBuyerName
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
