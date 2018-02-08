@@ -177,7 +177,7 @@ it("#07. should error when confirm data with deliveryDate item is null", functio
     createdData.items[0].deliveryDate=null;          
     manager.update(createdData)
         .then((id) => {
-            done("should error when confirm data with deliveryDate item = today");
+            done("should error when confirm data with deliveryDate item is null");
         })
         .catch((e) => {
             e.name.should.equal("ValidationError");
