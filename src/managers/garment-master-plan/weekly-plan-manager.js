@@ -193,4 +193,31 @@ module.exports = class WeeklyPlanManager extends BaseManager {
         });
     }
 
+    getYear(keyword){
+        return new Promise((resolve, reject) => {
+            var regex = new RegExp(keyword, "i");
+            var query = {
+                stringifyYear : regex,
+                _deleted : false,
+            };
+            this.collection.aggregate(
+                [
+                    { $project : {
+                        stringifyYear : { "$toLower" : "$year" },
+                        year : 1,
+                        _deleted : 1
+                    } },
+                    { $match : query},
+                    { $group : {
+                        _id: "$year",
+                        year: {$first : "$year"},
+                    } },
+                ]
+            )
+                .toArray(function (err, result) {
+                    resolve(result);
+                });
+        });
+    }
+
 }
