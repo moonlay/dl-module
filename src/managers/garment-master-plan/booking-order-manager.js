@@ -125,11 +125,12 @@ module.exports = class BookingOrderManager extends BaseManager {
                 }
                 else{
                     valid.deliveryDate=new Date(valid.deliveryDate);
-                    valid.bookingDate=new Date(valid.bookingDate);
+                    valid.bookingDate=new Date();
                     valid.bookingDate.setHours(0,0,0,0);
-                    valid.deliveryDate.setHours(0,0,0,0);
+                    valid.deliveryDate.setHours(14,0,0,0);
                     var today= new Date();
                     today.setHours(0,0,0,0);
+                    
                     if(valid.bookingDate!=valid.deliveryDate){
                         if(valid.bookingDate>valid.deliveryDate){
                             errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
@@ -194,11 +195,12 @@ module.exports = class BookingOrderManager extends BaseManager {
                                     today=new Date(item._createdDate);
                                 }
                                 today.setHours(0,0,0,0);
-                                item.deliveryDate.setHours(0,0,0,0);
+                                item.deliveryDate= new Date(item.deliveryDate);
+                                item.deliveryDate.setHours(15,0,0,0);
                                 valid.deliveryDate=new Date(valid.deliveryDate);
-                                valid.bookingDate= new Date(valid.bookingDate);
+                                valid.bookingDate= new Date();
                                 valid.bookingDate.setHours(0,0,0,0);
-                                valid.deliveryDate.setHours(0,0,0,0);
+                                valid.deliveryDate.setHours(14,0,0,0);
                                 if(valid.bookingDate!=item.deliveryDate){
                                     if(valid.bookingDate>item.deliveryDate){
                                         itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
