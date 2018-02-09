@@ -220,4 +220,45 @@ module.exports = class WeeklyPlanManager extends BaseManager {
         });
     }
 
+    getMonitoringRemainingEH(query) {
+        return new Promise((resolve, reject) => {
+            var deletedQuery = { _deleted: false };
+            var yearQuery = {};
+            if (query.year) {
+                yearQuery = {
+                    "year": Number(query.year)
+                };
+            }
+            var unitQuery = {};
+            if (query.unit) {
+                unitQuery = {
+                    "unit.code": query.unit
+                };
+            }
+
+            var Query = { "$and": [ deletedQuery, yearQuery, unitQuery ] };
+            this.collection
+                .aggregate( [
+                    { "$match": Query },
+                    {
+                        "$sort": {
+                            "_createdDate": -1,
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    getMonitoringRemainingEHXls(query) {
+
+    }
+
+
 }
