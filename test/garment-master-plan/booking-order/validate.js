@@ -85,6 +85,7 @@ it("#03. should error when create new data with bookingDate = deliveryDate", fun
         .then((data) => {
             data.deliveryDate=new Date();
             data.bookingDate=new Date();
+            data.deliveryDate.setHours(0,0,0,0);
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data bookingDate = deliveryDate");
