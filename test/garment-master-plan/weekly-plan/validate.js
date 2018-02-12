@@ -83,7 +83,27 @@ it("#04. should error when create new data with invalid year", function (done) {
             data.year = "year";
             manager.create(data)
                 .then((id) => {
-                    done("should error when create new data with invalid month");
+                    done("should error when create new data with invalid year");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#04-1. should error when create new data with out of range year", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            data.year = (new Date()).getFullYear() + 11;
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with out of range year");
                 })
                 .catch((e) => {
                     e.name.should.equal("ValidationError");
