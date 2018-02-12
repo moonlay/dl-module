@@ -256,9 +256,65 @@ module.exports = class WeeklyPlanManager extends BaseManager {
         });
     }
 
-    getMonitoringRemainingEHXls(query) {
+    getMonitoringRemainingEHXls(dataReport, query) {
+        return new Promise((resolve, reject) => {
+            var xls = {};
+            xls.data = [];
+            xls.options = [];
+            xls.name = '';
 
+            var units = [];
+            for (var x = 0; x < dataReport.data.length; x++) {
+              for (var y = 0; y < dataReport.data[x].items.length; y++) {
+                var unit = {
+                  code: dataReport.data[x].unit.code,
+                  remainingEH: dataReport.data[x].items[y].remainingEH,
+                  classBackground: 
+                  dataReport.data[x].items[y].remainingEH > 0 ? "warning" : 
+                  dataReport.data[x].items[y].remainingEH < 0 ? "danger" :
+                  "success"
+                };
+                var unitsTemp = units[y] ? units[y] : [];
+                unitsTemp.push(unit);
+                units[y] = unitsTemp;
+              }
+            }
+            // console.log(units);
+  
+            var weeks = [];
+            for (var x = 0; x < units.length; x++) {
+              var headCount = 0;
+              for (var y = 0; y < units[x].length; y++) {
+                headCount += Number(dataReport.data[y].items[x].operator);
+              }
+              var week = {
+                week: "W" + (x + 1),
+                units: units[x],
+                headCount: headCount
+              };
+              weeks.push(week);
+            }
+
+            for (var week of weeks) {
+                var item = {};
+                item["Unit"] = week.week;
+                for (unit of week.units) {
+                    item[unit.code] = unit.remainingEH;
+                }
+                item["Head Count"] = week.headCount;
+                xls.data.push(item);
+            }
+
+            xls.options["Unit"] = "string";
+            for (unit of week.units) {
+                xls.options[unit.code] = "string";
+            }
+            xls.options["Head Count"] = "string";
+
+            xls.name = `Remaining EH Report ` + (query.unit ? `${query.unit}-` : ``) + `${query.year}.xlsx`;
+
+            resolve(xls);
+        });
     }
-
 
 }
