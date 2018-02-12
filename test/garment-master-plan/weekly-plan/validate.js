@@ -169,7 +169,7 @@ it("#06. should error when create new data with no data unit", function (done) {
 });
 
 var newData;
-it("#07. should success when create new data for search", function (done) {
+it("#07. should success when create new data for search and duplicate data", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             newData = data;
@@ -186,7 +186,20 @@ it("#07. should success when create new data for search", function (done) {
         });
 });
 
-it("#08. should success when search data with filter", function (done) {
+it("#08. should error when create new duplicate data", function (done) {
+    manager.create(newData)
+        .then((id) => {
+            done("should error when create new duplicate data");
+        })
+        .catch((e) => {
+            e.name.should.equal("ValidationError");
+            e.should.have.property("errors");
+            e.errors.should.instanceof(Object);
+            done();
+        });
+});
+
+it("#09. should success when search data with filter", function (done) {
     manager.read({
         keyword: newData.unit.name
     })
@@ -202,7 +215,7 @@ it("#08. should success when search data with filter", function (done) {
         });
 });
 
-it(`#09. should success when remove all data`, function(done) {
+it(`#10. should success when remove all data`, function(done) {
     manager.collection.remove({})
         .then((result) => {
             done();
