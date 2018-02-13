@@ -179,12 +179,11 @@ module.exports = class WeeklyPlanManager extends BaseManager {
             }
             this.collection.aggregate(
                 [
-                     {$unwind:"$items"},
+                    {$unwind:"$items"},
                     {
-                   
-                    $match: query
-                },
-            {$project: {'items':"$items"}}
+                        $match: query
+                    },
+                    {$project: {'items':"$items"}}
                 ]
             )
                 .toArray(function (err, result) {
@@ -217,6 +216,43 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                 .toArray(function (err, result) {
                     resolve(result);
                 });
+        });
+    }
+
+
+    getUnit(keyword, filter){
+        return new Promise((resolve, reject) => {
+            var regex = new RegExp(keyword, "i");
+
+            var unitCodeFilter = {
+                "unit.code": {
+                    "$regex": regex
+                }
+            };
+
+            var unitNameFilter = {
+                "unit.name": {
+                    "$regex": regex
+                }
+            };
+
+            var keywordFilter = {};
+            keywordFilter["$or"] = [unitCodeFilter, unitNameFilter];
+
+            var yearFilter = { year: filter.year };
+
+            var deletedFilter = { _deleted: false };
+
+            var query = {};
+            query["$and"] = [keywordFilter, yearFilter, deletedFilter];
+
+            this.collection.distinct(
+                "unit",
+                query,
+                function (err, result) {
+                    resolve(result);
+                }
+            );
         });
     }
 
