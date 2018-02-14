@@ -823,7 +823,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "materialName": "$material.name",
                                 "materialConstruction": "$materialConstruction.name",
                                 "materialWidth": "$materialWidth",
-                                "designMotive": "$designMotive.name",
+                                // "designMotive": "$designMotive.name",
+                                "designCode" : "$designCode"
                             }
                         },
                         { $sort: { "_createdDate": -1 } },
@@ -859,7 +860,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "materialName": "$material.name",
                                 "materialConstruction": "$materialConstruction.name",
                                 "materialWidth": "$materialWidth",
-                                "designMotive": "$designMotive.name",
+                                // "designMotive": "$designMotive.name",
+                                "designCode" : "$designCode"
                             }
                         },
                         { $sort: { "_createdDate": -1 } }
