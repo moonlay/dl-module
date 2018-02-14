@@ -1359,6 +1359,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
             item["Sales"] = statusOrder.accountName ? statusOrder.accountName : '';
             item["Tanggal Terima Order"] = statusOrder._createdDate ? moment(statusOrder._createdDate).format('DD/MM/YYYY') : '';
             item["Permintaan Delivery"] = statusOrder.deliveryDate ? moment(statusOrder.deliveryDate).format('DD/MM/YYYY') : '';
+            item["Posisi Kanban Terakhir"] = '';
+            item["Perubahan Tanggal Delivery"] = statusOrder.deliveryDateCorrection ? moment(statusOrder.deliveryDateCorrection).format('DD/MM/YYYY') : '';
+            item["Alasan Perubahan Tanggal Delivery"] = statusOrder.reason;
             item["Panjang SPP"] = statusOrder.orderQuantity ? Number(Number(statusOrder.orderQuantity).toFixed(2)) : 0;
             item["Sisa Belum Turun Kanban"] = statusOrder.notInKanbanQuantity ? Number(Number(statusOrder.notInKanbanQuantity).toFixed(2)) : 0;
             item["Belum Produksi"] = statusOrder.preProductionQuantity ? Number(Number(statusOrder.preProductionQuantity).toFixed(2)) : 0;
@@ -1392,6 +1395,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
         xls.options["Buyer"] = "string";
         xls.options["Sales"] = "string";
         xls.options["Tanggal Terima Order"] = "string";
+        xls.options["Posisi Kanban Terakhir"] = "string";
+        xls.options["Perubahan Tanggal Delivery"] = "string";
+        xls.options["Alasan Perubahan Tanggal Delivery"] = "string";        
         xls.options["Permintaan Delivery"] = "string";
         xls.options["Panjang SPP"] = "number";
         xls.options["Sisa Belum Turun Kanban"] = "number";
@@ -1412,7 +1418,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
         xls.options = [];
         xls.name = `LAPORAN DETAIL SPP ${orderNo}.xlsx`;
 
-        for (var kanbanDetail of result.data) {
+        let res = result.data;
+
+        for (var kanbanDetail of res.data) {
 
             var item = {};
             item["No"] = kanbanDetail.no ? kanbanDetail.no : '';
