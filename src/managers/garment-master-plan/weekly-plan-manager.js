@@ -248,7 +248,11 @@ module.exports = class WeeklyPlanManager extends BaseManager {
             var keywordFilter = {};
             keywordFilter["$or"] = [unitCodeFilter, unitNameFilter];
 
-            var yearFilter = { year: filter.year };
+            var yearFilter = {};
+
+            if (filter) {
+                yearFilter = { year: filter.year };
+            }
 
             var deletedFilter = { _deleted: false };
 
