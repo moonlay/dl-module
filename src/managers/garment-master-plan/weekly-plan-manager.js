@@ -160,7 +160,6 @@ module.exports = class WeeklyPlanManager extends BaseManager {
 
     getWeek(keyword, filter){
         return new Promise((resolve, reject) => {
-            var regex = new RegExp(keyword, "i");
             var query={};
             if(filter.weekNumber){
                 query={
@@ -177,13 +176,23 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                     _deleted:false
                 }
             }
+
+            var regex = new RegExp(keyword, "i");
+            var filterWeek = {
+                "week": {
+                    "$regex": regex
+                }
+            };
+
             this.collection.aggregate(
                 [
-                    {$unwind:"$items"},
-                    {
-                        $match: query
-                    },
-                    {$project: {'items':"$items"}}
+                    { $unwind:"$items" },
+                    { $match: query },
+                    { $project: {
+                        'items': "$items",
+                        'week': {"$concat" : ["W",{ "$toLower" : "$items.weekNumber" }]},
+                    } },
+                    { $match: filterWeek },
                 ]
             )
                 .toArray(function (err, result) {
