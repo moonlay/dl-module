@@ -21,6 +21,7 @@ var StandardTestManager = require('../master/standard-test-manager');
 var MaterialConstructionManager = require('../master/material-construction-manager');
 var YarnMaterialManager = require('../master/yarn-material-manager');
 var AccountManager = require('../auth/account-manager');
+var OrderStatusHistoryManager = require('./order-status-history-manager');
 var BaseManager = require('module-toolkit').BaseManager;
 var i18n = require('dl-i18n');
 var generateCode = require("../../utils/code-generator");
@@ -54,6 +55,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         this.StandardTestManager = new StandardTestManager(db, user);
         this.AccountManager = new AccountManager(db, user);
         this.fpSalesContractManager = new FPSalesContractManager(db, user);
+        this.orderStatusHistoryManager = new OrderStatusHistoryManager(db, user);
         this.documentNumbers = this.db.collection("document-numbers");
     }
 
@@ -1357,6 +1359,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
             item["Sales"] = statusOrder.accountName ? statusOrder.accountName : '';
             item["Tanggal Terima Order"] = statusOrder._createdDate ? moment(statusOrder._createdDate).format('DD/MM/YYYY') : '';
             item["Permintaan Delivery"] = statusOrder.deliveryDate ? moment(statusOrder.deliveryDate).format('DD/MM/YYYY') : '';
+            item["Posisi Kanban Terakhir"] = '';
+            item["Perubahan Tanggal Delivery"] = statusOrder.deliveryDateCorrection ? moment(statusOrder.deliveryDateCorrection).format('DD/MM/YYYY') : '';
+            item["Alasan Perubahan Tanggal Delivery"] = statusOrder.reason;
             item["Panjang SPP"] = statusOrder.orderQuantity ? Number(Number(statusOrder.orderQuantity).toFixed(2)) : 0;
             item["Sisa Belum Turun Kanban"] = statusOrder.notInKanbanQuantity ? Number(Number(statusOrder.notInKanbanQuantity).toFixed(2)) : 0;
             item["Belum Produksi"] = statusOrder.preProductionQuantity ? Number(Number(statusOrder.preProductionQuantity).toFixed(2)) : 0;
@@ -1390,6 +1395,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
         xls.options["Buyer"] = "string";
         xls.options["Sales"] = "string";
         xls.options["Tanggal Terima Order"] = "string";
+        xls.options["Posisi Kanban Terakhir"] = "string";
+        xls.options["Perubahan Tanggal Delivery"] = "string";
+        xls.options["Alasan Perubahan Tanggal Delivery"] = "string";        
         xls.options["Permintaan Delivery"] = "string";
         xls.options["Panjang SPP"] = "number";
         xls.options["Sisa Belum Turun Kanban"] = "number";
@@ -1410,7 +1418,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
         xls.options = [];
         xls.name = `LAPORAN DETAIL SPP ${orderNo}.xlsx`;
 
-        for (var kanbanDetail of result.data) {
+        let res = result.data;
+
+        for (var kanbanDetail of res.data) {
 
             var item = {};
             item["No"] = kanbanDetail.no ? kanbanDetail.no : '';
@@ -1629,14 +1639,16 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 var getKanbanAndDailyOperations = this.getKanbanAndDailyOperations(orderNumbers);
                 var getPackingReceipts = this.getPackingReceipts(orderNumbers);
                 var getShipmentDocuments = this.getShipmentDocuments(orderNumbers);
+                var getOrderStatusHistories = this.orderStatusHistoryManager.read(orderNumbers);
 
                 // return Promise.all([Promise.resolve([]), Promise.resolve([]), Promise.resolve([]), getProductionOrderNotInKanban])
-                return Promise.all([getKanbanAndDailyOperations, getPackingReceipts, getShipmentDocuments])
+                return Promise.all([getKanbanAndDailyOperations, getPackingReceipts, getShipmentDocuments, getOrderStatusHistories])
                     .then((results) => {
                         var kanbanAndDailyOperations = results[0];
                         var packingReceipts = results[1];
                         var packingShipments = results[2];
-
+                        var orderStatusHistories = results[3];
+                        
                         var data = [];
 
                         let detailIndex = 1;
@@ -1644,6 +1656,13 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         for (var productionOrder of productionOrders) {
 
                             var datum = {};
+
+                            let history = orderStatusHistories.find(p => p._id == productionOrder.orderNo);
+
+                            if(history) {
+                                datum.deliveryDateCorrection = history.deliveryDateCorrection;
+                                datum.reason = history.reason;
+                            }
 
                             datum.no = detailIndex++;
                             datum.orderNo = productionOrder.orderNo;
@@ -1737,9 +1756,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
         var orderNumbers = [];
         orderNumbers.push(info.orderNo);
 
-        return this.getKanbanAndDailyOperations(orderNumbers)
-            .then((kanbanAndDailyOperations) => {
-                var kanbanAndDailyOperations = kanbanAndDailyOperations;
+        
+
+        return Promise.all([this.getKanbanAndDailyOperations(orderNumbers), this.orderStatusHistoryManager.getByProductionOrderNo(info.orderNo)])
+            .then((results) => {
+                var kanbanAndDailyOperations = results[0];
+                var histories = results[1];
 
                 var data = [];
 
@@ -1775,11 +1797,16 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                         }
                     }
-
+                    
                     data.push(datum);
                 }
 
-                return Promise.resolve(data);
+                let result = {
+                    data: data,
+                    histories: histories
+                };
+
+                return Promise.resolve(result);
             })
     }
 
