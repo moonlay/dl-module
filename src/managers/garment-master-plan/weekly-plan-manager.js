@@ -278,7 +278,7 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                     { "$match": Query },
                     {
                         "$sort": {
-                            "_createdDate": -1,
+                            "unit.code": 1,
                         }
                     }
                 ])
