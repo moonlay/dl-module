@@ -178,7 +178,7 @@ it('#11. should success when create report detail', function (done) {
 
 it('#12. should success when get data detail for Excel Report', function (done) {
 
-    manager.getOrderStatusDetailXls(resultForExcelTest, query)
+    manager.getOrderStatusDetailXls(resultForExcelTest, query, 0)
         .then((xlsData) => {
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
@@ -193,7 +193,7 @@ it('#12. should success when get data detail for Excel Report', function (done) 
     var test={
         data:[{}]
     }
-        manager.getOrderStatusDetailXls(test, query)
+        manager.getOrderStatusDetailXls(test, query, 0)
             .then((xlsData) => {
                 xlsData.should.have.property('data');
                 xlsData.should.have.property('options');
@@ -219,7 +219,7 @@ it('#13. should success when create report detail', function (done) {
 
 it('#14. should success when get data detail for Excel Report', function (done) {
 
-    manager.getOrderStatusKanbanDetailXls(resultForExcelTest, query)
+    manager.getOrderStatusKanbanDetailXls(resultForExcelTest, query, 0)
         .then((xlsData) => {
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
