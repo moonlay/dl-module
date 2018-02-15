@@ -730,7 +730,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         });
     }
 
-       getAllData(startdate, enddate, offset) {
+        getAllData(startdate, enddate, offset) {
         return new Promise((resolve, reject) => 
         {
                    var now = new Date();
@@ -740,36 +740,54 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             
            var query = [deleted];
 
-           if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
-                var validStartDate = new Date(startdate);
-                var validEndDate = new Date(enddate);
-                query.push(
-                     {
-                          "date": {
-                                   $gte: validStartDate,
-                                   $lte: validEndDate
-                                  }
-                    }
-                    )
-            }
+           var validStartDate = new Date(startdate);
+           var validEndDate = new Date(enddate);
 
+
+           if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "date": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
       var match = { '$and': query };
             
-      var POColl = map.garmentPurchasing.collection.GarmentPurchaseOrderExternal; 
       this.collection.aggregate([
       {$match: match },
       {$unwind:"$items"},
       {$unwind:"$items.items"},
-      {$lookup :{from :POColl,
-                 localField :"items.items.purchaseOrderExternalNo",
-                 foreignField :"no",
-                 as :"POEX"},  
-      },
       {$project :{
                     "NoInv":"$no",
                     "TgInv":"$date",
                     "KdSpl":"$supplier.code",
                     "NmSpl":"$supplier.name",
+                    "MtUang":"$currency.code",
+                    "Rate":"$currency.rate",
                     "PakaiPPN":"$useIncomeTax",
                     "NoPPN":"$incomeTaxNo",
                     "TgPPN":"$incomeTaxDate",
@@ -790,19 +808,19 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                     "QtyInv": "$items.items.deliveredQuantity",
                     "HrgInv": "$items.items.pricePerDealUnit",
                     "SatInv":"$items.items.purchaseOrderUom.unit",
-                    "POEXs": "$POEX",
                     "UserIn":"$_createdBy",
                     "TgIn":"$_createdDate",
                     "UserEd":"$_updatedBy",
                     "TgEd":"$_updatedDate"   
                  }
       }, 
-      {$unwind :"$POEXs"},
       {$project :{
                     "NoInv":"$NoInv",
                     "TgInv":"$TgInv",
                     "KdSpl":"$KdSpl",
                     "NmSpl":"$NmSpl",
+                    "MtUang":"$MtUang",
+                    "Rate":"$Rate",
                     "PakaiPPN":"$PakaiPPN",
                     "NoPPN":"$NoPPN",
                     "TgPPN":"$TgPPN",
@@ -823,9 +841,6 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                     "QtyInv": "$QtyInv",
                     "HrgInv": "$HrgInv",
                     "SatInv":"$SatInv",
-                    "PrsPPH":"$POEXs.vatRate",
-                    "MtUang":"$POEXs.currency.code",
-                    "Rate":"$POEXs.currencyRate",
                     "UserIn":"$UserIn","TgIn":"$TgIn",
                     "UserEd":"$UserEd","TgEd":"$TgEd"
                  }
@@ -834,6 +849,8 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                         "TgInv":"$TgInv",
                         "KdSpl":"$KdSpl",
                         "NmSpl":"$NmSpl",
+                        "MtUang":"$MtUang",
+                        "Rate":"$Rate",
                         "PakaiPPN":"$PakaiPPN",
                         "NoPPN":"$NoPPN",
                         "TgPPN":"$TgPPN",
@@ -854,9 +871,6 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                         "QtyInv": "$QtyInv",
                         "HrgInv": "$HrgInv",
                         "SatInv":"$SatInv",
-                        "PrsPPH":"$PrsPPH",
-                        "MtUang":"$MtUang",
-                        "Rate":"$Rate",
                         "UserIn":"$UserIn","TgIn":"$TgIn",
                         "UserEd":"$UserEd","TgEd":"$TgEd"
                       },

@@ -625,7 +625,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
         });
     }
 
-    getAllData(startdate, enddate, offset) {
+     getAllData(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
             var now = new Date();
             var deleted = {
