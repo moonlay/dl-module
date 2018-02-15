@@ -2,6 +2,7 @@ require("should");
 
 var dailyOperationDataUtil = require("../../data-util/production/finishing-printing/daily-operation-data-util");
 var shipmentDocumentDataUtil = require("../../data-util/inventory/finishing-printing/fp-shipment-document-data-util");
+var orderStatusHistoryDataUtil = require("../../data-util/sales/order-status-historical-data-util");
 
 var helper = require("../../helper");
 var validate = require("dl-models").validator;
@@ -221,10 +222,15 @@ it('#14. should success when get data detail for Excel Report', function (done) 
 
     manager.getOrderStatusKanbanDetailXls(resultForExcelTest, query, 0)
         .then((xlsData) => {
-            xlsData.should.have.property('data');
-            xlsData.should.have.property('options');
-            xlsData.should.have.property('name');
-            done();
+            orderStatusHistoryDataUtil.createTestData(productionOrderNo)
+                .then(() => {
+                    xlsData.should.have.property('data');
+                    xlsData.should.have.property('options');
+                    
+                    xlsData.should.have.property('name');
+                    done();
+                });
+            
         }).catch(e => {
             done(e);
         });

@@ -17,5 +17,20 @@ class OrderStatusHistoricalDataUtil {
                 return Promise.resolve(data);
             });
     }
+
+    createTestData(productionOrderNo) {
+        var Model = require('dl-models').sales.OrderStatusHistory;
+        var data = new Model();
+
+        data.productionOrderNo = productionOrderNo;
+        data.deliveryDateCorrection = new Date();
+        data.reason = "Test Reason";
+
+        return helper
+            .getManager(OrderStatusHistoricalManager)
+            .then((manager) => {
+                return manager.create([data]);
+            });
+    }
 }
 module.exports = new OrderStatusHistoricalDataUtil();
