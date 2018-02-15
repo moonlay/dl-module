@@ -209,12 +209,15 @@ it('#13. should success when create report detail', function (done) {
 
     query.orderNo = productionOrderNo;
 
-    manager.getOrderStatusKanbanDetailReport(query)
-        .then((result) => {
-            resultForExcelTest.data = result;
-            done();
-        }).catch((e) => {
-            done(e);
+    orderStatusHistoryDataUtil.createTestData(productionOrderNo)
+        .then(() => {
+            manager.getOrderStatusKanbanDetailReport(query)
+                .then((result) => {
+                    resultForExcelTest.data = result;
+                    done();
+                }).catch((e) => {
+                    done(e);
+                });
         });
 });
 
@@ -222,15 +225,10 @@ it('#14. should success when get data detail for Excel Report', function (done) 
 
     manager.getOrderStatusKanbanDetailXls(resultForExcelTest, query, 0)
         .then((xlsData) => {
-            orderStatusHistoryDataUtil.createTestData(productionOrderNo)
-                .then(() => {
-                    xlsData.should.have.property('data');
-                    xlsData.should.have.property('options');
-                    
-                    xlsData.should.have.property('name');
-                    done();
-                });
-            
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
         }).catch(e => {
             done(e);
         });
