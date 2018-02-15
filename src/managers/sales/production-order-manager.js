@@ -1316,7 +1316,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return Promise.resolve(xls);
     }
 
-    getOrderStatusDetailXls(result, query) {
+    getOrderStatusDetailXls(result, query, offset) {
         var xls = {};
         var year = parseInt(query.year);
         var month = query.month;
@@ -1360,7 +1360,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
             item["Tanggal Terima Order"] = statusOrder._createdDate ? moment(statusOrder._createdDate).format('DD/MM/YYYY') : '';
             item["Permintaan Delivery"] = statusOrder.deliveryDate ? moment(statusOrder.deliveryDate).format('DD/MM/YYYY') : '';
             item["Posisi Kanban Terakhir"] = '';
-            item["Perubahan Tanggal Delivery"] = statusOrder.deliveryDateCorrection ? moment(statusOrder.deliveryDateCorrection).format('DD/MM/YYYY') : '';
+            item["Perubahan Tanggal Delivery"] = statusOrder.deliveryDateCorrection ? moment(statusOrder.deliveryDateCorrection).add(offset, 'h').format('DD/MM/YYYY') : '';
             item["Alasan Perubahan Tanggal Delivery"] = statusOrder.reason;
             item["Panjang SPP"] = statusOrder.orderQuantity ? Number(Number(statusOrder.orderQuantity).toFixed(2)) : 0;
             item["Sisa Belum Turun Kanban"] = statusOrder.notInKanbanQuantity ? Number(Number(statusOrder.notInKanbanQuantity).toFixed(2)) : 0;
@@ -1411,10 +1411,11 @@ module.exports = class ProductionOrderManager extends BaseManager {
         return Promise.resolve(xls);
     }
 
-    getOrderStatusKanbanDetailXls(result, query) {
+    getOrderStatusKanbanDetailXls(result, query, offset) {
         var xls = {};
         var orderNo = query.orderNo;
         xls.data = [];
+        xls.histories = [];
         xls.options = [];
         xls.name = `LAPORAN DETAIL SPP ${orderNo}.xlsx`;
 
@@ -1439,6 +1440,14 @@ module.exports = class ProductionOrderManager extends BaseManager {
         xls.options["Area"] = "string";
         xls.options["Kuantiti (m)"] = "number";
         xls.options["Status"] = "string";
+
+        for(let history of res.histories) {
+            let item = {};
+            item["Tanggal Buat"] = moment(history._createdDate).add(offset, 'h').format('DD/MM/YYYY');
+            item["Tanggal Hasil Revisi"] = moment(history.deliveryDateCorrection).add(offset, 'h').format('DD/MM/YYYY');
+            item["Alasan"] = history.reason;
+            xls.histories.push(item);
+        }
 
         return Promise.resolve(xls);
     }
