@@ -80,19 +80,21 @@ it("#02. should error when create new data with deliveryDate is null", function 
         });
 });
 
-it("#03. should error when create new data with orderQuantity is 0", function (done){
+it("#03. should error when create new data with bookingDate = deliveryDate", function (done){
     dataUtil.getNewData()
         .then((data) => {
-            data.orderQuantity=0;
+            data.deliveryDate=new Date();
+            data.bookingDate=new Date();
+            data.deliveryDate.setHours(0,0,0,0);
             manager.create(data)
                 .then((id) => {
-                    done("should error when create new data with orderQuantity is null");
+                    done("should error when create new data bookingDate = deliveryDate");
                 })
                 .catch((e) => {
                     e.name.should.equal("ValidationError");
                     e.should.have.property("errors");
                     e.errors.should.instanceof(Object);
-                    e.errors.should.have.property("orderQuantity");
+                    e.errors.should.have.property("deliveryDate");
                     done();
                 });
         })

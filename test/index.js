@@ -99,6 +99,7 @@ describe('#dl-module', function (done) {
     test('@SALES/DEAL TRACKING STAGE', './sales/deal-tracking-stage');
     test('@SALES/DEAL TRACKING DEAL', './sales/deal-tracking-deal');
     test('@SALES/DEAL TRACKING ACTIVITY', './sales/deal-tracking-activity');
+    test('@SALES/ORDER STATUS HISTORY', './sales/order-status-historical');    
 
     // //Production
     test('@PRODUCTION/FINISHING-PRINTING/KANBAN', './production/finishing-printing/kanban');

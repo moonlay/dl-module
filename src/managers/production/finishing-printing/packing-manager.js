@@ -551,20 +551,22 @@ getQcgudangReport(query ){
                 index += 1;
                 item["No"] = index;
                 item["Nomor Packing"] = packing.code ? packing.code : '';
+                item["Jenis Penyerahan"] = packing.deliveryType ? packing.deliveryType : '';
                 item["Nomor Order"] = packing.productionOrderNo ? packing.productionOrderNo : '';
                 item["Jenis Order"] = packing.orderType ? packing.orderType : '';
-                item["Buyer"] = packing.buyer ? packing.buyer : '';
+                item["Buyer"] = packing.buyerName ? packing.buyerName : '';
                 item["Konstruksi"] = packing.construction ? packing.construction : '';
-                item["Design/Motif"] = packing.designNumber ? packing.designNumber : '';
+                item["Motif"] = packing.designCode ? packing.designCode : '';
                 item["Warna yang diminta"] = packing.colorName ? packing.colorName : '';
                 item["Tanggal"] = packing.date ? moment(new Date(packing.date)).add(query.offset, 'h').format(dateFormat) : '';
 
 
                 item["Lot"] = packingItem.lot ? packingItem.lot : '';
                 item["Grade"] = packingItem.grade ? packingItem.grade : '';
-                item["Berat"] = packingItem.weight ? packingItem.weight : '';
-                item["Panjang"] = packingItem.length ? packingItem.length : '';
+                item["Berat(kg)"] = packingItem.weight ? packingItem.weight : '';
+                item["Panjang(m)"] = packingItem.length ? packingItem.length : '';
                 item["Quantity"] = packingItem.quantity ? packingItem.quantity : '';
+                item["Total"] =  packingItem.quantity * packingItem.length;
                 item["Keterangan"] = packingItem.remark ? packingItem.remark : '';
                 xls.options[packingItem.lot] = "string";
                 xls.options[packingItem.grade] = "string";
