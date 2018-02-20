@@ -100,3 +100,14 @@ it("#05. should success when destroy all unit test data", function (done) {
             done(e);
         });
 });
+
+
+it("#06. should success when read data", function (done) {
+    manager.read({ keyword: "Moonlay Technologies" })
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

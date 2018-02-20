@@ -80,7 +80,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "items.conversion",
             "items.isPosted",
             "items.isClosed",
-
         ];
     }
 
@@ -325,7 +324,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             if (_keyword) {
                                 _keyword = _keyword.replace("(", "\\(");
                                 _keyword = _keyword.replace(")", "\\)");
-                                var regex = new RegExp(_keyword, "i");
+                                var regex = new RegExp(_keyword,"i");
                                 switch (j) {
                                     case 0:
                                         keywordFilters.push({
@@ -603,7 +602,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     for (var item of splittedPurchaseOrder.items) {
                                         var sourceItem = sourcePurchaseOrder.items.find((_sourceItem) => item.product._id.toString() === _sourceItem.product._id.toString());
                                         if (sourceItem) {
-                                            sourceItem.defaultQuantity = sourceItem.defaultQuantity - item.defaultQuantity;
+                                            sourceItem.defaultQuantity = parseFloat((sourceItem.defaultQuantity - item.defaultQuantity).toFixed(2));
                                         }
                                     }
                                     sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
@@ -947,6 +946,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "budgetPrice": "$items.budgetPrice",
                                         "currencyRate": "$items.currency.rate",
                                         "dealQuantity": "$items.dealQuantity",
+                                        "currency": "$items.currency.code",
                                         "dealUom": "$items.dealUom.unit",
                                         "pricePerDealUnit": "$items.pricePerDealUnit",
                                         "supplier.name": "$items.supplier.name",
@@ -984,6 +984,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "budgetPrice": 1,
                                         "currencyRate": 1,
                                         "dealQuantity": 1,
+                                        "currency": 1,
                                         "dealUom": 1,
                                         "pricePerDealUnit": 1,
                                         "supplier.name": 1,
@@ -1031,6 +1032,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "budgetPrice": "$items.budgetPrice",
                                     "currencyRate": "$items.currency.rate",
                                     "dealQuantity": "$items.dealQuantity",
+                                    "currency": "$items.currency.code",
                                     "dealUom": "$items.dealUom.unit",
                                     "pricePerDealUnit": "$items.pricePerDealUnit",
                                     "supplier.name": "$items.supplier.name",
@@ -1068,6 +1070,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "budgetPrice": 1,
                                     "currencyRate": 1,
                                     "dealQuantity": 1,
+                                    "currency": 1,
                                     "dealUom": 1,
                                     "pricePerDealUnit": 1,
                                     "supplier.name": 1,
@@ -1104,7 +1107,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     var remainQuantity = 0;
                     var sum = 0;
 
-                    if (data.arrayIndex != null && data.arrayIndex >= 0) {
+                    if (data.arrayIndex || data.arrayIndex >= 0) {
                         sum = 0;
                         for (var i = 0; i <= data.arrayIndex; i++) {
                             sum += data.fulfillmentsTotal[i];
@@ -1143,6 +1146,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     } else {
                         data.correction = {};
                     }
+                    if (!data.supplier) {
+                        data.supplier = {
+                            code: "",
+                            name: ""
+                        }
+                    }
                     index++;
                     var item = {
                         no: index,
@@ -1152,7 +1161,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         division: data.unit.division.name,
                         refNo: data.refNo,
                         roNo: data.roNo,
-                        shipmentDate: data.purchaseRequest.shipmentDate ? moment(new Date(data.purchaseRequest.shipmentDate)).add(offset, 'h').format(dateFormat) : "-",
+                        shipmentDate: data.purchaseRequest.shipmentDate ? moment(new Date(data.purchaseRequest.shipmentDate)).add(offset, 'h').format(dateFormat): "-",
                         artikel: data.artikel,
                         category: data.category,
                         productName: data.product.name,
@@ -1160,15 +1169,20 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         productDesc: data.product.description,
                         defaultQuantity: data.defaultQuantity ? data.defaultQuantity : 0,
                         defaultUom: data.defaultUom ? data.defaultUom : "-",
-                        budgetPrice: data.budgetPrice * data.currencyRate,
-                        pricePerItem: data.pricePerDealUnit * data.currencyRate,
-                        priceTotal: data.pricePerDealUnit * data.dealQuantity * data.currencyRate,
+                        dealUom: data.dealUom ? data.dealUom : "-",
+                        budgetPrice: data.budgetPrice,
+                        pricePerItem: data.pricePerDealUnit,
+                        priceTotal: data.pricePerDealUnit * data.dealQuantity,
+                        priceTtl: data.pricePerDealUnit * data.dealQuantity * data.currencyRate,
+                        currencyRate: data.currencyRate,
                         supplierCode: data.supplier.code,
                         supplierName: data.supplier.name,
                         poIntCreatedDate: data._createdDate ? moment(new Date(data._createdDate)).add(offset, 'h').format(dateFormat) : "-",
                         poExtNo: data.poeNo,
                         poExtDate: data.poeDate ? moment(new Date(data.poeDate)).add(offset, 'h').format(dateFormat) : "-",
                         poExtExpectedDeliveryDate: data.poeExpectedDeliveryDate ? moment(new Date(data.poeExpectedDeliveryDate)).add(offset, 'h').format(dateFormat) : "-",
+                        dealQuantity: data.dealQuantity ? data.dealQuantity : 0,
+                        currency: data.currency,
                         deliveryOrderNo: data.fulfillment ? data.fulfillment.deliveryOrderNo ? data.fulfillment.deliveryOrderNo : "-" : "-",
                         deliveryOrderUseCustoms: data.fulfillment ? data.fulfillment.deliveryOrderUseCustoms ? data.fulfillment.deliveryOrderUseCustoms : false : false,
                         supplierDoDate: data.fulfillment ? data.fulfillment.supplierDoDate ? moment(new Date(data.fulfillment.supplierDoDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
@@ -1230,62 +1244,65 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
         for (var data of results.data) {
             var item = {
-                "Nomor": data.no,
+                "No": data.no,
                 "Tanggal Purchase Request": data.prDate,
-                "Nomor Purchase Request": data.prNo,
+                "No Purchase Request": data.prNo,
                 "Unit": data.unit,
                 "Divisi": data.division,
-                "Nomor Ref Purchase Request": data.refNo,
-                "Nomor RO": data.roNo,
+                "No Ref Purchase Request": data.refNo,
+                "No RO": data.roNo,
                 "Shipment Garment": data.shipmentDate,
                 "Artikel": data.artikel,
                 "Kategori": data.category,
                 "Nama Barang": data.productName,
                 "Kode Barang": data.productCode,
                 "Keterangan Barang": data.productDesc,
-                "Jumlah Barang": data.defaultQuantity,
-                "Satuan Barang": data.defaultUom,
+                "Jumlah Barang": data.dealQuantity,
+                "Satuan Barang": data.dealUom,
                 "Harga Budget": data.budgetPrice,
                 "Harga Satuan Beli": data.pricePerItem,
                 "Harga Total": data.priceTotal,
+                "Mata Uang": data.currency,
+                "Kurs": data.currencyRate,
+                "Harga Total Rp": data.priceTtl,
                 "Kode Supplier": data.supplierCode,
                 "Nama Supplier": data.supplierName,
                 "Tanggal Terima PO Internal": data.poIntCreatedDate,
-                "Nomor PO Eksternal": data.poExtNo,
+                "No PO Eksternal": data.poExtNo,
                 "Tanggal PO Eksternal": data.poExtDate,
                 "Tanggal Target Datang": data.poExtExpectedDeliveryDate,
-                "Nomor Surat Jalan": data.deliveryOrderNo,
+                "No Surat Jalan": data.deliveryOrderNo,
                 "Dikenakan Bea Cukai": data.deliveryOrderUseCustoms ? "Ya" : "Tidak",
                 "Tanggal Surat Jalan": data.supplierDoDate,
                 "Tanggal Datang Barang": data.deliveryOrderDate,
                 "Jumlah Barang Datang": data.deliveryOrderDeliveredQuantity,
-                "Satuan": data.defaultUom,
+                "Satuan": data.dealUom,
                 "Jumlah Barang Sisa": data.remainQuantity,
-                "Nomor Bea Cukai": data.customsNo,
+                "No Bea Cukai": data.customsNo,
                 "Tanggal Bea Cukai": data.customsDate,
-                "Nomor Bon Terima Unit": data.unitReceiptNoteNo,
+                "No Bon Terima Unit": data.unitReceiptNoteNo,
                 "Tanggal Bon Terima Unit": data.unitReceiptNoteDate,
                 "Jumlah Barang Diterima": data.unitReceiptNoteDeliveredQuantity,
                 "Satuan Barang Diterima": data.unitReceiptDeliveredUom,
-                "Nomor Invoice": data.invoiceNo,
+                "No Invoice": data.invoiceNo,
                 "Tanggal Invoice": data.invoiceDate,
                 "Dikenakan PPN": data.invoiceUseIncomeTax ? "Ya" : "Tidak",
-                "Nomor PPN": data.invoiceIncomeTaxNo,
+                "No PPN": data.invoiceIncomeTaxNo,
                 "Tanggal PPN": data.invoiceIncomeTaxDate,
                 "Nilai PPN": data.incomeValue,
                 "Dikenakan PPH": data.invoiceUseVat ? "Ya" : "Tidak",
                 "Jenis PPH": data.invoiceVat,
-                "Nomor PPH": data.invoiceVatNo,
+                "No PPH": data.invoiceVatNo,
                 "Tanggal PPH": data.invoiceVatDate,
                 "Nilai PPH": data.vatValue,
-                "Nomor Nota Intern": data.interNoteNo,
+                "No Nota Intern": data.interNoteNo,
                 "Tanggal Nota Intern": data.interNoteDate,
                 "Nilai Nota Intern": data.interNoteValue,
                 "Tanggal Jatuh Tempo": data.interNoteDueDate,
-                "Nomor Koreksi": data.correctionNo,
+                "No Koreksi": data.correctionNo,
                 "Tanggal Koreksi": data.correctionDate,
                 "Nilai Koreksi": data.correctionPriceTotal,
-                "Keterangan Koreksi": data.correctionRemark,
+                "Ket Koreksi": data.correctionRemark,
                 "Keterangan": data.remark,
                 "Status": data.status
             }
@@ -1293,13 +1310,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         }
 
         var options = {
-            "Nomor": "number",
+            "No": "number",
             "Tanggal Purchase Request": "string",
-            "Nomor Purchase Request": "string",
+            "No Purchase Request": "string",
             "Unit": "string",
             "Divisi": "string",
-            "Nomor Ref Purchase Request": "string",
-            "Nomor RO": "string",
+            "No Ref Purchase Request": "string",
+            "No RO": "string",
             "Shipment Garment": "string",
             "Artikel": "string",
             "Kategori": "string",
@@ -1310,44 +1327,47 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "Satuan Barang": "string",
             "Harga Barang": "number",
             "Harga Total": "number",
+            "Mata Uang": "string",
+            "Kurs": "number",
+            "Harga Total Rp": "number",
             "Kode Supplier": "string",
             "Nama Supplier": "string",
             "Tanggal Terima PO Internal": "string",
-            "Nomor PO Eksternal": "string",
+            "No PO Eksternal": "string",
             "Tanggal PO Eksternal": "string",
             "Tanggal Target Datang": "string",
-            "Nomor Surat Jalan": "string",
+            "No Surat Jalan": "string",
             "Dikenakan Bea Cukai": "string",
             "Tanggal Surat Jalan": "string",
             "Tanggal Datang Barang": "string",
             "Jumlah Barang Datang": "number",
             "Satuan": "string",
             "Jumlah Barang Sisa": "string",
-            "Nomor Bea Cukai": "string",
+            "No Bea Cukai": "string",
             "Tanggal Bea Cukai": "string",
-            "Nomor Bon Terima Unit": "string",
+            "No Bon Terima Unit": "string",
             "Tanggal Bon Terima Unit": "string",
             "Jumlah Barang Diterima": "number",
             "Satuan Barang Diterima": "string",
-            "Nomor Invoice": "string",
+            "No Invoice": "string",
             "Tanggal Invoice": "string",
             "Dikenakan PPN": "string",
-            "Nomor PPN": "string",
+            "No PPN": "string",
             "Tanggal PPN": "string",
             "Nilai PPN": "number",
             "Dikenakan PPH": "string",
             "Jenis PPH": "string",
-            "Nomor PPH": "string",
+            "No PPH": "string",
             "Tanggal PPH": "string",
             "Nilai PPH": "number",
-            "Nomor Nota Intern": "string",
+            "No Nota Intern": "string",
             "Tanggal Nota Intern": "string",
             "Nilai Nota Intern": "string",
             "Tanggal Jatuh Tempo": "string",
-            "Nomor Koreksi": "string",
+            "No Koreksi": "string",
             "Tanggal Koreksi": "string",
             "Nilai Koreksi": "string",
-            "Keterangan Koreksi": "string",
+            "Ket Koreksi": "string",
             "Keterangan": "string",
             "Status": "string"
         };
@@ -1380,9 +1400,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "status.value": info.state
             });
         }
-        if (info.user && info.user !== "") {
-            Object.assign(query, {
-                "_createdBy": info.user.username
+        if (info.user && info.user !== "" ) {
+            Object.assign(query, {      
+                "_createdBy": info.user
             });
         }
         if (info.unitId && info.unitId !== "") {
@@ -1518,6 +1538,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "budgetPrice": "$items.budgetPrice",
                                         "currencyRate": "$items.currency.rate",
                                         "dealQuantity": "$items.dealQuantity",
+                                        "currency": "$items.currency.code",
                                         "dealUom": "$items.dealUom.unit",
                                         "pricePerDealUnit": "$items.pricePerDealUnit",
                                         "supplier.name": "$items.supplier.name",
@@ -1556,6 +1577,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "budgetPrice": 1,
                                         "currencyRate": 1,
                                         "dealQuantity": 1,
+                                        "currency": 1,
                                         "dealUom": 1,
                                         "pricePerDealUnit": 1,
                                         "supplier.name": 1,
@@ -1604,6 +1626,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "budgetPrice": "$items.budgetPrice",
                                     "currencyRate": "$items.currency.rate",
                                     "dealQuantity": "$items.dealQuantity",
+                                    "currency": "$items.currency.code",
                                     "dealUom": "$items.dealUom.unit",
                                     "pricePerDealUnit": "$items.pricePerDealUnit",
                                     "supplier.name": "$items.supplier.name",
@@ -1642,6 +1665,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "budgetPrice": 1,
                                     "currencyRate": 1,
                                     "dealQuantity": 1,
+                                    "currency": 1,
                                     "dealUom": 1,
                                     "pricePerDealUnit": 1,
                                     "supplier.name": 1,
@@ -1679,7 +1703,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                     var remainQuantity = 0;
                     var sum = 0;
 
-                    if (data.arrayIndex != null && data.arrayIndex >= 0) {
+                    if (data.arrayIndex || data.arrayIndex >= 0) {
                         sum = 0;
                         for (var i = 0; i <= data.arrayIndex; i++) {
                             sum += data.fulfillmentsTotal[i];
@@ -1719,6 +1743,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         data.correction = {};
                     }
                     index++;
+                    if (!data.supplier) {
+                        data.supplier = {
+                            code: "",
+                            name: ""
+                        }
+                    }
                     var item = {
                         no: index,
                         prDate: data.prDate ? moment(new Date(data.prDate)).add(offset, 'h').format(dateFormat) : "-",
@@ -1727,7 +1757,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         division: data.unit.division.name,
                         refNo: data.refNo,
                         roNo: data.roNo,
-                        shipmentDate: data.purchaseRequest.shipmentDate ? moment(new Date(data.purchaseRequest.shipmentDate)).add(offset, 'h').format(dateFormat) : "-",
+                        shipmentDate: data.purchaseRequest.shipmentDate ? moment(new Date(data.purchaseRequest.shipmentDate)).add(offset, 'h').format(dateFormat): "-",
                         artikel: data.artikel,
                         category: data.category,
                         productName: data.product.name,
@@ -1735,15 +1765,20 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         productDesc: data.product.description,
                         defaultQuantity: data.defaultQuantity ? data.defaultQuantity : 0,
                         defaultUom: data.defaultUom ? data.defaultUom : "-",
-                        budgetPrice: data.budgetPrice * data.currencyRate,
-                        pricePerItem: data.pricePerDealUnit * data.currencyRate,
-                        priceTotal: data.pricePerDealUnit * data.dealQuantity * data.currencyRate,
+                        dealUom: data.dealUom ? data.dealUom : "-",
+                        budgetPrice: data.budgetPrice,
+                        pricePerItem: data.pricePerDealUnit,
+                        priceTotal: data.pricePerDealUnit * data.dealQuantity,
+                        priceTtl: data.pricePerDealUnit * data.dealQuantity * data.currencyRate,
+                        currencyRate: data.currencyRate,
                         supplierCode: data.supplier.code,
                         supplierName: data.supplier.name,
                         poIntCreatedDate: data._createdDate ? moment(new Date(data._createdDate)).add(offset, 'h').format(dateFormat) : "-",
                         poExtNo: data.poeNo,
                         poExtDate: data.poeDate ? moment(new Date(data.poeDate)).add(offset, 'h').format(dateFormat) : "-",
                         poExtExpectedDeliveryDate: data.poeExpectedDeliveryDate ? moment(new Date(data.poeExpectedDeliveryDate)).add(offset, 'h').format(dateFormat) : "-",
+                        dealQuantity: data.dealQuantity ? data.dealQuantity : 0,
+                        currency: data.currency,
                         deliveryOrderNo: data.fulfillment ? data.fulfillment.deliveryOrderNo ? data.fulfillment.deliveryOrderNo : "-" : "-",
                         deliveryOrderUseCustoms: data.fulfillment ? data.fulfillment.deliveryOrderUseCustoms ? data.fulfillment.deliveryOrderUseCustoms : false : false,
                         supplierDoDate: data.fulfillment ? data.fulfillment.supplierDoDate ? moment(new Date(data.fulfillment.supplierDoDate)).add(offset, 'h').format(dateFormat) : "-" : "-",
@@ -1808,60 +1843,63 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             var item = {
                 "No": data.no,
                 "Tanggal Purchase Request": data.prDate,
-                "Nomor Purchase Request": data.prNo,
+                "No Purchase Request": data.prNo,
                 "Unit": data.unit,
                 "Divisi": data.division,
-                "Nomor Ref Purchase Request": data.refNo,
-                "Nomor RO": data.roNo,
+                "No Ref Purchase Request": data.refNo,
+                "No RO": data.roNo,
                 "Shipment Garment": data.shipmentDate,
                 "Artikel": data.artikel,
                 "Kategori": data.category,
                 "Nama Barang": data.productName,
                 "Kode Barang": data.productCode,
                 "Keterangan Barang": data.productDesc,
-                "Jumlah Barang": data.defaultQuantity,
-                "Satuan Barang": data.defaultUom,
+                "Jumlah Barang": data.dealQuantity,
+                "Satuan Barang": data.dealUom,
                 "Harga Budget": data.budgetPrice,
                 "Harga Satuan Beli": data.pricePerItem,
-                "Harga Total": data.pricePerItem,
+                "Harga Total": data.priceTotal,
+                "Mata Uang": data.currency,
+                "Kurs": data.currencyRate,
+                "Harga Total Rp": data.priceTtl,
                 "Kode Supplier": data.supplierCode,
                 "Nama Supplier": data.supplierName,
                 "Tanggal Terima PO Internal": data.poIntCreatedDate,
-                "Nomor PO Eksternal": data.poExtNo,
+                "No PO Eksternal": data.poExtNo,
                 "Tanggal PO Eksternal": data.poExtDate,
                 "Tanggal Target Datang": data.poExtExpectedDeliveryDate,
-                "Nomor Surat Jalan": data.deliveryOrderNo,
+                "No Surat Jalan": data.deliveryOrderNo,
                 "Dikenakan Bea Cukai": data.deliveryOrderUseCustoms ? "Ya" : "Tidak",
                 "Tanggal Surat Jalan": data.supplierDoDate,
                 "Tanggal Datang Barang": data.deliveryOrderDate,
                 "Jumlah Barang Datang": data.deliveryOrderDeliveredQuantity,
-                "Satuan": data.defaultUom,
+                "Satuan": data.dealUom,
                 "Jumlah Barang Sisa": data.remainQuantity,
-                "Nomor Bea Cukai": data.customsNo,
+                "No Bea Cukai": data.customsNo,
                 "Tanggal Bea Cukai": data.customsDate,
-                "Nomor Bon Terima Unit": data.unitReceiptNoteNo,
+                "No Bon Terima Unit": data.unitReceiptNoteNo,
                 "Tanggal Bon Terima Unit": data.unitReceiptNoteDate,
                 "Jumlah Barang Diterima": data.unitReceiptNoteDeliveredQuantity,
                 "Satuan Barang Diterima": data.unitReceiptDeliveredUom,
-                "Nomor Invoice": data.invoiceNo,
+                "No Invoice": data.invoiceNo,
                 "Tanggal Invoice": data.invoiceDate,
                 "Dikenakan PPN": data.invoiceUseIncomeTax ? "Ya" : "Tidak",
-                "Nomor PPN": data.invoiceIncomeTaxNo,
+                "No PPN": data.invoiceIncomeTaxNo,
                 "Tanggal PPN": data.invoiceIncomeTaxDate,
                 "Nilai PPN": data.incomeValue,
                 "Dikenakan PPH": data.invoiceUseVat ? "Ya" : "Tidak",
                 "Jenis PPH": data.invoiceVat,
-                "Nomor PPH": data.invoiceVatNo,
+                "No PPH": data.invoiceVatNo,
                 "Tanggal PPH": data.invoiceVatDate,
                 "Nilai PPH": data.vatValue,
-                "Nomor Nota Intern": data.interNoteNo,
+                "No Nota Intern": data.interNoteNo,
                 "Tanggal Nota Intern": data.interNoteDate,
                 "Nilai Nota Intern": data.interNoteValue,
                 "Tanggal Jatuh Tempo": data.interNoteDueDate,
-                "Nomor Koreksi": data.correctionNo,
+                "No Koreksi": data.correctionNo,
                 "Tanggal Koreksi": data.correctionDate,
                 "Nilai Koreksi": data.correctionPriceTotal,
-                "Keterangan Koreksi": data.correctionRemark,
+                "Ket Koreksi": data.correctionRemark,
                 "Keterangan": data.remark,
                 "Status": data.status,
                 "_createdBy": data._createdBy
@@ -1872,11 +1910,11 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         var options = {
             "No": "number",
             "Tanggal Purchase Request": "string",
-            "Nomor Purchase Request": "string",
+            "No Purchase Request": "string",
             "Unit": "string",
             "Divisi": "string",
-            "Nomor Ref Purchase Request": "string",
-            "Nomor RO": "string",
+            "No Ref Purchase Request": "string",
+            "No RO": "string",
             "Shipment Garment": "string",
             "Artikel": "string",
             "Kategori": "string",
@@ -1887,44 +1925,47 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "Satuan Barang": "string",
             "Harga Barang": "number",
             "Harga Total": "number",
+            "Mata Uang": "string",
+            "Kurs": "number",
+            "Harga Total Rp": "number",
             "Kode Supplier": "string",
             "Nama Supplier": "string",
             "Tanggal Terima PO Internal": "string",
-            "Nomor PO Eksternal": "string",
+            "No PO Eksternal": "string",
             "Tanggal PO Eksternal": "string",
             "Tanggal Target Datang": "string",
-            "Nomor Surat Jalan": "string",
+            "No Surat Jalan": "string",
             "Dikenakan Bea Cukai": "string",
             "Tanggal Surat Jalan": "string",
             "Tanggal Datang Barang": "string",
             "Jumlah Barang Datang": "number",
             "Satuan": "string",
             "Jumlah Barang Sisa": "string",
-            "Nomor Bea Cukai": "string",
+            "No Bea Cukai": "string",
             "Tanggal Bea Cukai": "string",
-            "Nomor Bon Terima Unit": "string",
+            "No Bon Terima Unit": "string",
             "Tanggal Bon Terima Unit": "string",
             "Jumlah Barang Diterima": "number",
             "Satuan Barang Diterima": "string",
-            "Nomor Invoice": "string",
+            "No Invoice": "string",
             "Tanggal Invoice": "string",
             "Dikenakan PPN": "string",
-            "Nomor PPN": "string",
+            "No PPN": "string",
             "Tanggal PPN": "string",
             "Nilai PPN": "number",
             "Dikenakan PPH": "string",
             "Jenis PPH": "string",
-            "Nomor PPH": "string",
+            "No PPH": "string",
             "Tanggal PPH": "string",
             "Nilai PPH": "number",
-            "Nomor Nota Intern": "string",
+            "No Nota Intern": "string",
             "Tanggal Nota Intern": "string",
             "Nilai Nota Intern": "string",
             "Tanggal Jatuh Tempo": "string",
-            "Nomor Koreksi": "string",
+            "No Koreksi": "string",
             "Tanggal Koreksi": "string",
             "Nilai Koreksi": "string",
-            "Keterangan Koreksi": "string",
+            "Ket Koreksi": "string",
             "Keterangan": "string",
             "Status": "string",
             "Staff Input": "string"
@@ -1942,7 +1983,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         }
         else
             xls.name = `Laporan Monitoring Pembelian All.xlsx`;
-
         return Promise.resolve(xls);
     }
 };

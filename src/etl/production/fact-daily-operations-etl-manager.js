@@ -293,7 +293,6 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
                         if (data.badOutputReasons && data.badOutputReasons.length > 0) {
                             var sqlQueryReason = 'INSERT INTO [DL_Fact_Daily_Operation_Reason_Temp](dailyOperationCode, badOutputReasonCode, reason, length, description, action) ';
-
                             var countReason = 1;
 
                             for (var item of data.badOutputReasons) {

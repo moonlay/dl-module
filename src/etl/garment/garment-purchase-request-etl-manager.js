@@ -441,7 +441,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         } else if (unique.Konf.trim() == "K.4") {
                             unitCode = "C1A"
                         } else if (unique.Konf.trim() == "K.5") {
-                            unitCode = "C2A"
+                            unitCode = "C1B"
                         } else {
                             unitCode = unique.Konf.trim();
                         }
@@ -527,7 +527,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                         } else if (data.Konf.trim() == "K.4") {
                             unitCode = "C1A"
                         } else if (data.Konf.trim() == "K.5") {
-                            unitCode = "C2A"
+                            unitCode = "C1B"
                         } else {
                             unitCode = data.Konf.trim();
                         }
@@ -860,8 +860,7 @@ module.exports = class GarmentPurchaseRequestEtlManager extends BaseManager {
                 var processed = [];
                 var deleteProcess = [];
                 var tempProcess = [];
-                var roNoArr = [];
-    
+                var roNoArr = [];    
                 var dataRo = [];
     
                 for (var i of dataArr) {

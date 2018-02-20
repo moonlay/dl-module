@@ -1055,7 +1055,7 @@ module.exports = class DailyOperationManager extends BaseManager {
         return data;
     }
 
-    getXlsDailyMachine(result, query) {
+    getXlsDailyMachine(result, query, offset) {
 
         var xls = {};
         xls.data = [];
@@ -1069,7 +1069,7 @@ module.exports = class DailyOperationManager extends BaseManager {
             index++;
             var item = {};
             item["No"] = index;
-            item["dateOutput"] = moment(new Date(daily._id.date)).format(dateFormat);
+            item["dateOutput"] = daily._id && daily._id.date ? moment(daily._id.date).add(offset, "h").format(dateFormat) : "";
             item["Machine Name"] = daily._id.machineName;
             item["process Area"] = daily._id.processArea;
             item["type"] = "output";
@@ -1181,10 +1181,12 @@ module.exports = class DailyOperationManager extends BaseManager {
             item["Lebar Kain (inch)"] = daily.kanban ? daily.kanban.productionOrder.materialWidth : '';
             item["Jenis Proses"] = daily.kanban ? daily.kanban.productionOrder.processType.name : '';
             item["Tgl Input"] = daily.dateInput ? moment(new Date(daily.dateInput)).format(dateFormat) : '';
-            item["Jam Input"] = daily.timeInput ? moment(daily.timeInput).add(timezone, 'h').format('HH:mm') : '';
+            item["Jam Input"] = daily.timeInput ? moment(daily.timeInput).format('HH:mm') : '';
+            // item["Jam Input"] = daily.timeInput ? moment(daily.timeInput).add(timezone, 'h').format('HH:mm') : '';
             item["input"] = daily.input ? daily.input : 0;
             item["Tgl Output"] = daily.dateOutput ? moment(new Date(daily.dateOutput)).format(dateFormat) : '';
-            item["Jam Output"] = daily.timeOutput ? moment(daily.timeOutput).add(timezone, 'h').format('HH:mm') : '';
+            item["Jam Output"] = daily.timeOutput ? moment(daily.timeOutput).format('HH:mm') : '';
+            // item["Jam Output"] = daily.timeOutput ? moment(daily.timeOutput).add(timezone, 'h').format('HH:mm') : '';
             item["BQ"] = daily.goodOutput ? daily.goodOutput : 0;
             item["BS"] = daily.badOutput ? daily.badOutput : 0;
             item["Keterangan BQ"] = daily.badOutputDescription ? daily.badOutputDescription : '';

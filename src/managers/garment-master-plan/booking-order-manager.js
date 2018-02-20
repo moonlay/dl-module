@@ -5,12 +5,13 @@ require("mongodb-toolkit");
 var DLModels = require("dl-models");
 var map = DLModels.map;
 var BookingOrder = DLModels.garmentMasterPlan.BookingOrder;
-var MasterPlan = DLModels.garmentMasterPlan.MasterPlan;
+var SewingBlockingPlan = DLModels.garmentMasterPlan.SewingBlockingPlan;
 var BaseManager = require("module-toolkit").BaseManager;
 var i18n = require("dl-i18n");
 var ComodityManager = require('./master-plan-comodity-manager');
 //var MasterPlanManager = require('./master-plan-manager');
 var GarmentBuyerManager = require('../master/garment-buyer-manager');
+var GarmentSectionManager = require('../garment-master-plan/garment-section-manager');
 var generateCode = require("../../utils/code-generator");
 var assert = require('assert');
 var moment = require("moment");
@@ -19,10 +20,11 @@ module.exports = class BookingOrderManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.garmentMasterPlan.collection.BookingOrder);
-        this.masterPlanCollection = this.db.use(map.garmentMasterPlan.collection.MasterPlan);
+        this.sewingBlockingPlanCollection = this.db.use(map.garmentMasterPlan.collection.SewingBlockingPlan);
         this.comodityManager = new ComodityManager(db, user);
         //this.masterPlanManager = new MasterPlanManager(db, user);
         this.garmentBuyerManager = new GarmentBuyerManager(db, user);
+        this.garmentSectionManager = new GarmentSectionManager(db, user);
         this.documentNumbers = this.db.collection("document-numbers");
     }
 
@@ -75,7 +77,9 @@ module.exports = class BookingOrderManager extends BaseManager {
 
         //var getComodity = valid.styleId && ObjectId.isValid(valid.styleId) ? this.styleManager.getSingleByIdOrDefault(new ObjectId(valid.styleId)) : Promise.resolve(null);
         var getBuyer = valid.garmentBuyerId && ObjectId.isValid(valid.garmentBuyerId) ? this.garmentBuyerManager.getSingleByIdOrDefault(new ObjectId(valid.garmentBuyerId)) : Promise.resolve(null);
-       
+
+        var getSection = valid.garmentSectionId && ObjectId.isValid(valid.garmentSectionId) ? this.garmentSectionManager.getSingleByIdOrDefault(new ObjectId(valid.garmentSectionId)) : Promise.resolve(null);
+
         // valid.details = valid.details || [];
         // var getWeeklyPlan = [];
         // var getUnit = [];
@@ -86,10 +90,11 @@ module.exports = class BookingOrderManager extends BaseManager {
         //     getWeeklyPlan.push(week);
         // }
         // 2. begin: Validation.
-        return Promise.all([getBooking,getBuyer])
+        return Promise.all([getBooking,getBuyer,getSection])
             .then(results => {
                 var duplicateBooking = results[0];
                 var _buyer=results[1];
+                var _section=results[2];
 
 
                 // if(!valid.code || valid.code === "")
@@ -108,6 +113,9 @@ module.exports = class BookingOrderManager extends BaseManager {
                 // if(!_buyer)
                 //     errors["buyer"] = i18n.__("BookingOrder.buyer.isNotFound:%s is not found", i18n.__("BookingOrder.buyer._:Buyer"));
 
+                if(!valid.garmentSectionId || valid.garmentSectionId==='')
+                    errors["section"] = i18n.__("BookingOrder.section.isRequired:%s is required", i18n.__("BookingOrder.section._:Section"));
+
                 if(!valid.orderQuantity || valid.orderQuantity<=0)
                     errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.isRequired:%s is required", i18n.__("BookingOrder.orderQuantity._:OrderQuantity"));
                 
@@ -116,14 +124,22 @@ module.exports = class BookingOrderManager extends BaseManager {
                      errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.isRequired:%s is required", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
                 }
                 else{
-                    valid.deliveryDate=new Date(valid.deliveryDate);
                     valid.bookingDate=new Date(valid.bookingDate);
+                    valid.deliveryDate= moment(new Date(valid.deliveryDate)).add(7, 'h').locale('id');
+                    valid.deliveryDate=new Date(valid.deliveryDate);
+                    var check_deliveryDate=new Date(valid.deliveryDate);
+                    check_deliveryDate.setHours(0,0,0,0);                                        
+                    valid.bookingDate.setHours(0,0,0,0);
+                   
                     var today= new Date();
-                    if(valid.bookingDate>valid.deliveryDate){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
-                    }
-                    else if(today>valid.deliveryDate){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
+                    today.setHours(0,0,0,0);
+                    
+                    if(valid.bookingDate.getTime()> valid.deliveryDate.getTime()){
+                        errors["deliveryDate"] = i18n.__("BookingOrder.DdeliveryDatee.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
+                    } else if(valid.bookingDate.getTime() == check_deliveryDate.getTime()){
+                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate1.shouldNot:%s should not be the same date as booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
+                    } else if(today.getTime()>valid.deliveryDate.getTime()){
+                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
                     }
                 }
                 // if(valid.items){
@@ -182,17 +198,28 @@ module.exports = class BookingOrderManager extends BaseManager {
                                     today=new Date(item._createdDate);
                                 }
                                 today.setHours(0,0,0,0);
+                                item.deliveryDate= moment(new Date(item.deliveryDate)).add(7,'h').locale('id');
+                                // valid.deliveryDate= moment(new Date(valid.deliveryDate)).add(7, 'h').locale('id');
+                                // item.deliveryDate.setHours(0,0,0,0);
                                 valid.deliveryDate=new Date(valid.deliveryDate);
                                 valid.bookingDate= new Date(valid.bookingDate);
-                                if(today>item.deliveryDate){
-                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
-                                }
-                                else if (valid.deliveryDate<item.deliveryDate){
-                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDated.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
-                                }
-                                else if(valid.bookingDate>item.deliveryDate){
+                                item.deliveryDate= new Date(item.deliveryDate);
+                                valid.bookingDate.setHours(0,0,0,0);
+                                var check_deliveryDate=new Date(valid.deliveryDate);
+                                check_deliveryDate.setHours(0,0,0,0); 
+                                var check_item_deliveryDate=new Date(item.deliveryDate);
+                                check_item_deliveryDate.setHours(0,0,0,0); 
+                                // valid.deliveryDate.setHours(0,0,0,0);
+                                // item.deliveryDate.setHours(0,0,0,0);
+                                
+                                if (valid.bookingDate.getTime()>check_item_deliveryDate.getTime()){
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
+                                } else if(valid.bookingDate.getTime()==check_item_deliveryDate.getTime()){
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate2.shouldNot:%s should not be the same date as booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
+                                } else if (check_deliveryDate.getTime()<check_item_deliveryDate.getTime()){
+                                    itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDatedd.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
                                 }
+                                // item.deliveryDate= new Date(item.deliveryDate.setDate(item.deliveryDate.getDate() + 1));        
                             }
 
                             index++;
@@ -221,6 +248,12 @@ module.exports = class BookingOrderManager extends BaseManager {
                     valid.garmentBuyerCode=_buyer.code;
                 }
 
+                if(_section){
+                    valid.garmentSectionId=new ObjectId(_section._id);
+                    valid.garmentSectionName=_section.name;
+                    valid.garmentSectionCode=_section.code;
+                }
+
                 if (!valid.stamp) {
                     valid = new BookingOrder(valid);
                 }
@@ -243,7 +276,9 @@ module.exports = class BookingOrderManager extends BaseManager {
 
     _beforeInsert(data) {
         // salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
-        var type = data.garmentBuyerCode  ? "BOOKING/" + data.garmentBuyerCode : "";
+        var dataGarmentSectionCode = data.garmentSectionCode ? data.garmentSectionCode : "";
+        var dataGarmentBuyerCode = data.garmentBuyerCode ? data.garmentBuyerCode : "";
+        var type = dataGarmentSectionCode + "-" + dataGarmentBuyerCode;
         return this.documentNumbers
             .find({ "type": type }, { "number": 1, "year": 1 })
             .sort({ "year": -1, "number": -1 })
@@ -251,8 +286,7 @@ module.exports = class BookingOrderManager extends BaseManager {
             .toArray()
             .then((previousDocumentNumbers) => {
 
-                var yearNow = parseInt(moment().format("YYYY"));
-                var monthNow = moment().format("MM");
+                var yearNow = moment().format("YYYY");
 
                 var number = 1;
 
@@ -262,9 +296,9 @@ module.exports = class BookingOrderManager extends BaseManager {
                         var oldYear = previousDocumentNumbers[0].year;
                         number = yearNow > oldYear ? number : previousDocumentNumbers[0].number + 1;
 
-                        data.code = `${type}/${monthNow}.${yearNow}/${this.pad(number, 4)}`;
+                        data.code = `${type}-${yearNow.substr(-2)}${this.pad(number, 5)}`;
                     } else {
-                        data.code = `${type}/${monthNow}.${yearNow}/0001`;
+                        data.code = `${type}-${yearNow.substr(-2)}00001`;
                     }
                 }
 
@@ -313,22 +347,22 @@ module.exports = class BookingOrderManager extends BaseManager {
                         "bookingOrderNo": booking.code,
                         "_deleted":false
                     };
-                    this.masterPlanCollection.singleOrDefault(query)
-                        .then((masterPlan) => {
-                            if(masterPlan){
+                    this.sewingBlockingPlanCollection.singleOrDefault(query)
+                        .then((sewingBlockingPlan) => {
+                            if(sewingBlockingPlan){
                                 if(booking.isCanceled){
-                                    masterPlan.status="Booking Dibatalkan";
+                                    sewingBlockingPlan.status="Booking Dibatalkan";
                                 }
                                 else{
-                                    masterPlan.status="Booking Ada Perubahan";
-                                    for(var detail of masterPlan.details){
+                                    sewingBlockingPlan.status="Booking Ada Perubahan";
+                                    for(var detail of sewingBlockingPlan.details){
                                         var itemBooking = booking.items.find(select => select.code === detail.code);
                                         if(itemBooking){
                                             detail.isConfirmed = itemBooking.isConfirmed;
                                         }
                                     }
                                 }
-                                this.masterPlanCollection.update(masterPlan)
+                                this.sewingBlockingPlanCollection.update(sewingBlockingPlan)
                                     .then((id) =>
                                         resolve(bookingId));
                             }
@@ -362,12 +396,12 @@ module.exports = class BookingOrderManager extends BaseManager {
 
     delete(data) {
         data._deleted = true;
-        return this.masterPlanCollection.singleOrDefault({ "bookingOrderNo": data.code,"_deleted":false })
-                   .then(masterPlan =>{
-                       if(masterPlan){
-                        masterPlan.status="Booking Dihapus";
-                        return this.masterPlanCollection.update(masterPlan)
-                                   .then(idMasterPlan=>{
+        return this.sewingBlockingPlanCollection.singleOrDefault({ "bookingOrderNo": data.code,"_deleted":false })
+                   .then(sewingBlockingPlan =>{
+                       if(sewingBlockingPlan){
+                        sewingBlockingPlan.status="Booking Dihapus";
+                        return this.sewingBlockingPlanCollection.update(sewingBlockingPlan)
+                                   .then(idSewingBlockingPlan=>{
                                          return this.collection.update(data)
                                                    .then(id => {return id});
                                    });

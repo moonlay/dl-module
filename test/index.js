@@ -99,6 +99,7 @@ describe('#dl-module', function (done) {
     test('@SALES/DEAL TRACKING STAGE', './sales/deal-tracking-stage');
     test('@SALES/DEAL TRACKING DEAL', './sales/deal-tracking-deal');
     test('@SALES/DEAL TRACKING ACTIVITY', './sales/deal-tracking-activity');
+    test('@SALES/ORDER STATUS HISTORY', './sales/order-status-historical');    
 
     // //Production
     test('@PRODUCTION/FINISHING-PRINTING/KANBAN', './production/finishing-printing/kanban');
@@ -134,7 +135,8 @@ describe('#dl-module', function (done) {
     test('@GARMENT MASTER PLAN/STYLE', './garment-master-plan/style');
     test('@GARMENT MASTER PLAN/STANDARD-HOUR', './garment-master-plan/standard-hour');
     test('@GARMENT MASTER PLAN/MASTER PLAN COMODITY', './garment-master-plan/master-plan-comodity');
-    test('@GARMENT MASTER PLAN/MASTER PLAN', './garment-master-plan/master-plan');
+     test('@GARMENT MASTER PLAN/SEWING-BLOCKING-PLAN', './garment-master-plan/sewing-blocking-plan');
+    test('@GARMENT MASTER PLAN/GARMENT SECTION', './garment-master-plan/garment-section');
 
      //Etl
      test('@ETL/DIM-BUYER', './etl/dim/dim-buyer');
@@ -169,6 +171,7 @@ describe('#dl-module', function (done) {
      test('@ETL/FACT-INVENTORY-SUMMARY', './etl/inventory/fact-inventory-summary');
      test('@ETL/garment-purchase-request', './etl/garment/garment-purchase-request');
      test('@ETL/FACT-GARMENT-PURCHASING', './etl/garment/purchasing/fact-purchasing');
+     test('@ETL/FACT-GARMENT-TOTAL-HUTANG', './etl/garment/purchasing/fact-total-hutang');
      test('@ETL/FACT-FP-PACKING-RECEIPT', './etl/inventory/fact-fp-packing-receipt');
      test('@ETL/FACT-FP-SHIPMENT-DOCUMENT', './etl/inventory/fact-fp-shipment-document');
      test('@ETL/FACT-DEAL-TRACKING-BOARD', './etl/sales/fact-deal-tracking-board');

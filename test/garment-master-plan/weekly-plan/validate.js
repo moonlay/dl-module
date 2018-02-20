@@ -77,11 +77,52 @@ it("#03. should error when create new data with invalid month", function (done) 
         });
 });
 
-it("#04. should error when create new data with invalid efficiency and operator", function (done) {
+it("#04. should error when create new data with invalid year", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            data.year = "year";
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with invalid year");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#04-1. should error when create new data with out of range year", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            data.year = (new Date()).getFullYear() + 11;
+            manager.create(data)
+                .then((id) => {
+                    done("should error when create new data with out of range year");
+                })
+                .catch((e) => {
+                    e.name.should.equal("ValidationError");
+                    e.should.have.property("errors");
+                    e.errors.should.instanceof(Object);
+                    done();
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#05. should error when create new data with invalid efficiency, operator and workingHours", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             data.items[0].efficiency = 0;
             data.items[0].operator = 0;
+            data.items[0].workingHours = 0;
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with invalid month");
@@ -95,6 +136,7 @@ it("#04. should error when create new data with invalid efficiency and operator"
                         if (Object.getOwnPropertyNames(item).length > 0) {
                             item.should.have.property('efficiency');
                             item.should.have.property('operator');
+                            item.should.have.property('workingHours');
                         }
                     }
                     done();
@@ -105,7 +147,7 @@ it("#04. should error when create new data with invalid efficiency and operator"
         });
 });
 
-it("#05. should error when create new data with no data unit", function (done) {
+it("#06. should error when create new data with no data unit", function (done) {
     dataUtil.getNewData()
         .then((data) => {
             data.unitId = "unitId";
@@ -126,7 +168,54 @@ it("#05. should error when create new data with no data unit", function (done) {
         });
 });
 
-it(`#06. should success when remove all data`, function(done) {
+var newData;
+it("#07. should success when create new data for search and duplicate data", function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            newData = data;
+            manager.create(data)
+                .then((id) => {
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#08. should error when create new duplicate data", function (done) {
+    manager.create(newData)
+        .then((id) => {
+            done("should error when create new duplicate data");
+        })
+        .catch((e) => {
+            e.name.should.equal("ValidationError");
+            e.should.have.property("errors");
+            e.errors.should.instanceof(Object);
+            done();
+        });
+});
+
+it("#09. should success when search data with filter", function (done) {
+    manager.read({
+        keyword: newData.unit.name
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#10. should success when remove all data`, function(done) {
     manager.collection.remove({})
         .then((result) => {
             done();

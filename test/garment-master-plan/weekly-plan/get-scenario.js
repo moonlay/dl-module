@@ -83,6 +83,43 @@ it(`#03. should success when get week by filter from created data`, function (do
     });
 });
 
+it(`#03-1. should success when get week by filter from created data`, function (done) {
+    var key=createdData.name;
+    var filter={};
+    filter.year=createdData.year;
+    filter.unit=createdData.unit.code;
+    filter.weekNumber=createdData.items[1].weekNumber;
+    manager.getWeek(key,filter).then(
+        week => {
+            week.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+    });
+});
+
+it("#03-2. should success when get year with keyword", function (done) {
+    manager.getYear(createdData.year)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#03-3. should success when get unit with keyword and filter", function (done) {
+    manager.getUnit(createdData.unit.code, {'year' : createdData.year})
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 it(`#04. should success when destroy data with id`, function(done) {
     manager.destroy(createdId)
         .then((result) => {

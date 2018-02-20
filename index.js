@@ -116,7 +116,8 @@ module.exports = {
             DealTrackingBoardManager: require('./src/managers/sales/deal-tracking-board-manager'),
             DealTrackingStageManager: require('./src/managers/sales/deal-tracking-stage-manager'),
             DealTrackingDealManager: require('./src/managers/sales/deal-tracking-deal-manager'),
-            DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager')
+            DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager'),
+            OrderStatusHistoryManager: require('./src/managers/sales/order-status-history-manager')
         },
         garmentMasterPlan: {
             WeeklyPlanManager: require("./src/managers/garment-master-plan/weekly-plan-manager"),
@@ -125,7 +126,8 @@ module.exports = {
             StandardHourManager: require('./src/managers/garment-master-plan/standard-hour-manager'),
             BookingOrderManager: require('./src/managers/garment-master-plan/booking-order-manager'),
             MasterPlanComodityManager: require('./src/managers/garment-master-plan/master-plan-comodity-manager'),
-            MasterPlanManager: require('./src/managers/garment-master-plan/master-plan-manager')
+            SewingBlockingPlanManager: require('./src/managers/garment-master-plan/sewing-blocking-plan-manager'),
+            GarmentSectionManager: require('./src/managers/garment-master-plan/garment-section-manager'),
         }
     },
     test: {
@@ -232,7 +234,8 @@ module.exports = {
                 dealTrackingBoard: require('./test/data-util/sales/deal-tracking-board-data-util'),
                 dealTrackingStage: require('./test/data-util/sales/deal-tracking-stage-data-util'),
                 dealTrackingDeal: require('./test/data-util/sales/deal-tracking-deal-data-util'),
-                dealTrackingActivity: require('./test/data-util/sales/deal-tracking-activity-data-util')
+                dealTrackingActivity: require('./test/data-util/sales/deal-tracking-activity-data-util'),
+                orderStatusHistory: require('./test/data-util/sales/order-status-historical-data-util')
             },
             garmentMasterPlan: {
                 weeklyPlan: require("./test/data-util/garment-master-plan/weekly-plan-data-util"),
@@ -241,7 +244,8 @@ module.exports = {
                 standardHour: require("./test/data-util/garment-master-plan/standard-hour-data-util"),
                 bookingOrder: require("./test/data-util/garment-master-plan/booking-order-data-util"),
                 masterPlanComodity: require("./test/data-util/garment-master-plan/master-plan-comodity-data-util"),
-                masterPlan: require("./test/data-util/garment-master-plan/master-plan-data-util")
+                sewingBlockingPlan: require("./test/data-util/garment-master-plan/sewing-blocking-plan-data-util"),
+                garmentSection: require("./test/data-util/garment-master-plan/garment-section-data-util")
             }
         }
     },
@@ -295,6 +299,9 @@ module.exports = {
         garment: {
             dim: {
                 dimGarmentSupplier: require("./src/etl/garment/dim/dim-garment-supplier-etl-manager")
+            },
+            purchasing: {
+                factTotalHutangGarment: require("./src/etl/garment/purchasing/fact-total-hutang-etl-manager")
             },
             garmentPurchaseRequestsEtl: require("./src/etl/garment/garment-purchase-request-etl-manager"),
             factGarmentPurchasing: require("./src/etl/garment/purchasing/fact-purchasing-etl-manager"),
