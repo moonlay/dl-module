@@ -116,7 +116,8 @@ module.exports = {
             DealTrackingBoardManager: require('./src/managers/sales/deal-tracking-board-manager'),
             DealTrackingStageManager: require('./src/managers/sales/deal-tracking-stage-manager'),
             DealTrackingDealManager: require('./src/managers/sales/deal-tracking-deal-manager'),
-            DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager')
+            DealTrackingActivityManager: require('./src/managers/sales/deal-tracking-activity-manager'),
+            OrderStatusHistoryManager: require('./src/managers/sales/order-status-history-manager')
         },
         garmentMasterPlan: {
             WeeklyPlanManager: require("./src/managers/garment-master-plan/weekly-plan-manager"),
@@ -233,7 +234,8 @@ module.exports = {
                 dealTrackingBoard: require('./test/data-util/sales/deal-tracking-board-data-util'),
                 dealTrackingStage: require('./test/data-util/sales/deal-tracking-stage-data-util'),
                 dealTrackingDeal: require('./test/data-util/sales/deal-tracking-deal-data-util'),
-                dealTrackingActivity: require('./test/data-util/sales/deal-tracking-activity-data-util')
+                dealTrackingActivity: require('./test/data-util/sales/deal-tracking-activity-data-util'),
+                orderStatusHistory: require('./test/data-util/sales/order-status-historical-data-util')
             },
             garmentMasterPlan: {
                 weeklyPlan: require("./test/data-util/garment-master-plan/weekly-plan-data-util"),
