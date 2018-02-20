@@ -404,17 +404,17 @@ it("#16. should success when search data with filter", function (done) {
         });
 });
 
-it("#17. should success when get preview", function (done) {
-    manager.getPreview(newData.details[0].week.month, newData.details[0].weeklyPlanYear)
-        .then((documents) => {
-            documents.should.be.instanceof(Array);
-            documents.length.should.not.equal(0);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#17. should success when get preview", function (done) {
+//     manager.getPreview(newData.details[0].week.month, newData.details[0].weeklyPlanYear)
+//         .then((documents) => {
+//             documents.should.be.instanceof(Array);
+//             documents.length.should.not.equal(0);
+//             done();
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
 it("#18. should error when create new data with same booking order", function (done) {
     manager.create(newData)
