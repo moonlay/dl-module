@@ -221,8 +221,9 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                     valid.bookingItems = _bookingOrder.items;
                 }
                 var details =[];
+                var index=0;
                 for(var detail of valid.details){
-                    detail.code = !detail.code ? generateCode() : detail.code;
+                    detail.code = !detail.code ? generateCode() + index.toString()  : detail.code;
                     var unitId = ObjectId.isValid(detail.unitId) && typeof(detail.unitId) === 'object' ? detail.unitId.toString() : detail.unitId;
                     var unitSelected = _units.find(select => select._id.toString() === unitId);
                     if(unitSelected){
@@ -237,7 +238,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                         var weekDay = weeklyPlan.items.find(select => select.weekNumber === detail.week.weekNumber && select.month === detail.week.month && select.efficiency === detail.week.efficiency && select.operator === detail.week.operator);
                         if(weekDay){
                             detail.week = weekDay;
-                            // detail.week.remainingAH-=detail.ehBooking;
+                            // detail.week.remainingEH-=detail.ehBooking;
                             // detail.week.usedAH+=detail.ehBooking;
                         }
                     }
@@ -259,6 +260,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                     detail._createdDate = valid._createdDate;
                     detail.stamp(this.user.username, "manager");
                     details.push(detail);
+                    index++;
                 }
                 valid.details = details;
                 if(_buyer){
@@ -307,31 +309,47 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
         return this.getSingleById(data._id)
             .then(masterPlan => {
                 var weeks=[];
-                for(var detail of masterPlan.details){
-                    weeks.push(this.weeklyPlanManager.getSingleById(detail.weeklyPlanId));
+                var flags=[], output=[], l=masterPlan.details.length;
+                for(var i=0;i<l;i++){
+                    if(flags[masterPlan.details[i].weeklyPlanId.toString()])continue;
+                    flags[masterPlan.details[i].weeklyPlanId.toString()]=true;
+                    output.push(this.weeklyPlanManager.getSingleById(masterPlan.details[i].weeklyPlanId));
                 }
-                 return Promise.all(weeks)
+                 return Promise.all(output)
                 .then(weeklyPlans=>{
                     var updateWeek=[];
-                    for(var mp of masterPlan.details){
-                        for(var w of weeklyPlans){
+                    // for(var mp of masterPlan.details){
+                    //     //for(var w of weeklyPlans){
+                    //         //if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
+                    //             mp.week.remainingEH+=mp.ehBooking;
+                    //             mp.week.usedEH-=mp.ehBooking;
+                    //           //  w.items[mp.week.weekNumber-1]= mp.week;  
+                    //            // break;                                      
+                    //        // }
+                    //     //}
+                    //     updateWeek.push(this.weeklyPlanManager.collection.update(w));
+                    //     for(var detail of data.details){
+                    //         if(mp.masterPlanComodityId.toString()===detail.masterPlanComodityId.toString() && mp.unitId.toString() === detail.unitId.toString() && mp.weeklyPlanYear===detail.weeklyPlanYear){
+                    //             if(detail.week){
+                    //                 if(detail.week.weekNumber===mp.week.weekNumber){
+                    //                     detail.week=mp.week;
+                    //                 }
+                    //             }
+                    //         }
+                    //     }
+                    // }
+                    for(var w of weeklyPlans){
+                        for(var mp of masterPlan.details){
                             if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
-                                mp.week.remainingAH+=mp.ehBooking;
-                                mp.week.usedAH-=mp.ehBooking;
-                                w.items[mp.week.weekNumber-1]= mp.week;  
-                                break;                                      
+                                w.items[mp.week.weekNumber-1].usedEH-=mp.ehBooking;
+                                w.items[mp.week.weekNumber-1].remainingEH+=mp.ehBooking;
                             }
                         }
                         updateWeek.push(this.weeklyPlanManager.collection.update(w));
-                        for(var detail of data.details){
-                            if(mp.masterPlanComodityId.toString()===detail.masterPlanComodityId.toString() && mp.unitId.toString() === detail.unitId.toString() && mp.weeklyPlanYear===detail.weeklyPlanYear){
-                                if(detail.week){
-                                    if(detail.week.weekNumber===mp.week.weekNumber){
-                                        detail.week=mp.week;
-                                    }
-                                }
-                            }
-                        }
+                    }
+                    for(var mp of masterPlan.details){
+                        mp.week.remainingEH+=mp.ehBooking;
+                        mp.week.usedEH-=mp.ehBooking;
                     }
                     
                     return Promise.all(updateWeek)
@@ -351,22 +369,41 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
             .then(masterPlan => {
                 var weeks=[];
                 masterPlan.status="Booking";
-                for(var detail of masterPlan.details){
-                    weeks.push(this.weeklyPlanManager.getSingleById(detail.weeklyPlanId));
+                var flags=[], output=[], l=masterPlan.details.length;
+                for(var i=0;i<l;i++){
+                    if(flags[masterPlan.details[i].weeklyPlanId.toString()])continue;
+                    flags[masterPlan.details[i].weeklyPlanId.toString()]=true;
+                    output.push(this.weeklyPlanManager.getSingleById(masterPlan.details[i].weeklyPlanId));
                 }
-                 return Promise.all(weeks)
+                // for(var detail of masterPlan.details){
+                //     weeks.push(this.weeklyPlanManager.getSingleById(detail.weeklyPlanId));
+                // }
+                 return Promise.all(output)
                 .then(weeklyPlans=>{
                     var updateWeek=[];
-                    for(var mp of masterPlan.details){
-                        for(var w of weeklyPlans){
+                    // for(var mp of masterPlan.details){
+                    //     for(var w of weeklyPlans){
+                    //         if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
+                    //             mp.week.remainingEH-=mp.ehBooking;
+                    //             mp.week.usedEH+=mp.ehBooking;
+                    //             w.items[mp.week.weekNumber-1]= mp.week;  
+                    //             break;                                      
+                    //         }
+                    //     }
+                    //     updateWeek.push(this.weeklyPlanManager.collection.update(w));
+                    // }
+                    for(var w of weeklyPlans){
+                        for(var mp of masterPlan.details){
                             if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
-                                mp.week.remainingAH-=mp.ehBooking;
-                                mp.week.usedAH+=mp.ehBooking;
-                                w.items[mp.week.weekNumber-1]= mp.week;  
-                                break;                                      
+                                w.items[mp.week.weekNumber-1].usedEH+=mp.ehBooking;
+                                w.items[mp.week.weekNumber-1].remainingEH-=mp.ehBooking;
                             }
                         }
                         updateWeek.push(this.weeklyPlanManager.collection.update(w));
+                    }
+                    for(var mp of masterPlan.details){
+                        mp.week.remainingEH-=mp.ehBooking;
+                        mp.week.usedEH+=mp.ehBooking;
                     }
                     return Promise.all(updateWeek)
                     .then(result=>{
@@ -384,27 +421,40 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
         return this.getSingleById(id)
             .then((masterPlan) => {
                 var weeks=[];
-                for(var detail of masterPlan.details){
-                    weeks.push(this.weeklyPlanManager.getSingleById(detail.weeklyPlanId));
+                var flags=[], output=[], l=masterPlan.details.length;
+                for(var i=0;i<l;i++){
+                    if(flags[masterPlan.details[i].weeklyPlanId.toString()])continue;
+                    flags[masterPlan.details[i].weeklyPlanId.toString()]=true;
+                    output.push(this.weeklyPlanManager.getSingleById(masterPlan.details[i].weeklyPlanId));
                 }
                 return this.bookingOrderManager.getSingleById(masterPlan.bookingOrderId)
                 .then(booking =>{
                     booking.isMasterPlan = true;
                     return this.bookingOrderManager.collection.update(booking)
                     .then(idBooking=>{
-                        return Promise.all(weeks)
+                        return Promise.all(output)
                         .then(weeklyPlans=>{
                             var updateWeek=[];
-                            for(var mp of masterPlan.details){
-                                for(var w of weeklyPlans){
-                                    if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){   
-                                        mp.week.remainingAH-=mp.ehBooking;
-                                        mp.week.usedAH+=mp.ehBooking; 
-                                        w.items[mp.week.weekNumber-1]= mp.week;  
-                                        break;                                   
+                            for(var w of weeklyPlans){
+                                for(var mp of masterPlan.details){
+                                    if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
+                                        w.items[mp.week.weekNumber-1].usedEH+=mp.ehBooking;
+                                        w.items[mp.week.weekNumber-1].remainingEH-=mp.ehBooking;
                                     }
+
+                                    //if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){   
+                                        // mp.week.remainingEH-=mp.ehBooking;
+                                        // mp.week.usedEH+=mp.ehBooking; 
+                                        // w.items[mp.week.weekNumber-1]= mp.week;  
+                                        // break;                                   
+                                   // }
                                 }
+
                                 updateWeek.push(this.weeklyPlanManager.collection.update(w));
+                            }
+                            for(var mp of masterPlan.details){
+                                mp.week.remainingEH-=mp.ehBooking;
+                                mp.week.usedEH+=mp.ehBooking;
                             }
                             return Promise.all(updateWeek)
                             .then(result=>{
@@ -423,27 +473,42 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
         var masterPlanId=data._id;
         data._deleted=true;
         var weeks=[];
-        for(var detail of data.details){
-            weeks.push(this.weeklyPlanManager.getSingleById(detail.weeklyPlanId));
+        // for(var detail of data.details){
+        //     weeks.push(this.weeklyPlanManager.getSingleById(detail.weeklyPlanId));
+        // }
+        var flags=[], output=[], l=data.details.length;
+        for(var i=0;i<l;i++){
+            if(flags[data.details[i].weeklyPlanId.toString()])continue;
+            flags[data.details[i].weeklyPlanId.toString()]=true;
+            output.push(this.weeklyPlanManager.getSingleById(data.details[i].weeklyPlanId));
         }
         return this.bookingOrderManager.getSingleById(data.bookingOrderId)
         .then(booking =>{
             booking.isMasterPlan = false;
             return this.bookingOrderManager.collection.update(booking)
             .then(idBooking=>{
-                return Promise.all(weeks)
+                return Promise.all(output)
                 .then(weeklyPlans=>{
                     var updateWeek=[];
                     for(var w of weeklyPlans){
                         for(var mp of data.details){
-                            if(w._id.toString()===mp.weeklyPlanId.toString()){
-                                mp.week.remainingAH+=mp.ehBooking;
-                                mp.week.usedAH-=mp.ehBooking;
-                                w.items[mp.week.weekNumber-1]= mp.week;                                   
+                            if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
+                                w.items[mp.week.weekNumber-1].usedEH-=mp.ehBooking;
+                                w.items[mp.week.weekNumber-1].remainingEH+=mp.ehBooking;
                             }
+                        
+                    // for(var w of weeklyPlans){
+                    //     for(var mp of data.details){
+                    //         if(w._id.toString()===mp.weeklyPlanId.toString()){
+                    //             mp.week.remainingEH+=mp.ehBooking;
+                    //             mp.week.usedEH-=mp.ehBooking;
+                    //             w.items[mp.week.weekNumber-1]= mp.week;                                   
+                    //         }
                         }
                         updateWeek.push(this.weeklyPlanManager.collection.update(w));
                     }
+                    
+                    
                     return Promise.all(updateWeek).then(result=>{
                         return this.collection.update(data);
                     });
@@ -453,55 +518,56 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
         .then(() => 
             Promise.resolve(masterPlanId));
     }
+    
 
-    getPreview(month, year){
-        return new Promise((resolve, reject) => {
-            var deletedQuery = {
-                _deleted: false
-            };
-            var stringDate = month > 10 ? `${year}-${month - 1}-01` : `${year}-0${month - 1}-01`;
-            var thisDate = new Date(stringDate);
-            var nextDate = new Date(thisDate.setMonth(thisDate.getMonth() + 6));
-            var nextMonth = nextDate.getMonth();
-            var nextYear = nextDate.getFullYear();
-            var dateQuery = {
-                "$and" : [
-                    {"details.week.month" : {"$gte" : (month - 1)}},
-                    {"details.weeklyPlanYear" : {"$gte" : year}},
-                    {"details.week.month" : {"$lte" : nextMonth}},
-                    {"details.weeklyPlanYear" : {"$lte" : nextYear}}
-                ]
-            };
-            this.collection
-            .aggregate([
-                { "$unwind": "$details" },
-                { "$match": dateQuery }, 
-                {
-                    "$project": {
-                        "month": "$details.week.month",
-                        "week": "$details.week.weekNumber",
-                        "year": "$details.weeklyPlanYear",
-                        "unitCode": "$details.unit.code",
-                        "sh":"$details.shSewing"
-                    }
-                },
-                {
-                    "$group": {
-                        "_id": { "month": "$month", "week": "$week", "year": "$year", "unitCode": "$unitCode" },
-                        "sh": { "$sum": "$sh" }
-                    }
-                }
+    // getPreview(month, year){
+    //     return new Promise((resolve, reject) => {
+    //         var deletedQuery = {
+    //             _deleted: false
+    //         };
+    //         var stringDate = month > 10 ? `${year}-${month - 1}-01` : `${year}-0${month - 1}-01`;
+    //         var thisDate = new Date(stringDate);
+    //         var nextDate = new Date(thisDate.setMonth(thisDate.getMonth() + 6));
+    //         var nextMonth = nextDate.getMonth();
+    //         var nextYear = nextDate.getFullYear();
+    //         var dateQuery = {
+    //             "$and" : [
+    //                 {"details.week.month" : {"$gte" : (month - 1)}},
+    //                 {"details.weeklyPlanYear" : {"$gte" : year}},
+    //                 {"details.week.month" : {"$lte" : nextMonth}},
+    //                 {"details.weeklyPlanYear" : {"$lte" : nextYear}}
+    //             ]
+    //         };
+    //         this.collection
+    //         .aggregate([
+    //             { "$unwind": "$details" },
+    //             { "$match": dateQuery }, 
+    //             {
+    //                 "$project": {
+    //                     "month": "$details.week.month",
+    //                     "week": "$details.week.weekNumber",
+    //                     "year": "$details.weeklyPlanYear",
+    //                     "unitCode": "$details.unit.code",
+    //                     "sh":"$details.shSewing"
+    //                 }
+    //             },
+    //             {
+    //                 "$group": {
+    //                     "_id": { "month": "$month", "week": "$week", "year": "$year", "unitCode": "$unitCode" },
+    //                     "sh": { "$sum": "$sh" }
+    //                 }
+    //             }
 
-            ])
-            .toArray()
-            .then(results => {
-                resolve(results);
-            })
-            .catch(e => {
-                reject(e);
-            });
-        });
-    }
+    //         ])
+    //         .toArray()
+    //         .then(results => {
+    //             resolve(results);
+    //         })
+    //         .catch(e => {
+    //             reject(e);
+    //         });
+    //     });
+    // }
 
     _createIndexes() {
         var dateIndex = {
