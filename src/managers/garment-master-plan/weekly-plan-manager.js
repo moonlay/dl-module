@@ -312,7 +312,7 @@ module.exports = class WeeklyPlanManager extends BaseManager {
         return new Promise((resolve, reject) => {
             var xls = {};
             xls.data = [];
-            xls.options = [];
+            xls.options = {};
             xls.name = '';
 
             var units = [];
@@ -320,11 +320,7 @@ module.exports = class WeeklyPlanManager extends BaseManager {
               for (var y = 0; y < dataReport.data[x].items.length; y++) {
                 var unit = {
                   code: dataReport.data[x].unit.code,
-                  remainingEH: dataReport.data[x].items[y].remainingEH,
-                  classBackground: 
-                  dataReport.data[x].items[y].remainingEH > 0 ? "warning" : 
-                  dataReport.data[x].items[y].remainingEH < 0 ? "danger" :
-                  "success"
+                  remainingEH: dataReport.data[x].items[y].remainingEH
                 };
                 var unitsTemp = units[y] ? units[y] : [];
                 unitsTemp.push(unit);
@@ -357,11 +353,75 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                 xls.data.push(item);
             }
 
-            xls.options["Unit"] = "string";
+            var border = {
+                top: { style: 'thin', color: 'FF000000' },
+                bottom: { style: 'thin', color: 'FF000000' },
+                left: { style: 'thin', color: 'FF000000' },
+                right: { style: 'thin', color: 'FF000000' },
+            };
+
+            var fgColor = function(color){
+                return {
+                    fgColor: {
+                        rgb: color
+                    }
+                }
+            };
+
+            var styles = {
+                header: {
+                    fill: fgColor('FFCCCCCC'),
+                    border: border,
+                    alignment: {
+                        horizontal: 'center'
+                    },
+                    font: {
+                        bold: true
+                    }
+                },
+                cell: {
+                    fill: fgColor('FFFFFFFF'),
+                    border: border
+                },
+                cellRed: {
+                    fill: fgColor('FFFF0000'),
+                    border: border
+                },
+                cellGreen: {
+                    fill: fgColor('FF00FF00'),
+                    border: border
+                },
+                cellYellow: {
+                    fill: fgColor('FFFFFF00'),
+                    border: border
+                }
+            };
+
+            xls.options.specification = {};
+            xls.options.specification["Unit"] = {
+                displayName : "Unit",
+                width: 50,
+                headerStyle: styles.header,
+                cellStyle: styles.cell
+            };
             for (unit of week.units) {
-                xls.options[unit.code] = "string";
+                xls.options.specification[unit.code] = {
+                    displayName : unit.code,
+                    width: 100,
+                    headerStyle: styles.header,
+                    cellStyle : function(value, row) {
+                        return (value > 0) ? styles.cellYellow :
+                        (value < 0) ? styles.cellRed :
+                        styles.cellGreen;
+                    }
+                };
             }
-            xls.options["Head Count"] = "string";
+            xls.options.specification["Head Count"] = {
+                displayName : "Head Count",
+                width: 100,
+                headerStyle: styles.header,
+                cellStyle: styles.cell
+            };
 
             xls.name = `Remaining EH Report ` + (query.unit ? `${query.unit}-` : ``) + `${query.year}.xlsx`;
 
