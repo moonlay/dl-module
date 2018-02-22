@@ -261,11 +261,14 @@ module.exports = class WeeklyPlanManager extends BaseManager {
 
             this.collection.distinct(
                 "unit",
-                query,
-                function (err, result) {
-                    resolve(result);
-                }
-            );
+                query
+            )
+            .then(results => {
+                resolve(results);
+            })
+            .catch(e => {
+                reject(e);
+            });
         });
     }
 
