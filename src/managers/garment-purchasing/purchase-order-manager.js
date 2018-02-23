@@ -846,6 +846,11 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "items.refNo": info.prRefNo
             });
         }
+        if (info.deliveryOrderNo && info.deliveryOrderNo !== "") {
+            Object.assign(query, {
+                "items.fulfillments.deliveryOrderNo" : info.deliveryOrderNo
+            })
+        }
 
         var offset = Number(info.offset) || 7;
         var page = (Number(info.page) || 1) - 1;
@@ -1437,6 +1442,11 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             Object.assign(query, {
                 "items.refNo": info.prRefNo
             });
+        }
+        if (info.deliveryOrderNo && info.deliveryOrderNo !== "") {
+            Object.assign(query, {
+                "items.fulfillments.deliveryOrderNo" : info.deliveryOrderNo
+            })
         }
 
         var offset = Number(info.offset) || 7;
