@@ -608,7 +608,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
     }
 
 
-    getAllData(startdate, enddate, offset) {
+      getAllData(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
             var now = new Date();
             var deleted = {

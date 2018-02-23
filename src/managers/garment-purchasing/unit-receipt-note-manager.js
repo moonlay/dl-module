@@ -1156,6 +1156,120 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
+     getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var now = new Date();
+            var deleted = {
+                _deleted: false
+            };
+  
+            var query = [deleted];
+
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "date": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
+
+            var match = { '$and': query };
+            
+            var DOColl = map.garmentPurchasing.collection.GarmentDeliveryOrder;
+            this.collection.aggregate(
+                [{
+                    $match: match
+                }, {
+                    $unwind: "$items"
+                },
+                {
+                    $lookup: {
+                        from: DOColl,
+                        foreignField: "no",
+                        localField: "deliveryOrderNo",
+                        as: "DO"
+                    },
+                },
+                {
+                    $project: {
+                        "NoBon": "$no",
+                        "TgBon": "$date",
+                        "Konf": "$unit.code",
+                        "NoSJ": "$deliveryOrderNo",
+                        "KdSpl": "$supplier.code",
+                        "NmSpl": "$supplier.name",
+                        "Lokasi": "$storageName",
+                        "PlanPO": "$items.purchaseRequestRefNo",
+                        "NoRO": "$items.roNo",
+                        "KdBrg": "$items.product.code",
+                        "NmBrg": "$items.remark",
+                        "QtyBon": "$items.deliveredQuantity",
+                        "SatBon": "$items.deliveredUom.unit",
+                        "Konversi": "$items.conversion",
+                        "SatKonv": "$items.uomConversion.unit",
+                        "TgIn":"$_createdDate",
+                        "UserIn":"$_createdBy",
+                        "TgEd":"$_updatedDate",
+                        "UserEd":"$_updatedBy",
+                        "DOs": "$DO"
+                    }
+                },
+                { $unwind: "$DOs" },
+                {
+                    $project: {
+                        "NoBon": "$NoBon", "TgBon": "$TgBon", "Konf": "$Konf","NoSJ": "$NoSJ", "KdSpl": "$KdSpl",
+                        "NmSpl": "$NmSpl", "Lokasi": "$Lokasi", "PlanPO": "$PlanPO", "NoRO": "$NoRO", "KdBrg": "$KdBrg",
+                        "NmBrg": "$NmBrg", "QtyBon": "$QtyBon","SatBon": "$SatBon","SatKonv": "$SatKonv", "Konversi": "$Konversi",
+                        "TgIn": "$TgIn", "UserIn": "$UserIn", "TgEd": "$TgEd", "UserEd": "$UserEd",
+                        "TgSJ": "$DOs.supplierDoDate", "TgDtg": "$DOs.date"
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            NoBon: "$NoBon", TgBon: "$TgBon", Konf: "$Konf", NoSJ: "$NoSJ", KdSpl: "$KdSpl",
+                            NmSpl: "$NmSpl", Lokasi: "$Lokasi", PlanPO: "$PlanPO", NoRO: "$NoRO", KdBrg: "$KdBrg",
+                            NmBrg: "$NmBrg", QtyBon: "$QtyBon", SatBon: "$SatBon", SatKonv: "$SatKonv", Konversi: "$Konversi",
+                            TgIn: "$TgIn", UserIn: "$UserIn", TgEd: "$TgEd", UserEd: "$UserEd",
+                            TgSJ: "$TgSJ", TgDtg: "$TgDtg"
+                        }
+                    }
+                }
+                ])
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }
+
     getUnitReceiptReportXls(dataReport, query) {
 
         return new Promise((resolve, reject) => {

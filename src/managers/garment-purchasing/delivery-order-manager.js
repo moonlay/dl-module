@@ -1067,7 +1067,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             });
     }*/
 
-    getAllData(startdate, enddate, offset) {
+  getAllData(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
 
             var now = new Date();
@@ -1077,17 +1077,39 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
             var query = [deleted];
 
-            if (startdate && startdate !== "" && startdate != "undefined" && enddate && enddate !== "" && enddate != "undefined") {
-                var validStartDate = new Date(startdate);
-                var validEndDate = new Date(enddate);
-                query.push(
-                    {
-                        "date": {
-                            $gte: validStartDate,
-                            $lte: validEndDate
-                        }
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "supplierDoDate": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
                     }
-                )
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "supplierDoDate": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "supplierDoDate": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
             }
 
             var match = { "$and": query };
