@@ -261,14 +261,11 @@ module.exports = class WeeklyPlanManager extends BaseManager {
 
             this.collection.distinct(
                 "unit",
-                query
-            )
-            .then(results => {
-                resolve(results);
-            })
-            .catch(e => {
-                reject(e);
-            });
+                query,
+                function (err, result) {
+                    resolve(result);
+                }
+            );
         });
     }
 
@@ -298,12 +295,8 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                         }
                     }
                 ])
-                .toArray()
-                .then(results => {
-                    resolve(results);
-                })
-                .catch(e => {
-                    reject(e);
+                .toArray(function (err, result) {
+                    resolve(result);
                 });
         });
     }
@@ -365,7 +358,7 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                     fgColor: {
                         rgb: color
                     }
-                }
+                };
             };
 
             var styles = {
@@ -409,7 +402,7 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                     displayName : unit.code,
                     width: 100,
                     headerStyle: styles.header,
-                    cellStyle : function(value, row) {
+                    cellStyle : (value, row) => {
                         return (value > 0) ? styles.cellYellow :
                         (value < 0) ? styles.cellRed :
                         styles.cellGreen;
