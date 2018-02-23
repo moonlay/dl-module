@@ -133,82 +133,39 @@ it("#06. should success when get report with no parameter and get excel", functi
         });
 });
 
-// it("#07. should success when get report with parameter no", function (done) {
-//     unitReceiptNoteManager.getUnitReceiptAllReport({"no" : no},user)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
-// it("#08. should success when get report with parameter unit", function (done) {
-//     unitReceiptNoteManager.getUnitReceiptAllReport({"unit" : unit},user)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
-// it("#09. should success when get report with parameter supplier", function (done) {
-//     unitReceiptNoteManager.getUnitReceiptAllReport({"supplier" : supplier},user)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             done();
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
+var resultForExcelTest = {};
+it('#07. should success when create report', function (done) {
+    var info = {};
+       
+    unitReceiptNoteManager.getUnitReceiptAllReport(info)
+        .then(result => {
+             result.should.instanceof(Object);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
 
-// it("#10. should success when get report with parameter dateFrom", function (done) {
-//     unitReceiptNoteManager.getUnitReceiptAllReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD')},user)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             var result = {
-//                 data : data
-//             };
-//             unitReceiptNoteManager.getUnitReceiptAllReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD')})
-//                 .then(xls => {
-//                     xls.should.instanceof(Object);
-//                     xls.should.have.property('data');
-//                     xls.should.have.property('options');
-//                     xls.should.have.property('name');
-//                     done();
-//                 })
-//                 .catch((e) => {
-//                     done(e);
-//                 });
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
-// it("#11. should success when get report with parameter dateFrom and dateTo", function (done) {
-//     unitReceiptNoteManager.getUnitReceiptAllReport({"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')},user)
-//         .then((data) => {
-//             data.should.instanceof(Array);
-//             var result = {
-//                 data : data
-//             };
-//             unitReceiptNoteManager.getUnitReceiptAllReportXls(result, {"dateFrom":moment(dateBefore).format('YYYY-MM-DD'), "dateTo":moment(dateNow).format('YYYY-MM-DD')})
-//                 .then(xls => {
-//                     xls.should.instanceof(Object);
-//                     xls.should.have.property('data');
-//                     xls.should.have.property('options');
-//                     xls.should.have.property('name');
-//                     done();
-//                 })
-//                 .catch((e) => {
-//                     done(e);
-//                 });
-//         })
-//         .catch((e) => {
-//             done(e);
-//         });
-// });
-
-
+it("#08. should success when get report with no parameter and get excel", function (done) {
+    unitReceiptNoteManager.getUnitReceiptAllReport({})
+        .then((data) => {
+            data.should.instanceof(Array);
+            var result = {
+                data : data
+            };
+            unitReceiptNoteManager.getUnitReceiptAllReportXls(result, {})
+                .then(xls => {
+                    xls.should.instanceof(Object);
+                    xls.should.have.property('data');
+                    xls.should.have.property('options');
+                    xls.should.have.property('name');
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
