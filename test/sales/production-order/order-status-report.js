@@ -2,6 +2,7 @@ require("should");
 
 var dailyOperationDataUtil = require("../../data-util/production/finishing-printing/daily-operation-data-util");
 var shipmentDocumentDataUtil = require("../../data-util/inventory/finishing-printing/fp-shipment-document-data-util");
+var orderStatusHistoryDataUtil = require("../../data-util/sales/order-status-historical-data-util");
 
 var helper = require("../../helper");
 var validate = require("dl-models").validator;
@@ -178,7 +179,7 @@ it('#11. should success when create report detail', function (done) {
 
 it('#12. should success when get data detail for Excel Report', function (done) {
 
-    manager.getOrderStatusDetailXls(resultForExcelTest, query)
+    manager.getOrderStatusDetailXls(resultForExcelTest, query, 0)
         .then((xlsData) => {
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');
@@ -193,7 +194,7 @@ it('#12. should success when get data detail for Excel Report', function (done) 
     var test={
         data:[{}]
     }
-        manager.getOrderStatusDetailXls(test, query)
+        manager.getOrderStatusDetailXls(test, query, 0)
             .then((xlsData) => {
                 xlsData.should.have.property('data');
                 xlsData.should.have.property('options');
@@ -208,18 +209,21 @@ it('#13. should success when create report detail', function (done) {
 
     query.orderNo = productionOrderNo;
 
-    manager.getOrderStatusKanbanDetailReport(query)
-        .then((result) => {
-            resultForExcelTest.data = result;
-            done();
-        }).catch((e) => {
-            done(e);
+    orderStatusHistoryDataUtil.createTestData(productionOrderNo)
+        .then(() => {
+            manager.getOrderStatusKanbanDetailReport(query)
+                .then((result) => {
+                    resultForExcelTest.data = result;
+                    done();
+                }).catch((e) => {
+                    done(e);
+                });
         });
 });
 
 it('#14. should success when get data detail for Excel Report', function (done) {
 
-    manager.getOrderStatusKanbanDetailXls(resultForExcelTest, query)
+    manager.getOrderStatusKanbanDetailXls(resultForExcelTest, query, 0)
         .then((xlsData) => {
             xlsData.should.have.property('data');
             xlsData.should.have.property('options');

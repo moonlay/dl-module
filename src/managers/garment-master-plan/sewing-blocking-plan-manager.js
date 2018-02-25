@@ -221,8 +221,9 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                     valid.bookingItems = _bookingOrder.items;
                 }
                 var details =[];
+                var index=0;
                 for(var detail of valid.details){
-                    detail.code = !detail.code ? generateCode() : detail.code;
+                    detail.code = !detail.code ? generateCode() + index.toString()  : detail.code;
                     var unitId = ObjectId.isValid(detail.unitId) && typeof(detail.unitId) === 'object' ? detail.unitId.toString() : detail.unitId;
                     var unitSelected = _units.find(select => select._id.toString() === unitId);
                     if(unitSelected){
@@ -259,6 +260,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                     detail._createdDate = valid._createdDate;
                     detail.stamp(this.user.username, "manager");
                     details.push(detail);
+                    index++;
                 }
                 valid.details = details;
                 if(_buyer){
@@ -516,55 +518,56 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
         .then(() => 
             Promise.resolve(masterPlanId));
     }
+    
 
-    getPreview(month, year){
-        return new Promise((resolve, reject) => {
-            var deletedQuery = {
-                _deleted: false
-            };
-            var stringDate = month > 10 ? `${year}-${month - 1}-01` : `${year}-0${month - 1}-01`;
-            var thisDate = new Date(stringDate);
-            var nextDate = new Date(thisDate.setMonth(thisDate.getMonth() + 6));
-            var nextMonth = nextDate.getMonth();
-            var nextYear = nextDate.getFullYear();
-            var dateQuery = {
-                "$and" : [
-                    {"details.week.month" : {"$gte" : (month - 1)}},
-                    {"details.weeklyPlanYear" : {"$gte" : year}},
-                    {"details.week.month" : {"$lte" : nextMonth}},
-                    {"details.weeklyPlanYear" : {"$lte" : nextYear}}
-                ]
-            };
-            this.collection
-            .aggregate([
-                { "$unwind": "$details" },
-                { "$match": dateQuery }, 
-                {
-                    "$project": {
-                        "month": "$details.week.month",
-                        "week": "$details.week.weekNumber",
-                        "year": "$details.weeklyPlanYear",
-                        "unitCode": "$details.unit.code",
-                        "sh":"$details.shSewing"
-                    }
-                },
-                {
-                    "$group": {
-                        "_id": { "month": "$month", "week": "$week", "year": "$year", "unitCode": "$unitCode" },
-                        "sh": { "$sum": "$sh" }
-                    }
-                }
+    // getPreview(month, year){
+    //     return new Promise((resolve, reject) => {
+    //         var deletedQuery = {
+    //             _deleted: false
+    //         };
+    //         var stringDate = month > 10 ? `${year}-${month - 1}-01` : `${year}-0${month - 1}-01`;
+    //         var thisDate = new Date(stringDate);
+    //         var nextDate = new Date(thisDate.setMonth(thisDate.getMonth() + 6));
+    //         var nextMonth = nextDate.getMonth();
+    //         var nextYear = nextDate.getFullYear();
+    //         var dateQuery = {
+    //             "$and" : [
+    //                 {"details.week.month" : {"$gte" : (month - 1)}},
+    //                 {"details.weeklyPlanYear" : {"$gte" : year}},
+    //                 {"details.week.month" : {"$lte" : nextMonth}},
+    //                 {"details.weeklyPlanYear" : {"$lte" : nextYear}}
+    //             ]
+    //         };
+    //         this.collection
+    //         .aggregate([
+    //             { "$unwind": "$details" },
+    //             { "$match": dateQuery }, 
+    //             {
+    //                 "$project": {
+    //                     "month": "$details.week.month",
+    //                     "week": "$details.week.weekNumber",
+    //                     "year": "$details.weeklyPlanYear",
+    //                     "unitCode": "$details.unit.code",
+    //                     "sh":"$details.shSewing"
+    //                 }
+    //             },
+    //             {
+    //                 "$group": {
+    //                     "_id": { "month": "$month", "week": "$week", "year": "$year", "unitCode": "$unitCode" },
+    //                     "sh": { "$sum": "$sh" }
+    //                 }
+    //             }
 
-            ])
-            .toArray()
-            .then(results => {
-                resolve(results);
-            })
-            .catch(e => {
-                reject(e);
-            });
-        });
-    }
+    //         ])
+    //         .toArray()
+    //         .then(results => {
+    //             resolve(results);
+    //         })
+    //         .catch(e => {
+    //             reject(e);
+    //         });
+    //     });
+    // }
 
     _createIndexes() {
         var dateIndex = {
@@ -582,5 +585,100 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
+    }
+    getReport(query)
+    {
+        return new Promise((resolve, reject) => {
+
+            var deletedQuery = { deleted: false };
+           
+            var unitQuery = {};
+            if (query.unit !="") {
+                unitQuery = {
+                    "unit" : query.unit
+                };
+            }
+        
+
+            var yearQuery = {};
+            if (query.year) {
+                yearQuery = {
+                    "year": parseInt(query.year)
+                };
+            }
+ 
+            var weeklyPlans = map.garmentMasterPlan.collection.WeeklyPlan;
+       
+           var Query = { "$and": [ yearQuery, deletedQuery,unitQuery] };
+         
+           
+        
+            this.collection
+                .aggregate( [
+                    { "$unwind": "$details"},
+                    {"$lookup":{from :weeklyPlans,localField:"details.weeklyPlanId",foreignField:"_id",as :"weeklyPlans"}},
+                    { "$unwind": {path: "$weeklyPlans", preserveNullAndEmptyArrays: true} },
+                   // { "$match": Query},    
+                    {  
+                        "$project": {  
+                        "buyer": { $concat :["$garmentBuyerName","-","$details.masterPlanComodity.name"]},  
+                        "year":"$weeklyPlans.year",  
+                        "weekSewingBlocking":"$details.week.weekNumber",  
+                        "unit" :"$weeklyPlans.unit.code",  
+                        "SMVSewing":"$details.shSewing",  
+                        "weekNumber":"$weeklyPlans.items.weekNumber",  
+                        "bookigQty":"$details.quantity",  
+                        "isConfirmed":"$details.isConfirmed", 
+                        "efficiency":"$weeklyPlans.items.efficiency",  
+                        "workingHoours":"$weeklyPlans.items.workingHours",  
+                        "AHTotal":"$weeklyPlans.items.ahTotal",  
+                        "EHTotal":"$weeklyPlans.items.ehTotal",  
+                        "usedTotal":"$weeklyPlans.items.usedEH",  
+                        "remainingEH":"$weeklyPlans.items.remainingEH" , 
+                        "operator":"$weeklyPlans.items.operator" ,
+                        "deleted":"$_deleted"
+                        }
+                    },
+                    { "$match": Query },    
+                  
+                        {  
+                        "$group":{ _id: {"buyer" :"$buyer",  
+                        "year":"$year",  
+                        "weekSewingBlocking":"$weekSewingBlocking",  
+                        "unit" :"$unit",  
+                        "operator":"$operator", 
+                        "SMVSewing":"$SMVSewing", 
+                        "isConfirmed":"$isConfirmed", 
+                        "weekNumber":"$weekNumber",  
+                        "bookingQty":"$bookigQty" ,  
+                        "efficiency":"$efficiency",  
+                        "workingHoours":"$workingHoours",  
+                        "AHTotal":"$AHTotal",  
+                        "EHTotal":"$EHTotal",  
+                        "usedTotal":"$usedTotal",  
+                        "remainingEH":"$remainingEH"},  
+                        "BookingQTyTot":{"$sum":"$bookigQty"},  
+                        "SMVTot":{"$sum":"$SMVSewing"} , 
+                         
+                        count: { $sum: 1 }  
+                         
+                        }  
+                        },  
+                        
+                        {  
+                        "$sort": {  
+                        "_id.unit": 1,  
+                        "_id.buyer":1
+                        }  
+                        }  
+                        ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
     }
 }

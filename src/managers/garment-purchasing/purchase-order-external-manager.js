@@ -1262,7 +1262,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         }
     }
 
-    getAllData(startdate, enddate, offset) {
+   getAllData(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
             var now = new Date();
             var deleted = {
@@ -1317,9 +1317,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     $match: match
                 }, {
                     $unwind: "$items"
-                }, {
-                    $unwind: "$items.realizations"
-                },
+                }, 
                 {
                     $lookup: {
                         from: POColl,
@@ -1354,7 +1352,6 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "SatOrder": "$items.defaultUom.unit",
                         "QtyBeli": "$items.dealQuantity",
                         "SatBeli": "$items.dealUom.unit",
-                        "QtySJ": "$items.realizations.deliveredQuantity",
                         "SatKonv": "$items.uomConversion.unit",
                         "Konversi": "$items.conversion",
                         "HargaSat": "$items.pricePerDealUnit",
@@ -1369,7 +1366,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         "Tempo": "$Tempo", "MtUang": "$MtUang", "RateMU": "$RateMU", "PakaiPPN": "$PakaiPPN",
                         "PakaiPPH": "$PakaiPPH", "RatePPH": "$RatePPH", "Status": "$Status", "PRNo": "$PRNo",
                         "PlanPO": "$PlanPO", "RONo": "$RONo", "KdBrg": "$KdBrg", "NmBrg": "$NmBrg", "QtyOrder": "$QtyOrder",
-                        "SatOrder": "$SatOrder", "QtyBeli": "$QtyBeli", "QtySJ": "$QtySJ", "SatBeli": "$SatBeli",
+                        "SatOrder": "$SatOrder", "QtyBeli": "$QtyBeli", "SatBeli": "$SatBeli",
                         "SatKonv": "$SatKonv", "Konversi": "$Konversi", "HargaSat": "$HargaSat", "KdByr": "$POs.buyer.code",
                         "Konf": "$POs.unit.code", "Article": "$POs.artikel"
                     }
@@ -1381,8 +1378,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                             Tempo: "$Tempo", MtUang: "$MtUang", RateMU: "$RateMU", PakaiPPN: "$PakaiPPN", PakaiPPH: "$PakaiPPH", RatePPH: "$RatePPH", Status: "$Status", PRNo: "$PRNo", PlanPO: "$PlanPO",
                             RONo: "$RONo", KdBrg: "$KdBrg", NmBrg: "$NmBrg", QtyOrder: "$QtyOrder", SatOrder: "$SatOrder", QtyBeli: "$QtyBeli", SatBeli: "$SatBeli",
                             SatKonv: "$SatKonv", Konversi: "$Konversi", HargaSat: "$HargaSat", KdByr: "$KdByr", Konf: "$Konf", Article: "$Article"
-                        },
-                        "QtySJ": { $sum: "$QtySJ" }
+                        }
                     }
                 }
                 ])
@@ -1392,6 +1388,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 });
         });
     }
+
 
     getPOExtReport(query) {
         return new Promise((resolve, reject) => {
