@@ -178,6 +178,8 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                 valid.budget = _budget;
 
                 valid.date = new Date(valid.date);
+
+                valid.internal = valid.internal;
                 
                 if(valid.expectedDeliveryDate)
                     valid.expectedDeliveryDate = new Date(valid.expectedDeliveryDate);

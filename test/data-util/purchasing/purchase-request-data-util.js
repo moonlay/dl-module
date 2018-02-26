@@ -28,6 +28,7 @@ class PurchaseRequestDataUtil {
                     unit: unit,
                     categoryId: category._id,
                     category: category,
+                    internal:false,
 
                     isPosted: false,
                     remark: "Unit Test",
