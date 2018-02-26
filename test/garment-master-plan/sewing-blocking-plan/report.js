@@ -34,8 +34,8 @@ it("#01. should success when get report with parameter year", function (done) {
             done(e);
         });
 });
-it("#01. should success when get report with parameter unit", function (done) {
-    manager.getReport({"unit" : unit})
+it("#02. should success when get report with parameter unit and year", function (done) {
+    manager.getReport({"unit" : unit,"year" : year})
         .then((data) => {
             data.should.instanceof(Array);
             done();
@@ -44,3 +44,53 @@ it("#01. should success when get report with parameter unit", function (done) {
             done(e);
         });
 });
+var dummyData;
+var dummyDataId;
+var queryMonitoringRemainingEH = {};
+var dummyMonitoringRemainingEHResult = {};
+
+it(`#03. should success when get created new data`, function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            manager.create(data)
+                .then((id) => {
+                    dummyDataId = id;
+                    dummyData = data;
+                    queryMonitoringRemainingEH.year = 2018;
+                    queryMonitoringRemainingEH.unit = "C1A";
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+it("#04. should success when get report with parameter year and getExcel", function (done) {
+   
+    manager.getReport({"year" : year})
+            .then((data) => {
+                data.should.instanceof(Array);
+                var result = {
+                    data : data
+                };
+                manager.getXls(result, {"year" : year})
+                    .then(xls => {
+                        xls.should.instanceof(Object);
+                        xls.should.have.property('data');
+                        xls.should.have.property('options');
+                        xls.should.have.property('name');
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            })
+            .catch((e) => {
+                done(e);
+            });
+    });
+
+ 
