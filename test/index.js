@@ -45,7 +45,7 @@ describe('#dl-module', function (done) {
 
     // test('@MASTER/MONITORING-EVENT-TYPE', './master/monitoring-event-type');
     test('@MASTER/STEP', './master/step');
-    // test('@MASTER/MACHINE-TYPE', './master/machine-type');
+    test('@MASTER/MACHINE-TYPE', './master/machine-type');
     test('@MASTER/MACHINE-SPESIFICATION-STANDARD', './master/machine-spesification-standard');
     test('@MASTER/MATERIAL-CONSTRUCTION', './master/material-construction');
     test('@MASTER/YARN-MATERIAL', './master/yarn-material');
