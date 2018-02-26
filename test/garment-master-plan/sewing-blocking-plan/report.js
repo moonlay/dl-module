@@ -44,7 +44,31 @@ it("#02. should success when get report with parameter unit and year", function 
             done(e);
         });
 });
-it("#03. should success when get report with parameter year and getExcel", function (done) {
+var dummyData;
+var dummyDataId;
+var queryMonitoringRemainingEH = {};
+var dummyMonitoringRemainingEHResult = {};
+
+it(`#03. should success when get created new data`, function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            manager.create(data)
+                .then((id) => {
+                    dummyDataId = id;
+                    dummyData = data;
+                    queryMonitoringRemainingEH.year = 2018;
+                    queryMonitoringRemainingEH.unit = "C1A";
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+it("#04. should success when get report with parameter year and getExcel", function (done) {
    
     manager.getReport({"year" : year})
             .then((data) => {
