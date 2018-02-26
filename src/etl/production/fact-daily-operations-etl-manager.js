@@ -30,6 +30,8 @@ const selectedFields = {
     "kanban.productionOrder.orderType.name": 1,
     "kanban.productionOrder.orderNo": 1,
     "badOutputReasons.precentage": 1,
+    "badOutputReasons.length": 1,
+    "badOutputReasons.action": 1,
     "badOutputReasons.description": 1,
     "badOutputReasons.badOutputReason.code": 1,
     "badOutputReasons.badOutputReason.reason": 1,
