@@ -782,7 +782,10 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                 }
                 }
             }
-            total=Object.values(totalqty);
+            
+            total = Object.keys(totalqty).map(function(key) {
+                return totalqty[key];
+            });
             
             for(var x=0;x<length_week;x++){
                 var obj=[];
