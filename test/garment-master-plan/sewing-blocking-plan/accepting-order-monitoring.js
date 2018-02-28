@@ -29,35 +29,15 @@ var dummyDataId;
 var queryAcceptingOrderMonitoring = {};
 var dummyAcceptingOrderMonitoringResult = {};
 
-it('#01. should success when get created data with no data', function(done){
-    dataUtil.getNewData()
-        .then((data) => {
-            manager.create(data)
-                .then((id) => {
-                    dummyDataId = null;
-                    dummyData = null;
-                    queryAcceptingOrderMonitoring.year = null;
-                    queryAcceptingOrderMonitoring.unit = null;
-                    done();
-                })
-                .catch((e) => {
-                    done(e);
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-
-it(`#02. should success when get created new data`, function (done) {
+it(`#01. should success when get created new data`, function (done) {
     dataUtil.getNewData()
         .then((data) => {
             manager.create(data)
                 .then((id) => {
                     dummyDataId = id;
                     dummyData = data;
-                    queryAcceptingOrderMonitoring.year = dummyData.year;
-                    queryAcceptingOrderMonitoring.unit = dummyData.unit;
+                    queryAcceptingOrderMonitoring.year = dummyData.details[0].weeklyPlanYear;
+                    queryAcceptingOrderMonitoring.unit = '';
                     done();
                 })
                 .catch((e) => {
@@ -69,24 +49,7 @@ it(`#02. should success when get created new data`, function (done) {
         });
 });
 
-it(`#03. should success when get created new data with query unit is null`, function (done) {
-    dataUtil.getNewData()
-        .then((data) => {
-            manager.create(data)
-                .then((id) => {
-                    queryAcceptingOrderMonitoring.unit = null;
-                    done();
-                })
-                .catch((e) => {
-                    done(e);
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-
-it("#04. should success when get Accepting Order Monitoring", function (done) {
+it("#02. should success when get Accepting Order Monitoring", function (done) {
     manager.getAcceptedOrderMonitoring(queryAcceptingOrderMonitoring)
         .then((data) => {
             data.should.instanceof(Array);
