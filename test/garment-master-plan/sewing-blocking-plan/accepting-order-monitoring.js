@@ -29,7 +29,27 @@ var dummyDataId;
 var queryAcceptingOrderMonitoring = {};
 var dummyAcceptingOrderMonitoringResult = {};
 
-it(`#01. should success when get created new data`, function (done) {
+it('#01. should success when get created data with no data', function(done){
+    dataUtil.getNewData()
+        .then((data) => {
+            manager.create(data)
+                .then((id) => {
+                    dummyDataId = null;
+                    dummyData = null;
+                    queryAcceptingOrderMonitoring.year = null;
+                    queryAcceptingOrderMonitoring.unit = null;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#02. should success when get created new data`, function (done) {
     dataUtil.getNewData()
         .then((data) => {
             manager.create(data)
@@ -49,7 +69,24 @@ it(`#01. should success when get created new data`, function (done) {
         });
 });
 
-it("#02. should success when get Accepting Order Monitoring", function (done) {
+it(`#03. should success when get created new data with query unit is null`, function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            manager.create(data)
+                .then((id) => {
+                    queryAcceptingOrderMonitoring.unit = null;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#04. should success when get Accepting Order Monitoring", function (done) {
     manager.getAcceptedOrderMonitoring(queryAcceptingOrderMonitoring)
         .then((data) => {
             data.should.instanceof(Array);
@@ -61,7 +98,7 @@ it("#02. should success when get Accepting Order Monitoring", function (done) {
         });
 });
 
-it("#03. should success when get Accepting Order Monitoring XLS", function (done) {
+it("#05. should success when get Accepting Order Monitoring XLS", function (done) {
     manager.getAcceptedOrderMonitoringXls(dummyAcceptingOrderMonitoringResult, queryAcceptingOrderMonitoring)
         .then((xls) => {
             xls.should.instanceof(Object);
@@ -75,7 +112,7 @@ it("#03. should success when get Accepting Order Monitoring XLS", function (done
         });
 });
 
-it('#04. should success when destroy data with id', function(done) {
+it('#06. should success when destroy data with id', function(done) {
     manager.destroy(dummyDataId)
         .then((result) => {
             result.should.be.Boolean();
@@ -87,7 +124,7 @@ it('#04. should success when destroy data with id', function(done) {
         });
 });
 
-it('#05. should null when get destroyed data', function(done) {
+it('#07. should null when get destroyed data', function(done) {
     manager.getSingleByIdOrDefault(dummyDataId)
         .then((data) => {
             should.equal(data, null);
@@ -98,7 +135,7 @@ it('#05. should null when get destroyed data', function(done) {
         });
 });
 
-it(`#06. should success when remove all data`, function(done) {
+it(`#08. should success when remove all data`, function(done) {
     manager.collection.remove({})
         .then((result) => {
             done();
@@ -107,3 +144,4 @@ it(`#06. should success when remove all data`, function(done) {
             done(e);
         });
 });
+
