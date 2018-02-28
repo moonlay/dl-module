@@ -608,6 +608,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
             }
  
             var weeklyPlans = map.garmentMasterPlan.collection.WeeklyPlan;
+            var bookingOrders = map.garmentMasterPlan.collection.BookingOrder;
        
            var Query = { "$and": [ yearQuery, deletedQuery,unitQuery] };
          
@@ -616,8 +617,10 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
             this.collection
                 .aggregate( [
                     { "$unwind": "$details"},
-                    {"$lookup":{from :weeklyPlans,localField:"details.weeklyPlanId",foreignField:"_id",as :"weeklyPlans"}},
+                    { "$lookup":{from :weeklyPlans,localField:"details.weeklyPlanId",foreignField:"_id",as :"weeklyPlans"}},
                     { "$unwind": {path: "$weeklyPlans", preserveNullAndEmptyArrays: true} },
+                    { "$lookup":{from :bookingOrders,localField:"bookingOrderId",foreignField:"_id",as :"bookingOrders"}},
+                    { "$unwind": {path: "$bookingOrders", preserveNullAndEmptyArrays: true} },
                    // { "$match": Query},    
                     {  
                         "$project": {  
@@ -627,6 +630,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                         "unit" :"$weeklyPlans.unit.code",  
                         "SMVSewing":"$details.shSewing",  
                         "weekNumber":"$weeklyPlans.items.weekNumber",  
+                        "weekEndDate":"$weeklyPlans.items.endDate",  
                         "bookigQty":"$details.quantity",  
                         "isConfirmed":"$details.isConfirmed", 
                         "efficiency":"$weeklyPlans.items.efficiency",  
@@ -636,6 +640,8 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                         "usedTotal":"$weeklyPlans.items.usedEH",  
                         "remainingEH":"$weeklyPlans.items.remainingEH" , 
                         "operator":"$weeklyPlans.items.operator" ,
+                        "bookingOrderItems": "$bookingOrders.items",
+                        "bookingOrdersQuantity": "$bookingOrders.orderQuantity",
                         "deleted":"$_deleted"
                         }
                     },
@@ -650,12 +656,15 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                         "SMVSewing":"$SMVSewing", 
                         "isConfirmed":"$isConfirmed", 
                         "weekNumber":"$weekNumber",  
+                        "weekEndDate":"$weekEndDate",  
                         "bookingQty":"$bookigQty" ,  
                         "efficiency":"$efficiency",  
                         "workingHoours":"$workingHoours",  
                         "AHTotal":"$AHTotal",  
                         "EHTotal":"$EHTotal",  
                         "usedTotal":"$usedTotal",  
+                        "bookingOrderItems": "$bookingOrderItems",
+                        "bookingOrdersQuantity": "$bookingOrdersQuantity",
                         "remainingEH":"$remainingEH"},  
                         "BookingQTyTot":{"$sum":"$bookigQty"},  
                         "SMVTot":{"$sum":"$SMVSewing"} , 
