@@ -1107,7 +1107,7 @@ getDataMonitoringAll(info) {
                     "KdBrg":"$items.items.items.product.code",
                     "NmBrg":"$items.items.items.product.name",
                     "SatNI":"$items.items.items.purchaseOrderUom.unit",
-                    "Qty" : "$items.items.items.purchaseOrderQuantity",
+                    "Qty" : "$items.items.items.deliveredQuantity",
                     "Harga" : "$items.items.items.pricePerDealUnit",
                     "TgIn":"$_createdDate",
                     "UserIn":"$_createdBy",
