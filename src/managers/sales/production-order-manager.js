@@ -477,9 +477,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     for (var i of valid.details) {
                         totalqty += i.quantity;
                     }
+                    let indexDetail = 1;
                     for (var detail of valid.details) {
                         var detailError = {};
-                        detail.code = generateCode();
+                        let unique = "CODE" + indexDetail++;
+                        detail.code = generateCode(unique);
+         
                         if (!detail.colorRequest || detail.colorRequest == "")
                             detailError["colorRequest"] = i18n.__("ProductionOrder.details.colorRequest.isRequired:%s is required", i18n.__("ProductionOrder.details.colorRequest._:ColorRequest")); //"colorRequest tidak boleh kosong";
                         if (detail.quantity <= 0)
