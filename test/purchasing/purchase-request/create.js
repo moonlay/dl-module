@@ -52,6 +52,19 @@ it('#02. should success when create new data', function (done) {
         });
 });
 
+it('#02. (02) should success when create new data', function (done) {
+    PurchaseRequest.getNewTestData2()
+        .then(pr => {
+            purchaseRequest = pr;
+            validate(purchaseRequest);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+
 it('#02. should error when create new data using duplicate item', function (done) {
     PurchaseRequest.getNewData()
         .then(pr => {
