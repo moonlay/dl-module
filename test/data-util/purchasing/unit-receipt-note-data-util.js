@@ -68,6 +68,7 @@ class UnitReceiptNoteDataUtil {
                 });
             });
     }
+
 }
 
 module.exports = new UnitReceiptNoteDataUtil();
