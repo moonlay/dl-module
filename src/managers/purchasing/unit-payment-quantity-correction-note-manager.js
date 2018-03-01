@@ -548,7 +548,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
             item["TANGGAL FAKTUR PAJAK PPN"] = corqty.incomeTaxCorrectionDate? moment(new Date(corqty.incomeTaxCorrectionDate)).format(dateFormat) : '';
             item["UNIT"] = corqty.items.purchaseOrder.unit.name? corqty.items.purchaseOrder.unit.name : '';
             item["KATEGORI"] = corqty.unitPaymentOrder.category? corqty.unitPaymentOrder.category.name : '';
-            item["CODE SUPPLIER"] = corqty.unitPaymentOrder.supplier.code? corqty.unitPaymentOrder.supplier.code : '';
+            item["CODE SUPPLIER"] = corqty.unitPaymentOrder.supplier? corqty.unitPaymentOrder.supplier.code : '';
             item["SUPPLIER"] = corqty.unitPaymentOrder.supplier? corqty.unitPaymentOrder.supplier.name : '';
             item["KODE BARANG"] = corqty.items.product? corqty.items.product.code : '';
             item["NAMA BARANG"] = corqty.items.product? corqty.items.product.name : '';
@@ -571,7 +571,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
             item["HARGA SATUAN"] = HARGA;
             item["HARGA TOTAL"] = TOTAL;
             item["USER INPUT"] = corqty._createdBy? corqty._createdBy : '';
-            item["MATA UANG"] = corqty.items.currency.code? corqty.items.currency.code : '';
+            item["MATA UANG"] = corqty.items.currency? corqty.items.currency.code : '';
             
             xls.data.push(item);
         }

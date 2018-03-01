@@ -571,7 +571,7 @@ getXls(result, query){
              item["NO PURCHASE REQUEST"] = corhrg.items.purchaseOrder.purchaseRequest? corhrg.items.purchaseOrder.purchaseRequest.no : '';
              item["FAKTUR PAJAK PPN"] = corhrg.incomeTaxCorrectionNo? corhrg.incomeTaxCorrectionNo : '';
              item["TANGGAL FAKTUR PAJAK PPN"] = corhrg.incomeTaxCorrectionDate? moment(new Date(corhrg.incomeTaxCorrectionDate)).format(dateFormat) : '';
-              item["CODE SUPPLIER"] = corhrg.unitPaymentOrder.supplier.code? corhrg.unitPaymentOrder.supplier.code : '';
+              item["CODE SUPPLIER"] = corhrg.unitPaymentOrder.supplier? corhrg.unitPaymentOrder.supplier.code : '';
              item["SUPPLIER"] = corhrg.unitPaymentOrder.supplier? corhrg.unitPaymentOrder.supplier.name : '';
              item["JENIS KOREKSI"] = corhrg.correctionType? corhrg.correctionType : '';
              item["KODE"] = corhrg.items.product? corhrg.items.product.code : '';
@@ -595,8 +595,8 @@ getXls(result, query){
              item["HARGA SATUAN"] = harga;
              item["HARGA TOTAL"] = total;
              item["USER INPUT"] = corhrg._createdBy? corhrg._createdBy : '';
-             item["MATA UANG"] = corhrg.items.currency.code? corhrg.items.currency.code : '';
-             item["KATEGORI"] = corhrg.unitPaymentOrder.category.name? corhrg.unitPaymentOrder.category.name : '';
+             item["MATA UANG"] = corhrg.items.currency? corhrg.items.currency.code : '';
+             item["KATEGORI"] = corhrg.unitPaymentOrder.category? corhrg.unitPaymentOrder.category.name : '';
 
              xls.data.push(item);
          }
