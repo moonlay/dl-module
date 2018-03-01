@@ -571,6 +571,7 @@ getXls(result, query){
              item["NO PURCHASE REQUEST"] = corhrg.items.purchaseOrder.purchaseRequest? corhrg.items.purchaseOrder.purchaseRequest.no : '';
              item["FAKTUR PAJAK PPN"] = corhrg.incomeTaxCorrectionNo? corhrg.incomeTaxCorrectionNo : '';
              item["TANGGAL FAKTUR PAJAK PPN"] = corhrg.incomeTaxCorrectionDate? moment(new Date(corhrg.incomeTaxCorrectionDate)).format(dateFormat) : '';
+              item["CODE SUPPLIER"] = corhrg.unitPaymentOrder.supplier? corhrg.unitPaymentOrder.supplier.code : '';
              item["SUPPLIER"] = corhrg.unitPaymentOrder.supplier? corhrg.unitPaymentOrder.supplier.name : '';
              item["JENIS KOREKSI"] = corhrg.correctionType? corhrg.correctionType : '';
              item["KODE"] = corhrg.items.product? corhrg.items.product.code : '';
@@ -594,6 +595,8 @@ getXls(result, query){
              item["HARGA SATUAN"] = harga;
              item["HARGA TOTAL"] = total;
              item["USER INPUT"] = corhrg._createdBy? corhrg._createdBy : '';
+             item["MATA UANG"] = corhrg.items.currency? corhrg.items.currency.code : '';
+             item["KATEGORI"] = corhrg.unitPaymentOrder.category? corhrg.unitPaymentOrder.category.name : '';
 
              xls.data.push(item);
          }
@@ -606,6 +609,7 @@ getXls(result, query){
          xls.options["NO PURCHASE REQUEST"] = "string";
          xls.options["FAKTUR PAJAK PPN"] = "string";
          xls.options["TANGGAL FAKTUR PAJAK PPN"] = "string";
+         xls.options["CODE SUPPLIER"] = "string";
          xls.options["SUPPLIER"] = "string";
          xls.options["JENIS KOREKSI"] = "string";
          xls.options["KODE"] = "string";
@@ -615,6 +619,8 @@ getXls(result, query){
          xls.options["HARGA SATUAN"] = "number";
          xls.options["HARGA TOTAL"] = "number";
          xls.options["USER INPUT"] = "string";
+         xls.options["MATA UANG"] = "string";
+         xls.options["KATEGORI"] = "string";
 
          if(query.dateFrom && query.dateTo){
              xls.name = `Monitoring Koreksi Harga ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
