@@ -590,8 +590,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         }, 0);
 
                     if (purchaseOrder.status.value <= 7) {
-
-                        purchaseOrder.status = purchaseOrder.purchaseRequest.internal == true ? poStatusEnum.COMPLETE : (totalReceived === totalDealQuantity ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING);
+                        purchaseOrder.status =(totalReceived === totalDealQuantity ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING);
+                        // purchaseOrder.status = purchaseOrder.purchaseRequest.internal == true ? poStatusEnum.COMPLETE : (totalReceived === totalDealQuantity ? poStatusEnum.RECEIVED : poStatusEnum.RECEIVING);
                         // purchaseOrder.status = fulfillment.unitReceiptNoteDeliveredQuantity < fulfillment.deliveryOrderDeliveredQuantity ? poStatusEnum.RECEIVING : purchaseOrder.status;
                     }
                     return this.purchaseOrderManager.updateCollectionPurchaseOrder(purchaseOrder);

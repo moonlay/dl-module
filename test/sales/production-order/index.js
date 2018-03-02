@@ -29,3 +29,7 @@ describe("ORDER STATUS REPORT SCENARIOS", function () {
 describe("CLOSE SCENARIOS", function () {
     require("./close");
 });
+
+describe("DUPLICATE SCENARIOS", function () {
+    require("./duplicate");
+});

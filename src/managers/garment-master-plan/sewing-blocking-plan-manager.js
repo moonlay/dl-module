@@ -1211,6 +1211,60 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
         });
     }
 
+    getAcceptedOrderMonitoring(query){
+        return new Promise((resolve, reject) => {
+            var deletedQuery = { _deleted: false };
+            var yearQuery = {};
+            if (query.year) {
+                yearQuery = {
+                    "details.weeklyPlanYear": parseInt(query.year)
+                };
+            }
+            var unitQuery = {};
+            if (query.unit !='') {
+                unitQuery = {
+                    "details.unit.code": query.unit
+                };
+            }
+
+            var Query = { "$and": [ deletedQuery, yearQuery, unitQuery] };
+            this.collection
+                .aggregate([
+                    { "$unwind": "$details" },
+                    { "$match": Query },
+                    { "$lookup":{from :'weekly-plans',localField:'details.weeklyPlanId',foreignField:'_id',as:'weeklyPlans'}},
+                    { "$unwind": {path:"$weeklyPlans", preserveNullAndEmptyArrays: true} },
+                    { "$project": {
+                        'unitcode':'$details.unit.code',
+                        'week':'$details.week.weekNumber',
+                        'qty':'$details.quantity',
+                        'unit' :'$weeklyPlans.unit', 
+                        'items':'$weeklyPlans.items',
+                        }
+                    },
+                    {"$group": {
+                        '_id':{'week':'$week','unitcode':'$unitcode','unit':'$unit','items':'$items'},
+                        'qty':{'$sum':'$qty'},
+                        }
+                    },
+                    {
+                        "$sort": {
+
+                            "_id.unitcode": 1,
+                            "_id.week":1,
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
     getAcceptedOrderMonitoringXls(dataReport, query) {
         return new Promise((resolve, reject) => {
             var xls = {};
@@ -1223,102 +1277,139 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
             var total = [];
             var qty = [];
             var weeks = [];
-            // var getWeeklyPlan = query.year ? this.weeklyPlanManager.collection.find({ "year":  yr}).toArray() : Promise.resolve([]);
 
-            for (var x = 0; x < dataReport.data.length; x++) {
-                var length_week = dataReport.data[x]._id.items.length;
-                break;
+            var deletedQuery = { _deleted: false };
+            var yearQuery = {};
+            if (query.year) {
+                yearQuery = {
+                    "year": parseInt(query.year)
+                };
             }
-            if (query.unit == '') {
-                for (var x = 0; x < dataReport.data.length; x++) {
-                    if (units.length <= 0) {
-                        units.push(dataReport.data[x]._id.unit.code);
+            var unitQuery = {};
+            if (query.unit !='') {
+                unitQuery = {
+                    "unit.code": query.unit
+                };
+            }
+            
+            var Query = { "$and": [ deletedQuery, yearQuery, unitQuery] };
+            var getUnit=   this.db.use(map.garmentMasterPlan.collection.WeeklyPlan)
+            .aggregate([
+                { "$match": Query },
+                { "$project": {
+                    'unit' :'$unit.code', 
                     }
-                    var u = units.find(i => i == dataReport.data[x]._id.unit.code);
-                    if (!u) {
-                        units.push(dataReport.data[x]._id.unit.code);
+                },
+                {"$group": {
+                    '_id':{'unit':'$unit',},
+                    }
+                },
+                {
+                    "$sort": {
+                        "_id.unit": 1,
                     }
                 }
-            }
-            else if (query.unit != '') {
-                units.push(query.unit);
-            }
+            ])
+            .toArray()
+            .then(results=>{
+                
+                for(var x=0; x < dataReport.data.length; x++){
+                    var length_week= dataReport.data[x]._id.items.length;
+                    break;
+                  }
+                if(query.unit==''){
+                    for(var x=0; x < results.length; x++){
+                      if(units.length<=0){
+                       units.push(results[x]._id.unit);
+                      }
+                      var u=units.find(i=> i==results[x]._id.unit);
+                      if(!u){
+                       units.push(results[x]._id.unit);
+                      }
+                    }
+                }
+                else if(query.unit!=''){
+                  units.push(query.unit);
+                }
 
-            var totalqty = [];
-            for (var x = 0; x < dataReport.data.length; x++) {
-                for (var code of units) {
-                    if (code == dataReport.data[x]._id.unitcode) {
-                        if (!totalqty[code]) {
-                            totalqty[code] = dataReport.data[x].qty;
+                var totalqty=[];
+                for(var code of units){
+                    for(var x=0; x < dataReport.data.length; x++){
+                    if(dataReport.data[x]._id.unitcode==code){
+                        if(!totalqty[code]){
+                        totalqty[code]=dataReport.data[x].qty;
                         } else {
-                            totalqty[code] += dataReport.data[x].qty;
+                        totalqty[code]+=dataReport.data[x].qty; 
                         }
+                    } 
+                    }
+                    if(!totalqty[code]){
+                    totalqty[code]='-';
                     }
                 }
-            }
-
-            total = Object.keys(totalqty).map(function (key) {
-                return totalqty[key];
-            });
-
-            for (var x = 0; x < length_week; x++) {
-                var obj = [];
-                var week = {
-                    weeknumber: 'W' + (x + 1)
-                }
-                weeks.push(week);
-                for (var y of units) {
-                    var unit = {};
-                    var grup = dataReport.data.find(o => o._id.unitcode == y && o._id.week == (x + 1));
-                    if (grup) {
-                        unit = {
-                            code: y,
-                            week: x + 1,
-                            quantity: grup.qty,
-                        }
-                    } else {
-                        unit = {
-                            code: y,
-                            week: x + 1,
-                            quantity: '-'
-                        }
+                total = Object.keys(totalqty).map(function(key) {
+                    return totalqty[key];
+                });
+                
+                for(var x=0;x<length_week;x++){
+                    var obj=[];
+                    var week={
+                      weeknumber:'W'+(x+1)
                     }
-
-                    obj.push(unit);
-
+                    weeks.push(week);
+                    for(var y of units){
+                      var unit={};
+                      var grup= dataReport.data.find(o=>o._id.unitcode==y && o._id.week == (x+1));
+                      if(grup){
+                        unit={
+                          code:y,
+                          week:x+1,
+                          quantity:grup.qty,
+                        }
+                      } else {
+                        unit={
+                          code:y,
+                          week:x+1,
+                          quantity:'-'
+                        }
+                      }
+                      
+                      obj.push(unit);
+        
+                    }
+                    qty.push(obj);
                 }
-                qty.push(obj);
-            }
-
-            x = 0;
-            for (var week of weeks) {
-                var item = {};
-                item["Unit"] = week.weeknumber;
-                y = 0;
+                
+                x=0;
+                for (var week of weeks) {
+                    var item = {};
+                    item["Unit"] = week.weeknumber;
+                    y=0;
+                    for (unit of units) {
+                        item[unit] = qty[x][y].quantity;
+                        y++;
+                    }
+                    xls.data.push(item);
+                    x++;
+                } 
+                var i =0; 
+                var item_total = {};
+                for(var unit of units){    
+                    item_total[unit] = total[i];
+                    i++;
+                }
+                item_total["Unit"] = 'TOTAL';
+                xls.data.push(item_total);
+    
+                xls.options["Unit"] = "string";
                 for (unit of units) {
-                    item[unit] = qty[x][y].quantity;
-                    y++;
+                    xls.options[unit] = "string";
                 }
-                xls.data.push(item);
-                x++;
-            }
-            var i = 0;
-            var item_total = {};
-            for (var unit of units) {
-                item_total[unit] = total[i];
-                i++;
-            }
-            item_total["Unit"] = 'TOTAL';
-            xls.data.push(item_total);
-
-            xls.options["Unit"] = "string";
-            for (unit of units) {
-                xls.options[unit] = "string";
-            }
-
-            xls.name = `Monitoring Order Diterima dan Booking Report ` + (query.unit ? `${query.unit}-` : ``) + `${query.year}.xlsx`;
-
-            resolve(xls);
+                
+                xls.name = `Monitoring Order Diterima dan Booking Report ` + (query.unit ? `${query.unit}-` : ``) + `${query.year}.xlsx`;
+                resolve(xls);
+                
+            });
         });
     }
 
