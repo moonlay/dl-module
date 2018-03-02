@@ -1154,7 +1154,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
         });
     }
 
-    getAcceptedOrderMonitoring(query) {
+    getAcceptedOrderMonitoring(query){
         return new Promise((resolve, reject) => {
             var deletedQuery = { _deleted: false };
             var yearQuery = {};
@@ -1164,40 +1164,38 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                 };
             }
             var unitQuery = {};
-            if (query.unit != '') {
+            if (query.unit !='') {
                 unitQuery = {
                     "details.unit.code": query.unit
                 };
             }
 
-            var Query = { "$and": [deletedQuery, yearQuery, unitQuery] };
+            var Query = { "$and": [ deletedQuery, yearQuery, unitQuery] };
             this.collection
                 .aggregate([
                     { "$unwind": "$details" },
                     { "$match": Query },
-                    { "$lookup": { from: 'weekly-plans', localField: 'details.weeklyPlanId', foreignField: '_id', as: 'weeklyPlans' } },
-                    { "$unwind": { path: "$weeklyPlans", preserveNullAndEmptyArrays: true } },
-                    {
-                        "$project": {
-                            'buyer': '$garmentBuyerCode',
-                            'unitcode': '$details.unit.code',
-                            'week': '$details.week.weekNumber',
-                            'qty': '$details.quantity',
-                            'unit': '$weeklyPlans.unit',
-                            'items': '$weeklyPlans.items',
+                    { "$lookup":{from :'weekly-plans',localField:'details.weeklyPlanId',foreignField:'_id',as:'weeklyPlans'}},
+                    { "$unwind": {path:"$weeklyPlans", preserveNullAndEmptyArrays: true} },
+                    { "$project": {
+                        'buyer':'$garmentBuyerCode',
+                        'unitcode':'$details.unit.code',
+                        'week':'$details.week.weekNumber',
+                        'qty':'$details.quantity',
+                        'unit' :'$weeklyPlans.unit', 
+                        'items':'$weeklyPlans.items',
                         }
                     },
-                    {
-                        "$group": {
-                            '_id': { 'week': '$week', 'unitcode': '$unitcode', 'unit': '$unit', 'items': '$items' },
-                            'qty': { '$sum': '$qty' },
+                    {"$group": {
+                        '_id':{'week':'$week','unitcode':'$unitcode','unit':'$unit','items':'$items'},
+                        'qty':{'$sum':'$qty'},
                         }
                     },
                     {
                         "$sort": {
 
                             "_id.unitcode": 1,
-                            "_id.week": 1,
+                            "_id.week":1,
                         }
                     }
                 ])
@@ -1271,8 +1269,8 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
             xls.data = [];
             xls.options = [];
             xls.name = '';
-
-            var yr = parseInt(query.year);
+            
+            var yr=parseInt(query.year);
             var units = [];
             var total = [];
             var qty = [];
@@ -1412,5 +1410,4 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
             });
         });
     }
-
 }
