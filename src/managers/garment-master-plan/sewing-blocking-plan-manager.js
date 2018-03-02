@@ -1013,14 +1013,6 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                         bold: true
                     }
                 },
-                cellunit: {
-                    fill: fgColor('FFFFFFFF'),
-                    border: border,
-                    alignment: {
-                        // horizontal: 'center',
-                        vertical: 'top'
-                    }
-                },
                 cell: {
                     fill: fgColor('FFFFFFFF'),
                     border: border
@@ -1032,37 +1024,40 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                         bold: true
                     }
                 },
-                cellRed: {
-                    fill: fgColor('FFFF0000'),
-                    border: border
-                },
-                cellGreen: {
-                    fill: fgColor('FF00FF00'),
-                    border: border
-                },
-                cellYellow: {
-                    fill: fgColor('FFFFFF00'),
-                    border: border
-                },
-                cellSoftYellow: {
-                    fill: fgColor('FFEEE860'),
-                    border: border
-                },
-                cellSoftOrange: {
-                    fill: fgColor('FFF4A919'),
-                    border: border
-                },
-            };
-
-            var cellColor = function (color) {
-                return {
-                    fill: {
-                        fgColor: {
-                            rgb: color
-                        }
+                cellUnit: {
+                    fill: fgColor('FFFFFFFF'),
+                    border: border,
+                    alignment: {
+                        // horizontal: 'center',
+                        vertical: 'top'
                     },
-                    border : border
-                }
+                    font: {
+                        bold: true
+                    }
+                },
+                cellColor: (color) => {
+                    return {
+                        fill: {
+                            fgColor: {
+                                rgb: color
+                            }
+                        },
+                        border: border
+                    }
+                },
+                cellColorBold: (color) => {
+                    return {
+                        fill: {
+                            fgColor: {
+                                rgb: color
+                            }
+                        },
+                        border: border,
+                        font: {
+                            bold: true
+                        }
+                    }
+                },
             };
 
             var mergeCountEnd = 1;
@@ -1071,7 +1066,6 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
             xls.options.merges = [];
 
             for (var b of this.dataXL) {
-// console.log(JSON.stringify(b));
                 var item = {};
                 xls.options.specification = {};
 
@@ -1100,46 +1094,49 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                     displayName: "UNIT",
                     width: 50,
                     headerStyle: styles.header,
-                    cellStyle: styles.cellunit
+                    cellStyle: styles.cellUnit
                 };
                 xls.options.specification["BUYER-KOMODITI"] = {
                     displayName: "BUYER-KOMODITI",
                     width: 300,
                     headerStyle: styles.header,
-                    cellStyle: styles.cell
+                    cellStyle: function (value, row) {
+                        return value === "TOTAL" ? styles.cellBold :
+                            row["SMV Sewing"] === "" ? styles.cellBold :
+                                styles.cell;
+                    }
                 };
 
                 for (var d = 0; d <= this.weeklyNumbers.length; d++) {
-                    item["weeknumber"] = d;
                     if (d === 0) {
                         item["SMV Sewing"] = b.quantity[d];
                         xls.options.specification["SMV Sewing"] = {
                             displayName: "SMV Sewing",
                             width: 75,
                             headerStyle: styles.header,
-                            cellStyle: styles.cell
+                            cellStyle: function (value, row) {
+                                return row["BUYER-KOMODITI"] === "TOTAL" ? styles.cellBold : styles.cell;
+                            }
                         };
-
                     } else {
                         var weekNo = "W" + (d).toString();
-                        item[weekNo] = b.quantity[d];
+                        item[weekNo] = { value: b.quantity[d], weeknumber: d };
 
                         xls.options.specification[weekNo] = {
                             displayName: weekNo,
                             width: 70,
                             headerStyle: styles.header,
+                            cellFormat: function (value) {
+                                return value.value;
+                            },
                             cellStyle: function (value, row) {
-// console.log(JSON.stringify(row));
                                 if (row["BUYER-KOMODITI"] === "Remaining EH") {
-                                    return (value > 0) ? styles.cellYellow :
-                                        (value < 0) ? styles.cellRed :
-                                            styles.cellGreen;
+                                    return (value.value > 0) ? styles.cellColorBold('FFFFFF00') :
+                                        (value.value < 0) ? styles.cellColorBold('FFFF0000') :
+                                            styles.cellColorBold('FF00FF00');
 
                                 } if (row.background) {
-console.log(JSON.stringify(row.background));
-console.log(row.weeknumber);
-                                    // return cellColor("FF" + row.background[d].substring(1));
-                                    return styles.cell;
+                                    return styles.cellColor("FF" + row.background[value.weeknumber].substring(1));
                                 } else {
                                     return styles.cellBold;
                                 }
