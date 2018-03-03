@@ -381,6 +381,11 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                             "staff": "$do_docs._createdBy",
                             //"staff":"$_createdBy",
                             "items.unitReceiptNote.date": "$items.unitReceiptNote.date",
+                             "codesupplier": "$supplier.code",
+                            "satuan": "$items.unitReceiptNote.items.deliveredUom.unit",
+                            "matauang": "$items.unitReceiptNote.items.currency.code",
+                            "kdkategori": "$category.code",
+                            "kategori": "$category.name",
                         }
                     },
 

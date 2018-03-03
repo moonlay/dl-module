@@ -104,13 +104,13 @@ module.exports = class WeavingSalesContractManager extends BaseManager {
                 }
 
                 var documentNumbersData = {
-                    type: type,
-                    documentNumber: salesContract.salesContractNo,
-                    number: number,
-                    year: yearNow,
-                    description: NUMBER_DESCRIPTION
+                    "$set": {
+                        documentNumber: salesContract.salesContractNo,
+                        number: number,
+                        year: yearNow
+                    }
                 };
-                
+
                 var options = {
                     "upsert": true
                 };

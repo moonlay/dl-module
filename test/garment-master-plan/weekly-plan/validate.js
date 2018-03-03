@@ -125,7 +125,7 @@ it("#05. should error when create new data with invalid efficiency, operator and
             data.items[0].workingHours = 0;
             manager.create(data)
                 .then((id) => {
-                    done("should error when create new data with invalid month");
+                    done("should error when create new data with invalid efficiency, operator and workingHours");
                 })
                 .catch((e) => {
                     e.name.should.equal("ValidationError");

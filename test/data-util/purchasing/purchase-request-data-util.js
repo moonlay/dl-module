@@ -28,6 +28,7 @@ class PurchaseRequestDataUtil {
                     unit: unit,
                     categoryId: category._id,
                     category: category,
+                    internal: false,
 
                     isPosted: false,
                     remark: "Unit Test",
@@ -48,12 +49,24 @@ class PurchaseRequestDataUtil {
                 return Promise.resolve(data);
             });
     }
-    
+
     getNewTestData() {
         return helper
             .getManager(PurchaseRequestManager)
             .then((manager) => {
                 return this.getNewData().then((data) => {
+                    return manager.create(data)
+                        .then((id) => manager.getSingleById(id));
+                });
+            });
+    }
+
+    getNewTestData2() {
+        return helper
+            .getManager(PurchaseRequestManager)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    data.internal = true;
                     return manager.create(data)
                         .then((id) => manager.getSingleById(id));
                 });

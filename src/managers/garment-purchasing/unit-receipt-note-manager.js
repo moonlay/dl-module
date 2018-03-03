@@ -1156,6 +1156,120 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         });
     }
 
+     getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var now = new Date();
+            var deleted = {
+                _deleted: false
+            };
+  
+            var query = [deleted];
+
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
+
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "date": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "date": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
+
+            var match = { '$and': query };
+            
+            var DOColl = map.garmentPurchasing.collection.GarmentDeliveryOrder;
+            this.collection.aggregate(
+                [{
+                    $match: match
+                }, {
+                    $unwind: "$items"
+                },
+                {
+                    $lookup: {
+                        from: DOColl,
+                        foreignField: "no",
+                        localField: "deliveryOrderNo",
+                        as: "DO"
+                    },
+                },
+                {
+                    $project: {
+                        "NoBon": "$no",
+                        "TgBon": "$date",
+                        "Konf": "$unit.code",
+                        "NoSJ": "$deliveryOrderNo",
+                        "KdSpl": "$supplier.code",
+                        "NmSpl": "$supplier.name",
+                        "Lokasi": "$storageName",
+                        "PlanPO": "$items.purchaseRequestRefNo",
+                        "NoRO": "$items.roNo",
+                        "KdBrg": "$items.product.code",
+                        "NmBrg": "$items.remark",
+                        "QtyBon": "$items.deliveredQuantity",
+                        "SatBon": "$items.deliveredUom.unit",
+                        "Konversi": "$items.conversion",
+                        "SatKonv": "$items.uomConversion.unit",
+                        "TgIn":"$_createdDate",
+                        "UserIn":"$_createdBy",
+                        "TgEd":"$_updatedDate",
+                        "UserEd":"$_updatedBy",
+                        "DOs": "$DO"
+                    }
+                },
+                { $unwind: "$DOs" },
+                {
+                    $project: {
+                        "NoBon": "$NoBon", "TgBon": "$TgBon", "Konf": "$Konf","NoSJ": "$NoSJ", "KdSpl": "$KdSpl",
+                        "NmSpl": "$NmSpl", "Lokasi": "$Lokasi", "PlanPO": "$PlanPO", "NoRO": "$NoRO", "KdBrg": "$KdBrg",
+                        "NmBrg": "$NmBrg", "QtyBon": "$QtyBon","SatBon": "$SatBon","SatKonv": "$SatKonv", "Konversi": "$Konversi",
+                        "TgIn": "$TgIn", "UserIn": "$UserIn", "TgEd": "$TgEd", "UserEd": "$UserEd",
+                        "TgSJ": "$DOs.supplierDoDate", "TgDtg": "$DOs.date"
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            NoBon: "$NoBon", TgBon: "$TgBon", Konf: "$Konf", NoSJ: "$NoSJ", KdSpl: "$KdSpl",
+                            NmSpl: "$NmSpl", Lokasi: "$Lokasi", PlanPO: "$PlanPO", NoRO: "$NoRO", KdBrg: "$KdBrg",
+                            NmBrg: "$NmBrg", QtyBon: "$QtyBon", SatBon: "$SatBon", SatKonv: "$SatKonv", Konversi: "$Konversi",
+                            TgIn: "$TgIn", UserIn: "$UserIn", TgEd: "$TgEd", UserEd: "$UserEd",
+                            TgSJ: "$TgSJ", TgDtg: "$TgDtg"
+                        }
+                    }
+                }
+                ])
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    resolve(result);
+                });
+        });
+    }
+
     getUnitReceiptReportXls(dataReport, query) {
 
         return new Promise((resolve, reject) => {
@@ -1210,6 +1324,177 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             }
             else
                 xls.name = `Unit Receipt Report.xlsx`;
+
+            resolve(xls);
+        });
+    }
+
+    getUnitReceiptAllReport(query, user) {
+        return new Promise((resolve, reject) => {
+
+            var deletedQuery = { _deleted: false };
+
+            var date = new Date();
+            var dateString = moment(date).format('YYYY-MM-DD');
+            var dateNow = new Date(dateString);
+            var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            var dateQuery = {
+                "date": {
+                    "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
+                    "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
+                }
+            };
+
+            var noQuery = {};
+            if (query.no) {
+                noQuery = {
+                    "no": (query.no)
+                };
+            }
+
+            var purchaseRequestQuery = {};
+            if (query.pr) {
+                purchaseRequestQuery = {
+                    "items.purchaseRequestNo": (query.pr)
+                };
+            }
+
+            var purchaseRequestRefNoQuery = {};
+            if (query.purchaseRequestRefNo) {
+                purchaseRequestRefNoQuery = {
+                    "items.purchaseRequestRefNo": (query.purchaseRequestRefNo)
+                };
+            }
+
+            var roNoQuery = {};
+            if (query.roNo) {
+                roNoQuery = {
+                    "items.roNo": (query.roNo)
+                }
+            }
+
+            var deliveryorderNoQuery = {};
+            if (query.deliveryorderNo) {
+                deliveryorderNoQuery = {
+                    "deliveryOrderNo": (query.deliveryorderNo)
+                }
+            }
+
+            var unitQuery = {};
+            if (query.unit) {
+                unitQuery = {
+                    "unit.code": (query.unit)
+                };
+            }
+
+            var supplierQuery = {};
+            if (query.supplier) {
+                supplierQuery = {
+                    "supplier.code": (query.supplier)
+                };
+            }
+
+
+            var Query = { "$and": [dateQuery, deletedQuery, supplierQuery, purchaseRequestRefNoQuery, roNoQuery, deliveryorderNoQuery, unitQuery, purchaseRequestQuery, noQuery] };
+            this.collection
+                .aggregate([
+                    { "$unwind": "$items" }
+                    , { "$unwind": "$items.product" }
+                    , { "$match": Query }
+                    , {
+                        "$project": {
+                            "no": "$no",
+                            "date": 1,
+                            "unit": "$unit.name",
+                            "supplier": "$supplier.name",
+                            "deliveryorderNo": "$deliveryOrderNo",
+                            "purchaseRequestNo": "$items.purchaseRequestNo",
+                            "purchaseRequestRefNo": "$items.purchaseRequestRefNo",
+                            "roNo": "$items.roNo",
+                            "artikel": "$items.artikel",
+                            "productCode": "$items.product.code",
+                            "productName": "$items.product.name",
+                            "quantity": "$items.deliveredQuantity",
+                            "unitCode": "$items.deliveredUom.unit",
+                            "remark": "$items.remark",
+                            "createdBy": "$_createdBy",
+                        }
+                    },
+
+                    {
+                        "$sort": {
+                            "date": 1,
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    getUnitReceiptAllReportXls(dataReport, query) {
+
+        return new Promise((resolve, reject) => {
+            var xls = {};
+            xls.data = [];
+            xls.options = [];
+            xls.name = '';
+
+            var dateFormat = "DD/MM/YYYY";
+
+            for (var data of dataReport.data) {
+                var item = {};
+                item["No Bon Terima Unit"] = data.no;
+                item["Tanggal Bon Terima Unit"] = data.date ? moment(data.date).format(dateFormat) : '';
+                item["Unit"] = data.unit ? data.unit : '';
+                item["Supplier"] = data.supplier ? data.supplier : '';
+                item["Surat Jalan"] = data.deliveryorderNo ? data.deliveryorderNo : '';
+                item["No PR"] = data.purchaseRequestNo ? data.purchaseRequestNo : '';
+                item["No Ref PR"] = data.purchaseRequestRefNo ? data.purchaseRequestRefNo : '';
+                item["No RO"] = data.roNo ? data.roNo : '';
+                item["Artikel"] = data.artikel ? data.artikel : '';
+                item["Kode Barang"] = data.productCode ? data.productCode : '';
+                item["Nama Barang"] = data.productName ? data.productName : '';
+                item["Jumlah"] = data.quantity ? data.quantity : '';
+                item["Satuan"] = data.unitCode ? data.unitCode : '';
+                item["Keterangan"] = data.remark ? data.remark : '';
+                item["User"] = data.createdBy ? data.createdBy : '';
+                xls.data.push(item);
+
+            }
+
+            xls.options["No Bon Terima Unit"] = "string";
+            xls.options["Tanggal Bon Terima Unit"] = "string";
+            xls.options["Unit"] = "string";
+            xls.options["Supplier"] = "string";
+            xls.options["Surat Jalan"] = "string";
+            xls.options["No PR"] = "string";
+            xls.options["No Ref PR"] = "string";
+            xls.options["No RO"] = "string";
+            xls.options["Artikel"] = "string";
+            xls.options["Kode Barang"] = "string";
+            xls.options["Nama Barang"] = "string";
+            xls.options["Jumlah"] = "number";
+            xls.options["Satuan"] = "string";
+            xls.options["Keterangan"] = "string";
+            xls.options["User"] = "string";
+
+            if (query.dateFrom && query.dateTo) {
+                xls.name = `Unit Receipt Report All ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            }
+            else if (!query.dateFrom && query.dateTo) {
+                xls.name = `Unit Receipt Report All ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+            }
+            else if (query.dateFrom && !query.dateTo) {
+                xls.name = `Unit Receipt Report All ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+            }
+            else
+                xls.name = `Unit Receipt Report All.xlsx`;
 
             resolve(xls);
         });

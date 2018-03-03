@@ -38,6 +38,20 @@ it("#01. should error when create items with empty data", function (done) {
         });
 });
 
+it('#01.(02) should success when create new data', function (done) {
+    MachineType.getNewTestData2()
+        .then(data => {
+            validate(data);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
+
+
+// getNewTestData2
+
 it("#02. should error when create items with duplicate data", function (done) {
     MachineType.getNewData()
         .then((data) => {
