@@ -74,6 +74,37 @@ class MachineTypeDataUtil {
                 });
             });
     }
+
+    getNewTestData2() {
+        return helper
+            .getManager(machineType)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    data.code=generateCode();
+                    data.indicators =
+                    [{
+                        indicator: `Tekanan Press Mangle`,
+                        dataType: "number",
+                        defaultValue: 10,
+                        uom: "a",
+                    },
+                        {
+                            indicator: `Tekanan Press Mangl`,
+                            dataType: "string",
+                            defaultValue: "10",
+                            uom: "a",
+                        }, {
+                            indicator: `range`,
+                            dataType: "option",
+                            defaultValue: "1-10",
+                            uom: "a",
+                        }
+                    ];
+                    return manager.create(data)
+                        .then((id) => manager.getSingleById(id));
+                });
+            });
+    }
 }
 
 module.exports = new MachineTypeDataUtil();

@@ -30,6 +30,8 @@ const selectedFields = {
     "kanban.productionOrder.orderType.name": 1,
     "kanban.productionOrder.orderNo": 1,
     "badOutputReasons.precentage": 1,
+    "badOutputReasons.length": 1,
+    "badOutputReasons.action": 1,
     "badOutputReasons.description": 1,
     "badOutputReasons.badOutputReason.code": 1,
     "badOutputReasons.badOutputReason.reason": 1,
@@ -293,6 +295,7 @@ module.exports = class FactDailyOperationEtlManager extends BaseManager {
 
                         if (data.badOutputReasons && data.badOutputReasons.length > 0) {
                             var sqlQueryReason = 'INSERT INTO [DL_Fact_Daily_Operation_Reason_Temp](dailyOperationCode, badOutputReasonCode, reason, length, description, action) ';
+
                             var countReason = 1;
 
                             for (var item of data.badOutputReasons) {

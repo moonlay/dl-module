@@ -180,6 +180,7 @@ it("#08. should success when get report with parameter no", function (done) {
 it('#09. should success when generate data to Excel Report with date', function (done) {
     var startdate = null;
     var enddate   = null;
+    var offset=7;
     customsManager.getAllData(startdate, enddate)
     .then(result => {
         result.should.instanceof(Array);

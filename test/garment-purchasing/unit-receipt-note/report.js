@@ -133,6 +133,56 @@ it("#06. should success when get report with no parameter and get excel", functi
         });
 });
 
+it('#07. should success when generate data to Excel Report with date', function (done) {
+    var startdate = null;
+    var enddate   = null;
+    var offset=7;
+    unitReceiptNoteManager.getAllData(startdate, enddate, offset)
+    .then(result => {
+        result.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+});
+
+var resultForExcelTest = {};
+it('#08. should success when create report', function (done) {
+    var info = {};
+       
+    unitReceiptNoteManager.getUnitReceiptAllReport(info)
+        .then(result => {
+             result.should.instanceof(Object);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it("#09. should success when get report with no parameter and get excel", function (done) {
+    unitReceiptNoteManager.getUnitReceiptAllReport({})
+        .then((data) => {
+            data.should.instanceof(Array);
+            var result = {
+                data : data
+            };
+            unitReceiptNoteManager.getUnitReceiptAllReportXls(result, {})
+                .then(xls => {
+                    xls.should.instanceof(Object);
+                    xls.should.have.property('data');
+                    xls.should.have.property('options');
+                    xls.should.have.property('name');
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 
 
 

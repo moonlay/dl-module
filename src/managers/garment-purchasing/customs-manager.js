@@ -12,6 +12,7 @@ var DeliveryOrderManager = require("./delivery-order-manager");
 var generateCode = require('../../utils/code-generator');
 var i18n = require("dl-i18n");
 var moment = require('moment');
+var assert = require('assert');
 
 module.exports = class CustomsManager extends BaseManager {
     constructor(db, user) {
@@ -483,46 +484,92 @@ module.exports = class CustomsManager extends BaseManager {
         });
     }
 
-getAllData(filter) {
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                return new Promise((resolve, reject) => {
-                    var query = Object.assign({});
-                    query = Object.assign(query, filter);
-                    query = Object.assign(query, {
-                        _deleted: false
-                    });
+   getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var now = new Date();
+            var deleted = {
+                _deleted: false
+            };
+            var query = [deleted];
 
-                    var _select = ["no",
-                        "customsDate",
-                        "validateDate",
-                        "customsType",
-                        "customsOrigin",
-                        "supplier",
-                        "amountOfPackaging",
-                        "packaging",
-                        "bruto",
-                        "netto",
-                        "currency",
-                        "deliveryOrders.no",
-                        "deliveryOrders.date",
-                        "deliveryOrders.supplierDoDate",
-                        "deliveryOrders.items",
-                        "_createdBy",
-                        "_createdDate",
-                        "_updatedBy",
-                        "_updatedDate"  
-                        ];
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
 
-                    this.collection.where(query).select(_select).execute()
-                        .then((results) => {
-                            resolve(results.data);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
+            if (startdate && enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDate = {
+                    "customsDate": {
+                        $gte: validStartDate,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDate);
+            }
+            else if (!startdate && enddate) {
+                validEndDate.setHours(validEndDate.getHours() - offset);
+                var filterDateTo = {
+                    "customsDate": {
+                        $gte: now,
+                        $lte: validEndDate
+                    }
+                };
+                query.push(filterDateTo);
+            }
+            else if (startdate && !enddate) {
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                var filterDateFrom = {
+                    "customsDate": {
+                        $gte: validStartDate,
+                        $lte: now
+                    }
+                };
+                query.push(filterDateFrom);
+            }
+
+            var match = { '$and': query };
+
+            this.collection.aggregate([
+                { $match: match },
+                { $unwind: "$deliveryOrders" },
+                {
+                    $project: {
+                        "NoBC": "$no",
+                        "TgBC": "$customsDate",
+                        "TgValid": "$validateDate",
+                        "TipeBC": "$customsType",
+                        "KdSpl": "$supplier.code",
+                        "NmSpl" : "$supplier.name",
+                        "NoSJ" : "$deliveryOrders.no",
+                        "TgSJ" : "$deliveryOrders.supplierDoDate",
+                        "TgDtg" : "$deliveryOrders.date",                
+                        "QtyBC": "$amountOfPackaging",
+                        "SatBC": "$packaging",
+                        "Brutto": "$bruto",
+                        "Netto": "$netto",
+                        "TgIn": "$_createdDate",
+                        "UserIn": "$_createdBy",
+                        "TgEd": "$_updatedDate",
+                        "UserEd": "$_updatedBy",
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            "NoBC": "$NoBC", "TgBC": "$TgBC", "TgValid": "$TgValid", "TipeBC": "$TipeBC",
+                            "KdSpl": "$KdSpl", "NmSpl" : "$NmSpl", "NoSJ" : "$NoSJ", "TgSJ" : "$TgSJ", "TgDtg" : "$TgDtg",      
+                            "QtyBC": "$QtyBC", "SatBC": "$SatBC", "Brutto": "$Brutto", "Netto": "$Netto",
+                            "TgIn": "$TgIn", "UserIn": "$UserIn", "TgEd": "$TgEd", "UserEd": "$UserEd"
+                        }
+                    }
+                }
+            ])
+                .toArray(function (err, result) {
+                    assert.equal(err, null);
+                    console.log(result);
+                    resolve(result);
                 });
-            });
+        });
     }
 
     getCustomsReportXls(dataReport, query) {

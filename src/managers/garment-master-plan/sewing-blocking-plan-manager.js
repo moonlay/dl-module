@@ -221,8 +221,9 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                     valid.bookingItems = _bookingOrder.items;
                 }
                 var details =[];
+                var index=0;
                 for(var detail of valid.details){
-                    detail.code = !detail.code ? generateCode() : detail.code;
+                    detail.code = !detail.code ? generateCode() + index.toString()  : detail.code;
                     var unitId = ObjectId.isValid(detail.unitId) && typeof(detail.unitId) === 'object' ? detail.unitId.toString() : detail.unitId;
                     var unitSelected = _units.find(select => select._id.toString() === unitId);
                     if(unitSelected){
@@ -259,6 +260,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                     detail._createdDate = valid._createdDate;
                     detail.stamp(this.user.username, "manager");
                     details.push(detail);
+                    index++;
                 }
                 valid.details = details;
                 if(_buyer){
@@ -516,55 +518,56 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
         .then(() => 
             Promise.resolve(masterPlanId));
     }
+    
 
-    getPreview(month, year){
-        return new Promise((resolve, reject) => {
-            var deletedQuery = {
-                _deleted: false
-            };
-            var stringDate = month > 10 ? `${year}-${month - 1}-01` : `${year}-0${month - 1}-01`;
-            var thisDate = new Date(stringDate);
-            var nextDate = new Date(thisDate.setMonth(thisDate.getMonth() + 6));
-            var nextMonth = nextDate.getMonth();
-            var nextYear = nextDate.getFullYear();
-            var dateQuery = {
-                "$and" : [
-                    {"details.week.month" : {"$gte" : (month - 1)}},
-                    {"details.weeklyPlanYear" : {"$gte" : year}},
-                    {"details.week.month" : {"$lte" : nextMonth}},
-                    {"details.weeklyPlanYear" : {"$lte" : nextYear}}
-                ]
-            };
-            this.collection
-            .aggregate([
-                { "$unwind": "$details" },
-                { "$match": dateQuery }, 
-                {
-                    "$project": {
-                        "month": "$details.week.month",
-                        "week": "$details.week.weekNumber",
-                        "year": "$details.weeklyPlanYear",
-                        "unitCode": "$details.unit.code",
-                        "sh":"$details.shSewing"
-                    }
-                },
-                {
-                    "$group": {
-                        "_id": { "month": "$month", "week": "$week", "year": "$year", "unitCode": "$unitCode" },
-                        "sh": { "$sum": "$sh" }
-                    }
-                }
+    // getPreview(month, year){
+    //     return new Promise((resolve, reject) => {
+    //         var deletedQuery = {
+    //             _deleted: false
+    //         };
+    //         var stringDate = month > 10 ? `${year}-${month - 1}-01` : `${year}-0${month - 1}-01`;
+    //         var thisDate = new Date(stringDate);
+    //         var nextDate = new Date(thisDate.setMonth(thisDate.getMonth() + 6));
+    //         var nextMonth = nextDate.getMonth();
+    //         var nextYear = nextDate.getFullYear();
+    //         var dateQuery = {
+    //             "$and" : [
+    //                 {"details.week.month" : {"$gte" : (month - 1)}},
+    //                 {"details.weeklyPlanYear" : {"$gte" : year}},
+    //                 {"details.week.month" : {"$lte" : nextMonth}},
+    //                 {"details.weeklyPlanYear" : {"$lte" : nextYear}}
+    //             ]
+    //         };
+    //         this.collection
+    //         .aggregate([
+    //             { "$unwind": "$details" },
+    //             { "$match": dateQuery }, 
+    //             {
+    //                 "$project": {
+    //                     "month": "$details.week.month",
+    //                     "week": "$details.week.weekNumber",
+    //                     "year": "$details.weeklyPlanYear",
+    //                     "unitCode": "$details.unit.code",
+    //                     "sh":"$details.shSewing"
+    //                 }
+    //             },
+    //             {
+    //                 "$group": {
+    //                     "_id": { "month": "$month", "week": "$week", "year": "$year", "unitCode": "$unitCode" },
+    //                     "sh": { "$sum": "$sh" }
+    //                 }
+    //             }
 
-            ])
-            .toArray()
-            .then(results => {
-                resolve(results);
-            })
-            .catch(e => {
-                reject(e);
-            });
-        });
-    }
+    //         ])
+    //         .toArray()
+    //         .then(results => {
+    //             resolve(results);
+    //         })
+    //         .catch(e => {
+    //             reject(e);
+    //         });
+    //     });
+    // }
 
     _createIndexes() {
         var dateIndex = {
@@ -582,5 +585,357 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
+    }
+    getReport(query)
+    {
+        return new Promise((resolve, reject) => {
+
+            var deletedQuery = { deleted: false };
+           
+            var unitQuery = {};
+            if (query.unit !="") {
+                unitQuery = {
+                    "unit" : query.unit
+                };
+            }
+        
+
+            var yearQuery = {};
+            if (query.year) {
+                yearQuery = {
+                    "year": parseInt(query.year)
+                };
+            }
+ 
+            var weeklyPlans = map.garmentMasterPlan.collection.WeeklyPlan;
+       
+           var Query = { "$and": [ yearQuery, deletedQuery,unitQuery] };
+         
+           
+        
+            this.collection
+                .aggregate( [
+                    { "$unwind": "$details"},
+                    {"$lookup":{from :weeklyPlans,localField:"details.weeklyPlanId",foreignField:"_id",as :"weeklyPlans"}},
+                    { "$unwind": {path: "$weeklyPlans", preserveNullAndEmptyArrays: true} },
+                   // { "$match": Query},    
+                    {  
+                        "$project": {  
+                        "buyer": { $concat :["$garmentBuyerName","-","$details.masterPlanComodity.name"]},  
+                        "year":"$weeklyPlans.year",  
+                        "weekSewingBlocking":"$details.week.weekNumber",  
+                        "unit" :"$weeklyPlans.unit.code",  
+                        "SMVSewing":"$details.shSewing",  
+                        "weekNumber":"$weeklyPlans.items.weekNumber",  
+                        "bookigQty":"$details.quantity",  
+                        "isConfirmed":"$details.isConfirmed", 
+                        "efficiency":"$weeklyPlans.items.efficiency",  
+                        "workingHoours":"$weeklyPlans.items.workingHours",  
+                        "AHTotal":"$weeklyPlans.items.ahTotal",  
+                        "EHTotal":"$weeklyPlans.items.ehTotal",  
+                        "usedTotal":"$weeklyPlans.items.usedEH",  
+                        "remainingEH":"$weeklyPlans.items.remainingEH" , 
+                        "operator":"$weeklyPlans.items.operator" ,
+                        "deleted":"$_deleted"
+                        }
+                    },
+                    { "$match": Query },    
+                  
+                        {  
+                        "$group":{ _id: {"buyer" :"$buyer",  
+                        "year":"$year",  
+                        "weekSewingBlocking":"$weekSewingBlocking",  
+                        "unit" :"$unit",  
+                        "operator":"$operator", 
+                        "SMVSewing":"$SMVSewing", 
+                        "isConfirmed":"$isConfirmed", 
+                        "weekNumber":"$weekNumber",  
+                        "bookingQty":"$bookigQty" ,  
+                        "efficiency":"$efficiency",  
+                        "workingHoours":"$workingHoours",  
+                        "AHTotal":"$AHTotal",  
+                        "EHTotal":"$EHTotal",  
+                        "usedTotal":"$usedTotal",  
+                        "remainingEH":"$remainingEH"},  
+                        "BookingQTyTot":{"$sum":"$bookigQty"},  
+                        "SMVTot":{"$sum":"$SMVSewing"} , 
+                         
+                        count: { $sum: 1 }  
+                         
+                        }  
+                        },  
+                        
+                        {  
+                        "$sort": {  
+                        "_id.unit": 1,  
+                        "_id.buyer":1
+                        }  
+                        }  
+                        ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    getAcceptedOrderMonitoring(query){
+        return new Promise((resolve, reject) => {
+            var deletedQuery = { _deleted: false };
+            var yearQuery = {};
+            if (query.year) {
+                yearQuery = {
+                    "details.weeklyPlanYear": parseInt(query.year)
+                };
+            }
+            var unitQuery = {};
+            if (query.unit !='') {
+                unitQuery = {
+                    "details.unit.code": query.unit
+                };
+            }
+
+            var Query = { "$and": [ deletedQuery, yearQuery, unitQuery] };
+            this.collection
+                .aggregate([
+                    { "$unwind": "$details" },
+                    { "$match": Query },
+                    { "$lookup":{from :'weekly-plans',localField:'details.weeklyPlanId',foreignField:'_id',as:'weeklyPlans'}},
+                    { "$unwind": {path:"$weeklyPlans", preserveNullAndEmptyArrays: true} },
+                    { "$project": {
+                        'buyer':'$garmentBuyerCode',
+                        'unitcode':'$details.unit.code',
+                        'week':'$details.week.weekNumber',
+                        'qty':'$details.quantity',
+                        'unit' :'$weeklyPlans.unit', 
+                        'items':'$weeklyPlans.items',
+                        }
+                    },
+                    {"$group": {
+                        '_id':{'week':'$week','unitcode':'$unitcode','unit':'$unit','items':'$items'},
+                        'qty':{'$sum':'$qty'},
+                        }
+                    },
+                    {
+                        "$sort": {
+
+                            "_id.unitcode": 1,
+                            "_id.week":1,
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    getAcceptedOrderMonitoring(query){
+        return new Promise((resolve, reject) => {
+            var deletedQuery = { _deleted: false };
+            var yearQuery = {};
+            if (query.year) {
+                yearQuery = {
+                    "details.weeklyPlanYear": parseInt(query.year)
+                };
+            }
+            var unitQuery = {};
+            if (query.unit !='') {
+                unitQuery = {
+                    "details.unit.code": query.unit
+                };
+            }
+
+            var Query = { "$and": [ deletedQuery, yearQuery, unitQuery] };
+            this.collection
+                .aggregate([
+                    { "$unwind": "$details" },
+                    { "$match": Query },
+                    { "$lookup":{from :'weekly-plans',localField:'details.weeklyPlanId',foreignField:'_id',as:'weeklyPlans'}},
+                    { "$unwind": {path:"$weeklyPlans", preserveNullAndEmptyArrays: true} },
+                    { "$project": {
+                        'unitcode':'$details.unit.code',
+                        'week':'$details.week.weekNumber',
+                        'qty':'$details.quantity',
+                        'unit' :'$weeklyPlans.unit', 
+                        'items':'$weeklyPlans.items',
+                        }
+                    },
+                    {"$group": {
+                        '_id':{'week':'$week','unitcode':'$unitcode','unit':'$unit','items':'$items'},
+                        'qty':{'$sum':'$qty'},
+                        }
+                    },
+                    {
+                        "$sort": {
+
+                            "_id.unitcode": 1,
+                            "_id.week":1,
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    getAcceptedOrderMonitoringXls(dataReport, query) {
+        return new Promise((resolve, reject) => {
+            var xls = {};
+            xls.data = [];
+            xls.options = [];
+            xls.name = '';
+            
+            var yr=parseInt(query.year);
+            var units = [];
+            var total = [];
+            var qty = [];
+            var weeks = [];
+
+            var deletedQuery = { _deleted: false };
+            var yearQuery = {};
+            if (query.year) {
+                yearQuery = {
+                    "year": parseInt(query.year)
+                };
+            }
+            var unitQuery = {};
+            if (query.unit !='') {
+                unitQuery = {
+                    "unit.code": query.unit
+                };
+            }
+            
+            var Query = { "$and": [ deletedQuery, yearQuery, unitQuery] };
+            var getUnit=   this.db.use(map.garmentMasterPlan.collection.WeeklyPlan)
+            .aggregate([
+                { "$match": Query },
+                { "$project": {
+                    'unit' :'$unit.code', 
+                    }
+                },
+                {"$group": {
+                    '_id':{'unit':'$unit',},
+                    }
+                },
+                {
+                    "$sort": {
+                        "_id.unit": 1,
+                    }
+                }
+            ])
+            .toArray()
+            .then(results=>{
+                
+                for(var x=0; x < dataReport.data.length; x++){
+                    var length_week= dataReport.data[x]._id.items.length;
+                    break;
+                  }
+                if(query.unit==''){
+                    for(var x=0; x < results.length; x++){
+                      if(units.length<=0){
+                       units.push(results[x]._id.unit);
+                      }
+                      var u=units.find(i=> i==results[x]._id.unit);
+                      if(!u){
+                       units.push(results[x]._id.unit);
+                      }
+                    }
+                }
+                else if(query.unit!=''){
+                  units.push(query.unit);
+                }
+
+                var totalqty=[];
+                for(var code of units){
+                    for(var x=0; x < dataReport.data.length; x++){
+                    if(dataReport.data[x]._id.unitcode==code){
+                        if(!totalqty[code]){
+                        totalqty[code]=dataReport.data[x].qty;
+                        } else {
+                        totalqty[code]+=dataReport.data[x].qty; 
+                        }
+                    } 
+                    }
+                    if(!totalqty[code]){
+                    totalqty[code]='-';
+                    }
+                }
+                total = Object.keys(totalqty).map(function(key) {
+                    return totalqty[key];
+                });
+                
+                for(var x=0;x<length_week;x++){
+                    var obj=[];
+                    var week={
+                      weeknumber:'W'+(x+1)
+                    }
+                    weeks.push(week);
+                    for(var y of units){
+                      var unit={};
+                      var grup= dataReport.data.find(o=>o._id.unitcode==y && o._id.week == (x+1));
+                      if(grup){
+                        unit={
+                          code:y,
+                          week:x+1,
+                          quantity:grup.qty,
+                        }
+                      } else {
+                        unit={
+                          code:y,
+                          week:x+1,
+                          quantity:'-'
+                        }
+                      }
+                      
+                      obj.push(unit);
+        
+                    }
+                    qty.push(obj);
+                }
+                
+                x=0;
+                for (var week of weeks) {
+                    var item = {};
+                    item["Unit"] = week.weeknumber;
+                    y=0;
+                    for (unit of units) {
+                        item[unit] = qty[x][y].quantity;
+                        y++;
+                    }
+                    xls.data.push(item);
+                    x++;
+                } 
+                var i =0; 
+                var item_total = {};
+                for(var unit of units){    
+                    item_total[unit] = total[i];
+                    i++;
+                }
+                item_total["Unit"] = 'TOTAL';
+                xls.data.push(item_total);
+    
+                xls.options["Unit"] = "string";
+                for (unit of units) {
+                    xls.options[unit] = "string";
+                }
+                
+                xls.name = `Monitoring Order Diterima dan Booking Report ` + (query.unit ? `${query.unit}-` : ``) + `${query.year}.xlsx`;
+                resolve(xls);
+                
+            });
+        });
     }
 }
