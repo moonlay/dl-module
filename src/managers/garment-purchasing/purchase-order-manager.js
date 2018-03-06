@@ -824,8 +824,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             });
         }
         if (info.purchaseOrderExternalNo && info.purchaseOrderExternalNo !== "") {
+            var regexPO = new RegExp(info.purchaseOrderExternalNo, "i");
             Object.assign(query, {
-                "items.purchaseOrderExternal.no": info.purchaseOrderExternalNo
+                // "items.purchaseOrderExternal.no": info.purchaseOrderExternalNo
+                "items.purchaseOrderExternal.no": {
+                    '$regex': regexPO
+                }
             });
         }
         if (info.supplierId && info.supplierId !== "") {
@@ -846,9 +850,18 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "items.refNo": info.prRefNo
             });
         }
-        if (info.deliveryOrderNo && info.deliveryOrderNo !== "") {
+        if (info.roNo && info.roNo !== "") {
             Object.assign(query, {
-                "items.fulfillments.deliveryOrderNo" : info.deliveryOrderNo
+                roNo: info.roNo
+            });
+        }
+        if (info.deliveryOrderNo && info.deliveryOrderNo !== "") {
+            var regexDO = new RegExp(info.deliveryOrderNo, "i");
+            Object.assign(query, {
+                // "items.fulfillments.deliveryOrderNo" : info.deliveryOrderNo
+                "items.fulfillments.deliveryOrderNo": {
+                    '$regex': regexDO
+                }
             })
         }
 
@@ -940,11 +953,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "unit.division.name": 1,
                                         "refNo": "$items.refNo",
                                         "roNo": "$roNo",
+                                        "buyer.code": "$buyer.code",
+                                        "buyer.name": "$buyer.name",
                                         "purchaseRequest.shipmentDate": "$purchaseRequest.shipmentDate",
                                         "artikel": "$artikel",
                                         "product.name": "$items.product.name",
                                         "product.code": "$items.product.code",
-                                        "product.description": "$items.product.description",
+                                        "product.description": "$items.remark",
                                         "category": "$items.category.name",
                                         "defaultQuantity": "$items.defaultQuantity",
                                         "defaultUom": "$items.defaultUom.unit",
@@ -960,6 +975,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "poeNo": "$items.purchaseOrderExternal.no",
                                         "poeDate": "$items.purchaseOrderExternal.date",
                                         "poeExpectedDeliveryDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
+                                        "usePPN": "$items.purchaseOrderExternal.useIncomeTax",
+                                        "usePPH": "$items.purchaseOrderExternal.useVat",
+                                        "vatRate": "$items.purchaseOrderExternal.vatRate",
                                         "status": 1,
                                         "fulfillments": "$items.fulfillments",
                                         "fulfillmentsTotal": "$items.fulfillments.deliveryOrderDeliveredQuantity",
@@ -978,6 +996,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "unit.division.name": 1,
                                         "refNo": 1,
                                         "roNo": 1,
+                                        "buyer.code": 1,
+                                        "buyer.name": 1,
                                         "purchaseRequest.shipmentDate": 1,
                                         "artikel": 1,
                                         "product.name": 1,
@@ -998,6 +1018,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "poeNo": 1,
                                         "poeDate": 1,
                                         "poeExpectedDeliveryDate": 1,
+                                        "usePPN": 1,
+                                        "usePPH": 1,
+                                        "vatRate": 1,
                                         "status": 1,
                                         "fulfillment": "$fulfillments",
                                         "fulfillmentsTotal": 1,
@@ -1005,6 +1028,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "remark": 1
                                     }
                                 },
+                                 { $sort : { "refNo" : 1 } }
                             ])
                             .toArray()
                     );
@@ -1026,11 +1050,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "unit.division.name": 1,
                                     "refNo": "$items.refNo",
                                     "roNo": "$roNo",
+                                    "buyer.code": "$buyer.code",
+                                    "buyer.name": "$buyer.name",
                                     "purchaseRequest.shipmentDate": "$purchaseRequest.shipmentDate",
                                     "artikel": "$artikel",
                                     "product.name": "$items.product.name",
                                     "product.code": "$items.product.code",
-                                    "product.description": "$items.product.description",
+                                    "product.description": "$items.remark",
                                     "category": "$items.category.name",
                                     "defaultQuantity": "$items.defaultQuantity",
                                     "defaultUom": "$items.defaultUom.unit",
@@ -1046,6 +1072,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "poeNo": "$items.purchaseOrderExternal.no",
                                     "poeDate": "$items.purchaseOrderExternal.date",
                                     "poeExpectedDeliveryDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
+                                    "usePPN": "$items.purchaseOrderExternal.useIncomeTax",
+                                    "usePPH": "$items.purchaseOrderExternal.useVat",
+                                    "vatRate": "$items.purchaseOrderExternal.vatRate",
                                     "status": 1,
                                     "fulfillments": "$items.fulfillments",
                                     "fulfillmentsTotal": "$items.fulfillments.deliveryOrderDeliveredQuantity",
@@ -1064,6 +1093,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "unit.division.name": 1,
                                     "refNo": 1,
                                     "roNo": 1,
+                                    "buyer.code": 1,
+                                    "buyer.name": 1,
                                     "purchaseRequest.shipmentDate": 1,
                                     "artikel": 1,
                                     "product.name": 1,
@@ -1084,6 +1115,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "poeNo": 1,
                                     "poeDate": 1,
                                     "poeExpectedDeliveryDate": 1,
+                                    "usePPN": 1,
+                                    "usePPH": 1,
+                                    "vatRate": 1,
                                     "status": 1,
                                     "fulfillment": "$fulfillments",
                                     "fulfillmentsTotal": 1,
@@ -1091,6 +1125,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "remark": 1
                                 }
                             },
+                            { $sort : { "refNo" : 1 } },
                             { $skip: page * size },
                             { $limit: size }
                         ])
@@ -1166,6 +1201,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         division: data.unit.division.name,
                         refNo: data.refNo,
                         roNo: data.roNo,
+                        buyerCode: data.buyer.code,
+                        buyerName: data.buyer.name,                        
                         shipmentDate: data.purchaseRequest.shipmentDate ? moment(new Date(data.purchaseRequest.shipmentDate)).add(offset, 'h').format(dateFormat): "-",
                         artikel: data.artikel,
                         category: data.category,
@@ -1186,6 +1223,11 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         poExtNo: data.poeNo,
                         poExtDate: data.poeDate ? moment(new Date(data.poeDate)).add(offset, 'h').format(dateFormat) : "-",
                         poExtExpectedDeliveryDate: data.poeExpectedDeliveryDate ? moment(new Date(data.poeExpectedDeliveryDate)).add(offset, 'h').format(dateFormat) : "-",
+                        
+                        poExtPPN: data.usePPN ? "Ya" : "Tidak",
+                        poExtPPH: data.usePPH ? "Ya" : "Tidak",
+                        poExtVat: data.vatRate ? data.vatRate : "-",
+
                         dealQuantity: data.dealQuantity ? data.dealQuantity : 0,
                         currency: data.currency,
                         deliveryOrderNo: data.fulfillment ? data.fulfillment.deliveryOrderNo ? data.fulfillment.deliveryOrderNo : "-" : "-",
@@ -1256,6 +1298,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "Divisi": data.division,
                 "No Ref Purchase Request": data.refNo,
                 "No RO": data.roNo,
+                "Buyer": data.buyerCode,
+                "Nama Buyer": data.buyerName,
                 "Shipment Garment": data.shipmentDate,
                 "Artikel": data.artikel,
                 "Kategori": data.category,
@@ -1276,6 +1320,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "No PO Eksternal": data.poExtNo,
                 "Tanggal PO Eksternal": data.poExtDate,
                 "Tanggal Target Datang": data.poExtExpectedDeliveryDate,
+                "Dikenakan PPN": data.poExtPPN,
+                "Dikenakan PPH": data.poExtPPH,
+                "PPH": data.poExtVat,
                 "No Surat Jalan": data.deliveryOrderNo,
                 "Dikenakan Bea Cukai": data.deliveryOrderUseCustoms ? "Ya" : "Tidak",
                 "Tanggal Surat Jalan": data.supplierDoDate,
@@ -1341,6 +1388,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "No PO Eksternal": "string",
             "Tanggal PO Eksternal": "string",
             "Tanggal Target Datang": "string",
+            "Dikenakan PPN": "string",
+            "Dikenakan PPH": "string",
+            "PPH": "string",
             "No Surat Jalan": "string",
             "Dikenakan Bea Cukai": "string",
             "Tanggal Surat Jalan": "string",
@@ -1421,8 +1471,12 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             });
         }
         if (info.purchaseOrderExternalNo && info.purchaseOrderExternalNo !== "") {
+            var regexPOExt = new RegExp(info.purchaseOrderExternalNo, "i");
             Object.assign(query, {
-                "items.purchaseOrderExternal.no": info.purchaseOrderExternalNo
+                // "items.purchaseOrderExternal.no": info.purchaseOrderExternalNo
+                "items.purchaseOrderExternal.no": {
+                    '$regex': regexPOExt
+                }
             });
         }
         if (info.supplierId && info.supplierId !== "") {
@@ -1443,9 +1497,18 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "items.refNo": info.prRefNo
             });
         }
-        if (info.deliveryOrderNo && info.deliveryOrderNo !== "") {
+        if (info.roNo && info.roNo !== "") {
             Object.assign(query, {
-                "items.fulfillments.deliveryOrderNo" : info.deliveryOrderNo
+                "roNo": info.roNo
+            });
+        }
+        if (info.deliveryOrderNo && info.deliveryOrderNo !== "") {
+            var regexSJ = new RegExp(info.deliveryOrderNo, "i");
+            Object.assign(query, {
+                // "items.fulfillments.deliveryOrderNo" : info.deliveryOrderNo
+                "items.fulfillments.deliveryOrderNo": {
+                    '$regex': regexSJ
+                }
             })
         }
 
@@ -1537,11 +1600,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "unit.division.name": 1,
                                         "refNo": "$items.refNo",
                                         "roNo": "$roNo",
+                                        "buyer.code": "$buyer.code",
+                                        "buyer.name": "$buyer.name",
                                         "purchaseRequest.shipmentDate": "$purchaseRequest.shipmentDate",
                                         "artikel": "$artikel",
                                         "product.name": "$items.product.name",
                                         "product.code": "$items.product.code",
-                                        "product.description": "$items.product.description",
+                                        "product.description": "$items.remark",
                                         "category": "$items.category.name",
                                         "defaultQuantity": "$items.defaultQuantity",
                                         "defaultUom": "$items.defaultUom.unit",
@@ -1557,6 +1622,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "poeNo": "$items.purchaseOrderExternal.no",
                                         "poeDate": "$items.purchaseOrderExternal.date",
                                         "poeExpectedDeliveryDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
+                                        "usePPN": "$items.purchaseOrderExternal.useIncomeTax",
+                                        "usePPH": "$items.purchaseOrderExternal.useVat",
+                                        "vatRate": "$items.purchaseOrderExternal.vatRate",
                                         "status": 1,
                                         "fulfillments": "$items.fulfillments",
                                         "fulfillmentsTotal": "$items.fulfillments.deliveryOrderDeliveredQuantity",
@@ -1576,6 +1644,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "unit.division.name": 1,
                                         "refNo": 1,
                                         "roNo": 1,
+                                        "buyer.code": 1,
+                                        "buyer.name": 1,
                                         "purchaseRequest.shipmentDate": 1,
                                         "artikel": 1,
                                         "product.name": 1,
@@ -1596,6 +1666,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "poeNo": 1,
                                         "poeDate": 1,
                                         "poeExpectedDeliveryDate": 1,
+                                        "usePPN": 1,
+                                        "usePPH": 1,
+                                        "vatRate": 1,
                                         "status": 1,
                                         "fulfillment": "$fulfillments",
                                         "fulfillmentsTotal": 1,
@@ -1604,6 +1677,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                         "_createdBy": 1
                                     }
                                 },
+                                { $sort : { "refNo" : 1 } }
                             ])
                             .toArray()
                     );
@@ -1625,11 +1699,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "unit.division.name": 1,
                                     "refNo": "$items.refNo",
                                     "roNo": "$roNo",
+                                    "buyer.code": "$buyer.code",
+                                    "buyer.name": "$buyer.name",
                                     "purchaseRequest.shipmentDate": "$purchaseRequest.shipmentDate",
                                     "artikel": "$artikel",
                                     "product.name": "$items.product.name",
                                     "product.code": "$items.product.code",
-                                    "product.description": "$items.product.description",
+                                    "product.description": "$items.remark",
                                     "category": "$items.category.name",
                                     "defaultQuantity": "$items.defaultQuantity",
                                     "defaultUom": "$items.defaultUom.unit",
@@ -1645,6 +1721,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "poeNo": "$items.purchaseOrderExternal.no",
                                     "poeDate": "$items.purchaseOrderExternal.date",
                                     "poeExpectedDeliveryDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
+                                    "usePPN": "$items.purchaseOrderExternal.useIncomeTax",
+                                    "usePPH": "$items.purchaseOrderExternal.useVat",
+                                    "vatRate": "$items.purchaseOrderExternal.vatRate",
                                     "status": 1,
                                     "fulfillments": "$items.fulfillments",
                                     "fulfillmentsTotal": "$items.fulfillments.deliveryOrderDeliveredQuantity",
@@ -1664,6 +1743,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "unit.division.name": 1,
                                     "refNo": 1,
                                     "roNo": 1,
+                                    "buyer.code": 1,
+                                    "buyer.name": 1,
                                     "purchaseRequest.shipmentDate": 1,
                                     "artikel": 1,
                                     "product.name": 1,
@@ -1684,6 +1765,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "poeNo": 1,
                                     "poeDate": 1,
                                     "poeExpectedDeliveryDate": 1,
+                                    "usePPN": 1,
+                                    "usePPH": 1,
+                                    "vatRate": 1,
                                     "status": 1,
                                     "fulfillment": "$fulfillments",
                                     "fulfillmentsTotal": 1,
@@ -1692,6 +1776,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     "_createdBy": 1
                                 }
                             },
+                            { $sort : { "refNo" : 1 } },
                             { $skip: page * size },
                             { $limit: size }
                         ])
@@ -1767,8 +1852,11 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         division: data.unit.division.name,
                         refNo: data.refNo,
                         roNo: data.roNo,
+                        buyerCode: data.buyer.code,
+                        buyerName: data.buyer.name,
                         shipmentDate: data.purchaseRequest.shipmentDate ? moment(new Date(data.purchaseRequest.shipmentDate)).add(offset, 'h').format(dateFormat): "-",
                         artikel: data.artikel,
+                        planpo: data.planpo,
                         category: data.category,
                         productName: data.product.name,
                         productCode: data.product.code,
@@ -1787,6 +1875,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         poExtNo: data.poeNo,
                         poExtDate: data.poeDate ? moment(new Date(data.poeDate)).add(offset, 'h').format(dateFormat) : "-",
                         poExtExpectedDeliveryDate: data.poeExpectedDeliveryDate ? moment(new Date(data.poeExpectedDeliveryDate)).add(offset, 'h').format(dateFormat) : "-",
+                        poExtPPN: data.usePPN ? "Ya" : "Tidak",
+                        poExtPPH: data.usePPH ? "Ya" : "Tidak",
+                        poExtVat: data.vatRate ? data.vatRate : "-",
                         dealQuantity: data.dealQuantity ? data.dealQuantity : 0,
                         currency: data.currency,
                         deliveryOrderNo: data.fulfillment ? data.fulfillment.deliveryOrderNo ? data.fulfillment.deliveryOrderNo : "-" : "-",
@@ -1858,6 +1949,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "Divisi": data.division,
                 "No Ref Purchase Request": data.refNo,
                 "No RO": data.roNo,
+                "Buyer": data.buyerCode,
+                "Nama Buyer": data.buyerName,
                 "Shipment Garment": data.shipmentDate,
                 "Artikel": data.artikel,
                 "Kategori": data.category,
@@ -1878,6 +1971,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 "No PO Eksternal": data.poExtNo,
                 "Tanggal PO Eksternal": data.poExtDate,
                 "Tanggal Target Datang": data.poExtExpectedDeliveryDate,
+                "Dikenakan PPN": data.poExtPPN,
+                "Dikenakan PPH": data.poExtPPH,
+                "PPH": data.poExtVat,
                 "No Surat Jalan": data.deliveryOrderNo,
                 "Dikenakan Bea Cukai": data.deliveryOrderUseCustoms ? "Ya" : "Tidak",
                 "Tanggal Surat Jalan": data.supplierDoDate,
@@ -1925,6 +2021,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "Divisi": "string",
             "No Ref Purchase Request": "string",
             "No RO": "string",
+            "Buyer": "string",
+            "Nama Buyer": "string",
             "Shipment Garment": "string",
             "Artikel": "string",
             "Kategori": "string",
@@ -1944,6 +2042,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             "No PO Eksternal": "string",
             "Tanggal PO Eksternal": "string",
             "Tanggal Target Datang": "string",
+            "Dikenakan PPN": "string",
+            "Dikenakan PPH": "string",
+            "PPH": "string",
             "No Surat Jalan": "string",
             "Dikenakan Bea Cukai": "string",
             "Tanggal Surat Jalan": "string",
