@@ -826,7 +826,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         if (info.purchaseOrderExternalNo && info.purchaseOrderExternalNo !== "") {
             var regexPO = new RegExp(info.purchaseOrderExternalNo, "i");
             Object.assign(query, {
-                // "items.purchaseOrderExternal.no": info.purchaseOrderExternalNo
                 "items.purchaseOrderExternal.no": {
                     '$regex': regexPO
                 }
@@ -858,7 +857,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         if (info.deliveryOrderNo && info.deliveryOrderNo !== "") {
             var regexDO = new RegExp(info.deliveryOrderNo, "i");
             Object.assign(query, {
-                // "items.fulfillments.deliveryOrderNo" : info.deliveryOrderNo
                 "items.fulfillments.deliveryOrderNo": {
                     '$regex': regexDO
                 }
@@ -1223,11 +1221,9 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         poExtNo: data.poeNo,
                         poExtDate: data.poeDate ? moment(new Date(data.poeDate)).add(offset, 'h').format(dateFormat) : "-",
                         poExtExpectedDeliveryDate: data.poeExpectedDeliveryDate ? moment(new Date(data.poeExpectedDeliveryDate)).add(offset, 'h').format(dateFormat) : "-",
-                        
                         poExtPPN: data.usePPN ? "Ya" : "Tidak",
                         poExtPPH: data.usePPH ? "Ya" : "Tidak",
                         poExtVat: data.vatRate ? data.vatRate : "-",
-
                         dealQuantity: data.dealQuantity ? data.dealQuantity : 0,
                         currency: data.currency,
                         deliveryOrderNo: data.fulfillment ? data.fulfillment.deliveryOrderNo ? data.fulfillment.deliveryOrderNo : "-" : "-",
@@ -1473,7 +1469,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         if (info.purchaseOrderExternalNo && info.purchaseOrderExternalNo !== "") {
             var regexPOExt = new RegExp(info.purchaseOrderExternalNo, "i");
             Object.assign(query, {
-                // "items.purchaseOrderExternal.no": info.purchaseOrderExternalNo
                 "items.purchaseOrderExternal.no": {
                     '$regex': regexPOExt
                 }
@@ -1505,7 +1500,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         if (info.deliveryOrderNo && info.deliveryOrderNo !== "") {
             var regexSJ = new RegExp(info.deliveryOrderNo, "i");
             Object.assign(query, {
-                // "items.fulfillments.deliveryOrderNo" : info.deliveryOrderNo
                 "items.fulfillments.deliveryOrderNo": {
                     '$regex': regexSJ
                 }
