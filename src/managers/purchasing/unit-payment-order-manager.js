@@ -256,8 +256,8 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
                 var validStartDate = new Date(dateFrom);
                 var validEndDate = new Date(dateTo);
-                // validStartDate.setHours(validStartDate.getHours() - offset);
-                //validEndDate.setHours(validEndDate.getHours() - offset);
+                 validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
                 qryMatch["$and"].push(
                     {
                         "date": {
@@ -386,6 +386,8 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                             "matauang": "$items.unitReceiptNote.items.currency.code",
                             "kdkategori": "$category.code",
                             "kategori": "$category.name",
+                              "tgltambah": "$items.unitReceiptNote.items.purchaseOrder.purchaseOrderExternal.paymentDueDays",
+                            "noserippn": "$incomeTaxNo",
                         }
                     },
 
