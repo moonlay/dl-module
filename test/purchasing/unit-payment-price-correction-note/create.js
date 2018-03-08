@@ -122,6 +122,7 @@ it('#05. should success when get data with Start Date', function (done) {
             "Jumlah":100,
             "HARGA":2000,
             "TOTAL":2000,
+            "PPN":0,
             "_createdBy":"AAA"
         }];
             po.should.instanceof(Array);
