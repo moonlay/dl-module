@@ -116,9 +116,10 @@ module.exports = class BookingOrderManager extends BaseManager {
                 if (!valid.garmentSectionId || valid.garmentSectionId === '')
                     errors["section"] = i18n.__("BookingOrder.section.isRequired:%s is required", i18n.__("BookingOrder.section._:Section"));
 
-                if (!valid.orderQuantity || valid.orderQuantity <= 0)
-                    errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.isRequired:%s is required", i18n.__("BookingOrder.orderQuantity._:OrderQuantity"));
-
+                if(!valid.expiredBookingOrder || valid.expiredBookingOrder==0){
+                    if(!valid.orderQuantity || valid.orderQuantity<=0)
+                        errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.isRequired:%s is required", i18n.__("BookingOrder.orderQuantity._:OrderQuantity"));
+                }
 
                 if (!valid.deliveryDate || valid.deliveryDate === "") {
                     errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.isRequired:%s is required", i18n.__("BookingOrder.deliveryDate._:DeliveryDate"));
@@ -270,6 +271,27 @@ module.exports = class BookingOrderManager extends BaseManager {
                 return this.update(booking)
                     .then((id) =>
                         Promise.resolve(id)
+                    );
+            });
+    }
+
+    expiredBooking(booking){
+        return this.getSingleById(booking._id)
+            .then((booking) => {
+                var total=0;
+                if(booking.items.length>0){
+                    for(var qty of booking.items){
+                        total+=qty.quantity;
+                    }
+                }
+                var leftOver=booking.orderQuantity-total;
+                if(leftOver>0){
+                    booking.expiredBookingOrder=leftOver;
+                    booking.orderQuantity-=leftOver;
+                }
+                return this.update(booking)
+                .then((id) =>
+                    Promise.resolve(id)
                     );
             });
     }
