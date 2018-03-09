@@ -1178,61 +1178,6 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                     { "$lookup":{from :'weekly-plans',localField:'details.weeklyPlanId',foreignField:'_id',as:'weeklyPlans'}},
                     { "$unwind": {path:"$weeklyPlans", preserveNullAndEmptyArrays: true} },
                     { "$project": {
-                        'buyer':'$garmentBuyerCode',
-                        'unitcode':'$details.unit.code',
-                        'week':'$details.week.weekNumber',
-                        'qty':'$details.quantity',
-                        'unit' :'$weeklyPlans.unit', 
-                        'items':'$weeklyPlans.items',
-                        }
-                    },
-                    {"$group": {
-                        '_id':{'week':'$week','unitcode':'$unitcode','unit':'$unit','items':'$items'},
-                        'qty':{'$sum':'$qty'},
-                        }
-                    },
-                    {
-                        "$sort": {
-
-                            "_id.unitcode": 1,
-                            "_id.week":1,
-                        }
-                    }
-                ])
-                .toArray()
-                .then(results => {
-                    resolve(results);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getAcceptedOrderMonitoring(query){
-        return new Promise((resolve, reject) => {
-            var deletedQuery = { _deleted: false };
-            var yearQuery = {};
-            if (query.year) {
-                yearQuery = {
-                    "details.weeklyPlanYear": parseInt(query.year)
-                };
-            }
-            var unitQuery = {};
-            if (query.unit !='') {
-                unitQuery = {
-                    "details.unit.code": query.unit
-                };
-            }
-
-            var Query = { "$and": [ deletedQuery, yearQuery, unitQuery] };
-            this.collection
-                .aggregate([
-                    { "$unwind": "$details" },
-                    { "$match": Query },
-                    { "$lookup":{from :'weekly-plans',localField:'details.weeklyPlanId',foreignField:'_id',as:'weeklyPlans'}},
-                    { "$unwind": {path:"$weeklyPlans", preserveNullAndEmptyArrays: true} },
-                    { "$project": {
                         'unitcode':'$details.unit.code',
                         'week':'$details.week.weekNumber',
                         'qty':'$details.quantity',
@@ -1310,7 +1255,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
             ])
             .toArray()
             .then(results=>{
-                
+                if(dataReport.data.length!=0){
                 for(var x=0; x < dataReport.data.length; x++){
                     var length_week= dataReport.data[x]._id.items.length;
                     break;
@@ -1403,7 +1348,7 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
                 for (unit of units) {
                     xls.options[unit] = "string";
                 }
-                
+            } 
                 xls.name = `Monitoring Order Diterima dan Booking Report ` + (query.unit ? `${query.unit}-` : ``) + `${query.year}.xlsx`;
                 resolve(xls);
                 
