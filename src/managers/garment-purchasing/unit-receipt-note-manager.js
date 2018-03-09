@@ -1101,6 +1101,20 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 };
             }
 
+            var roNoQuery = {};
+            if (query.roNo) {
+                roNoQuery = {
+                    "items.roNo": (query.roNo)
+                }
+            }
+
+            var deliveryorderNoQuery = {};
+            if (query.deliveryorderNo) {
+                deliveryorderNoQuery = {
+                    "deliveryOrderNo": (query.deliveryorderNo)
+                }
+            }
+
             var unitQuery = {};
             if (query.unit) {
                 unitQuery = {
@@ -1116,7 +1130,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             }
 
 
-            var Query = { "$and": [userQuery, dateQuery, deletedQuery, supplierQuery, purchaseRequestRefNoQuery, unitQuery, purchaseRequestQuery, noQuery] };
+            var Query = { "$and": [userQuery, dateQuery, deletedQuery, supplierQuery, purchaseRequestRefNoQuery, roNoQuery, deliveryorderNoQuery, unitQuery, purchaseRequestQuery, noQuery] };
             this.collection
                 .aggregate([
                     { "$unwind": "$items" }
