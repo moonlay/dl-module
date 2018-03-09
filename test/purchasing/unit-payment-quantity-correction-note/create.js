@@ -104,6 +104,9 @@ it('#05. should success when get data with Start Date', function (done) {
                         name :"sdsd",
 
                     },
+                    currency: {
+                        code : "sss",
+                    },
                     uom :
                     {unit : "MTR"},
                     
@@ -115,7 +118,8 @@ it('#05. should success when get data with Start Date', function (done) {
                         name : "ddd"
                     },
                     supplier : {
-                        name : "aaa"
+                        name : "aaa",
+                        code : "ccc"
                     }
                 },
             
