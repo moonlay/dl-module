@@ -234,8 +234,8 @@ module.exports = class BookingOrderManager extends BaseManager {
                         }
                     
                     }
-                    else 
-                        errors["detail"] = i18n.__("BookingOrder.detail.mustHaveItem:%s must have at least 1 item", i18n.__("BookingOrder.detail._:Detail"));
+                    // else 
+                    //     errors["detail"] = i18n.__("BookingOrder.detail.mustHaveItem:%s must have at least 1 item", i18n.__("BookingOrder.detail._:Detail"));
                 
                 }
                 if (Object.getOwnPropertyNames(errors).length > 0) {
