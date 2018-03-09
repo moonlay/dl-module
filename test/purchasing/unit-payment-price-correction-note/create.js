@@ -118,6 +118,9 @@ it('#05. should success when get data with Start Date', function (done) {
                         name : "ddd",
                         code : "eee"
                     },
+                    category : {
+                        name : "ddd",
+                    },
                 },
             
             "correctionType":"bbb",
