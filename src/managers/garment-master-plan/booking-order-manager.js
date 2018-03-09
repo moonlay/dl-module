@@ -277,24 +277,59 @@ module.exports = class BookingOrderManager extends BaseManager {
 
     expiredBooking(booking){
         return this.getSingleById(booking._id)
-            .then((booking) => {
-                var total=0;
-                if(booking.items.length>0){
-                    for(var qty of booking.items){
-                        total+=qty.quantity;
-                    }
-                }
-                var leftOver=booking.orderQuantity-total;
-                if(leftOver>0){
-                    booking.expiredBookingOrder=leftOver;
-                    booking.orderQuantity-=leftOver;
-                }
-                return this.update(booking)
-                .then((id) =>
-                    Promise.resolve(id)
-                    );
+            .then( (booking) => {
+                var query = {
+                    "bookingOrderNo": booking.code,
+                    "_deleted":false
+                };
+                return this.sewingBlockingPlanCollection.singleOrDefault(query)
+                    .then((sewingBlockingPlan) => {
+                        var total=0;
+                        booking.canceledDate=new Date();
+                        if(booking.items.length>0){
+                            for(var qty of booking.items){
+                                total+=qty.quantity;
+                            }
+                        }
+                        var leftOver=booking.orderQuantity-total;
+                        if(leftOver>0){
+                            booking.expiredBookingOrder=leftOver;
+                            booking.orderQuantity-=leftOver;
+                        }
+                        if(sewingBlockingPlan){
+                            if(booking.items.length==0){
+                                sewingBlockingPlan.status="Booking Expired";
+                            }
+                            else{
+                                sewingBlockingPlan.status="Booking Ada Perubahan";
+                                for(var detail of sewingBlockingPlan.details){
+                                    var itemBooking = booking.items.find(select => select.code === detail.code);
+                                    if(itemBooking){
+                                        detail.isConfirmed = itemBooking.isConfirmed;
+                                    }
+                                }
+                            }
+                            return this.sewingBlockingPlanCollection.update(sewingBlockingPlan)
+                                .then((id) =>{
+                                    return this.collection.update(booking)
+                                    .then((id) =>
+                                        Promise.resolve(id)
+                                        );
+                                })
+                        }
+                        else{
+                            return this.collection.update(booking)
+                                    .then((id) =>
+                                        Promise.resolve(id)
+                                        );
+                        }
+                        
+                        
+                
+            });
             });
     }
+
 
     _beforeInsert(data) {
         // salesContract.salesContractNo = salesContract.salesContractNo ? salesContract.salesContractNo : generateCode();
