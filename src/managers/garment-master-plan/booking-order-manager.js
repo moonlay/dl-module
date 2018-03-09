@@ -116,7 +116,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                 if(!valid.garmentSectionId || valid.garmentSectionId==='')
                     errors["section"] = i18n.__("BookingOrder.section.isRequired:%s is required", i18n.__("BookingOrder.section._:Section"));
 
-                if((!valid.expiredBookingOrder || valid.expiredBookingOrder==0) && (!valid.canceledBookingOrder || valid.canceledBookingOrder==0)){
+                if((!valid.expiredBookingOrder || valid.expiredBookingOrder === 0) && (!valid.canceledBookingOrder || valid.canceledBookingOrder === 0)){
                     if(!valid.orderQuantity || valid.orderQuantity<=0)
                         errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.isRequired:%s is required", i18n.__("BookingOrder.orderQuantity._:OrderQuantity"));
                 }
