@@ -253,7 +253,8 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             qryMatch["$and"] = [
                 { "_deleted": false }];
 
-            if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
+        //    if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
+           if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
                 var validStartDate = new Date(dateFrom);
                 var validEndDate = new Date(dateTo);
                  validStartDate.setHours(validStartDate.getHours() - offset);
