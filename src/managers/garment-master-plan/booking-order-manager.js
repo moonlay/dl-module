@@ -285,7 +285,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                 return this.sewingBlockingPlanCollection.singleOrDefault(query)
                     .then((sewingBlockingPlan) => {
                         var total=0;
-                        booking.canceledDate=new Date();
+                        booking.expiredDeletedDate=new Date();
                         if(booking.items.length>0){
                             for(var qty of booking.items){
                                 total+=qty.quantity;
