@@ -572,7 +572,14 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
             item["HARGA TOTAL"] = TOTAL;
             item["USER INPUT"] = corqty._createdBy? corqty._createdBy : '';
             item["MATA UANG"] = corqty.items.currency? corqty.items.currency.code : '';
-            
+             if(corqty.useIncomeTax==true){
+                    var z =( (corqty.items.quantity * corqty.items.pricePerUnit)/10).toFixed(2).toString().split('.'); 
+                    var z1=z[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                    var ppn= z1 + '.' + z[1];
+                    item["PPN"] =ppn;
+                    }else{
+                    item["PPN"] =0;
+                    }
             xls.data.push(item);
         }
 
@@ -597,7 +604,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         xls.options["HARGA TOTAL"] = "number";
         xls.options["USER INPUT"] = "string";
         xls.options["MATA UANG"] = "string";
-
+        xls.options["PPN"] = "number";
         if(query.dateFrom && query.dateTo){
             xls.name = `Monitoring Koreksi Jumlah ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }

@@ -99,5 +99,18 @@ class BookingOrderDataUtil {
                 });
             });
     }
+    getNewTestDataEmptyItems() {
+        return helper
+            .getManager(BookingOrderManager)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    data.items = [];
+                    return manager.create(data)
+                        .then((id) => {
+                            return manager.getSingleById(id)
+                        });
+                });
+            });
+    }
 }
 module.exports = new BookingOrderDataUtil();

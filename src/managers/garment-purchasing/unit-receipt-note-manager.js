@@ -1101,6 +1101,20 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 };
             }
 
+            var roNoQuery = {};
+            if (query.roNo) {
+                roNoQuery = {
+                    "items.roNo": (query.roNo)
+                }
+            }
+
+            var deliveryorderNoQuery = {};
+            if (query.deliveryorderNo) {
+                deliveryorderNoQuery = {
+                    "deliveryOrderNo": (query.deliveryorderNo)
+                }
+            }
+
             var unitQuery = {};
             if (query.unit) {
                 unitQuery = {
@@ -1116,7 +1130,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             }
 
 
-            var Query = { "$and": [userQuery, dateQuery, deletedQuery, supplierQuery, purchaseRequestRefNoQuery, unitQuery, purchaseRequestQuery, noQuery] };
+            var Query = { "$and": [userQuery, dateQuery, deletedQuery, supplierQuery, purchaseRequestRefNoQuery, roNoQuery, deliveryorderNoQuery, unitQuery, purchaseRequestQuery, noQuery] };
             this.collection
                 .aggregate([
                     { "$unwind": "$items" }
@@ -1172,7 +1186,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDate = {
-                    "date": {
+                    "_createdDate": {
                         $gte: validStartDate,
                         $lte: validEndDate
                     }
@@ -1182,7 +1196,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             else if (!startdate && enddate) {
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDateTo = {
-                    "date": {
+                    "_createdDate": {
                         $gte: now,
                         $lte: validEndDate
                     }
@@ -1192,7 +1206,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             else if (startdate && !enddate) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 var filterDateFrom = {
-                    "date": {
+                    "_createdDate": {
                         $gte: validStartDate,
                         $lte: now
                     }
