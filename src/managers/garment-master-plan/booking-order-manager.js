@@ -548,14 +548,14 @@ module.exports = class BookingOrderManager extends BaseManager {
                 bookingOrderStateQuery = {
                     "isMasterPlan": false ,
                     "isCanceled":false ,
-                    "items":{$size:0}
+                    "items": {$exists:false}
                     
                 }
             }else  if (query.bookingOrderState === "Confirmed") {
                 bookingOrderStateQuery = {
                     "isMasterPlan": false ,
                     "isCanceled":false ,
-                    "items":{$not:{$size:0}}
+                    "items":{$exists:true}
                     
                 }
             }
@@ -619,7 +619,6 @@ module.exports = class BookingOrderManager extends BaseManager {
             this.dataXls=[];
             
             var count=0;
-
             
             for (var pr of dataReport.data) {
                 temps.bookingCode=pr.bookingCode;
@@ -699,7 +698,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                         item_temp["Status Confirm"]='';
                         item_temp["Status Booking Order"]='';
                         item_temp["Sisa Order(Belum Confirm)"]='';
-                        item_temp["Tanggal Pengiriman (Booking)"]=item["Tanggal Pengiriman (Booking)"];
+                        item_temp["Tanggal Pengiriman (Booking)"]='';
                         item_temp["Komoditi"]=item["Komoditi"];
                         item_temp["Tanggal Pengiriman(Confirm)"]=item["Tanggal Pengiriman(Confirm)"];
                         item_temp["Tanggal Confirm"]=item["Tanggal Confirm"];
@@ -809,7 +808,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                     var c=1;
                     for(var b of Object.keys(xls.data[a])){
                         
-                        if(xls.data[a]["Kode Booking"]!=='' && (this.rowspan[d].row_count)>1 && (b!=="Tanggal Pengiriman (Booking)" && b!=="Komoditi" && b!=="Tanggal Pengiriman(Confirm)" && b!=="Tanggal Confirm" && b!=="Jumlah Confirm" && b!=="Keterangan")){//&& xls.data[a].b && ){
+                        if(xls.data[a]["Kode Booking"]!=='' && (this.rowspan[d].row_count)>1 && (b!=="Komoditi" && b!=="Tanggal Pengiriman(Confirm)" && b!=="Tanggal Confirm" && b!=="Jumlah Confirm" && b!=="Keterangan")){//&& xls.data[a].b && ){
                             xls.options.merges.push(
                                 { start: { row: a+2, column: c }, end: { row: (a+(this.rowspan[d].row_count)+1), column: c } }
                             );
