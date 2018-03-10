@@ -10,7 +10,7 @@ describe("CANCEL BOOKING SCENARIOS", function() {
     require("./cancel-booking");
 });
 
-describe("CANCEL BOOKING SCENARIOS", function() {
+describe("EXPIRED BOOKING SCENARIOS", function() {
     require("./expired-booking");
 });
 

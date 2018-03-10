@@ -116,7 +116,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                 if(!valid.garmentSectionId || valid.garmentSectionId==='')
                     errors["section"] = i18n.__("BookingOrder.section.isRequired:%s is required", i18n.__("BookingOrder.section._:Section"));
 
-                if(!valid.expiredBookingOrder || valid.expiredBookingOrder==0){
+                if((!valid.expiredBookingOrder || valid.expiredBookingOrder === 0) && (!valid.canceledBookingOrder || valid.canceledBookingOrder === 0)){
                     if(!valid.orderQuantity || valid.orderQuantity<=0)
                         errors["orderQuantity"] = i18n.__("BookingOrder.orderQuantity.isRequired:%s is required", i18n.__("BookingOrder.orderQuantity._:OrderQuantity"));
                 }
@@ -234,8 +234,8 @@ module.exports = class BookingOrderManager extends BaseManager {
                         }
                     
                     }
-                    else 
-                        errors["detail"] = i18n.__("BookingOrder.detail.mustHaveItem:%s must have at least 1 item", i18n.__("BookingOrder.detail._:Detail"));
+                    // else 
+                    //     errors["detail"] = i18n.__("BookingOrder.detail.mustHaveItem:%s must have at least 1 item", i18n.__("BookingOrder.detail._:Detail"));
                 
                 }
                 if (Object.getOwnPropertyNames(errors).length > 0) {
@@ -267,10 +267,18 @@ module.exports = class BookingOrderManager extends BaseManager {
     cancelBooking(booking){
         return this.getSingleById(booking._id)
             .then((booking) => {
-                booking.isCanceled=true;
+                var subtracted = booking.items.length > 0 ?
+                    booking.orderQuantity - booking.items.reduce((total, value) => total + value.quantity, 0) :
+                    booking.orderQuantity;
+                    
+                booking.orderQuantity -= subtracted;
+                booking.canceledBookingOrder = subtracted;
+
+                booking.canceledDate = new Date();
+                booking.isCanceled = booking.items.length <= 0;
                 return this.update(booking)
-                .then((id) =>
-                    Promise.resolve(id)
+                    .then((id) =>
+                        Promise.resolve(id)
                     );
             });
     }
