@@ -499,7 +499,7 @@ module.exports = class CustomsManager extends BaseManager {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDate = {
-                    "customsDate": {
+                    "_createdDate": {
                         $gte: validStartDate,
                         $lte: validEndDate
                     }
@@ -509,7 +509,7 @@ module.exports = class CustomsManager extends BaseManager {
             else if (!startdate && enddate) {
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDateTo = {
-                    "customsDate": {
+                    "_createdDate": {
                         $gte: now,
                         $lte: validEndDate
                     }
@@ -519,7 +519,7 @@ module.exports = class CustomsManager extends BaseManager {
             else if (startdate && !enddate) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 var filterDateFrom = {
-                    "customsDate": {
+                    "_createdDate": {
                         $gte: validStartDate,
                         $lte: now
                     }

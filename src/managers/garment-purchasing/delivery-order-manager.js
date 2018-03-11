@@ -1084,7 +1084,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDate = {
-                    "supplierDoDate": {
+                    "_createdDate": {
                         $gte: validStartDate,
                         $lte: validEndDate
                     }
@@ -1094,7 +1094,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             else if (!startdate && enddate) {
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDateTo = {
-                    "supplierDoDate": {
+                    "_createdDate": {
                         $gte: now,
                         $lte: validEndDate
                     }
@@ -1104,7 +1104,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             else if (startdate && !enddate) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 var filterDateFrom = {
-                    "supplierDoDate": {
+                    "_createdDate": {
                         $gte: validStartDate,
                         $lte: now
                     }

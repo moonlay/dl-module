@@ -628,7 +628,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDate = {
-                    "date": {
+                    "_createdDate": {
                         $gte: validStartDate,
                         $lte: validEndDate
                     }
@@ -638,7 +638,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
             else if (!startdate && enddate) {
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDateTo = {
-                    "date": {
+                    "_createdDate": {
                         $gte: now,
                         $lte: validEndDate
                     }
@@ -648,7 +648,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
             else if (startdate && !enddate) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 var filterDateFrom = {
-                    "date": {
+                    "_createdDate": {
                         $gte: validStartDate,
                         $lte: now
                     }

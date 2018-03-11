@@ -61,7 +61,7 @@ it("#02. should success when get Accepting Order Monitoring", function (done) {
         });
 });
 
-it("#05. should success when get Accepting Order Monitoring XLS", function (done) {
+it("#03. should success when get Accepting Order Monitoring XLS", function (done) {
     manager.getAcceptedOrderMonitoringXls(dummyAcceptingOrderMonitoringResult, queryAcceptingOrderMonitoring)
         .then((xls) => {
             xls.should.instanceof(Object);
@@ -75,7 +75,7 @@ it("#05. should success when get Accepting Order Monitoring XLS", function (done
         });
 });
 
-it('#06. should success when destroy data with id', function(done) {
+it('#04. should success when destroy data with id', function(done) {
     manager.destroy(dummyDataId)
         .then((result) => {
             result.should.be.Boolean();
@@ -87,7 +87,7 @@ it('#06. should success when destroy data with id', function(done) {
         });
 });
 
-it('#07. should null when get destroyed data', function(done) {
+it('#05. should null when get destroyed data', function(done) {
     manager.getSingleByIdOrDefault(dummyDataId)
         .then((data) => {
             should.equal(data, null);
@@ -98,7 +98,7 @@ it('#07. should null when get destroyed data', function(done) {
         });
 });
 
-it(`#08. should success when remove all data`, function(done) {
+it(`#06. should success when remove all data`, function(done) {
     manager.collection.remove({})
         .then((result) => {
             done();
