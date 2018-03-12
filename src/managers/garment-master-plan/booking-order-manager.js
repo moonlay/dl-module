@@ -293,7 +293,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                 return this.sewingBlockingPlanCollection.singleOrDefault(query)
                     .then((sewingBlockingPlan) => {
                         var total=0;
-                        booking.canceledDate=new Date();
+                        booking.expiredDeletedDate=new Date();
                         if(booking.items.length>0){
                             for(var qty of booking.items){
                                 total+=qty.quantity;
@@ -548,14 +548,14 @@ module.exports = class BookingOrderManager extends BaseManager {
                 bookingOrderStateQuery = {
                     "isMasterPlan": false ,
                     "isCanceled":false ,
-                    "items":{$size:0}
+                    "items": {$exists:false}
                     
                 }
             }else  if (query.bookingOrderState === "Confirmed") {
                 bookingOrderStateQuery = {
                     "isMasterPlan": false ,
                     "isCanceled":false ,
-                    "items":{$not:{$size:0}}
+                    "items":{$exists:true}
                     
                 }
             }
@@ -619,7 +619,6 @@ module.exports = class BookingOrderManager extends BaseManager {
             this.dataXls=[];
             
             var count=0;
-
             
             for (var pr of dataReport.data) {
                 temps.bookingCode=pr.bookingCode;
@@ -699,15 +698,15 @@ module.exports = class BookingOrderManager extends BaseManager {
                         item_temp["Status Confirm"]='';
                         item_temp["Status Booking Order"]='';
                         item_temp["Sisa Order(Belum Confirm)"]='';
-                        item_temp["Tanggal Pengiriman (Booking)"]=item["Tanggal Pengiriman (Booking)"];
+                        item_temp["Tanggal Pengiriman (Booking)"]='';
                         item_temp["Komoditi"]=item["Komoditi"];
                         item_temp["Tanggal Pengiriman(Confirm)"]=item["Tanggal Pengiriman(Confirm)"];
                         item_temp["Tanggal Confirm"]=item["Tanggal Confirm"];
                         item_temp["Jumlah Confirm"] = item["Jumlah Confirm"];
                         item_temp["Keterangan"]=item["Keterangan"];
                         item_temp["Selisih Hari (dari Tanggal Pengiriman)"]=item["Selisih Hari (dari Tanggal Pengiriman)"];
-                        
-                        rowcount.row_count=row_span_count+1;
+                        row_span_count=row_span_count+1;
+                        rowcount.row_count=row_span_count;
                         
                         rowcount.code=data.bookingCode;
                         xls.data.push(item_temp);
@@ -716,6 +715,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                     } else if(!temp_data.code || temp_data.code!=data.bookingCode){
                         temp_data.code=data.bookingCode;
                         remain=0;
+                        row_span_count=1;
                         rowcount.row_count=row_span_count;
                         rowcount.code=data.bookingCode;
                         
@@ -809,7 +809,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                     var c=1;
                     for(var b of Object.keys(xls.data[a])){
                         
-                        if(xls.data[a]["Kode Booking"]!=='' && (this.rowspan[d].row_count)>1 && (b!=="Tanggal Pengiriman (Booking)" && b!=="Komoditi" && b!=="Tanggal Pengiriman(Confirm)" && b!=="Tanggal Confirm" && b!=="Jumlah Confirm" && b!=="Keterangan")){//&& xls.data[a].b && ){
+                        if(xls.data[a]["Kode Booking"]!=='' && (this.rowspan[d].row_count)>1 && (b!=="Komoditi" && b!=="Tanggal Pengiriman(Confirm)" && b!=="Tanggal Confirm" && b!=="Jumlah Confirm" && b!=="Keterangan")){//&& xls.data[a].b && ){
                             xls.options.merges.push(
                                 { start: { row: a+2, column: c }, end: { row: (a+(this.rowspan[d].row_count)+1), column: c } }
                             );
