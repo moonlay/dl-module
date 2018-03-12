@@ -705,16 +705,17 @@ module.exports = class BookingOrderManager extends BaseManager {
                         item_temp["Jumlah Confirm"] = item["Jumlah Confirm"];
                         item_temp["Keterangan"]=item["Keterangan"];
                         item_temp["Selisih Hari (dari Tanggal Pengiriman)"]=item["Selisih Hari (dari Tanggal Pengiriman)"];
-                        
-                        rowcount.row_count=row_span_count+1;
+                        row_span_count=row_span_count+1;
+                        rowcount.row_count=row_span_count;
                         
                         rowcount.code=data.bookingCode;
                         xls.data.push(item_temp);
                         this.rowspan.push(rowcount); 
-                        
+                        console.log(this.rowspan);
                     } else if(!temp_data.code || temp_data.code!=data.bookingCode){
                         temp_data.code=data.bookingCode;
                         remain=0;
+                        row_span_count=1;
                         rowcount.row_count=row_span_count;
                         rowcount.code=data.bookingCode;
                         
