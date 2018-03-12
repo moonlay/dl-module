@@ -711,7 +711,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                         rowcount.code=data.bookingCode;
                         xls.data.push(item_temp);
                         this.rowspan.push(rowcount); 
-                        console.log(this.rowspan);
+                        
                     } else if(!temp_data.code || temp_data.code!=data.bookingCode){
                         temp_data.code=data.bookingCode;
                         remain=0;
