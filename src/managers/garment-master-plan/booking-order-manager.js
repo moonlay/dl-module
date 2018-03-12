@@ -482,7 +482,6 @@ module.exports = class BookingOrderManager extends BaseManager {
         return new Promise((resolve, reject) => {
 
             var deletedQuery = { _deleted: false };
-           
             var date = new Date();
             var dateString = moment(date).format('YYYY-MM-DD');
             var dateNow = new Date(dateString);
@@ -501,6 +500,12 @@ module.exports = class BookingOrderManager extends BaseManager {
                         "$gte": dateFrom,
                         "$lte": dateTo
                     }
+                };
+            }
+            var sectionQuery = {};
+            if(query.section) {
+                sectionQuery = {
+                    "section": query.section
                 };
             }
             var codeQuery = {};
@@ -560,13 +565,16 @@ module.exports = class BookingOrderManager extends BaseManager {
                 }
             }
 
-             var Query = { "$and": [ dateQuery, deletedQuery, buyerQuery, comodityQuery, confirmStateQuery, bookingOrderStateQuery, codeQuery] };
+            var totalOrderQuery={"totalOrderQty":{$ne:0}};
+
+             var Query = { "$and": [ dateQuery, deletedQuery, sectionQuery, buyerQuery, comodityQuery, confirmStateQuery, bookingOrderStateQuery, codeQuery, totalOrderQuery] };
             this.collection
                 .aggregate( [
                     { "$unwind": {path: "$items", preserveNullAndEmptyArrays: true} },
                     {
                         "$project": {
                             "bookingCode": "$code",
+                            "section": "$garmentSectionCode",
                             "bookingDate":"$bookingDate",
                             "buyer": "$garmentBuyerName",
                             "totalOrderQty" :"$orderQuantity",
@@ -711,7 +719,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                         rowcount.code=data.bookingCode;
                         xls.data.push(item_temp);
                         this.rowspan.push(rowcount); 
-                        
+                        // console.log(this.rowspan);
                     } else if(!temp_data.code || temp_data.code!=data.bookingCode){
                         temp_data.code=data.bookingCode;
                         remain=0;
