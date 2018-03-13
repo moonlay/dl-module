@@ -132,8 +132,8 @@ module.exports = class BookingOrderManager extends BaseManager {
                     check_deliveryDate.setHours(0,0,0,0);                                        
                     valid.bookingDate.setHours(0,0,0,0);
 
-                    var today= new Date();
-                    today.setHours(0,0,0,0);
+                    // var today= new Date();
+                    // today.setHours(0,0,0,0);
 
                     var next45Days = new Date();
                     next45Days.setHours(0,0,0,0);
