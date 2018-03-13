@@ -276,15 +276,18 @@ module.exports = class BookingOrderManager extends BaseManager {
     cancelBooking(booking){
         return this.getSingleById(booking._id)
             .then((booking) => {
-                var subtracted = booking.items.length > 0 ?
-                    booking.orderQuantity - booking.items.reduce((total, value) => total + value.quantity, 0) :
-                    booking.orderQuantity;
+                var subtracted = booking.orderQuantity -
+                    booking.items.reduce(
+                        (total, value) => total + value.quantity
+                        , 0
+                    );
                     
                 booking.orderQuantity -= subtracted;
-                booking.canceledBookingOrder = subtracted;
+                booking.canceledBookingOrder = booking.canceledBookingOrder + subtracted;
 
                 booking.canceledDate = new Date();
                 booking.isCanceled = booking.items.length <= 0;
+
                 return this.update(booking)
                     .then((id) =>
                         Promise.resolve(id)
