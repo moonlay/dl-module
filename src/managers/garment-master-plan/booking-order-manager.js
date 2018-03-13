@@ -131,18 +131,18 @@ module.exports = class BookingOrderManager extends BaseManager {
                     var check_deliveryDate=new Date(valid.deliveryDate);
                     check_deliveryDate.setHours(0,0,0,0);                                        
                     valid.bookingDate.setHours(0,0,0,0);
-                   
+
                     var today= new Date();
                     today.setHours(0,0,0,0);
-                    
+
                     if(valid.bookingDate.getTime()> valid.deliveryDate.getTime()){
                         errors["deliveryDate"] = i18n.__("BookingOrder.DdeliveryDatee.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
                     } else if(valid.bookingDate.getTime() == check_deliveryDate.getTime()){
                         errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate1.shouldNot:%s should not be the same date as booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
                     } else if(today.getTime()>valid.deliveryDate.getTime()){
                         errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
+                        }
                     }
-                }
                 // if(valid.items){
                 //     var totalqty = 0;
                 //     for (var i of valid.items) {
@@ -241,6 +241,15 @@ module.exports = class BookingOrderManager extends BaseManager {
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
+                }
+
+                var indexCanceledItem = valid.items.findIndex(item => item.isCanceled);
+                if(indexCanceledItem > -1) {
+                    var canceledItem = valid.items[indexCanceledItem];
+                    valid.canceledItems ?
+                        valid.canceledItems.push(canceledItem) :
+                        valid.canceledItems = [canceledItem];
+                    valid.items.splice(indexCanceledItem, 1);
                 }
 
                 if(_buyer){
