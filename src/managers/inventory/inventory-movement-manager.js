@@ -239,13 +239,10 @@ module.exports = class InventoryMovementManager extends BaseManager {
             query = {},
             order = info.order || {};
 
-        var dateToIsNotNull = info.dateTo ? true : false;
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = dateToIsNotNull ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : new Date(new Date().setHours(23,59,59,0));
         dateFrom.setHours(dateFrom.getHours() - info.offset);
-
-        if(dateToIsNotNull)
-            dateTo.setHours(dateTo.getHours() - info.offset);
+        dateTo.setHours(dateTo.getHours() - info.offset);
         
         var filterMovement = {};
         let inventoryDocumentsDate = [];
