@@ -131,16 +131,25 @@ module.exports = class BookingOrderManager extends BaseManager {
                     var check_deliveryDate=new Date(valid.deliveryDate);
                     check_deliveryDate.setHours(0,0,0,0);                                        
                     valid.bookingDate.setHours(0,0,0,0);
-                   
-                    var today= new Date();
-                    today.setHours(0,0,0,0);
-                    
-                    if(valid.bookingDate.getTime()> valid.deliveryDate.getTime()){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.DdeliveryDatee.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
-                    } else if(valid.bookingDate.getTime() == check_deliveryDate.getTime()){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate1.shouldNot:%s should not be the same date as booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
-                    } else if(today.getTime()>valid.deliveryDate.getTime()){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
+
+                    // var today= new Date();
+                    // today.setHours(0,0,0,0);
+
+                    var next45Days = new Date();
+                    next45Days.setHours(0,0,0,0);
+                    next45Days = new Date(moment(next45Days).add(45, 'd').add(7, 'h').locale('id'));
+
+                    if (!valid.items || valid.items.length === 0) {
+                        if(valid.bookingDate.getTime()> valid.deliveryDate.getTime()){
+                            errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotLessThanBookingDate:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
+                        } else if(valid.bookingDate.getTime() == check_deliveryDate.getTime()){
+                            errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotSameAsBookingDate:%s should not be the same date as booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
+                        // } else if(today.getTime()>valid.deliveryDate.getTime()){
+                        //     errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
+                        // }
+                        } else if(next45Days.getTime() >= valid.deliveryDate.getTime()){
+                            errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldMoreThan45Days:%s should be more than 45 days from today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
+                        }
                     }
                 }
                 // if(valid.items){
@@ -243,6 +252,15 @@ module.exports = class BookingOrderManager extends BaseManager {
                     return Promise.reject(new ValidationError("data does not pass validation", errors));
                 }
 
+                var indexCanceledItem = valid.items.findIndex(item => item.isCanceled);
+                if(indexCanceledItem > -1) {
+                    var canceledItem = valid.items[indexCanceledItem];
+                    valid.canceledItems ?
+                        valid.canceledItems.push(canceledItem) :
+                        valid.canceledItems = [canceledItem];
+                    valid.items.splice(indexCanceledItem, 1);
+                }
+
                 if(_buyer){
                     valid.garmentBuyerId=new ObjectId(_buyer._id);
                     valid.garmentBuyerName=_buyer.name;
@@ -267,15 +285,18 @@ module.exports = class BookingOrderManager extends BaseManager {
     cancelBooking(booking){
         return this.getSingleById(booking._id)
             .then((booking) => {
-                var subtracted = booking.items.length > 0 ?
-                    booking.orderQuantity - booking.items.reduce((total, value) => total + value.quantity, 0) :
-                    booking.orderQuantity;
+                var subtracted = booking.orderQuantity -
+                    booking.items.reduce(
+                        (total, value) => total + value.quantity
+                        , 0
+                    );
                     
                 booking.orderQuantity -= subtracted;
-                booking.canceledBookingOrder = subtracted;
+                booking.canceledBookingOrder = booking.canceledBookingOrder + subtracted;
 
                 booking.canceledDate = new Date();
                 booking.isCanceled = booking.items.length <= 0;
+
                 return this.update(booking)
                     .then((id) =>
                         Promise.resolve(id)

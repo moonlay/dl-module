@@ -60,6 +60,7 @@ it("#03. should success when read data", function (done) {
         "filter": {
             "_id": createdId
         },
+        "offset": 0,
         "keyword": "TEST"
     })
         .then((documents) => {
