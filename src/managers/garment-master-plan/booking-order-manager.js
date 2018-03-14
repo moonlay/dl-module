@@ -125,10 +125,10 @@ module.exports = class BookingOrderManager extends BaseManager {
                      errors["deliveryDate"] = i18n.__("BookingOrder.deliveryDate.isRequired:%s is required", i18n.__("BookingOrder.deliveryDate._:DeliveryDate")); 
                 }
                 else{
-                    valid.bookingDate=new Date(valid.bookingDate);
-                    valid.deliveryDate= moment(new Date(valid.deliveryDate)).add(7, 'h').locale('id');
-                    valid.deliveryDate=new Date(valid.deliveryDate);
-                    var check_deliveryDate=new Date(valid.deliveryDate);
+                    valid.bookingDate = new Date(valid.bookingDate);
+                    var validDeliveryDate = moment(new Date(valid.deliveryDate)).add(7, 'h').locale('id');
+                    validDeliveryDate = new Date(validDeliveryDate);
+                    var check_deliveryDate = new Date(validDeliveryDate);
                     check_deliveryDate.setHours(0,0,0,0);                                        
                     valid.bookingDate.setHours(0,0,0,0);
 
@@ -140,14 +140,14 @@ module.exports = class BookingOrderManager extends BaseManager {
                     next45Days = new Date(moment(next45Days).add(45, 'd').add(7, 'h').locale('id'));
 
                     if (!valid.items || valid.items.length === 0) {
-                        if(valid.bookingDate.getTime()> valid.deliveryDate.getTime()){
+                        if(valid.bookingDate.getTime()> validDeliveryDate.getTime()){
                             errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotLessThanBookingDate:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
                         } else if(valid.bookingDate.getTime() == check_deliveryDate.getTime()){
                             errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotSameAsBookingDate:%s should not be the same date as booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
-                        // } else if(today.getTime()>valid.deliveryDate.getTime()){
+                        // } else if(today.getTime()>validDeliveryDate.getTime()){
                         //     errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
                         // }
-                        } else if(next45Days.getTime() >= valid.deliveryDate.getTime()){
+                        } else if(next45Days.getTime() >= validDeliveryDate.getTime()){
                             errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldMoreThan45Days:%s should be more than 45 days from today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
                         }
                     }
