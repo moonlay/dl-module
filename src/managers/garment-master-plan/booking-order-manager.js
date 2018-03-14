@@ -689,7 +689,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                 a.setHours(0,0,0,0);
                 b.setHours(0,0,0,0);
                 var diff=a.getTime() - b.getTime();
-                var timeDiff = Math.abs(a.getTime() - b.getTime());
+                var timeDiff = a.getTime() - b.getTime();
                 var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
                           
                 if(diffDays>0 && diffDays<=45){
@@ -722,14 +722,13 @@ module.exports = class BookingOrderManager extends BaseManager {
                         // console.log(this.rowspan);
                     } else if(!temp_data.code || temp_data.code!=data.bookingCode){
                         temp_data.code=data.bookingCode;
-                        remain=0;
                         row_span_count=1;
                         rowcount.row_count=row_span_count;
                         rowcount.code=data.bookingCode;
-                        
                         xls.data.push(item);
                         this.rowspan.push(rowcount); 
                     }
+                    remain=0;
                     
                     xls.options.specification = {};
                     var fgColor = function(color){
