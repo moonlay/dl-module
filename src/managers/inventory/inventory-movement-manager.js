@@ -240,7 +240,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
             order = info.order || {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : (new Date());
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : new Date(new Date().setHours(23,59,59,0));
         dateFrom.setHours(dateFrom.getHours() - info.offset);
         dateTo.setHours(dateTo.getHours() - info.offset);
         
