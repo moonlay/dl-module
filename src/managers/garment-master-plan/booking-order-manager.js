@@ -703,7 +703,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                       
                     }
                 var today=new Date();
-                var a = new Date(data.deliveryDateBooking);
+                var a = new Date(moment(data.deliveryDateBooking ).add(7, 'h').format(dateFormat));
                 var b = today;
                 a.setHours(0,0,0,0);
                 b.setHours(0,0,0,0);
