@@ -702,15 +702,16 @@ module.exports = class BookingOrderManager extends BaseManager {
                         }
                       
                     }
-                var today=new Date();
-                var a = new Date(moment(data.deliveryDateBooking ).add(7, 'h').format(dateFormat));
-                var b = today;
-                a.setHours(0,0,0,0);
-                b.setHours(0,0,0,0);
-                var diff=a.getTime() - b.getTime();
-                var timeDiff = a.getTime() - b.getTime();
-                var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                          
+                    var today=new Date();
+                    var a = moment(new Date(data.deliveryDateBooking)).add(7, 'h').locale('id');
+                    var b = today;
+                    a = new Date(a);
+                    a.setHours(0,0,0,0);
+                    b.setHours(0,0,0,0);
+                    var diff=a.getTime() - b.getTime();
+                    var timeDiff = a.getTime() - b.getTime();
+                    var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                             
                 if(diffDays>0 && diffDays<=45){
                     item["Selisih Hari (dari Tanggal Pengiriman)"] = diffDays;
                 } else if(diffDays<=0 || diffDays>45){
