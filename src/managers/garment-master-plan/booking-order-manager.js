@@ -703,9 +703,9 @@ module.exports = class BookingOrderManager extends BaseManager {
                       
                     }
                     var today=new Date();
-                    data.deliveryDateBooking = moment(new Date(data.deliveryDateBooking)).add(7, 'h').locale('id');
+                    var a = moment(new Date(data.deliveryDateBooking)).add(7, 'h').locale('id');
                     var b = today;
-                    var a=new Date(data.deliveryDateBooking);
+                    a = new Date(a);
                     a.setHours(0,0,0,0);
                     b.setHours(0,0,0,0);
                     var diff=a.getTime() - b.getTime();
