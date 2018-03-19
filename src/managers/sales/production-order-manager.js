@@ -482,7 +482,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         var detailError = {};
                         let unique = "CODE" + indexDetail++;
                         detail.code = generateCode(unique);
-         
+
                         if (!detail.colorRequest || detail.colorRequest == "")
                             detailError["colorRequest"] = i18n.__("ProductionOrder.details.colorRequest.isRequired:%s is required", i18n.__("ProductionOrder.details.colorRequest._:ColorRequest")); //"colorRequest tidak boleh kosong";
                         if (detail.quantity <= 0)
@@ -2222,4 +2222,58 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     //#endregion New Status Order
 
+    //#region Update IsRequested and IsCompleted
+    updateIsRequested(ids) {
+        var objectIds = ids.map((id) => {
+            return new ObjectId(id);
+        })
+
+        return this
+            .collection
+            .updateMany({ "_id": { "$in": objectIds } },
+                {
+                    "$set": {
+                        "isRequested": true,
+                        "_updatedBy": this.user.username,
+                        "_updatedDate": new Date()
+                    }
+                })
+    }
+
+    updateIsCompleted(ids) {
+        var objectIds = ids.map((id) => {
+            return new ObjectId(id);
+        })
+
+        return this
+            .collection
+            .updateMany({ "_id": { "$in": objectIds } },
+                {
+                    "$set": {
+                        "isCompleted": true,
+                        "_updatedBy": this.user.username,
+                        "_updatedDate": new Date()
+                    }
+                })
+    }
+
+    updateReceivedQuantity(data) {
+        var updatePromises = data.map((datum) => {
+            return this
+                .collection
+                .updateOne({ "_id": new ObjectId(datum.id) },
+                    {
+                        "$set": {
+                            "_updatedBy": this.user.username,
+                            "_updatedDate": new Date()
+                        },
+                        "$inc": {
+                            "distributedQuantity": parseFloat(datum.distributedQuantity)
+                        }
+                    })
+        });
+
+        return Promise.all(updatePromises);
+    }
+    //#endregion Update IsRequested and IsCompleted
 }
