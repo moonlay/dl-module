@@ -320,7 +320,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                         }
                         var leftOver=booking.orderQuantity-total;
                         if(leftOver>0){
-                            booking.expiredBookingOrder=leftOver;
+                            booking.expiredBookingOrder = booking.expiredBookingOrder + leftOver;
                             booking.orderQuantity-=leftOver;
                         }
                         if(sewingBlockingPlan){
