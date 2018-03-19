@@ -166,6 +166,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                         
                         for (var item of valid.items) {
                             item._createdDate= item._createdDate ? item._createdDate: new Date();
+                            item.code= !item.code || item.code==valid.code  ? generateCode()+index.toString() : item.code ;
                             var itemError = {};
 
                             if(!item.masterPlanComodity){
