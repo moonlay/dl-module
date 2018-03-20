@@ -3,7 +3,7 @@ var DataUtil = require("../../data-util/sales/production-order-data-util");
 var helper = require("../../helper");
 var validate = require("dl-models").validator.sales.productionOrder;
 var codeGenerator = require('../../../src/utils/code-generator');
-var ProductionOrderManager= require("../../../src/managers/sales/production-order-manager");
+var ProductionOrderManager = require("../../../src/managers/sales/production-order-manager");
 var instanceManager;
 
 
@@ -54,7 +54,7 @@ it(`#02. should success when get created data with id`, function (done) {
 it('#04. should success when create pdf', function (done) {
     var query = {};
 
-    instanceManager.pdf(createdData._id,7)
+    instanceManager.pdf(createdData._id, 7)
         .then((pdfData) => {
             done();
         }).catch((e) => {
@@ -62,8 +62,42 @@ it('#04. should success when create pdf', function (done) {
         });
 });
 
+it("#05. should success update isRequested", function (done) {
+    instanceManager.updateIsRequested([createdData._id])
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e)
+        })
+});
 
-it("#05. should success when destroy all unit test data", function (done) {
+it("#06. should success update isCompleted", function (done) {
+    instanceManager.updateIsCompleted([createdData._id])
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e)
+        })
+});
+
+it("#07. should success update isRequested", function (done) {
+    var param = {
+        id: createdData._id,
+        receivedQuantity: 10
+    }
+
+    instanceManager.updateReceivedQuantity([param])
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e)
+        })
+});
+
+it("#08. should success when destroy all unit test data", function (done) {
     instanceManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();

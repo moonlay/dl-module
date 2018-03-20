@@ -86,6 +86,7 @@ it("#03. should error when create new data with bookingDate = deliveryDate", fun
             data.deliveryDate=new Date();
             data.bookingDate=new Date();
             data.deliveryDate.setHours(0,0,0,0);
+            data.items = [];
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data bookingDate = deliveryDate");
@@ -127,6 +128,7 @@ it("#05. should error when create new data with deliveryDate < bookingDate ", fu
         .then((data) => {
             var targetDate=new Date();
             data.deliveryDate=new Date(targetDate.setDate(targetDate.getDate() - 10));
+            data.items = [];
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with deliveryDate < bookingDate");
@@ -150,6 +152,7 @@ it("#06. should error when create new data with deliveryDate < today ", function
             var targetDate=new Date();
             data.bookingDate=new Date(targetDate.setDate(targetDate.getDate() - 7));
             data.deliveryDate=new Date(targetDate.setDate(targetDate.getDate() - 5));
+            data.items = [];
             manager.create(data)
                 .then((id) => {
                     done("should error when create new data with deliveryDate < today");

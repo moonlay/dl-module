@@ -21,7 +21,7 @@ class BookingOrderDataUtil {
                 var _comodity2 = results[3];
                 var date = new Date();
                 var targetDate=new Date();
-                var deliveryDate=new Date(targetDate.setDate(targetDate.getDate() + 10));
+                var deliveryDate=new Date(targetDate.setDate(targetDate.getDate() + 46));
             
                 var code = generateCode();
                 var data = {
