@@ -289,6 +289,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
 
                     var query = Object.assign({});
                     var queryCategory = Object.assign({});
+                    var queryMatchItems = Object.assign({});
 
                     if (category === "FABRIC") {
                         queryCategory = {
@@ -340,6 +341,13 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                             }
                                         });
                                         break;
+                                    case 2:
+                                        queryMatchItems = Object.assign(queryMatchItems, {
+                                            "items.category.name": {
+                                                "$regex": regex
+                                            }
+                                        });
+                                        break;                                           
                                 }
                             }
                         }
@@ -353,6 +361,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         "purchaseRequest.no": 1,
                         "purchaseRequest._id": 1,
                         "roNo": 1,
+                        "artikel":1,
                         "isPosted": 1,
                         "isUsed": 1,
                         "_createdBy": 1,
@@ -372,7 +381,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         "items.remark": "$items.remark"
                     };
 
-                    var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryCategory }, { $project: _select }];
+                    var _sort = { "items.refNo" : 1 };
+                    var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryCategory }, { $match: queryMatchItems }, { $project: _select}, { $sort: _sort}];
 
                     var queryDate = Object.assign({});
                     if (shipmentDateFrom && shipmentDateTo) {

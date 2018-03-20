@@ -352,8 +352,9 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         "day": { $dayOfMonth: "$shipmentDate" },
                     };
 
-                    var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryMatchItems }, { $project: _select }];
-
+                    var _sort = { "items.refNo" : 1 };
+                    var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryMatchItems }, { $project: _select }, { $sort: _sort}];
+                    
                     var queryDate = Object.assign({});
                     if (shipmentDateFrom && shipmentDateTo) {
                         var _shipmentDateFrom = new Date(shipmentDateFrom);
