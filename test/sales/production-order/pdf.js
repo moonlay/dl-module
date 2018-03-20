@@ -62,8 +62,12 @@ it('#04. should success when create pdf', function (done) {
         });
 });
 
-it("#05. should success update isRequested", function (done) {
-    instanceManager.updateIsRequested([createdData._id])
+it("#05. should success update isRequested create context", function (done) {
+    var data = {
+        ids: [createdData._id],
+        context: "CREATE"
+    }
+    instanceManager.updateIsRequested(data)
         .then((result) => {
             done();
         })
@@ -72,8 +76,12 @@ it("#05. should success update isRequested", function (done) {
         })
 });
 
-it("#06. should success update isCompleted", function (done) {
-    instanceManager.updateIsCompleted([createdData._id])
+it("#06. should success update isRequested delete context", function (done) {
+    var data = {
+        ids: [createdData._id],
+        context: "DELETE"
+    }
+    instanceManager.updateIsRequested(data)
         .then((result) => {
             done();
         })
@@ -82,10 +90,55 @@ it("#06. should success update isCompleted", function (done) {
         })
 });
 
-it("#07. should success update isRequested", function (done) {
+it("#07. should success update isCompleted complete context", function (done) {
+    var data = {
+        ids: [createdData._id],
+        context: "COMPLETE"
+    }
+    instanceManager.updateIsCompleted(data)
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e)
+        })
+});
+
+it("#08. should success update isCompleted delete context", function (done) {
+    var data = {
+        ids: [createdData._id],
+        context: "DELETE"
+    }
+    instanceManager.updateIsCompleted(data)
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e)
+        })
+});
+
+it("#09. should success update distributed quantity context create", function (done) {
     var param = {
         id: createdData._id,
-        receivedQuantity: 10
+        receivedQuantity: 10,
+        context: "CREATE"
+    }
+
+    instanceManager.updateDistributedQuantity([param])
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e)
+        })
+});
+
+it("#10. should success update distributed quantity context delete", function (done) {
+    var param = {
+        id: createdData._id,
+        receivedQuantity: 10,
+        context: "DELETE"
     }
 
     instanceManager.updateDistributedQuantity([param])
