@@ -2257,7 +2257,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                 })
     }
 
-    updateReceivedQuantity(data) {
+    updateDistributedQuantity(data) {
         var updatePromises = data.map((datum) => {
             return this
                 .collection
@@ -2277,4 +2277,3 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
     //#endregion Update IsRequested and IsCompleted
 }
-

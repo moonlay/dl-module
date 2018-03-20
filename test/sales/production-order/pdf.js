@@ -88,7 +88,7 @@ it("#07. should success update isRequested", function (done) {
         receivedQuantity: 10
     }
 
-    instanceManager.updateReceivedQuantity([param])
+    instanceManager.updateDistributedQuantity([param])
         .then((result) => {
             done();
         })
