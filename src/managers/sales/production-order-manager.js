@@ -2268,7 +2268,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             "_updatedDate": new Date()
                         },
                         "$inc": {
-                            "distributedQuantity": datum.context.toUpperCase() == "CREATE" ? parseFloat(datum.distributedQuantity) : parseFloat(datum.distributedQuantity * -1)
+                            "distributedQuantity": datum.distributedQuantity
                         }
                     })
         });
