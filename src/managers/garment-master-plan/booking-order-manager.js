@@ -1027,19 +1027,19 @@ module.exports = class BookingOrderManager extends BaseManager {
                }
 
                item["Jumlah Booking Order Akhir"] = data.totalOrderQty;
-               item["Tanggal Pengiriman(booking)"]= data.deliveryDateBooking ? moment(data.deliveryDateBooking).format("DD MMMM YYYY") : "";  
+               item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking ? moment(data.deliveryDateBooking).format("DD MMMM YYYY") : "";  
 
                  if(!data.canceledItems) {
                     item["Komoditi"]="";
                     item["Jumlah Confirm"]="";
                     item["Tanggal Confirm"]="";
-                    item["Tanggal Pengiriman(confirm)"]="";
+                    item["Tanggal Pengiriman (Confirm)"]="";
                     item["Keterangan"]="";
                  } else {
                     item["Komoditi"] = data.comodity;
                     item["Jumlah Confirm"] = data.orderQty;
                     item["Tanggal Confirm"] = data.cancelConfirmDate ? moment(data.cancelConfirmDate).format("DD MMMM YYYY") : "";
-                    item["Tanggal Pengiriman(confirm)"] = data.deliveryDateConfirm ? moment(data.deliveryDateConfirm).format("DD MMMM YYYY") : "";
+                    item["Tanggal Pengiriman (Confirm)"] = data.deliveryDateConfirm ? moment(data.deliveryDateConfirm).format("DD MMMM YYYY") : "";
                     item["Keterangan"] = data.remark;
                  }
 
@@ -1073,11 +1073,11 @@ module.exports = class BookingOrderManager extends BaseManager {
                              temporaryCancelSisa["Buyer"] = item["Buyer"];
                              temporaryCancelSisa["Jumlah Booking Order Awal"] = item["Jumlah Booking Order Awal"];
                              temporaryCancelSisa["Jumlah Booking Order Akhir"] = item["Jumlah Booking Order Akhir"]
-                             temporaryCancelSisa["Tanggal Pengiriman(booking)"] = item["Tanggal Pengiriman(booking)"];
+                             temporaryCancelSisa["Tanggal Pengiriman (Booking)"] = item["Tanggal Pengiriman (Booking)"];
                              temporaryCancelSisa["Komoditi"] = item["Komoditi"];
                              temporaryCancelSisa["Jumlah Confirm"] = item["Jumlah Confirm"];
                              temporaryCancelSisa["Tanggal Confirm"] = item["Tanggal Confirm"];
-                             temporaryCancelSisa["Tanggal Pengiriman(confirm)"] = item["Tanggal Pengiriman(confirm)"];
+                             temporaryCancelSisa["Tanggal Pengiriman (Confirm)"] = item["Tanggal Pengiriman (Confirm)"];
                              temporaryCancelSisa["Keterangan"] = item["Keterangan"];
                              temporaryCancelSisa["Tanggal Cancel"]=data.canceledDate ? moment(data.canceledDate).format("DD MMMM YYYY") : "";
                              temporaryCancelSisa["Jumlah yang Dicancel"]=data.canceledBookingOrder;
@@ -1100,11 +1100,11 @@ module.exports = class BookingOrderManager extends BaseManager {
                              temporaryExpired["Buyer"] = item["Buyer"];
                              temporaryExpired["Jumlah Booking Order Awal"] = item["Jumlah Booking Order Awal"];
                              temporaryExpired["Jumlah Booking Order Akhir"] = item["Jumlah Booking Order Akhir"]
-                             temporaryExpired["Tanggal Pengiriman(booking)"] = item["Tanggal Pengiriman(booking)"];
+                             temporaryExpired["Tanggal Pengiriman (Booking)"] = item["Tanggal Pengiriman (Booking)"];
                              temporaryExpired["Komoditi"] = item["Komoditi"];
                              temporaryExpired["Jumlah Confirm"] = item["Jumlah Confirm"];
                              temporaryExpired["Tanggal Confirm"] = item["Tanggal Confirm"];
-                             temporaryExpired["Tanggal Pengiriman(confirm)"] = item["Tanggal Pengiriman(confirm)"];
+                             temporaryExpired["Tanggal Pengiriman (Confirm)"] = item["Tanggal Pengiriman (Confirm)"];
                              temporaryExpired["Keterangan"] = item["Keterangan"];
                              temporaryExpired["Tanggal Cancel"]=data.expiredDeletedDate ? moment(data.expiredDeletedDate).format("DD MMMM YYYY") : "";
                              temporaryExpired["Jumlah yang Dicancel"]=data.expiredBookingOrder;
@@ -1124,7 +1124,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                         item["Tanggal Booking"]='';
                         item["Buyer"]='';
                         item["Jumlah Booking Order Akhir"]='';
-                        item["Tanggal Pengiriman(booking)"]='';
+                        item["Tanggal Pengiriman (Booking)"]='';
                         item["Jumlah Booking Order Awal"]='';
                         row_span_count=row_span_count+1;    
                      } else if((!_temp.code || _temp.code !== item["Kode Booking"]) ){
@@ -1206,10 +1206,10 @@ module.exports = class BookingOrderManager extends BaseManager {
  
                      for(var b of Object.keys(xls.data[0])){
                          
-                         if(b=='Tanggal Pengiriman (Booking)' || b=='Tanggal Pengiriman(Confirm)' || b=='Tanggal Cancel'){
+                         if(b=='Buyer' || b=='Jumlah Booking Order Awal' || b=='Jumlah Booking Order Akhir' || b=='Tanggal Pengiriman (Booking)' || b=='Tanggal Pengiriman (Confirm)' || b=='Tanggal Cancel'){
                              xls.options.specification[b] = {
                                  displayName: b,
-                                 width: 200,
+                                 width: 250,
                                  headerStyle: styles.header,
                                  cellStyle: styles.cellUnit
                              };
@@ -1230,7 +1230,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                      for(var a=0;a<xls.data.length;a++){
                          var c=1;
                          for(var b of Object.keys(xls.data[a])){
-                             if(xls.data[a]["Kode Booking"]!=='' && (this.rowspan[d].row_count)>1 && (b!=="Komoditi" && b!=="Jumlah Confirm" && b!=="Tanggal Confirm" && b!=="Tanggal Pengiriman(confirm)" && b!=="Keterangan" && b!=="Tanggal Cancel" && b!=="Jumlah yang Dicancel" && b!=="Status Cancel")){//&& xls.data[a].b && ){
+                             if(xls.data[a]["Kode Booking"]!=='' && (this.rowspan[d].row_count)>1 && (b!=="Komoditi" && b!=="Jumlah Confirm" && b!=="Tanggal Confirm" && b!=="Tanggal Pengiriman (Confirm)" && b!=="Keterangan" && b!=="Tanggal Cancel" && b!=="Jumlah yang Dicancel" && b!=="Status Cancel")){//&& xls.data[a].b && ){
                                 if(xls.data[a]["Status Cancel"]=="Cancel Confirm"){ 
                                     xls.options.merges.push(
                                         { start: { row: a+2, column: c }, end: { row: (a+(this.rowspan[d].row_count)+1), column: c } }
@@ -1247,11 +1247,11 @@ module.exports = class BookingOrderManager extends BaseManager {
                  xls.options["Buyer"] = "string";
                  xls.options["Jumlah Booking Order Awal"] = "number";
                  xls.options["Jumlah Booking Order Akhir"] = "number";
-                 xls.options["Tanggal Pengiriman(Booking)"] = "string";
+                 xls.options["Tanggal Pengiriman (Booking)"] = "string";
                  xls.options["Komoditi"] = "string";
                  xls.options["Jumlah Confirm)"] = "number";
                  xls.options["Tanggal Confirm"] = "string";
-                 xls.options["Tanggal Pengiriman(confirm"] = "string";
+                 xls.options["Tanggal Pengiriman (Confirm"] = "string";
                  xls.options["Keterangan"] = "string";
                  xls.options["Tanggal Cancel"] = "string";
                  xls.options["Jumlah yang Dicancel"] = "number";
