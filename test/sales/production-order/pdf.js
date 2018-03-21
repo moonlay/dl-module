@@ -114,12 +114,12 @@ it("#08. should success update distributed quantity with context", function (don
     var params = {
         contextQuantityAndIds: [{
             id: createdData._id,
-            receivedQuantity: 10,
+            distributedQuantity: 10,
             context: "CREATE"
         },
         {
             id: createdData._id,
-            receivedQuantity: 10,
+            distributedQuantity: 10,
             context: "DELETE"
         }]
     }
