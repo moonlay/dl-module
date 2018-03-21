@@ -2265,9 +2265,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     {
                         "$set": {
                             "_updatedBy": this.user.username,
-                            "_updatedDate": new Date()
+                            "_updatedDate": new Date(),
+                            "distributedQuantity": parseFloat(datum.distributedQuantity)
                         },
-                        "distributedQuantity": parseFloat(datum.distributedQuantity)
                     })
         });
 
