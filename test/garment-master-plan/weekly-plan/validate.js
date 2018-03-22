@@ -117,35 +117,35 @@ it("#04-1. should error when create new data with out of range year", function (
         });
 });
 
-it("#05. should error when create new data with invalid efficiency, operator and workingHours", function (done) {
-    dataUtil.getNewData()
-        .then((data) => {
-            data.items[0].efficiency = 0;
-            data.items[0].operator = 0;
-            data.items[0].workingHours = 0;
-            manager.create(data)
-                .then((id) => {
-                    done("should error when create new data with invalid efficiency, operator and workingHours");
-                })
-                .catch((e) => {
-                    e.name.should.equal("ValidationError");
-                    e.should.have.property("errors");
-                    e.errors.should.instanceof(Object);
-                    e.errors.should.have.property('items');
-                    for(var item of e.errors.items){
-                        if (Object.getOwnPropertyNames(item).length > 0) {
-                            item.should.have.property('efficiency');
-                            item.should.have.property('operator');
-                            item.should.have.property('workingHours');
-                        }
-                    }
-                    done();
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#05. should error when create new data with invalid efficiency, operator and workingHours", function (done) {
+//     dataUtil.getNewData()
+//         .then((data) => {
+//             data.items[0].efficiency = 0;
+//             data.items[0].operator = 0;
+//             data.items[0].workingHours = 0;
+//             manager.create(data)
+//                 .then((id) => {
+//                     done("should error when create new data with invalid efficiency, operator and workingHours");
+//                 })
+//                 .catch((e) => {
+//                     e.name.should.equal("ValidationError");
+//                     e.should.have.property("errors");
+//                     e.errors.should.instanceof(Object);
+//                     e.errors.should.have.property('items');
+//                     for(var item of e.errors.items){
+//                         if (Object.getOwnPropertyNames(item).length > 0) {
+//                             item.should.have.property('efficiency');
+//                             item.should.have.property('operator');
+//                             item.should.have.property('workingHours');
+//                         }
+//                     }
+//                     done();
+//                 });
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
 it("#06. should error when create new data with no data unit", function (done) {
     dataUtil.getNewData()
