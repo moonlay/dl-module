@@ -413,12 +413,13 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                     }
                 };
             }
-            xls.options.specification["Total Remaining EH"] = {
-                displayName : "Total Remaining EH",
-                width: 120,
-                headerStyle: styles.header,
-                cellStyle: styles.cell
-            };
+            if(!query.unit)
+                xls.options.specification["Total Remaining EH"] = {
+                    displayName : "Total Remaining EH",
+                    width: 120,
+                    headerStyle: styles.header,
+                    cellStyle: styles.cell
+                };
             xls.options.specification["Head Count"] = {
                 displayName : "Head Count",
                 width: 100,
