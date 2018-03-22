@@ -21,3 +21,7 @@ describe("CONFIRM BOOKING SCENARIOS", function() {
 describe("MONITORING BOOKING SCENARIOS", function() {
     require("./report");
 });
+
+describe("MONITORING CANCELED BOOKING SCENARIOS", function() {
+    require("./cancel-booking-report");
+});
