@@ -126,29 +126,26 @@ module.exports = class BookingOrderManager extends BaseManager {
                 }
                 else if (!valid.items || valid.items.length === 0) {
                     valid.bookingDate = new Date(valid.bookingDate);
-                    var validDeliveryDate = moment(new Date(valid.deliveryDate)).add(7, 'h').locale('id');
-                    validDeliveryDate = new Date(validDeliveryDate);
-                    var check_deliveryDate = new Date(validDeliveryDate);
-                    check_deliveryDate.setHours(0,0,0,0);                                        
-                    valid.bookingDate.setHours(0,0,0,0);
+                    valid.deliveryDate = new Date(valid.deliveryDate);
+                    valid.bookingDate.setUTCHours(valid.bookingDate.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+                    valid.deliveryDate.setUTCHours(valid.deliveryDate.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
 
-                    // var today= new Date();
-                    // today.setHours(0,0,0,0);
+                    // setUTCHours 17 atau -7 untuk mengubah ke 00:00:00 WIB
 
                     var next45Days = new Date();
-                    next45Days.setHours(0,0,0,0);
-                    next45Days = new Date(moment(next45Days).add(45, 'd').add(7, 'h').locale('id'));
+                    next45Days.setUTCHours(next45Days.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+                    next45Days.setDate(next45Days.getDate() + 45);
 
-                    if(valid.bookingDate.getTime()> validDeliveryDate.getTime()){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotLessThanBookingDate:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
-                    } else if(valid.bookingDate.getTime() == check_deliveryDate.getTime()){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotSameAsBookingDate:%s should not be the same date as booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
-                    // } else if(today.getTime()>validDeliveryDate.getTime()){
+                    if (valid.bookingDate.getTime() > valid.deliveryDate.getTime()) {
+                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotLessThanBookingDate:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate"));
+                    } else if (valid.bookingDate.getTime() == valid.deliveryDate.getTime()) {
+                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotSameAsBookingDate:%s should not be the same date as booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate"));
+                    } else if (next45Days.getTime() >= valid.deliveryDate.getTime()) {
+                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldMoreThan45Days:%s from today date should be more than 45 days", i18n.__("BookingOrder.deliveryDate._:deliveryDate")) + " (" + moment(next45Days).add(7, 'h').format('DD-MMM-YYYY') + ")";
+                    }
+                    // } else if(today.getTime() > validDeliveryDate.getTime()){
                     //     errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
                     // }
-                    } else if(next45Days.getTime() >= validDeliveryDate.getTime()){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldMoreThan45Days:%s should be more than 45 days from today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
-                    }
                 }
                 // if(valid.items){
                 //     var totalqty = 0;
@@ -200,31 +197,18 @@ module.exports = class BookingOrderManager extends BaseManager {
                                 itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.isRequired:%s is required", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
                             }
                             else{
-                                item.deliveryDate=new Date(item.deliveryDate);
-                                var today= new Date();
-                                if(item._createdDate!='' && item._createdDate){
-                                    today=new Date(item._createdDate);
-                                }
-                                today.setHours(0,0,0,0);
-                                item.deliveryDate= moment(new Date(item.deliveryDate)).add(7,'h').locale('id');
-                                // valid.deliveryDate= moment(new Date(valid.deliveryDate)).add(7, 'h').locale('id');
-                                // item.deliveryDate.setHours(0,0,0,0);
-                                valid.deliveryDate=new Date(valid.deliveryDate);
-                                valid.bookingDate= new Date(valid.bookingDate);
-                                item.deliveryDate= new Date(item.deliveryDate);
-                                valid.bookingDate.setHours(0,0,0,0);
-                                var check_deliveryDate=new Date(valid.deliveryDate);
-                                check_deliveryDate.setHours(0,0,0,0); 
-                                var check_item_deliveryDate=new Date(item.deliveryDate);
-                                check_item_deliveryDate.setHours(0,0,0,0); 
-                                // valid.deliveryDate.setHours(0,0,0,0);
-                                // item.deliveryDate.setHours(0,0,0,0);
-                                
-                                if (valid.bookingDate.getTime()>check_item_deliveryDate.getTime()){
+                                var check_bookingDate = new Date(valid.bookingDate);
+                                check_bookingDate.setUTCHours(check_bookingDate.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+                                var check_deliveryDate = new Date(valid.deliveryDate);
+                                check_deliveryDate.setUTCHours(check_deliveryDate.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+                                var check_item_deliveryDate = new Date(item.deliveryDate);
+                                check_item_deliveryDate.setUTCHours(check_item_deliveryDate.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+
+                                if (check_bookingDate.getTime() > check_item_deliveryDate.getTime()) {
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
-                                } else if(valid.bookingDate.getTime()==check_item_deliveryDate.getTime()){
+                                } else if (check_bookingDate.getTime() == check_item_deliveryDate.getTime()) {
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate2.shouldNot:%s should not be the same date as booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
-                                } else if (check_deliveryDate.getTime()<check_item_deliveryDate.getTime()){
+                                } else if (check_deliveryDate.getTime() < check_item_deliveryDate.getTime()) {
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDatedd.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
                                 }
                                 // item.deliveryDate= new Date(item.deliveryDate.setDate(item.deliveryDate.getDate() + 1));        
@@ -739,7 +723,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                         rowcount.code=data.bookingCode;
                         xls.data.push(item_temp);
                         this.rowspan.push(rowcount); 
-                        
+
                     } else if(!temp_data.code || temp_data.code!=data.bookingCode){
                         temp_data.code=data.bookingCode;
                         row_span_count=1;
