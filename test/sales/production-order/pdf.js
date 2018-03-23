@@ -111,18 +111,16 @@ it("#07. should success update isCompleted with context", function (done) {
 });
 
 it("#08. should success update distributed quantity with context", function (done) {
-    var params = {
-        contextQuantityAndIds: [{
-            id: createdData._id,
-            distributedQuantity: 10,
-            context: "CREATE"
-        },
-        {
-            id: createdData._id,
-            distributedQuantity: 10,
-            context: "DELETE"
-        }]
-    }
+    var params = [{
+        id: createdData._id,
+        distributedQuantity: 10,
+        context: "CREATE"
+    },
+    {
+        id: createdData._id,
+        distributedQuantity: 10,
+        context: "DELETE"
+    }]
 
     instanceManager.updateDistributedQuantity(params)
         .then((result) => {
