@@ -10,6 +10,7 @@ var moment = require('moment');
 var dateFrom=new Date("2018-01-02")
 var dateTo=new Date("2018-01-10");
 var comodity="comodity";
+var section="section";
 var buyer="buyer";
 var code ="code";
 var isconfirmState="Sudah Dikonfirmasi";
@@ -17,6 +18,7 @@ var notconfirmState="Belum Dikonfirmasi";
 var bookingOrderBooking="Booking";
 var bookingOrderMasterPlan="Sudah Dibuat Master Plan";
 var bookingOrderCanceled="Booking Dibatalkan";
+var bookingOrderConfirmed="Confirmed";
 var offset=7;
 
 require("should");
@@ -67,7 +69,18 @@ it("#03. should success when get report with parameter comodity", function (done
         });
 });
 
-it("#04. should success when get report with parameter isconfirmstate", function (done) {
+it("#04. should success when get report with parameter section", function (done) {
+    bookingOrderManager.getBookingOrderReport({"section" : section},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#05. should success when get report with parameter isconfirmstate", function (done) {
     bookingOrderManager.getBookingOrderReport({"confirmState" : isconfirmState},offset)
         .then((data) => {
             data.should.instanceof(Array);
@@ -77,7 +90,7 @@ it("#04. should success when get report with parameter isconfirmstate", function
             done(e);
         });
 });
-it("#05. should success when get report with parameter notconfirmstate", function (done) {
+it("#06. should success when get report with parameter notconfirmstate", function (done) {
     bookingOrderManager.getBookingOrderReport({"confirmState" : notconfirmState},offset)
         .then((data) => {
             data.should.instanceof(Array);
@@ -87,7 +100,7 @@ it("#05. should success when get report with parameter notconfirmstate", functio
             done(e);
         });
 });
-it("#06. should success when get report with parameter booking order state :Booking", function (done) {
+it("#07. should success when get report with parameter booking order state :Booking", function (done) {
     bookingOrderManager.getBookingOrderReport({"bookingOrderState" : bookingOrderBooking},offset)
         .then((data) => {
             data.should.instanceof(Array);
@@ -97,7 +110,7 @@ it("#06. should success when get report with parameter booking order state :Book
             done(e);
         });
 });
-it("#07. should success when get report with parameter booking order state : Sudah dibuat Master Plan", function (done) {
+it("#08. should success when get report with parameter booking order state : Sudah dibuat Master Plan", function (done) {
     bookingOrderManager.getBookingOrderReport({"bookingOrderState" : bookingOrderMasterPlan},offset)
         .then((data) => {
             data.should.instanceof(Array);
@@ -107,7 +120,7 @@ it("#07. should success when get report with parameter booking order state : Sud
             done(e);
         });
 });
-it("#08. should success when get report with parameter booking order state : Booking Dibatalkan", function (done) {
+it("#09. should success when get report with parameter booking order state : Booking Dibatalkan", function (done) {
     bookingOrderManager.getBookingOrderReport({"bookingOrderState" : bookingOrderCanceled},offset)
         .then((data) => {
             data.should.instanceof(Array);
@@ -118,7 +131,20 @@ it("#08. should success when get report with parameter booking order state : Boo
         });
 });
 
-it("#09. should success when get report with parameter datefrom and dateTo", function (done) {
+it("#10. should success when get report with parameter booking order state : Confirmed", function (done) {
+    bookingOrderManager.getBookingOrderReport({"bookingOrderState" : bookingOrderConfirmed},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+
+
+it("#11. should success when get report with parameter datefrom and dateTo", function (done) {
     bookingOrderDataUtil.getReportData()
     .then((datas)=>{
         bookingOrderManager.getBookingOrderReport({dateFrom,dateTo},offset)
@@ -146,7 +172,7 @@ it("#09. should success when get report with parameter datefrom and dateTo", fun
 
 });
 
-it("#10. should success when get report with no parameter and get excel", function (done) {
+it("#12. should success when get report with no parameter and get excel", function (done) {
     bookingOrderDataUtil.getReportData()
     .then((datas)=>{
         bookingOrderManager.getBookingOrderReport({},offset)
