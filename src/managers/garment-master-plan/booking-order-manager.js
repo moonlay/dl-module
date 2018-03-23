@@ -493,15 +493,10 @@ module.exports = class BookingOrderManager extends BaseManager {
             var dateQuery={};
             if (query.dateFrom !== undefined && query.dateFrom !== "" && query.dateTo !== undefined  && query.dateTo !== "")
             {
-                var dateFrom = new Date(query.dateFrom);
-                var dateTo = new Date(query.dateTo);
-                dateFrom.setHours(dateFrom.getHours() - offset);
-                dateTo.setHours(dateTo.getHours() - offset);
-
                 dateQuery = {
                     "bookingDate": {
-                        "$gte": dateFrom,
-                        "$lte": dateTo
+                        "$gte": new Date(`${query.dateFrom} 00:00:00`),
+                        "$lte": new Date(`${query.dateTo} 23:59:59`)
                     }
                 };
             }
@@ -569,7 +564,7 @@ module.exports = class BookingOrderManager extends BaseManager {
             }
 
             var totalOrderQuery={"totalOrderQty":{$ne:0}};
-
+            
              var Query = { "$and": [ dateQuery, deletedQuery, sectionQuery, buyerQuery, comodityQuery, confirmStateQuery, bookingOrderStateQuery, codeQuery, totalOrderQuery] };
             this.collection
                 .aggregate( [
@@ -597,7 +592,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                     { "$match": Query },
                     {
                         "$sort": {
-                            "_createdDate": -1,
+                            "_updatedDate": -1,
                         }
                     }
                 ])
@@ -621,8 +616,6 @@ module.exports = class BookingOrderManager extends BaseManager {
             xls.name = '';
             var remain=0;
             var temp=dataReport.data;
-            this.temp=[];
-            var temps={};
             var dateFormat = "DD/MM/YYYY";
             var temp_data = {};
             
@@ -630,13 +623,8 @@ module.exports = class BookingOrderManager extends BaseManager {
             this.dataXls=[];
             
             var count=0;
-            
-            for (var pr of dataReport.data) {
-                temps.bookingCode=pr.bookingCode;
-                temps.orderQty=pr.orderQty;
-                this.temp.push(temps);
-            }
             var row_span_count=1;
+
             for (var data of dataReport.data) {
                 var item = {};
                 var item_temp = {};
@@ -686,16 +674,16 @@ module.exports = class BookingOrderManager extends BaseManager {
                         }
                       
                     }
-                    var today=new Date();
-                    var a = moment(new Date(data.deliveryDateBooking)).add(7, 'h').locale('id');
-                    var b = today;
-                    a = new Date(a);
-                    a.setHours(0,0,0,0);
-                    b.setHours(0,0,0,0);
-                    var diff=a.getTime() - b.getTime();
-                    var timeDiff = a.getTime() - b.getTime();
-                    var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                             
+                var today=new Date();
+                var a = moment(new Date(data.deliveryDateBooking)).add(7, 'h').locale('id');
+                var b = today;
+                a = new Date(a);
+                a.setHours(0,0,0,0);
+                b.setHours(0,0,0,0);
+                var diff=a.getTime() - b.getTime();
+                var timeDiff = a.getTime() - b.getTime();
+                var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                          
                 if(diffDays>0 && diffDays<=45){
                     item["Selisih Hari (dari Tanggal Pengiriman)"] = diffDays;
                 } else if(diffDays<=0 || diffDays>45){
@@ -723,7 +711,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                         rowcount.code=data.bookingCode;
                         xls.data.push(item_temp);
                         this.rowspan.push(rowcount); 
-
+                        
                     } else if(!temp_data.code || temp_data.code!=data.bookingCode){
                         temp_data.code=data.bookingCode;
                         row_span_count=1;
@@ -845,13 +833,13 @@ module.exports = class BookingOrderManager extends BaseManager {
             xls.options["Selisih Hari (dari Tanggal Pengiriman)"] = "number";
 
             if (query.dateFrom && query.dateTo) {
-                xls.name = `Booking Order ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                xls.name = `Booking Order ${moment(new Date(query.dateFrom)).add(7, 'h').format(dateFormat)} - ${moment(new Date(query.dateTo)).add(7, 'h').format(dateFormat)}.xlsx`;
             }
             else if (!query.dateFrom && query.dateTo) {
-                xls.name = `Booking Order ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                xls.name = `Booking Order ${moment(new Date(query.dateTo)).add(7, 'h').format(dateFormat)}.xlsx`;
             }
             else if (query.dateFrom && !query.dateTo) {
-                xls.name = `Booking Order ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+                xls.name = `Booking Order ${moment(new Date(query.dateFrom)).add(7, 'h').format(dateFormat)}.xlsx`;
             }
             else
                 xls.name = `Booking Order Report.xlsx`;
@@ -859,6 +847,7 @@ module.exports = class BookingOrderManager extends BaseManager {
             resolve(xls);
         });
     }
+
     getCanceledBookingOrderReport(query,offset) {
         return new Promise((resolve, reject) => {
             
@@ -871,15 +860,10 @@ module.exports = class BookingOrderManager extends BaseManager {
             var dateQuery={};
             if (query.dateFrom !== undefined && query.dateFrom !== "" && query.dateTo !== undefined  && query.dateTo !== "")
             {
-                var dateFrom = new Date(query.dateFrom);
-                var dateTo = new Date(query.dateTo);
-                dateFrom.setHours(dateFrom.getHours() - offset);
-                dateTo.setHours(dateTo.getHours() - offset);
-
                 dateQuery = {
                     "bookingDate": {
-                        "$gte": dateFrom,
-                        "$lte": dateTo
+                        "$gte": new Date(`${query.dateFrom} 00:00:00`),
+                        "$lte": new Date(`${query.dateTo} 23:59:59`)
                     }
                 };
             }
@@ -952,7 +936,8 @@ module.exports = class BookingOrderManager extends BaseManager {
                     { "$match": {"$and":Query,"$or":queryOr} },
                     {
                         "$sort": {
-                            "_createdDate": -1,
+                            "_updatedDate": -1,
+                            "bookingCode" : 1,
                         }
                     }
                 ])
@@ -998,7 +983,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                var temporaryExpired = {};  
 
                item["Kode Booking"]=  data.bookingCode;
-               item["Tanggal Booking"] =data.bookingDate ? moment(data.bookingDate).format("DD MMMM YYYY") : "";;
+               item["Tanggal Booking"] =data.bookingDate ? moment(data.bookingDate).add(7, 'h').format("DD MMMM YYYY") : "";;
                item["Buyer"] = data.buyer;
                if((data.canceledBookingOrder==0 || data.canceledBookingOrder==undefined) && (data.expiredBookingOrder==0 || data.expiredBookingOrder==undefined)){
                 item["Jumlah Booking Order Awal"] = data.totalOrderQty;
@@ -1011,7 +996,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                }
 
                item["Jumlah Booking Order Akhir"] = data.totalOrderQty;
-               item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking ? moment(data.deliveryDateBooking).format("DD MMMM YYYY") : "";  
+               item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking ? moment(data.deliveryDateBooking).add(7, 'h').format("DD MMMM YYYY") : "";  
 
                  if(!data.canceledItems) {
                     item["Komoditi"]="";
@@ -1022,32 +1007,32 @@ module.exports = class BookingOrderManager extends BaseManager {
                  } else {
                     item["Komoditi"] = data.comodity;
                     item["Jumlah Confirm"] = data.orderQty;
-                    item["Tanggal Confirm"] = data.cancelConfirmDate ? moment(data.cancelConfirmDate).format("DD MMMM YYYY") : "";
-                    item["Tanggal Pengiriman (Confirm)"] = data.deliveryDateConfirm ? moment(data.deliveryDateConfirm).format("DD MMMM YYYY") : "";
+                    item["Tanggal Confirm"] = data.cancelConfirmDate ? moment(data.cancelConfirmDate).add(7, 'h').format("DD MMMM YYYY") : "";
+                    item["Tanggal Pengiriman (Confirm)"] = data.deliveryDateConfirm ? moment(data.deliveryDateConfirm).add(7, 'h').format("DD MMMM YYYY") : "";
                     item["Keterangan"] = data.remark;
                  }
 
                  if(!item["Komoditi"]){
                      if(data.canceledBookingOrder>0 && (query.cancelState=='' || query.cancelState=='Cancel Sisa')){
                     
-                        item["Tanggal Cancel"]=data.canceledDate ? moment(data.canceledDate).format("DD MMMM YYYY") : "";
+                        item["Tanggal Cancel"]=data.canceledDate ? moment(data.canceledDate).add(7, 'h').format("DD MMMM YYYY") : "";
                         item["Jumlah yang Dicancel"]=data.canceledBookingOrder;
                         item["Status Cancel"]="Cancel Sisa";
                      
                      } else if(data.expiredBookingOrder>0 && (query.cancelState== '' || query.cancelState=='Expired')){
                      
-                        item["Tanggal Cancel"]=data.expiredDeletedDate ? moment(data.expiredDeletedDate).format("DD MMMM YYYY") : "";
+                        item["Tanggal Cancel"]=data.expiredDeletedDate ? moment(data.expiredDeletedDate).add(7, 'h').format("DD MMMM YYYY") : "";
                         item["Jumlah yang Dicancel"]=data.expiredBookingOrder;
                         item["Status Cancel"]="Expired";
                      
                      } 
                  } else if(item["Komoditi"]) {
-                    item["Tanggal Cancel"]=data.cancelItemsDate ? moment(data.cancelItemsDate).format("DD MMMM YYYY") : "";
+                    item["Tanggal Cancel"]=data.cancelItemsDate ? moment(data.cancelItemsDate).add(7, 'h').format("DD MMMM YYYY") : "";
                     item["Jumlah yang Dicancel"]=data.orderQty;
                     item["Status Cancel"]="Cancel Confirm";
                  }
 
-                 if (data.canceledDate || (data.canceledBookingOrder>0 || data.expiredBookingOrder>0)){
+                 if (item["Tanggal Cancel"] || (data.canceledBookingOrder>0 || data.expiredBookingOrder>0)){
                      if(query.cancelState!=="Cancel Confirm"){
                          if(data.canceledBookingOrder>0 && data.canceledItems && (item["Kode Booking"]!==_temp2.code || !_temp2.code) && (item["Status Cancel"]!==_temp2.cancelState || !_temp2.cancelState) && query.cancelState!=="Expired"){ //&& _data.cancelState!=="Cancel Confirm"){  
                              _temp2.code=item["Kode Booking"];
@@ -1058,12 +1043,12 @@ module.exports = class BookingOrderManager extends BaseManager {
                              temporaryCancelSisa["Jumlah Booking Order Awal"] = item["Jumlah Booking Order Awal"];
                              temporaryCancelSisa["Jumlah Booking Order Akhir"] = item["Jumlah Booking Order Akhir"]
                              temporaryCancelSisa["Tanggal Pengiriman (Booking)"] = item["Tanggal Pengiriman (Booking)"];
-                             temporaryCancelSisa["Komoditi"] = item["Komoditi"];
-                             temporaryCancelSisa["Jumlah Confirm"] = item["Jumlah Confirm"];
-                             temporaryCancelSisa["Tanggal Confirm"] = item["Tanggal Confirm"];
-                             temporaryCancelSisa["Tanggal Pengiriman (Confirm)"] = item["Tanggal Pengiriman (Confirm)"];
-                             temporaryCancelSisa["Keterangan"] = item["Keterangan"];
-                             temporaryCancelSisa["Tanggal Cancel"]=data.canceledDate ? moment(data.canceledDate).format("DD MMMM YYYY") : "";
+                             temporaryCancelSisa["Komoditi"] = "";
+                             temporaryCancelSisa["Jumlah Confirm"] = "";
+                             temporaryCancelSisa["Tanggal Confirm"] = "";
+                             temporaryCancelSisa["Tanggal Pengiriman (Confirm)"] = "";
+                             temporaryCancelSisa["Keterangan"] = "";
+                             temporaryCancelSisa["Tanggal Cancel"]=data.canceledDate ? moment(data.canceledDate).add(7, 'h').format("DD MMMM YYYY") : "";
                              temporaryCancelSisa["Jumlah yang Dicancel"]=data.canceledBookingOrder;
                              temporaryCancelSisa["Status Cancel"]="Cancel Sisa";
 
@@ -1085,12 +1070,12 @@ module.exports = class BookingOrderManager extends BaseManager {
                              temporaryExpired["Jumlah Booking Order Awal"] = item["Jumlah Booking Order Awal"];
                              temporaryExpired["Jumlah Booking Order Akhir"] = item["Jumlah Booking Order Akhir"]
                              temporaryExpired["Tanggal Pengiriman (Booking)"] = item["Tanggal Pengiriman (Booking)"];
-                             temporaryExpired["Komoditi"] = item["Komoditi"];
-                             temporaryExpired["Jumlah Confirm"] = item["Jumlah Confirm"];
-                             temporaryExpired["Tanggal Confirm"] = item["Tanggal Confirm"];
-                             temporaryExpired["Tanggal Pengiriman (Confirm)"] = item["Tanggal Pengiriman (Confirm)"];
-                             temporaryExpired["Keterangan"] = item["Keterangan"];
-                             temporaryExpired["Tanggal Cancel"]=data.expiredDeletedDate ? moment(data.expiredDeletedDate).format("DD MMMM YYYY") : "";
+                             temporaryExpired["Komoditi"] = "";
+                             temporaryExpired["Jumlah Confirm"] = "";
+                             temporaryExpired["Tanggal Confirm"] = "";
+                             temporaryExpired["Tanggal Pengiriman (Confirm)"] = "";
+                             temporaryExpired["Keterangan"] = "";
+                             temporaryExpired["Tanggal Cancel"]=data.expiredDeletedDate ? moment(data.expiredDeletedDate).add(7, 'h').format("DD MMMM YYYY") : "";
                              temporaryExpired["Jumlah yang Dicancel"]=data.expiredBookingOrder;
                              temporaryExpired["Status Cancel"]="Expired";
                              count++;
@@ -1242,13 +1227,13 @@ module.exports = class BookingOrderManager extends BaseManager {
                  xls.options["Status Cancel"] = "string";
      
                  if (query.dateFrom && query.dateTo) {
-                     xls.name = `Canceled Booking Order ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                     xls.name = `Canceled Booking Order ${moment(new Date(query.dateFrom)).add(7, 'h').format(dateFormat)} - ${moment(new Date(query.dateTo)).add(7, 'h').format(dateFormat)}.xlsx`;
                  }
                  else if (!query.dateFrom && query.dateTo) {
-                     xls.name = `Canceled Booking Order ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                     xls.name = `Canceled Booking Order ${moment(new Date(query.dateTo)).add(7, 'h').format(dateFormat)}.xlsx`;
                  }
                  else if (query.dateFrom && !query.dateTo) {
-                     xls.name = `Canceled Booking Order ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+                     xls.name = `Canceled Booking Order ${moment(new Date(query.dateFrom)).add(7, 'h').format(dateFormat)}.xlsx`;
                  }
                  else
                      xls.name = `Canceled Booking Order Report.xlsx`;
