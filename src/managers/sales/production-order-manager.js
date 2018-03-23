@@ -2258,7 +2258,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     updateDistributedQuantity(data) {
-        var updatePromises = data.contextQuantityAndIds.map((datum) => {
+        var updatePromises = data.map((datum) => {
             return this
                 .collection
                 .updateOne({ "_id": new ObjectId(datum.id) },
