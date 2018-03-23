@@ -126,29 +126,26 @@ module.exports = class BookingOrderManager extends BaseManager {
                 }
                 else if (!valid.items || valid.items.length === 0) {
                     valid.bookingDate = new Date(valid.bookingDate);
-                    var validDeliveryDate = moment(new Date(valid.deliveryDate)).add(7, 'h').locale('id');
-                    validDeliveryDate = new Date(validDeliveryDate);
-                    var check_deliveryDate = new Date(validDeliveryDate);
-                    check_deliveryDate.setHours(0,0,0,0);                                        
-                    valid.bookingDate.setHours(0,0,0,0);
+                    valid.deliveryDate = new Date(valid.deliveryDate);
+                    valid.bookingDate.setUTCHours(valid.bookingDate.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+                    valid.deliveryDate.setUTCHours(valid.deliveryDate.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
 
-                    // var today= new Date();
-                    // today.setHours(0,0,0,0);
+                    // setUTCHours 17 atau -7 untuk mengubah ke 00:00:00 WIB
 
                     var next45Days = new Date();
-                    next45Days.setHours(0,0,0,0);
-                    next45Days = new Date(moment(next45Days).add(45, 'd').add(7, 'h').locale('id'));
+                    next45Days.setUTCHours(next45Days.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+                    next45Days.setDate(next45Days.getDate() + 45);
 
-                    if(valid.bookingDate.getTime()> validDeliveryDate.getTime()){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotLessThanBookingDate:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
-                    } else if(valid.bookingDate.getTime() == check_deliveryDate.getTime()){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotSameAsBookingDate:%s should not be the same date as booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
-                    // } else if(today.getTime()>validDeliveryDate.getTime()){
+                    if (valid.bookingDate.getTime() > valid.deliveryDate.getTime()) {
+                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotLessThanBookingDate:%s should not be less than booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate"));
+                    } else if (valid.bookingDate.getTime() == valid.deliveryDate.getTime()) {
+                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNotSameAsBookingDate:%s should not be the same date as booking date", i18n.__("BookingOrder.deliveryDate._:deliveryDate"));
+                    } else if (next45Days.getTime() >= valid.deliveryDate.getTime()) {
+                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldMoreThan45Days:%s from today date should be more than 45 days", i18n.__("BookingOrder.deliveryDate._:deliveryDate")) + " (" + moment(next45Days).add(7, 'h').format('DD-MMM-YYYY') + ")";
+                    }
+                    // } else if(today.getTime() > validDeliveryDate.getTime()){
                     //     errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldNot:%s should not be less than today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
                     // }
-                    } else if(next45Days.getTime() >= validDeliveryDate.getTime()){
-                        errors["deliveryDate"] = i18n.__("BookingOrder.DeliveryDate.shouldMoreThan45Days:%s should be more than 45 days from today date", i18n.__("BookingOrder.deliveryDate._:deliveryDate")); 
-                    }
                 }
                 // if(valid.items){
                 //     var totalqty = 0;
@@ -200,31 +197,18 @@ module.exports = class BookingOrderManager extends BaseManager {
                                 itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate.isRequired:%s is required", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
                             }
                             else{
-                                item.deliveryDate=new Date(item.deliveryDate);
-                                var today= new Date();
-                                if(item._createdDate!='' && item._createdDate){
-                                    today=new Date(item._createdDate);
-                                }
-                                today.setHours(0,0,0,0);
-                                item.deliveryDate= moment(new Date(item.deliveryDate)).add(7,'h').locale('id');
-                                // valid.deliveryDate= moment(new Date(valid.deliveryDate)).add(7, 'h').locale('id');
-                                // item.deliveryDate.setHours(0,0,0,0);
-                                valid.deliveryDate=new Date(valid.deliveryDate);
-                                valid.bookingDate= new Date(valid.bookingDate);
-                                item.deliveryDate= new Date(item.deliveryDate);
-                                valid.bookingDate.setHours(0,0,0,0);
-                                var check_deliveryDate=new Date(valid.deliveryDate);
-                                check_deliveryDate.setHours(0,0,0,0); 
-                                var check_item_deliveryDate=new Date(item.deliveryDate);
-                                check_item_deliveryDate.setHours(0,0,0,0); 
-                                // valid.deliveryDate.setHours(0,0,0,0);
-                                // item.deliveryDate.setHours(0,0,0,0);
-                                
-                                if (valid.bookingDate.getTime()>check_item_deliveryDate.getTime()){
+                                var check_bookingDate = new Date(valid.bookingDate);
+                                check_bookingDate.setUTCHours(check_bookingDate.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+                                var check_deliveryDate = new Date(valid.deliveryDate);
+                                check_deliveryDate.setUTCHours(check_deliveryDate.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+                                var check_item_deliveryDate = new Date(item.deliveryDate);
+                                check_item_deliveryDate.setUTCHours(check_item_deliveryDate.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+
+                                if (check_bookingDate.getTime() > check_item_deliveryDate.getTime()) {
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDates.shouldNot:%s should not be less than booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));
-                                } else if(valid.bookingDate.getTime()==check_item_deliveryDate.getTime()){
+                                } else if (check_bookingDate.getTime() == check_item_deliveryDate.getTime()) {
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDate2.shouldNot:%s should not be the same date as booking date", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate")); 
-                                } else if (check_deliveryDate.getTime()<check_item_deliveryDate.getTime()){
+                                } else if (check_deliveryDate.getTime() < check_item_deliveryDate.getTime()) {
                                     itemError["deliveryDate"] = i18n.__("BookingOrder.items.deliveryDatedd.shouldNot:%s should not be more than booking deliveryDate", i18n.__("BookingOrder.items.deliveryDate._:DeliveryDate"));                                 
                                 }
                                 // item.deliveryDate= new Date(item.deliveryDate.setDate(item.deliveryDate.getDate() + 1));        
@@ -509,15 +493,10 @@ module.exports = class BookingOrderManager extends BaseManager {
             var dateQuery={};
             if (query.dateFrom !== undefined && query.dateFrom !== "" && query.dateTo !== undefined  && query.dateTo !== "")
             {
-                var dateFrom = new Date(query.dateFrom);
-                var dateTo = new Date(query.dateTo);
-                dateFrom.setHours(dateFrom.getHours() - offset);
-                dateTo.setHours(dateTo.getHours() - offset);
-
                 dateQuery = {
                     "bookingDate": {
-                        "$gte": dateFrom,
-                        "$lte": dateTo
+                        "$gte": new Date(`${query.dateFrom} 00:00:00`),
+                        "$lte": new Date(`${query.dateTo} 23:59:59`)
                     }
                 };
             }
@@ -585,7 +564,7 @@ module.exports = class BookingOrderManager extends BaseManager {
             }
 
             var totalOrderQuery={"totalOrderQty":{$ne:0}};
-
+            
              var Query = { "$and": [ dateQuery, deletedQuery, sectionQuery, buyerQuery, comodityQuery, confirmStateQuery, bookingOrderStateQuery, codeQuery, totalOrderQuery] };
             this.collection
                 .aggregate( [
@@ -613,7 +592,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                     { "$match": Query },
                     {
                         "$sort": {
-                            "_createdDate": -1,
+                            "_updatedDate": -1,
                         }
                     }
                 ])
@@ -637,8 +616,6 @@ module.exports = class BookingOrderManager extends BaseManager {
             xls.name = '';
             var remain=0;
             var temp=dataReport.data;
-            this.temp=[];
-            var temps={};
             var dateFormat = "DD/MM/YYYY";
             var temp_data = {};
             
@@ -646,13 +623,8 @@ module.exports = class BookingOrderManager extends BaseManager {
             this.dataXls=[];
             
             var count=0;
-            
-            for (var pr of dataReport.data) {
-                temps.bookingCode=pr.bookingCode;
-                temps.orderQty=pr.orderQty;
-                this.temp.push(temps);
-            }
             var row_span_count=1;
+
             for (var data of dataReport.data) {
                 var item = {};
                 var item_temp = {};
@@ -702,16 +674,16 @@ module.exports = class BookingOrderManager extends BaseManager {
                         }
                       
                     }
-                    var today=new Date();
-                    var a = moment(new Date(data.deliveryDateBooking)).add(7, 'h').locale('id');
-                    var b = today;
-                    a = new Date(a);
-                    a.setHours(0,0,0,0);
-                    b.setHours(0,0,0,0);
-                    var diff=a.getTime() - b.getTime();
-                    var timeDiff = a.getTime() - b.getTime();
-                    var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                             
+                var today=new Date();
+                var a = moment(new Date(data.deliveryDateBooking)).add(7, 'h').locale('id');
+                var b = today;
+                a = new Date(a);
+                a.setHours(0,0,0,0);
+                b.setHours(0,0,0,0);
+                var diff=a.getTime() - b.getTime();
+                var timeDiff = a.getTime() - b.getTime();
+                var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                          
                 if(diffDays>0 && diffDays<=45){
                     item["Selisih Hari (dari Tanggal Pengiriman)"] = diffDays;
                 } else if(diffDays<=0 || diffDays>45){
@@ -739,7 +711,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                         rowcount.code=data.bookingCode;
                         xls.data.push(item_temp);
                         this.rowspan.push(rowcount); 
-                        // console.log(this.rowspan);
+                        
                     } else if(!temp_data.code || temp_data.code!=data.bookingCode){
                         temp_data.code=data.bookingCode;
                         row_span_count=1;
@@ -861,13 +833,13 @@ module.exports = class BookingOrderManager extends BaseManager {
             xls.options["Selisih Hari (dari Tanggal Pengiriman)"] = "number";
 
             if (query.dateFrom && query.dateTo) {
-                xls.name = `Booking Order ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                xls.name = `Booking Order ${moment(new Date(query.dateFrom)).add(7, 'h').format(dateFormat)} - ${moment(new Date(query.dateTo)).add(7, 'h').format(dateFormat)}.xlsx`;
             }
             else if (!query.dateFrom && query.dateTo) {
-                xls.name = `Booking Order ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+                xls.name = `Booking Order ${moment(new Date(query.dateTo)).add(7, 'h').format(dateFormat)}.xlsx`;
             }
             else if (query.dateFrom && !query.dateTo) {
-                xls.name = `Booking Order ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+                xls.name = `Booking Order ${moment(new Date(query.dateFrom)).add(7, 'h').format(dateFormat)}.xlsx`;
             }
             else
                 xls.name = `Booking Order Report.xlsx`;
@@ -876,4 +848,397 @@ module.exports = class BookingOrderManager extends BaseManager {
         });
     }
 
+    getCanceledBookingOrderReport(query,offset) {
+        return new Promise((resolve, reject) => {
+            
+            var deletedQuery = { _deleted: false };
+            var date = new Date();
+            var dateString = moment(date).format('YYYY-MM-DD');
+            var dateNow = new Date(dateString);
+            var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            
+            var dateQuery={};
+            if (query.dateFrom !== undefined && query.dateFrom !== "" && query.dateTo !== undefined  && query.dateTo !== "")
+            {
+                dateQuery = {
+                    "bookingDate": {
+                        "$gte": new Date(`${query.dateFrom} 00:00:00`),
+                        "$lte": new Date(`${query.dateTo} 23:59:59`)
+                    }
+                };
+            }
+            
+            var codeQuery = {};
+            if (query.code) {
+                codeQuery = {
+                    "bookingCode": query.code
+                };
+            }
+            var buyerQuery = {};
+            if (query.buyer) {
+                buyerQuery = {
+                    "buyer": query.buyer
+                };
+            }
+            
+            var cancelStateQuery = {};
+            var cancelStateQueryOr = {};
+            if (query.cancelState === "Cancel Confirm") {
+                cancelStateQuery = {
+                    "canceledItems":{"$ne":[] },
+                    "canceledItems":{$exists:true}
+                }
+            }else  if (query.cancelState === "Cancel Sisa") 
+            {
+                cancelStateQuery = {
+                    "canceledBookingOrder":{"$gt":0}
+                }  
+            }else if (query.cancelState==="Expired")
+            {
+                cancelStateQuery = {
+                    "expiredBookingOrder":{"$gt":0}
+                }
+            }
+            
+             var Query =  [ dateQuery, deletedQuery, buyerQuery, cancelStateQuery, codeQuery] ;
+             var queryOr;
+             if(query.cancelState==="Cancel Sisa" || query.cancelState==="Expired"){
+                queryOr=[{}];
+             } else {
+                queryOr= [cancelStateQuery];
+             }
+            this.collection
+                .aggregate( [
+                    { "$unwind": {path: "$canceledItems", preserveNullAndEmptyArrays: true} },
+                    {
+                        "$project": {
+                            "bookingCode": "$code",
+                            "bookingDate":"$bookingDate",
+                            "buyer": "$garmentBuyerName",
+                            "totalOrderQty" :"$orderQuantity",
+                            "canceledBookingOrder":"$canceledBookingOrder",
+                            "expiredBookingOrder":"$expiredBookingOrder",
+                            "deliveryDateBooking":"$deliveryDate",
+                            "orderQty":"$canceledItems.quantity",
+                            "deliveryDateConfirm":{"$ifNull":["$canceledItems.deliveryDate",""]},
+                            "remark" :"$canceledItems.remark",
+                            "comodity":"$canceledItems.masterPlanComodity.name",
+                            "_deleted":"$_deleted",
+                            "_createdDate":"$_createdDate",
+                            "cancelItemsDate":"$canceledItems.canceledDate",
+                            "canceledDate":"$canceledDate",
+                            "expiredDeletedDate":"$expiredDeletedDate",
+                            "cancelConfirmDate":{"$ifNull":["$canceledItems._createdDate",""]},
+                            "items":"$items",
+                            "canceledItems":"$canceledItems"
+                        }
+                    },
+                    { "$match": {"$and":Query,"$or":queryOr} },
+                    {
+                        "$sort": {
+                            "_updatedDate": -1,
+                            "bookingCode" : 1,
+                        }
+                    }
+                ])
+                .toArray()
+                .then(results => {
+                    resolve(results);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+
+    getCanceledBookingOrderReportXls(dataReport, query,offset) {
+
+        return new Promise((resolve, reject) => {
+            var xls = {};
+            xls.data = [];
+            xls.options = [];
+            xls.name = '';
+            var temp=dataReport.data;
+            
+            var _temp = {};
+            var _temp2 = {};
+            var _temp3 = {};
+            var dateFormat = "DD/MM/YYYY";
+            var temp_data = {};
+            
+            this.rowspan=[];
+            this.dataXls=[];
+            
+            var count=0;
+            var row_span_count=1;
+            
+            for (var data of dataReport.data) {
+               var temporaryCancelSisa = {};
+               var temporaryExpired = {};  
+               var item = {};
+               var item_temp = {};
+               var rowcount={};
+               var temporaryCancelSisa = {};
+               var temporaryExpired = {};  
+
+               item["Kode Booking"]=  data.bookingCode;
+               item["Tanggal Booking"] =data.bookingDate ? moment(data.bookingDate).add(7, 'h').format("DD MMMM YYYY") : "";;
+               item["Buyer"] = data.buyer;
+               if((data.canceledBookingOrder==0 || data.canceledBookingOrder==undefined) && (data.expiredBookingOrder==0 || data.expiredBookingOrder==undefined)){
+                item["Jumlah Booking Order Awal"] = data.totalOrderQty;
+               } else if(data.canceledBookingOrder>0 && data.expiredBookingOrder>0){
+                item["Jumlah Booking Order Awal"] = data.totalOrderQty + data.canceledBookingOrder + data.expiredBookingOrder;
+               } else if(data.canceledBookingOrder>0 && (data.expiredBookingOrder==0 || data.expiredBookingOrder==undefined)){
+                item["Jumlah Booking Order Awal"] =data.totalOrderQty + data.canceledBookingOrder;
+               } else if((data.canceledBookingOrder==0 || data.canceledBookingOrder==undefined) && data.expiredBookingOrder>0){
+                item["Jumlah Booking Order Awal"]= data.totalOrderQty + data.expiredBookingOrder;
+               }
+
+               item["Jumlah Booking Order Akhir"] = data.totalOrderQty;
+               item["Tanggal Pengiriman (Booking)"]= data.deliveryDateBooking ? moment(data.deliveryDateBooking).add(7, 'h').format("DD MMMM YYYY") : "";  
+
+                 if(!data.canceledItems) {
+                    item["Komoditi"]="";
+                    item["Jumlah Confirm"]="";
+                    item["Tanggal Confirm"]="";
+                    item["Tanggal Pengiriman (Confirm)"]="";
+                    item["Keterangan"]="";
+                 } else {
+                    item["Komoditi"] = data.comodity;
+                    item["Jumlah Confirm"] = data.orderQty;
+                    item["Tanggal Confirm"] = data.cancelConfirmDate ? moment(data.cancelConfirmDate).add(7, 'h').format("DD MMMM YYYY") : "";
+                    item["Tanggal Pengiriman (Confirm)"] = data.deliveryDateConfirm ? moment(data.deliveryDateConfirm).add(7, 'h').format("DD MMMM YYYY") : "";
+                    item["Keterangan"] = data.remark;
+                 }
+
+                 if(!item["Komoditi"]){
+                     if(data.canceledBookingOrder>0 && (query.cancelState=='' || query.cancelState=='Cancel Sisa')){
+                    
+                        item["Tanggal Cancel"]=data.canceledDate ? moment(data.canceledDate).add(7, 'h').format("DD MMMM YYYY") : "";
+                        item["Jumlah yang Dicancel"]=data.canceledBookingOrder;
+                        item["Status Cancel"]="Cancel Sisa";
+                     
+                     } else if(data.expiredBookingOrder>0 && (query.cancelState== '' || query.cancelState=='Expired')){
+                     
+                        item["Tanggal Cancel"]=data.expiredDeletedDate ? moment(data.expiredDeletedDate).add(7, 'h').format("DD MMMM YYYY") : "";
+                        item["Jumlah yang Dicancel"]=data.expiredBookingOrder;
+                        item["Status Cancel"]="Expired";
+                     
+                     } 
+                 } else if(item["Komoditi"]) {
+                    item["Tanggal Cancel"]=data.cancelItemsDate ? moment(data.cancelItemsDate).add(7, 'h').format("DD MMMM YYYY") : "";
+                    item["Jumlah yang Dicancel"]=data.orderQty;
+                    item["Status Cancel"]="Cancel Confirm";
+                 }
+
+                 if (item["Tanggal Cancel"] || (data.canceledBookingOrder>0 || data.expiredBookingOrder>0)){
+                     if(query.cancelState!=="Cancel Confirm"){
+                         if(data.canceledBookingOrder>0 && data.canceledItems && (item["Kode Booking"]!==_temp2.code || !_temp2.code) && (item["Status Cancel"]!==_temp2.cancelState || !_temp2.cancelState) && query.cancelState!=="Expired"){ //&& _data.cancelState!=="Cancel Confirm"){  
+                             _temp2.code=item["Kode Booking"];
+                             _temp2.cancelState=item["Status Cancel"];
+                             temporaryCancelSisa["Kode Booking"]=item["Kode Booking"];
+                             temporaryCancelSisa["Tanggal Booking"] =item["Tanggal Booking"];
+                             temporaryCancelSisa["Buyer"] = item["Buyer"];
+                             temporaryCancelSisa["Jumlah Booking Order Awal"] = item["Jumlah Booking Order Awal"];
+                             temporaryCancelSisa["Jumlah Booking Order Akhir"] = item["Jumlah Booking Order Akhir"]
+                             temporaryCancelSisa["Tanggal Pengiriman (Booking)"] = item["Tanggal Pengiriman (Booking)"];
+                             temporaryCancelSisa["Komoditi"] = "";
+                             temporaryCancelSisa["Jumlah Confirm"] = "";
+                             temporaryCancelSisa["Tanggal Confirm"] = "";
+                             temporaryCancelSisa["Tanggal Pengiriman (Confirm)"] = "";
+                             temporaryCancelSisa["Keterangan"] = "";
+                             temporaryCancelSisa["Tanggal Cancel"]=data.canceledDate ? moment(data.canceledDate).add(7, 'h').format("DD MMMM YYYY") : "";
+                             temporaryCancelSisa["Jumlah yang Dicancel"]=data.canceledBookingOrder;
+                             temporaryCancelSisa["Status Cancel"]="Cancel Sisa";
+
+                             row_span_count=1;
+                             rowcount.row_count=row_span_count;
+                             rowcount.code=item["Kode Booking"];
+                             rowcount.cancelState=temporaryCancelSisa["Status Cancel"];
+
+                             count++;
+                             xls.data.push(temporaryCancelSisa);
+                             this.rowspan.push(rowcount); 
+                         } 
+                         if(data.expiredBookingOrder>0 && data.canceledItems && (item["Kode Booking"]!==_temp3.code || !_temp3.code) && (item["Status Cancel"]!==_temp3.cancelState || !_temp3.cancelState)&& query.cancelState!=="Cancel Sisa"){ //&& _data.cancelState!=="Cancel Confirm"){
+                             _temp3.code=item["Kode Booking"];
+                             _temp3.cancelState=item["Status Cancel"];
+                             temporaryExpired["Kode Booking"]=item["Kode Booking"];
+                             temporaryExpired["Tanggal Booking"] =item["Tanggal Booking"];
+                             temporaryExpired["Buyer"] = item["Buyer"];
+                             temporaryExpired["Jumlah Booking Order Awal"] = item["Jumlah Booking Order Awal"];
+                             temporaryExpired["Jumlah Booking Order Akhir"] = item["Jumlah Booking Order Akhir"]
+                             temporaryExpired["Tanggal Pengiriman (Booking)"] = item["Tanggal Pengiriman (Booking)"];
+                             temporaryExpired["Komoditi"] = "";
+                             temporaryExpired["Jumlah Confirm"] = "";
+                             temporaryExpired["Tanggal Confirm"] = "";
+                             temporaryExpired["Tanggal Pengiriman (Confirm)"] = "";
+                             temporaryExpired["Keterangan"] = "";
+                             temporaryExpired["Tanggal Cancel"]=data.expiredDeletedDate ? moment(data.expiredDeletedDate).add(7, 'h').format("DD MMMM YYYY") : "";
+                             temporaryExpired["Jumlah yang Dicancel"]=data.expiredBookingOrder;
+                             temporaryExpired["Status Cancel"]="Expired";
+                             count++;
+
+                             row_span_count=1;
+                             rowcount.row_count=row_span_count;
+                             rowcount.code=item["Kode Booking"];
+                             rowcount.cancelState=temporaryExpired["Status Cancel"];
+                             xls.data.push(temporaryExpired);
+                             this.rowspan.push(rowcount); 
+                         }
+                     }
+                     if(_temp.code == item["Kode Booking"] && _temp.cancelState == item["Status Cancel"]){
+                        item["Kode Booking"]='';
+                        item["Tanggal Booking"]='';
+                        item["Buyer"]='';
+                        item["Jumlah Booking Order Akhir"]='';
+                        item["Tanggal Pengiriman (Booking)"]='';
+                        item["Jumlah Booking Order Awal"]='';
+                        row_span_count=row_span_count+1;    
+                     } else if((!_temp.code || _temp.code !== item["Kode Booking"]) ){
+                         _temp.code = item["Kode Booking"];
+                         _temp.cancelState = item["Status Cancel"];
+                         row_span_count=1;
+                     } else if(_temp.code==item["Kode Booking"] && _temp.cancelState!==item["Status Cancel"]){
+                         _temp.code = item["Kode Booking"];
+                         _temp.cancelState = item["Status Cancel"];
+                         row_span_count=1;
+                     }
+                     
+                     if(query.cancelState=="Cancel Sisa" || query.cancelState=="Expired"){
+                        if(item["Status Cancel"] !== "Cancel Confirm"){
+                            rowcount.row_count=row_span_count;
+                            rowcount.code=data.bookingCode;
+                            rowcount.cancelState=item["Status Cancel"];    
+                            xls.data.push(item);
+                            this.rowspan.push(rowcount);
+                        }
+                     } else {
+                        rowcount.row_count=row_span_count;
+                        rowcount.code=data.bookingCode;
+                        rowcount.cancelState=item["Status Cancel"];    
+                        xls.data.push(item);
+                        this.rowspan.push(rowcount);
+                         if (this.rowspan[count].row_count>1){
+                             for(var x=rowcount.row_count;0<x;x--){
+                                 if(this.rowspan[count].cancelState=="Cancel Confirm")
+                                 {var z=count-x;
+                                 
+                                 this.rowspan[z+1].row_count=this.rowspan[count].row_count;}
+                             }    
+                         } 
+                         count++;                           
+                     }
+                     xls.options.specification = {};
+                     var fgColor = function(color){
+                         return {
+                             fgColor: {
+                                 rgb: color
+                             }
+                         };
+                     };
+                     var border = {
+                         top: { style: 'thin', color: 'FF000000' },
+                         bottom: { style: 'thin', color: 'FF000000' },
+                         left: { style: 'thin', color: 'FF000000' },
+                         right: { style: 'thin', color: 'FF000000' },
+                     };
+                     var styles = {
+                         header: {
+                             fill: fgColor('FFCCCCCC'),
+                             border: border,
+                             alignment: {
+                                 horizontal: 'center'
+                             },
+                             font: {
+                                 bold: true
+                             }
+                         },
+                         cellUnit: {
+                             
+                             border: border,
+                             alignment: {
+                                 vertical: 'top'
+                             },
+                             
+                         },
+                         cellUnit_2: {
+                             border: border,
+                             alignment: {
+                                 horizontal: 'right',
+                                 vertical: 'top'
+                             },
+                             
+                         },
+                     };
+ 
+                     for(var b of Object.keys(xls.data[0])){
+                         
+                         if(b=='Buyer' || b=='Jumlah Booking Order Awal' || b=='Jumlah Booking Order Akhir' || b=='Tanggal Pengiriman (Booking)' || b=='Tanggal Pengiriman (Confirm)' || b=='Tanggal Cancel'){
+                             xls.options.specification[b] = {
+                                 displayName: b,
+                                 width: 250,
+                                 headerStyle: styles.header,
+                                 cellStyle: styles.cellUnit
+                             };
+                         } else {
+                             xls.options.specification[b] = {
+                                 displayName: b,
+                                 width: 150,
+                                 headerStyle: styles.header,
+                                 cellStyle: styles.cellUnit
+                             };
+                         }
+                     };
+
+                    }
+                }
+                     xls.options.merges = [];
+                     var d=0;
+                     for(var a=0;a<xls.data.length;a++){
+                         var c=1;
+                         for(var b of Object.keys(xls.data[a])){
+                             if(xls.data[a]["Kode Booking"]!=='' && (this.rowspan[d].row_count)>1 && (b!=="Komoditi" && b!=="Jumlah Confirm" && b!=="Tanggal Confirm" && b!=="Tanggal Pengiriman (Confirm)" && b!=="Keterangan" && b!=="Tanggal Cancel" && b!=="Jumlah yang Dicancel" && b!=="Status Cancel")){//&& xls.data[a].b && ){
+                                if(xls.data[a]["Status Cancel"]=="Cancel Confirm"){ 
+                                    xls.options.merges.push(
+                                        { start: { row: a+2, column: c }, end: { row: (a+(this.rowspan[d].row_count)+1), column: c } }
+                                    );
+                                }
+                             }
+                             c++;
+                         }
+                         d++;
+                     }
+     
+                 xls.options["Kode Booking"] = "string";
+                 xls.options["Tanggal Booking"] = "string";
+                 xls.options["Buyer"] = "string";
+                 xls.options["Jumlah Booking Order Awal"] = "number";
+                 xls.options["Jumlah Booking Order Akhir"] = "number";
+                 xls.options["Tanggal Pengiriman (Booking)"] = "string";
+                 xls.options["Komoditi"] = "string";
+                 xls.options["Jumlah Confirm)"] = "number";
+                 xls.options["Tanggal Confirm"] = "string";
+                 xls.options["Tanggal Pengiriman (Confirm"] = "string";
+                 xls.options["Keterangan"] = "string";
+                 xls.options["Tanggal Cancel"] = "string";
+                 xls.options["Jumlah yang Dicancel"] = "number";
+                 xls.options["Status Cancel"] = "string";
+     
+                 if (query.dateFrom && query.dateTo) {
+                     xls.name = `Canceled Booking Order ${moment(new Date(query.dateFrom)).add(7, 'h').format(dateFormat)} - ${moment(new Date(query.dateTo)).add(7, 'h').format(dateFormat)}.xlsx`;
+                 }
+                 else if (!query.dateFrom && query.dateTo) {
+                     xls.name = `Canceled Booking Order ${moment(new Date(query.dateTo)).add(7, 'h').format(dateFormat)}.xlsx`;
+                 }
+                 else if (query.dateFrom && !query.dateTo) {
+                     xls.name = `Canceled Booking Order ${moment(new Date(query.dateFrom)).add(7, 'h').format(dateFormat)}.xlsx`;
+                 }
+                 else
+                     xls.name = `Canceled Booking Order Report.xlsx`;
+     
+                 resolve(xls);                    
+                });
+            }
 }

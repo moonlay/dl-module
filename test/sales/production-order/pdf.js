@@ -62,33 +62,12 @@ it('#04. should success when create pdf', function (done) {
         });
 });
 
-it("#05. should success update isRequested", function (done) {
-    instanceManager.updateIsRequested([createdData._id])
-        .then((result) => {
-            done();
-        })
-        .catch((e) => {
-            done(e)
-        })
-});
-
-it("#06. should success update isCompleted", function (done) {
-    instanceManager.updateIsCompleted([createdData._id])
-        .then((result) => {
-            done();
-        })
-        .catch((e) => {
-            done(e)
-        })
-});
-
-it("#07. should success update isRequested", function (done) {
-    var param = {
-        id: createdData._id,
-        receivedQuantity: 10
+it("#05. should success update isRequested create context", function (done) {
+    var data = {
+        ids: [createdData._id],
+        context: "CREATE"
     }
-
-    instanceManager.updateReceivedQuantity([param])
+    instanceManager.updateIsRequested(data)
         .then((result) => {
             done();
         })
@@ -97,7 +76,62 @@ it("#07. should success update isRequested", function (done) {
         })
 });
 
-it("#08. should success when destroy all unit test data", function (done) {
+it("#06. should success update isRequested delete context", function (done) {
+    var data = {
+        ids: [createdData._id],
+        context: "DELETE"
+    }
+    instanceManager.updateIsRequested(data)
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e)
+        })
+});
+
+it("#07. should success update isCompleted with context", function (done) {
+    var data = {
+        contextAndIds: [{
+            id: createdData._id,
+            context: "COMPLETE"
+        },
+        {
+            id: createdData._id,
+            context: "INCOMPLETE"
+        }]
+    }
+    instanceManager.updateIsCompleted(data)
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e)
+        })
+});
+
+it("#08. should success update distributed quantity with context", function (done) {
+    var params = [{
+        id: createdData._id,
+        distributedQuantity: 10,
+        context: "CREATE"
+    },
+    {
+        id: createdData._id,
+        distributedQuantity: 10,
+        context: "DELETE"
+    }]
+
+    instanceManager.updateDistributedQuantity(params)
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e)
+        })
+});
+
+it("#09. should success when destroy all unit test data", function (done) {
     instanceManager.destroy(createdData._id)
         .then((result) => {
             result.should.be.Boolean();

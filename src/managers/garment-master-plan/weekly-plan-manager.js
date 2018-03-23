@@ -92,12 +92,12 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                         } else if (item.startDate.getMonth() != item.month && item.endDate.getMonth() != item.month) {
                             itemError["month"] = i18n.__("WeeklyPlan.items.month.isOutOfRange:%s is out of range", i18n.__("WeeklyPlan.items.month._:Month"));
                         }
-                        if(!item.efficiency || item.efficiency <= 0)
-                            itemError["efficiency"] = i18n.__("WeeklyPlan.items.efficiency.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.efficiency._:Efficiency"));
-                        if(!item.operator || item.operator <= 0)
-                            itemError["operator"] = i18n.__("WeeklyPlan.items.operator.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.operator._:Operator"));
-                        if(!item.workingHours || item.workingHours <= 0)
-                            itemError["workingHours"] = i18n.__("WeeklyPlan.items.workingHours.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.workingHours._:WorkingHours"));
+                        // if(!item.efficiency || item.efficiency <= 0)
+                        //     itemError["efficiency"] = i18n.__("WeeklyPlan.items.efficiency.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.efficiency._:Efficiency"));
+                        // if(!item.operator || item.operator <= 0)
+                        //     itemError["operator"] = i18n.__("WeeklyPlan.items.operator.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.operator._:Operator"));
+                        // if(!item.workingHours || item.workingHours <= 0)
+                        //     itemError["workingHours"] = i18n.__("WeeklyPlan.items.workingHours.mustBeGreaterThan:%s must be greather than 0", i18n.__("WeeklyPlan.items.workingHours._:WorkingHours"));
                         itemErrors.push(itemError);
                     }
 
@@ -325,13 +325,16 @@ module.exports = class WeeklyPlanManager extends BaseManager {
             var weeks = [];
             for (var x = 0; x < units.length; x++) {
               var headCount = 0;
+              var remainingEH=0;
               for (var y = 0; y < units[x].length; y++) {
                 headCount += Number(dataReport.data[y].items[x].operator);
+                remainingEH += Number(dataReport.data[y].items[x].remainingEH);
               }
               var week = {
                 week: "W" + (x + 1),
                 units: units[x],
-                headCount: headCount
+                headCount: headCount,
+                eh:remainingEH
               };
               weeks.push(week);
             }
@@ -342,6 +345,7 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                 for (unit of week.units) {
                     item[unit.code] = unit.remainingEH;
                 }
+                item["Total Remaining EH"] = week.eh;
                 item["Head Count"] = week.headCount;
                 xls.data.push(item);
             }
@@ -409,6 +413,13 @@ module.exports = class WeeklyPlanManager extends BaseManager {
                     }
                 };
             }
+            if(!query.unit)
+                xls.options.specification["Total Remaining EH"] = {
+                    displayName : "Total Remaining EH",
+                    width: 120,
+                    headerStyle: styles.header,
+                    cellStyle: styles.cell
+                };
             xls.options.specification["Head Count"] = {
                 displayName : "Head Count",
                 width: 100,
