@@ -12,11 +12,11 @@ var dateTo=new Date("2018-01-10");
 var comodity="comodity";
 var buyer="buyer";
 var code ="code";
-var isconfirmState="Sudah Dikonfirmasi";
-var notconfirmState="Belum Dikonfirmasi";
-var bookingOrderBooking="Booking";
-var bookingOrderMasterPlan="Sudah Dibuat Master Plan";
-var bookingOrderCanceled="Booking Dibatalkan";
+var cancelStateCancelConfirm="Cancel Confirm";
+var cancelStateCancelSisa="Cancel Sisa";
+var cancelConfirmExpired="Expired";
+// var bookingOrderMasterPlan="Sudah Dibuat Master Plan";
+// var bookingOrderCanceled="Booking Dibatalkan";
 var offset=7;
 
 require("should");
@@ -56,8 +56,29 @@ it("#02. should success when get report with parameter buyer", function (done) {
             done(e);
         });
 });
-it("#03. should success when get report with parameter comodity", function (done) {
-    bookingOrderManager.getCanceledBookingOrderReport({"comodity" : comodity},offset)
+
+it("#03. should success when get report with parameter cancelStateCancelConfirm", function (done) {
+    bookingOrderManager.getCanceledBookingOrderReport({"cancelState" : cancelStateCancelConfirm},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+it("#04. should success when get report with parameter cancelStateCancelSisa", function (done) {
+    bookingOrderManager.getCanceledBookingOrderReport({"cancelState" : cancelStateCancelSisa},offset)
+        .then((data) => {
+            data.should.instanceof(Array);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+it("#05. should success when get report with parameter cancelConfirmExpired", function (done) {
+    bookingOrderManager.getCanceledBookingOrderReport({"cancelState" : cancelConfirmExpired},offset)
         .then((data) => {
             data.should.instanceof(Array);
             done();
@@ -67,58 +88,8 @@ it("#03. should success when get report with parameter comodity", function (done
         });
 });
 
-it("#04. should success when get report with parameter isconfirmstate", function (done) {
-    bookingOrderManager.getCanceledBookingOrderReport({"confirmState" : isconfirmState},offset)
-        .then((data) => {
-            data.should.instanceof(Array);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-it("#05. should success when get report with parameter notconfirmstate", function (done) {
-    bookingOrderManager.getCanceledBookingOrderReport({"confirmState" : notconfirmState},offset)
-        .then((data) => {
-            data.should.instanceof(Array);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-it("#06. should success when get report with parameter booking order state :Booking", function (done) {
-    bookingOrderManager.getCanceledBookingOrderReport({"bookingOrderState" : bookingOrderBooking},offset)
-        .then((data) => {
-            data.should.instanceof(Array);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-it("#07. should success when get report with parameter booking order state : Sudah dibuat Master Plan", function (done) {
-    bookingOrderManager.getCanceledBookingOrderReport({"bookingOrderState" : bookingOrderMasterPlan},offset)
-        .then((data) => {
-            data.should.instanceof(Array);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
-it("#08. should success when get report with parameter booking order state : Booking Dibatalkan", function (done) {
-    bookingOrderManager.getCanceledBookingOrderReport({"bookingOrderState" : bookingOrderCanceled},offset)
-        .then((data) => {
-            data.should.instanceof(Array);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
 
-it("#09. should success when get report with parameter datefrom and dateTo", function (done) {
+it("#06. should success when get report with parameter datefrom and dateTo", function (done) {
     bookingOrderDataUtil.getReportData()
     .then((datas)=>{
         bookingOrderManager.getCanceledBookingOrderReport({dateFrom,dateTo},offset)
@@ -146,7 +117,7 @@ it("#09. should success when get report with parameter datefrom and dateTo", fun
 
 });
 
-it("#10. should success when get report with no parameter and get excel", function (done) {
+it("#07. should success when get report with no parameter and get excel", function (done) {
     bookingOrderDataUtil.getReportData()
     .then((datas)=>{
         bookingOrderManager.getCanceledBookingOrderReport({},offset)
