@@ -2253,35 +2253,33 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     updateIsCompleted(data) {
-        var objectIds = data.ids.map((id) => {
-            return new ObjectId(id);
+        var updatePromises = data.contextAndIds.map((datum) => {
+            return this
+                .collection
+                .update({ "_id": new ObjectId(datum.id) },
+                    {
+                        "$set": {
+                            "isCompleted": datum.context.toUpperCase() == "COMPLETE" ? true : false,
+                            "_updatedBy": this.user.username,
+                            "_updatedDate": new Date()
+                        }
+                    })
         })
 
-        return this
-            .collection
-            .updateMany({ "_id": { "$in": objectIds } },
-                {
-                    "$set": {
-                        "isCompleted": data.context.toUpperCase() == "COMPLETE" ? true : false,
-                        "_updatedBy": this.user.username,
-                        "_updatedDate": new Date()
-                    }
-                })
+        return Promise.all(updatePromises);
     }
 
     updateDistributedQuantity(data) {
-        var updatePromises = data.map((datum) => {
+        var updatePromises = data.contextQuantityAndIds.map((datum) => {
             return this
                 .collection
                 .updateOne({ "_id": new ObjectId(datum.id) },
                     {
                         "$set": {
                             "_updatedBy": this.user.username,
-                            "_updatedDate": new Date()
+                            "_updatedDate": new Date(),
+                            "distributedQuantity": parseFloat(datum.distributedQuantity)
                         },
-                        "$inc": {
-                            "distributedQuantity": datum.context.toUpperCase() == "CREATE" ? parseFloat(datum.distributedQuantity) : parseFloat(datum.distributedQuantity * -1)
-                        }
                     })
         });
 
