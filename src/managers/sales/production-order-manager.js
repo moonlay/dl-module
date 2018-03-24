@@ -108,7 +108,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     _beforeInsert(productionOrder) {
         if (!productionOrder.orderNo) {
-            var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
+            if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing")) {
+                var type = "P";
+            } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "rfp")) {
+                var type = "RFP";
+            } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "rfd")) {
+                var type = "RFD";
+            } else {
+                var type = "F";
+            }
             var query = { "type": type, "description": NUMBER_DESCRIPTION };
             var fields = { "number": 1, "year": 1 };
 
