@@ -293,6 +293,8 @@ module.exports = class BookingOrderManager extends BaseManager {
                     "bookingOrderNo": booking.code,
                     "_deleted":false
                 };
+                booking._updatedDate=new Date();
+                booking._updatedBy=this.user.username;
                 return this.sewingBlockingPlanCollection.singleOrDefault(query)
                     .then((sewingBlockingPlan) => {
                         var total=0;
