@@ -110,15 +110,15 @@ module.exports = class ProductionOrderManager extends BaseManager {
         if (!productionOrder.orderNo) {
             // var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
             if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing")) {
-                var type = "P"
+                var type = "P";
             } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "finishing")) {
-                var type = "F"
+                var type = "F";
             } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "yarn dyed")) {
-                var type = "F"
+                var type = "F";
             } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "rfp")){
-                var type = "RFP"
+                var type = "RFP";
             } else {
-                var type = "RFD"
+                var type = "RFD";
             }
             var query = { "type": type, "description": NUMBER_DESCRIPTION };
             var fields = { "number": 1, "year": 1 };
