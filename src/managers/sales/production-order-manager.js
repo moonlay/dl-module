@@ -107,18 +107,17 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     _beforeInsert(productionOrder) {
+        var type ="";
         if (!productionOrder.orderNo) {
             // var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
             if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing")) {
-                var type = "P"
-            } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "finishing")) {
-                var type = "F"
-            } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "yarn dyed")) {
-                var type = "F"
-            } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "rfp")){
-                var type = "RFP"
+                 type = "P";
+            } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "rfp")) {
+                 type = "RFP";
+            } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "rfd")) {
+                 type = "RFD";
             } else {
-                var type = "RFD"
+                 type = "F";
             }
             var query = { "type": type, "description": NUMBER_DESCRIPTION };
             var fields = { "number": 1, "year": 1 };
