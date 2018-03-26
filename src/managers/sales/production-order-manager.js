@@ -119,7 +119,6 @@ module.exports = class ProductionOrderManager extends BaseManager {
                  type = "RFD";
             } else {
                  type = "F";
-
             }
             var query = { "type": type, "description": NUMBER_DESCRIPTION };
             var fields = { "number": 1, "year": 1 };
