@@ -489,14 +489,18 @@ module.exports = class BookingOrderManager extends BaseManager {
             var dateString = moment(date).format('YYYY-MM-DD');
             var dateNow = new Date(dateString);
             var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            var dateFrom = new Date(query.dateFrom);
+            var dateTo = new Date(query.dateTo);
+            dateFrom.setUTCHours(dateFrom.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+            dateTo.setUTCHours(dateTo.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
             
             var dateQuery={};
             if (query.dateFrom !== undefined && query.dateFrom !== "" && query.dateTo !== undefined  && query.dateTo !== "")
             {
                 dateQuery = {
                     "bookingDate": {
-                        "$gte": new Date(`${query.dateFrom} 00:00:00`),
-                        "$lte": new Date(`${query.dateTo} 23:59:59`),
+                        "$gte": dateFrom,
+                        "$lte": dateTo,
                     }
                 };
             }
@@ -857,14 +861,18 @@ module.exports = class BookingOrderManager extends BaseManager {
             var dateString = moment(date).format('YYYY-MM-DD');
             var dateNow = new Date(dateString);
             var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            var dateFrom = new Date(query.dateFrom);
+            var dateTo = new Date(query.dateTo);
+            dateFrom.setUTCHours(dateFrom.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
+            dateTo.setUTCHours(dateTo.getUTCHours() >= 17 ? 17 : -7, 0, 0, 0);
             
             var dateQuery={};
             if (query.dateFrom !== undefined && query.dateFrom !== "" && query.dateTo !== undefined  && query.dateTo !== "")
             {
                 dateQuery = {
                     "bookingDate": {
-                        "$gte": new Date(`${query.dateFrom} 00:00:00`),
-                        "$lte": new Date(`${query.dateTo} 23:59:59`),
+                        "$gte": dateFrom,
+                        "$lte": dateTo,
                     }
                 };
             }
