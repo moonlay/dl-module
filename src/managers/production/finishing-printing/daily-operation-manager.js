@@ -395,19 +395,19 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var lengthTotal = 0;
                                 var valueArr = valid.badOutputReasons.map(function (item) { return item.badOutputReasonId ? item.badOutputReasonId.toString() : "" });
 
-                                var itemDuplicateErrors = new Array(valueArr.length);
-                                valueArr.some(function (item, idx) {
-                                    var itemError = {};
-                                    if (valueArr.indexOf(item) != idx) {
-                                        itemError["badOutputReason"] = i18n.__("Ada data duplikasi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"Nama barang tidak boleh kosong";
-                                    }
-                                    if (Object.getOwnPropertyNames(itemError).length > 0) {
-                                        itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
-                                        itemDuplicateErrors[idx] = itemError;
-                                    } else {
-                                        itemDuplicateErrors[idx] = itemError;
-                                    }
-                                });
+                                // var itemDuplicateErrors = new Array(valueArr.length);
+                                // valueArr.some(function (item, idx) {
+                                //     var itemError = {};
+                                //     if (valueArr.indexOf(item) != idx) {
+                                //         itemError["badOutputReason"] = i18n.__("Ada data duplikasi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"Nama barang tidak boleh kosong";
+                                //     }
+                                //     if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                //         itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                                //         itemDuplicateErrors[idx] = itemError;
+                                //     } else {
+                                //         itemDuplicateErrors[idx] = itemError;
+                                //     }
+                                // });
                                 for (var a of valid.badOutputReasons) {
                                     var itemError = {};
                                     var _index = valid.badOutputReasons.indexOf(a);
@@ -427,9 +427,9 @@ module.exports = class DailyOperationManager extends BaseManager {
                                         itemError["badOutputReason"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"keterangan bad output tidak boleh kosong";
                                     else if (!dataBadOutput)
                                         itemError["badOutputReason"] = i18n.__("Data Keterangan Bad Output tidak ditemukan", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"keterangan bad output tidak boleh kosong";
-                                    else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
-                                        itemError["badOutputReason"] = itemDuplicateErrors[_index].badOutputReason;
-                                    }
+                                    // else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                                    //     itemError["badOutputReason"] = itemDuplicateErrors[_index].badOutputReason;
+                                    // }
                                     itemErrors.push(itemError);
                                 }
                                 if (lengthTotal !== badOutput)
