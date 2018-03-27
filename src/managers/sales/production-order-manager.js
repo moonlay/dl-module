@@ -2223,8 +2223,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
     //#endregion New Status Order
 
     //#region Update IsRequested and IsCompleted
-    updateIsRequested(ids) {
-        var objectIds = ids.map((id) => {
+    updateIsRequested(data) {
+        var objectIds = data.ids.map((id) => {
             return new ObjectId(id);
         })
 
@@ -2233,31 +2233,31 @@ module.exports = class ProductionOrderManager extends BaseManager {
             .updateMany({ "_id": { "$in": objectIds } },
                 {
                     "$set": {
-                        "isRequested": true,
+                        "isRequested": data.context.toUpperCase() === "CREATE" ? true : false,
                         "_updatedBy": this.user.username,
                         "_updatedDate": new Date()
                     }
                 })
     }
 
-    updateIsCompleted(ids) {
-        var objectIds = ids.map((id) => {
-            return new ObjectId(id);
+    updateIsCompleted(data) {
+        var updatePromises = data.contextAndIds.map((datum) => {
+            return this
+                .collection
+                .update({ "_id": new ObjectId(datum.id) },
+                    {
+                        "$set": {
+                            "isCompleted": datum.context.toUpperCase() == "COMPLETE" ? true : false,
+                            "_updatedBy": this.user.username,
+                            "_updatedDate": new Date()
+                        }
+                    })
         })
 
-        return this
-            .collection
-            .updateMany({ "_id": { "$in": objectIds } },
-                {
-                    "$set": {
-                        "isCompleted": true,
-                        "_updatedBy": this.user.username,
-                        "_updatedDate": new Date()
-                    }
-                })
+        return Promise.all(updatePromises);
     }
 
-    updateReceivedQuantity(data) {
+    updateDistributedQuantity(data) {
         var updatePromises = data.map((datum) => {
             return this
                 .collection
@@ -2265,11 +2265,9 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     {
                         "$set": {
                             "_updatedBy": this.user.username,
-                            "_updatedDate": new Date()
-                        },
-                        "$inc": {
+                            "_updatedDate": new Date(),
                             "distributedQuantity": parseFloat(datum.distributedQuantity)
-                        }
+                        },
                     })
         });
 
@@ -2277,4 +2275,3 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
     //#endregion Update IsRequested and IsCompleted
 }
-

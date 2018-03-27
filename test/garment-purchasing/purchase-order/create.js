@@ -114,7 +114,7 @@ it("#05. should success when read data", function (done) {
 it('#06. should success when get data by keyword using FABRIC Category', function (done) {
     var shipmentDate = new Date();
     var moment = require('moment');
-    purchaseOrderManager.getPurchaseOrderByTag('dev', "FABRIC", "#Test Unit #buyer 01", moment(shipmentDate).format("YYYY-MM-DD"), moment(shipmentDate).format("YYYY-MM-DD"))
+    purchaseOrderManager.getPurchaseOrderByTag('dev', "FABRIC", "#Test Unit #buyer 01 #kategori 01", moment(shipmentDate).format("YYYY-MM-DD"), moment(shipmentDate).format("YYYY-MM-DD"))
         .then(data => {
             data.should.be.instanceof(Array);
             done();
@@ -127,7 +127,7 @@ it('#06. should success when get data by keyword using FABRIC Category', functio
 it('#07. should success when get data by keyword using Other Category', function (done) {
     var shipmentDate = new Date();
     var moment = require('moment');
-    purchaseOrderManager.getPurchaseOrderByTag('dev', "ACCESORIES", "#Test Unit #buyer 01", moment(shipmentDate).format("YYYY-MM-DD"), moment(shipmentDate).format("YYYY-MM-DD"))
+    purchaseOrderManager.getPurchaseOrderByTag('dev', "ACCESORIES", "#Test Unit #buyer 01 #kategori 01", moment(shipmentDate).format("YYYY-MM-DD"), moment(shipmentDate).format("YYYY-MM-DD"))
         .then(data => {
             data.should.be.instanceof(Array);
             done();
