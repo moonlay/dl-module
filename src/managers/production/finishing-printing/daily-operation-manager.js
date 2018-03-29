@@ -103,18 +103,22 @@ module.exports = class DailyOperationManager extends BaseManager {
             var getStep = valid.stepId && ObjectId.isValid(valid.stepId) ? this.stepManager.getSingleByIdOrDefault(new ObjectId(valid.stepId)) : Promise.resolve(null);
             var getBadOutput = [];
             var dataReasons = valid.badOutputReasons || [];
+            var getMachineReason=[];
             for (var a of dataReasons) {
                 if (a.badOutputReasonId && ObjectId.isValid(a.badOutputReasonId))
                     getBadOutput.push(this.badOutputReasonManager.getSingleByIdOrDefault(new ObjectId(a.badOutputReasonId)))
+                if (a.machineId && ObjectId.isValid(a.machineId))
+                    getMachineReason.push(this.machineManager.getSingleByIdOrDefault(new ObjectId(a.machineId)))
             }
-            Promise.all([getKanban, getMachine, getStep, getDaily, thisDaily].concat(getBadOutput))
+            Promise.all([getKanban, getMachine, getStep, getDaily, thisDaily].concat(getBadOutput,getMachineReason))
                 .then(results => {
                     var _kanban = results[0];
                     var _machine = results[1];
                     var _step = results[2];
                     var _dailyData = results[3];
                     var _daily = results[4];
-                    var _badOutput = results.slice(5, results.length) || [];
+                    var _badOutput = results.slice(5, 5 + getBadOutput.length) || [];
+                    var _machineReasons = results.slice(5 + getBadOutput.length, results.length) || [];
                     var now = new Date();
                     var tempInput;
                     var tempOutput;
@@ -395,19 +399,19 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var lengthTotal = 0;
                                 var valueArr = valid.badOutputReasons.map(function (item) { return item.badOutputReasonId ? item.badOutputReasonId.toString() : "" });
 
-                                var itemDuplicateErrors = new Array(valueArr.length);
-                                valueArr.some(function (item, idx) {
-                                    var itemError = {};
-                                    if (valueArr.indexOf(item) != idx) {
-                                        itemError["badOutputReason"] = i18n.__("Ada data duplikasi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"Nama barang tidak boleh kosong";
-                                    }
-                                    if (Object.getOwnPropertyNames(itemError).length > 0) {
-                                        itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
-                                        itemDuplicateErrors[idx] = itemError;
-                                    } else {
-                                        itemDuplicateErrors[idx] = itemError;
-                                    }
-                                });
+                                // var itemDuplicateErrors = new Array(valueArr.length);
+                                // valueArr.some(function (item, idx) {
+                                //     var itemError = {};
+                                //     if (valueArr.indexOf(item) != idx) {
+                                //         itemError["badOutputReason"] = i18n.__("Ada data duplikasi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"Nama barang tidak boleh kosong";
+                                //     }
+                                //     if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                //         itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                                //         itemDuplicateErrors[idx] = itemError;
+                                //     } else {
+                                //         itemDuplicateErrors[idx] = itemError;
+                                //     }
+                                // });
                                 for (var a of valid.badOutputReasons) {
                                     var itemError = {};
                                     var _index = valid.badOutputReasons.indexOf(a);
@@ -427,9 +431,17 @@ module.exports = class DailyOperationManager extends BaseManager {
                                         itemError["badOutputReason"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"keterangan bad output tidak boleh kosong";
                                     else if (!dataBadOutput)
                                         itemError["badOutputReason"] = i18n.__("Data Keterangan Bad Output tidak ditemukan", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"keterangan bad output tidak boleh kosong";
-                                    else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
-                                        itemError["badOutputReason"] = itemDuplicateErrors[_index].badOutputReason;
+                                    // else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                                    //     itemError["badOutputReason"] = itemDuplicateErrors[_index].badOutputReason;
+                                    // }
+                                    function searchMachine(params) {
+                                        return !params ? null : params.code === a.machine.code;
                                     }
+                                    var dataBadOutputMachine = _machineReasons.find(searchMachine);
+                                    if (!a.machineId || a.machineId === "")
+                                        itemError["machine"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.machine._:Machine")); //"mesin penyebab bad output tidak boleh kosong";
+                                    else if (!dataBadOutputMachine)
+                                        itemError["machine"] = i18n.__("Data Mesin Penyebab Bad Output tidak ditemukan", i18n.__("DailyOperation.badOutputReasons.machine._:Machine")); //"mesin penyebab bad output tidak boleh kosong";
                                     itemErrors.push(itemError);
                                 }
                                 if (lengthTotal !== badOutput)
@@ -494,12 +506,19 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     return !params ? null : params.code === a.badOutputReason.code;
                                 }
                                 var dataBadOutput = _badOutput.find(searchItem);
+                                
+                            function searchMachine(params) {
+                                return !params ? null : params.code === a.machine.code;
+                            }
+                            var dataBadOutputMachine = _machineReasons.find(searchMachine);
                                 var data = new BadOutputReasonItem({
                                     length: a.length,
                                     action: a.action,
                                     description: a.description,
                                     badOutputReasonId: new ObjectId(dataBadOutput._id),
-                                    badOutputReason: dataBadOutput
+                                    badOutputReason: dataBadOutput,
+                                    machineId:new ObjectId(a.machineId),
+                                    machine:dataBadOutputMachine
                                 })
                                 data._createdDate = dateNow;
                                 data.stamp(this.user.username, "manager")
