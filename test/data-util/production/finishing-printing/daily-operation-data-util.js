@@ -60,7 +60,9 @@ class DailyOperationDataUtil {
                                             description: "Rusak",
                                             action: "Digudangkan",
                                             badOutputReasonId: reason._id,
-                                            badOutputReason: reason
+                                            badOutputReason: reason,
+                                            machineId: _machine._id,
+                                            machine: _machine
                                         }]
                                     };
                                 }
