@@ -133,7 +133,7 @@ it('#07. should success when get data report PO Per Staff with date', function (
     var dateFrom = null;
     var dateTo   = null;
     var kategori = null;
-    purchaseOrderManager.getDataTest( dateFrom, dateTo, kategori)
+     manager.getDataTest( dateFrom, dateTo, kategori)
     .then(po => {
         po.should.instanceof(Array);
         done();
@@ -148,7 +148,7 @@ it('#08. should success when get data report PO Per Staff with date', function (
     var dateTo   = null;
     var kategori = null;
     var supplier = null;
-    purchaseOrderManager.getDataTestSub(supplier,dateFrom,dateTo,kategori)
+     manager.getDataTestSub(supplier,dateFrom,dateTo,kategori)
     .then(po => {
         po.should.instanceof(Array);
         done();
