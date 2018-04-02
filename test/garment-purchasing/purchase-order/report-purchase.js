@@ -128,3 +128,32 @@ it('#06. should success when get data for Excel Report', function (done) {
             done(e);
         });
 });
+
+it('#07. should success when get data report PO Per Staff with date', function (done) {
+    var dateFrom = null;
+    var dateTo   = null;
+    var kategori = null;
+    purchaseOrderManager.getDataTest( dateFrom, dateTo, kategori)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#08. should success when get data report PO Per Staff with date', function (done) {
+    var dateFrom = null;
+    var dateTo   = null;
+    var kategori = null;
+    var supplier = null;
+    purchaseOrderManager.getDataTestSub(supplier,dateFrom,dateTo,kategori)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
