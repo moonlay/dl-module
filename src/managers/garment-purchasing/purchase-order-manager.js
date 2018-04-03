@@ -1948,7 +1948,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 { "isPosted": true }];
 
 
-            if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
+            if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
                 var validStartDate = new Date(dateFrom);
                 var validEndDate = new Date(dateTo);
                 validStartDate.setHours(validStartDate.getHours() - offset);
@@ -2134,7 +2134,7 @@ var dates = {
                 { "_deleted": false },
                 { "isPosted": true }];
 
-          if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
+          if (dateFrom && dateFrom !== "" && dateTo && dateTo !== "") {
                 var validStartDate = new Date(dateFrom);
                 var validEndDate = new Date(dateTo);
                 validStartDate.setHours(validStartDate.getHours() - offset);
