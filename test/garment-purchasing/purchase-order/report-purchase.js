@@ -132,7 +132,7 @@ it('#06. should success when get data for Excel Report', function (done) {
 it('#07. should success when get data kedatangan report with date', function (done) {
     var dateFrom = null;
     var dateTo   = null;
-    var kategori = null;
+    var kategori = "Bahan Baku";
      var offset = null;
      manager.getDataTest( dateFrom, dateTo, kategori,offset)
     .then(po => {
@@ -147,7 +147,7 @@ it('#07. should success when get data kedatangan report with date', function (do
 it('#08. should success when get data kedatangan detail  report  with date', function (done) {
     var dateFrom = null;
     var dateTo   = null;
-    var kategori = null;
+    var kategori = "Bahan Baku";
     var supplier = null;
     var offset = null;
      manager.getDataTestSub(supplier,dateFrom,dateTo,kategori,offset)
