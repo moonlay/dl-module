@@ -117,10 +117,9 @@ it('#07. should success when get data kedatangan with date', function (done) {
     var dateTo   = null;
     var kategori = "Bahan Baku";
     var offset = 7;
-    purchaseOrderManager.getDataTest( dateFrom, dateTo, kategori,offset)
+    manager.getDataTest( dateFrom, dateTo, kategori,offset)
     .then(po => {
         po.should.instanceof(Array);
-               po.length.should.not.equal(0);
         done();
     }).catch(e => {
             done(e);
@@ -134,7 +133,7 @@ it('#08. should success when get data kedatangan detail with date', function (do
     var kategori = "Bahan Baku";
     var supplier = null;
      var offset =7;
-    purchaseOrderManager.getDataTestSub(supplier,dateFrom,dateTo,kategori,offset)
+    manager.getDataTestSub(supplier,dateFrom,dateTo,kategori,offset)
     .then(po => {
         po.should.instanceof(Array);
         done();
