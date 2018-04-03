@@ -133,7 +133,7 @@ it('#07. should success when get data kedatangan report with date', function (do
     var dateFrom = null;
     var dateTo   = null;
     var kategori = "Bahan Baku";
-     var offset = null;
+     var offset = 7;
      manager.getDataTest( dateFrom, dateTo, kategori,offset)
     .then(po => {
         po.should.instanceof(Array);
@@ -149,7 +149,7 @@ it('#08. should success when get data kedatangan detail  report  with date', fun
     var dateTo   = null;
     var kategori = "Bahan Baku";
     var supplier = null;
-    var offset = null;
+    var offset = 7;
      manager.getDataTestSub(supplier,dateFrom,dateTo,kategori,offset)
     .then(po => {
         po.should.instanceof(Array);
