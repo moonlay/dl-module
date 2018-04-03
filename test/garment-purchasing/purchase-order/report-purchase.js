@@ -129,11 +129,12 @@ it('#06. should success when get data for Excel Report', function (done) {
         });
 });
 
-it('#07. should success when get data report PO Per Staff with date', function (done) {
+it('#07. should success when get data kedatangan report with date', function (done) {
     var dateFrom = null;
     var dateTo   = null;
     var kategori = null;
-     manager.getDataTest( dateFrom, dateTo, kategori)
+     var offset = null;
+     manager.getDataTest( dateFrom, dateTo, kategori,offset)
     .then(po => {
         po.should.instanceof(Array);
         done();
@@ -143,12 +144,13 @@ it('#07. should success when get data report PO Per Staff with date', function (
 
 });
 
-it('#08. should success when get data report PO Per Staff with date', function (done) {
+it('#08. should success when get data kedatangan detail  report  with date', function (done) {
     var dateFrom = null;
     var dateTo   = null;
     var kategori = null;
     var supplier = null;
-     manager.getDataTestSub(supplier,dateFrom,dateTo,kategori)
+    var offset = null;
+     manager.getDataTestSub(supplier,dateFrom,dateTo,kategori,offset)
     .then(po => {
         po.should.instanceof(Array);
         done();
