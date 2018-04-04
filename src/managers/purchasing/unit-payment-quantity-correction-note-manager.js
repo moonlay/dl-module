@@ -548,6 +548,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
             item["TANGGAL FAKTUR PAJAK PPN"] = corqty.incomeTaxCorrectionDate? moment(new Date(corqty.incomeTaxCorrectionDate)).format(dateFormat) : '';
             item["UNIT"] = corqty.items.purchaseOrder.unit.name? corqty.items.purchaseOrder.unit.name : '';
             item["KATEGORI"] = corqty.unitPaymentOrder.category? corqty.unitPaymentOrder.category.name : '';
+            item["CODE SUPPLIER"] = corqty.unitPaymentOrder.supplier? corqty.unitPaymentOrder.supplier.code : '';
             item["SUPPLIER"] = corqty.unitPaymentOrder.supplier? corqty.unitPaymentOrder.supplier.name : '';
             item["KODE BARANG"] = corqty.items.product? corqty.items.product.code : '';
             item["NAMA BARANG"] = corqty.items.product? corqty.items.product.name : '';
@@ -570,7 +571,15 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
             item["HARGA SATUAN"] = HARGA;
             item["HARGA TOTAL"] = TOTAL;
             item["USER INPUT"] = corqty._createdBy? corqty._createdBy : '';
-            
+            item["MATA UANG"] = corqty.items.currency? corqty.items.currency.code : '';
+             if(corqty.useIncomeTax==true){
+                    var z =( (corqty.items.quantity * corqty.items.pricePerUnit)/10).toFixed(2).toString().split('.'); 
+                    var z1=z[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                    var ppn= z1 + '.' + z[1];
+                    item["PPN"] =ppn;
+                    }else{
+                    item["PPN"] =0;
+                    }
             xls.data.push(item);
         }
 
@@ -585,6 +594,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         xls.options["TANGGAL FAKTUR PAJAK PPN"] = "date";
         xls.options["UNIT"] = "string";
         xls.options["KATEGORI"] = "string";
+        xls.options["CODE SUPPLIER"] = "string";
         xls.options["SUPPLIER"] = "string";
         xls.options["KODE BARANG"] = "string";
         xls.options["NAMA BARANG"] = "string";
@@ -593,7 +603,8 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         xls.options["HARGA SATUAN"] = "number";
         xls.options["HARGA TOTAL"] = "number";
         xls.options["USER INPUT"] = "string";
-
+        xls.options["MATA UANG"] = "string";
+        xls.options["PPN"] = "number";
         if(query.dateFrom && query.dateTo){
             xls.name = `Monitoring Koreksi Jumlah ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
         }

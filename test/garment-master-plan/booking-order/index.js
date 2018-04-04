@@ -10,10 +10,18 @@ describe("CANCEL BOOKING SCENARIOS", function() {
     require("./cancel-booking");
 });
 
+describe("EXPIRED BOOKING SCENARIOS", function() {
+    require("./expired-booking");
+});
+
 describe("CONFIRM BOOKING SCENARIOS", function() {
     require("./confirm");
 });
 
 describe("MONITORING BOOKING SCENARIOS", function() {
     require("./report");
+});
+
+describe("MONITORING CANCELED BOOKING SCENARIOS", function() {
+    require("./cancel-booking-report");
 });

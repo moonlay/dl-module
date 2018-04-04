@@ -104,6 +104,9 @@ it('#05. should success when get data with Start Date', function (done) {
                         name :"sdsd",
 
                     },
+                    currency: {
+                        code : "sss",
+                    },
                     uom :
                     {unit : "PCS"},
                     
@@ -112,7 +115,11 @@ it('#05. should success when get data with Start Date', function (done) {
                 unitPaymentOrder : 
                 {
                     supplier : {
-                        name : "ddd"
+                        name : "ddd",
+                        code : "eee"
+                    },
+                    category : {
+                        name : "ddd",
                     },
                 },
             
@@ -122,6 +129,7 @@ it('#05. should success when get data with Start Date', function (done) {
             "Jumlah":100,
             "HARGA":2000,
             "TOTAL":2000,
+            "useIncomeTax":true,
             "_createdBy":"AAA"
         }];
             po.should.instanceof(Array);

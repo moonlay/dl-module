@@ -78,7 +78,7 @@ class ProductionOrderDataUtil {
 
                     var data = {
                         salesContractNo: _fp.salesContractNo,
-                        orderNo: `orderNo/${codeGenerator()}`,
+                        /* orderNo: `orderNo/${codeGenerator()}`, */
                         uomId: _uom._id,
                         uom: _uom,
                         buyerId: _buyer._id,

@@ -188,21 +188,21 @@ it("#07. should error when confirm data with deliveryDate item is null", functio
             });
 });
 
-it("#08. should error when confirm created data without data items", function (done) {
-    createdData.type='confirm';
-    createdData.items = [];
-        manager.update(createdData)
-            .then((id) => {
-                    done("should error when confirm created data without data items");
-                })
-                .catch((e) => {
-                    e.name.should.equal("ValidationError");
-                    e.should.have.property("errors");
-                    e.errors.should.instanceof(Object);
-                    e.errors.should.have.property("detail");
-                    done();
-                });
-});
+// it("#08. should error when confirm created data without data items", function (done) {
+//     createdData.type='confirm';
+//     createdData.items = [];
+//         manager.update(createdData)
+//             .then((id) => {
+//                     done("should error when confirm created data without data items");
+//                 })
+//                 .catch((e) => {
+//                     e.name.should.equal("ValidationError");
+//                     e.should.have.property("errors");
+//                     e.errors.should.instanceof(Object);
+//                     e.errors.should.have.property("detail");
+//                     done();
+//                 });
+// });
 
 it("#09. should success when search data with filter", function (done) {
     manager.read({

@@ -5,7 +5,7 @@ var should = require('should');
 var helper = require("../../helper");
 var Manager = require("../../../src/managers/garment-master-plan/sewing-blocking-plan-manager");
 var manager = null;
-var dataUtil =require("../../data-util/garment-master-plan/sewing-blocking-plan-data-util");
+var dataUtil = require("../../data-util/garment-master-plan/sewing-blocking-plan-data-util");
 var validate = require("dl-models").validator.garmentMasterPlan.sewingBlockingPlan;
 require("should");
 
@@ -21,11 +21,34 @@ before('#00. connect db', function (done) {
             done(e);
         })
 });
- var year=2018;
- var unit="C1A";
- 
-it("#01. should success when get report with parameter year", function (done) {
-    manager.getReport({"year" : year})
+
+var dummyData;
+var dummyDataId;
+var queryReport = {};
+var dummyReportResult = {};
+
+it(`#01. should success when get created new data`, function (done) {
+    dataUtil.getNewData()
+        .then((data) => {
+            manager.create(data)
+                .then((id) => {
+                    dummyDataId = id;
+                    dummyData = data;
+                    queryReport.year = dummyData.details[0].weeklyPlanYear;
+                    queryReport.unit = dummyData.details[0].unit.code;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#02. should success when get report with parameter year", function (done) {
+    manager.getReport({ "year": queryReport.year })
         .then((data) => {
             data.should.instanceof(Array);
             done();
@@ -34,10 +57,33 @@ it("#01. should success when get report with parameter year", function (done) {
             done(e);
         });
 });
-it("#01. should success when get report with parameter unit", function (done) {
-    manager.getReport({"unit" : unit})
+
+it("#03. should success when get report with parameter year and unit", function (done) {
+    manager.getReport(queryReport)
         .then((data) => {
             data.should.instanceof(Array);
+            dummyReportResult.data = data;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#04. should success when get report with parameter year and unit", function (done) {
+    manager.getXls(dummyReportResult, queryReport)
+        .then((data) => {
+            data.should.instanceof(Object);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it(`#99. should success when remove all data`, function(done) {
+    manager.collection.remove({})
+        .then((result) => {
             done();
         })
         .catch((e) => {

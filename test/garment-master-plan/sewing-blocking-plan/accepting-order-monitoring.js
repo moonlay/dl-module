@@ -36,8 +36,8 @@ it(`#01. should success when get created new data`, function (done) {
                 .then((id) => {
                     dummyDataId = id;
                     dummyData = data;
-                    queryAcceptingOrderMonitoring.year = dummyData.year;
-                    queryAcceptingOrderMonitoring.unit = dummyData.unit;
+                    queryAcceptingOrderMonitoring.year = dummyData.details[0].weeklyPlanYear;
+                    queryAcceptingOrderMonitoring.unit = '';
                     done();
                 })
                 .catch((e) => {
@@ -107,3 +107,4 @@ it(`#06. should success when remove all data`, function(done) {
             done(e);
         });
 });
+

@@ -107,48 +107,64 @@ module.exports = class ProductionOrderManager extends BaseManager {
     }
 
     _beforeInsert(productionOrder) {
+        if (!productionOrder.orderNo) {
+            var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
+            var query = { "type": type, "description": NUMBER_DESCRIPTION };
+            var fields = { "number": 1, "year": 1 };
 
-        var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
-        var query = { "type": type, "description": NUMBER_DESCRIPTION };
-        var fields = { "number": 1, "year": 1 };
+            return this.documentNumbers
+                .findOne(query, fields)
+                .then((previousDocumentNumber) => {
+                    var yearNow = parseInt(moment().format("YYYY"));
 
-        return this.documentNumbers
-            .findOne(query, fields)
-            .then((previousDocumentNumber) => {
+                    var number = 0;
+                    let productionOrders = [];
 
-                var yearNow = parseInt(moment().format("YYYY"));
-
-                var number = 1;
-
-                if (!productionOrder.orderNo) {
                     if (previousDocumentNumber) {
 
                         var oldYear = previousDocumentNumber.year;
-                        number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
+                        number = yearNow > oldYear ? number : previousDocumentNumber.number;
 
-                        productionOrder.orderNo = `${type}${moment().format("YY")}${this.pad(number, 4)}`;
-                    } else {
-                        productionOrder.orderNo = `${type}${moment().format("YY")}0001`;
+                        /* productionOrder.orderNo = `${type}${moment().format("YY")}${this.pad(number, 4)}`; */
+                    }
+                    /*
+                        else {
+                            productionOrder.orderNo = `${type}${moment().format("YY")}0001`;
+                        }
+                    */
+
+                    let now = new Date();
+
+                    for (let detail of productionOrder.details) {
+                        let pOrder = Object.create(productionOrder);
+                        pOrder._createdDate = now;
+                        pOrder.orderNo = `${type}${moment().format("YY")}${this.pad(++number, 4)}`;
+                        pOrder.orderQuantity = detail.quantity;
+                        pOrder.details = [detail];
+
+                        productionOrders.push(pOrder);
                     }
 
-                }
+                    var documentNumbersData = {
+                        "$set": {
+                            documentNumber: productionOrders[productionOrders.length - 1].orderNo,
+                            number: number,
+                            year: parseInt(moment().format("YYYY"))
+                        }
+                    };
 
-                var documentNumbersData = {
-                    type: type,
-                    documentNumber: productionOrder.orderNo,
-                    number: number,
-                    year: parseInt(moment().format("YYYY")),
-                    description: NUMBER_DESCRIPTION
-                };
+                    var options = { "upsert": true };
 
-                var options = { "upsert": true };
-
-                return this.documentNumbers
-                    .updateOne(query, documentNumbersData, options)
-                    .then((id) => {
-                        return Promise.resolve(productionOrder)
-                    })
-            })
+                    return this.documentNumbers
+                        .updateOne(query, documentNumbersData, options)
+                        .then((id) => {
+                            return Promise.resolve(productionOrders)
+                        });
+                });
+        }
+        else {
+            return Promise.resolve([productionOrder])
+        }
     }
 
     pad(number, length) {
@@ -159,6 +175,69 @@ module.exports = class ProductionOrderManager extends BaseManager {
         }
 
         return str;
+    }
+
+    checkAvailability(productionOrders, index, id) {
+        if (index + 1 != productionOrders.length) {
+            return this.createSync(productionOrders, index + 1);
+        }
+        else {
+            return Promise.resolve(id);
+        }
+    }
+
+    createSync(productionOrders, index) {
+        return this.collection.insert(productionOrders[index])
+            .then(id => {
+                let spp = productionOrders[index];
+
+                return this.fpSalesContractManager.getSingleById(spp.salesContractId)
+                    .then((sc) => {
+                        if (sc.remainingQuantity != undefined) {
+                            sc.remainingQuantity = sc.remainingQuantity - spp.orderQuantity;
+                            return this.fpSalesContractManager.update(sc)
+                                .then((scId) => {
+                                    return this.checkAvailability(productionOrders, index, id);
+                                });
+                        }
+                        else {
+                            return this.checkAvailability(productionOrders, index, id);
+                        }
+                    });
+            })
+            .catch(err => {
+                if (err.errmsg && err.errmsg.indexOf("duplicate key error") != -1) {
+                    let msg = "";
+
+                    for (let i = 0; i < productionOrders.length; i++) {
+                        msg += "Data Acuan Warna " + productionOrders[i].details[0].colorTemplate + " dan Warna Yang Diminta " + productionOrders[i].details[0].colorRequest;
+
+                        if (i < index) { /* Success Data */
+                            msg += " Berhasil\n";
+                        }
+                        else {
+                            msg += " Gagal\n";
+                        }
+                    }
+                    return Promise.reject({ name: "DuplicateError", message: "Beberapa atau semua data gagal tersimpan", errors: msg });
+                }
+                else {
+                    return Promise.reject({ name: "UnknownError", message: "Terjadi kesalahan" });
+                }
+            });
+    }
+
+    create(data) {
+        return this._pre(data)
+            .then((validData) => {
+                return this._beforeInsert(validData);
+            })
+            .then((processedData) => {
+                return this.createSync(processedData, 0);
+            })
+            .then((id) => {
+                return this._afterInsert(id);
+            });
     }
 
     _validate(productionOrder) {
@@ -398,9 +477,12 @@ module.exports = class ProductionOrderManager extends BaseManager {
                     for (var i of valid.details) {
                         totalqty += i.quantity;
                     }
+                    let indexDetail = 1;
                     for (var detail of valid.details) {
                         var detailError = {};
-                        detail.code = generateCode();
+                        let unique = "CODE" + indexDetail++;
+                        detail.code = generateCode(unique);
+
                         if (!detail.colorRequest || detail.colorRequest == "")
                             detailError["colorRequest"] = i18n.__("ProductionOrder.details.colorRequest.isRequired:%s is required", i18n.__("ProductionOrder.details.colorRequest._:ColorRequest")); //"colorRequest tidak boleh kosong";
                         if (detail.quantity <= 0)
@@ -541,6 +623,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
             });
     }
 
+    /*
+
     _afterInsert(id) {
         return this.getSingleById(id)
             .then((spp) => {
@@ -551,8 +635,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             sc.remainingQuantity = sc.remainingQuantity - spp.orderQuantity;
                             return this.fpSalesContractManager.update(sc)
                                 .then(
-                                (id) =>
-                                    Promise.resolve(sppId));
+                                    (id) =>
+                                        Promise.resolve(sppId));
                         }
                         else {
                             Promise.resolve(sppId);
@@ -561,6 +645,8 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
             });
     }
+
+    */
 
     _beforeUpdate(data) {
         return this.getSingleById(data._id)
@@ -826,7 +912,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "materialConstruction": "$materialConstruction.name",
                                 "materialWidth": "$materialWidth",
                                 // "designMotive": "$designMotive.name",
-                                "designCode" : "$designCode"
+                                "designCode": "$designCode"
                             }
                         },
                         { $sort: { "_createdDate": -1 } },
@@ -863,7 +949,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                                 "materialConstruction": "$materialConstruction.name",
                                 "materialWidth": "$materialWidth",
                                 // "designMotive": "$designMotive.name",
-                                "designCode" : "$designCode"
+                                "designCode": "$designCode"
                             }
                         },
                         { $sort: { "_createdDate": -1 } }
@@ -1397,7 +1483,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         xls.options["Tanggal Terima Order"] = "string";
         xls.options["Posisi Kanban Terakhir"] = "string";
         xls.options["Perubahan Tanggal Delivery"] = "string";
-        xls.options["Alasan Perubahan Tanggal Delivery"] = "string";        
+        xls.options["Alasan Perubahan Tanggal Delivery"] = "string";
         xls.options["Permintaan Delivery"] = "string";
         xls.options["Panjang SPP"] = "number";
         xls.options["Sisa Belum Turun Kanban"] = "number";
@@ -1441,7 +1527,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         xls.options["Kuantiti (m)"] = "number";
         xls.options["Status"] = "string";
 
-        for(let history of res.histories) {
+        for (let history of res.histories) {
             let item = {};
             item["Tanggal Buat"] = moment(history._createdDate).add(offset, 'h').format('DD/MM/YYYY');
             item["Tanggal Hasil Revisi"] = moment(history.deliveryDateCorrection).add(offset, 'h').format('DD/MM/YYYY');
@@ -1657,7 +1743,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                         var packingReceipts = results[1];
                         var packingShipments = results[2];
                         var orderStatusHistories = results[3];
-                        
+
                         var data = [];
 
                         let detailIndex = 1;
@@ -1668,7 +1754,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
                             let history = orderStatusHistories.find(p => p._id == productionOrder.orderNo);
 
-                            if(history) {
+                            if (history) {
                                 datum.deliveryDateCorrection = history.deliveryDateCorrection;
                                 datum.reason = history.reason;
                             }
@@ -1765,7 +1851,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         var orderNumbers = [];
         orderNumbers.push(info.orderNo);
 
-        
+
 
         return Promise.all([this.getKanbanAndDailyOperations(orderNumbers), this.orderStatusHistoryManager.getByProductionOrderNo(info.orderNo)])
             .then((results) => {
@@ -1806,7 +1892,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
                             }
                         }
                     }
-                    
+
                     data.push(datum);
                 }
 
@@ -2136,4 +2222,56 @@ module.exports = class ProductionOrderManager extends BaseManager {
 
     //#endregion New Status Order
 
+    //#region Update IsRequested and IsCompleted
+    updateIsRequested(data) {
+        var objectIds = data.ids.map((id) => {
+            return new ObjectId(id);
+        })
+
+        return this
+            .collection
+            .updateMany({ "_id": { "$in": objectIds } },
+                {
+                    "$set": {
+                        "isRequested": data.context.toUpperCase() === "CREATE" ? true : false,
+                        "_updatedBy": this.user.username,
+                        "_updatedDate": new Date()
+                    }
+                })
+    }
+
+    updateIsCompleted(data) {
+        var updatePromises = data.contextAndIds.map((datum) => {
+            return this
+                .collection
+                .update({ "_id": new ObjectId(datum.id) },
+                    {
+                        "$set": {
+                            "isCompleted": datum.context.toUpperCase() == "COMPLETE" ? true : false,
+                            "_updatedBy": this.user.username,
+                            "_updatedDate": new Date()
+                        }
+                    })
+        })
+
+        return Promise.all(updatePromises);
+    }
+
+    updateDistributedQuantity(data) {
+        var updatePromises = data.map((datum) => {
+            return this
+                .collection
+                .updateOne({ "_id": new ObjectId(datum.id) },
+                    {
+                        "$set": {
+                            "_updatedBy": this.user.username,
+                            "_updatedDate": new Date(),
+                            "distributedQuantity": parseFloat(datum.distributedQuantity)
+                        },
+                    })
+        });
+
+        return Promise.all(updatePromises);
+    }
+    //#endregion Update IsRequested and IsCompleted
 }
