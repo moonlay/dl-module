@@ -113,8 +113,8 @@ it("#06. should success when read data", function (done) {
 });
 
 it('#07. should success when get data kedatangan with date', function (done) {
-    var dateFrom = null;
-    var dateTo   = null;
+    var dateFrom =  createdData.date;
+    var dateTo   =  createdData.date;
     var kategori = "Bahan Baku";
     var offset = 7;
     manager.getDataTest( dateFrom, dateTo, kategori,offset)
@@ -128,8 +128,8 @@ it('#07. should success when get data kedatangan with date', function (done) {
 });
 
 it('#08. should success when get data kedatangan detail with date', function (done) {
-    var dateFrom = null;
-    var dateTo   = null;
+    var dateFrom =  createdData.date;
+    var dateTo   =  createdData.date;
     var kategori = "Bahan Baku";
     var supplier = null;
      var offset =7;
