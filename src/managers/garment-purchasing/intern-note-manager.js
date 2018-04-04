@@ -31,6 +31,7 @@ module.exports = class InternNoteManager extends BaseManager {
         this.invoiceNoteManager = new InvoiceNoteManager(db, user);
         this.currencyManager = new CurrencyManager(db, user);
         this.supplierManager = new SupplierManager(db, user);
+        this.unitReceiptNote = this.db.collection("garment-unit-receipt-notes");
     }
 
     _validate(internNote) {
@@ -220,12 +221,28 @@ module.exports = class InternNoteManager extends BaseManager {
                 valid.supplierId = valid.supplier._id;
                 valid.currency = _currency;
 
+                valid.hasUnitReceiptNote = true;
+
+                var unitReceiptNotes = [];
                 for (var item of valid.items) {
                     var _invoiceNote = _invoiceNotes.find(invoiceNote => invoiceNote._id.toString() === item._id.toString());
                     if (_invoiceNote) {
                         item = Object.assign(item, _invoiceNote)
                     }
+                    //get data unit receipt notes
+                    for (var unitReceiptNote of item.items) {
+                        unitReceiptNotes.push(unitReceiptNote.deliveryOrderNo)
+                    }
                 }
+                
+                // set true or false "hasUnitReceiptNote" 
+                this.getUnitReceiptNote(unitReceiptNotes).then(res => {
+                    for (var i of unitReceiptNotes) {
+                        if (!(res.find(data => data.deliveryOrderNo == i))) {
+                            valid.hasUnitReceiptNote = false;
+                        }
+                    }
+                })
 
                 if (!valid.stamp) {
                     valid = new InternNote(valid);
@@ -234,6 +251,14 @@ module.exports = class InternNoteManager extends BaseManager {
                 valid.stamp(this.user.username, 'manager');
                 return Promise.resolve(valid);
             });
+    }
+
+    getUnitReceiptNote(data) {
+        return new Promise((resolve, reject) => {
+            this.unitReceiptNote.find({ "deliveryOrderNo": { $in: data }, "_deleted": false }).toArray(function (err, result) {
+                resolve(result);
+            });
+        });
     }
 
     _getQuery(paging) {
@@ -668,7 +693,7 @@ module.exports = class InternNoteManager extends BaseManager {
                                 getListKurs.push(this.kursManager.collection.aggregate([
                                     {
                                         $match:
-                                        { "_deleted": false, "code": internNote.currency.code, "date": { $lte: currency.date } }
+                                            { "_deleted": false, "code": internNote.currency.code, "date": { $lte: currency.date } }
                                     },
                                     {
                                         $project: {
@@ -812,7 +837,7 @@ module.exports = class InternNoteManager extends BaseManager {
                             "currency": "$currency.code",
                             "paymentMethod": "$items.items.items.paymentMethod",
                             "paymentType": "$items.items.items.paymentType",
-                            "dueDate": {$add:["$items.items.deliveryOrderDate",{$multiply:["$items.items.items.paymentDueDays",24,60,60000]}]},
+                            "dueDate": { $add: ["$items.items.deliveryOrderDate", { $multiply: ["$items.items.items.paymentDueDays", 24, 60, 60000] }] },
                             "invoiceNo": "$items.no",
                             "invoiceDate": "$items.date",
                             "productCode": "$items.items.items.product.code",
@@ -820,7 +845,7 @@ module.exports = class InternNoteManager extends BaseManager {
                             "qty": "$items.items.items.deliveredQuantity",
                             "uom": "$items.items.items.purchaseOrderUom.unit",
                             "price": "$items.items.items.pricePerDealUnit",
-                            
+
                         }
                     },
                     {
@@ -831,11 +856,11 @@ module.exports = class InternNoteManager extends BaseManager {
                 ])
                 .toArray()
                 .then(results => {
-                    for(var data of results){
-                        for(var data1 of results){
-                            if(data.no===data1.no){
-                                if(data.dueDate<data1.dueDate){
-                                    data.dueDate=data1.dueDate;
+                    for (var data of results) {
+                        for (var data1 of results) {
+                            if (data.no === data1.no) {
+                                if (data.dueDate < data1.dueDate) {
+                                    data.dueDate = data1.dueDate;
                                 }
                             }
                         }
@@ -848,7 +873,7 @@ module.exports = class InternNoteManager extends BaseManager {
         });
     }
 
-getDataMonitoringAll(info) {
+    getDataMonitoringAll(info) {
         return new Promise((resolve, reject) => {
             var _defaultFilter = {
                 _deleted: false
@@ -896,13 +921,13 @@ getDataMonitoringAll(info) {
                     , { "$unwind": "$items.items" }
                     , {
                         $lookup:
-                        {
-                            from:"garment-unit-receipt-notes",
-                            localField:"items.items.deliveryOrderNo",
-                            foreignField:"deliveryOrderNo",
-                            as:"hasil_docs"
-                        }
-                       }
+                            {
+                                from: "garment-unit-receipt-notes",
+                                localField: "items.items.deliveryOrderNo",
+                                foreignField: "deliveryOrderNo",
+                                as: "hasil_docs"
+                            }
+                    }
                     , { "$unwind": "$items.items.items" }
                     , { "$match": query }
                     , {
@@ -916,7 +941,7 @@ getDataMonitoringAll(info) {
                             "currency": "$currency.code",
                             "paymentMethod": "$items.items.items.paymentMethod",
                             "paymentType": "$items.items.items.paymentType",
-                            "dueDate": {$add:["$items.items.deliveryOrderDate",{$multiply:["$items.items.items.paymentDueDays",24,60,60000]}]},
+                            "dueDate": { $add: ["$items.items.deliveryOrderDate", { $multiply: ["$items.items.items.paymentDueDays", 24, 60, 60000] }] },
                             "invoiceNo": "$items.no",
                             "invoiceDate": "$items.date",
                             "deliveryOrderNo": "$items.items.deliveryOrderNo",
@@ -939,11 +964,11 @@ getDataMonitoringAll(info) {
                 ])
                 .toArray()
                 .then(results => {
-                    for(var data of results){
-                        for(var data1 of results){
-                            if(data.no===data1.no){
-                                if(data.dueDate<data1.dueDate){
-                                    data.dueDate=data1.dueDate;
+                    for (var data of results) {
+                        for (var data1 of results) {
+                            if (data.no === data1.no) {
+                                if (data.dueDate < data1.dueDate) {
+                                    data.dueDate = data1.dueDate;
                                 }
                             }
                         }
@@ -1033,15 +1058,14 @@ getDataMonitoringAll(info) {
 
         return Promise.resolve(xls);
     }
-    
-  getAllData(startdate, enddate, offset) {
-        return new Promise((resolve, reject) => 
-        {
-           var now = new Date();
-           var deleted = {
+
+    getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var now = new Date();
+            var deleted = {
                 _deleted: false
             };
-            
+
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
 
@@ -1079,55 +1103,62 @@ getDataMonitoringAll(info) {
                 query.push(filterDateFrom);
             }
 
-      var match = { '$and': query };
-            
-      this.collection.aggregate([
-      {$match: match },
-      {$unwind:"$items"},
-      {$unwind:"$items.items"},
-      {$unwind:"$items.items.items"},
-      {$project :{
-                    "NoNI":"$no",
-                    "TgNI":"$date",
-                    "MtUang":"$currency.code",
-                    "Rate" :"$currency.rate",
-                    "KdSpl":"$supplier.code",
-                    "NmSpl":"$supplier.name",   
-                    "NoInv":"$items.no",
-                    "TgInv":"$items.date",
-                    "NoSJ" :"$items.items.deliveryOrderNo",
-                    "TgSJ":"$items.items.deliveryOrderSupplierDoDate",
-                    "TgDtg":"$items.items.deliveryOrderDate",
-                    "PoExt":"$items.items.items.purchaseOrderExternalNo",
-                    "PlanPO":"$items.items.items.purchaseRequestRefNo",
-                    "NoRO":"$items.items.items.roNo",
-                    "TipeByr":"$items.items.items.paymentType",
-                    "TermByr":"$items.items.items.paymentMethod",
-                    "Tempo":"$items.items.items.paymentDueDays",
-                    "KdBrg":"$items.items.items.product.code",
-                    "NmBrg":"$items.items.items.product.name",
-                    "SatNI":"$items.items.items.purchaseOrderUom.unit",
-                    "Qty" : "$items.items.items.purchaseOrderQuantity",
-                    "Harga" : "$items.items.items.pricePerDealUnit",
-                    "TgIn":"$_createdDate",
-                    "UserIn":"$_createdBy",
-                    "TgEd":"$_updatedDate",
-                    "UserEd":"$_updatedBy",
-      }}, 
-      {$group :{ _id: {"NoNI":"$NoNI","TgNI":"$TgNI","MtUang":"$MtUang","Rate":"$Rate","KdSpl":"$KdSpl","NmSpl":"$NmSpl",   
-                       "NoInv":"$NoInv","TgInv":"$TgInv", "NoSJ" :"$NoSJ","TgSJ":"$TgSJ","TgDtg":"$TgDtg",
-                       "PoExt":"$PoExt","PlanPO":"$PlanPO","NoRO":"$NoRO","TipeByr":"$TipeByr",
-                       "TermByr":"$TermByr","Tempo":"$Tempo","KdBrg":"$KdBrg","NmBrg":"$NmBrg",
-                       "SatNI":"$SatNI","Qty":"$Qty","Harga" : "$Harga","TgIn":"$TgIn","UserIn":"$UserIn",
-                       "TgEd":"$TgEd","UserEd":"$UserEd"
-               },
-               "TotNI": { $sum: { $multiply: ["$Qty", "$Harga","$Rate"]
-                                 }
-                         }
-               }
-        } 
-      ])
-        .toArray(function (err, result) {
+            var match = { '$and': query };
+
+            this.collection.aggregate([
+                { $match: match },
+                { $unwind: "$items" },
+                { $unwind: "$items.items" },
+                { $unwind: "$items.items.items" },
+                {
+                    $project: {
+                        "NoNI": "$no",
+                        "TgNI": "$date",
+                        "MtUang": "$currency.code",
+                        "Rate": "$currency.rate",
+                        "KdSpl": "$supplier.code",
+                        "NmSpl": "$supplier.name",
+                        "NoInv": "$items.no",
+                        "TgInv": "$items.date",
+                        "NoSJ": "$items.items.deliveryOrderNo",
+                        "TgSJ": "$items.items.deliveryOrderSupplierDoDate",
+                        "TgDtg": "$items.items.deliveryOrderDate",
+                        "PoExt": "$items.items.items.purchaseOrderExternalNo",
+                        "PlanPO": "$items.items.items.purchaseRequestRefNo",
+                        "NoRO": "$items.items.items.roNo",
+                        "TipeByr": "$items.items.items.paymentType",
+                        "TermByr": "$items.items.items.paymentMethod",
+                        "Tempo": "$items.items.items.paymentDueDays",
+                        "KdBrg": "$items.items.items.product.code",
+                        "NmBrg": "$items.items.items.product.name",
+                        "SatNI": "$items.items.items.purchaseOrderUom.unit",
+                        "Qty": "$items.items.items.deliveredQuantity",
+                        "Harga": "$items.items.items.pricePerDealUnit",
+                        "TgIn": "$_createdDate",
+                        "UserIn": "$_createdBy",
+                        "TgEd": "$_updatedDate",
+                        "UserEd": "$_updatedBy",
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            "NoNI": "$NoNI", "TgNI": "$TgNI", "MtUang": "$MtUang", "Rate": "$Rate", "KdSpl": "$KdSpl", "NmSpl": "$NmSpl",
+                            "NoInv": "$NoInv", "TgInv": "$TgInv", "NoSJ": "$NoSJ", "TgSJ": "$TgSJ", "TgDtg": "$TgDtg",
+                            "PoExt": "$PoExt", "PlanPO": "$PlanPO", "NoRO": "$NoRO", "TipeByr": "$TipeByr",
+                            "TermByr": "$TermByr", "Tempo": "$Tempo", "KdBrg": "$KdBrg", "NmBrg": "$NmBrg",
+                            "SatNI": "$SatNI", "Qty": "$Qty", "Harga": "$Harga", "TgIn": "$TgIn", "UserIn": "$UserIn",
+                            "TgEd": "$TgEd", "UserEd": "$UserEd"
+                        },
+                        "TotNI": {
+                            $sum: {
+                                $multiply: ["$Qty", "$Harga", "$Rate"]
+                            }
+                        }
+                    }
+                }
+            ])
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });
