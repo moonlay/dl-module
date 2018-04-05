@@ -35,7 +35,17 @@ it('#01. should success when create new data', function (done) {
 it('#02. should error when create with duplicate Order Number', function (done) {
     ProductionOrderDataUtil.getNewData()
         .then(productionOrder => {
-            var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
+            var type ="";
+            // var type = productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing") ? "P" : "F";
+            if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "printing")) {
+                type = "P";
+            } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "rfp")) {
+                type = "RFP";
+            } else if (productionOrder && productionOrder.orderType && productionOrder.orderType.name && (productionOrder.orderType.name.toString().toLowerCase() === "rfd")) {
+                type = "RFD";
+            } else {
+                type = "F";
+            }
             var query = { "type": type, "description": "SPP Finishing Printing" };
 
             database.collection("document-numbers")
