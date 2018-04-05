@@ -861,7 +861,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     })
                     for (var pr of prId) {
                         if (ObjectId.isValid(pr)) {
-                            getPurchaseRequests.push(this.purchaseRequestManager.getSingleByIdOrDefault(pr, ["artikel", "items.product._id", "items.colors", "no", "_id"]));
+                            getPurchaseRequests.push(this.purchaseRequestManager.getSingleByIdOrDefault(pr, ["artikel", "items.product._id", "items.colors", "no", "_id", "shipmentDate"]));
                         }
                     }
                     Promise.all(getPurchaseRequests)
@@ -871,6 +871,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 var _prItem = _pr.items.find((prItem) => prItem.product._id.toString() === item.product._id.toString())
                                 item.colors = _prItem.colors || []
                                 item.artikel = _pr.artikel;
+                                item.shipmentDate = _pr.shipmentDate;
                             }
 
                             var getDefinition;
