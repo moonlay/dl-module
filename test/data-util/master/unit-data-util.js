@@ -43,5 +43,20 @@ class UnitDataUtil {
                 return this.getSert(data);
             });
     }
+
+    getFPTestData() {
+        return division.getFPTestData()
+            .then(div => {
+                let data = {
+                    code: 'UT/FP',
+                    divisionId: div._id,
+                    division: div,
+                    name: 'FINISHING',
+                    description: ''
+                };
+
+                return this.getSert(data);
+            });
+    }
 }
 module.exports = new UnitDataUtil();
