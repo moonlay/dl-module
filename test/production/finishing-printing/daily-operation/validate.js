@@ -641,43 +641,43 @@ it("#19. on index 1 step 1 : should error when create new data Output with prece
         });
 });
 
-it("#20. on index 1 step 1 : should error when create new data Output with duplicate badoutput reason", function(done) {
-    dataUtil.getNewData("output")
-        .then(data => {
-            data.kanban = kanban;
-            data.kanbanId = kanban._id;
-            data.machine = machine;
-            data.machineId = machine._id;
-            data.step = step1;
-            data.stepId = step1._id;
-            data.dateOutput = '2017-01-03';
-            var items = []
-            var item;
-            for(var a of data.badOutputReasons){
-                item = a;
-            }
-            item.length = 1;
-            items.push(item);
-            items.push(item);
-            data.badOutputReasons = items
-            dailyOperationManager.create(data)
-                .then(daily => {
-                    done("on index 1 step 1 : should error when create new data Output with duplicate badoutput reason");
-                })
-                .catch((e) => {
-                    try {
-                        e.errors.should.have.property('badOutputReasons');
-                        done();
-                    }
-                    catch (ex) {
-                        done(ex);
-                    }
-                });
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
+// it("#20. on index 1 step 1 : should error when create new data Output with duplicate badoutput reason", function(done) {
+//     dataUtil.getNewData("output")
+//         .then(data => {
+//             data.kanban = kanban;
+//             data.kanbanId = kanban._id;
+//             data.machine = machine;
+//             data.machineId = machine._id;
+//             data.step = step1;
+//             data.stepId = step1._id;
+//             data.dateOutput = '2017-01-03';
+//             var items = []
+//             var item;
+//             for(var a of data.badOutputReasons){
+//                 item = a;
+//             }
+//             item.length = 1;
+//             items.push(item);
+//             items.push(item);
+//             data.badOutputReasons = items
+//             dailyOperationManager.create(data)
+//                 .then(daily => {
+//                     done("on index 1 step 1 : should error when create new data Output with duplicate badoutput reason");
+//                 })
+//                 .catch((e) => {
+//                     try {
+//                         e.errors.should.have.property('badOutputReasons');
+//                         done();
+//                     }
+//                     catch (ex) {
+//                         done(ex);
+//                     }
+//                 });
+//         })
+//         .catch((e) => {
+//             done(e);
+//         });
+// });
 
 it("#21. on index 1 step 1 : should error when create new data Output with no exist data reason", function(done) {
     dataUtil.getNewData("output")
