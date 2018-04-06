@@ -236,20 +236,20 @@ module.exports = class InternNoteManager extends BaseManager {
                 }
                 
                 // set true or false "hasUnitReceiptNote" 
-                this.getUnitReceiptNote(unitReceiptNotes).then(res => {
+                return this.getUnitReceiptNote(unitReceiptNotes).then(res => {
                     for (var i of unitReceiptNotes) {
                         if (!(res.find(data => data.deliveryOrderNo == i))) {
                             valid.hasUnitReceiptNote = false;
                         }
                     }
+
+                    if (!valid.stamp) {
+                        valid = new InternNote(valid);
+                    }
+
+                    valid.stamp(this.user.username, 'manager');
+                    return Promise.resolve(valid);
                 })
-
-                if (!valid.stamp) {
-                    valid = new InternNote(valid);
-                }
-
-                valid.stamp(this.user.username, 'manager');
-                return Promise.resolve(valid);
             });
     }
 
