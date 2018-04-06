@@ -1231,7 +1231,7 @@ getDataMonitoringAll(info) {
                 internNote.hasUnitReceiptNote = listStatus.map((item) => item)
                     .reduce((prev, curr, index) => {
                         return prev && curr
-                    }, true);
+                    }, false);
 
                 if (!internNote.stamp) {
                     internNote = new InternNote(internNote);
