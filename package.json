@@ -22,7 +22,7 @@
   "dependencies": {
     "assert": "^1.4.1",
     "dl-i18n": "git+https://github.com/danliris/dl-i18n.git",
-    "dl-models": "https://github.com/danliris/dl-models#dev",
+    "dl-models": "https://github.com/danliris/dl-models",
     "hashids": "^1.1.0",
     "module-toolkit": "git+https://github.com/pinkgorilla/module-toolkit.git",
     "moment": "2.17.1",
