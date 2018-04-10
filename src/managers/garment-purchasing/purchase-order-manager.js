@@ -2110,7 +2110,29 @@ getDataKirim( dateFrom, dateTo, offset) {
                       var qryMatch = {};
             qryMatch["$and"] = [
                 { "_deleted": false },
-                { "isPosted": true }];
+                { "isPosted": true }, {
+                        "items.category.name":{$ne:"SUBKON"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"INTERLINING"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PROCESS"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"WASH"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PRINT"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"PLISKET"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"EMBROIDERY"} 
+                    }];
 
 if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
                 var validStartDate = new Date(dateFrom);
@@ -2270,7 +2292,29 @@ var dates = {
                           
             qryMatch["$and"] = [
                 { "_deleted": false },
-                { "isPosted": true }];
+                { "isPosted": true }, {
+                        "items.category.name":{$ne:"SUBKON"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"INTERLINING"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PROCESS"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"WASH"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PRINT"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"PLISKET"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"EMBROIDERY"} 
+                    }];
 
           if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
                 var validStartDate = new Date(dateFrom);
@@ -2540,6 +2584,20 @@ var dates = {
                     },
                      {
                         "items.category.name":{$ne:"PROCESS"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"WASH"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PRINT"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"PLISKET"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"EMBROIDERY"} 
                     }
                     )
 
@@ -2672,6 +2730,20 @@ var dates = {
                     },
                      {
                         "items.category.name":{$ne:"PROCESS"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"WASH"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PRINT"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"PLISKET"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"EMBROIDERY"} 
                     }
                     )
                 }
