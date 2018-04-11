@@ -963,6 +963,7 @@ module.exports = class DailyOperationManager extends BaseManager {
             "badOutput": 1,
             "badOutputDescription": 1,
             "action": 1,
+            "type": 1,
             "badOutputReasons.badOutputReason.reason": 1,
             "badOutputReasons.precentage": 1,
             "badOutputReasons.length": 1,
