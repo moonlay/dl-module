@@ -103,14 +103,14 @@ module.exports = class DailyOperationManager extends BaseManager {
             var getStep = valid.stepId && ObjectId.isValid(valid.stepId) ? this.stepManager.getSingleByIdOrDefault(new ObjectId(valid.stepId)) : Promise.resolve(null);
             var getBadOutput = [];
             var dataReasons = valid.badOutputReasons || [];
-            var getMachineReason=[];
+            var getMachineReason = [];
             for (var a of dataReasons) {
                 if (a.badOutputReasonId && ObjectId.isValid(a.badOutputReasonId))
                     getBadOutput.push(this.badOutputReasonManager.getSingleByIdOrDefault(new ObjectId(a.badOutputReasonId)))
                 if (a.machineId && ObjectId.isValid(a.machineId))
                     getMachineReason.push(this.machineManager.getSingleByIdOrDefault(new ObjectId(a.machineId)))
             }
-            Promise.all([getKanban, getMachine, getStep, getDaily, thisDaily].concat(getBadOutput,getMachineReason))
+            Promise.all([getKanban, getMachine, getStep, getDaily, thisDaily].concat(getBadOutput, getMachineReason))
                 .then(results => {
                     var _kanban = results[0];
                     var _machine = results[1];
@@ -506,19 +506,19 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     return !params ? null : params.code === a.badOutputReason.code;
                                 }
                                 var dataBadOutput = _badOutput.find(searchItem);
-                                
-                            function searchMachine(params) {
-                                return !params ? null : params.code === a.machine.code;
-                            }
-                            var dataBadOutputMachine = _machineReasons.find(searchMachine);
+
+                                function searchMachine(params) {
+                                    return !params ? null : params.code === a.machine.code;
+                                }
+                                var dataBadOutputMachine = _machineReasons.find(searchMachine);
                                 var data = new BadOutputReasonItem({
                                     length: a.length,
                                     action: a.action,
                                     description: a.description,
                                     badOutputReasonId: new ObjectId(dataBadOutput._id),
                                     badOutputReason: dataBadOutput,
-                                    machineId:new ObjectId(a.machineId),
-                                    machine:dataBadOutputMachine
+                                    machineId: new ObjectId(a.machineId),
+                                    machine: dataBadOutputMachine
                                 })
                                 data._createdDate = dateNow;
                                 data.stamp(this.user.username, "manager")
@@ -984,7 +984,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                 return this.collection
                     .aggregate([
                         { "$match": { "code": { "$in": inputCodes } } },
-                        { "$project": { "code": 1 } },
+                        { "$project": selectedFields },
                         { "$sort": order }
                     ])
                     .toArray()
