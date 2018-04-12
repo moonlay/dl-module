@@ -12,7 +12,7 @@ addons:
     packages:
     - mongodb-org-server
 after_success:
-- mongo --quiet --eval  "printjson(db.adminCommand('listDatabases'))"
+- mongo admin --eval "db.dropDatabase()"
 - npm run coveralls
 - npm run codeclimate
 cache: false
