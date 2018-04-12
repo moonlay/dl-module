@@ -12,6 +12,7 @@ addons:
     packages:
     - mongodb-org-server
 after_success:
+- mongo mydb_test --eval "db.dropDatabase()"
 - npm run coveralls
 - npm run codeclimate
 cache: false
