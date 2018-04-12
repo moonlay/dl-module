@@ -1082,9 +1082,7 @@ module.exports = class DailyOperationManager extends BaseManager {
 
         return this.collection.aggregate([
             {
-                "$match": {
-                    "type": "output"
-                }
+                "$match": matchQuery
             },
             {
                 "$project": {
@@ -1114,9 +1112,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                     },
                     "date": "$dateOutput"
                 }
-            },
-            {
-                "$match": matchQuery
             },
             {
                 "$group": {
@@ -1287,7 +1282,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                 });
         });
     }
-
 
     getDataDaily(query) {
         return this._createIndexes()
