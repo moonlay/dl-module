@@ -1000,7 +1000,7 @@ module.exports = class DailyOperationManager extends BaseManager {
 
                         for (var result of results) {
                             if (result.type && result.type.toString().toLowerCase() === "input") {
-                                var outputResult = results.find((daily) => daily.type && daily.type.toString().toLowerCase() === "output");
+                                var outputResult = results.find((daily) => daily.type && daily.type.toString().toLowerCase() === "output" && daily.code === result.code);
 
                                 if (outputResult) {
                                     result.badOutput = outputResult.badOutput;
