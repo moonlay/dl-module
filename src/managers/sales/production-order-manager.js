@@ -2244,7 +2244,7 @@ module.exports = class ProductionOrderManager extends BaseManager {
         var updatePromises = data.contextAndIds.map((datum) => {
             return this
                 .collection
-                .update({ "_id": new ObjectId(datum.id) },
+                .updateOne({ "_id": new ObjectId(datum.id) },
                     {
                         "$set": {
                             "isCompleted": datum.context.toUpperCase() == "COMPLETE" ? true : false,
