@@ -1283,6 +1283,32 @@ module.exports = class DailyOperationManager extends BaseManager {
         });
     }
 
+    getMonitoringMontlyReport(query) {
+        return this.collection.aggregate([
+            {
+                "$match": {
+                    "_deleted": false, "machine.code": query.machineCode, "type": "input", "dateInput": {
+                        "$gte": new Date(query.dateFrom),
+                        "$lte": new Date(query.dateTo)
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_updatedDate":1,
+                    "_deleted": 1,
+                    "type": 1,
+                    "input":1,
+                    "dateInput": 1,
+                    "machine.name": 1,
+                    "machine.code": 1,
+                    "machine.monthlyCapacity":1,
+                }
+            }])
+            .sort({ "_updatedDate": -1})
+            .toArray()
+    }
+
     getDataDaily(query) {
         return this._createIndexes()
             .then((createIndexResults) => {
