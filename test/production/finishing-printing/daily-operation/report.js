@@ -149,20 +149,20 @@ it("#07. should success when get report with date parameter", function (done) {
 it("#08.(2) should success create Excel with id", function (done) {
     var _idExcel = [];
     for (var temp of dataReport.data) {
-        temp.kanban=null;
-        temp.machine=null;
-        temp.dateInput=null;
-        temp.timeInput=null;
-        temp.input=null;
-        temp.dateOutput=null;
-        temp.timeOutput=null;
-        temp.goodOutput=null;
-        temp.badOutput=null;
-        temp.badOutputDescription=null;
+        temp.kanban = null;
+        temp.machine = null;
+        temp.dateInput = null;
+        temp.timeInput = null;
+        temp.input = null;
+        temp.dateOutput = null;
+        temp.timeOutput = null;
+        temp.goodOutput = null;
+        temp.badOutput = null;
+        temp.badOutputDescription = null;
         _idExcel.push(temp)
     }
 
-    dataReport.data=_idExcel;
+    dataReport.data = _idExcel;
 
     dailyOperationManager.getXls(dataReport, { "dateFrom": moment(dateBefore).format('YYYY-MM-DD'), "dateTo": moment(dateNow).format('YYYY-MM-DD') }, 7)
         .then((item) => {
@@ -179,22 +179,22 @@ it("#08.(2) should success create Excel with id", function (done) {
 it("#08.(3) should success create Excel with id", function (done) {
     var _idExcel = [];
     for (var temp of dataReport.data) {
-        temp.kanban=null;
-        temp.machine=null;
-        temp.dateInput=null;
-        temp.timeInput=null;
-        temp.input=null;
-        temp.dateOutput=null;
-        temp.timeOutput=null;
-        temp.goodOutput=null;
-        temp.badOutput=null;
-        temp.badOutputDescription=null;
+        temp.kanban = null;
+        temp.machine = null;
+        temp.dateInput = null;
+        temp.timeInput = null;
+        temp.input = null;
+        temp.dateOutput = null;
+        temp.timeOutput = null;
+        temp.goodOutput = null;
+        temp.badOutput = null;
+        temp.badOutputDescription = null;
         _idExcel.push(temp)
     }
 
-    dataReport.data=_idExcel;
+    dataReport.data = _idExcel;
 
-    dailyOperationManager.getXls(dataReport, { "dateFrom": moment(dateBefore).format('YYYY-MM-DD')}, 7)
+    dailyOperationManager.getXls(dataReport, { "dateFrom": moment(dateBefore).format('YYYY-MM-DD') }, 7)
         .then((item) => {
             item.should.have.property('data');
             item.should.have.property('options');
@@ -209,22 +209,22 @@ it("#08.(3) should success create Excel with id", function (done) {
 it("#08.(4) should success create Excel with id", function (done) {
     var _idExcel = [];
     for (var temp of dataReport.data) {
-        temp.kanban=null;
-        temp.machine=null;
-        temp.dateInput=null;
-        temp.timeInput=null;
-        temp.input=null;
-        temp.dateOutput=null;
-        temp.timeOutput=null;
-        temp.goodOutput=null;
-        temp.badOutput=null;
-        temp.badOutputDescription=null;
+        temp.kanban = null;
+        temp.machine = null;
+        temp.dateInput = null;
+        temp.timeInput = null;
+        temp.input = null;
+        temp.dateOutput = null;
+        temp.timeOutput = null;
+        temp.goodOutput = null;
+        temp.badOutput = null;
+        temp.badOutputDescription = null;
         _idExcel.push(temp)
     }
 
-    dataReport.data=_idExcel;
+    dataReport.data = _idExcel;
 
-    dailyOperationManager.getXls(dataReport, {"dateTo": moment(dateNow).format('YYYY-MM-DD') }, 7)
+    dailyOperationManager.getXls(dataReport, { "dateTo": moment(dateNow).format('YYYY-MM-DD') }, 7)
         .then((item) => {
             item.should.have.property('data');
             item.should.have.property('options');
@@ -267,6 +267,23 @@ it("#09. should success when create data output", function (done) {
             done(e);
         });
 });
+
+it("#09.(2) should success when get data", function (done) {
+    var data= dataInput;
+    var filter = {
+        "machineCode": data.machine.code,
+        "type": "input",
+        "dateFrom": new Date(),
+        "dateTo": new Date(),
+    };
+    dailyOperationManager.getMonitoringMontlyReport(filter)
+        .then((result) => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+})
 
 it("#10. should success when get report with date parameter", function (done) {
     dailyOperationManager.getDailyOperationBadReport({ "dateFrom": moment(dateBefore).format('YYYY-MM-DD'), "dateTo": moment(dateNow).format('YYYY-MM-DD') })
@@ -376,3 +393,7 @@ it("#15. should success when destroy all unit test data", function (done) {
             done(e);
         });
 });
+
+
+
+
