@@ -1,0 +1,18 @@
+version: '2'
+services:
+    danliris-test-data:
+      image: danliris-test-data:latest
+      environment:
+          - NODE_ENV=test
+          - DB_CONNECTIONSTRING=mongodb://mongodb:27017
+      ports:
+          - 3000:3000
+      links:
+          - mongodb
+      depends_on:
+          - mongodb
+    mongodb:
+      image: mongo:latest
+      ports:
+          - 27017:27017
+      command: mongod --smallfiles --logpath=/dev/null # --quiet
