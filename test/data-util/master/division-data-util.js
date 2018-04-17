@@ -32,5 +32,14 @@ class DivisionDataUtil {
         };
         return this.getSert(data);
     }
+
+    getFPTestData() {
+        let data = {
+            code: 'UT/FP',
+            name: 'FINISHING & PRINTING',
+            description: ''
+        }
+        return this.getSert(data);
+    }
 }
 module.exports = new DivisionDataUtil();

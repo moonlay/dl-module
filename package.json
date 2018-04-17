@@ -4,6 +4,7 @@
   "description": "Dan Liris Modules",
   "main": "index.js",
   "scripts": {
+    "generate-test-data": "mocha test/generate-test-data/index.js",
     "test": "mocha test/index.js",
     "cover": "istanbul cover _mocha",
     "coveralls": "npm run cover -- --report lcovonly && cat ./coverage/lcov.info | coveralls",
@@ -22,7 +23,7 @@
   "dependencies": {
     "assert": "^1.4.1",
     "dl-i18n": "git+https://github.com/danliris/dl-i18n.git",
-    "dl-models": "https://github.com/danliris/dl-models#dev",
+    "dl-models": "https://github.com/danliris/dl-models#uat",
     "hashids": "^1.1.0",
     "module-toolkit": "git+https://github.com/pinkgorilla/module-toolkit.git",
     "moment": "2.17.1",
