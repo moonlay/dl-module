@@ -8,7 +8,7 @@ function test(name, path) {
 describe('#dl-module', function (done) {
     this.timeout(2 * 60000);
 
-    // Auth
+    Auth
     test('@AUTH/ACCOUNT', './auth/account');
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
@@ -179,5 +179,7 @@ describe('#dl-module', function (done) {
      test('@ETL/FACT-DEAL-TRACKING-DEAL', './etl/sales/fact-deal-tracking-deal');
      test('@ETL/FACT-DEAL-TRACKING-ACTIVITY', './etl/sales/fact-deal-tracking-activity');
      test('@ETL/FACT-INSPECTION-LOT-COLOR', './etl/production/fact-inspection-lot-color');
+
+    // test('@TESTDATA/TESTDATA','./generate-test-data/index')
 
 });
