@@ -180,4 +180,6 @@ describe('#dl-module', function (done) {
      test('@ETL/FACT-DEAL-TRACKING-ACTIVITY', './etl/sales/fact-deal-tracking-activity');
      test('@ETL/FACT-INSPECTION-LOT-COLOR', './etl/production/fact-inspection-lot-color');
 
+    // test('@TESTDATA/TESTDATA','./generate-test-data/index')
+
 });

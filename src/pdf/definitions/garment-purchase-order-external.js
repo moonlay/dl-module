@@ -66,13 +66,9 @@ module.exports = function (pox, offset) {
                 style: ['size07', 'bold']
             }, {
                 stack: [{
-                    text: iso,
-                    alignment: "right",
-                    style: ['size08']
-                }, {
                     text: `Nomor PO : ${number}${pox.isOverBudget ? '-OB' : ''}`,
                     alignment: "right",
-                    style: ['size09', 'bold']
+                    style: ['size11', 'bold']
                 }]
 
             }
