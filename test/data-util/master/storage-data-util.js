@@ -107,5 +107,19 @@ class StorageDataUtil {
                 return this.getSert(data);
             });
     }
+
+    getGreigePrintingInventoryTestData() {
+        return unit.getTestData()
+            .then((data) => {
+                var data = {
+                    code: 'UT/GudangGreigePrinting',
+                    name: 'Gudang Greige Printing',
+                    description: '',
+                    unitId: data._id,
+                    unit: data
+                };
+                return this.getSert(data);
+            });
+    }
 }
 module.exports = new StorageDataUtil();
