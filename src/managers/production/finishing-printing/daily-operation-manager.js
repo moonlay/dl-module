@@ -103,14 +103,14 @@ module.exports = class DailyOperationManager extends BaseManager {
             var getStep = valid.stepId && ObjectId.isValid(valid.stepId) ? this.stepManager.getSingleByIdOrDefault(new ObjectId(valid.stepId)) : Promise.resolve(null);
             var getBadOutput = [];
             var dataReasons = valid.badOutputReasons || [];
-            var getMachineReason = [];
+            var getMachineReason=[];
             for (var a of dataReasons) {
                 if (a.badOutputReasonId && ObjectId.isValid(a.badOutputReasonId))
                     getBadOutput.push(this.badOutputReasonManager.getSingleByIdOrDefault(new ObjectId(a.badOutputReasonId)))
                 if (a.machineId && ObjectId.isValid(a.machineId))
                     getMachineReason.push(this.machineManager.getSingleByIdOrDefault(new ObjectId(a.machineId)))
             }
-            Promise.all([getKanban, getMachine, getStep, getDaily, thisDaily].concat(getBadOutput, getMachineReason))
+            Promise.all([getKanban, getMachine, getStep, getDaily, thisDaily].concat(getBadOutput,getMachineReason))
                 .then(results => {
                     var _kanban = results[0];
                     var _machine = results[1];
@@ -506,22 +506,25 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     return !params ? null : params.code === a.badOutputReason.code;
                                 }
                                 var dataBadOutput = _badOutput.find(searchItem);
-
-                                function searchMachine(params) {
-                                    return !params ? null : params.code === a.machine.code;
-                                }
-                                var dataBadOutputMachine = _machineReasons.find(searchMachine);
-                                var data = new BadOutputReasonItem({
+                                
+                            function searchMachine(params) {
+                                return !params ? null : params.code === a.machine.code;
+                            }
+                            var dataBadOutputMachine = _machineReasons.find(searchMachine);
+                                var data = {
                                     length: a.length,
                                     action: a.action,
                                     description: a.description,
                                     badOutputReasonId: new ObjectId(dataBadOutput._id),
                                     badOutputReason: dataBadOutput,
-                                    machineId: new ObjectId(a.machineId),
-                                    machine: dataBadOutputMachine
-                                })
-                                data._createdDate = dateNow;
-                                data.stamp(this.user.username, "manager")
+                                    machineId:new ObjectId(a.machineId),
+                                    machine: {
+                                        name: dataBadOutputMachine.name,
+                                        code: dataBadOutputMachine.code,
+                                    }
+                                }
+                                // data._createdDate = dateNow;
+                                // data.stamp(this.user.username, "manager")
                                 items.push(data);
                             }
                             valid.badOutputReasons = items;
@@ -752,289 +755,165 @@ module.exports = class DailyOperationManager extends BaseManager {
     //         });
     // }
 
-    // getDailyOperationReport(query) {
-    //     return new Promise((resolve, reject) => {
-    //         var date = new Date();
-    //         var dateString = moment(date).format('YYYY-MM-DD');
-    //         var dateNow = new Date(dateString);
-    //         var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
-    //         var date = {
-    //             "dateInput": {
-    //                 "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
-    //                 "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
-    //             },
-    //             "_deleted": false
-    //         };
-    //         var kanbanQuery = {};
-    //         if (query.kanban) {
-    //             kanbanQuery = {
-    //                 "kanbanId": new ObjectId(query.kanban)
-    //             };
-    //         }
-    //         var machineQuery = {};
-    //         if (query.machine) {
-    //             machineQuery = {
-    //                 "machineId": new ObjectId(query.machine)
-    //             };
-    //         }
-    //         var order = {
-    //             "dateInput": -1
-    //         };
-    //         var QueryInput = { "$and": [date, machineQuery, kanbanQuery, { "type": "input" }] };
-
-    //         var selectedFields = {
-    //             "code": 1,
-    //             "kanban.productionOrder.orderNo": 1,
-    //             "kanban.cart.cartNumber": 1,
-    //             "kanban.isReprocess": 1,
-    //             "machine.name": 1,
-    //             "step.process": 1,
-    //             "kanban.productionOrder.material.name": 1,
-    //             "kanban.selectedProductionOrderDetail.colorRequest": 1,
-    //             "kanban.productionOrder.finishWidth": 1,
-    //             "kanban.productionOrder.processType.name": 1,
-    //             "dateInput": 1,
-    //             "timeInput": 1,
-    //             "input": 1,
-    //             "dateOutput": 1,
-    //             "timeOutput": 1,
-    //             "goodOutput": 1,
-    //             "badOutput": 1,
-    //             "badOutputDescription": 1,
-    //             "action": 1,
-    //             "badOutputReasons.badOutputReason.reason": 1,
-    //             "badOutputReasons.precentage": 1,
-    //             "badOutputReasons.length": 1,
-    //             "badOutputReasons.action": 1
-    //         }
-
-    //         this.collection
-    //             .find({ $query: QueryInput, $orderby: order }, selectedFields)
-    //             .toArray()
-    //             .then(input => {
-    //                 var itemCode = input.map(function (item) { return item.code });
-    //                 var QueryOutput = { "$and": [{ "code": { "$in": itemCode } }, { "type": "output" }, { "_deleted": false }] };
-    //                 this.collection
-    //                     .find({ $query: QueryOutput, $orderby: order }, selectedFields)
-    //                     .toArray()
-    //                     .then(output => {
-    //                         var data = {
-    //                             data: [],
-    //                             count: 0,
-    //                             size: 0,
-    //                             total: 0,
-    //                             page: 0
-    //                         }
-    //                         var dataTemp = [];
-    //                         for (var a of input) {
-    //                             var tamp = a;
-    //                             function searchItem(params) {
-    //                                 return !params ? null : params.code === a.code;
-    //                             }
-    //                             var dataOutput = output.find(searchItem);
-    //                             if (dataOutput) {
-    //                                 tamp.badOutput = dataOutput.badOutput;
-    //                                 tamp.goodOutput = dataOutput.goodOutput;
-    //                                 tamp.dateOutput = dataOutput.dateOutput;
-    //                                 tamp.timeOutput = dataOutput.timeOutput;
-    //                                 tamp.action = dataOutput.action ? dataOutput.action : "";
-
-    //                                 // if (tamp.hasOwnProperty("action"))
-    //                                 //     tamp.action = dataOutput.action ? dataOutput.action : "";
-    //                                 // else
-    //                                 //     tamp["action"] = dataOutput.action ? dataOutput.action : "";
-
-    //                                 tamp.badOutputDescription = dataOutput.badOutputDescription ? dataOutput.badOutputDescription : "";
-    //                                 if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
-    //                                     var index = 0;
-    //                                     var description = "";
-    //                                     for (var reason of dataOutput.badOutputReasons) {
-    //                                         index++;
-    //                                         if (index === dataOutput.badOutputReasons.length) {
-    //                                             description += `${index}. ${reason.badOutputReason.reason ? reason.badOutputReason.reason : ""} ${reason.length ? reason.length + "(m)" : reason.precentage ? reason.precentage + "(%)" : 0} ${tamp.action ? tamp.action : reason.action ? reason.action : ""}`;
-    //                                         } else {
-    //                                             description += `${index}. ${reason.badOutputReason.reason ? reason.badOutputReason.reason : ""} ${reason.length ? reason.length + "(m)" : reason.precentage ? reason.precentage + "(%)" : 0} ${tamp.action ? tamp.action : reason.action ? reason.action : ""}\n`;
-    //                                         }
-    //                                     }
-    //                                     tamp.badOutputDescription = description;
-    //                                 }
-
-    //                                 // if (tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
-    //                                 //     tamp.badOutputDescription = dataOutput.badOutputDescription;
-    //                                 // else if (!tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
-    //                                 //     tamp["badOutputDescription"] = dataOutput.badOutputDescription;
-    //                                 // else if (tamp.hasOwnProperty("badOutputDescription") && !dataOutput.hasOwnProperty("badOutputDescription")) {
-    //                                 //     var description = ""
-    //                                 //     if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
-    //                                 //         var index = 0;
-    //                                 //         for (var a of dataOutput.badOutputReasons) {
-    //                                 //             index++;
-    //                                 //             if (index === dataOutput.badOutputReasons.length) {
-    //                                 //                 description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}`;
-    //                                 //             }
-    //                                 //             description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}\n`;
-    //                                 //         }
-    //                                 //     }
-    //                                 //     tamp.badOutputDescription = description;
-    //                                 // } else {
-    //                                 //     var description = ""
-    //                                 //     if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
-    //                                 //         var index = 0;
-    //                                 //         for (var a of dataOutput.badOutputReasons) {
-    //                                 //             index++;
-    //                                 //             if (index === dataOutput.badOutputReasons.length) {
-    //                                 //                 description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}`;
-    //                                 //             }
-    //                                 //             description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}\n`;
-    //                                 //         }
-    //                                 //     }
-    //                                 //     tamp["badOutputDescription"] = description;
-    //                                 // }
-    //                             }
-    //                             // for(var b of output){
-    //                             //     if(tamp.code === b.code){
-    //                             //         tamp.badOutput = b.badOutput;
-    //                             //         tamp.goodOutput = b.goodOutput;
-    //                             //         tamp.dateOutput = b.dateOutput;
-    //                             //         tamp.timeOutput = b.timeOutput;
-    //                             //         tamp.badOutputDescription = b.badOutputDescription;
-    //                             //     }
-    //                             // }
-    //                             dataTemp.push(tamp);
-    //                         }
-    //                         if (dataTemp.length > 0) {
-    //                             data.data = dataTemp;
-    //                             data.count = dataTemp.length;
-    //                             data.total = dataTemp.length;
-    //                         }
-    //                         resolve(data);
-    //                     });
-    //             });
-    //     });
-    // }
-
     getDailyOperationReport(query) {
-        var date = new Date();
-        var dateString = moment(date).format('YYYY-MM-DD');
-        var dateNow = new Date(dateString);
-        var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
-        var date = {
-            "dateInput": {
-                "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
-                "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
-            },
-            "_deleted": false
-        };
-        var kanbanQuery = {};
-        if (query.kanban) {
-            kanbanQuery = {
-                "kanbanId": new ObjectId(query.kanban)
+        return new Promise((resolve, reject) => {
+            var date = new Date();
+            var dateString = moment(date).format('YYYY-MM-DD');
+            var dateNow = new Date(dateString);
+            var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+            var date = {
+                "dateInput": {
+                    "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
+                    "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
+                },
+                "_deleted": false
             };
-        }
-        var machineQuery = {};
-        if (query.machine) {
-            machineQuery = {
-                "machineId": new ObjectId(query.machine)
+            var kanbanQuery = {};
+            if (query.kanban) {
+                kanbanQuery = {
+                    "kanbanId": new ObjectId(query.kanban)
+                };
+            }
+            var machineQuery = {};
+            if (query.machine) {
+                machineQuery = {
+                    "machineId": new ObjectId(query.machine)
+                };
+            }
+            var order = {
+                "dateInput": -1
             };
-        }
-        var order = {
-            "dateInput": -1,
-            "code": -1
-        };
-        var inputQuery = { "$and": [date, machineQuery, kanbanQuery, { "type": "input" }] };
+            var QueryInput = { "$and": [date, machineQuery, kanbanQuery, { "type": "input" }] };
 
-        var selectedFields = {
-            "code": 1,
-            "kanban.productionOrder.orderNo": 1,
-            "kanban.cart.cartNumber": 1,
-            "kanban.isReprocess": 1,
-            "machine.name": 1,
-            "step.process": 1,
-            "kanban.productionOrder.material.name": 1,
-            "kanban.selectedProductionOrderDetail.colorRequest": 1,
-            "kanban.productionOrder.finishWidth": 1,
-            "kanban.productionOrder.processType.name": 1,
-            "dateInput": 1,
-            "timeInput": 1,
-            "input": 1,
-            "dateOutput": 1,
-            "timeOutput": 1,
-            "goodOutput": 1,
-            "badOutput": 1,
-            "badOutputDescription": 1,
-            "action": 1,
-            "type": 1,
-            "badOutputReasons.badOutputReason.reason": 1,
-            "badOutputReasons.precentage": 1,
-            "badOutputReasons.length": 1,
-            "badOutputReasons.action": 1
-        }
+            var selectedFields = {
+                "code": 1,
+                "kanban.productionOrder.orderNo": 1,
+                "kanban.cart.cartNumber": 1,
+                "kanban.isReprocess": 1,
+                "machine.name": 1,
+                "step.process": 1,
+                "kanban.productionOrder.material.name": 1,
+                "kanban.selectedProductionOrderDetail.colorRequest": 1,
+                "kanban.productionOrder.finishWidth": 1,
+                "kanban.productionOrder.processType.name": 1,
+                "dateInput": 1,
+                "timeInput": 1,
+                "input": 1,
+                "dateOutput": 1,
+                "timeOutput": 1,
+                "goodOutput": 1,
+                "badOutput": 1,
+                "badOutputDescription": 1,
+                "action": 1,
+                "badOutputReasons.badOutputReason.reason": 1,
+                "badOutputReasons.precentage": 1,
+                "badOutputReasons.length": 1,
+                "badOutputReasons.action": 1
+            }
 
-        return this.collection
-            .aggregate([
-                { "$match": inputQuery },
-                { "$project": { "code": 1 } }
-            ])
-            .toArray()
-            .then((inputResults) => {
+            this.collection
+                .find({ $query: QueryInput, $orderby: order }, selectedFields)
+                .toArray()
+                .then(input => {
+                    var itemCode = input.map(function (item) { return item.code });
+                    var QueryOutput = { "$and": [{ "code": { "$in": itemCode } }, { "type": "output" }, { "_deleted": false }] };
+                    this.collection
+                        .find({ $query: QueryOutput, $orderby: order }, selectedFields)
+                        .toArray()
+                        .then(output => {
+                            var data = {
+                                data: [],
+                                count: 0,
+                                size: 0,
+                                total: 0,
+                                page: 0
+                            }
+                            var dataTemp = [];
+                            for (var a of input) {
+                                var tamp = a;
+                                function searchItem(params) {
+                                    return !params ? null : params.code === a.code;
+                                }
+                                var dataOutput = output.find(searchItem);
+                                if (dataOutput) {
+                                    tamp.badOutput = dataOutput.badOutput;
+                                    tamp.goodOutput = dataOutput.goodOutput;
+                                    tamp.dateOutput = dataOutput.dateOutput;
+                                    tamp.timeOutput = dataOutput.timeOutput;
+                                    tamp.action = dataOutput.action ? dataOutput.action : "";
 
-                var inputCodes = inputResults.map((result) => {
-                    return result.code;
-                });
+                                    // if (tamp.hasOwnProperty("action"))
+                                    //     tamp.action = dataOutput.action ? dataOutput.action : "";
+                                    // else
+                                    //     tamp["action"] = dataOutput.action ? dataOutput.action : "";
 
-                return this.collection
-                    .aggregate([
-                        { "$match": { "code": { "$in": inputCodes } } },
-                        { "$project": selectedFields },
-                        { "$sort": order }
-                    ])
-                    .toArray()
-                    .then((results) => {
-                        var resultFormat = {
-                            data: [],
-                            count: 0,
-                            size: 0,
-                            total: 0,
-                            page: 0
-                        }
-
-                        for (var result of results) {
-                            if (result.type && result.type.toString().toLowerCase() === "input") {
-                                var outputResult = results.find((daily) => daily.type && daily.type.toString().toLowerCase() === "output" && daily.code === result.code);
-
-                                if (outputResult) {
-                                    result.badOutput = outputResult.badOutput;
-                                    result.goodOutput = outputResult.goodOutput;
-                                    result.dateOutput = outputResult.dateOutput;
-                                    result.timeOutput = outputResult.timeOutput;
-                                    result.action = outputResult.action ? outputResult.action : "";
-
-                                    result.badOutputDescription = outputResult.badOutputDescription ? outputResult.badOutputDescription : "";
-                                    if (outputResult.badOutputReasons && outputResult.badOutputReasons.length > 0) {
+                                    tamp.badOutputDescription = dataOutput.badOutputDescription ? dataOutput.badOutputDescription : "";
+                                    if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
                                         var index = 0;
                                         var description = "";
-                                        for (var reason of outputResult.badOutputReasons) {
+                                        for (var reason of dataOutput.badOutputReasons) {
                                             index++;
-                                            if (index === outputResult.badOutputReasons.length) {
-                                                description += `${index}. ${reason.badOutputReason.reason ? reason.badOutputReason.reason : ""} ${reason.length ? reason.length + "(m)" : reason.precentage ? reason.precentage + "(%)" : 0} ${result.action ? result.action : reason.action ? reason.action : ""}`;
+                                            if (index === dataOutput.badOutputReasons.length) {
+                                                description += `${index}. ${reason.badOutputReason.reason ? reason.badOutputReason.reason : ""} ${reason.length ? reason.length + "(m)" : reason.precentage ? reason.precentage + "(%)" : 0} ${tamp.action ? tamp.action : reason.action ? reason.action : ""}`;
                                             } else {
-                                                description += `${index}. ${reason.badOutputReason.reason ? reason.badOutputReason.reason : ""} ${reason.length ? reason.length + "(m)" : reason.precentage ? reason.precentage + "(%)" : 0} ${result.action ? result.action : reason.action ? reason.action : ""}\n`;
+                                                description += `${index}. ${reason.badOutputReason.reason ? reason.badOutputReason.reason : ""} ${reason.length ? reason.length + "(m)" : reason.precentage ? reason.precentage + "(%)" : 0} ${tamp.action ? tamp.action : reason.action ? reason.action : ""}\n`;
                                             }
                                         }
-                                        result.badOutputDescription = description;
+                                        tamp.badOutputDescription = description;
                                     }
+
+                                    // if (tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
+                                    //     tamp.badOutputDescription = dataOutput.badOutputDescription;
+                                    // else if (!tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
+                                    //     tamp["badOutputDescription"] = dataOutput.badOutputDescription;
+                                    // else if (tamp.hasOwnProperty("badOutputDescription") && !dataOutput.hasOwnProperty("badOutputDescription")) {
+                                    //     var description = ""
+                                    //     if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
+                                    //         var index = 0;
+                                    //         for (var a of dataOutput.badOutputReasons) {
+                                    //             index++;
+                                    //             if (index === dataOutput.badOutputReasons.length) {
+                                    //                 description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}`;
+                                    //             }
+                                    //             description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}\n`;
+                                    //         }
+                                    //     }
+                                    //     tamp.badOutputDescription = description;
+                                    // } else {
+                                    //     var description = ""
+                                    //     if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
+                                    //         var index = 0;
+                                    //         for (var a of dataOutput.badOutputReasons) {
+                                    //             index++;
+                                    //             if (index === dataOutput.badOutputReasons.length) {
+                                    //                 description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}`;
+                                    //             }
+                                    //             description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}\n`;
+                                    //         }
+                                    //     }
+                                    //     tamp["badOutputDescription"] = description;
+                                    // }
                                 }
-
-                                resultFormat.data.push(result);
+                                // for(var b of output){
+                                //     if(tamp.code === b.code){
+                                //         tamp.badOutput = b.badOutput;
+                                //         tamp.goodOutput = b.goodOutput;
+                                //         tamp.dateOutput = b.dateOutput;
+                                //         tamp.timeOutput = b.timeOutput;
+                                //         tamp.badOutputDescription = b.badOutputDescription;
+                                //     }
+                                // }
+                                dataTemp.push(tamp);
                             }
-                        }
-
-                        resultFormat.count = results.length;
-                        resultFormat.total = results.length;
-
-                        return Promise.resolve(resultFormat)
-                    })
-            })
+                            if (dataTemp.length > 0) {
+                                data.data = dataTemp;
+                                data.count = dataTemp.length;
+                                data.total = dataTemp.length;
+                            }
+                            resolve(data);
+                        });
+                });
+        });
     }
 
     getDailyMachine(query, timeOffset) {
@@ -1082,7 +961,9 @@ module.exports = class DailyOperationManager extends BaseManager {
 
         return this.collection.aggregate([
             {
-                "$match": matchQuery
+                "$match": {
+                    "type": "output"
+                }
             },
             {
                 "$project": {
@@ -1112,6 +993,9 @@ module.exports = class DailyOperationManager extends BaseManager {
                     },
                     "date": "$dateOutput"
                 }
+            },
+            {
+                "$match": matchQuery
             },
             {
                 "$group": {
@@ -1283,31 +1167,6 @@ module.exports = class DailyOperationManager extends BaseManager {
         });
     }
 
-    getMonitoringMontlyReport(query) {
-        return this.collection.aggregate([
-            {
-                "$match": {
-                    "_deleted": false, "machine.code": query.machineCode, "type": "input", "dateInput": {
-                        "$gte": new Date(query.dateFrom),
-                        "$lte": new Date(query.dateTo)
-                    }
-                }
-            },
-            {
-                "$project": {
-                    "_updatedDate":1,
-                    "_deleted": 1,
-                    "type": 1,
-                    "input":1,
-                    "dateInput": 1,
-                    "machine.name": 1,
-                    "machine.code": 1,
-                    "machine.monthlyCapacity":1,
-                }
-            }])
-            .sort({ "_updatedDate": -1})
-            .toArray()
-    }
 
     getDataDaily(query) {
         return this._createIndexes()

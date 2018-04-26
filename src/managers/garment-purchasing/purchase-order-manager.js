@@ -539,7 +539,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             .then((createIndexResults) => {
                 return this._validate(purchaseOrder)
                     .then(validData => {
-                        return this.collection.updateOne({ _id: validData._id }, { $set: { "_deleted": true } })
+                        return this.collection.updateOne({ _id: validData._id }, { $set: { "_deleted": true, "_updatedDate": new Date() } })
                             .then((result) => Promise.resolve(validData._id))
                             .then((purchaseOrderId) => {
                                 return this.purchaseRequestManager.getSingleById(validData.purchaseRequest._id)
@@ -2102,368 +2102,6 @@ module.exports = class PurchaseOrderManager extends BaseManager {
     }
 
 
-getDataKirim( dateFrom, dateTo, offset) {
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                return new Promise((resolve, reject) => {
-                
-                      var qryMatch = {};
-            qryMatch["$and"] = [
-                { "_deleted": false },
-                { "isPosted": true }, {
-                        "items.category.name":{$ne:"SUBKON"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"INTERLINING"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"PROCESS"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"WASH"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"PRINT"} 
-                    }
-                    ,
-                     {
-                        "items.category.name":{$ne:"PLISKET"} 
-                    }
-                    ,
-                     {
-                        "items.category.name":{$ne:"EMBROIDERY"} 
-                    }];
-
-if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
-                var validStartDate = new Date(dateFrom);
-                var validEndDate = new Date(dateTo);
-                validStartDate.setHours(validStartDate.getHours() - offset);
-                validEndDate.setHours(validEndDate.getHours() - offset);
-
-                qryMatch["$and"].push(
-                    {
-                        "items.fulfillments.supplierDoDate": {
-                            $gte: validStartDate,
-                            $lte: validEndDate
-                        }
-                    })
-            }
-           
-          
-
- var bbbb = new Date();
-             bbbb.setHours(bbbb.getHours() );
-          var aaaa = { $ifNull: ["$items.purchaseOrderExternal.expectedDeliveryDate", bbbb] };       
-  
-var dates = {
-                $divide: [{
-                    $subtract: [{
-                        $subtract: [
-                            { "$add": ["$items.fulfillments.supplierDoDate" , 60 * 60 * 1000 ] },
-                            {
-                                "$add": [
-                                    { "$millisecond": "$items.fulfillments.supplierDoDate" },
-                                    {
-                                        "$multiply": [
-                                            { "$second": "$items.fulfillments.supplierDoDate" },
-                                            1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$minute": "$items.fulfillments.supplierDoDate" },
-                                            60, 1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$hour": { "$add": ["$items.fulfillments.supplierDoDate", 60 * 60 * 1000 ] } },
-                                            60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    }, {
-                        $subtract: [
-                            { "$add": [aaaa, 60 * 60 * 1000] },
-                            {
-                                "$add": [
-                                    { "$millisecond": aaaa },
-                                    {
-                                        "$multiply": [
-                                            { "$second": aaaa },
-                                            1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$minute": aaaa },
-                                            60, 1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$hour": { "$add": [aaaa, 60 * 60 * 1000 ] } },
-                                            60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }]
-                    }]
-                }, 86400000]
-            };
-
-  
-  
-                    return this.collection
-                        .aggregate([
-                            {
-                            $match: qryMatch
-                            },
-                            
-                              {
-                               $unwind: { path: "$items", preserveNullAndEmptyArrays: false }
-                            },
-                            {
-                               $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: false }
-                            },
-                
-                              {
-                                "$project": {
-                                //  "tgl1": "$items.purchaseOrderExternal.expectedDeliveryDate",
-                                //  "tgl2": "$items.fulfillments.supplierDoDate",
-                                 "supplier": "$items.supplier.name",
-                                 "kdsupplier": "$items.supplier.code",
-                                 "selisih": dates,
-                                 "Ok": {  // Set to 1 if value < 10
-                $cond: [ { $lt: [dates, 5 ] }, 1, 0]
-            },
-                                 "NotOk":  {  // Set to 1 if value > 10
-                $cond: [ { $gt: [ dates, 5 ] }, 1, 0]
-            },
-                            
-                                }
-                            },
-                           {
-                        $group: {
-                            _id: { supplier: "$supplier",kdsupplier: "$kdsupplier"} ,
-                             "Ok": { $sum: "$Ok" },
-                             "NotOk": { $sum: "$NotOk" },
-                                 count: { $sum: 1 }
-                             
-                        }
-                             }, 
-                             {
-                                "$project": {
-                                 "Ok": "$Ok",
-                                 "NotOk": "$NotOk",
-                                 "count": "$count",
-                                 "_id.supplier": "$_id.supplier",
-                                 "_id.kdsupplier": "$_id.kdsupplier",
-                                "Cek":{$multiply:[{$divide:["$Ok","$count"]},100]},
-                                }
-                            },
-                              {
-                        $sort: 
-                            { "_id.supplier": 1} 
-                             },
-                        ])
-                        .toArray()
-                        .then(results => {
-                            resolve(results);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                });
-            });
-    }
-
-
-
- getDataKirimSub(supplier,dateFrom,dateTo,offset) {
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                return new Promise((resolve, reject) => {
-
-                      var qryMatch = {};
-
-                          
-            qryMatch["$and"] = [
-                { "_deleted": false },
-                { "isPosted": true }, {
-                        "items.category.name":{$ne:"SUBKON"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"INTERLINING"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"PROCESS"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"WASH"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"PRINT"} 
-                    }
-                    ,
-                     {
-                        "items.category.name":{$ne:"PLISKET"} 
-                    }
-                    ,
-                     {
-                        "items.category.name":{$ne:"EMBROIDERY"} 
-                    }];
-
-          if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
-                var validStartDate = new Date(dateFrom);
-                var validEndDate = new Date(dateTo);
-                validStartDate.setHours(validStartDate.getHours() - offset);
-                validEndDate.setHours(validEndDate.getHours() - offset);
-       
-                qryMatch["$and"].push(
-                    {
-                        "items.fulfillments.supplierDoDate": {
-                            $gte: validStartDate,
-                            $lte: validEndDate
-                        }
-                    })
-              
-            }
-
-        if (supplier !== "") {
-                             qryMatch["$and"].push(
-                   {
-                         "items.supplier.code":supplier
-                     })
-        
-        }
-       
-
-          
-        
- var bbbb = new Date();
-             bbbb.setHours(bbbb.getHours() );
-          var aaaa = { $ifNull: ["$items.purchaseOrderExternal.expectedDeliveryDate", bbbb] };
-  
-var dates = {
-                $divide: [{
-                    $subtract: [{
-                        $subtract: [
-                            { "$add": ["$items.fulfillments.supplierDoDate" , 60 * 60 * 1000 ] },
-                            {
-                                "$add": [
-                                    { "$millisecond": "$items.fulfillments.supplierDoDate" },
-                                    {
-                                        "$multiply": [
-                                            { "$second": "$items.fulfillments.supplierDoDate" },
-                                            1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$minute": "$items.fulfillments.supplierDoDate" },
-                                            60, 1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$hour": { "$add": ["$items.fulfillments.supplierDoDate", 60 * 60 * 1000 ] } },
-                                            60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    }, {
-                        $subtract: [
-                            { "$add": [aaaa, 60 * 60 * 1000] },
-                            {
-                                "$add": [
-                                    { "$millisecond": aaaa },
-                                    {
-                                        "$multiply": [
-                                            { "$second": aaaa },
-                                            1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$minute": aaaa },
-                                            60, 1000
-                                        ]
-                                    },
-                                    {
-                                        "$multiply": [
-                                            { "$hour": { "$add": [aaaa, 60 * 60 * 1000 ] } },
-                                            60, 60, 1000
-                                        ]
-                                    }
-                                ]
-                            }]
-                    }]
-                }, 86400000]
-            };
-
-                    return this.collection
-                        .aggregate([
-                    
-                            {
-                            $match: qryMatch
-                            },
-                            
-                              {
-                               $unwind: { path: "$items", preserveNullAndEmptyArrays: false }
-                            },
-                             {
-                               $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: false }
-                            },
-                             
-                              {
-                                "$project": {
-                             
-                                    "refNo": "$items.refNo",
-                                    "roNo": "$roNo",
-                                    "purchaseRequestshipmentDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
-                                    "artikel": "$artikel",
-                                    "productname": "$items.product.name",
-                                    "productcode": "$items.product.code",
-                                    "productdescription": "$items.remark",
-                                    "category": "$items.category.name",
-                                     "supplier": "$items.supplier.name",
-                                    "suppliercode": "$items.supplier.code",
-                                    "selisih": dates,
-                                    "poeNo": "$items.purchaseOrderExternal.no",
-                                    "poeDate": "$items.purchaseOrderExternal.date",
-                                    "remark": "$items.remark",
-                                    "tglll": "$items.fulfillments.supplierDoDate",
-                                    "tglpr": "$date",
-                                    "tglpo": "$_createdDate",
-                                    "_createdBy": "$_createdBy",
-                                    "kategori": "$items.category.name",
-                                
-                            
-                                }
-                            },{
-                        $sort: 
-                            { "tglll": 1} 
-                             },
-                       
-                        ])
-                        .toArray()
-                        .then(results => {
-                            resolve(results);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        });
-                });
-            });
-    }
-
-
-
     getDataTest( dateFrom, dateTo, kategori, offset) {
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -2475,8 +2113,7 @@ var dates = {
                 { "isPosted": true }];
 
 
-//if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
-if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
+            if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
                 var validStartDate = new Date(dateFrom);
                 var validEndDate = new Date(dateTo);
                 validStartDate.setHours(validStartDate.getHours() - offset);
@@ -2494,7 +2131,7 @@ if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
             var aa={$or:[{
                         "items.category.name":"FABRIC" 
                     },{
-                        "items.category.name":"INTERLINING" 
+                        "items.category.name":"SUBKON" 
                     }]} 
           
 
@@ -2578,26 +2215,6 @@ var dates = {
                         "items.category.name":{$ne:"FABRIC"} 
                     },  {
                         "items.category.name":{$ne:"SUBKON"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"INTERLINING"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"PROCESS"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"WASH"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"PRINT"} 
-                    }
-                    ,
-                     {
-                        "items.category.name":{$ne:"PLISKET"} 
-                    }
-                    ,
-                     {
-                        "items.category.name":{$ne:"EMBROIDERY"} 
                     }
                     )
 
@@ -2628,7 +2245,6 @@ var dates = {
                                  "tgl1": "$items.fulfillments.deliveryOrderDate",
                                  "tgl2": "$purchaseRequest.shipmentDate",
                                  "supplier": "$items.supplier.name",
-                                 "kdsupplier": "$items.supplier.code",
                                  "selisih": dates,
                                  "NotOk": ncmd,
                                  "Ok": cmd,
@@ -2637,7 +2253,7 @@ var dates = {
                             },
                            {
                         $group: {
-                            _id: { supplier: "$supplier",kdsupplier: "$kdsupplier"} ,
+                            _id: { supplier: "$supplier"} ,
                              "Ok": { $sum: "$Ok" },
                              "NotOk": { $sum: "$NotOk" },
                                  count: { $sum: 1 }
@@ -2650,13 +2266,12 @@ var dates = {
                                  "NotOk": "$NotOk",
                                  "count": "$count",
                                  "_id.supplier": "$_id.supplier",
-                                 "_id.kdsupplier": "$_id.kdsupplier",
                                 "Cek":{$multiply:[{$divide:["$Ok","$count"]},100]},
                                 }
                             },
                               {
                         $sort: 
-                            { Cek: 1,count: -1} 
+                            { Cek: -1,count: -1} 
                              },
                         ])
                         .toArray()
@@ -2670,8 +2285,6 @@ var dates = {
             });
     }
 
-
-
     getDataTestSub(supplier,dateFrom,dateTo,kategori,offset) {
         return this._createIndexes()
             .then((createIndexResults) => {
@@ -2684,7 +2297,7 @@ var dates = {
                 { "_deleted": false },
                 { "isPosted": true }];
 
-          if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
+          if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
                 var validStartDate = new Date(dateFrom);
                 var validEndDate = new Date(dateTo);
                 validStartDate.setHours(validStartDate.getHours() - offset);
@@ -2703,14 +2316,14 @@ var dates = {
         if (supplier !== "") {
                              qryMatch["$and"].push(
                    {
-                         "items.supplier.code":supplier
+                         "items.supplier.name":supplier
                      })
         
         }
          var aa={$or:[{
                         "items.category.name":"FABRIC" 
                     },{
-                        "items.category.name":"INTERLINING" 
+                        "items.category.name":"SUBKON" 
                     }]} 
           
             if (kategori == "Bahan Baku" ) {
@@ -2724,26 +2337,6 @@ var dates = {
                         "items.category.name":{$ne:"FABRIC"} 
                     },  {
                         "items.category.name":{$ne:"SUBKON"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"INTERLINING"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"PROCESS"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"WASH"} 
-                    },
-                     {
-                        "items.category.name":{$ne:"PRINT"} 
-                    }
-                    ,
-                     {
-                        "items.category.name":{$ne:"PLISKET"} 
-                    }
-                    ,
-                     {
-                        "items.category.name":{$ne:"EMBROIDERY"} 
                     }
                     )
                 }
@@ -2848,15 +2441,10 @@ var dates = {
                                     "tglpr": "$date",
                                     "tglpo": "$_createdDate",
                                     "_createdBy": "$_createdBy",
-                                    "kategori": "$items.category.name",
                                 
                             
                                 }
                             },
-                            {
-                        $sort: 
-                            { "tglll": 1} 
-                             },
                        
                         ])
                         .toArray()

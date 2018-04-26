@@ -608,7 +608,7 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
     }
 
 
-       getAllData(startdate, enddate, offset) {
+      getAllData(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
             var now = new Date();
             var deleted = {
@@ -674,9 +674,10 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                         "KdSpl": "$deliveryOrder.supplier.code",
                         "NmSpl": "$deliveryOrder.supplier.name",
                         "NoSJ": "$deliveryOrder.no",
-                        "TgSJ": "$deliveryOrder.supplierDoDate",
-                        "TgDtg": "$deliveryOrder.date",
+                        "TgSJ": "$deliveryOrder.date",
+                        "TgDtg": "$deliveryOrder.supplierDoDate",
                         "QtySJ": "$deliveryOrder.items.fulfillments.quantity",
+                        "HrgSJ": "$deliveryOrder.items.fulfillments.pricePerUnit",
                         "TotSJ": "$deliveryOrder.items.fulfillments.priceTotal",
                         "POExt": "$items.purchaseOrderExternalNo",
                         "NoPR": "$items.purchaseRequestNo",
@@ -692,18 +693,16 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                         "UserIn": "$_createdBy",
                         "TgEd": "$_updatedDate",
                         "UserEd": "$_updatedBy",
-                        "itemsProdId": "$items.purchaseOrderInternalId",
-                        "fulProdId": "$deliveryOrder.items.fulfillments.purchaseOrderId"
                     }
                 },
                 {
                     $group: {
                         _id: {
-                            "NoNK": "$NoNK", "TgNK": "$TgNK", "Jenis": "$Jenis", "Ketr": "$Ketr", "MtUang": "$MtUang","Rate": "$Rate", 
-                            "KdSpl": "$KdSpl", "NmSpl": "$NmSpl", "NoSJ": "$NoSJ", "TgSJ": "$TgSJ", "TgDtg": "$TgDtg", 
-                            "QtySJ": "$QtySJ", "TotSJ": "$TotSJ", "POExt": "$POExt", "NoPR": "$NoPR", "PlanPO": "$PlanPO", "NoRO": "$NoRO",
-                            "KdBrg": "$KdBrg", "NmBrg": "$NmBrg","Satuan": "$Satuan", "Qty": "$Qty", "Harga": "$Harga", 
-                            "Total": "$Total",  "TgIn": "$TgIn", "UserIn": "$UserIn", "TgEd": "$TgEd", "UserEd": "$UserEd","itemsProdId": "$itemsProdId", "fulProdId": "$fulProdId"
+                            "NoNK": "$NoNK", "TgNK": "$TgNK", "Jenis": "$Jenis", "Ketr": "$Ketr", "MtUang": "$MtUang",
+                            "Rate": "$Rate", "KdSpl": "$KdSpl", "NmSpl": "$NmSpl", "NoSJ": "$NoSJ", "TgSJ": "$TgSJ",
+                            "TgDtg": "$TgDtg", "QtySJ": "$QtySJ", "HrgSJ": "$HrgSJ", "TotSJ": "$TotSJ", "POExt": "$POExt", "NoPR": "$NoPR", "PlanPO": "$PlanPO",
+                            "NoRO": "$NoRO", "KdBrg": "$KdBrg", "NmBrg": "$NmBrg", "Satuan": "$Satuan", "Qty": "$Qty", "Harga": "$Harga",
+                            "Total": "$Total", "TgIn": "$TgIn", "UserIn": "$UserIn", "TgEd": "$TgEd", "UserEd": "$UserEd"
                         }
                     }
                 }

@@ -691,8 +691,8 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                         "KdSpl": "$deliveryOrder.supplier.code",
                         "NmSpl": "$deliveryOrder.supplier.name",
                         "NoSJ": "$deliveryOrder.no",
-                        "TgSJ": "$deliveryOrder.supplierDoDate",
-                        "TgDtg": "$deliveryOrder.date",
+                        "TgSJ": "$deliveryOrder.date",
+                        "TgDtg": "$deliveryOrder.supplierDoDate",
                         "QtySJ": "$deliveryOrder.items.fulfillments.deliveredQuantity",
                         "POExt": "$items.purchaseOrderExternalNo",
                         "NoPR": "$items.purchaseRequestNo",
@@ -708,18 +708,16 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                         "UserIn": "$_createdBy",
                         "TgEd": "$_updatedDate",
                         "UserEd": "$_updatedBy",
-                        "itemsProdId": "$items.purchaseOrderInternalId",
-                        "fulProdId": "$deliveryOrder.items.fulfillments.purchaseOrderId",
                     }
                 },
                 {
                     $group: {
                         _id: {
                             "NoNK": "$NoNK", "TgNK": "$TgNK", "Jenis": "$Jenis", "Ketr": "$Ketr", "MtUang": "$MtUang",
-                            "Rate": "$Rate", "KdSpl": "$KdSpl", "NmSpl": "$NmSpl", "NoSJ": "$NoSJ", "TgSJ": "$TgSJ", 
+                            "Rate": "$Rate", "KdSpl": "$KdSpl", "NmSpl": "$NmSpl", "NoSJ": "$NoSJ", "TgSJ": "$TgSJ",
                             "TgDtg": "$TgDtg", "QtySJ": "$QtySJ", "POExt": "$POExt", "NoPR": "$NoPR", "PlanPO": "$PlanPO",
                             "NoRO": "$NoRO", "KdBrg": "$KdBrg", "NmBrg": "$NmBrg", "Satuan": "$Satuan", "Qty": "$Qty", "Harga": "$Harga",
-                            "Total": "$Total", "TgIn": "$TgIn", "UserIn": "$UserIn", "TgEd": "$TgEd", "UserEd": "$UserEd","itemsProdId": "$itemsProdId", "fulProdId": "$fulProdId"
+                            "Total": "$Total", "TgIn": "$TgIn", "UserIn": "$UserIn", "TgEd": "$TgEd", "UserEd": "$UserEd"
                         }
                     }
                 }
@@ -731,7 +729,7 @@ module.exports = class PurchaseQuantityCorrectionManager extends BaseManager {
                 });
         });
     }
-    
+
     getPurchaseQuantityCorrectionReportXls(dataReport, query) {
 
         return new Promise((resolve, reject) => {

@@ -836,10 +836,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                         "UserIn": "$_createdBy",
                         "TgIn": "$_createdDate",
                         "UserEd": "$_updatedBy",
-                        "TgEd": "$_updatedDate",
-                        "BayarPajak": "$isPayTax",
-                        "NoInvPPN":"$incomeTaxInvoiceNo",
-                        "NoInvPPH": "$vatInvoiceNo"
+                        "TgEd": "$_updatedDate"
                     }
                 },
                 {
@@ -871,10 +868,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                         "HrgInv": "$HrgInv",
                         "SatInv": "$SatInv",
                         "UserIn": "$UserIn", "TgIn": "$TgIn",
-                        "UserEd": "$UserEd", "TgEd": "$TgEd",
-                        "BayarPajak": "$BayarPajak",
-                        "NoInvPPN":"$NoInvPPN",
-                        "NoInvPPH": "$NoInvPPH"                        
+                        "UserEd": "$UserEd", "TgEd": "$TgEd"
                     }
                 },
                 {
@@ -907,10 +901,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                             "HrgInv": "$HrgInv",
                             "SatInv": "$SatInv",
                             "UserIn": "$UserIn", "TgIn": "$TgIn",
-                            "UserEd": "$UserEd", "TgEd": "$TgEd",
-                            "BayarPajak":"$BayarPajak",
-                            "NoInvPPN": "$NoInvPPN",
-                            "NoInvPPH": "$NoInvPPH"                            
+                            "UserEd": "$UserEd", "TgEd": "$TgEd"
                         },
                         "TQtyInv": { $sum: "$QtyInv" },
                         "TotInv": { $sum: { $multiply: ["$QtyInv", "$HrgInv"] } }

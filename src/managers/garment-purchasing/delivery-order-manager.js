@@ -1077,18 +1077,6 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
             var query = [deleted];
 
-            var hasCustoms = {
-                "hasCustoms":true
-            };
-
-            var query = [hasCustoms];
-            
-            var useCustoms = {
-                "useCustoms":true
-            };
-
-            var query = [useCustoms];
-            
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
 

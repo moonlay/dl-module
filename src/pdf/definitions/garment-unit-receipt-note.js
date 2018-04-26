@@ -38,7 +38,11 @@ module.exports = function (unitReceiptNote, offset) {
                         alignment: "right",
                         text: ' ',
                         style: ['size08', 'bold']
-                    } ]
+                    }, {
+                        alignment: "right",
+                        text: iso,
+                        style: ['size08', 'bold']
+                    }]
                 }]
 
             }]

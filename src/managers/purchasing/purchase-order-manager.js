@@ -378,7 +378,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             .updateOne({
                                 _id: validData._id
                             }, {
-                                $set: { "_deleted": true }
+                                $set: { "_deleted": true, "_updatedDate": new Date() }
                             })
                             .then((result) => Promise.resolve(validData._id))
                             .then((purchaseOrderId) => {

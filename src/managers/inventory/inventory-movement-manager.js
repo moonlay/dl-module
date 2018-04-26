@@ -77,9 +77,6 @@ module.exports = class InventoryMovementManager extends BaseManager {
                         _id: null,
                         quantity: {
                             '$sum': '$quantity'
-                        },
-                        stockPlanning: {
-                            '$sum': '$stockPlanning'
                         }
                     }
                 }]).toArray().then(results => results[0]);
@@ -91,7 +88,6 @@ module.exports = class InventoryMovementManager extends BaseManager {
                         var sum = results[0];
                         var summary = results[1];
                         summary.quantity = sum.quantity;
-                        summary.stockPlanning = sum.stockPlanning;
                         return this.inventorySummaryManager.update(summary)
                     })
                     .then(sumId => id)
@@ -161,7 +157,6 @@ module.exports = class InventoryMovementManager extends BaseManager {
                 if (valid.type == "OUT") {
                     valid.quantity = valid.quantity * -1;
                 }
-                valid.stockPlanning = valid.stockPlanning;
 
                 valid.before = _dbInventorySummary.quantity;
 
@@ -245,10 +240,10 @@ module.exports = class InventoryMovementManager extends BaseManager {
             order = info.order || {};
 
         var dateFrom = info.dateFrom ? (new Date(info.dateFrom)) : (new Date(1900, 1, 1));
-        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : new Date(new Date().setHours(23, 59, 59, 0));
+        var dateTo = info.dateTo ? (new Date(info.dateTo + "T23:59")) : new Date(new Date().setHours(23,59,59,0));
         dateFrom.setHours(dateFrom.getHours() - info.offset);
         dateTo.setHours(dateTo.getHours() - info.offset);
-
+        
         var filterMovement = {};
         let inventoryDocumentsDate = [];
 

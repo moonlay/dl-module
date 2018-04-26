@@ -1273,16 +1273,11 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 isPosted: true
             };
 
-            var POStatus = {
-                "status.name": "ARRIVING"
-            };
-            
-            var query = [deleted, isPosted, POStatus];
-
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
 
-            
+            var query = [deleted, isPosted];
+
             if (startdate && enddate) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
@@ -1321,15 +1316,14 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             this.collection.aggregate(
                 [{
                     $match: match
-                },
-                {
+                }, {
                     $unwind: "$items"
                 }, 
                 {
                     $lookup: {
                         from: POColl,
-                        foreignField: "refNo",
-                        localField: "items.prNo",
+                        foreignField: "no",
+                        localField: "items.poNo",
                         as: "PO"
                     },
                 },
@@ -1395,6 +1389,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 });
         });
     }
+
 
     getPOExtReport(query) {
         return new Promise((resolve, reject) => {
