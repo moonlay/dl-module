@@ -511,17 +511,20 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 return !params ? null : params.code === a.machine.code;
                             }
                             var dataBadOutputMachine = _machineReasons.find(searchMachine);
-                                var data = new BadOutputReasonItem({
+                                var data = {
                                     length: a.length,
                                     action: a.action,
                                     description: a.description,
                                     badOutputReasonId: new ObjectId(dataBadOutput._id),
                                     badOutputReason: dataBadOutput,
                                     machineId:new ObjectId(a.machineId),
-                                    machine:dataBadOutputMachine
-                                })
-                                data._createdDate = dateNow;
-                                data.stamp(this.user.username, "manager")
+                                    machine: {
+                                        code: dataBadOutputMachine.code,
+                                        name: dataBadOutputMachine.name,
+                                    }
+                                }
+                                // data._createdDate = dateNow;
+                                // data.stamp(this.user.username, "manager")
                                 items.push(data);
                             }
                             valid.badOutputReasons = items;
@@ -529,6 +532,8 @@ module.exports = class DailyOperationManager extends BaseManager {
                             delete valid.badOutputReasons;
                         }
                     }
+
+                    delete valid.machine.steps;
 
                     if (!valid.stamp)
                         valid = new DailyOperation(valid);
