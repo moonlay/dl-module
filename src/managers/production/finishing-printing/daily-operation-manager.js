@@ -470,7 +470,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                     }
                     if (_machine) {
                         //valid.machine = _machine;
-                        valid.machine = _machine._id;
+                        valid.machine._id = _machine._id;
                         valid.machineId = _machine._id;
                     }
                     if (_step) {
