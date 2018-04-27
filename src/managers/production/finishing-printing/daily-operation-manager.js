@@ -509,12 +509,14 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 function searchItem(params) {
                                     return !params ? null : params.code === a.badOutputReason.code;
                                 }
-                                //var dataBadOutput = _badOutput.find(searchItem);
-
+                                var dataBadOutput = _badOutput.find(searchItem);
+                                
+                                a._id = dataBadOutput._id;
+                                
                                 function searchMachine(params) {
                                     return !params ? null : params.code === a.machine.code;
                                 }
-                                //var dataBadOutputMachine = _machineReasons.find(searchMachine);
+                                var dataBadOutputMachine = _machineReasons.find(searchMachine);
                                 var data = {
                                     length: a.length,
                                     action: a.action,
@@ -523,6 +525,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     badOutputReason: a,
                                     machineId: new ObjectId(a.machineId),
                                     machine: {
+                                        _id: dataBadOutputMachine._id,
                                         name: dataBadOutputMachine.name,
                                         code: dataBadOutputMachine.code,
                                     }
