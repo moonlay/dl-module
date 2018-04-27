@@ -523,7 +523,11 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     action: a.action,
                                     description: a.description,
                                     badOutputReasonId: new ObjectId(dataBadOutput._id),
-                                    badOutputReason: a,
+                                    badOutputReason: {
+                                        _id: dataBadOutput._id,
+                                        reason: a.badOutputReason.reason,
+                                        code: a.badOutputReason.code,
+                                    },
                                     machineId: new ObjectId(a.machineId),
                                     machine: {
                                         _id: dataBadOutputMachine._id,
@@ -541,7 +545,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                         }
                     }
                 
-                    delete valid.machine.steps;
+                    //delete valid.machine.steps;
 
                     if (!valid.stamp)
                         valid = new DailyOperation(valid);
