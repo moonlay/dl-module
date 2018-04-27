@@ -128,3 +128,39 @@ it('#06. should success when get data for Excel Report', function (done) {
             done(e);
         });
 });
+
+var resultForExcelTest1 = {};
+it('#07. should success when create report', function (done) {
+    var query = {};
+    query.unit = createdData.unitId;  
+    query.user = createdData.user;  
+    query.duration = createdData.duration;  
+    query.dateFrom = createdData.date;
+    query.dateTo = new Date();
+    query.dateTo.setDate(createdData.date.getDate() + 5);
+
+    manager.getDurationPOIntPoExt(query)
+        .then(result => {
+            resultForExcelTest1 = result;
+            var POdata = result.data;
+            POdata.should.instanceof(Array);
+            POdata.length.should.not.equal(0);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#08. should success when get data for Excel Report', function (done) {
+    var query = {};
+
+    manager.getXlsDurationPOIntPOExt(resultForExcelTest1, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
