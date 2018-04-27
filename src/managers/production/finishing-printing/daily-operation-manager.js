@@ -464,21 +464,23 @@ module.exports = class DailyOperationManager extends BaseManager {
                     }
 
                     if (_kanban) {
-                        valid.kanban = _kanban;
+                        //valid.kanban = _kanban;
                         valid.kanbanId = _kanban._id;
                     }
                     if (_machine) {
-                        valid.machine = _machine;
+                        //valid.machine = _machine;
                         valid.machineId = _machine._id;
                     }
                     if (_step) {
                         valid.stepId = _step._id;
+                        /*
                         var step = {};
                         for (var a of valid.kanban.instruction.steps) {
                             if (a._id.toString() === _step._id.toString())
                                 step = a;
                         }
                         valid.step = step;
+                        */
                         valid.step._id = _step._id;
                     }
 
@@ -505,23 +507,26 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 function searchItem(params) {
                                     return !params ? null : params.code === a.badOutputReason.code;
                                 }
-                                var dataBadOutput = _badOutput.find(searchItem);
+                                //var dataBadOutput = _badOutput.find(searchItem);
 
                                 function searchMachine(params) {
                                     return !params ? null : params.code === a.machine.code;
                                 }
-                                var dataBadOutputMachine = _machineReasons.find(searchMachine);
-                                var data = new BadOutputReasonItem({
+                                //var dataBadOutputMachine = _machineReasons.find(searchMachine);
+                                var data = {
                                     length: a.length,
                                     action: a.action,
                                     description: a.description,
                                     badOutputReasonId: new ObjectId(dataBadOutput._id),
-                                    badOutputReason: dataBadOutput,
+                                    badOutputReason: a,
                                     machineId: new ObjectId(a.machineId),
-                                    machine: dataBadOutputMachine
-                                })
-                                data._createdDate = dateNow;
-                                data.stamp(this.user.username, "manager")
+                                    machine: {
+                                        name: dataBadOutputMachine.name,
+                                        code: dataBadOutputMachine.code,
+                                    }
+                                };
+                                //data._createdDate = dateNow;
+                                //data.stamp(this.user.username, "manager")
                                 items.push(data);
                             }
                             valid.badOutputReasons = items;
@@ -529,6 +534,8 @@ module.exports = class DailyOperationManager extends BaseManager {
                             delete valid.badOutputReasons;
                         }
                     }
+                
+                    delete valid.machine.steps;
 
                     if (!valid.stamp)
                         valid = new DailyOperation(valid);
