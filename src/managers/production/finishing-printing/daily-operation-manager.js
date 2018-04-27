@@ -465,10 +465,12 @@ module.exports = class DailyOperationManager extends BaseManager {
 
                     if (_kanban) {
                         //valid.kanban = _kanban;
+                        valid.kanban._id = _kanban._id;
                         valid.kanbanId = _kanban._id;
                     }
                     if (_machine) {
                         //valid.machine = _machine;
+                        valid.machine = _machine._id;
                         valid.machineId = _machine._id;
                     }
                     if (_step) {
