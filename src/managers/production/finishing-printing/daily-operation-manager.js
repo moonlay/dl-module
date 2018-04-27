@@ -512,6 +512,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var dataBadOutput = _badOutput.find(searchItem);
                                 
                                 a._id = dataBadOutput._id;
+                                a.code = dataBadOutput.code;
                                 
                                 function searchMachine(params) {
                                     return !params ? null : params.code === a.machine.code;
