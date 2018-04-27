@@ -378,8 +378,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                             .updateOne({
                                 _id: validData._id
                             }, {
-                                $set: { "_deleted": true }
-                            })
+                                    $set: { "_deleted": true, "_updatedDate": new Date() }
+                                })
                             .then((result) => Promise.resolve(validData._id))
                             .then((purchaseOrderId) => {
                                 return this.purchaseRequestManager.getSingleById(validData.purchaseRequest._id)
@@ -1395,8 +1395,8 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             .updateOne({
                 _id: purchaseOrder._id
             }, {
-                $set: purchaseOrder
-            })
+                    $set: purchaseOrder
+                })
             .then((result) => { return this.getSingleByIdOrDefault(purchaseOrder._id, this.purchaseOrderFields) });
     }
 
