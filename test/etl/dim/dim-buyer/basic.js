@@ -2,17 +2,17 @@ var helper = require("../../../helper");
 var Manager = require("../../../../src/etl/dim/dim-buyer-etl-manager");
 var instanceManager = null;
 var should = require("should");
-var sqlHelper = require("../../../sql-helper");
+var sqlMock = require("../../../sql-mock");
 
 before("#00. connect db", function (done) {
-    Promise.all([helper, sqlHelper])
+    Promise.all([helper])
         .then((result) => {
             var db = result[0];
-            var sql = result[1];
+
             db.getDb().then((db) => {
                 instanceManager = new Manager(db, {
                     username: "unit-test"
-                }, sql);
+                }, sqlMock);
                 done();
             })
                 .catch((e) => {

@@ -539,7 +539,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             .then((createIndexResults) => {
                 return this._validate(purchaseOrder)
                     .then(validData => {
-                        return this.collection.updateOne({ _id: validData._id }, { $set: { "_deleted": true } })
+                        return this.collection.updateOne({ _id: validData._id }, { $set: { "_deleted": true, "_updatedDate": new Date() } })
                             .then((result) => Promise.resolve(validData._id))
                             .then((purchaseOrderId) => {
                                 return this.purchaseRequestManager.getSingleById(validData.purchaseRequest._id)
