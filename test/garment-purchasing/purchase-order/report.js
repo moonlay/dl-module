@@ -172,3 +172,134 @@ it('#10. should success when get data pengiriman detail with date', function (do
         });
 
 });
+
+var resultForExcelTest = {};
+it('#11. should success when get data with Start Date, End Date and Duration 0-7 days', function (done) {
+    var query = {};
+    query.dateFrom = new Date(createdData._createdDate);
+    query.dateTo = new Date(createdData._createdDate);
+    query.duration = "0-7 hari";
+
+    manager.getDurationPOIntPoExt(query)
+        .then(result => {
+            var po = result;
+            po.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#12. should success when get data with date, unit and Duration 8-14 days', function (done) {
+    var query = {};
+    query.unitId= createdData.unit._id;
+    query.dateFrom = new Date(createdData._createdDate);
+    query.dateTo = new Date(createdData._createdDate);
+    query.duration = "8-14 hari";
+
+    manager.getDurationPOIntPoExt(query)
+        .then(result => {
+            var po = result;
+            resultForExcelTest.info = result;
+            po.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#13. should success when get data with Start Date, End Date and Duration 15-30 days', function (done) {
+    var query = {};
+    query.dateFrom = new Date(createdData._createdDate);
+    query.dateTo = new Date(createdData._createdDate);
+    query.duration = "15-30 hari";
+
+    manager.getDurationPOIntPoExt(query)
+        .then(result => {
+            var po = result;
+            po.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#14. should success when get data with Start Date, End Date and Duration >30 days', function (done) {
+    var query = {};
+    query.dateFrom = new Date(createdData._createdDate);
+    query.dateTo = new Date(createdData._createdDate);
+    query.duration = "> 30 hari";
+
+    manager.getDurationPOIntPoExt(query)
+        .then(result => {
+            var po = result;
+            po.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#15. should success when get data for Excel Report', function (done) {
+    var query = {};
+    query.duration = "0-7 hari";
+
+    manager.getXlsDurationPOIntPOExt(resultForExcelTest, query)
+        .then(xlsData => {             
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#16. should success when get data for Excel Report using dateFrom only', function (done) {
+    var query = {};
+    query.dateFrom = new Date(createdData._createdDate);
+    query.duration = "8-14 hari";
+
+    manager.getXlsDurationPOIntPOExt(resultForExcelTest, query)
+        .then(xlsData => {             
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#17. should success when get data for Excel Report using dateTo only', function (done) {
+    var query = {};
+    query.dateTo = new Date(createdData._createdDate);
+    query.duration = "> 30 hari";
+
+    manager.getXlsDurationPOIntPOExt(resultForExcelTest, query)
+        .then(xlsData => {             
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#18. should success when get data for Excel Report using both dateFrom and dateTo', function (done) {
+    var query = {};
+    query.dateFrom = new Date(createdData._createdDate);
+    query.dateTo = new Date(createdData._createdDate);
+    query.duration = "15-30 hari";
+
+    manager.getXlsDurationPOIntPOExt(resultForExcelTest, query)
+        .then(xlsData => {             
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
