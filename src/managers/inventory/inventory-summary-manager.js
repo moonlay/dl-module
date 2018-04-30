@@ -278,4 +278,24 @@ module.exports = class InventorySummaryManager extends BaseManager {
 
         return Promise.resolve(xls);
     }
+
+    UpdateInventorySummary(data) {
+        return new Promise((resolve, reject) => {
+
+            var process = [];
+            for (var i of data) {
+               
+                process.push(this.collection.updateOne(
+                    { "_deleted": false, "productCode": i.productCode , "uom" : "MTR", "storageName": i.storageName == "PRINTING" ? "Gudang Greige Printing" : "Gudang Greige Finishing" },
+                    {"$inc": { "stockPlanning": i.quantity } }
+                ));
+            }
+
+            Promise.all(process).then(res => {
+                resolve(res)
+            })
+
+        })
+    }
+
 }
