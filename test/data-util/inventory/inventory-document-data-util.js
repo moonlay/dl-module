@@ -75,7 +75,8 @@ class InventoryDocumentDataUtil {
                     items: [{
                         productId: product._id,
                         quantity: 1000,
-                        uomId: uom._id
+                        uomId: uom._id,
+                        stockPlanning:0,
                     }]
                 };
 
