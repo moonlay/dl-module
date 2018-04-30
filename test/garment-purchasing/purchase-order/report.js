@@ -303,3 +303,38 @@ it('#18. should success when get data for Excel Report using both dateFrom and d
             done(e);
         });
 });
+
+it('#19. should success when get data with date and unit', function (done) {
+    var query = {};
+    query.unitId = createdData.unit._id;
+    query.dateFrom = new Date(createdData._createdDate);
+    query.dateTo = new Date(createdData._createdDate);
+  
+    manager.getDurationPOIntPoExt(query)
+        .then(result => {
+            var po = result;
+            resultForExcelTest.info = result;
+            po.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#20. should success when get data for Excel Report using both dateFrom, dateTo and unit', function (done) {
+    var query = {};
+    query.unitId = createdData.unit._id;
+    query.dateFrom = new Date(createdData._createdDate);
+    query.dateTo = new Date(createdData._createdDate);
+    query.duration = "15-30 hari";
+
+    manager.getXlsDurationPOIntPOExt(resultForExcelTest, query)
+        .then(xlsData => {             
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
