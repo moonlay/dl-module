@@ -474,6 +474,8 @@ module.exports = class DailyOperationManager extends BaseManager {
                         valid.machineId = _machine._id;
                     }
                     if (_step) {
+                        let currStep = valid.kanban.instruction.steps[valid.kanban.currentStepIndex];
+
                         valid.stepId = _step._id;
                         /*
                         var step = {};
@@ -483,7 +485,24 @@ module.exports = class DailyOperationManager extends BaseManager {
                         }
                         valid.step = step;
                         */
-                        valid.step._id = _step._id;
+                        valid.step = {
+                            _id: _step._id,
+                            process: currStep.process,
+                            processArea: currStep.processArea,
+                            deadline: currStep.deadline,
+                            isNotDone: currStep.isNotDone,
+                        };
+
+                        let index = 0;
+                        for (let step of valid.kanban.instruction.steps) {
+                            if(index != valid.kanban.currentStepIndex) {
+                                delete step.processArea;
+                                delete step.deadline;
+                                delete step.isNotDone;
+                            }
+
+                            index++;
+                        }
                     }
 
                     if (valid.type == "input") {
