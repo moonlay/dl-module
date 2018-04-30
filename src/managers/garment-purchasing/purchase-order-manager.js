@@ -2892,8 +2892,8 @@ getDurationPOIntPoExt(query) {
             
             var userQuery = {};
             if (query.user && query.user != "") {
-                userQuery = {
-                    "_createdBy": query.user
+                userQuery = { 
+                    "_createdBy": query.user 
                 }
             }
 
