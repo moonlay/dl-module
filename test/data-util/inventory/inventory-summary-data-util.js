@@ -26,7 +26,7 @@ class InventorySummaryDataUtil {
                     storageId: storage._id,
                     uomId: uom._id,
                     quantity: 1000,
-                    stockPlanning: 0,
+                    stockPlanning: 1000,
 
                 };
 

@@ -43,12 +43,18 @@ it("#01.(02) should success when create new data", function (done) {
     InventorySummary.getNewData2()
         .then((data) => inventorySummaryManager.create(data))
         .then((id) => {
-            id.should.be.Object();
-            createdId = id;
-            done();
+            done("Should not be able to create with empty data");
         })
         .catch((e) => {
-            done(e);
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
         });
 });
 
