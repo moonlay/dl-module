@@ -31,7 +31,8 @@ class InventoryMovementDataUtil {
                     productId: product._id,
                     storageId: storage._id,
                     uomId: uom._id,
-                    quantity: 1000
+                    quantity: 1000,
+                    stockPlanning: 0
                 };
 
                 return data;
