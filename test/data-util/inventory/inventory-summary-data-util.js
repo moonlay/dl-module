@@ -26,7 +26,7 @@ class InventorySummaryDataUtil {
                     storageId: storage._id,
                     uomId: uom._id,
                     quantity: 1000,
-                    stockPlanning:0,
+                    stockPlanning: 0,
 
                 };
 
@@ -47,12 +47,15 @@ class InventorySummaryDataUtil {
             });
     }
 
-    
+
     getNewTestData2() {
         return helper
             .getManager(InventorySummaryManager)
             .then((manager) => {
                 return this.getNewData().then((data) => {
+                    data.productId = "";
+                    data.storageId = "";
+                    data.uomId = "";
                     data.stockPlanning = 1000;
                     return manager.create(data)
                         .then((id) => {
