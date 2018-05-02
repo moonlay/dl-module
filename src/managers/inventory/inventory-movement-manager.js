@@ -166,9 +166,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
                     valid.stockPlanning = valid.quantity;
                 } else {
                     valid.after = _dbInventorySummary.quantity + valid.quantity;
-
                     valid.stockPlanning = _dbInventorySummary.stockPlanning == 0 ? _dbInventorySummary.stockPlanning + valid.quantity : _dbInventorySummary.stockPlanning;
-
                 }
 
                 if (!valid.stamp) {
