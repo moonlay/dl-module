@@ -50,5 +50,21 @@ class InventoryMovementDataUtil {
                 });
             });
     }
+
+    getNewTestData2() {
+        return helper
+            .getManager(InventoryMovementManager)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    data.productId = "";
+                    data.storageId = "";
+                    data.uomId = "";
+                    return manager.create(data)
+                        .then((id) => {
+                            return manager.getSingleById(id)
+                        });
+                });
+            });
+    }
 }
 module.exports = new InventoryMovementDataUtil();
