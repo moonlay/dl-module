@@ -39,25 +39,6 @@ it("#01. should success when create new data", function (done) {
         });
 });
 
-it("#01.(02) should success when create new data", function (done) {
-    InventorySummary.getNewData2()
-        .then((data) => inventorySummaryManager.create(data))
-        .then((id) => {
-            done("Should not be able to create with empty data");
-        })
-        .catch((e) => {
-            try {
-                e.name.should.equal("ValidationError");
-                e.should.have.property("errors");
-                e.errors.should.instanceof(Object);
-                done();
-            }
-            catch (ex) {
-                done(e);
-            }
-        });
-});
-
 var createdData;
 it(`#02. should success when get created data with id`, function (done) {
     inventorySummaryManager.getSingleById(createdId)
