@@ -78,9 +78,6 @@ module.exports = class InventoryMovementManager extends BaseManager {
                         quantity: {
                             '$sum': '$quantity'
                         },
-                        stockPlanning: {
-                            '$sum': '$stockPlanning'
-                        }
                     }
                 }]).toArray().then(results => results[0]);
 
@@ -91,7 +88,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
                         var sum = results[0];
                         var summary = results[1];
                         summary.quantity = sum.quantity;
-                        summary.stockPlanning = sum.stockPlanning;
+                        // summary.stockPlanning = stockPlanning;
                         return this.inventorySummaryManager.update(summary)
                     })
                     .then(sumId => id)
@@ -169,7 +166,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
                     valid.stockPlanning = valid.quantity;
                 } else {
                     valid.after = _dbInventorySummary.quantity + valid.quantity;
-                    valid.stockPlanning = _dbInventorySummary.stockPlanning + valid.quantity;
+                    valid.stockPlanning = _dbInventorySummary.stockPlanning == 0 ? _dbInventorySummary.stockPlanning + valid.quantity : _dbInventorySummary.stockPlanning;
                 }
 
                 if (!valid.stamp) {
