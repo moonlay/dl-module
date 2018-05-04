@@ -560,3 +560,39 @@ it('#33. should success when get data for Excel Report using both dateFrom, date
             done(e);
         });
 });
+it('#34. should success when get data with date, user, unit and Duration 31-60 days', function (done) {
+    var query = {};
+    query.unitId= createdData.unit._id;
+    query.user= createdData._createdBy;
+    query.dateFrom = new Date(createdData.items[0].purchaseOrderExternal._createdDate);
+    query.dateTo = new Date(createdData.items[0].purchaseOrderExternal._createdDate);
+    query.duration = "31-60 hari";
+
+    manager.getDurationPOExtDo(query)
+        .then(result => {
+            var po = result;
+            resultForExcelTest.info = result;
+            po.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#35. should success when get data for Excel Report using both dateFrom, dateTo and unit', function (done) {
+    var query = {};
+    query.unitId = createdData.unit._id;
+    query.dateFrom = new Date(createdData.items[0].purchaseOrderExternal._createdDate);
+    query.dateTo = new Date(createdData.items[0].purchaseOrderExternal._createdDate);
+    query.duration = "31-60 hari";
+
+    manager.getXlsDurationPOExtDo(resultForExcelTest, query)
+        .then(xlsData => {             
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
