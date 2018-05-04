@@ -202,14 +202,19 @@ module.exports = class KanbanManager extends BaseManager {
                             valid.productionOrderId = _productionOrder._id;
                             // valid.productionOrder = _productionOrder;
                             
+                            valid.productionOrder._id = _productionOrder._id;
                             valid.productionOrder.salesContractId = _productionOrder.salesContractId;
                             valid.productionOrder.buyerId = _productionOrder.buyerId;
+                            valid.productionOrder.buyer._id = _productionOrder.buyerId;
                             valid.productionOrder.processTypeId = _productionOrder.processTypeId;
                             valid.productionOrder.orderTypeId = _productionOrder.orderTypeId;
                             valid.productionOrder.processType.orderTypeId = _productionOrder.processType.orderTypeId;
                             valid.productionOrder.materialId = _productionOrder.materialId;
+                            valid.productionOrder.material._id = _productionOrder.materialId;
                             valid.productionOrder.materialConstructionId = _productionOrder.materialConstructionId;
+                            valid.productionOrder.materialConstruction._id = _productionOrder.materialConstructionId;
                             valid.productionOrder.yarnMaterialId = _productionOrder.yarnMaterialId;
+                            valid.productionOrder.yarnMaterial._id = _productionOrder.yarnMaterialId;
                             valid.productionOrder.uomId = _productionOrder.uomId;
 
                             valid.cart.uomId = _productionOrder.uomId;
