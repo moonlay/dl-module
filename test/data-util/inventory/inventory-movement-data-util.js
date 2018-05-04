@@ -31,8 +31,7 @@ class InventoryMovementDataUtil {
                     productId: product._id,
                     storageId: storage._id,
                     uomId: uom._id,
-                    quantity: 1000,
-                    stockPlanning: 0
+                    quantity: 1000
                 };
 
                 return data;
@@ -44,22 +43,6 @@ class InventoryMovementDataUtil {
             .getManager(InventoryMovementManager)
             .then((manager) => {
                 return this.getNewData().then((data) => {
-                    return manager.create(data)
-                        .then((id) => {
-                            return manager.getSingleById(id)
-                        });
-                });
-            });
-    }
-
-    getNewTestData2() {
-        return helper
-            .getManager(InventoryMovementManager)
-            .then((manager) => {
-                return this.getNewData().then((data) => {
-                    data.productId = "";
-                    data.storageId = "";
-                    data.uomId = "";
                     return manager.create(data)
                         .then((id) => {
                             return manager.getSingleById(id)
