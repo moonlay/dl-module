@@ -175,7 +175,8 @@ it('#06. should success when create new data with old kanban id', function (done
                 kanbanManager.create(data)
                     .then((id) => {
                         kanban.oldKanbanId = id;
-
+                        kanban.oldKanban = kanban;
+                        
                         kanbanManager.create(kanban)
                             .then((id) => {
                                 kanbanId = id;
