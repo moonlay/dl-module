@@ -1,7 +1,7 @@
 'use strict'
 var helper = require("../../helper");
 var InventoryMovementManager = require("../../../src/managers/inventory/inventory-movement-manager");
-
+var ObjectId = require("mongodb").ObjectId;
 var inventoryDocumentDataUtil = require("./inventory-document-data-util");
 var productDataUtil = require('../master/product-data-util');
 var storageDataUtil = require('../master/storage-data-util');
@@ -39,6 +39,59 @@ class InventoryMovementDataUtil {
             })
     }
 
+    //Surat Permintaan Barang
+    getNewTestData2() {
+        return helper
+            .getManager(InventoryMovementManager)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    data.referenceType = "Surat Permintaan Barang";
+                    data.type = "OUT";
+                    return data;
+                });
+            });
+    }
+
+    //Surat Permintaan Barang "IN"
+    getNewTestData3() {
+        return helper
+            .getManager(InventoryMovementManager)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    data.referenceType = "Surat Permintaan Barang";
+                    data.type = "IN";
+                    return data;
+                });
+            });
+    }
+
+    //Bon Pengantar Greige type IN
+    getNewTestData4() {
+        return helper
+            .getManager(InventoryMovementManager)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    data.referenceType = "Bon Pengantar Greige";
+                    data.type = "IN";
+                    return data;
+                });
+            });
+    }
+
+    //Bon Pengantar Greige type OUT
+    getNewTestData5() {
+        return helper
+            .getManager(InventoryMovementManager)
+            .then((manager) => {
+                return this.getNewData().then((data) => {
+                    data.referenceType = "Bon Pengantar Greige";
+                    data.type = "OUT";
+                    return data;
+                });
+            });
+    }
+
+
     getNewTestData() {
         return helper
             .getManager(InventoryMovementManager)
@@ -52,20 +105,5 @@ class InventoryMovementDataUtil {
             });
     }
 
-    getNewTestData2() {
-        return helper
-            .getManager(InventoryMovementManager)
-            .then((manager) => {
-                return this.getNewData().then((data) => {
-                    data.productId = "";
-                    data.storageId = "";
-                    data.uomId = "";
-                    return manager.create(data)
-                        .then((id) => {
-                            return manager.getSingleById(id)
-                        });
-                });
-            });
-    }
 }
 module.exports = new InventoryMovementDataUtil();
