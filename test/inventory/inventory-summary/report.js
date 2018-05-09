@@ -112,25 +112,3 @@ it("#06. should success when destroy all unit test data", function (done) {
             done(e);
         });
 });
-
-it("#07. should success when Update Inventory Summary", function (done) {
-    inventoryData=[];
-    InventorySummary={};
-
-    InventorySummary.quantity = 0;
-    InventorySummary.productCode = "ProductCode";
-    InventorySummary.productId = "ProductId";
-    InventorySummary.productName = "ProductName";
-    InventorySummary.storageName = "Printing";
-    InventorySummary.uom = "MTR";
-
-    inventoryData.push(InventorySummary);
-
-    inventorySummaryManager.UpdateInventorySummary(inventoryData)
-        .then((result) => {
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
