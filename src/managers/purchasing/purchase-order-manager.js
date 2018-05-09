@@ -613,6 +613,52 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             });
     }
 
+ getDataPOIntNotPostMonitoring(unitId, categoryId, dateFrom, dateTo, offset) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                    var query = Object.assign({});
+
+                    Object.assign(query, {
+                           "status.name":"CREATED"
+                    });
+                   
+                    if (unitId !== "undefined" && unitId !== "") {
+                        Object.assign(query, {
+                            unitId: new ObjectId(unitId)
+                        });
+                    }
+                    if (categoryId !== "undefined" && categoryId !== "") {
+                        Object.assign(query, {
+                            categoryId: new ObjectId(categoryId)
+                        });
+                    }
+                   
+                    if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+                        var _dateFrom = new Date(dateFrom);
+                        var _dateTo = new Date(dateTo);
+                        _dateFrom.setHours(_dateFrom.getHours() - offset);
+                        _dateTo.setHours(_dateTo.getHours() - offset);
+                        Object.assign(query, {
+                            date: {
+                                $gte: _dateFrom,
+                                $lte: _dateTo
+                            }
+                        });
+                    }
+                    
+                    query = Object.assign(query, { _deleted: false });
+                    this.collection.find(query).toArray()
+                        .then(purchaseOrders => {
+                            resolve(purchaseOrders);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
     getDataPOUnit(startdate, enddate, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
