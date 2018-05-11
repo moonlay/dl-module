@@ -109,3 +109,19 @@ it('#04. should success when get data detail report Surat Perintah Bayar', funct
 
 });
 
+it('#05. should success when update position', function (done) {
+    let data = {
+        position: 2,
+        unitPaymentOrders: [createdData.no],
+    };
+
+    unitPaymentOrderManager.updatePosition(data)
+        .then((res) => {
+            res.should.be.Object();
+            res.modifiedCount.should.be.above(0);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});

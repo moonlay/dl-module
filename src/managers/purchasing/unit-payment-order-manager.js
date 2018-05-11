@@ -1045,4 +1045,17 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                 });
             });
     }
+
+    updatePosition(data) {
+        return this
+            .collection
+            .updateMany({ "no": { "$in": data.unitPaymentOrders } },
+                {
+                    "$set": {
+                        "position": data.position,
+                        "_updatedBy": this.user.username,
+                        "_updatedDate": new Date()
+                    }
+                });
+    }
 };
