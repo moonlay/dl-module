@@ -166,7 +166,7 @@ module.exports = class InventoryMovementManager extends BaseManager {
                     valid.quantity = 0;
                 }
 
-                if (valid.type == "OUT" && valid.referenceType != "Surat Permintaan Barang") {
+                if (valid.type == "OUT") {
                     valid.quantity = valid.quantity * -1;
                 }
 
