@@ -20,10 +20,10 @@ before('#00. connect db', function (done) {
         })
 });
 
-var createdId;
+var createdId;var createdData;
 it('#01. should success when create new data', function (done) {
     unitPaymentOrder.getNewData()
-        .then((data) => unitPaymentOrderManager.create(data))
+        .then((data) => {unitPaymentOrderManager.create(data); createdData=data;})
         .then((id) => {
             id.should.be.Object();
             createdId = id;
@@ -48,4 +48,20 @@ it('#02. should error when create new blank data', function (done) {
                 done(ex);
             }
         })
+});
+
+it("#03. should success when search data with filter", function (done) {
+    unitPaymentOrderManager.read({
+        keyword: createdData.supplier.name
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
 });

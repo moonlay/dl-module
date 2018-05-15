@@ -65,3 +65,19 @@ it('#03. should error when create new blank data', function (done) {
             }
         })
 });
+
+it("#04. should success when search data with filter", function (done) {
+    unitReceiptNoteManager.read({
+        keyword: unitReceiptNoteManager.supplier.name
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
