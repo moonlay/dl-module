@@ -19,10 +19,10 @@ before('#00. connect db', function (done) {
         })
 });
 
-var createdData;
+var createdData;var createdId;
 it('#01. should success when create new data', function (done) {
     unitReceiptNote.getNewData()
-        .then((data) => unitReceiptNoteManager.create(data))
+        .then((data) => {unitReceiptNoteManager.create(data); createdData=data;})
         .then((id) => {
             id.should.be.Object();
             createdId = id;
@@ -68,7 +68,7 @@ it('#03. should error when create new blank data', function (done) {
 
 it("#04. should success when search data with filter", function (done) {
     unitReceiptNoteManager.read({
-        keyword: unitReceiptNoteManager.supplier.name
+        keyword: createdData.supplier.name
     })
         .then((documents) => {
             //process documents
