@@ -34,6 +34,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
         this.vatManager = new VatManager(db, user);
         this.supplierManager = new SupplierManager(db, user);
         this.productManager = new ProductManager(db, user);
+        this.documentNumbers = this.db.collection("document-numbers");
         this.purchaseOrderFields = [
             "_id",
             "no",
@@ -147,9 +148,56 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
     }
 
     _beforeInsert(purchaseOrderExternal) {
-        purchaseOrderExternal.no = generateCode();
-        purchaseOrderExternal.status = poStatusEnum.CREATED;
-        return Promise.resolve(purchaseOrderExternal)
+        var monthNow = moment().format("MM");
+        var yearNow = parseInt(moment().format("YY"));
+        var type = "PE"+monthNow+yearNow;
+        var query = { "type": type, "description": "PE" };
+        var fields = { "number": 1, "year": 1 };
+
+        return this.documentNumbers
+            .findOne(query, fields)
+            .then((previousDocumentNumber) => {
+
+                var number = 1;
+
+                if (!purchaseOrderExternal.no) {
+                    if (previousDocumentNumber) {
+                        var oldYear = previousDocumentNumber.year;
+                        number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
+
+                        purchaseOrderExternal.no = `PE-${yearNow}-${monthNow}-${this.pad(number, 3)}`;
+                    } else {
+                        purchaseOrderExternal.no = `PE-${yearNow}-${monthNow}-001`;
+                    }
+                }
+
+                var documentNumbersData = {
+                    type: type,
+                    documentNumber: purchaseOrderExternal.no,
+                    number: number,
+                    year: yearNow,
+                    description: "PE"
+                };
+
+                var options = { "upsert": true };
+
+                return this.documentNumbers
+                    .updateOne(query, documentNumbersData, options)
+                    .then((id) => {
+                        purchaseOrderExternal.status = poStatusEnum.CREATED;
+                        return Promise.resolve(purchaseOrderExternal)
+                    })
+            })
+    }
+
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
     _afterInsert(id) {
