@@ -8,7 +8,7 @@ function test(name, path) {
 describe('#dl-module', function (done) {
     this.timeout(2 * 60000);
 
-    Auth
+    //Auth
     test('@AUTH/ACCOUNT', './auth/account');
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
