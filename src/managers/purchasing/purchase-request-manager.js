@@ -206,49 +206,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
-    customCode(purchaseRequest){
-        var yearNow = parseInt(moment().format("YY"));
-        var monthNow = moment().format("MM");
-        var type = purchaseRequest && purchaseRequest.unit?purchaseRequest.unit.code + monthNow + year : "";
-        var query = { "type": type, "description": "PR" };
-        var fields = { "number": 1, "year": 1 };
-
-        return this.documentNumbers
-            .findOne(query, fields)
-            .then((previousDocumentNumber) => {
-                var number = 1;
-
-                if (!purchaseRequest.no) {
-                    if (previousDocumentNumber) {
-                        var budgetCode= purchaseRequest.budget? purchaseRequest.budget.code : "";
-                        var unitCode=purchaseRequest.unit? purchaseRequest.unit.code : "";
-                        var categoryCode=purchaseRequest.category? purchaseRequest.category.code : "";
-                        var oldYear = previousDocumentNumber.year;
-                        number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
-
-                        purchaseRequest.no = `PR-${budgetCode}-${unitCode}-${categoryCode}-${yearNow}-${monthNow}-${this.pad(number, 3)}`;
-                    } else {
-                        purchaseRequest.no = `PR-${budgetCode}-${unitCode}-${categoryCode}-${yearNow}-${monthNow}-001`;
-                    }
-                }
-
-                var documentNumbersData = {
-                    type: type,
-                    documentNumber: purchaseRequest.no,
-                    number: number,
-                    year: yearNow,
-                    description: "PR"
-                };
-
-                var options = { "upsert": true };
-
-                return this.documentNumbers
-                    .updateOne(query, documentNumbersData, options)
-                    .then((id) => {
-                        return Promise.resolve(purchaseRequest)
-                    })
-            })
-    }
+   
 
     pad(number, length) {
 

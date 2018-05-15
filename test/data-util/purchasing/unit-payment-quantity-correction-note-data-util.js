@@ -36,7 +36,7 @@ class UnitPaymentQuantityCorrectionNoteDataUtil {
                         itemsUnitPaymentQuantityCorrectionNote = [].concat.apply([], itemsUnitPaymentQuantityCorrectionNote);
 
                         var data = {
-                            no: `UT/UPPCN/${codeGenerator()}`,
+                            //no: `UT/UPPCN/${codeGenerator()}`,
                             date: new Date(),
                             unitPaymentOrderId: dataUnitPaymentOrder._id,
                             unitPaymentOrder: dataUnitPaymentOrder,

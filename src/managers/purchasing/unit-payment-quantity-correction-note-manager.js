@@ -299,54 +299,54 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
     }
 
     _beforeInsert(unitPaymentQuantityCorrectionNote) {
-        // var monthNow = moment().format("MM");
-        // var yearNow = parseInt(moment().format("YY"));
-        // var code="";
-        // var unitCode=unitPaymentQuantityCorrectionNote.unit ? unitPaymentQuantityCorrectionNote.unit.code : "";
-        // if(unitPaymentQuantityCorrectionNote && unitPaymentQuantityCorrectionNote.supplier){
-        //     code= unitPaymentQuantityCorrectionNote.supplier.import ? "NRI" : "NRL";
-        // }
-        // var type = code+monthNow+yearNow+unitCode;
-        // var query = { "type": type, "description": NUMBER_DESCRIPTION };
-        // var fields = { "number": 1, "year": 1 };
+        var monthNow = moment().format("MM");
+        var yearNow = parseInt(moment().format("YY"));
+        var code="";
+        var unitCode=unitPaymentQuantityCorrectionNote.unit ? unitPaymentQuantityCorrectionNote.unit.code : "";
+        if(unitPaymentQuantityCorrectionNote && unitPaymentQuantityCorrectionNote.supplier){
+            code= unitPaymentQuantityCorrectionNote.supplier.import ? "NRI" : "NRL";
+        }
+        var type = code+monthNow+yearNow+unitCode;
+        var query = { "type": type, "description": NUMBER_DESCRIPTION };
+        var fields = { "number": 1, "year": 1 };
 
-        // return this.documentNumbers
-        //     .findOne(query, fields)
-        //     .then((previousDocumentNumber) => {
+        return this.documentNumbers
+            .findOne(query, fields)
+            .then((previousDocumentNumber) => {
 
-        //         var number = 1;
+                var number = 1;
 
-        //         if (!unitPaymentQuantityCorrectionNote.no) {
-        //             if (previousDocumentNumber) {
-        //                 var oldYear = previousDocumentNumber.year;
-        //                 number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
+                if (!unitPaymentQuantityCorrectionNote.no) {
+                    if (previousDocumentNumber) {
+                        var oldYear = previousDocumentNumber.year;
+                        number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-        //                 unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-${this.pad(number, 3)}`;
-        //             } else {
-        //                 unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-001`;
-        //             }
-        //         }
+                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-${this.pad(number, 3)}`;
+                    } else {
+                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-001`;
+                    }
+                }
 
-        //         var documentNumbersData = {
-        //             type: type,
-        //             documentNumber: unitPaymentQuantityCorrectionNote.no,
-        //             number: number,
-        //             year: yearNow,
-        //             description: NUMBER_DESCRIPTION
-        //         };
+                var documentNumbersData = {
+                    type: type,
+                    documentNumber: unitPaymentQuantityCorrectionNote.no,
+                    number: number,
+                    year: yearNow,
+                    description: NUMBER_DESCRIPTION
+                };
 
-        //         var options = { "upsert": true };
+                var options = { "upsert": true };
 
-        //         return this.documentNumbers
-        //             .updateOne(query, documentNumbersData, options)
-        //             .then((id) => {
-        //                 return Promise.resolve(unitPaymentQuantityCorrectionNote);
-        //             })
-        //     })
-        unitPaymentQuantityCorrectionNote.no = generateCode("correctionPrice");
-        if (unitPaymentQuantityCorrectionNote.unitPaymentOrder.useIncomeTax)
-            unitPaymentQuantityCorrectionNote.returNoteNo = generateCode("returCode");
-        return Promise.resolve(unitPaymentQuantityCorrectionNote)
+                return this.documentNumbers
+                    .updateOne(query, documentNumbersData, options)
+                    .then((id) => {
+                        return Promise.resolve(unitPaymentQuantityCorrectionNote);
+                    })
+            })
+        // unitPaymentQuantityCorrectionNote.no = generateCode("correctionPrice");
+        // if (unitPaymentQuantityCorrectionNote.unitPaymentOrder.useIncomeTax)
+        //     unitPaymentQuantityCorrectionNote.returNoteNo = generateCode("returCode");
+        // return Promise.resolve(unitPaymentQuantityCorrectionNote)
     }
 
     _afterInsert(id) {
