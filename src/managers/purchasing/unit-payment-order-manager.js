@@ -246,14 +246,14 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         });
     }
 
-    getDataMonitorSpb(unitId, PRNo, noSpb, supplierId, dateFrom, dateTo, staffName, offset) {
+   getDataMonitorSpb(unitId, supplierId, dateFrom, dateTo, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
             var nilai = {};
             qryMatch["$and"] = [
                 { "_deleted": false }];
 
-        //    if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
+
            if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
                 var validStartDate = new Date(dateFrom);
                 var validEndDate = new Date(dateTo);
@@ -271,43 +271,19 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                 )
             }
 
-            if (unitId !== "") {
-                qryMatch["$and"].push({
-                    "items.unitReceiptNote.unitId": new ObjectId(unitId)
+         
 
+            if (supplierId !== "undefined" && supplierId !== "") {
+                qryMatch["$and"].push({
+             supplierId: new ObjectId(supplierId)
                 })
             }
 
-            if (supplierId !== "") {
-                qryMatch["$and"].push({
-                    "supplierId": new ObjectId(supplierId)
-
-                })
+       
+            var nilai={};
+if (unitId !== undefined && unitId !== "") {
+                nilai = { "pr_docs.unitId": new ObjectId(unitId) };
             }
-
-            //   if (staffName!=="") {
-            //                 qryMatch["$and"].push({
-            //                       "do_docs._createdBy":staffName
-            //                 })
-            //             }
-            if (staffName !== undefined && staffName !== "") {
-                nilai = { "do_docs._createdBy": staffName };
-            }
-
-            if (PRNo !== "") {
-                qryMatch["$and"].push({
-                    "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": PRNo
-
-                })
-            }
-
-            if (noSpb !== "") {
-                qryMatch["$and"].push({
-                    "no": noSpb
-
-                })
-            }
-
             this.collection.aggregate(
                 [
                     {
@@ -332,32 +308,8 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                     {
                         $unwind: "$pr_docs"
                     },
-                    {
-                        $lookup:
-                            {
-                                from: "delivery-orders",
-                                localField: "items.unitReceiptNote.deliveryOrder.no",
-                                foreignField: "no",
-                                as: "do_docs"
-                            }
-                    },
-                    //      {
-                    //    $lookup:
-                    //      {
-                    //        from: "purchase-orders",
-                    //        localField: "items.unitReceiptNote.items.purchaseOrder.no",
-                    //        foreignField: "no",
-                    //        as: "do_docs"
-                    //      }
-                    // },
-                    // {
-                    //                     $unwind:"$do_docs"
-                    //                 },
-                    { $match: nilai },
-                    //   {
-                    //      $match: qryMatch
-                    //  },
-
+                     { $match: nilai },
+                  
                     {
                         $project: {
                             no: "$no",
@@ -369,18 +321,15 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                             invoceDate: "$invoceDate",
                             invoceNo: "$invoceNo",
                             dueDate: "$dueDate",
-                            "supplier.name": "$supplier.name",
+                            "suppliernm": "$supplier.name",
                             "division.name": "$division.name",
                             "useIncomeTax": "$useIncomeTax",
                             "useVat": "$useVat",
                             "vat.rate": "$vat.rate",
-                            //"namaUnit": "$items.unitReceiptNote.unit.name",
                             "namaUnit": "$pr_docs.unit.name",
                             "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no": "$items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
                             "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$pr_docs.date",
                             "items.unitReceiptNote.no": "$items.unitReceiptNote.no",
-                            "staff": "$do_docs._createdBy",
-                            //"staff":"$_createdBy",
                             "items.unitReceiptNote.date": "$items.unitReceiptNote.date",
                              "codesupplier": "$supplier.code",
                             "satuan": "$items.unitReceiptNote.items.deliveredUom.unit",
@@ -402,7 +351,6 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                 });
         });
     }
-
 
     _getQuery(paging) {
         var deletedFilter = {
@@ -1044,5 +992,18 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         });
                 });
             });
+    }
+
+    updatePosition(data) {
+        return this
+            .collection
+            .updateMany({ "no": { "$in": data.unitPaymentOrders } },
+                {
+                    "$set": {
+                        "position": data.position,
+                        "_updatedBy": this.user.username,
+                        "_updatedDate": new Date()
+                    }
+                });
     }
 };
