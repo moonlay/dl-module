@@ -701,7 +701,7 @@ it('#41. should success when get data with date, supplier and Duration 31-60 day
 it('#42. should success when get data for Excel Report using both dateFrom, dateTo, supplier and unit', function (done) {
     var query = {};
     query.unitId = createdData.unit._id;
-    query.supplierId = createdData.items[0].supplier._id;
+   query.supplierId = createdData.items[0].supplier._id;
     query.dateFrom = new Date(createdData.items[0].purchaseOrderExternal._createdDate);
     query.dateTo = new Date(createdData.items[0].purchaseOrderExternal._createdDate);
     query.duration = "31-60 hari";

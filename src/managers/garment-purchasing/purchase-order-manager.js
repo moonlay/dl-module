@@ -3332,7 +3332,7 @@ getDurationPoExtDo(query) {
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
         var offset = query.offset;
-        for (var report of result.info) {
+        for (var report of result.data) {
             var dateDiff = Math.ceil(report.dateDiff);
             index++;
             var item = {};

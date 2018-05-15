@@ -8,7 +8,7 @@ function test(name, path) {
 describe('#dl-module', function (done) {
     this.timeout(2 * 60000);
 
-    // Auth
+    Auth
     test('@AUTH/ACCOUNT', './auth/account');
     test('@AUTH/ROLE', './auth/role');
     test('@AUTH/API-ENDPOINT', './auth/api-endpoint');
@@ -79,7 +79,7 @@ describe('#dl-module', function (done) {
 
     //Garmet Purchasing 
     test('@GARMENT PURCHASING/PURCHASE REQUEST', './garment-purchasing/purchase-request');
-    test('@GARMENT PURCHASING/PURCHASE ORDER', './garment-purchasing/purchase-order');
+     test('@GARMENT PURCHASING/PURCHASE ORDER', './garment-purchasing/purchase-order');
     test('@GARMENT PURCHASING/PURCHASE ORDER EXTERNAL', './garment-purchasing/purchase-order-external');
     test('@GARMENT PURCHASING/DELIVERY ORDER', './garment-purchasing/delivery-order');
     test('@GARMENT PURCHASING/CUSTOMS', './garment-purchasing/customs');
