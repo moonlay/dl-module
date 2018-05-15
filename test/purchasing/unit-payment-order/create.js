@@ -23,11 +23,14 @@ before('#00. connect db', function (done) {
 var createdId;var createdData;
 it('#01. should success when create new data', function (done) {
     unitPaymentOrder.getNewData()
-        .then((data) => {unitPaymentOrderManager.create(data); createdData=data;})
-        .then((id) => {
-            id.should.be.Object();
-            createdId = id;
-            done();
+        .then((data) => {
+            createdData=data;
+            unitPaymentOrderManager.create(data)
+            .then((id) => {
+                id.should.be.Object();
+                createdId = id;
+                done();
+            }) 
         })
         .catch((e) => {
             done(e);
