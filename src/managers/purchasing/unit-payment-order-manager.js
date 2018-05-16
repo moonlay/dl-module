@@ -1083,6 +1083,7 @@ if (unitId !== undefined && unitId !== "") {
             let validStartDate = new Date(filter.dateFrom);
             let validEndDate = new Date(filter.dateTo);
             validStartDate.setHours(validStartDate.getHours() - offset);
+            validEndDate.setHours(23, 59, 59);
             validEndDate.setHours(validEndDate.getHours() - offset);
             
             filterApply.date = {
