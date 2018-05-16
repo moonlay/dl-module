@@ -153,3 +153,14 @@ it('#06. should success when get data for Excel Report q', function (done) {
             done(e);
         });
 });
+
+
+it("#07. should success when read data", function (done) {
+    unitPaymentPriceCorrectionNoteManager.read({ "keyword": "test" })
+        .then((data) => {
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

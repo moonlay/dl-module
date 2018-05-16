@@ -13,6 +13,7 @@ var BudgetManager = require("../master/budget-manager");
 var CategoryManager = require("../master/category-manager");
 var ProductManager = require("../master/product-manager");
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
+var moment = require("moment");
 
 module.exports = class PurchaseRequestManager extends BaseManager {
     constructor(db, user) {
@@ -25,6 +26,7 @@ module.exports = class PurchaseRequestManager extends BaseManager {
         this.budgetManager = new BudgetManager(db, user);
         this.categoryManager = new CategoryManager(db, user);
         this.productManager = new ProductManager(db, user);
+        this.documentNumbers = this.db.collection("document-numbers");
     }
 
     _getQuery(paging) {
@@ -204,11 +206,64 @@ module.exports = class PurchaseRequestManager extends BaseManager {
             });
     }
 
+   
+
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
+    }
+
     _beforeInsert(purchaseRequest) {
-        purchaseRequest.no = generateCode();
-        purchaseRequest.status = prStatusEnum.CREATED;
-        purchaseRequest._createdDate = new Date();
-        return Promise.resolve(purchaseRequest);
+        var type = purchaseRequest && purchaseRequest.budget && purchaseRequest.unit && purchaseRequest.category? purchaseRequest.budget.code + purchaseRequest.unit.code + purchaseRequest.category.code : "";
+        var query = { "type": type, "description": "PR" };
+        var fields = { "number": 1, "year": 1 };
+
+        return this.documentNumbers
+            .findOne(query, fields)
+            .then((previousDocumentNumber) => {
+                var budgetCode= purchaseRequest.budget? purchaseRequest.budget.code : "";
+                var unitCode=purchaseRequest.unit? purchaseRequest.unit.code : "";
+                var categoryCode=purchaseRequest.category? purchaseRequest.category.code : "";
+                var yearNow = parseInt(moment().format("YY"));
+                var monthNow = moment().format("MM");
+
+                var number = 1;
+
+                if (!purchaseRequest.no) {
+                    if (previousDocumentNumber) {
+                        var oldYear = previousDocumentNumber.year;
+                        number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
+
+                        purchaseRequest.no = `PR-${budgetCode}-${unitCode}-${categoryCode}-${yearNow}-${monthNow}-${this.pad(number, 3)}`;
+                    } else {
+                        purchaseRequest.no = `PR-${budgetCode}-${unitCode}-${categoryCode}-${yearNow}-${monthNow}-001`;
+                    }
+                }
+
+                var documentNumbersData = {
+                    type: type,
+                    documentNumber: purchaseRequest.no,
+                    number: number,
+                    year: yearNow,
+                    description: "PR"
+                };
+
+                var options = { "upsert": true };
+
+                return this.documentNumbers
+                    .updateOne(query, documentNumbersData, options)
+                    .then((id) => {
+                        purchaseRequest.status = prStatusEnum.CREATED;
+                        purchaseRequest._createdDate = new Date();
+                        return Promise.resolve(purchaseRequest)
+                    })
+            })
+        
     }
 
     post(listPurchaseRequest) {

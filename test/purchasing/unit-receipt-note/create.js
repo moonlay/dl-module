@@ -19,14 +19,17 @@ before('#00. connect db', function (done) {
         })
 });
 
-var createdData;
+var createdData;var createdId;
 it('#01. should success when create new data', function (done) {
     unitReceiptNote.getNewData()
-        .then((data) => unitReceiptNoteManager.create(data))
-        .then((id) => {
-            id.should.be.Object();
-            createdId = id;
-            done();
+        .then((data) => {
+            createdData=data;
+            unitReceiptNoteManager.create(data)
+            .then((id) => {
+                id.should.be.Object();
+                createdId = id;
+                done();
+            }); 
         })
         .catch((e) => {
             done(e);
@@ -64,4 +67,20 @@ it('#03. should error when create new blank data', function (done) {
                 done(ex);
             }
         })
+});
+
+it("#04. should success when search data with filter", function (done) {
+    unitReceiptNoteManager.read({
+        keyword: createdData.supplier.name
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
 });

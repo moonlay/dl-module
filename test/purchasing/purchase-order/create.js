@@ -128,3 +128,19 @@ it('#05. should failed when create new purchase-order with already used purchase
             done();
         });
 });
+
+it("#06. should success when search data with filter", function (done) {
+    purchaseOrderManager.read({
+        keyword: purchaseOrder.buyer.name
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
