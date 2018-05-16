@@ -401,7 +401,7 @@ if (unitId !== undefined && unitId !== "") {
         var monthNow = moment().format("MM");
         var yearNow = parseInt(moment().format("YY"));
         var code="";
-        var unitCode=unitPaymentOrder.unit ? unitPaymentOrder.unit.code : "";
+        var unitCode=unitPaymentOrder.division ? unitPaymentOrder.division.code : "";
         if(unitPaymentOrder && unitPaymentOrder.supplier){
             code= unitPaymentOrder.supplier.import ? "NKI" : "NKL";
         }

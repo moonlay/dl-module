@@ -219,19 +219,19 @@ module.exports = class PurchaseRequestManager extends BaseManager {
     }
 
     _beforeInsert(purchaseRequest) {
-        var type = purchaseRequest && purchaseRequest.budget && purchaseRequest.unit && purchaseRequest.category? purchaseRequest.budget.code + purchaseRequest.unit.code + purchaseRequest.category.code : "";
+        var budgetCode= purchaseRequest.budget? purchaseRequest.budget.code : "";
+        var unitCode=purchaseRequest.unit? purchaseRequest.unit.code : "";
+        var categoryCode=purchaseRequest.category? purchaseRequest.category.code : "";
+        var yearNow = parseInt(moment().format("YY"));
+        var monthNow = moment().format("MM");
+        var type = unitCode + yearNow + monthNow;
         var query = { "type": type, "description": "PR" };
         var fields = { "number": 1, "year": 1 };
 
         return this.documentNumbers
             .findOne(query, fields)
             .then((previousDocumentNumber) => {
-                var budgetCode= purchaseRequest.budget? purchaseRequest.budget.code : "";
-                var unitCode=purchaseRequest.unit? purchaseRequest.unit.code : "";
-                var categoryCode=purchaseRequest.category? purchaseRequest.category.code : "";
-                var yearNow = parseInt(moment().format("YY"));
-                var monthNow = moment().format("MM");
-
+                
                 var number = 1;
 
                 if (!purchaseRequest.no) {
@@ -263,7 +263,6 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         return Promise.resolve(purchaseRequest)
                     })
             })
-        
     }
 
     post(listPurchaseRequest) {
