@@ -68,3 +68,25 @@ it("#03. should success when search data with filter", function (done) {
             done(e);
         });
 });
+
+it("#03. should success when get expedition report data", function (done) {
+    unitPaymentOrderManager.getExpeditionReport({
+        filter: {
+            no: createdData.no,
+            supplierCode: createdData.supplier.code,
+            divisionCode: createdData.division.code,
+            status: 1,
+            dateFrom: new Date(1995, 1, 23),
+            dateTo: createdData.date,
+        }
+    }, 0)
+        .then((documents) => {
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

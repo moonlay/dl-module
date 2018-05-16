@@ -1062,4 +1062,52 @@ if (unitId !== undefined && unitId !== "") {
                     }
                 });
     }
+
+    getExpeditionReport(paging, offset) {
+        let filter = paging.filter;
+        let filterApply = {};
+
+        if (filter.no)
+            filterApply.no = filter.no;
+
+        if (filter.supplierCode)
+            filterApply['supplier.code'] = filter.supplierCode;
+        
+        if (filter.divisionCode)
+            filterApply['division.code'] = filter.divisionCode;
+
+        if (filter.status)
+            filterApply.position = filter.status;
+
+        if (filter.dateFrom && filter.dateTo) {
+            let validStartDate = new Date(filter.dateFrom);
+            let validEndDate = new Date(filter.dateTo);
+            validStartDate.setHours(validStartDate.getHours() - offset);
+            validEndDate.setHours(23, 59, 59);
+            validEndDate.setHours(validEndDate.getHours() - offset);
+            
+            filterApply.date = {
+                $gte: validStartDate,
+                $lte: validEndDate,
+            };
+        }
+
+        paging.filter = filterApply;
+
+        let _paging = Object.assign({
+            page: 1,
+            size: 20,
+            order: {},
+            filter: {},
+            select: []
+        }, paging);
+
+        let query = this._getQuery(_paging);
+        return this.collection
+            .where(query)
+            .select(_paging.select)
+            .page(_paging.page, _paging.size)
+            .order(_paging.order)
+            .execute();
+    }
 };
