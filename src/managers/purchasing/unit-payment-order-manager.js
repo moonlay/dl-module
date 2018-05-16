@@ -1077,15 +1077,15 @@ if (unitId !== undefined && unitId !== "") {
             filterApply['division.code'] = filter.divisionCode;
 
         if (filter.status)
-            fiter.position = filter.status;
+            filterApply.position = filter.status;
 
         if (filter.dateFrom && filter.dateTo) {
-            let validStartDate = new Date(dateFrom);
-            let validEndDate = new Date(dateTo);
+            let validStartDate = new Date(filter.dateFrom);
+            let validEndDate = new Date(filter.dateTo);
             validStartDate.setHours(validStartDate.getHours() - offset);
             validEndDate.setHours(validEndDate.getHours() - offset);
             
-            filter.date = {
+            filterApply.date = {
                 $gte: validStartDate,
                 $lte: validEndDate,
             };
