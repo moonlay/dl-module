@@ -15,6 +15,9 @@ var generateCode = require('../../utils/code-generator');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 var StorageManager = require('../master/storage-manager');
 var TextileInventoryDocumentManager = require('../inventory/inventory-document-manager');
+var moment = require("moment");
+
+const NUMBER_DESCRIPTION = "Bon Pembelian";
 
 module.exports = class UnitReceiptNoteManager extends BaseManager {
     constructor(db, user) {
@@ -26,6 +29,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         this.supplierManager = new SupplierManager(db, user);
         this.storageManager = new StorageManager(db, user);
         this.textileInventoryDocumentManager = new TextileInventoryDocumentManager(db,user);
+        this.documentNumbers = this.db.collection("document-numbers");
         this.deliveryOrderFields = [
             "no",
             "refNo",
@@ -338,8 +342,60 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
     }
 
     _beforeInsert(unitReceiptNote) {
-        unitReceiptNote.no = generateCode();
-        return Promise.resolve(unitReceiptNote);
+        var monthNow = moment().format("MM");
+        var yearNow = parseInt(moment().format("YY"));
+        var code="";
+        var unitCode=unitReceiptNote.unit ? unitReceiptNote.unit.code : "";
+        if(unitReceiptNote && unitReceiptNote.supplier){
+            code= unitReceiptNote.supplier.import ? "BPI" : "BPL";
+        }
+        var type = code+monthNow+yearNow+unitCode;
+        var query = { "type": type, "description": NUMBER_DESCRIPTION };
+        var fields = { "number": 1, "year": 1 };
+
+        return this.documentNumbers
+            .findOne(query, fields)
+            .then((previousDocumentNumber) => {
+
+                var number = 1;
+
+                if (!unitReceiptNote.no) {
+                    if (previousDocumentNumber) {
+                        var oldYear = previousDocumentNumber.year;
+                        number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
+
+                        unitReceiptNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-${this.pad(number, 3)}`;
+                    } else {
+                        unitReceiptNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-001`;
+                    }
+                }
+
+                var documentNumbersData = {
+                    type: type,
+                    documentNumber: unitReceiptNote.no,
+                    number: number,
+                    year: yearNow,
+                    description: NUMBER_DESCRIPTION
+                };
+
+                var options = { "upsert": true };
+
+                return this.documentNumbers
+                    .updateOne(query, documentNumbersData, options)
+                    .then((id) => {
+                        return Promise.resolve(unitReceiptNote);
+                    })
+            })
+    }
+    
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
     }
 
     _afterInsert(id) {
