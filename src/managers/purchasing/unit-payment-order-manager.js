@@ -1064,7 +1064,7 @@ if (unitId !== undefined && unitId !== "") {
     }
 
     getExpeditionReport(paging, offset) {
-        let filter = pagingfilter;
+        let filter = paging.filter;
         let filterApply = {};
 
         if (filter.no)
