@@ -77,11 +77,10 @@ it("#03. should success when get expedition report data", function (done) {
             divisionCode: createdData.division.code,
             status: 1,
             dateFrom: new Date(1995, 1, 23),
-            dateTo: createdDate.date,
+            dateTo: createdData.date,
         }
     }, 0)
         .then((documents) => {
-            //process documents
             documents.should.have.property("data");
             documents.data.should.be.instanceof(Array);
             documents.data.length.should.not.equal(0);
