@@ -302,9 +302,9 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         var monthNow = moment().format("MM");
         var yearNow = parseInt(moment().format("YY"));
         var code="";
-        var unitCode=unitPaymentQuantityCorrectionNote.unit ? unitPaymentQuantityCorrectionNote.unit.code : "";
-        if(unitPaymentQuantityCorrectionNote && unitPaymentQuantityCorrectionNote.supplier){
-            code= unitPaymentQuantityCorrectionNote.supplier.import ? "NRI" : "NRL";
+        var unitCode=unitPaymentQuantityCorrectionNote.unitPaymentOrder ? unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.code : "";
+        if(unitPaymentQuantityCorrectionNote && unitPaymentQuantityCorrectionNote.unitPaymentOrder){
+            code= unitPaymentQuantityCorrectionNote.unitPaymentOrder.supplier.import ? "NRI" : "NRL";
         }
         var type = code+monthNow+yearNow+unitCode;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
