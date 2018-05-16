@@ -371,9 +371,9 @@ getDataKoreksiHarga(query){
         var monthNow = moment().format("MM");
         var yearNow = parseInt(moment().format("YY"));
         var code="";
-        var unitCode=unitPaymentPriceCorrectionNote.unit ? unitPaymentPriceCorrectionNote.unit.code : "";
-        if(unitPaymentPriceCorrectionNote && unitPaymentPriceCorrectionNote.supplier){
-            code= unitPaymentPriceCorrectionNote.supplier.import ? "NRI" : "NRL";
+        var unitCode=unitPaymentPriceCorrectionNote.unitPaymentOrder ? unitPaymentPriceCorrectionNote.unitPaymentOrder.division.code : "";
+        if(unitPaymentPriceCorrectionNote && unitPaymentPriceCorrectionNote.unitPaymentOrder){
+            code= unitPaymentPriceCorrectionNote.unitPaymentOrder.supplier.import ? "NRI" : "NRL";
         }
         var type = code+monthNow+yearNow+unitCode;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
