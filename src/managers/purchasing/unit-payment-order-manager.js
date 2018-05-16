@@ -1068,7 +1068,7 @@ if (unitId !== undefined && unitId !== "") {
         let filterApply = {};
 
         if (filter.no)
-            filterApply = filter.no;
+            filterApply.no = filter.no;
 
         if (filter.supplierCode)
             filterApply['supplier.code'] = filter.supplierCode;
