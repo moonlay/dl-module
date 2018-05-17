@@ -302,11 +302,11 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         var monthNow = moment().format("MM");
         var yearNow = parseInt(moment().format("YY"));
         var code="";
-        var unitCode=unitPaymentQuantityCorrectionNote.unitPaymentOrder ? unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.code : "";
+        // var unitCode=unitPaymentQuantityCorrectionNote.unitPaymentOrder ? unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.code : "";
         if(unitPaymentQuantityCorrectionNote && unitPaymentQuantityCorrectionNote.unitPaymentOrder){
             code= unitPaymentQuantityCorrectionNote.unitPaymentOrder.supplier.import ? "NRI" : "NRL";
         }
-        var type = code+monthNow+yearNow+unitCode;
+        var type = code+monthNow+yearNow;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
         var fields = { "number": 1, "year": 1 };
 
@@ -321,9 +321,9 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-${this.pad(number, 3)}`;
+                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 4)}`;
                     } else {
-                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-001`;
+                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-0001`;
                     }
                 }
 

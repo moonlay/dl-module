@@ -371,11 +371,11 @@ getDataKoreksiHarga(query){
         var monthNow = moment().format("MM");
         var yearNow = parseInt(moment().format("YY"));
         var code="";
-        var unitCode=unitPaymentPriceCorrectionNote.unitPaymentOrder ? unitPaymentPriceCorrectionNote.unitPaymentOrder.division.code : "";
+        // var unitCode=unitPaymentPriceCorrectionNote.unitPaymentOrder ? unitPaymentPriceCorrectionNote.unitPaymentOrder.division.code : "";
         if(unitPaymentPriceCorrectionNote && unitPaymentPriceCorrectionNote.unitPaymentOrder){
             code= unitPaymentPriceCorrectionNote.unitPaymentOrder.supplier.import ? "NRI" : "NRL";
         }
-        var type = code+monthNow+yearNow+unitCode;
+        var type = code+monthNow+yearNow;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
         var fields = { "number": 1, "year": 1 };
 
@@ -390,9 +390,9 @@ getDataKoreksiHarga(query){
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-${this.pad(number, 3)}`;
+                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 4)}`;
                     } else {
-                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-001`;
+                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}-${code}-0001`;
                     }
                 }
 
