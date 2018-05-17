@@ -178,7 +178,7 @@ it(`#11. should success when update data`, function (done) {
 });
 
 it("#12. should success when search data with filter", function (done) {
-    unitPaymentOrderManager.read({
+    deliveryOrderManager.read({
         keyword: createdData.supplier.name
     })
         .then((documents) => {
