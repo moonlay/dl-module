@@ -401,11 +401,11 @@ if (unitId !== undefined && unitId !== "") {
         var monthNow = moment().format("MM");
         var yearNow = parseInt(moment().format("YY"));
         var code="";
-        var unitCode=unitPaymentOrder.division ? unitPaymentOrder.division.code : "";
+        // var unitCode=unitPaymentOrder.division ? unitPaymentOrder.division.code : "";
         if(unitPaymentOrder && unitPaymentOrder.supplier){
             code= unitPaymentOrder.supplier.import ? "NKI" : "NKL";
         }
-        var type = code+monthNow+yearNow+unitCode;
+        var type = code+monthNow+yearNow;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
         var fields = { "number": 1, "year": 1 };
 
@@ -420,9 +420,9 @@ if (unitId !== undefined && unitId !== "") {
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                        unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-${unitCode}-${this.pad(number, 3)}`;
+                        unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 4)}`;
                     } else {
-                        unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-${unitCode}-001`;
+                        unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-0001`;
                     }
                 }
 
