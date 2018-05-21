@@ -12,7 +12,8 @@ module.exports = function (unitPaymentOrder, offset) {
                 quantity: receiptNoteItem.deliveredQuantity,
                 uom: receiptNoteItem.deliveredUom.unit,
                 price: receiptNoteItem.pricePerDealUnit,
-                duedays: receiptNoteItem.purchaseOrder.purchaseOrderExternal.paymentDueDays
+                duedays: receiptNoteItem.purchaseOrder.purchaseOrderExternal.paymentDueDays,
+                unit: unitPaymentOrderItem.unitReceiptNote.unit ? unitPaymentOrderItem.unitReceiptNote.unit.name : ""
             };
         });
     });
@@ -189,6 +190,10 @@ module.exports = function (unitPaymentOrder, offset) {
         {
             text: 'Nomor Bon Unit',
             style: 'tableHeader'
+        },
+        {
+            text: 'Unit',
+            style: 'tableHeader'
         }
     ];
 
@@ -228,6 +233,9 @@ module.exports = function (unitPaymentOrder, offset) {
             }, {
                 text: item.unitReceiptNoteNo,
                 style: ['size08', 'center']
+            }, {
+                text: item.unit,
+                style: ['size08', 'center']
             }];
     });
 
@@ -236,12 +244,12 @@ module.exports = function (unitPaymentOrder, offset) {
             text: "tidak ada barang",
             style: ['size08', 'center'],
             colSpan: 7
-        }, "", "", "", "", ""]
+        }, "", "", "", "", "",""]
     ];
 
     var table = [{
         table: {
-            widths: ['4%', '25%', '10%', '17%', '20%', '12%', '12%'],
+            widths: ['4%', '25%', '10%', '15%', '16%', '10%', '10%','10%'],
             headerRows: 1,
             body: [].concat([thead], tbody)
         }
