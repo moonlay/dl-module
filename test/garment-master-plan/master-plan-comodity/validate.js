@@ -43,7 +43,7 @@ it("#01. should success when create new data", function (done) {
 
 it("#02. should success when search data with filter", function (done) {
     manager.read({
-        keyword: newData.name
+        keyword: newData.code
     })
         .then((documents) => {
             //process documents
