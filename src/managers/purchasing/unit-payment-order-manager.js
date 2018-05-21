@@ -419,10 +419,15 @@ if (unitId !== undefined && unitId !== "") {
                     if (previousDocumentNumber) {
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
-
-                        unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 4)}`;
+                        if(code=="NKL")
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 4)}`;
+                        else if(code=="NKI")
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 3)}`;
                     } else {
-                        unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-0001`;
+                        if(code=="NKL")
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-0001`;
+                        else if(code=="NKI")
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-001`;
                     }
                 }
 

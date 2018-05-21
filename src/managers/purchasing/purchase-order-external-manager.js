@@ -165,9 +165,9 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                        purchaseOrderExternal.no = `PE-${yearNow}-${monthNow}-${this.pad(number, 4)}`;
+                        purchaseOrderExternal.no = `PE-${yearNow}-${monthNow}-${this.pad(number, 5)}`;
                     } else {
-                        purchaseOrderExternal.no = `PE-${yearNow}-${monthNow}-0001`;
+                        purchaseOrderExternal.no = `PE-${yearNow}-${monthNow}-00001`;
                     }
                 }
 
