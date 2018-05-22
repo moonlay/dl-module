@@ -32,10 +32,12 @@ class InventoryDocumentDataUtil {
                     items: [{
                         productId: product._id,
                         quantity: 1000,
+                        stockPlanning: 1000,
                         uomId: uom._id
                     }, {
                         productId: product2._id,
                         quantity: 1000,
+                        stockPlanning: 1000,
                         uomId: uom._id
                     }]
                 };
@@ -75,7 +77,8 @@ class InventoryDocumentDataUtil {
                     items: [{
                         productId: product._id,
                         quantity: 1000,
-                        uomId: uom._id
+                        uomId: uom._id,
+                        stockPlanning: 1000,
                     }]
                 };
 
@@ -83,7 +86,7 @@ class InventoryDocumentDataUtil {
             });
     }
 
-     getPackingNewTestData() {
+    getPackingNewTestData() {
         return helper
             .getManager(InventoryDocumentManager)
             .then((manager) => {

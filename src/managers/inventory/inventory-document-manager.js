@@ -103,7 +103,8 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                         productId: item.productId,
                         uomId: item.uomId,
                         quantity: item.quantity,
-                        remark:item.remark
+                        stockPlanning: item.stockPlanning,
+                        remark: item.remark
                     };
                     return this.inventoryMovementManager.create(movement);
                 })
@@ -227,7 +228,9 @@ module.exports = class InventoryDocumentManager extends BaseManager {
                 valid.storageName = _storage.name;
                 valid.storageCode = _storage.code;
 
+                // var process = [];
                 for (var item of valid.items) {
+                    // process.push(this.getInventorySummary(item.productId, item.uom, item.storageId))
                     var product = _products.find(product => product._id.toString() === item.productId.toString());
                     var uom = _uoms.find(uom => uom._id.toString() === item.uomId.toString());
 
@@ -237,17 +240,32 @@ module.exports = class InventoryDocumentManager extends BaseManager {
 
                     item.uomId = uom._id;
                     item.uom = uom.unit;
+                    item.stockPlanning = item.stockPlanning;
                 }
 
                 if (!valid.stamp) {
                     valid = new InventoryDocumentModel(valid);
                 }
 
+                // return Promise.all(process).then(res => {
+                // for (var i of valid.items) {
+                //     if (!(res[0].find(data => data.productId == i.productId))) {
+                //         i.stockPlanning = i.quantity;
+                //     }
+                // }
                 valid.stamp(this.user.username, "manager");
                 return Promise.resolve(valid);
-
-
+                // })
             })
+    }
+
+    getInventorySummary(id, uom, storageId) {
+        return new Promise((resolve, reject) => {
+            this.inventorySummaryManager.collection.find({ productId: new ObjectId(id), uom: uom, storageId: new ObjectId(storageId) })
+                .toArray(function (err, result) {
+                    resolve(result);
+                });
+        })
     }
 
     _createIndexes() {

@@ -114,3 +114,19 @@ it('#04. purchase-orders supplier & currency should be the same with one in purc
             done(e);
         });
 });
+
+it("#03. should success when search data with filter", function (done) {
+    purchaseOrderExternalManager.read({
+        keyword: purchaseOrderExternal.supplier.name
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

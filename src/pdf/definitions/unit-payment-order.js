@@ -12,7 +12,7 @@ module.exports = function (unitPaymentOrder, offset) {
                 quantity: receiptNoteItem.deliveredQuantity,
                 uom: receiptNoteItem.deliveredUom.unit,
                 price: receiptNoteItem.pricePerDealUnit,
-                duedays: receiptNoteItem.purchaseOrder.purchaseOrderExternal.paymentDueDays
+                duedays: receiptNoteItem.purchaseOrder.purchaseOrderExternal.paymentDueDays,
             };
         });
     });
@@ -189,7 +189,7 @@ module.exports = function (unitPaymentOrder, offset) {
         {
             text: 'Nomor Bon Unit',
             style: 'tableHeader'
-        }
+        },
     ];
 
     var tbody = items.map(function (item, index) {

@@ -200,17 +200,52 @@ module.exports = class KanbanManager extends BaseManager {
                         }
                         if (_productionOrder) {
                             valid.productionOrderId = _productionOrder._id;
-                            valid.productionOrder = _productionOrder;
+                            // valid.productionOrder = _productionOrder;
+                            
+                            valid.productionOrder._id = _productionOrder._id;
+                            valid.productionOrder.salesContractId = _productionOrder.salesContractId;
+                            valid.productionOrder.buyerId = _productionOrder.buyerId;
+                            valid.productionOrder.buyer._id = _productionOrder.buyerId;
+                            valid.productionOrder.processTypeId = _productionOrder.processTypeId;
+                            valid.productionOrder.orderTypeId = _productionOrder.orderTypeId;
+                            valid.productionOrder.processType.orderTypeId = _productionOrder.processType.orderTypeId;
+                            valid.productionOrder.materialId = _productionOrder.materialId;
+                            valid.productionOrder.material._id = _productionOrder.materialId;
+                            valid.productionOrder.materialConstructionId = _productionOrder.materialConstructionId;
+                            valid.productionOrder.materialConstruction._id = _productionOrder.materialConstructionId;
+                            valid.productionOrder.yarnMaterialId = _productionOrder.yarnMaterialId;
+                            valid.productionOrder.yarnMaterial._id = _productionOrder.yarnMaterialId;
+                            valid.productionOrder.uomId = _productionOrder.uomId;
+
                             valid.cart.uomId = _productionOrder.uomId;
-                            valid.cart.uom = _productionOrder.uom;
+                            valid.cart.uom = {
+                                unit: _productionOrder.uom.unit,
+                            };
                         }
                         if (_uom) {
                             valid.cart.uomId = _uom._id;
-                            valid.cart.uom = _uom;
+                            valid.cart.uom = {
+                                unit: _uom.unit,
+                            };
                         }
 
                         if (valid.oldKanbanId && ObjectId.isValid(valid.oldKanbanId)) {
+                            let cartNumber = valid.oldKanban.cart.cartNumber;
+                            let qty = valid.oldKanban.cart.qty;
+                            let uom = valid.oldKanban.cart.uom.unit;
+                            let pcs = valid.oldKanban.cart.pcs;
+
                             valid.oldKanbanId = new ObjectId(valid.oldKanbanId);
+                            valid.oldKanban = {
+                                cart: {
+                                    qty: qty,
+                                    cartNumber: cartNumber,
+                                    uom: {
+                                        unit: uom,
+                                    },
+                                    pcs: pcs,
+                                }
+                            };
                         }
 
                         if (!valid.stamp) {

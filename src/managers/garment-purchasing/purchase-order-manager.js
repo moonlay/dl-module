@@ -539,7 +539,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             .then((createIndexResults) => {
                 return this._validate(purchaseOrder)
                     .then(validData => {
-                        return this.collection.updateOne({ _id: validData._id }, { $set: { "_deleted": true } })
+                        return this.collection.updateOne({ _id: validData._id }, { $set: { "_deleted": true, "_updatedDate": new Date() } })
                             .then((result) => Promise.resolve(validData._id))
                             .then((purchaseOrderId) => {
                                 return this.purchaseRequestManager.getSingleById(validData.purchaseRequest._id)
@@ -2870,4 +2870,537 @@ var dates = {
             });
     }
 
+getDurationPOIntPoExt(query) {
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                _deleted: false
+            };
+            var postedQuery = {
+                isPosted: true
+            };
+            var closedQuery = {
+                isClosed: true
+            };
+            // Tgl Po Internal
+            var date = {
+                "_createdDate": {
+                    "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                }
+            };
+            var offset = query.offset;
+            
+            var userQuery = {};
+            if (query.user && query.user != "") {
+                userQuery = { 
+                    "_createdBy": query.user 
+                }
+            }
+
+            var unitQuery = {};
+            if (query.unitId && query.unitId != "") {
+                unitQuery = {
+                    "unit._id": new ObjectId(query.unitId)
+                }
+            }
+
+            // Tgl Po External
+            var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [{ "$add": ["$items.purchaseOrderExternal._createdDate", 60 * offset * 60 * 1000] },
+                        {
+                            "$add": [
+                                { "$millisecond": "$items.purchaseOrderExternal._createdDate" },
+                                {
+                                    "$multiply": [
+                                        { "$second": "$items.purchaseOrderExternal._createdDate" },
+                                        1000
+                                    ]
+                                },
+                                {
+                                    "$multiply": [
+                                        { "$minute": "$items.purchaseOrderExternal._createdDate" },
+                                        60, 1000
+                                    ]
+                                },
+                                {
+                                    "$multiply": [
+                                        { "$hour": { "$add": ["$items.purchaseOrderExternal._createdDate", 60 * offset * 60 * 1000] } },
+                                        60, 60, 1000
+                                    ]
+                                }
+                            ]
+                        }
+                        ]
+                    }, {
+                        $subtract: [
+                            { "$add": ["$_createdDate", 60 * offset * 60 * 1000] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$_createdDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$_createdDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$_createdDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$_createdDate", 60 * offset * 60 * 1000] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
+                }, 86400000]
+            };
+            var durationQuery = {};
+            if (query.duration === "0-7 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: { $lt: [dates, 8] },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if (query.duration === "8-14 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: {
+                            "$and": [
+                                { $gte: [dates, 8] },
+                                { $lte: [dates, 14] }
+                            ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if (query.duration === "15-30 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: {
+                            "$and": [
+                                { $gt: [dates, 14] },
+                                { $lte: [dates, 30] }
+                            ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if (query.duration === "> 30 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: { $gt: [dates, 30] },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+
+            var Query = { "$and": [date, deletedQuery, postedQuery, closedQuery, unitQuery, userQuery] };
+
+            this.collection.aggregate([
+                { $unwind: "$items" },
+                { $match: Query },
+                { $redact: durationQuery },
+                {
+                    $project: {
+                        "poIntNo": "$refNo",
+                        "roNo": "$roNo",
+                        "planPO": "$items.refNo",
+                        "artikelNo": "$artikel",
+                        "buyerName": "$buyer.name", 
+                        "unit": "$unit.name",
+                        "category": "$items.category.name",
+                        "productCode": "$items.product.code",
+                        "productName": "$items.remark",
+                        "productQuantity": "$items.dealQuantity",
+                        "productUom": "$items.dealUom.unit",
+                        "productPrice": "$items.pricePerDealUnit",
+                        "supplierCode": "$items.supplier.code",
+                        "supplierName": "$items.supplier.name",
+                        "poIntDate": "$date",
+                        "poIntCreatedDate": "$_createdDate",
+                        "poEksCreatedDate": "$items.purchaseOrderExternal._createdDate",
+                        "expectedDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
+                        "poEksNo": "$items.purchaseOrderExternal.no",
+                        "dateDiff": dates,
+                        "staff": "$items.purchaseOrderExternal._createdBy"
+                    }
+                },
+                { $sort: { "dateDiff": -1 } }
+            ])
+                .toArray().then(report => {
+                    var index = 0;
+                    for (var x of report) {
+                        index++;
+                        x.index = index;
+                    }
+                    report.data = report.slice(parseInt(query.size) * (parseInt(query.page) - 1), parseInt(query.size) + (parseInt(query.size) * (parseInt(query.page) - 1)));
+                    report.info = {
+                        total: report.length,
+                        size: query.size,
+                        count: query.size,
+                        page: query.page
+                    }
+                    resolve(report);
+                });
+        });
+    }
+
+    getXlsDurationPOIntPOExt(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var offset = query.offset;
+        for (var report of result.info) {
+            var dateDiff = Math.ceil(report.dateDiff);
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["No PO Internal"] = report.poIntNo;
+            item["No RO"] = report.roNo;
+            item["Plan PO"] = report.planPO;
+            item["Article / Style"] = report.artikelNo;
+            item["Nama Buyer"] = report.buyerName;
+            item["Unit"] = report.unit;
+            item["Kategori"] = report.category;
+            item["Kode Barang"] = report.productCode;
+            item["Nama Barang"] = report.productName;
+            item["Jumlah Barang"] = report.productQuantity;
+            item["Satuan Barang"] = report.productUom;
+            item["Harga Barang"] = report.productPrice;
+            item["Kode Supplier"] = report.supplierCode;
+            item["Nama Supplier"] = report.supplierName;
+            item["Tanggal PO Internal"] = moment(new Date(report.poIntCreatedDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksCreatedDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).add(7, 'h').format(dateFormat);
+            item["No PO Eksternal"] = report.poEksNo;
+            item["Selisih Tanggal PO Internal - PO Eksternal (hari)"] = dateDiff;
+            item["Nama Staff Pembelian"] = report.staff;
+
+            xls.data.push(item);
+        }
+
+        xls.options = {
+            "No": "number",
+            "No Po Internal": "string",
+            "No RO": "string",
+            "Plan PO": "string",
+            "Article / Style": "string",
+            "Nama Buyer": "string",
+            "Unit": "string",
+            "Kategori": "string",
+            "Kode Barang": "string",
+            "Nama Barang": "string",
+            "Jumlah Barang": "number",
+            "Satuan Barang": "string",
+            "Harga Barang": "number",
+            "Kode Supplier": "string",
+            "Nama Supplier": "string",
+            "Tanggal PO Internal": "string",
+            "Tanggal PO Eksternal": "string",
+            "Tanggal Target Datang": "string",
+            "No PO Eksternal": "string",
+            "Selisih Tanggal PO Internal - PO Eksternal (hari)": "number",
+            "Nama Staff Pembelian": "string"
+        };
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL GARMENT ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL GARMENT ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL GARMENT ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `LAPORAN DURASI PO INTERNAL - PO EKSTERNAL GARMENT.xlsx`;
+
+        return Promise.resolve(xls);
+    }     
+getDurationPoExtDo(query) {
+        return new Promise((resolve, reject) => {
+            var deletedQuery = {
+                "items.purchaseOrderExternal._deleted": false
+            };
+            var postedQuery = {
+                "items.purchaseOrderExternal.isPosted": false
+            };
+            var closedQuery = {
+                "items.purchaseOrderExternal.isClosed": false
+            };
+            // Tgl Po Eksternal
+            var date = {
+                "items.purchaseOrderExternal._createdDate": {
+                    "$gte": (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                    "$lte": (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                }
+            };
+            var offset = query.offset;
+            
+            var userQuery = {};
+            if (query.user && query.user != "") {
+                userQuery = { 
+                    "_createdBy": query.user 
+                }
+            }
+
+            var unitQuery = {};
+            if (query.unitId && query.unitId != "") {
+                unitQuery = {
+                    "unit._id": new ObjectId(query.unitId)
+                }
+            }
+
+            var supplierQuery = {};
+            if (query.supplierId && query.supplierId != ""){
+                supplierQuery = {
+                    "items.supplier._id": new ObjectId(query.supplierId)
+                }
+            }
+
+            // Tgl Po External
+            var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [{ "$add": ["$items.fulfillments.supplierDoDate", 60 * offset * 60 * 1000] },
+                        {
+                            "$add": [
+                                { "$millisecond": "$items.fulfillments.supplierDoDate" },
+                                {
+                                    "$multiply": [
+                                        { "$second": "$items.fulfillments.supplierDoDate" },
+                                        1000
+                                    ]
+                                },
+                                {
+                                    "$multiply": [
+                                        { "$minute": "$items.fulfillments.supplierDoDate" },
+                                        60, 1000
+                                    ]
+                                },
+                                {
+                                    "$multiply": [
+                                        { "$hour": { "$add": ["$items.fulfillments.supplierDoDate", 60 * offset * 60 * 1000] } },
+                                        60, 60, 1000
+                                    ]
+                                }
+                            ]
+                        }
+                        ]
+                    }, {
+                        $subtract: [
+                            { "$add": ["$items.purchaseOrderExternal._createdDate" , 60 * offset * 60 * 1000] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$items.purchaseOrderExternal._createdDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$items.purchaseOrderExternal._createdDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$items.purchaseOrderExternal._createdDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$items.purchaseOrderExternal._createdDate", 60 * offset * 60 * 1000] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
+                }, 86400000]
+            };
+            var durationQuery = {};
+           if (query.duration === "0-30 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: { $lt: [dates, 31] },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if (query.duration === "31-60 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: {
+                            "$and": [
+                                { $gte: [dates, 31] },
+                                { $lte: [dates, 60] }
+                            ]
+                        },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+            else if (query.duration === "> 60 hari") {
+                durationQuery = {
+                    $cond: {
+                        if: { $gt: [dates, 60] },
+                        then: "$$KEEP",
+                        else: "$$PRUNE"
+                    }
+                }
+            }
+
+            var Query = { "$and": [date, deletedQuery, unitQuery, supplierQuery, userQuery] };
+            this.collection.aggregate([
+                { $unwind: "$items" },
+                { $unwind: "$items.fulfillments"},
+                { $match: Query },
+                { $redact: durationQuery },
+                {
+                    $project: {
+                        "poIntNo": "$refNo",
+                        "roNo": "$roNo",
+                        "planPO": "$items.refNo",
+                        "artikelNo": "$artikel",
+                        "buyerName": "$buyer.name", 
+                        "unit": "$unit.name",
+                        "category": "$items.category.name",
+                        "productCode": "$items.product.code",
+                        "productName": "$items.remark",
+                        "productQuantity": "$items.dealQuantity",
+                        "productUom": "$items.dealUom.unit",
+                        "productPrice": "$items.pricePerDealUnit",
+                        "supplierCode": "$items.supplier.code",
+                        "supplierName": "$items.supplier.name",
+                        "poIntDate": "$date",
+                        "poIntCreatedDate": "$_createdDate",
+                        "poEksCreatedDate": "$items.purchaseOrderExternal._createdDate",
+                        "expectedDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
+                        "poEksNo": "$items.purchaseOrderExternal.no",
+                        "deliveryOrderNo": "$items.fulfillments.deliveryOrderNo",
+                        "supplierDoDate": "$items.fulfillments.supplierDoDate",
+                        "dateDiff": dates,
+                        "staff": "$items.purchaseOrderExternal._createdBy"
+                    }
+                },
+                { $sort: {"items.purchaseOrderExternal._createdDate": -1}}
+            ])
+                .toArray().then(report => {
+                    var index = 0;
+                    for (var x of report) {
+                        index++;
+                        x.index = index;
+                    }
+                    report.data = report.slice(parseInt(query.size) * (parseInt(query.page) - 1), parseInt(query.size) + (parseInt(query.size) * (parseInt(query.page) - 1)));
+                    report.info = {
+                        total: report.length,
+                        size: query.size,
+                        count: query.size,
+                        page: query.page
+                    }
+                    resolve(report);
+                });
+        });
+    }
+
+    getXlsDurationPoExtDo(result, query) {
+        var xls = {};
+        xls.data = [];
+        xls.options = [];
+        xls.name = '';
+
+        var index = 0;
+        var dateFormat = "DD/MM/YYYY";
+        var offset = query.offset;
+        for (var report of result.data) {
+            var dateDiff = Math.ceil(report.dateDiff);
+            index++;
+            var item = {};
+            item["No"] = index;
+            item["No PO Internal"] = report.poIntNo;
+            item["No RO"] = report.roNo;
+            item["Plan PO"] = report.planPO;
+            item["Article / Style"] = report.artikelNo;
+            item["Nama Buyer"] = report.buyerName;
+            item["Unit"] = report.unit;
+            item["Kategori"] = report.category;
+            item["Kode Barang"] = report.productCode;
+            item["Nama Barang"] = report.productName;
+            item["Jumlah Barang"] = report.productQuantity;
+            item["Satuan Barang"] = report.productUom;
+            item["Harga Barang"] = report.productPrice;
+            item["Kode Supplier"] = report.supplierCode;
+            item["Nama Supplier"] = report.supplierName;
+            item["Tanggal PO Internal"] = moment(new Date(report.poIntCreatedDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal PO Eksternal"] = moment(new Date(report.poEksCreatedDate)).add(7, 'h').format(dateFormat);
+            item["Tanggal Target Datang"] = moment(new Date(report.expectedDate)).add(7, 'h').format(dateFormat);
+            item["No PO Eksternal"] = report.poEksNo;
+            item["No Surat Jalan"] = report.deliveryOrderNo;
+            item["Tanggal Surat Jalan"] = moment(new Date(report.supplierDoDate)).add(7, 'h').format(dateFormat);
+            item["Selisih Tanggal PO Eksternal - Surat Jalan  (hari)"] = dateDiff;
+            item["Nama Staff Pembelian"] = report.staff;
+
+            xls.data.push(item);
+        }
+
+        xls.options = {
+            "No": "number",
+            "No Po Internal": "string",
+            "No RO": "string",
+            "Plan PO": "string",
+            "Article / Style": "string",
+            "Nama Buyer": "string",
+            "Unit": "string",
+            "Kategori": "string",
+            "Kode Barang": "string",
+            "Nama Barang": "string",
+            "Jumlah Barang": "number",
+            "Satuan Barang": "string",
+            "Harga Barang": "number",
+            "Kode Supplier": "string",
+            "Nama Supplier": "string",
+            "Tanggal PO Internal": "string",
+            "Tanggal PO Eksternal": "string",
+            "Tanggal Target Datang": "string",
+            "No PO Eksternal": "string",
+            "No Surat Jalan": "string",
+            "Tanggal Surat Jalan": "string",
+            "Selisih Tanggal PO Eksternal - Surat Jalan (hari)": "number",
+            "Nama Staff Pembelian": "string"
+        };
+
+        if (query.dateFrom && query.dateTo) {
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN  GARMENT ${moment(new Date(query.dateFrom)).format(dateFormat)} - ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (!query.dateFrom && query.dateTo) {
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN GARMENT ${moment(new Date(query.dateTo)).format(dateFormat)}.xlsx`;
+        }
+        else if (query.dateFrom && !query.dateTo) {
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN GARMENT ${moment(new Date(query.dateFrom)).format(dateFormat)}.xlsx`;
+        }
+        else
+            xls.name = `LAPORAN DURASI PO EKSTERNAL - SURAT JALAN GARMENT.xlsx`;
+
+        return Promise.resolve(xls);
+    }    
 };

@@ -296,3 +296,20 @@ it('#17. should success when get data detail report Per Staff with date', functi
         });
 
 });
+
+
+it('#18. should success when get data report Per Supplier Per Unit Per Kategori with date', function (done) {
+    var dateFrom = null;
+    var dateTo   = null;
+    var unitId     = null;
+    var categoryId = null;
+    var offset = 7;
+    purchaseOrderManager.getDataPOIntNotPostMonitoring(unitId, categoryId, dateFrom, dateTo, offset)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});

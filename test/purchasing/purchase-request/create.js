@@ -90,3 +90,19 @@ it('#02. should error when create new data using duplicate item', function (done
             done(e);
         });
 });
+
+it("#03. should success when search data with filter", function (done) {
+    purchaseRequestManager.read({
+        keyword: purchaseRequest.unit.name
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});

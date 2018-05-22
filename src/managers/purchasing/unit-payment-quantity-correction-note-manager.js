@@ -15,6 +15,8 @@ var generateCode = require('../../utils/code-generator');
 var UnitReceiptNoteManager = require('./unit-receipt-note-manager');
 var moment = require('moment');
 
+const NUMBER_DESCRIPTION = "Nota Koreksi"
+
 module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
@@ -23,6 +25,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         this.purchaseOrderManager = new PurchaseOrderManager(db, user);
         this.purchaseOrderExternalManager = new PurchaseOrderExternalManager(db, user);
         this.unitReceiptNoteManager = new UnitReceiptNoteManager(db, user);
+        this.documentNumbers = this.db.collection("document-numbers");
     }
     
     getMonitoringKoreksi(query){
@@ -285,11 +288,65 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         });
     }
 
+    pad(number, length) {
+
+        var str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+
+        return str;
+    }
+
     _beforeInsert(unitPaymentQuantityCorrectionNote) {
-        unitPaymentQuantityCorrectionNote.no = generateCode("correctionPrice");
-        if (unitPaymentQuantityCorrectionNote.unitPaymentOrder.useIncomeTax)
-            unitPaymentQuantityCorrectionNote.returNoteNo = generateCode("returCode");
-        return Promise.resolve(unitPaymentQuantityCorrectionNote)
+        var monthNow = moment().format("MM");
+        var yearNow = parseInt(moment().format("YY"));
+        var code="";
+        // var unitCode=unitPaymentQuantityCorrectionNote.unitPaymentOrder ? unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.code : "";
+        if(unitPaymentQuantityCorrectionNote && unitPaymentQuantityCorrectionNote.unitPaymentOrder){
+            code= unitPaymentQuantityCorrectionNote.unitPaymentOrder.supplier.import ? "NRI" : "NRL";
+        }
+        var type = code+monthNow+yearNow;
+        var query = { "type": type, "description": NUMBER_DESCRIPTION };
+        var fields = { "number": 1, "year": 1 };
+
+        return this.documentNumbers
+            .findOne(query, fields)
+            .then((previousDocumentNumber) => {
+
+                var number = 1;
+
+                if (!unitPaymentQuantityCorrectionNote.no) {
+                    if (previousDocumentNumber) {
+                        var oldYear = previousDocumentNumber.year;
+                        number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
+
+                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 4)}`;
+                    } else {
+                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-0001`;
+                    }
+                }
+
+                var documentNumbersData = {
+                    type: type,
+                    documentNumber: unitPaymentQuantityCorrectionNote.no,
+                    number: number,
+                    year: yearNow,
+                    description: NUMBER_DESCRIPTION
+                };
+
+                var options = { "upsert": true };
+
+                return this.documentNumbers
+                    .updateOne(query, documentNumbersData, options)
+                    .then((id) => {
+                        return Promise.resolve(unitPaymentQuantityCorrectionNote);
+                    })
+            })
+        // unitPaymentQuantityCorrectionNote.no = generateCode("correctionPrice");
+        // if (unitPaymentQuantityCorrectionNote.unitPaymentOrder.useIncomeTax)
+        //     unitPaymentQuantityCorrectionNote.returNoteNo = generateCode("returCode");
+        // return Promise.resolve(unitPaymentQuantityCorrectionNote)
     }
 
     _afterInsert(id) {

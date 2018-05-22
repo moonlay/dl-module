@@ -278,4 +278,5 @@ module.exports = class InventorySummaryManager extends BaseManager {
 
         return Promise.resolve(xls);
     }
+
 }

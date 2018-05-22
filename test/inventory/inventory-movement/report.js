@@ -40,6 +40,59 @@ it("#01. should success when create new data", function (done) {
         });
 });
 
+it("#01.(2) should success when create new data", function (done) {
+    InventoryMovement.getNewTestData2()
+        .then((data) =>
+            inventoryMovementManager.create(data))
+        .then((id) => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#01.(3) should success when create new data", function (done) {
+    InventoryMovement.getNewTestData3()
+        .then((data) => inventoryMovementManager.create(data))
+        .then((id) => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#01.(4) should success when create new data", function (done) {
+    InventoryMovement.getNewTestData4()
+        .then((data) => inventoryMovementManager.create(data))
+        .then((id) => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#01.(5) should success when create new data", function (done) {
+    InventoryMovement.getNewTestData5()
+        .then((data) => inventoryMovementManager.create(data))
+        .then((id) => {
+            id.should.be.Object();
+            createdId = id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 var createdData;
 it(`#02. should success when get created data with id`, function (done) {
     inventoryMovementManager.getSingleById(createdId)

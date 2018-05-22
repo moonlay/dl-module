@@ -176,3 +176,19 @@ it(`#11. should success when update data`, function (done) {
             done(e);
         });
 });
+
+it("#12. should success when search data with filter", function (done) {
+    deliveryOrderManager.read({
+        keyword: createdData.supplier.name
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
