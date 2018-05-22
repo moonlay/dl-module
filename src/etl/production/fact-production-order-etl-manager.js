@@ -121,14 +121,14 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
             var materialWidth = item.materialWidth ? item.materialWidth : null;
 
             return {
-                salesContractNo: item.salesContractNo ? `'${item.salesContractNo}'` : null,
-                productionOrderNo: item.orderNo ? `'${item.orderNo}'` : null,
-                orderType: item.orderType && item.orderType.name ? `'${item.orderType.name}'` : null,
+                salesContractNo: item.salesContractNo ? `'${item.salesContractNo.replace(/'/g, '"')}'` : null,
+                productionOrderNo: item.orderNo ? `'${item.orderNo.replace(/'/g, '"')}'` : null,
+                orderType: item.orderType && item.orderType.name ? `'${item.orderType.name.replace(/'/g, '"')}'` : null,
                 processType: item.processType && item.processType.name ? `'${item.processType.name.replace(/'/g, '"')}'` : null,
                 material: item.material && item.material.name ? `'${item.material.name.replace(/'/g, '"')}'` : null,
                 materialConstruction: item.materialConstruction && item.materialConstruction.name ? `'${item.materialConstruction.name.replace(/'/g, '"')}'` : null,
                 yarnMaterialNo: item.yarnMaterial ? `'${item.yarnMaterial.name.replace(/'/g, '"')}'` : null,
-                materialWidth: item.materialWidth ? `'${item.materialWidth}'` : null,
+                materialWidth: item.materialWidth ? `'${item.materialWidth.replace(/'/g, '"')}'` : null,
                 orderQuantity: item.orderQuantity ? `${item.orderQuantity}` : null,
                 orderUom: item.uom && item.uom.unit ? `'${item.uom.unit.replace(/'/g, '"')}'` : null,
                 buyer: item.buyer ? `'${item.buyer.name.replace(/'/g, '"')}'` : null,
@@ -137,11 +137,11 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
                 createdDate: item._createdDate ? `'${moment(item._createdDate).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                 totalOrderConvertion: item.orderQuantity ? `${this.orderQuantityConvertion(orderUom, orderQuantity)}` : null,
                 construction: this.joinConstructionString(material.replace(/'/g, '"'), materialConstruction.replace(/'/g, '"'), yarnMaterialNo.replace(/'/g, '"'), materialWidth),
-                buyerCode: item.buyer ? `'${item.buyer.code}'` : null,
+                buyerCode: item.buyer ? `'${item.buyer.code.replace(/'/g, '"')}'` : null,
                 cartQuantity: null,
                 kanbanCode: null,
                 deleted: `'${item._deleted}'`,
-                username: item.account && item.account.username ? `'${item.account.username}'` : null,
+                username: item.account && item.account.username ? `'${item.account.username.replace(/'/g, '"')}'` : null,
             }
         });
         return Promise.resolve([].concat.apply([], result));
