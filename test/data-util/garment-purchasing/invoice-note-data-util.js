@@ -133,7 +133,7 @@ class InvoiceNoteDataUtil {
                             incomeTaxDate: new Date(),
                             vatNo: `UT/PPH/${codeGenerator()}`,
                             vatDate: new Date(),
-                            useVat: true,
+                            useVat: false,
                             vat: vat,
                             isPayTax: false,
                             hasInternNote: false,

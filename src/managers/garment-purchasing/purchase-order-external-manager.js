@@ -861,7 +861,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                     })
                     for (var pr of prId) {
                         if (ObjectId.isValid(pr)) {
-                            getPurchaseRequests.push(this.purchaseRequestManager.getSingleByIdOrDefault(pr, ["artikel", "items.product._id", "items.colors", "no", "_id"]));
+                            getPurchaseRequests.push(this.purchaseRequestManager.getSingleByIdOrDefault(pr, ["artikel", "items.product._id", "items.colors", "no", "_id", "shipmentDate"]));
                         }
                     }
                     Promise.all(getPurchaseRequests)
@@ -871,6 +871,7 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                                 var _prItem = _pr.items.find((prItem) => prItem.product._id.toString() === item.product._id.toString())
                                 item.colors = _prItem.colors || []
                                 item.artikel = _pr.artikel;
+                                item.shipmentDate = _pr.shipmentDate;
                             }
 
                             var getDefinition;
@@ -1272,11 +1273,16 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 isPosted: true
             };
 
+            var POStatus = {
+                "status.name": "ARRIVING"
+            };
+            
+            var query = [deleted, isPosted, POStatus];
+
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
 
-            var query = [deleted, isPosted];
-
+            
             if (startdate && enddate) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
@@ -1315,14 +1321,15 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
             this.collection.aggregate(
                 [{
                     $match: match
-                }, {
+                },
+                {
                     $unwind: "$items"
                 }, 
                 {
                     $lookup: {
                         from: POColl,
-                        foreignField: "no",
-                        localField: "items.poNo",
+                        foreignField: "refNo",
+                        localField: "items.prNo",
                         as: "PO"
                     },
                 },
@@ -1388,7 +1395,6 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 });
         });
     }
-
 
     getPOExtReport(query) {
         return new Promise((resolve, reject) => {

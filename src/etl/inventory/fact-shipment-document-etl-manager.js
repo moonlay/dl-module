@@ -118,22 +118,22 @@ module.exports = class FPShipmentDocumentEtlManager extends BaseManager {
                             if (item.packingReceiptItems && item.packingReceiptItems.length > 0) {
                                 for (var packingReceiptItem of item.packingReceiptItems) {
                                     var obj = {
-                                        buyerCode: shipment.buyerCode ? `'${shipment.buyerCode}'` : null,
-                                        buyerName: shipment.buyerName ? `'${shipment.buyerName}'` : null,
-                                        buyerType: shipment.buyerType ? `'${shipment.buyerType}'` : null,
-                                        shipmentCode: shipment.code ? `'${shipment.code}'` : null,
+                                        buyerCode: shipment.buyerCode ? `'${shipment.buyerCode.replace(/'/g, '"')}'` : null,
+                                        buyerName: shipment.buyerName ? `'${shipment.buyerName.replace(/'/g, '"')}'` : null,
+                                        buyerType: shipment.buyerType ? `'${shipment.buyerType.replace(/'/g, '"')}'` : null,
+                                        shipmentCode: shipment.code ? `'${shipment.code.replace(/'/g, '"')}'` : null,
                                         deliveryDate: shipment.deliveryDate ? `'${moment(shipment.deliveryDate).format("YYYY-MM-DD")}'` : null,
                                         isVoid: `'${shipment.isVoid}'`,
-                                        designCode: detail.designCode ? `'${detail.designCode}'` : null,
-                                        designNumber: detail.designNumber ? `'${detail.designNumber}'` : null,
-                                        productionOrderNo: detail.productionOrderNo ? `'${detail.productionOrderNo}'` : null,
-                                        productionOrderType: detail.productionOrderType ? `'${detail.productionOrderType}'` : null,
-                                        colorType: packingReceiptItem.colorType ? `'${packingReceiptItem.colorType}'` : null,
+                                        designCode: detail.designCode ? `'${detail.designCode.replace(/'/g, '"')}'` : null,
+                                        designNumber: detail.designNumber ? `'${detail.designNumber.replace(/'/g, '"')}'` : null,
+                                        productionOrderNo: detail.productionOrderNo ? `'${detail.productionOrderNo.replace(/'/g, '"')}'` : null,
+                                        productionOrderType: detail.productionOrderType ? `'${detail.productionOrderType.replace(/'/g, '"')}'` : null,
+                                        colorType: packingReceiptItem.colorType ? `'${packingReceiptItem.colorType.replace(/'/g, '"')}'` : null,
                                         length: packingReceiptItem.length ? `${packingReceiptItem.length}` : null,
-                                        productCode: packingReceiptItem.productCode ? `'${packingReceiptItem.productCode}'` : null,
-                                        productName: packingReceiptItem.productName ? `'${packingReceiptItem.productName}'` : null,
+                                        productCode: packingReceiptItem.productCode ? `'${packingReceiptItem.productCode.replace(/'/g, '"')}'` : null,
+                                        productName: packingReceiptItem.productName ? `'${packingReceiptItem.productName.replace(/'/g, '"')}'` : null,
                                         quantity: packingReceiptItem.quantity ? `${packingReceiptItem.quantity}` : null,
-                                        uomUnit: packingReceiptItem.uomUnit ? `'${packingReceiptItem.uomUnit}'` : null,
+                                        uomUnit: packingReceiptItem.uomUnit ? `'${packingReceiptItem.uomUnit.replace(/'/g, '"')}'` : null,
                                         weight: packingReceiptItem.weight ? `${packingReceiptItem.weight}` : null
                                     }
 

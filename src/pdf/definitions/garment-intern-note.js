@@ -121,7 +121,7 @@ module.exports = function (data, offset) {
                             }, {
                                 width: '*',
                                 text: data.no,
-                                style: ['size06']
+                                style: ['size08']
                             }]
                         },
                         {

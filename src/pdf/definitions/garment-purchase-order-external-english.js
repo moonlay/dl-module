@@ -22,12 +22,14 @@ module.exports = function (pox, offset) {
             prNo: poItem.prNo,
             prRefNo: poItem.prRefNo,
             artikel: poItem.artikel,
+            roNo: poItem.roNo,
             quantity: poItem.dealQuantity,
             uom: poItem.dealUom.unit,
             price: poItem.pricePerDealUnit,
             remark: poItem.remark,
             isOverBudget: poItem.isOverBudget,
-            colors: poItem.colors || []
+            colors: poItem.colors || [],
+            shipmentDate: poItem.shipmentDate
         };
     });
 
@@ -64,13 +66,9 @@ module.exports = function (pox, offset) {
                 style: ['size07', 'bold']
             }, {
                 stack: [{
-                    text: iso,
-                    alignment: "right",
-                    style: ['size08']
-                }, {
                     text: `Nomor PO : ${number}${pox.isOverBudget ? '-OB' : ''}`,
                     alignment: "right",
-                    style: ['size09', 'bold']
+                    style: ['size11', 'bold']
                 }]
 
             }
@@ -124,6 +122,9 @@ module.exports = function (pox, offset) {
     };
 
     var theadOpt = [{
+        text: 'NO',
+        style: ['size08', 'bold', 'center']
+    },{
         text: 'DESCRIPTION OF GOODS',
         style: ['size08', 'bold', 'center']
     }, {
@@ -145,15 +146,18 @@ module.exports = function (pox, offset) {
     var tbodyText = [];
 
     if (pox.category === "FABRIC") {
-        tbodyText = items.map(function (item) {
+        tbodyText = items.map(function (item, index) {
             return [{
+                text: (index + 1),
+                style: ['size08', 'center']
+            },{
                 stack: [item.productCode, item.productName, `COMPOSITION: ${item.productDesc}`, `CONTRUCTION: ${item.productProperties[0]}`, `YARN: ${item.productProperties[1]}`, `FINISH WIDTH: ${item.productProperties[2]}`, "QUALITY : EXPORT QUALITY", `DESIGN/COLOUR : ${item.colors.join(', ')}`, `Remark : ${item.remark}`, {
                     text: `${item.prNo} - ${item.prRefNo}${item.isOverBudget ? "-OB" : ""}`,
                     style: 'bold'
                 }],
                 style: ['size08']
             }, {
-                text: item.artikel,
+                text: `${item.artikel} - ${item.roNo} - ${moment(item.shipmentDate).add(offset, 'h').format("MMMM Do YYYY")} `,
                 style: ['size08', 'left']
             }, {
                 text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
@@ -181,15 +185,18 @@ module.exports = function (pox, offset) {
             }];
         });
     } else {
-        tbodyText = items.map(function (item) {
+        tbodyText = items.map(function (item, index) {
             return [{
+                text: (index + 1),
+                style: ['size08', 'center']
+            },{
                 stack: [`${item.productCode} - ${item.productName}`, item.productDesc, item.remark, {
                     text: `${item.prNo} - ${item.prRefNo}${item.isOverBudget ? "-OB" : ""}`,
                     style: 'bold'
                 }],
                 style: ['size08']
             }, {
-                text: item.artikel,
+                text: `${item.artikel} - ${item.roNo} - ${moment(item.shipmentDate).add(offset, 'h').format("MMMM Do YYYY")} `,
                 style: ['size08', 'left']
             }, {
                 text: parseFloat(item.quantity).toLocaleString(locale, locale.decimal) + ' ' + item.uom,
@@ -249,7 +256,7 @@ module.exports = function (pox, offset) {
 
 
     var tfootTextImport = [
-        [{
+        [null,{
             text: 'TOTAL QUANTITY',
             style: ['size08', 'bold', 'right'],
         }, null, {
@@ -275,7 +282,7 @@ module.exports = function (pox, offset) {
 
     var table = [{
         table: {
-            widths: ['25%', '22%', '13%', '15%', '25%'],
+            widths: ['5%','25%', '22%', '11%', '15%', '20%'],
             headerRows: 1,
             body: [].concat([thead], tbodyText, tfoot)
         }

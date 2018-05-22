@@ -103,18 +103,22 @@ module.exports = class DailyOperationManager extends BaseManager {
             var getStep = valid.stepId && ObjectId.isValid(valid.stepId) ? this.stepManager.getSingleByIdOrDefault(new ObjectId(valid.stepId)) : Promise.resolve(null);
             var getBadOutput = [];
             var dataReasons = valid.badOutputReasons || [];
+            var getMachineReason = [];
             for (var a of dataReasons) {
                 if (a.badOutputReasonId && ObjectId.isValid(a.badOutputReasonId))
                     getBadOutput.push(this.badOutputReasonManager.getSingleByIdOrDefault(new ObjectId(a.badOutputReasonId)))
+                if (a.machineId && ObjectId.isValid(a.machineId))
+                    getMachineReason.push(this.machineManager.getSingleByIdOrDefault(new ObjectId(a.machineId)))
             }
-            Promise.all([getKanban, getMachine, getStep, getDaily, thisDaily].concat(getBadOutput))
+            Promise.all([getKanban, getMachine, getStep, getDaily, thisDaily].concat(getBadOutput, getMachineReason))
                 .then(results => {
                     var _kanban = results[0];
                     var _machine = results[1];
                     var _step = results[2];
                     var _dailyData = results[3];
                     var _daily = results[4];
-                    var _badOutput = results.slice(5, results.length) || [];
+                    var _badOutput = results.slice(5, 5 + getBadOutput.length) || [];
+                    var _machineReasons = results.slice(5 + getBadOutput.length, results.length) || [];
                     var now = new Date();
                     var tempInput;
                     var tempOutput;
@@ -395,19 +399,19 @@ module.exports = class DailyOperationManager extends BaseManager {
                                 var lengthTotal = 0;
                                 var valueArr = valid.badOutputReasons.map(function (item) { return item.badOutputReasonId ? item.badOutputReasonId.toString() : "" });
 
-                                var itemDuplicateErrors = new Array(valueArr.length);
-                                valueArr.some(function (item, idx) {
-                                    var itemError = {};
-                                    if (valueArr.indexOf(item) != idx) {
-                                        itemError["badOutputReason"] = i18n.__("Ada data duplikasi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"Nama barang tidak boleh kosong";
-                                    }
-                                    if (Object.getOwnPropertyNames(itemError).length > 0) {
-                                        itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
-                                        itemDuplicateErrors[idx] = itemError;
-                                    } else {
-                                        itemDuplicateErrors[idx] = itemError;
-                                    }
-                                });
+                                // var itemDuplicateErrors = new Array(valueArr.length);
+                                // valueArr.some(function (item, idx) {
+                                //     var itemError = {};
+                                //     if (valueArr.indexOf(item) != idx) {
+                                //         itemError["badOutputReason"] = i18n.__("Ada data duplikasi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"Nama barang tidak boleh kosong";
+                                //     }
+                                //     if (Object.getOwnPropertyNames(itemError).length > 0) {
+                                //         itemDuplicateErrors[valueArr.indexOf(item)] = itemError;
+                                //         itemDuplicateErrors[idx] = itemError;
+                                //     } else {
+                                //         itemDuplicateErrors[idx] = itemError;
+                                //     }
+                                // });
                                 for (var a of valid.badOutputReasons) {
                                     var itemError = {};
                                     var _index = valid.badOutputReasons.indexOf(a);
@@ -427,9 +431,17 @@ module.exports = class DailyOperationManager extends BaseManager {
                                         itemError["badOutputReason"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"keterangan bad output tidak boleh kosong";
                                     else if (!dataBadOutput)
                                         itemError["badOutputReason"] = i18n.__("Data Keterangan Bad Output tidak ditemukan", i18n.__("DailyOperation.badOutputReasons.badOutputReason._:BadOutputReason")); //"keterangan bad output tidak boleh kosong";
-                                    else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
-                                        itemError["badOutputReason"] = itemDuplicateErrors[_index].badOutputReason;
+                                    // else if (Object.getOwnPropertyNames(itemDuplicateErrors[_index]).length > 0) {
+                                    //     itemError["badOutputReason"] = itemDuplicateErrors[_index].badOutputReason;
+                                    // }
+                                    function searchMachine(params) {
+                                        return !params ? null : params.code === a.machine.code;
                                     }
+                                    var dataBadOutputMachine = _machineReasons.find(searchMachine);
+                                    if (!a.machineId || a.machineId === "")
+                                        itemError["machine"] = i18n.__("Harus diisi", i18n.__("DailyOperation.badOutputReasons.machine._:Machine")); //"mesin penyebab bad output tidak boleh kosong";
+                                    else if (!dataBadOutputMachine)
+                                        itemError["machine"] = i18n.__("Data Mesin Penyebab Bad Output tidak ditemukan", i18n.__("DailyOperation.badOutputReasons.machine._:Machine")); //"mesin penyebab bad output tidak boleh kosong";
                                     itemErrors.push(itemError);
                                 }
                                 if (lengthTotal !== badOutput)
@@ -494,12 +506,19 @@ module.exports = class DailyOperationManager extends BaseManager {
                                     return !params ? null : params.code === a.badOutputReason.code;
                                 }
                                 var dataBadOutput = _badOutput.find(searchItem);
+
+                                function searchMachine(params) {
+                                    return !params ? null : params.code === a.machine.code;
+                                }
+                                var dataBadOutputMachine = _machineReasons.find(searchMachine);
                                 var data = new BadOutputReasonItem({
                                     length: a.length,
                                     action: a.action,
                                     description: a.description,
                                     badOutputReasonId: new ObjectId(dataBadOutput._id),
-                                    badOutputReason: dataBadOutput
+                                    badOutputReason: dataBadOutput,
+                                    machineId: new ObjectId(a.machineId),
+                                    machine: dataBadOutputMachine
                                 })
                                 data._createdDate = dateNow;
                                 data.stamp(this.user.username, "manager")
@@ -733,6 +752,167 @@ module.exports = class DailyOperationManager extends BaseManager {
     //         });
     // }
 
+    // getDailyOperationReport(query) {
+    //     return new Promise((resolve, reject) => {
+    //         var date = new Date();
+    //         var dateString = moment(date).format('YYYY-MM-DD');
+    //         var dateNow = new Date(dateString);
+    //         var dateBefore = dateNow.setDate(dateNow.getDate() - 30);
+    //         var date = {
+    //             "dateInput": {
+    //                 "$gte": (!query || !query.dateFrom ? (new Date(dateBefore)) : (new Date(query.dateFrom))),
+    //                 "$lte": (!query || !query.dateTo ? date : (new Date(query.dateTo + "T23:59")))
+    //             },
+    //             "_deleted": false
+    //         };
+    //         var kanbanQuery = {};
+    //         if (query.kanban) {
+    //             kanbanQuery = {
+    //                 "kanbanId": new ObjectId(query.kanban)
+    //             };
+    //         }
+    //         var machineQuery = {};
+    //         if (query.machine) {
+    //             machineQuery = {
+    //                 "machineId": new ObjectId(query.machine)
+    //             };
+    //         }
+    //         var order = {
+    //             "dateInput": -1
+    //         };
+    //         var QueryInput = { "$and": [date, machineQuery, kanbanQuery, { "type": "input" }] };
+
+    //         var selectedFields = {
+    //             "code": 1,
+    //             "kanban.productionOrder.orderNo": 1,
+    //             "kanban.cart.cartNumber": 1,
+    //             "kanban.isReprocess": 1,
+    //             "machine.name": 1,
+    //             "step.process": 1,
+    //             "kanban.productionOrder.material.name": 1,
+    //             "kanban.selectedProductionOrderDetail.colorRequest": 1,
+    //             "kanban.productionOrder.finishWidth": 1,
+    //             "kanban.productionOrder.processType.name": 1,
+    //             "dateInput": 1,
+    //             "timeInput": 1,
+    //             "input": 1,
+    //             "dateOutput": 1,
+    //             "timeOutput": 1,
+    //             "goodOutput": 1,
+    //             "badOutput": 1,
+    //             "badOutputDescription": 1,
+    //             "action": 1,
+    //             "badOutputReasons.badOutputReason.reason": 1,
+    //             "badOutputReasons.precentage": 1,
+    //             "badOutputReasons.length": 1,
+    //             "badOutputReasons.action": 1
+    //         }
+
+    //         this.collection
+    //             .find({ $query: QueryInput, $orderby: order }, selectedFields)
+    //             .toArray()
+    //             .then(input => {
+    //                 var itemCode = input.map(function (item) { return item.code });
+    //                 var QueryOutput = { "$and": [{ "code": { "$in": itemCode } }, { "type": "output" }, { "_deleted": false }] };
+    //                 this.collection
+    //                     .find({ $query: QueryOutput, $orderby: order }, selectedFields)
+    //                     .toArray()
+    //                     .then(output => {
+    //                         var data = {
+    //                             data: [],
+    //                             count: 0,
+    //                             size: 0,
+    //                             total: 0,
+    //                             page: 0
+    //                         }
+    //                         var dataTemp = [];
+    //                         for (var a of input) {
+    //                             var tamp = a;
+    //                             function searchItem(params) {
+    //                                 return !params ? null : params.code === a.code;
+    //                             }
+    //                             var dataOutput = output.find(searchItem);
+    //                             if (dataOutput) {
+    //                                 tamp.badOutput = dataOutput.badOutput;
+    //                                 tamp.goodOutput = dataOutput.goodOutput;
+    //                                 tamp.dateOutput = dataOutput.dateOutput;
+    //                                 tamp.timeOutput = dataOutput.timeOutput;
+    //                                 tamp.action = dataOutput.action ? dataOutput.action : "";
+
+    //                                 // if (tamp.hasOwnProperty("action"))
+    //                                 //     tamp.action = dataOutput.action ? dataOutput.action : "";
+    //                                 // else
+    //                                 //     tamp["action"] = dataOutput.action ? dataOutput.action : "";
+
+    //                                 tamp.badOutputDescription = dataOutput.badOutputDescription ? dataOutput.badOutputDescription : "";
+    //                                 if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
+    //                                     var index = 0;
+    //                                     var description = "";
+    //                                     for (var reason of dataOutput.badOutputReasons) {
+    //                                         index++;
+    //                                         if (index === dataOutput.badOutputReasons.length) {
+    //                                             description += `${index}. ${reason.badOutputReason.reason ? reason.badOutputReason.reason : ""} ${reason.length ? reason.length + "(m)" : reason.precentage ? reason.precentage + "(%)" : 0} ${tamp.action ? tamp.action : reason.action ? reason.action : ""}`;
+    //                                         } else {
+    //                                             description += `${index}. ${reason.badOutputReason.reason ? reason.badOutputReason.reason : ""} ${reason.length ? reason.length + "(m)" : reason.precentage ? reason.precentage + "(%)" : 0} ${tamp.action ? tamp.action : reason.action ? reason.action : ""}\n`;
+    //                                         }
+    //                                     }
+    //                                     tamp.badOutputDescription = description;
+    //                                 }
+
+    //                                 // if (tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
+    //                                 //     tamp.badOutputDescription = dataOutput.badOutputDescription;
+    //                                 // else if (!tamp.hasOwnProperty("badOutputDescription") && dataOutput.hasOwnProperty("badOutputDescription"))
+    //                                 //     tamp["badOutputDescription"] = dataOutput.badOutputDescription;
+    //                                 // else if (tamp.hasOwnProperty("badOutputDescription") && !dataOutput.hasOwnProperty("badOutputDescription")) {
+    //                                 //     var description = ""
+    //                                 //     if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
+    //                                 //         var index = 0;
+    //                                 //         for (var a of dataOutput.badOutputReasons) {
+    //                                 //             index++;
+    //                                 //             if (index === dataOutput.badOutputReasons.length) {
+    //                                 //                 description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}`;
+    //                                 //             }
+    //                                 //             description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}\n`;
+    //                                 //         }
+    //                                 //     }
+    //                                 //     tamp.badOutputDescription = description;
+    //                                 // } else {
+    //                                 //     var description = ""
+    //                                 //     if (dataOutput.badOutputReasons && dataOutput.badOutputReasons.length > 0) {
+    //                                 //         var index = 0;
+    //                                 //         for (var a of dataOutput.badOutputReasons) {
+    //                                 //             index++;
+    //                                 //             if (index === dataOutput.badOutputReasons.length) {
+    //                                 //                 description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}`;
+    //                                 //             }
+    //                                 //             description += `${index}. ${a.badOutputReason.reason ? a.badOutputReason.reason : ""} ${a.length ? a.length : 0}(m) ${tamp.action ? tamp.action : a.action ? a.action : ""}\n`;
+    //                                 //         }
+    //                                 //     }
+    //                                 //     tamp["badOutputDescription"] = description;
+    //                                 // }
+    //                             }
+    //                             // for(var b of output){
+    //                             //     if(tamp.code === b.code){
+    //                             //         tamp.badOutput = b.badOutput;
+    //                             //         tamp.goodOutput = b.goodOutput;
+    //                             //         tamp.dateOutput = b.dateOutput;
+    //                             //         tamp.timeOutput = b.timeOutput;
+    //                             //         tamp.badOutputDescription = b.badOutputDescription;
+    //                             //     }
+    //                             // }
+    //                             dataTemp.push(tamp);
+    //                         }
+    //                         if (dataTemp.length > 0) {
+    //                             data.data = dataTemp;
+    //                             data.count = dataTemp.length;
+    //                             data.total = dataTemp.length;
+    //                         }
+    //                         resolve(data);
+    //                     });
+    //             });
+    //     });
+    // }
+
     getDailyOperationReport(query) {
         var date = new Date();
         var dateString = moment(date).format('YYYY-MM-DD');
@@ -783,6 +963,7 @@ module.exports = class DailyOperationManager extends BaseManager {
             "badOutput": 1,
             "badOutputDescription": 1,
             "action": 1,
+            "type": 1,
             "badOutputReasons.badOutputReason.reason": 1,
             "badOutputReasons.precentage": 1,
             "badOutputReasons.length": 1,
@@ -804,7 +985,7 @@ module.exports = class DailyOperationManager extends BaseManager {
                 return this.collection
                     .aggregate([
                         { "$match": { "code": { "$in": inputCodes } } },
-                        { "$project": { "code": 1 } },
+                        { "$project": selectedFields },
                         { "$sort": order }
                     ])
                     .toArray()
@@ -819,7 +1000,7 @@ module.exports = class DailyOperationManager extends BaseManager {
 
                         for (var result of results) {
                             if (result.type && result.type.toString().toLowerCase() === "input") {
-                                var outputResult = results.find((daily) => daily.type && daily.type.toString().toLowerCase() === "output");
+                                var outputResult = results.find((daily) => daily.type && daily.type.toString().toLowerCase() === "output" && daily.code === result.code);
 
                                 if (outputResult) {
                                     result.badOutput = outputResult.badOutput;
@@ -1062,9 +1243,7 @@ module.exports = class DailyOperationManager extends BaseManager {
 
         return this.collection.aggregate([
             {
-                "$match": {
-                    "type": "output"
-                }
+                "$match": matchQuery
             },
             {
                 "$project": {
@@ -1094,9 +1273,6 @@ module.exports = class DailyOperationManager extends BaseManager {
                     },
                     "date": "$dateOutput"
                 }
-            },
-            {
-                "$match": matchQuery
             },
             {
                 "$group": {
@@ -1268,6 +1444,31 @@ module.exports = class DailyOperationManager extends BaseManager {
         });
     }
 
+    getMonitoringMontlyReport(query) {
+        return this.collection.aggregate([
+            {
+                "$match": {
+                    "_deleted": false, "machine.code": query.machineCode, "type": "input", "dateInput": {
+                        "$gte": new Date(query.dateFrom),
+                        "$lte": new Date(query.dateTo)
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_updatedDate":1,
+                    "_deleted": 1,
+                    "type": 1,
+                    "input":1,
+                    "dateInput": 1,
+                    "machine.name": 1,
+                    "machine.code": 1,
+                    "machine.monthlyCapacity":1,
+                }
+            }])
+            .sort({ "_updatedDate": -1})
+            .toArray()
+    }
 
     getDataDaily(query) {
         return this._createIndexes()

@@ -111,3 +111,64 @@ it("#06. should success when read data", function (done) {
             done(e);
         });
 });
+
+it('#07. should success when get data kedatangan with date', function (done) {
+    var dateFrom =  createdData.date;
+    var dateTo   =  createdData.date;
+    var kategori = "Bahan Baku";
+    var offset = 7;
+    manager.getDataTest( dateFrom, dateTo, kategori,offset)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#08. should success when get data kedatangan detail with date', function (done) {
+    var dateFrom =  createdData.date;
+    var dateTo   =  createdData.date;
+    var kategori = "Bahan Baku";
+    var supplier = null;
+     var offset =7;
+    manager.getDataTestSub(supplier,dateFrom,dateTo,kategori,offset)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+
+it('#09. should success when get data pengiriman with date', function (done) {
+    var dateFrom =  createdData.date;
+    var dateTo   =  createdData.date;
+    var offset = 7;
+    manager.getDataKirim( dateFrom, dateTo,offset)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#10. should success when get data pengiriman detail with date', function (done) {
+    var dateFrom =  createdData.date;
+    var dateTo   =  createdData.date;
+    var supplier = null;
+     var offset =7;
+    manager.getDataKirimSub(supplier,dateFrom,dateTo,offset)
+    .then(po => {
+        po.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+
+});

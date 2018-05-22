@@ -91,17 +91,40 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                         var _invoiceNoteByRefno = results[4];
                         var _deliveryOrders = results.slice(5, results.length);
                         var now = new Date();
-                        var useIncomeTax = listPOExternal
-                            .map((poEks) => { return poEks.useIncomeTax })
-                            .reduce((prev, curr, index) => {
-                                return prev && curr
-                            }, true);
+                        // var useIncomeTax = listPOExternal
+                        //     .map((poEks) => { return poEks.useIncomeTax })
+                        //     .reduce((prev, curr, index) => {
+                        //         return prev && curr
+                        //     }, true);
 
-                        var useVat = listPOExternal
-                            .map((poEks) => { return poEks.useVat })
-                            .reduce((prev, curr, index) => {
-                                return prev && curr
-                            }, true);
+                        var useIncomeTaxCount = 0;
+                        for (var i of listPOExternal) {
+                            if (valid.useIncomeTax == i.useIncomeTax) {
+                                useIncomeTaxCount++
+                            }
+                        }
+                        var useIncomeTax = listPOExternal.length == useIncomeTaxCount;
+
+                        var useVatCount = 0;
+                        var pphCount = 0;
+                        for (var i of listPOExternal) {
+                            if (valid.useVat == i.useVat) {
+                                useVatCount++;
+                            }
+                            if (valid.useVat && i.vat) {
+                                if (valid.vat.name + valid.vat.rate == i.vat.name + i.vat.rate) {
+                                    pphCount++;
+                                }
+                            }
+                        }
+                        var useVat = listPOExternal.length == useVatCount;
+                        var pphType = listPOExternal.length == pphCount;
+
+                        // var useVat = listPOExternal
+                        //     .map((poEks) => { return poEks.useVat })
+                        //     .reduce((prev, curr, index) => {
+                        //         return prev && curr
+                        //     }, true);
                         _deliveryOrders = this.cleanUp(_deliveryOrders);
                         var currencies = [];
                         if (_deliveryOrders) {
@@ -170,7 +193,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                         }
 
                         if (listPOExternal.length > 0) {
-                            if (valid.useIncomeTax !== useIncomeTax) {
+                            if (!useIncomeTax) {
                                 errors["useIncomeTax"] = i18n.__("InvoiceNote.useIncomeTax.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useIncomeTax._:Using PPn"));
                             }
                             else if (valid.useIncomeTax) {
@@ -183,10 +206,13 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                                     valid.incomeTaxDate = "";
                                 }
                             }
-                            if (valid.useVat !== useVat) {
+                            if (!useVat) {
                                 errors["useVat"] = i18n.__("InvoiceNote.useVat.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.useVat._:Using PPh"));
                             }
                             else if (valid.useVat) {
+                                if (!pphType) {
+                                    errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s is different with purchase order external", i18n.__("InvoiceNote.vat._:Using PPh Type"));
+                                }
                                 if (valid.vat) {
                                     if (!valid.vat._id) {
                                         errors["vat"] = i18n.__("InvoiceNote.vat.isRequired:%s name is required", i18n.__("InvoiceNote.vat._:Jenis PPh"));
@@ -309,7 +335,6 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                                     item.purchaseOrderQuantity = Number(item.purchaseOrderQuantity);
                                     item.deliveredQuantity = Number(item.deliveredQuantity);
                                 }
-
                             }
                         }
 
@@ -730,21 +755,20 @@ module.exports = class InvoiceNoteManager extends BaseManager {
         });
     }
 
-        getAllData(startdate, enddate, offset) {
-        return new Promise((resolve, reject) => 
-        {
-                   var now = new Date();
-           var deleted = {
+    getAllData(startdate, enddate, offset) {
+        return new Promise((resolve, reject) => {
+            var now = new Date();
+            var deleted = {
                 _deleted: false
-           };
-            
-           var query = [deleted];
+            };
 
-           var validStartDate = new Date(startdate);
-           var validEndDate = new Date(enddate);
+            var query = [deleted];
+
+            var validStartDate = new Date(startdate);
+            var validEndDate = new Date(enddate);
 
 
-           if (startdate && enddate) {
+            if (startdate && enddate) {
                 validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 var filterDate = {
@@ -775,111 +799,125 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                 };
                 query.push(filterDateFrom);
             }
-      var match = { '$and': query };
-            
-      this.collection.aggregate([
-      {$match: match },
-      {$unwind:"$items"},
-      {$unwind:"$items.items"},
-      {$project :{
-                    "NoInv":"$no",
-                    "TgInv":"$date",
-                    "KdSpl":"$supplier.code",
-                    "NmSpl":"$supplier.name",
-                    "MtUang":"$currency.code",
-                    "Rate":"$currency.rate",
-                    "PakaiPPN":"$useIncomeTax",
-                    "NoPPN":"$incomeTaxNo",
-                    "TgPPN":"$incomeTaxDate",
-                    "PakaiPPH":"$useVat",
-                    "NoPPH":"$vatNo",
-                    "TgPPH":"$vatDate",
-                    "NmPPH":"$vat.name",
-                    "RatePPH":"$vat.rate",
-                    "NoSJ":"$items.deliveryOrderNo",
-                    "TgSJ":"$items.deliveryOrderSupplierDoDate",
-                    "TgDtg":"$items.deliveryOrderDate",
-                    "PoExt":"$items.items.purchaseOrderExternalNo",
-                    "NoPR":"$items.items.purchaseRequestNo",
-                    "PlanPO":"$items.items.purchaseRequestRefNo",
-                    "NoRO":"$items.items.roNo",
-                    "KdBrg":"$items.items.product.code",
-                    "NmBrg":"$items.items.product.name",
-                    "QtyInv": "$items.items.deliveredQuantity",
-                    "HrgInv": "$items.items.pricePerDealUnit",
-                    "SatInv":"$items.items.purchaseOrderUom.unit",
-                    "UserIn":"$_createdBy",
-                    "TgIn":"$_createdDate",
-                    "UserEd":"$_updatedBy",
-                    "TgEd":"$_updatedDate"   
-                 }
-      }, 
-      {$project :{
-                    "NoInv":"$NoInv",
-                    "TgInv":"$TgInv",
-                    "KdSpl":"$KdSpl",
-                    "NmSpl":"$NmSpl",
-                    "MtUang":"$MtUang",
-                    "Rate":"$Rate",
-                    "PakaiPPN":"$PakaiPPN",
-                    "NoPPN":"$NoPPN",
-                    "TgPPN":"$TgPPN",
-                    "PakaiPPH":"$PakaiPPH",
-                    "NoPPH":"$NoPPH",
-                    "TgPPH":"$TgPPH",
-                    "NmPPH":"$NmPPH",
-                    "RatePPH":"$RatePPH",
-                    "NoSJ":"$NoSJ",
-                    "TgSJ":"$TgSJ",
-                    "TgDtg":"$TgDtg",
-                    "PoExt":"$PoExt",
-                    "NoPR":"$NoPR",
-                    "PlanPO":"$PlanPO",
-                    "NoRO":"$NoRO",
-                    "KdBrg":"$KdBrg",
-                    "NmBrg":"$NmBrg",
-                    "QtyInv": "$QtyInv",
-                    "HrgInv": "$HrgInv",
-                    "SatInv":"$SatInv",
-                    "UserIn":"$UserIn","TgIn":"$TgIn",
-                    "UserEd":"$UserEd","TgEd":"$TgEd"
-                 }
-      },
-      {$group :{ _id: { "NoInv":"$NoInv",
-                        "TgInv":"$TgInv",
-                        "KdSpl":"$KdSpl",
-                        "NmSpl":"$NmSpl",
-                        "MtUang":"$MtUang",
-                        "Rate":"$Rate",
-                        "PakaiPPN":"$PakaiPPN",
-                        "NoPPN":"$NoPPN",
-                        "TgPPN":"$TgPPN",
-                        "PakaiPPH":"$PakaiPPH",
-                        "NoPPH":"$NoPPH",
-                        "TgPPH":"$TgPPH",
-                        "NmPPH":"$NmPPH",
-                        "RatePPH":"$RatePPH",
-                        "NoSJ":"$NoSJ",
-                        "TgSJ":"$TgSJ",
-                        "TgDtg":"$TgDtg",
-                        "PoExt":"$PoExt",
-                        "NoPR":"$NoPR",
-                        "PlanPO":"$PlanPO",
-                        "NoRO":"$NoRO",
-                        "KdBrg":"$KdBrg",
-                        "NmBrg":"$NmBrg",
+            var match = { '$and': query };
+
+            this.collection.aggregate([
+                { $match: match },
+                { $unwind: "$items" },
+                { $unwind: "$items.items" },
+                {
+                    $project: {
+                        "NoInv": "$no",
+                        "TgInv": "$date",
+                        "KdSpl": "$supplier.code",
+                        "NmSpl": "$supplier.name",
+                        "MtUang": "$currency.code",
+                        "Rate": "$currency.rate",
+                        "PakaiPPN": "$useIncomeTax",
+                        "NoPPN": "$incomeTaxNo",
+                        "TgPPN": "$incomeTaxDate",
+                        "PakaiPPH": "$useVat",
+                        "NoPPH": "$vatNo",
+                        "TgPPH": "$vatDate",
+                        "NmPPH": "$vat.name",
+                        "RatePPH": "$vat.rate",
+                        "NoSJ": "$items.deliveryOrderNo",
+                        "TgSJ": "$items.deliveryOrderSupplierDoDate",
+                        "TgDtg": "$items.deliveryOrderDate",
+                        "PoExt": "$items.items.purchaseOrderExternalNo",
+                        "NoPR": "$items.items.purchaseRequestNo",
+                        "PlanPO": "$items.items.purchaseRequestRefNo",
+                        "NoRO": "$items.items.roNo",
+                        "KdBrg": "$items.items.product.code",
+                        "NmBrg": "$items.items.product.name",
+                        "QtyInv": "$items.items.deliveredQuantity",
+                        "HrgInv": "$items.items.pricePerDealUnit",
+                        "SatInv": "$items.items.purchaseOrderUom.unit",
+                        "UserIn": "$_createdBy",
+                        "TgIn": "$_createdDate",
+                        "UserEd": "$_updatedBy",
+                        "TgEd": "$_updatedDate",
+                        "BayarPajak": "$isPayTax",
+                        "NoInvPPN":"$incomeTaxInvoiceNo",
+                        "NoInvPPH": "$vatInvoiceNo"
+                    }
+                },
+                {
+                    $project: {
+                        "NoInv": "$NoInv",
+                        "TgInv": "$TgInv",
+                        "KdSpl": "$KdSpl",
+                        "NmSpl": "$NmSpl",
+                        "MtUang": "$MtUang",
+                        "Rate": "$Rate",
+                        "PakaiPPN": "$PakaiPPN",
+                        "NoPPN": "$NoPPN",
+                        "TgPPN": "$TgPPN",
+                        "PakaiPPH": "$PakaiPPH",
+                        "NoPPH": "$NoPPH",
+                        "TgPPH": "$TgPPH",
+                        "NmPPH": "$NmPPH",
+                        "RatePPH": "$RatePPH",
+                        "NoSJ": "$NoSJ",
+                        "TgSJ": "$TgSJ",
+                        "TgDtg": "$TgDtg",
+                        "PoExt": "$PoExt",
+                        "NoPR": "$NoPR",
+                        "PlanPO": "$PlanPO",
+                        "NoRO": "$NoRO",
+                        "KdBrg": "$KdBrg",
+                        "NmBrg": "$NmBrg",
                         "QtyInv": "$QtyInv",
                         "HrgInv": "$HrgInv",
-                        "SatInv":"$SatInv",
-                        "UserIn":"$UserIn","TgIn":"$TgIn",
-                        "UserEd":"$UserEd","TgEd":"$TgEd"
-                      },
-               "TQtyInv": { $sum: "$QtyInv" }, 
-               "TotInv": { $sum: { $multiply: ["$QtyInv", "$HrgInv"]}}
-               }
-        } 
-      ])
-        .toArray(function (err, result) {
+                        "SatInv": "$SatInv",
+                        "UserIn": "$UserIn", "TgIn": "$TgIn",
+                        "UserEd": "$UserEd", "TgEd": "$TgEd",
+                        "BayarPajak": "$BayarPajak",
+                        "NoInvPPN":"$NoInvPPN",
+                        "NoInvPPH": "$NoInvPPH"                        
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            "NoInv": "$NoInv",
+                            "TgInv": "$TgInv",
+                            "KdSpl": "$KdSpl",
+                            "NmSpl": "$NmSpl",
+                            "MtUang": "$MtUang",
+                            "Rate": "$Rate",
+                            "PakaiPPN": "$PakaiPPN",
+                            "NoPPN": "$NoPPN",
+                            "TgPPN": "$TgPPN",
+                            "PakaiPPH": "$PakaiPPH",
+                            "NoPPH": "$NoPPH",
+                            "TgPPH": "$TgPPH",
+                            "NmPPH": "$NmPPH",
+                            "RatePPH": "$RatePPH",
+                            "NoSJ": "$NoSJ",
+                            "TgSJ": "$TgSJ",
+                            "TgDtg": "$TgDtg",
+                            "PoExt": "$PoExt",
+                            "NoPR": "$NoPR",
+                            "PlanPO": "$PlanPO",
+                            "NoRO": "$NoRO",
+                            "KdBrg": "$KdBrg",
+                            "NmBrg": "$NmBrg",
+                            "QtyInv": "$QtyInv",
+                            "HrgInv": "$HrgInv",
+                            "SatInv": "$SatInv",
+                            "UserIn": "$UserIn", "TgIn": "$TgIn",
+                            "UserEd": "$UserEd", "TgEd": "$TgEd",
+                            "BayarPajak":"$BayarPajak",
+                            "NoInvPPN": "$NoInvPPN",
+                            "NoInvPPH": "$NoInvPPH"                            
+                        },
+                        "TQtyInv": { $sum: "$QtyInv" },
+                        "TotInv": { $sum: { $multiply: ["$QtyInv", "$HrgInv"] } }
+                    }
+                }
+            ])
+                .toArray(function (err, result) {
                     assert.equal(err, null);
                     resolve(result);
                 });

@@ -2100,4 +2100,774 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             xls.name = `Laporan Monitoring Pembelian All.xlsx`;
         return Promise.resolve(xls);
     }
+
+
+getDataKirim( dateFrom, dateTo, offset) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                
+                      var qryMatch = {};
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "isPosted": true }, {
+                        "items.category.name":{$ne:"SUBKON"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"INTERLINING"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PROCESS"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"WASH"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PRINT"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"PLISKET"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"EMBROIDERY"} 
+                    }];
+
+if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
+                var validStartDate = new Date(dateFrom);
+                var validEndDate = new Date(dateTo);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+
+                qryMatch["$and"].push(
+                    {
+                        "items.fulfillments.supplierDoDate": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+            }
+           
+          
+
+ var bbbb = new Date();
+             bbbb.setHours(bbbb.getHours() );
+          var aaaa = { $ifNull: ["$items.purchaseOrderExternal.expectedDeliveryDate", bbbb] };       
+  
+var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$items.fulfillments.supplierDoDate" , 60 * 60 * 1000 ] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$items.fulfillments.supplierDoDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$items.fulfillments.supplierDoDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$items.fulfillments.supplierDoDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$items.fulfillments.supplierDoDate", 60 * 60 * 1000 ] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                        $subtract: [
+                            { "$add": [aaaa, 60 * 60 * 1000] },
+                            {
+                                "$add": [
+                                    { "$millisecond": aaaa },
+                                    {
+                                        "$multiply": [
+                                            { "$second": aaaa },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": aaaa },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": [aaaa, 60 * 60 * 1000 ] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
+                }, 86400000]
+            };
+
+  
+  
+                    return this.collection
+                        .aggregate([
+                            {
+                            $match: qryMatch
+                            },
+                            
+                              {
+                               $unwind: { path: "$items", preserveNullAndEmptyArrays: false }
+                            },
+                            {
+                               $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: false }
+                            },
+                
+                              {
+                                "$project": {
+                                //  "tgl1": "$items.purchaseOrderExternal.expectedDeliveryDate",
+                                //  "tgl2": "$items.fulfillments.supplierDoDate",
+                                 "supplier": "$items.supplier.name",
+                                 "kdsupplier": "$items.supplier.code",
+                                 "selisih": dates,
+                                 "Ok": {  // Set to 1 if value < 10
+                $cond: [ { $lt: [dates, 5 ] }, 1, 0]
+            },
+                                 "NotOk":  {  // Set to 1 if value > 10
+                $cond: [ { $gt: [ dates, 5 ] }, 1, 0]
+            },
+                            
+                                }
+                            },
+                           {
+                        $group: {
+                            _id: { supplier: "$supplier",kdsupplier: "$kdsupplier"} ,
+                             "Ok": { $sum: "$Ok" },
+                             "NotOk": { $sum: "$NotOk" },
+                                 count: { $sum: 1 }
+                             
+                        }
+                             }, 
+                             {
+                                "$project": {
+                                 "Ok": "$Ok",
+                                 "NotOk": "$NotOk",
+                                 "count": "$count",
+                                 "_id.supplier": "$_id.supplier",
+                                 "_id.kdsupplier": "$_id.kdsupplier",
+                                "Cek":{$multiply:[{$divide:["$Ok","$count"]},100]},
+                                }
+                            },
+                              {
+                        $sort: 
+                            { "_id.supplier": 1} 
+                             },
+                        ])
+                        .toArray()
+                        .then(results => {
+                            resolve(results);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
+
+
+ getDataKirimSub(supplier,dateFrom,dateTo,offset) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+
+                      var qryMatch = {};
+
+                          
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "isPosted": true }, {
+                        "items.category.name":{$ne:"SUBKON"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"INTERLINING"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PROCESS"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"WASH"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PRINT"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"PLISKET"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"EMBROIDERY"} 
+                    }];
+
+          if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
+                var validStartDate = new Date(dateFrom);
+                var validEndDate = new Date(dateTo);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+       
+                qryMatch["$and"].push(
+                    {
+                        "items.fulfillments.supplierDoDate": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+              
+            }
+
+        if (supplier !== "") {
+                             qryMatch["$and"].push(
+                   {
+                         "items.supplier.code":supplier
+                     })
+        
+        }
+       
+
+          
+        
+ var bbbb = new Date();
+             bbbb.setHours(bbbb.getHours() );
+          var aaaa = { $ifNull: ["$items.purchaseOrderExternal.expectedDeliveryDate", bbbb] };
+  
+var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$items.fulfillments.supplierDoDate" , 60 * 60 * 1000 ] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$items.fulfillments.supplierDoDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$items.fulfillments.supplierDoDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$items.fulfillments.supplierDoDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$items.fulfillments.supplierDoDate", 60 * 60 * 1000 ] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                        $subtract: [
+                            { "$add": [aaaa, 60 * 60 * 1000] },
+                            {
+                                "$add": [
+                                    { "$millisecond": aaaa },
+                                    {
+                                        "$multiply": [
+                                            { "$second": aaaa },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": aaaa },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": [aaaa, 60 * 60 * 1000 ] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
+                }, 86400000]
+            };
+
+                    return this.collection
+                        .aggregate([
+                    
+                            {
+                            $match: qryMatch
+                            },
+                            
+                              {
+                               $unwind: { path: "$items", preserveNullAndEmptyArrays: false }
+                            },
+                             {
+                               $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: false }
+                            },
+                             
+                              {
+                                "$project": {
+                             
+                                    "refNo": "$items.refNo",
+                                    "roNo": "$roNo",
+                                    "purchaseRequestshipmentDate": "$items.purchaseOrderExternal.expectedDeliveryDate",
+                                    "artikel": "$artikel",
+                                    "productname": "$items.product.name",
+                                    "productcode": "$items.product.code",
+                                    "productdescription": "$items.remark",
+                                    "category": "$items.category.name",
+                                     "supplier": "$items.supplier.name",
+                                    "suppliercode": "$items.supplier.code",
+                                    "selisih": dates,
+                                    "poeNo": "$items.purchaseOrderExternal.no",
+                                    "poeDate": "$items.purchaseOrderExternal.date",
+                                    "remark": "$items.remark",
+                                    "tglll": "$items.fulfillments.supplierDoDate",
+                                    "tglpr": "$date",
+                                    "tglpo": "$_createdDate",
+                                    "_createdBy": "$_createdBy",
+                                    "kategori": "$items.category.name",
+                                
+                            
+                                }
+                            },{
+                        $sort: 
+                            { "tglll": 1} 
+                             },
+                       
+                        ])
+                        .toArray()
+                        .then(results => {
+                            resolve(results);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
+
+
+    getDataTest( dateFrom, dateTo, kategori, offset) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+                
+                      var qryMatch = {};
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "isPosted": true }];
+
+
+//if (dateFrom && dateFrom !== "" && dateFrom != "undefined" && dateTo && dateTo !== "" && dateTo != "undefined") {
+if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
+                var validStartDate = new Date(dateFrom);
+                var validEndDate = new Date(dateTo);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+
+                qryMatch["$and"].push(
+                    {
+                        "items.fulfillments.deliveryOrderDate": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+            }
+           
+            var aa={$or:[{
+                        "items.category.name":"FABRIC" 
+                    },{
+                        "items.category.name":"INTERLINING" 
+                    }]} 
+          
+
+ var bbbb = new Date();
+             bbbb.setHours(bbbb.getHours() );
+          var aaaa = { $ifNull: ["$items.fulfillments.deliveryOrderDate", bbbb] };       
+  
+var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$purchaseRequest.shipmentDate" , 60 * 60 * 1000 ] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$purchaseRequest.shipmentDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$purchaseRequest.shipmentDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$purchaseRequest.shipmentDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$purchaseRequest.shipmentDate", 60 * 60 * 1000 ] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                        $subtract: [
+                            { "$add": [aaaa, 60 * 60 * 1000] },
+                            {
+                                "$add": [
+                                    { "$millisecond": aaaa },
+                                    {
+                                        "$multiply": [
+                                            { "$second": aaaa },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": aaaa },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": [aaaa, 60 * 60 * 1000 ] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
+                }, 86400000]
+            };
+
+  if (kategori == "Bahan Baku" ) {
+                        qryMatch["$and"].push(
+                            aa
+                    )
+                    var cmd = {  
+                              $cond: [ { $gt: [ dates, 29 ] }, 1, 0]
+                            };
+                    var ncmd = { 
+                                $cond: [ { $lt: [dates, 30 ] }, 1, 0]
+                              };
+                }
+            if (kategori == "Bahan Pendukung" ) {
+                        qryMatch["$and"].push(
+                           {
+                        "items.category.name":{$ne:"FABRIC"} 
+                    },  {
+                        "items.category.name":{$ne:"SUBKON"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"INTERLINING"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PROCESS"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"WASH"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PRINT"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"PLISKET"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"EMBROIDERY"} 
+                    }
+                    )
+
+                      var cmd = {  
+                              $cond: [ { $gt: [ dates, 19 ] }, 1, 0]
+                            };
+                    var  ncmd = { 
+                                $cond: [ { $lt: [dates, 20 ] }, 1, 0]
+                              };
+                }
+
+  
+                    return this.collection
+                        .aggregate([
+                            {
+                            $match: qryMatch
+                            },
+                            
+                              {
+                               $unwind: { path: "$items", preserveNullAndEmptyArrays: false }
+                            },
+                            {
+                               $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: false }
+                            },
+                
+                              {
+                                "$project": {
+                                 "tgl1": "$items.fulfillments.deliveryOrderDate",
+                                 "tgl2": "$purchaseRequest.shipmentDate",
+                                 "supplier": "$items.supplier.name",
+                                 "kdsupplier": "$items.supplier.code",
+                                 "selisih": dates,
+                                 "NotOk": ncmd,
+                                 "Ok": cmd,
+                            
+                                }
+                            },
+                           {
+                        $group: {
+                            _id: { supplier: "$supplier",kdsupplier: "$kdsupplier"} ,
+                             "Ok": { $sum: "$Ok" },
+                             "NotOk": { $sum: "$NotOk" },
+                                 count: { $sum: 1 }
+                             
+                        }
+                             }, 
+                             {
+                                "$project": {
+                                 "Ok": "$Ok",
+                                 "NotOk": "$NotOk",
+                                 "count": "$count",
+                                 "_id.supplier": "$_id.supplier",
+                                 "_id.kdsupplier": "$_id.kdsupplier",
+                                "Cek":{$multiply:[{$divide:["$Ok","$count"]},100]},
+                                }
+                            },
+                              {
+                        $sort: 
+                            { Cek: 1,count: -1} 
+                             },
+                        ])
+                        .toArray()
+                        .then(results => {
+                            resolve(results);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
+
+
+    getDataTestSub(supplier,dateFrom,dateTo,kategori,offset) {
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                return new Promise((resolve, reject) => {
+
+                      var qryMatch = {};
+
+                          
+            qryMatch["$and"] = [
+                { "_deleted": false },
+                { "isPosted": true }];
+
+          if (dateFrom && dateFrom !== ""  && dateTo && dateTo !== "" ) {
+                var validStartDate = new Date(dateFrom);
+                var validEndDate = new Date(dateTo);
+                validStartDate.setHours(validStartDate.getHours() - offset);
+                validEndDate.setHours(validEndDate.getHours() - offset);
+       
+                qryMatch["$and"].push(
+                    {
+                        "items.fulfillments.deliveryOrderDate": {
+                            $gte: validStartDate,
+                            $lte: validEndDate
+                        }
+                    })
+              
+            }
+
+        if (supplier !== "") {
+                             qryMatch["$and"].push(
+                   {
+                         "items.supplier.code":supplier
+                     })
+        
+        }
+         var aa={$or:[{
+                        "items.category.name":"FABRIC" 
+                    },{
+                        "items.category.name":"INTERLINING" 
+                    }]} 
+          
+            if (kategori == "Bahan Baku" ) {
+                        qryMatch["$and"].push(
+                            aa
+                    )
+                }
+            if (kategori == "Bahan Pendukung" ) {
+                        qryMatch["$and"].push(
+                           {
+                        "items.category.name":{$ne:"FABRIC"} 
+                    },  {
+                        "items.category.name":{$ne:"SUBKON"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"INTERLINING"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PROCESS"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"WASH"} 
+                    },
+                     {
+                        "items.category.name":{$ne:"PRINT"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"PLISKET"} 
+                    }
+                    ,
+                     {
+                        "items.category.name":{$ne:"EMBROIDERY"} 
+                    }
+                    )
+                }
+
+          
+        
+ var bbbb = new Date();
+             bbbb.setHours(bbbb.getHours() );
+          var aaaa = { $ifNull: ["$items.fulfillments.deliveryOrderDate", bbbb] };
+  
+var dates = {
+                $divide: [{
+                    $subtract: [{
+                        $subtract: [
+                            { "$add": ["$purchaseRequest.shipmentDate" , 60 * 60 * 1000 ] },
+                            {
+                                "$add": [
+                                    { "$millisecond": "$purchaseRequest.shipmentDate" },
+                                    {
+                                        "$multiply": [
+                                            { "$second": "$purchaseRequest.shipmentDate" },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": "$purchaseRequest.shipmentDate" },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": ["$purchaseRequest.shipmentDate", 60 * 60 * 1000 ] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }, {
+                        $subtract: [
+                            { "$add": [aaaa, 60 * 60 * 1000] },
+                            {
+                                "$add": [
+                                    { "$millisecond": aaaa },
+                                    {
+                                        "$multiply": [
+                                            { "$second": aaaa },
+                                            1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$minute": aaaa },
+                                            60, 1000
+                                        ]
+                                    },
+                                    {
+                                        "$multiply": [
+                                            { "$hour": { "$add": [aaaa, 60 * 60 * 1000 ] } },
+                                            60, 60, 1000
+                                        ]
+                                    }
+                                ]
+                            }]
+                    }]
+                }, 86400000]
+            };
+
+                    return this.collection
+                        .aggregate([
+                    
+                            {
+                            $match: qryMatch
+                            },
+                            
+                              {
+                               $unwind: { path: "$items", preserveNullAndEmptyArrays: false }
+                            },
+                             {
+                               $unwind: { path: "$items.fulfillments", preserveNullAndEmptyArrays: false }
+                            },
+                             
+                              {
+                                "$project": {
+                             
+                                    "refNo": "$items.refNo",
+                                    "roNo": "$roNo",
+                                    "purchaseRequestshipmentDate": "$purchaseRequest.shipmentDate",
+                                    "artikel": "$artikel",
+                                    "productname": "$items.product.name",
+                                    "productcode": "$items.product.code",
+                                    "productdescription": "$items.remark",
+                                    "category": "$items.category.name",
+                                     "supplier": "$items.supplier.name",
+                                    "suppliercode": "$items.supplier.code",
+                                    "selisih": dates,
+                                    "poeNo": "$items.purchaseOrderExternal.no",
+                                    "poeDate": "$items.purchaseOrderExternal.date",
+                                    "remark": "$items.remark",
+                                    "tglll": "$items.fulfillments.deliveryOrderDate",
+                                    "tglpr": "$date",
+                                    "tglpo": "$_createdDate",
+                                    "_createdBy": "$_createdBy",
+                                    "kategori": "$items.category.name",
+                                
+                            
+                                }
+                            },
+                            {
+                        $sort: 
+                            { "tglll": 1} 
+                             },
+                       
+                        ])
+                        .toArray()
+                        .then(results => {
+                            resolve(results);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        });
+                });
+            });
+    }
+
 };
