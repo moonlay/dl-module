@@ -5,12 +5,19 @@ var UnitPaymentOrderManager = require("../../../src/managers/purchasing/unit-pay
 var unitPaymentOrderManager = null;
 var unitPaymentOrder = require("../../data-util/purchasing/unit-payment-order-data-util");
 
+var DivisionManager = require("../../../src/managers/master/division-manager");
+var divisionManager = null;
+var division = require("../../data-util/master/division-data-util");
+
 require("should");
 
 before('#00. connect db', function (done) {
     helper.getDb()
         .then((db) => {
             unitPaymentOrderManager = new UnitPaymentOrderManager(db, {
+                username: 'unit-test'
+            });
+            divisionManager = new DivisionManager(db, {
                 username: 'unit-test'
             });
             done();
@@ -85,6 +92,42 @@ it("#03. should success when get expedition report data", function (done) {
             documents.data.should.be.instanceof(Array);
             documents.data.length.should.not.equal(0);
             done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+var createdDataDivision;
+var createdIdDivision;
+it("#04. should success when create new garment division", function(done) {
+    division.getTestGarmentData()
+    .then((data) =>{
+        createdDataDivision=data;
+        divisionManager.create(data)
+        .then((id) => {
+            id.should.be.Object();
+            createdIdDivision = id;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+    });
+});
+
+it('#05. should success when create new data', function (done) {
+    unitPaymentOrder.getNewData()
+        .then((data) => {
+            data.divisionId= createdIdDivision;
+            data.division =createdDataDivision;
+            data.division._id=createdIdDivision;
+            unitPaymentOrderManager.create(data)
+            .then((id) => {
+                id.should.be.Object();
+                createdId = id;
+                done();
+            }) 
         })
         .catch((e) => {
             done(e);

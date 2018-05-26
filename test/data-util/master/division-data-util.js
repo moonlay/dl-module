@@ -32,5 +32,14 @@ class DivisionDataUtil {
         };
         return this.getSert(data);
     }
+
+    getTestGarmentData() {
+        var data = {
+            code: 'UT/DIV/GMT/01',
+            name: 'GARMENT',
+            description: ''
+        };
+        return this.getSert(data);
+    }
 }
 module.exports = new DivisionDataUtil();

@@ -62,19 +62,3 @@ it("#02. should error when create new data with tempo less then 0", function(don
             done(e);
         });
 });
-
-it("#03. should success when search data with filter", function (done) {
-    instanceManager.read({
-        keyword: createdData.name
-    })
-        .then((documents) => {
-            //process documents
-            documents.should.have.property("data");
-            documents.data.should.be.instanceof(Array);
-            documents.data.length.should.not.equal(0);
-            done();
-        })
-        .catch((e) => {
-            done(e);
-        });
-});
