@@ -9,6 +9,8 @@ var DivisionManager = require("../../../src/managers/master/division-manager");
 var divisionManager = null;
 var division = require("../../data-util/master/division-data-util");
 
+var generateCode = require("../../../src/utils/code-generator");
+
 require("should");
 
 before('#00. connect db', function (done) {
@@ -76,7 +78,7 @@ it("#03. should success when search data with filter", function (done) {
         });
 });
 
-it("#03. should success when get expedition report data", function (done) {
+it("#04. should success when get expedition report data", function (done) {
     unitPaymentOrderManager.getExpeditionReport({
         filter: {
             no: createdData.no,
@@ -98,30 +100,27 @@ it("#03. should success when get expedition report data", function (done) {
         });
 });
 
-var createdDataDivision;
-var createdIdDivision;
-it("#04. should success when create new garment division", function(done) {
-    division.getTestGarmentData()
-    .then((data) =>{
-        createdDataDivision=data;
-        divisionManager.create(data)
-        .then((id) => {
-            id.should.be.Object();
-            createdIdDivision = id;
-            done();
+
+it('#05. should success when create new data', function (done) {
+    unitPaymentOrder.getNewData()
+        .then((data) => {
+            data.division.name ="GARMENT";
+            unitPaymentOrderManager.create(data)
+            .then((id) => {
+                id.should.be.Object();
+                createdId = id;
+                done();
+            }) 
         })
         .catch((e) => {
             done(e);
         });
-    });
 });
 
 it('#05. should success when create new data', function (done) {
     unitPaymentOrder.getNewData()
         .then((data) => {
-            data.divisionId= createdIdDivision;
-            data.division =createdDataDivision;
-            data.division._id=createdIdDivision;
+            data.division.name ="UTILITY";
             unitPaymentOrderManager.create(data)
             .then((id) => {
                 id.should.be.Object();
