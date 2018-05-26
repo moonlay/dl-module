@@ -19,10 +19,12 @@ before("#00. connect db", function(done) {
         });
 });
 
+var createdData;
 it("#01. should success when create new data with tempo value is 0", function(done) {
     Buyer.getNewData()
         .then(data => {
             data.tempo = 0;
+            createdData=data;
             instanceManager.create(data)
             .then(id => {
                 id.should.be.Object();
@@ -55,6 +57,22 @@ it("#02. should error when create new data with tempo less then 0", function(don
                 e.errors.should.have.property("tempo");
                 done();
             });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#03. should success when search data with filter", function (done) {
+    unitPaymentOrderManager.read({
+        keyword: createdData.code
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
         })
         .catch((e) => {
             done(e);
