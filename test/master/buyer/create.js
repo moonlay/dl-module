@@ -65,7 +65,7 @@ it("#02. should error when create new data with tempo less then 0", function(don
 
 it("#03. should success when search data with filter", function (done) {
     instanceManager.read({
-        keyword: createdData.code
+        keyword: createdData.name
     })
         .then((documents) => {
             //process documents
