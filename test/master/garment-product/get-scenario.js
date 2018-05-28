@@ -49,7 +49,7 @@ it(`#02. should success when get product by tags from created data`, function (d
 });
 
 it('#03. should success when get data Kanban', function (done) {
-    var query = { "keyword": a };
+    var query = { "keyword": "a" };
     productManager.read(query)
         .then(products => {
             products.data.should.instanceof(Array);
