@@ -375,7 +375,16 @@ getDataKoreksiHarga(query){
         if(unitPaymentPriceCorrectionNote && unitPaymentPriceCorrectionNote.unitPaymentOrder){
             code= unitPaymentPriceCorrectionNote.unitPaymentOrder.supplier.import ? "NRI" : "NRL";
         }
-        var type = code+monthNow+yearNow;
+        var division="";
+        if(unitPaymentPriceCorrectionNote.unitPaymentOrder && unitPaymentPriceCorrectionNote.unitPaymentOrder.division){
+            if(unitPaymentPriceCorrectionNote.unitPaymentOrder.division.name=="GARMENT"){
+                division="-G";
+            }
+            else if(unitPaymentPriceCorrectionNote.unitPaymentOrder.division.name=="UMUM" || unitPaymentPriceCorrectionNote.unitPaymentOrder.division.name=="SPINNING" || unitPaymentPriceCorrectionNote.unitPaymentOrder.division.name=="FINISHING & PRINTING" || unitPaymentPriceCorrectionNote.unitPaymentOrder.division.name=="UTILITY"|| unitPaymentPriceCorrectionNote.unitPaymentOrder.division.name=="WEAVING"){
+                division="-T";
+            }
+        }
+        var type = code+monthNow+yearNow+division;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
         var fields = { "number": 1, "year": 1 };
 
@@ -390,9 +399,9 @@ getDataKoreksiHarga(query){
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 4)}`;
+                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 4)}`;
                     } else {
-                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}-${code}-0001`;
+                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-0001`;
                     }
                 }
 
