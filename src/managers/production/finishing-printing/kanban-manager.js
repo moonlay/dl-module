@@ -237,6 +237,7 @@ module.exports = class KanbanManager extends BaseManager {
 
                             valid.oldKanbanId = new ObjectId(valid.oldKanbanId);
                             valid.oldKanban = {
+                                _id: new ObjectId(valid.oldKanbanId),
                                 cart: {
                                     qty: qty,
                                     cartNumber: cartNumber,

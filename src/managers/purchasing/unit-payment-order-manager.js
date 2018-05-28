@@ -405,7 +405,16 @@ if (unitId !== undefined && unitId !== "") {
         if(unitPaymentOrder && unitPaymentOrder.supplier){
             code= unitPaymentOrder.supplier.import ? "NKI" : "NKL";
         }
-        var type = code+monthNow+yearNow;
+        var division="";
+        if(unitPaymentOrder && unitPaymentOrder.division){
+            if(unitPaymentOrder.division.name=="GARMENT"){
+                division="-G";
+            }
+            else if(unitPaymentOrder.division.name=="UMUM" || unitPaymentOrder.division.name=="SPINNING" || unitPaymentOrder.division.name=="FINISHING & PRINTING" || unitPaymentOrder.division.name=="UTILITY"|| unitPaymentOrder.division.name=="WEAVING"){
+                division="-T";
+            }
+        }
+        var type = code+monthNow+yearNow+division;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
         var fields = { "number": 1, "year": 1 };
 
@@ -420,14 +429,14 @@ if (unitId !== undefined && unitId !== "") {
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
                         if(code=="NKL")
-                            unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 4)}`;
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 4)}`;
                         else if(code=="NKI")
-                            unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 3)}`;
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 3)}`;
                     } else {
                         if(code=="NKL")
-                            unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-0001`;
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-0001`;
                         else if(code=="NKI")
-                            unitPaymentOrder.no = `${yearNow}-${monthNow}-${code}-001`;
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-001`;
                     }
                 }
 

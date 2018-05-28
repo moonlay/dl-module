@@ -306,6 +306,15 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
         if(unitPaymentQuantityCorrectionNote && unitPaymentQuantityCorrectionNote.unitPaymentOrder){
             code= unitPaymentQuantityCorrectionNote.unitPaymentOrder.supplier.import ? "NRI" : "NRL";
         }
+        var division="";
+        if(unitPaymentQuantityCorrectionNote.unitPaymentOrder && unitPaymentQuantityCorrectionNote.unitPaymentOrder.division){
+            if(unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.name=="GARMENT"){
+                division="-G";
+            }
+            else if(unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.name=="UMUM" || unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.name=="SPINNING" || unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.name=="FINISHING & PRINTING" || unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.name=="UTILITY"|| unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.name=="WEAVING"){
+                division="-T";
+            }
+        }
         var type = code+monthNow+yearNow;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
         var fields = { "number": 1, "year": 1 };
@@ -321,9 +330,9 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-${this.pad(number, 4)}`;
+                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 4)}`;
                     } else {
-                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}-${code}-0001`;
+                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-0001`;
                     }
                 }
 
