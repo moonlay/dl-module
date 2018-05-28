@@ -366,7 +366,7 @@ module.exports = function (unitPaymentOrder, offset) {
                                 },
                                 {
                                     width: '*',
-                                    text: moment(unitPaymentOrder.dueDate || dueDate).add(offset,'h').format(locale.date.format)
+                                    text: moment(dueDate ||unitPaymentOrder.dueDate ).add(offset,'h').format(locale.date.format)
                                 }]
                         }, {
                             columns: [{

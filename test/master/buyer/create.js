@@ -19,10 +19,12 @@ before("#00. connect db", function(done) {
         });
 });
 
+var createdData;
 it("#01. should success when create new data with tempo value is 0", function(done) {
     Buyer.getNewData()
         .then(data => {
             data.tempo = 0;
+            createdData=data;
             instanceManager.create(data)
             .then(id => {
                 id.should.be.Object();
