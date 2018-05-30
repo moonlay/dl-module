@@ -60,8 +60,13 @@ module.exports = class GarmentProductManager extends BaseManager {
                     '$regex': keyRegex
                 }
             }
+            var descriptionFilter = {
+                'description': {
+                    '$regex': keyRegex
+                }
+            }
 
-            keywordFilter['$or'] = [codeFilter, nameFilter, constructionFilter, yarnFilter, widthFilter];
+            keywordFilter['$or'] = [codeFilter, nameFilter, constructionFilter, yarnFilter, widthFilter, descriptionFilter];
         }
 
 
