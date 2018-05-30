@@ -76,7 +76,7 @@ class SupplierDataUtil {
 
         getTestData4() {
         var data = {
-            code: 'UT/GRMNT/SUP/03',
+            code: 'UT/GRMNT/SUP/04',
             name: 'Supplier 04',
             address: 'Jl. Ahmad Yani No. 123, Semarang, Indonesia',
             contact: 'Mr. Adhy Pradana',
