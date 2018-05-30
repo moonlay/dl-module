@@ -38,7 +38,9 @@ class SupplierDataUtil {
             contact: 'Mrs. Smith',
             PIC: 'Mr. Smith',
             NPWP: 'N9TT-9G0A-B7FQ-RANC',
-            serialNumber: 'US-XYRKCS'
+            serialNumber: 'US-XYRKCS',
+            import: true,
+            useIncomeTax: false,
         };
         return this.getSert(data);
     }
