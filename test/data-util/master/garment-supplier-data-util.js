@@ -22,12 +22,19 @@ class SupplierDataUtil {
         data.address = `Solo [${code}]`;
         data.contact = `phone[${code}]`;
         data.PIC = `PIC[${code}]`;
-        data.import = true;
+        data.import = false;
         data.NPWP = `NPWP[${code}]`;
         data.serialNumber = `serialNo[${code}]`;
-        data.useIncomeTax = true;
+        data.useIncomeTax = false;
         
         return Promise.resolve(data);
+    }
+
+    getRandomTestData() {
+        return this.getNewData()
+            .then((data) => {
+                return this.getSert(data);
+            });
     }
 
     getTestData() {
@@ -45,23 +52,7 @@ class SupplierDataUtil {
         return this.getSert(data);
     }
 
-    getTestData2() {
-        var data = {
-            code: 'UT/GRMNT/SUP/02',
-            name: 'Supplier 02',
-            address: '7270 Colonial 2St. Hollis, NY 11423, USA',
-            contact: 'Mrs. Smi2th',
-            PIC: 'Mr. Smit2h',
-            NPWP: 'N9TT-9G0A2-B7FQ-RANC',
-            serialNumber: 'US-XY2RKCS',
-            import: true,
-            useIncomeTax: false,
-            
-        };
-        return this.getSert(data);
-    }
-
-    getTestData3() {
+        getTestData3() {
         var data = {
             code: 'UT/GRMNT/SUP/03',
             name: 'Supplier 03',
