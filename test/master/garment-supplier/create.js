@@ -22,7 +22,7 @@ before("#00. connect db", function(done) {
 it("#01. should success when create new data with useIncomeTax value is true", function(done) {
     Supplier.getNewData()
         .then(data => {
-            data.unseIncomeTax = true;
+            data.useIncomeTax = true;
             instanceManager.create(data)
             .then(id => {
                 id.should.be.Object();
@@ -46,7 +46,7 @@ it("#01. should success when create new data with useIncomeTax value is true", f
 it("#02. should success when create new data with useIncomeTax value is false", function(done) {
     Supplier.getNewData()
         .then(data => {
-            data.unseIncomeTax = false;
+            data.useIncomeTax = false;
             instanceManager.create(data)
             .then(id => {
                 id.should.be.Object();
