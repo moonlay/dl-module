@@ -107,7 +107,7 @@ class PurchaseOrderExternalDataUtil {
             .getManager(PoExternalManager)
             .then(manager => {
                 var getPurchaseOrders = purchaseOrders ? purchaseOrders : get2NewPos();
-                return Promise.all([supplier.getTestData2(), currency.getTestData(), vat.getTestData(), getPurchaseOrders])
+                return Promise.all([supplier.getTestData(), currency.getTestData(), vat.getTestData(), getPurchaseOrders])
                     .then(results => {
                         var supplier = results[0];
                         var currency = results[1];
