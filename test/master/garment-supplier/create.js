@@ -58,3 +58,50 @@ it(`#03. should null when get destroyed data`, function(done) {
         });
 });
 
+it("#04. should success when create new data with useIncomeTax value is false", function(done) {
+    dataUtil.getNewData()
+        .then(data => {
+            data.useIncomeTax = false;
+            instanceManager.create(data)
+            .then(id => {
+                id.should.be.Object();
+                instanceManager.destroy(id)
+                    .then(() => {
+                        done();
+                    })
+                .catch((e) => {
+                    done(e);
+                });
+            })
+            .catch((e) => {
+                done(e);
+            });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it("#05. should success when create new data with useIncomeTax value is true", function(done) {
+    dataUtil.getNewData()
+        .then(data => {
+            data.useIncomeTax = true;
+            instanceManager.create(data)
+            .then(id => {
+                id.should.be.Object();
+                instanceManager.destroy(id)
+                    .then(() => {
+                        done();
+                    })
+                .catch((e) => {
+                    done(e);
+                });
+            })
+            .catch((e) => {
+                done(e);
+            });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
