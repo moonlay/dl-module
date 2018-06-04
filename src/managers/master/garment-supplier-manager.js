@@ -70,8 +70,8 @@ module.exports = class SupplierManager extends BaseManager {
                 if (!valid.import)
                     valid.import = false;
 
-                if (!valid.useIncomceTax)
-                    valid.useIncomceTax = false;                    
+                if (!valid.useIncomeTax)
+                    valid.useIncomeTax = false;                    
 
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
