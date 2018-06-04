@@ -23,6 +23,27 @@ module.exports = class GarmentProductManager extends BaseManager {
         this.currencyManager = new CurrencyManager(db, user);
     }
 
+    getGarmentProduct(paging) {
+        var _paging = Object.assign({
+            page: 1,
+            size: 20,
+            order: {},
+            filter: {},
+            select: []
+        }, paging);
+        // var start = process.hrtime();
+
+        return this._createIndexes()
+            .then((createIndexResults) => {
+                var query = this._getQuery(_paging);
+                return this.collection
+                    .where(query)
+                    .select(_paging.select)
+                    .order(_paging.order)
+                    .execute();
+            });
+    }
+
     _getQuery(paging) {
         var _default = {
             _deleted: false,
