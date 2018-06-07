@@ -138,6 +138,16 @@ describe('#dl-module', function (done) {
      test('@GARMENT MASTER PLAN/SEWING-BLOCKING-PLAN', './garment-master-plan/sewing-blocking-plan');
     test('@GARMENT MASTER PLAN/GARMENT SECTION', './garment-master-plan/garment-section');
 
+    //Sp Master Plan
+    test('@SP MASTER PLAN/BOOKING-ORDER', './sp-master-plan/booking-order');
+    test('@SP MASTER PLAN/WEEKLY-PLAN', './sp-master-plan/weekly-plan');
+    test('@SP MASTER PLAN/WORKING-CAPACITIES-STANDARD', './sp-master-plan/working-capacities-standard');
+    test('@SP MASTER PLAN/STYLE', './sp-master-plan/style');
+    test('@SP MASTER PLAN/STANDARD-CAPACITY', './sp-master-plan/standard-capacity');
+    test('@SP MASTER PLAN/MASTER PLAN COMODITY', './sp-master-plan/master-plan-comodity');
+     test('@SP MASTER PLAN/SP-BLOCKING-PLAN', './sp-master-plan/sp-blocking-plan');
+    test('@SP MASTER PLAN/SP SECTION', './sp-master-plan/sp-section');
+
      //Etl
      test('@ETL/DIM-BUYER', './etl/dim/dim-buyer');
      test('@ETL/DIM-CATEGORY', './etl/dim/dim-category');
