@@ -418,6 +418,8 @@ getDataKoreksiHarga(query){
                 return this.documentNumbers
                     .updateOne(query, documentNumbersData, options)
                     .then((id) => {
+                        if (unitPaymentPriceCorrectionNote.unitPaymentOrder.useIncomeTax)
+                             unitPaymentPriceCorrectionNote.returNoteNo = generateCode("returCode");
                         return Promise.resolve(unitPaymentPriceCorrectionNote);
                     })
             })
