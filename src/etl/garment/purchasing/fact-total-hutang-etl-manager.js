@@ -117,7 +117,6 @@ module.exports = class FactTotalHutangManager extends BaseManager {
             return this.garmentPurchaseRequestManager
                 .collection
                 .aggregate([
-                    { "$unwind": "$items" },
                     {
                         "$match": {
                             "_deleted": false,
@@ -125,7 +124,8 @@ module.exports = class FactTotalHutangManager extends BaseManager {
                             "items.refNo": internNote.items.items.items.purchaseRequestRefNo
                         }
                     },
-                    { "$project": PURCHASE_REQUEST_FIELDS }
+                    { "$project": PURCHASE_REQUEST_FIELDS },
+                    { "$unwind": "$items" },
                 ]).toArray()
                 .then((purchaseRequests) => {
                     var result = {};
@@ -182,7 +182,7 @@ module.exports = class FactTotalHutangManager extends BaseManager {
     }
 
     extract(times) {
-        var timestamp = new Date("1970-01-01");
+        var timestamp = times.length > 0 ? new Date(times[0].start) : new Date("1970-01-01");
         return this.extractInternNote(timestamp)
             .then((internNotes) => {
                 return this.joinPurchaseRequest(internNotes)
