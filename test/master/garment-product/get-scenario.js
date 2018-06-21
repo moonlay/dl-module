@@ -64,7 +64,7 @@ it('#04. should success when read distinct by description data', function (done)
     var query = { "keyword": createdData.description };
     productManager.getDistinctProductDescription(query)
         .then(products => {
-            products.data.should.instanceof(Array);
+            products.should.instanceof(Array);
             done();
         }).catch(e => {
             done(e);
@@ -75,7 +75,7 @@ it('#05. should success when read single by name', function (done) {
     var query = { "name": createdData.name };
     productManager.getSingleProductByName(query)
         .then(product => {
-            done(product);
+            done();
         }).catch(e => {
             done(e);
         });
