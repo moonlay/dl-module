@@ -22,28 +22,7 @@ module.exports = class GarmentProductManager extends BaseManager {
         this.uomManager = new UomManager(db, user);
         this.currencyManager = new CurrencyManager(db, user);
     }
-
-    getGarmentProduct(paging) {
-        var _paging = Object.assign({
-            page: 1,
-            size: 20,
-            order: {},
-            filter: {},
-            select: []
-        }, paging);
-        // var start = process.hrtime();
-
-        return this._createIndexes()
-            .then((createIndexResults) => {
-                var query = this._getQuery(_paging);
-                return this.collection
-                    .where(query)
-                    .select(_paging.select)
-                    .order(_paging.order)
-                    .execute();
-            });
-    }
-
+    
     _getQuery(paging) {
         var _default = {
             _deleted: false,
@@ -157,6 +136,46 @@ module.exports = class GarmentProductManager extends BaseManager {
                 valid.price = Number(valid.price);
                 return Promise.resolve(valid);
             });
+    }
+
+    getDistinctProductDescription(paging) {
+        var _paging = Object.assign({
+            size: 20,
+            order: {},
+            filter: {},
+            select: []
+        }, paging);
+
+        return this._createIndexes()
+            .then(() => {
+                var query = this._getQuery(_paging);
+                return this.collection
+                    .aggregate([
+                        {
+                            "$match": query
+                        },
+                        {
+                            "$group": {
+                                "_id": "$description",  // the grouping key
+                                "document": { "$first": "$$ROOT" }
+                            }
+                        },
+                        { "$limit": 25 }
+                    ])
+                    .toArray()
+                    .then((result) => {
+                        result = result.map((data) => data.document);
+                        return result;
+                    })
+            });
+    }
+
+    getSingleProductByName(query) {
+        let nameFilter = {
+            "name": query.name
+        }
+        return this.collection.findOne(nameFilter)
+            .then((result) => result)
     }
 
     getProduct() {
