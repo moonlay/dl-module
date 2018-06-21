@@ -399,134 +399,123 @@ module.exports = class PackingManager extends BaseManager {
     }
 
 
-getQcgudangReport(query ){
-
-     var dateFrom = query.dateFrom ? (new Date(query.dateFrom)) : (new Date(1900, 1, 1));
+    getQcgudangReport(query ){
+        var dateFrom = query.dateFrom ? (new Date(query.dateFrom)) : (new Date(1900, 1, 1));
         var dateTo = query.dateTo ? (new Date(query.dateTo)) : (new Date());
         dateFrom.setHours(dateFrom.getHours() - query.offset);
         dateTo.setHours(dateTo.getHours() - query.offset);
         var now = new Date();
 
-
         return new Promise((resolve, reject) => {
-              var date = {
+            var date = {
                 "date" : {
-                    // "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
-                    // "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
-               $gte: new Date(dateFrom),
+                // "$gte" : (!query || !query.dateFrom ? (new Date("1900-01-01")) : (new Date(`${query.dateFrom} 00:00:00`))),
+                // "$lte" : (!query || !query.dateTo ? (new Date()) : (new Date(`${query.dateTo} 23:59:59`)))
+                $gte: new Date(dateFrom),
                 $lte: new Date(dateTo)
             },
                 "_deleted" : false,
                 "deliveryType" : { "$exists" : true, "$ne" : null}
             };
 
-        this.collection.aggregate([ 
-            {$match : date},
-
-{
-    $unwind : "$items"
-},
-{
-    $group : {
-        "_id":"$date",
-        "ulanganSolid": {
-            "$sum": {
-                "$cond": [{
-                    $and :[{
-                        "$eq": ["$deliveryType", "ULANGAN"]
-                    },{
-                        $or : [{
-                            "$eq": ["$finishedProductType", "WHITE"]
+        this.collection.aggregate([{
+            $match : date
+        },{
+            $unwind : "$items"
+        },{
+            $group : {
+                "_id":"$date",
+                "ulanganSolid": {
+                    "$sum": {
+                        "$cond": [{
+                            $and :[{
+                                "$eq": ["$deliveryType", "ULANGAN"]
+                            },{
+                                $or : [{
+                                    "$eq": ["$finishedProductType", "WHITE"]
+                                },{
+                                    "$eq": ["$finishedProductType", "DYEING"]
+                                }]
+                            }]
                         },{
-                            "$eq": ["$finishedProductType", "DYEING"]
-                        }]
-                    }]
-                },{
-                    $multiply : ["$items.length", "$items.quantity"]
-                }, 0]
-            }
-        },
-        "ulanganPrinting": {
-            "$sum": {
-                "$cond": [{
-                    $and :[{
-                        "$eq": ["$deliveryType", "ULANGAN"]
-                    },{
-                        $or : [{
-                            "$eq": ["$finishedProductType", "BATIK"]
+                            $multiply : ["$items.length", "$items.quantity"]
+                        }, 0]
+                    }
+                },
+                "ulanganPrinting": {
+                    "$sum": {
+                        "$cond": [{
+                            $and :[{
+                                "$eq": ["$deliveryType", "ULANGAN"]
+                            },{
+                                $or : [{
+                                    "$eq": ["$finishedProductType", "BATIK"]
+                                },{
+                                    "$eq": ["$finishedProductType", "TEKSTIL"]
+                                }]
+                            }]
                         },{
-                            "$eq": ["$finishedProductType", "TEKSTIL"]
-                        }]
-                    }]
-                },{
-                    $multiply : ["$items.length", "$items.quantity"]
-                }, 0]
-            }
-        },
-        "white": {
-            "$sum": {
-                "$cond": [{
-                    $and :[{
-                        "$eq": ["$deliveryType", "BARU"]
-                    },{
-                        "$eq": ["$finishedProductType", "WHITE"]
-                    }]
-                },{
-                    $multiply : ["$items.length", "$items.quantity"]
-                }, 0]
-            }
-        },
-        "dyeing": {
-            "$sum": {
-                "$cond": [{
-                    $and :[{
-                        "$eq": ["$deliveryType", "BARU"]
-                    },{
-                        "$eq": ["$finishedProductType", "DYEING"]
-                    }]
-                },{
-                    $multiply : ["$items.length", "$items.quantity"]
-                }, 0]
-            }
-        },
-        "printing": {
-            "$sum": {
-                "$cond": [{
-                    $and :[{
-                        "$eq": ["$deliveryType", "BARU"]
-                    },{
-                        $or : [{
-                            "$eq": ["$finishedProductType", "BATIK"]
+                            $multiply : ["$items.length", "$items.quantity"]
+                        }, 0]
+                    }
+                },
+                "white": {
+                    "$sum": {
+                        "$cond": [{
+                            $and :[{
+                                "$eq": ["$deliveryType", "BARU"]
+                            },{
+                                "$eq": ["$finishedProductType", "WHITE"]
+                            }]
                         },{
-                            "$eq": ["$finishedProductType", "TEKSTIL"]
-                        }]
-                    }]
-                },{
-                    $multiply : ["$items.length", "$items.quantity"]
-                }, 0]
+                            $multiply : ["$items.length", "$items.quantity"]
+                        }, 0]
+                    }
+                },
+                "dyeing": {
+                    "$sum": {
+                        "$cond": [{
+                            $and :[{
+                                "$eq": ["$deliveryType", "BARU"]
+                            },{
+                                "$eq": ["$finishedProductType", "DYEING"]
+                            }]
+                        },{
+                            $multiply : ["$items.length", "$items.quantity"]
+                        }, 0]
+                    }
+                },
+                "printing": {
+                    "$sum": {
+                        "$cond": [{
+                            $and :[{
+                                "$eq": ["$deliveryType", "BARU"]
+                            },{
+                                $or : [{
+                                    "$eq": ["$finishedProductType", "BATIK"]
+                                },{
+                                    "$eq": ["$finishedProductType", "TEKSTIL"]
+                                }]
+                            }]
+                        },{
+                            $multiply : ["$items.length", "$items.quantity"]
+                        }, 0]
+                    }
+                },
             }
-        },
-    }
-},
-
-{
-    $project : {
-        "date" : "$date",
-        "ulanganSolid" : "$ulanganSolid",
-        "white" : "$white",
-        "dyeing" : "$dyeing",
-        "ulanganPrinting" : "$ulanganPrinting",
-        "printing" : "$printing",
-        "jumlah" : { $sum: [ "$ulanganSolid", "$white", "$dyeing", "$ulanganPrinting", "$printing" ]  }
-    }
-}
-,{
-    $sort : {"_id" : 1}
-}
-
-             
-             ])
-
+        },{
+            $project : {
+                "date" : "$date",
+                "ulanganSolid" : "$ulanganSolid",
+                "white" : "$white",
+                "dyeing" : "$dyeing",
+                "ulanganPrinting" : "$ulanganPrinting",
+                "printing" : "$printing",
+                "jumlah" : { $sum: [ "$ulanganSolid", "$white", "$dyeing", "$ulanganPrinting", "$printing" ]  }
+            }
+        },{
+            $sort : {"_id" : 1}
+        }])
             .toArray()
             .then(result => {
                 resolve(result);
@@ -554,6 +543,7 @@ getQcgudangReport(query ){
                 item["Jenis Penyerahan"] = packing.deliveryType ? packing.deliveryType : '';
                 item["Nomor Order"] = packing.productionOrderNo ? packing.productionOrderNo : '';
                 item["Jenis Order"] = packing.orderType ? packing.orderType : '';
+                item["Jenis Barang Jadi"] = packing.finishedProductType ? packing.finishedProductType : '';
                 item["Buyer"] = packing.buyerName ? packing.buyerName : '';
                 item["Konstruksi"] = packing.construction ? packing.construction : '';
                 item["Motif"] = packing.designCode ? packing.designCode : '';
@@ -584,6 +574,7 @@ getQcgudangReport(query ){
         xls.options["Nomor Packing"] = "string";
         xls.options["Nomor Order"] = "string";
         xls.options["Jenis Order"] = "string";
+        xls.options["Jenis Barang Jadi"] = "string";
         xls.options["Buyer"] = "string";
         xls.options["Konstruksi"] = "string";
         xls.options["Design/Motif"] = "string";
@@ -606,7 +597,7 @@ getQcgudangReport(query ){
     }
 
 
-getXlss(result, query){
+    getXlss(result, query){
         var xls = {};
         xls.data = [];
         xls.options = [];

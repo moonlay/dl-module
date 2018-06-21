@@ -299,8 +299,8 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
     }
 
     _beforeInsert(unitPaymentQuantityCorrectionNote) {
-        var monthNow = moment().format("MM");
-        var yearNow = parseInt(moment().format("YY"));
+        var monthNow = moment(unitPaymentQuantityCorrectionNote.date).format("MM");
+        var yearNow = parseInt(moment(unitPaymentQuantityCorrectionNote.date).format("YY"));
         var code="";
         // var unitCode=unitPaymentQuantityCorrectionNote.unitPaymentOrder ? unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.code : "";
         if(unitPaymentQuantityCorrectionNote && unitPaymentQuantityCorrectionNote.unitPaymentOrder){
@@ -315,7 +315,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                 division="-T";
             }
         }
-        var type = code+monthNow+yearNow;
+        var type = code+monthNow+yearNow+division;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
         var fields = { "number": 1, "year": 1 };
 
@@ -349,6 +349,8 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                 return this.documentNumbers
                     .updateOne(query, documentNumbersData, options)
                     .then((id) => {
+                        if (unitPaymentQuantityCorrectionNote.unitPaymentOrder.useIncomeTax)
+                             unitPaymentQuantityCorrectionNote.returNoteNo = generateCode("returCode");
                         return Promise.resolve(unitPaymentQuantityCorrectionNote);
                     })
             })

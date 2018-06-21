@@ -21,7 +21,8 @@ const SELECTED_FIELDS = {
     "deliveryDate": 1,
     "_createdDate": 1,
     "buyer.code": 1,
-    "_deleted": 1
+    "_deleted": 1,
+    "isClosed": 1
 }
 
 // internal deps 
@@ -142,6 +143,7 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
                 kanbanCode: null,
                 deleted: `'${item._deleted}'`,
                 username: item.account && item.account.username ? `'${item.account.username.replace(/'/g, '"')}'` : null,
+                isClosed: `'${item.isClosed}'`,
             }
         });
         return Promise.resolve([].concat.apply([], result));
@@ -178,7 +180,7 @@ module.exports = class FactProductionOrderEtlManager extends BaseManager {
 
                         for (var item of data) {
                             if (item) {
-                                var queryString = `INSERT INTO DL_Fact_Production_Order_Temp([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi], [Konstruksi], [Kode Buyer], [Jumlah Order(Kanban)], [Kode Kanban], [deleted], [Nama Sales]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion}, ${item.construction}, ${item.buyerCode}, ${item.cartQuantity}, ${item.kanbanCode}, ${item.deleted}, ${item.username});\n`;
+                                var queryString = `INSERT INTO DL_Fact_Production_Order_Temp([Nomor Sales Contract], [Nomor Order Produksi], [Jenis Order], [Jenis Proses], [Material], [Konstruksi Material], [Nomor Benang Material], [Lebar Material], [Jumlah Order Produksi], [Satuan], [Buyer], [Jenis Buyer], [Tanggal Delivery], [Created Date], [Jumlah Order Konversi], [Konstruksi], [Kode Buyer], [Jumlah Order(Kanban)], [Kode Kanban], [deleted], [Nama Sales], [isClosed]) VALUES(${item.salesContractNo}, ${item.productionOrderNo}, ${item.orderType}, ${item.processType}, ${item.material}, ${item.materialConstruction}, ${item.yarnMaterialNo}, ${item.materialWidth}, ${item.orderQuantity}, ${item.orderUom}, ${item.buyer}, ${item.buyerType}, ${item.deliveryDate}, ${item.createdDate}, ${item.totalOrderConvertion}, ${item.construction}, ${item.buyerCode}, ${item.cartQuantity}, ${item.kanbanCode}, ${item.deleted}, ${item.username}, ${item.isClosed});\n`;
                                 sqlQuery = sqlQuery.concat(queryString);
                                 if (count % 1000 == 0) {
                                     command.push(this.insertQuery(request, sqlQuery));
