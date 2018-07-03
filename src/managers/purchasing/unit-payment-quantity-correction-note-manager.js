@@ -315,7 +315,7 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                 division="-T";
             }
         }
-        var type = code+monthNow+yearNow;
+        var type = code+monthNow+yearNow+division;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
         var fields = { "number": 1, "year": 1 };
 
