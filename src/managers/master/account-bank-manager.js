@@ -80,6 +80,14 @@ module.exports = class AccountBankManager extends BaseManager {
                     errors["bankName"] = i18n.__("AccountBank.bankName.isExist:%s is already exist", i18n.__("AccountBank.bankName._:BankName")); //"Nama Bank Harus diisi";
                     errors["accountNumber"] = i18n.__("AccountBank.accountNumber.isExist:%s with same Bank is already exist", i18n.__("AccountBank.accountNumber._:AccountNumber")); //"Nomor rekening dengan Bank dan Mata uang yang sama tidak boleh";
                 }
+
+                if (!valid.bankCode || valid.bankCode == "") {
+                    errors["bankCode"] = i18n.__("AccountBank.bankCode.isExist:%s is already exist", i18n.__("AccountBank.bankCode._:BankCode")); //"Kode Bank Harus diisi";
+                }
+
+                if (!valid.accountCOA || valid.accountCOA == "") {
+                    errors["accountCOA"] = i18n.__("AccountBank.accountCOA.isExist:%s is already exist", i18n.__("AccountBank.accountCOA._:AccountCOA")); //"Akun COA Harus diisi";
+                }
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
