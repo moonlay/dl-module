@@ -1,7 +1,7 @@
 var global = require('../../global');
 
 module.exports = function (data, offset) {
-
+var rate=data.currency.rate;
     var items = data.items.map(dataItem => {
         var _items = dataItem.items.map(item => {
             return {
@@ -145,6 +145,8 @@ module.exports = function (data, offset) {
             return prev + curr;
         }, 0);
 
+    var sumtax = (sum * rate); 
+
     var tfoot = [
         [{
             text: 'Total Ppn',
@@ -152,6 +154,14 @@ module.exports = function (data, offset) {
             colSpan: 4
         }, "", "", "", {
             text: parseFloat(sum).toLocaleString(locale, locale.currency),
+            style: ['size08', 'bold', 'right']
+        }],
+        [{
+            text: 'Total Ppn IDR',
+            style: ['size08', 'bold', 'right'],
+            colSpan: 4
+        }, "", "", "", {
+            text: parseFloat(sumtax).toLocaleString(locale, locale.currency),
             style: ['size08', 'bold', 'right']
         }]
     ];
