@@ -152,8 +152,15 @@ module.exports = function (data, offset) {
     var totalAmount = 0;
 
     var tbody = data.items.map(function (item, index) {
-        var doItem = data.deliveryOrder.items.find(i => i.purchaseOrderExternalId.toString() === item.purchaseOrderExternalId.toString());
-        var fulfillment = doItem.fulfillments.find(fulfillment => fulfillment.purchaseOrderId.toString() === item.purchaseOrderInternalId.toString() && fulfillment.purchaseRequestId.toString() === item.purchaseRequestId.toString() && fulfillment.productId.toString() === item.productId.toString());
+        let doItems = data.deliveryOrder.items.filter(i => i.purchaseOrderExternalId.toString() === item.purchaseOrderExternalId.toString());
+        let fulfillment;
+        
+        for (let doItem of doItems) {
+            fulfillment = doItem.fulfillments.find(p => p.purchaseOrderId.toString() === item.purchaseOrderInternalId.toString() && p.purchaseRequestId.toString() === item.purchaseRequestId.toString() && p.productId.toString() === item.productId.toString());
+
+            if (fulfillment)
+                break;
+        }
 
         fulfillment.corrections = fulfillment.corrections || [];
 
