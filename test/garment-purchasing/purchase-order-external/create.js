@@ -441,6 +441,7 @@ it('#09. should success when create new purchase-order-external with isOverBudge
 });
 
 it('#10. should success when approve over budget purchase-order-external', function (done) {
+    console.log(overBudgetData);
     purchaseOrderExternalManager.approve([overBudgetData])
         .then(ids => {
             purchaseOrderExternalManager.getSingleById(ids[0])
