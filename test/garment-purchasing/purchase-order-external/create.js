@@ -447,6 +447,7 @@ it('#10. should success when approve over budget purchase-order-external', funct
             purchaseOrderExternalManager.getSingleById(ids[0])
                 .then(poe => {
                     purchaseOrderExternal = poe;
+                    console.log(purchaseOrderExternal);
                     purchaseOrderExternal.isApproved.should.equal(true);
                     done();
                 })
