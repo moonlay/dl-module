@@ -422,7 +422,6 @@ it('#09. should success when create new purchase-order-external with isOverBudge
         })
         .then((data) => {
             for (var item of data.items) {
-                item.isPosted = true;
                 item.isOverBudget = true;
                 item.overBudgetRemark = "Over Budget Remark Test";
             }
@@ -430,6 +429,12 @@ it('#09. should success when create new purchase-order-external with isOverBudge
         })
         .then((id) => {
             return purchaseOrderExternalManager.getSingleById(id);
+        })
+        .then((data) => {
+            return purchaseOrderExternalManager.post([data])
+        })
+        .then((ids) => {
+            return purchaseOrderExternalManager.getSingleById(ids[0]);
         })
         .then(po => {
             overBudgetData = po;
