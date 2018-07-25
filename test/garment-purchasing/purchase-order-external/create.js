@@ -422,6 +422,7 @@ it('#09. should success when create new purchase-order-external with isOverBudge
         })
         .then((data) => {
             for (var item of data.items) {
+                item.isPosted = true;
                 item.isOverBudget = true;
                 item.overBudgetRemark = "Over Budget Remark Test";
             }
