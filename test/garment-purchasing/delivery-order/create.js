@@ -40,6 +40,21 @@ it("#01. should success when create new data", function (done) {
         });
 });
 
+it("#01-1. should success when create new data with similar purchase order external", function (done) {
+    deliveryOrderDataUtil.getNewData()
+        .then((data) => {
+            data.items.push(data.items[0]);
+            return deliveryOrderManager.create(data)
+        })
+        .then((id) => {
+            id.should.be.Object();
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
 var createdData;
 it(`#02. should success when get created data with id`, function (done) {
     deliveryOrderManager.getSingleById(createdId)
