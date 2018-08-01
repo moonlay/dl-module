@@ -398,8 +398,8 @@ if (unitId !== undefined && unitId !== "") {
     }
 
     _beforeInsert(unitPaymentOrder) {
-        var monthNow = moment(unitPaymentOrder.date).format("MM");
-        var yearNow = parseInt(moment(unitPaymentOrder.date).format("YY"));
+        var monthNow = moment(unitPaymentOrder.date).add(7,'h').format("MM");
+        var yearNow = parseInt(moment(unitPaymentOrder.date).add(7,'h').format("YY"));
         var code="";
         // var unitCode=unitPaymentOrder.division ? unitPaymentOrder.division.code : "";
         if(unitPaymentOrder && unitPaymentOrder.supplier){
