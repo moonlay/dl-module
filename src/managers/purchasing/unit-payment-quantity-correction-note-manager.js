@@ -299,8 +299,9 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
     }
 
     _beforeInsert(unitPaymentQuantityCorrectionNote) {
-        var monthNow = moment(unitPaymentQuantityCorrectionNote.date).add(7,'h').format("MM");
-        var yearNow = parseInt(moment(unitPaymentQuantityCorrectionNote.date).add(7,'h').format("YY"));
+        var date= moment(unitPaymentQuantityCorrectionNote.date.setHours(unitPaymentQuantityCorrectionNote.date.getHours() +7));
+        var monthNow = date.format("MM");
+        var yearNow = parseInt(date.format("YY"));
         var code="";
         // var unitCode=unitPaymentQuantityCorrectionNote.unitPaymentOrder ? unitPaymentQuantityCorrectionNote.unitPaymentOrder.division.code : "";
         if(unitPaymentQuantityCorrectionNote && unitPaymentQuantityCorrectionNote.unitPaymentOrder){
