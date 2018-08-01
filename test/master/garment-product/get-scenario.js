@@ -48,7 +48,40 @@ it(`#02. should success when get product by tags from created data`, function (d
     });
 });
 
-it(`#03. should success when destroy data with id`, function(done) {
+it('#03. should success when get data garment product', function (done) {
+    var query = { "keyword": "a" };
+    productManager.read(query)
+        .then(products => {
+            products.data.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+
+});
+
+it('#04. should success when read distinct by description data', function (done) {
+    var query = { "keyword": createdData.description };
+    productManager.getDistinctProductDescription(query)
+        .then(products => {
+            products.should.instanceof(Array);
+            done();
+        }).catch(e => {
+            done(e);
+        });
+})
+
+it('#05. should success when read single by name', function (done) {
+    var query = { "name": createdData.name };
+    productManager.getSingleProductByName(query)
+        .then(product => {
+            done();
+        }).catch(e => {
+            done(e);
+        });
+})
+
+it(`#06. should success when destroy data with id`, function (done) {
     productManager.destroy(createdId)
         .then((result) => {
             result.should.be.Boolean();
@@ -60,7 +93,7 @@ it(`#03. should success when destroy data with id`, function(done) {
         });
 });
 
-it(`#04. should null when get destroyed data`, function(done) {
+it(`#07. should null when get destroyed data`, function (done) {
     productManager.getSingleByIdOrDefault(createdId)
         .then((data) => {
             should.equal(data, null);

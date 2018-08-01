@@ -70,6 +70,9 @@ module.exports = class SupplierManager extends BaseManager {
                 if (!valid.import)
                     valid.import = false;
 
+                if (!valid.useIncomeTax)
+                    valid.useIncomeTax = false;                    
+
                 // 2c. begin: check if data has any error, reject if it has.
                 if (Object.getOwnPropertyNames(errors).length > 0) {
                     var ValidationError = require("module-toolkit").ValidationError;
@@ -117,7 +120,8 @@ module.exports = class SupplierManager extends BaseManager {
                                 "PIC": dataFile[i][4].trim(),
                                 "import": dataFile[i][5].trim(),
                                 "NPWP": dataFile[i][6].trim(),
-                                "serialNumber": dataFile[i][7].trim()
+                                "serialNumber": dataFile[i][7].trim(),
+                                "useIncomeTax": dataFile[i][8].trim()                              
                             });
                         }
                     }
@@ -135,13 +139,18 @@ module.exports = class SupplierManager extends BaseManager {
                         } else if ((data[i]["import"]).toString() !== "TRUE" && (data[i]["import"]).toString() !== "FALSE") {
                             errorMessage = errorMessage + "Import harus diisi dengan true atau false, ";
                         }
+                        if (data[i]["useIncomeTax"] === "" || data[i]["useIncomeTax"] === undefined) {
+                            errorMessage = errorMessage + "Pakai PPN tidak boleh kosong, ";
+                        } else if ((data[i]["useIncomeTax"]).toString() !== "TRUE" && (data[i]["useIncomeTax"]).toString() !== "FALSE") {
+                            errorMessage = errorMessage + "Pakai PPN harus diisi dengan true atau false, ";
+                        }
                         for (var j = 0; j < supplier.length; j++) {
                             if (supplier[j]["code"] === data[i]["code"]) {
                                 errorMessage = errorMessage + "Kode tidak boleh duplikat";
                             }
                         }
                         if (errorMessage !== "") {
-                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "address": data[i]["address"], "contact": data[i]["contact"], "PIC": data[i]["PIC"], "import": data[i]["import"], "NPWP": data[i]["NPWP"], "serialNumber": data[i]["serialNumber"], "Error": errorMessage });
+                            dataError.push({ "code": data[i]["code"], "name": data[i]["name"], "address": data[i]["address"], "contact": data[i]["contact"], "PIC": data[i]["PIC"], "import": data[i]["import"], "NPWP": data[i]["NPWP"], "serialNumber": data[i]["serialNumber"], "useIncomeTax": data[i]["useIncomeTax"], "Error": errorMessage });
                         }
                     }
                     if (dataError.length === 0) {
@@ -153,6 +162,12 @@ module.exports = class SupplierManager extends BaseManager {
                             if ((data[i]["import"]).toString() === "FALSE") {
                                 data[i]["import"] = false;
                             }
+                            if ((data[i]["useIncomeTax"]).toString() === "TRUE") {
+                                data[i]["useIncomeTax"] = true;
+                            }
+                            if ((data[i]["useIncomeTax"]).toString() === "FALSE") {
+                                data[i]["useIncomeTax"] = false;
+                            }                            
                             var valid = new Supplier(data[i]);
                             var now = new Date();
                             valid.stamp(this.user.username, 'manager');
@@ -195,5 +210,5 @@ module.exports = class SupplierManager extends BaseManager {
         };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
-    }
+    }  
 }

@@ -23,6 +23,8 @@ class AccountBankDataUtil {
                 var code = generateCode();
 
                 data.bankName = `Bank Name [${code}]`;
+                data.bankCode = `Bank Code`;
+                data.accountCOA = `Account COA`;
                 data.bankAddress = `Bank Address [${code}]`;
                 data.accountName = `Account Name [${code}]`;
                 data.accountNumber = `Account Number [${code}]`;
@@ -40,6 +42,8 @@ class AccountBankDataUtil {
                 var data = {
                     bankName: 'PT Bank Unit Test',
                     bankAddress: 'Cab. Solo',
+                    bankCode: 'Kode Bank',
+                    accountCOA: 'Akun COA',
                     accountName: 'Unit Test',
                     accountNumber: '111-2222-33',
                     swiftCode: 'SC/01/11',

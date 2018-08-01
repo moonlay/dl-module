@@ -93,9 +93,9 @@ module.exports = class PurchasePriceCorrection extends BaseManager {
                                         itemError["pricePerUnit"] = i18n.__("garmentPurchaseCorrection.items.pricePerUnit.isRequired:%s is required", i18n.__("garmentPurchaseCorrection.items.pricePerUnit._:Price Per Unit"));
                                     }
 
-                                    if (item.priceTotal <= 0) {
-                                        itemError["priceTotal"] = i18n.__("garmentPurchaseCorrection.items.priceTotal.isRequired:%s is required", i18n.__("garmentPurchaseCorrection.items.priceTotal._:Total Price"));
-                                    }
+                                    // if (item.priceTotal <= 0) {
+                                    //     itemError["priceTotal"] = i18n.__("garmentPurchaseCorrection.items.priceTotal.isRequired:%s is required", i18n.__("garmentPurchaseCorrection.items.priceTotal._:Total Price"));
+                                    // }
 
                                     var doItem = _deliveryOrder.items.find(i => i.purchaseOrderExternalId.toString() === item.purchaseOrderExternalId.toString());
                                     var fulfillment = doItem.fulfillments.find(fulfillment => fulfillment.purchaseOrderId.toString() === item.purchaseOrderInternalId.toString() && fulfillment.purchaseRequestId.toString() === item.purchaseRequestId.toString() && fulfillment.productId.toString() === item.productId.toString());
