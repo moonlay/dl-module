@@ -19,7 +19,7 @@ class PurchaseRequestDataUtil {
                 var budget = results[4];
 
                 var targetDate=new Date();
-                var deliveryDate=new Date(targetDate.setDate(targetDate.getDate() + 10))
+                var deliveryDate=new Date(targetDate.setDate(targetDate.getDate() + 10));
                 var data = {
                     no: `UT/PR/${codeGenerator()}`,
                     date: new Date(),
