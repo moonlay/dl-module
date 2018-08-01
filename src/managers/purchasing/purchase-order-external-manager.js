@@ -148,8 +148,9 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
     }
 
     _beforeInsert(purchaseOrderExternal) {
-        var monthNow = moment(purchaseOrderExternal.date).add(7,'h').format("MM");
-        var yearNow = parseInt(moment(purchaseOrderExternal.date).add(7,'h').format("YY"));
+        var date= moment(purchaseOrderExternal.date.setHours(purchaseOrderExternal.date.getHours() +7));
+        var monthNow = date.format("MM");
+        var yearNow = parseInt(date.format("YY"));
         var type = "PE"+monthNow+yearNow;
         var query = { "type": type, "description": "PE" };
         var fields = { "number": 1, "year": 1 };
