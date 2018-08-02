@@ -283,7 +283,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
 
                 valid.details = valid.details || [];
                 if (valid.details && valid.details.length <= 0) {
-                    errors["details"] = i18n.__("FinishingPrintingSalesContract.details.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.details._:Details")); //"Harus ada minimal 1 detail";
+                    errors["detailsCollection"] = i18n.__("FinishingPrintingSalesContract.details.isRequired:%s is required", i18n.__("FinishingPrintingSalesContract.details._:Details")); //"Harus ada minimal 1 detail";
                 }
                 else if (valid.details.length > 0) {
                     var detailErrors = [];

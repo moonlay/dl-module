@@ -21,6 +21,7 @@ class StepDataUtil {
 
                 data.process = code;
                 data.alias="alias";
+                data.processArea="TEST PROCESS AREA";
                 // var item1 = `data 1 ${code}`;
                 // var item2 = `data 2 ${code}`;
                 // data.itemMonitoring.push(item1);
@@ -44,10 +45,11 @@ class StepDataUtil {
     }
 
     getTestData(step) {
-                var _process = step && step.process ? step.process : "GAS SINGEING DAN DESIZING";
+                var _process = step && step.process ? step.process : "GAS SINGEING DAN DESIZING ZZ";
                 // var _itemMonitoring = items ? items : [
                 //         'Speed (m/mnt)', 'Pressure Burner (mBar)', 'Titik Api', 'Pressure Saturator (Bar)', 'Hasil Bakar Bulu (baik/tidak)'
                 //     ];
+                var _processArea = step && step.processArea ? step.processArea : "TEST Process Area";
                 var _alias = step && step.alias ? step.alias : "GS DZ";
                 var _stepIndicator = step && step.indicators ? step.indicators : [
                     {
@@ -85,6 +87,7 @@ class StepDataUtil {
                 ];
                  var data = {
                     process: _process,
+                    processArea: _processArea,
                     alias:_alias,
                     stepIndicators:_stepIndicator
                 };
@@ -96,6 +99,7 @@ class StepDataUtil {
         // var _itemMonitoring = items ? items : [
         //         'Speed (m/mnt)', 'Pressure Burner (mBar)', 'Titik Api', 'Pressure Saturator (Bar)', 'Hasil Bakar Bulu (baik/tidak)'
         //     ];
+        var _processArea = step && step.processArea ? step.processArea : "TEST Process Area";
         var _alias = step && step.alias ? step.alias : "GS DZ";
         var _stepIndicator = step && step.indicators ? step.indicators : [
             {
@@ -133,6 +137,7 @@ class StepDataUtil {
         ];
          var data = {
             process: _process,
+            processArea: _processArea,
             alias:_alias,
             stepIndicators:_stepIndicator
         };

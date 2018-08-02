@@ -416,16 +416,38 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         var poItem = purchaseOrder.items.find(item => item.product._id.toString() === productId.toString());
                         if (poItem) {
                             var deliveryOrder = realization.deliveryOrder;
-                            var fulfillment = {
-                                deliveryOrderNo: deliveryOrder.no,
-                                deliveryOrderUseCustoms: deliveryOrder.useCustoms,
-                                deliveryOrderDeliveredQuantity: Number(realization.deliveredQuantity),
-                                deliveryOrderDate: deliveryOrder.date,
-                                supplierDoDate: deliveryOrder.supplierDoDate
-                            };
+                            var item = poItem.fulfillments.find(item => item.deliveryOrderNo === deliveryOrder.no);
+                            if (item) {
+                                var index = poItem.fulfillments.indexOf(item);
+                                var realizationDeliveredQuantity = realizations.filter(r =>
+                                        r.deliveryOrder.no === realization.deliveryOrder.no &&
+                                        r.purchaseOrderId.toString() === realization.purchaseOrderId.toString() &&
+                                        r.purchaseRequestId.toString() === realization.purchaseRequestId.toString() &&
+                                        r.purchaseOrderExternalId.toString() === realization.purchaseOrderExternalId.toString() &&
+                                        r.productId.toString() === realization.productId.toString()
+                                    )
+                                    .map(r => Number(r.deliveredQuantity))
+                                    .reduce((prev, curr, index) => {
+                                        return prev + curr;
+                                }, 0);
 
-                            poItem.fulfillments = poItem.fulfillments || [];
-                            poItem.fulfillments.push(fulfillment);
+                                poItem.fulfillments[index].deliveryOrderNo = deliveryOrder.no;
+                                poItem.fulfillments[index].deliveryOrderUseCustoms = deliveryOrder.useCustoms;
+                                poItem.fulfillments[index].deliveryOrderDeliveredQuantity = realizationDeliveredQuantity;
+                                poItem.fulfillments[index].deliveryOrderDate = deliveryOrder.date;
+                                poItem.fulfillments[index].supplierDoDate = deliveryOrder.supplierDoDate;
+                            } else {
+                                var fulfillment = {
+                                    deliveryOrderNo: deliveryOrder.no,
+                                    deliveryOrderUseCustoms: deliveryOrder.useCustoms,
+                                    deliveryOrderDeliveredQuantity: Number(realization.deliveredQuantity),
+                                    deliveryOrderDate: deliveryOrder.date,
+                                    supplierDoDate: deliveryOrder.supplierDoDate
+                                };
+
+                                poItem.fulfillments = poItem.fulfillments || [];
+                                poItem.fulfillments.push(fulfillment);
+                            }
 
                             var _listDO = poItem.fulfillments.map((fulfillment) => fulfillment.deliveryOrderNo);
                             var _listDOUnique = _listDO.filter(function (elem, index, self) {
@@ -477,7 +499,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             var job = this.purchaseOrderExternalManager.getSingleById(purchaseOrderExternalId)
                 .then((purchaseOrderExternal) => {
                     for (var realization of realizations) {
-                        var item = purchaseOrderExternal.items.find(item => item.prId.toString() === realization.purchaseRequestId.toString() && item.product._id.toString() === realization.productId.toString());
+                        var item = purchaseOrderExternal.items.find(item => item.poId.toString() === realization.purchaseOrderId.toString() && item.prId.toString() === realization.purchaseRequestId.toString() && item.product._id.toString() === realization.productId.toString());
                         var purchaseOrder = purchaseOrderList.find(po => po._id.toString() === item.poId.toString())
                         var poItem = {};
                         if (purchaseOrder) {
@@ -514,8 +536,29 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                     }, 0);
                             }
                         }
-                        item.realizations = item.realizations || [];
-                        item.realizations.push({ "deliveryOrderNo": realization.deliveryOrder.no, "deliveredQuantity": realization.deliveredQuantity })
+
+                        var itemRealization = item.realizations.find(item => item.deliveryOrderNo === realization.deliveryOrder.no);
+                        if (itemRealization) {
+                            var index = item.realizations.indexOf(itemRealization);
+                            var realizationDeliveredQuantity = realizations.filter(r =>
+                                    r.deliveryOrder.no === realization.deliveryOrder.no &&
+                                    r.purchaseOrderId.toString() === realization.purchaseOrderId.toString() &&
+                                    r.purchaseRequestId.toString() === realization.purchaseRequestId.toString() &&
+                                    r.purchaseOrderExternalId.toString() === realization.purchaseOrderExternalId.toString() &&
+                                    r.productId.toString() === realization.productId.toString()
+                                )
+                                .map(r => Number(r.deliveredQuantity))
+                                .reduce((prev, curr, index) => {
+                                    return prev + curr;
+                            }, 0);
+
+                            item.realizations[index].deliveryOrderNo = realization.deliveryOrder.no;
+                            item.realizations[index].deliveredQuantity = realizationDeliveredQuantity;
+                        } else {
+                            item.realizations = item.realizations || [];
+                            item.realizations.push({ "deliveryOrderNo": realization.deliveryOrder.no, "deliveredQuantity": realization.deliveredQuantity })
+                        }
+
                         item.isClosed = (item.realizations.map(item => item.deliveredQuantity)
                             .reduce((prev, curr, index) => {
                                 return prev + curr;
@@ -659,9 +702,21 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                                         var item = poItem.fulfillments.find(item => item.deliveryOrderNo === oldDeliveryOrder.no);
                                         if (item) {
                                             var index = poItem.fulfillments.indexOf(item);
+                                            var realizationDeliveredQuantity = realizations.filter(r =>
+                                                    r.deliveryOrder.no === realization.deliveryOrder.no &&
+                                                    r.purchaseOrderId.toString() === realization.purchaseOrderId.toString() &&
+                                                    r.purchaseRequestId.toString() === realization.purchaseRequestId.toString() &&
+                                                    r.purchaseOrderExternalId.toString() === realization.purchaseOrderExternalId.toString() &&
+                                                    r.productId.toString() === realization.productId.toString()
+                                                )
+                                                .map(r => Number(r.deliveredQuantity))
+                                                .reduce((prev, curr, index) => {
+                                                    return prev + curr;
+                                            }, 0);
+            
                                             poItem.fulfillments[index].deliveryOrderNo = deliveryOrder.no;
                                             poItem.fulfillments[index].deliveryOrderUseCustoms = deliveryOrder.useCustoms;
-                                            poItem.fulfillments[index].deliveryOrderDeliveredQuantity = Number(realization.deliveredQuantity);
+                                            poItem.fulfillments[index].deliveryOrderDeliveredQuantity = realizationDeliveredQuantity;
                                             poItem.fulfillments[index].deliveryOrderDate = deliveryOrder.date;
                                             poItem.fulfillments[index].supplierDoDate = deliveryOrder.supplierDoDate;
                                         } else {
@@ -729,10 +784,21 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             var job = this.purchaseOrderExternalManager.getSingleById(purchaseOrderExternalId)
                 .then((purchaseOrderExternal) => {
                     for (var realization of realizations) {
-                        var item = purchaseOrderExternal.items.find(item => item.prId.toString() === realization.purchaseRequestId.toString() && item.product._id.toString() === realization.productId.toString());
-                        var index = item.realizations.find(_realization => realization.deliveryOrderNo === realization.deliveryOrderNo)
+                        var item = purchaseOrderExternal.items.find(item => item.poId.toString() === realization.purchaseOrderId.toString() && item.prId.toString() === realization.purchaseRequestId.toString() && item.product._id.toString() === realization.productId.toString());
+                        var index = item.realizations.findIndex(_realization => _realization.deliveryOrderNo === realization.deliveryOrder.no);
                         if (index !== -1) {
-                            item.realizations[index] = { "deliveryOrderNo": realization.deliveryOrder.no, "deliveredQuantity": realization.deliveredQuantity };
+                            var realizationDeliveredQuantity = realizations.filter(r =>
+                                    r.deliveryOrder.no === realization.deliveryOrder.no &&
+                                    r.purchaseOrderId.toString() === realization.purchaseOrderId.toString() &&
+                                    r.purchaseRequestId.toString() === realization.purchaseRequestId.toString() &&
+                                    r.purchaseOrderExternalId.toString() === realization.purchaseOrderExternalId.toString() &&
+                                    r.productId.toString() === realization.productId.toString()
+                                )
+                                .map(r => r.deliveredQuantity)
+                                .reduce((prev, curr, index) => {
+                                    return prev + curr;
+                                }, 0);
+                            item.realizations[index] = { "deliveryOrderNo": realization.deliveryOrder.no, "deliveredQuantity": realizationDeliveredQuantity };
                         }
                         var purchaseOrder = purchaseOrderList.find(po => po._id.toString() === item.poId.toString())
                         var poItem = {};
@@ -912,8 +978,8 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             var job = this.purchaseOrderExternalManager.getSingleById(purchaseOrderExternalId)
                 .then((purchaseOrderExternal) => {
                     for (var realization of realizations) {
-                        var item = purchaseOrderExternal.items.find(item => item.prId.toString() === realization.purchaseRequestId.toString() && item.product._id.toString() === realization.productId.toString());
-                        var index = item.realizations.find(_realization => realization.deliveryOrderNo === realization.deliveryOrderNo)
+                        var item = purchaseOrderExternal.items.find(item => item.poId.toString() === realization.purchaseOrderId.toString() && item.prId.toString() === realization.purchaseRequestId.toString() && item.product._id.toString() === realization.productId.toString());
+                        var index = item.realizations.findIndex(_realization => _realization.deliveryOrderNo === realization.deliveryOrder.no);
                         if (index !== -1) {
                             item.realizations.splice(index, 1);
                         }
