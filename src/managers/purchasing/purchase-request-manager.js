@@ -219,11 +219,13 @@ module.exports = class PurchaseRequestManager extends BaseManager {
     }
 
     _beforeInsert(purchaseRequest) {
+        var date= purchaseRequest.date;
+        date.setUTCHours(purchaseRequest.date.getUTCHours() +7);
         var budgetCode= purchaseRequest.budget? purchaseRequest.budget.code : "";
         var unitCode=purchaseRequest.unit? purchaseRequest.unit.code : "";
         var categoryCode=purchaseRequest.category? purchaseRequest.category.code : "";
-        var yearNow = parseInt(moment(purchaseRequest.date).format("YY"));
-        var monthNow = moment(purchaseRequest.date).format("MM");
+        var yearNow = parseInt(moment(date).format("YY"));
+        var monthNow = moment(date).format("MM");
         var type = unitCode + yearNow + monthNow;
         var query = { "type": type, "description": "PR" };
         var fields = { "number": 1, "year": 1 };

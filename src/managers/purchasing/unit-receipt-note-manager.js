@@ -342,8 +342,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
     }
 
     _beforeInsert(unitReceiptNote) {
-        var monthNow = moment(unitReceiptNote.date).format("MM");
-        var yearNow = parseInt(moment(unitReceiptNote.date).format("YY"));
+        var date= moment(unitReceiptNote.date.setHours(unitReceiptNote.date.getHours() +7));
+        var monthNow = date.format("MM");
+        var yearNow = parseInt(date.format("YY"));
         var code="";
         var unitCode=unitReceiptNote.unit ? unitReceiptNote.unit.code : "";
         if(unitReceiptNote && unitReceiptNote.supplier){
