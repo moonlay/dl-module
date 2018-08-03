@@ -21,7 +21,8 @@ class MachineDataUtil {
 
     getNewData() {
         var step = {
-            process : "SCOURING",
+            process : "SCOURING ZZZ",
+            processArea : "Machine Step Area",
             alias : "SC",
             indicator : [
                     {
@@ -102,7 +103,8 @@ class MachineDataUtil {
 
     getTestData() {
         var step = {
-            process : "SCOURING",
+            process : "SCOURING ZZ",
+            processArea : "Process Area Scouring",
             alias : "SC",
             indicator : [
                     {

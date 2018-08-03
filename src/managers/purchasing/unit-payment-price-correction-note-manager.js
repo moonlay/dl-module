@@ -368,8 +368,9 @@ getDataKoreksiHarga(query){
     }
 
     _beforeInsert(unitPaymentPriceCorrectionNote) {
-        var monthNow = moment(unitPaymentPriceCorrectionNote.date).format("MM");
-        var yearNow = parseInt(moment(unitPaymentPriceCorrectionNote.date).format("YY"));
+        var date= moment(unitPaymentPriceCorrectionNote.date.setHours(unitPaymentPriceCorrectionNote.date.getHours() +7));
+        var monthNow = date.format("MM");
+        var yearNow = parseInt(date.format("YY"));
         var code="";
         // var unitCode=unitPaymentPriceCorrectionNote.unitPaymentOrder ? unitPaymentPriceCorrectionNote.unitPaymentOrder.division.code : "";
         if(unitPaymentPriceCorrectionNote && unitPaymentPriceCorrectionNote.unitPaymentOrder){
