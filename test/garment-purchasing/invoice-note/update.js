@@ -138,3 +138,25 @@ it('#05. should success when update invoice note delete new item', function (don
             done(e);
         });
 });
+
+it('#06. should success when update invoice note', function (done) {
+    var deliveryOrderId = invoiceNote.items[invoiceNote.items.length - 1].deliveryOrderId;
+    invoiceNote.vatInvoiceNo="";
+    invoiceNote.isPayTax=true;
+    invoiceNoteManager.update(invoiceNote)
+        .then((id) => {
+            return invoiceNoteManager.getSingleById(id);
+        })
+        .then(invoiceNote => {
+            return invoiceNoteManager.deliveryOrderManager.getSingleByIdOrDefault(deliveryOrderId, ["hasInvoice"]);
+
+        })
+        .then(deliveryOrder => {
+            deliveryOrder.hasInvoice.should.be.Boolean();
+            deliveryOrder.hasInvoice.should.equal(false);
+            done();
+        })
+        .catch(e => {
+            done(e);
+        });
+});
