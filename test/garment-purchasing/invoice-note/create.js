@@ -107,9 +107,31 @@ it('#03. should error when create new invoice note with deliveredQuantity = 0', 
         });
 });
 
+it('#04. should error when create new invoice note with duplicate deliveryOrder', function (done) {
+    invoiceNoteDataUtil.getNewData()
+        .then((data) => {
+            data.items[1] = data.items[0]
+            return invoiceNoteManager.create(data)
+        })
+        .then((id) => {
+            done("Should not be able to create data");
+        })
+        .catch((e) => {
+            try {
+                e.name.should.equal("ValidationError");
+                e.should.have.property("errors");
+                e.errors.should.instanceof(Object);
+                done();
+            }
+            catch (ex) {
+                done(e);
+            }
+        });
+});
+
 var createdData;
 var createdId;
-it('#04. should success when create new invoice note', function (done) {
+it('#05. should success when create new invoice note', function (done) {
     invoiceNoteDataUtil.getNewTestData()
         .then((data) => {
             createdData = data;
@@ -121,7 +143,7 @@ it('#04. should success when create new invoice note', function (done) {
         });
 });
 
-it(`#05. should success when delete data`, function (done) {
+it(`#06. should success when delete data`, function (done) {
     invoiceNoteManager.delete(createdData)
         .then((id) => {
             id.toString().should.equal(createdId.toString());
@@ -133,7 +155,7 @@ it(`#05. should success when delete data`, function (done) {
 });
 
 
-it(`#06. should _deleted=true`, function (done) {
+it(`#07. should _deleted=true`, function (done) {
     invoiceNoteManager.getSingleByQuery({
         _id: createdId
     })
@@ -148,7 +170,7 @@ it(`#06. should _deleted=true`, function (done) {
         });
 });
 
-it("#07. should success when create deleted data", function (done) {
+it("#08. should success when create deleted data", function (done) {
     delete createdData._id;
     delete createdData.refNo;
     invoiceNoteManager.create(createdData)
