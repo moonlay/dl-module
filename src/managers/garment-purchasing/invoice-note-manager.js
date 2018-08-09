@@ -238,12 +238,31 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                                 errors["items"] = [{ "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }]
                             } else {
                                 var errItems = []
+                                var dup=[];
+                                var flag=false;
                                 for (var item of valid.items) {
+                                    
+                                        
+
                                     if (item.deliveryOrderId) {
                                         var errItem = {};
                                         var _deliveryOrder = _deliveryOrders.find(deliveryOrder => deliveryOrder._id.toString() === item.deliveryOrderId.toString());
                                         if (!_deliveryOrder) {
                                             errItem = { "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }
+                                        }
+                                        else{
+                                            if(dup.length===0){
+                                                dup.push(item.deliveryOrderId.toString());
+                                            }
+                                            else{
+                                                var duplicate= dup.find(a=>a==item.deliveryOrderId.toString());
+                                                if(duplicate){
+                                                    errItem = { "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isExist:%s is already used", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }
+                                                }
+                                                else{
+                                                    dup.push(item.deliveryOrderId.toString());
+                                                }
+                                            }
                                         }
                                     } else if (!item.deliveryOrderId) {
                                         errItem = { "deliveryOrderId": i18n.__("InvoiceNote.deliveryOrderId.isRequired:%s is required", i18n.__("InvoiceNote.deliveryOrderId._:Delivery Order")) }
@@ -301,7 +320,7 @@ module.exports = class InvoiceNoteManager extends BaseManager {
                         if (valid.isPayTax && valid.useIncomeTax) {
                             valid.incomeTaxInvoiceNo = "";
                         }
-                        if (valid.isPayTax && valid.useVat) {
+                        if (!valid.isPayTax && valid.useVat) {
                             valid.vatInvoiceNo = "";
                         }
 
