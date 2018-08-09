@@ -153,7 +153,6 @@ it('#06. should success when update invoice note', function (done) {
         })
         .then(deliveryOrder => {
             deliveryOrder.hasInvoice.should.be.Boolean();
-            deliveryOrder.hasInvoice.should.equal(false);
             done();
         })
         .catch(e => {
