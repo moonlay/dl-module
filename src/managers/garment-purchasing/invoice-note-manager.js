@@ -433,6 +433,10 @@ module.exports = class InvoiceNoteManager extends BaseManager {
             .then((realizations) => this.updateDeliveryOrderDeleteInvoiceNote(realizations))
             .then((realizations) => this.updatePurchaseOrderDeleteInvoiceNote(realizations))
             .then(() => {
+                if (data.isPayTax && data.useVat) {
+                    if(data.vatInvoiceNo === "")
+                        data.vatInvoiceNo = generateCode("vatInvoiceNo");
+                }
                 return Promise.resolve(data)
             })
     }
