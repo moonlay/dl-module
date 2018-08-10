@@ -356,10 +356,9 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                     var qryMatch = [{ $match: query }, { $unwind: "$items" }, { $match: queryMatchItems }, { $project: _select }, { $sort: _sort}];
                     
                     var queryDate = Object.assign({});
-                    if (shipmentDateFrom && shipmentDateTo) {
-                        var _shipmentDateFrom = new Date(shipmentDateFrom);
-                        var _shipmentDateTo = new Date(shipmentDateTo);
-
+                    var _shipmentDateFrom = new Date(shipmentDateFrom);
+                    var _shipmentDateTo = new Date(shipmentDateTo);
+                    if (!isNaN(_shipmentDateFrom) && !isNaN(_shipmentDateTo)) {
                         queryDate = {
                             year: { $gte: _shipmentDateFrom.getFullYear(), $lte: _shipmentDateTo.getFullYear() },
                             month: { $gte: _shipmentDateFrom.getMonth() + 1, $lte: _shipmentDateTo.getMonth() + 1 },
@@ -367,10 +366,34 @@ module.exports = class PurchaseRequestManager extends BaseManager {
                         }
                         qryMatch.push({ $match: queryDate })
                     }
+                    
+                    /* FILTER USED PR ITEM - id_po */
+                    qryMatch.push({ $lookup: {
+                        from: map.garmentPurchasing.collection.GarmentPurchaseRequest,
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "prRaw"
+                    } });
+                    qryMatch.push({ $unwind: "$prRaw" });
+                    /* FILTER USED PR ITEM - id_po */
 
                     this.collection.aggregate(qryMatch).toArray()
-                        .then((purchaseRequests) => {
-                            resolve(purchaseRequests);
+                        .then((results) => {
+
+                            /* FILTER USED AND DUPLICATE PR ITEM - id_po */
+                            let newResults = [];
+                            for (let index in results) {
+                                const result = results[index];
+                                const prItemFirst = result.prRaw.items.find((item) => item.product._id.toString() === result.items.productId.toString() && item.id_po.toString() === result.items.id_po.toString());
+                                const indexResults = newResults.findIndex((newResult) => newResult.roNo === result.roNo && newResult.items.productId.toString() === result.items.productId.toString() && newResult.items.id_po.toString() === result.items.id_po.toString());
+
+                                if(!prItemFirst.isUsed && indexResults == -1) {
+                                    newResults.push(result);
+                                }
+                            }
+                            /* FILTER USED AND DUPLICATE PR ITEM - id_po */
+
+                            resolve(newResults);
                         })
                         .catch(e => {
                             reject(e);
