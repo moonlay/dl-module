@@ -480,6 +480,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                         "dispositionNumber": "$dispositionNumber",
                         "orderType": "$orderType.name",
                         "comodity": "$comodity.name",
+                    
                         "quality": "$quality.name",
                         "orderQuantity": "$orderQuantity",
                         "tolerance": "$shippingQuantityTolerance",
@@ -582,6 +583,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
             item["Nomor Disposisi"] = sc.dispositionNumber;
             item["Jenis Order"] = sc.orderType;
             item["Komoditas"] = sc.comodity;
+      
             item["Kualitas"] = sc.quality;
             item["Jumlah Order SC"] = sc.orderQuantity;
             item["Jumlah Sudah Dibuatkan SPP"] = sc.productionOrderQuantity;
@@ -610,6 +612,7 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
             "Nomor Disposisi": "string",
             "Jenis Order": "string",
             "Komoditas": "string",
+         
             "Kualitas": "string",
             "Jumlah Order SC": "number",
             "Jumlah Sudah Dibuatkan SPP": "number",
