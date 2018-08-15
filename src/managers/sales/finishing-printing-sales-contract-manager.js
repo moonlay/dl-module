@@ -482,6 +482,8 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
                         "comodity": "$comodity.name",
                         "material": "$material.name",
                         "kontruksi": "$materialConstruction.name",
+                         "nobenang": "$yarnMaterial.name",
+                        "lebarfns": "$materialWidth",
                         "quality": "$quality.name",
                         "orderQuantity": "$orderQuantity",
                         "tolerance": "$shippingQuantityTolerance",
@@ -586,6 +588,8 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
             item["Komoditas"] = sc.comodity;
              item["Material"] = sc.material;
             item["Construction"] = sc.kontruksi;
+            item["No Benang"] = sc.nobenang;
+             item["Lebar Finish"] = sc.lebarfns;
             item["Kualitas"] = sc.quality;
             item["Jumlah Order SC"] = sc.orderQuantity;
             item["Jumlah Sudah Dibuatkan SPP"] = sc.productionOrderQuantity;
@@ -616,6 +620,8 @@ module.exports = class FinishingPrintingSalesContractManager extends BaseManager
             "Komoditas": "string",
              "Material": "string",
             "Construction": "string",
+            "No Benang": "string",
+            "Lebar Finish": "string",
             "Kualitas": "string",
             "Jumlah Order SC": "number",
             "Jumlah Sudah Dibuatkan SPP": "number",
