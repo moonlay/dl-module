@@ -14,6 +14,7 @@ var i18n = require('dl-i18n');
 var prStatusEnum = DLModels.purchasing.enum.PurchaseRequestStatus;
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 var moment = require('moment');
+var Hashids = require("hashids");
 
 module.exports = class PurchaseOrderManager extends BaseManager {
     constructor(db, user) {
@@ -102,7 +103,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 var _sourcePurchaseOrder = results[2];
 
                 if (_purchaseOrder) {
-                    errors["no"] = i18n.__("PurchaseOrder.no.isExist:%s is exist", i18n.__("PurchaseOrder.no._:No")); //"purchaseRequest tidak boleh kosong";
+                    errors["no"] = i18n.__("PurchaseOrder.no.isExist:%s %s is exist", i18n.__("PurchaseOrder.no._:Purchase Order No"), _purchaseOrder.no); //"purchaseRequest tidak boleh kosong";
                 }
 
                 if (!_purchaseRequest) {
@@ -121,7 +122,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     return id.toString() === searchId.toString();
                                 });
                                 if (!poId) {
-                                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request")); //"purchaseRequest tidak boleh sudah dipakai";
+                                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s %s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request"), `${_purchaseRequest.no} - ${prItem.refNo}`); //"purchaseRequest tidak boleh sudah dipakai";
                                 }
                             }
                         }
@@ -415,6 +416,20 @@ module.exports = class PurchaseOrderManager extends BaseManager {
         return Promise.resolve(purchaseOrder);
     }
 
+    createNoPre(validData) {
+        var now = new Date();
+
+        return this._beforeInsert(validData)
+            .then((processedData) => {
+                processedData._createdDate = now;
+
+                return this.collection.insert(processedData);
+            })
+            .then((id) => {
+                return this._afterInsert(id);
+            });
+    }
+
     createMultiple(listPurchaseRequest) {
         var getPurchaseRequests = [];
         var prIds = listPurchaseRequest.map((pr) => { return pr._id.toString() })
@@ -426,15 +441,30 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                 getPurchaseRequests.push(this.purchaseRequestManager.getSingleByIdOrDefault(prId));
             }
         }
+
+        // let errors = {};
+        // listPurchaseRequest.forEach((_purchaseRequest) => {
+        //     const duplicatePurchaseRequestItem = listPurchaseRequest.filter(f =>
+        //         f.no === _purchaseRequest.no && f.roNo === _purchaseRequest.roNo && f.items.refNo === _purchaseRequest.items.refNo
+        //     );
+        //     if(duplicatePurchaseRequestItem.length > 1) {
+        //         errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequestItem.isDouble:Duplicate %s : %s", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request Item"), `${_purchaseRequest.roNo} - ${_purchaseRequest.no} - ${_purchaseRequest.items.refNo}`);
+        //     }
+        // });
+        // if (Object.getOwnPropertyNames(errors).length > 0) {
+        //     var ValidationError = require('module-toolkit').ValidationError;
+        //     return Promise.reject(new ValidationError('data does not pass validation', errors));
+        // }
+
         return Promise.all(getPurchaseRequests)
             .then((purchaseRequests) => {
-                var jobs = [];
-                for (var _purchaseRequest of listPurchaseRequest) {
+                let preJobs = [];
+                listPurchaseRequest.forEach((_purchaseRequest, index) => {
                     var purchaseRequest = purchaseRequests.find((pr) => pr._id.toString() === _purchaseRequest._id.toString());
                     var prItems = purchaseRequest.items.find((item) => item.product._id.toString() === _purchaseRequest.items.productId.toString() && item.id_po.toString() === _purchaseRequest.items.id_po.toString())
 
-                    var purchaseOrder = {}
-                    purchaseOrder.no = generateCode(_purchaseRequest.items.id_po.toString());
+                    var purchaseOrder = {};
+                    purchaseOrder.no = this.generateCodeByIndex(_purchaseRequest.items.id_po.toString(), index);
                     purchaseOrder.status = poStatusEnum.CREATED;
                     purchaseOrder._createdDate = new Date();
                     purchaseOrder.refNo = purchaseRequest.no;
@@ -471,64 +501,73 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                         _items.push(_item);
                     }
                     purchaseOrder.items = _items;
-                    jobs.push(this.create(purchaseOrder));
-                }
-                return Promise.all(jobs)
-                    .then((poIds) => {
-                        var getPurchaseOrder = [];
-                        for (var poId of poIds) {
-                            getPurchaseOrder.push(this.getSingleById(poId, ["_id", "purchaseRequestId", "items.product._id", "items.id_po"]))
+
+                    preJobs.push(this._pre(purchaseOrder));
+                });
+
+                return Promise.all(preJobs)
+                    .then((validPurchaseOrders) => {
+                        let jobs = [];
+                        for (const purchaseOrder of validPurchaseOrders) {
+                            jobs.push(this.createNoPre(purchaseOrder));
                         }
-                        return Promise.all(getPurchaseOrder)
-                            .then((results) => {
-                                var listPurchaseOrders = results.map((poInternal) => {
-                                    return poInternal.items.map((item) => {
-                                        return {
-                                            purchaseOrderId: poInternal._id,
-                                            purchaseRequestId: poInternal.purchaseRequestId,
-                                            productId: item.product._id,
-                                            id_po: item.id_po
-                                        }
-                                    })
-                                })
-                                listPurchaseOrders = [].concat.apply([], listPurchaseOrders);
-                                var map = new Map();
-                                for (var purchaseOrder of listPurchaseOrders) {
-                                    var key = purchaseOrder.purchaseRequestId.toString();
-                                    if (!map.has(key))
-                                        map.set(key, [])
-                                    map.get(key).push(purchaseOrder);
+                        return Promise.all(jobs)
+                            .then((poIds) => {
+                                var getPurchaseOrder = [];
+                                for (var poId of poIds) {
+                                    getPurchaseOrder.push(this.getSingleById(poId, ["_id", "purchaseRequestId", "items.product._id", "items.id_po"]))
                                 }
-
-                                var jobs = [];
-                                map.forEach((items, purchaseRequestId) => {
-                                    var job = this.purchaseRequestManager.getSingleById(purchaseRequestId)
-                                        .then((purchaseRequest) => {
-                                            for (var item of items) {
-                                                var prItem = purchaseRequest.items.find(prItem => prItem.product._id.toString() === item.productId.toString() && prItem.id_po.toString() === item.id_po.toString());
-                                                if (prItem) {
-                                                    prItem.purchaseOrderIds = prItem.purchaseOrderIds || []
-                                                    prItem.purchaseOrderIds.push(item.purchaseOrderId);
-                                                    prItem.isUsed = true;
+                                return Promise.all(getPurchaseOrder)
+                                    .then((results) => {
+                                        var listPurchaseOrders = results.map((poInternal) => {
+                                            return poInternal.items.map((item) => {
+                                                return {
+                                                    purchaseOrderId: poInternal._id,
+                                                    purchaseRequestId: poInternal.purchaseRequestId,
+                                                    productId: item.product._id,
+                                                    id_po: item.id_po
                                                 }
-                                            }
-                                            purchaseRequest.isUsed = purchaseRequest.items
-                                                .map((item) => item.isUsed)
-                                                .reduce((prev, curr, index) => {
-                                                    return prev && curr
-                                                }, true);
-                                            purchaseRequest.status = prStatusEnum.PROCESSING;
-                                            return this.purchaseRequestManager.updateCollectionPR(purchaseRequest);
-                                        });
-                                    jobs.push(job);
-                                })
+                                            })
+                                        })
+                                        listPurchaseOrders = [].concat.apply([], listPurchaseOrders);
+                                        var map = new Map();
+                                        for (var purchaseOrder of listPurchaseOrders) {
+                                            var key = purchaseOrder.purchaseRequestId.toString();
+                                            if (!map.has(key))
+                                                map.set(key, [])
+                                            map.get(key).push(purchaseOrder);
+                                        }
 
-                                return Promise.all(jobs).then((results) => {
-                                    return Promise.resolve(poIds);
-                                })
+                                        var jobs = [];
+                                        map.forEach((items, purchaseRequestId) => {
+                                            var job = this.purchaseRequestManager.getSingleById(purchaseRequestId)
+                                                .then((purchaseRequest) => {
+                                                    for (var item of items) {
+                                                        var prItem = purchaseRequest.items.find(prItem => prItem.product._id.toString() === item.productId.toString() && prItem.id_po.toString() === item.id_po.toString());
+                                                        if (prItem) {
+                                                            prItem.purchaseOrderIds = prItem.purchaseOrderIds || []
+                                                            prItem.purchaseOrderIds.push(item.purchaseOrderId);
+                                                            prItem.isUsed = true;
+                                                        }
+                                                    }
+                                                    purchaseRequest.isUsed = purchaseRequest.items
+                                                        .map((item) => item.isUsed)
+                                                        .reduce((prev, curr, index) => {
+                                                            return prev && curr
+                                                        }, true);
+                                                    purchaseRequest.status = prStatusEnum.PROCESSING;
+                                                    return this.purchaseRequestManager.updateCollectionPR(purchaseRequest);
+                                                });
+                                            jobs.push(job);
+                                        })
+
+                                        return Promise.all(jobs).then((results) => {
+                                            return Promise.resolve(poIds);
+                                        })
+                                    })
                             })
                     })
-            })
+                })
             .catch(e => {
                 return Promise.reject(e);
             });
@@ -3403,4 +3442,13 @@ getDurationPoExtDo(query) {
 
         return Promise.resolve(xls);
     }    
+
+    generateCodeByIndex(salt, index) {
+        var hashids = new Hashids(salt, 8, "ABCDEFGHIJKLMNPQRSTUVWXYZ123456789");
+        var now = moment();
+        var begin = now.clone().startOf("month");
+        var diff = now.diff(begin);
+        var code = `${hashids.encode(Number("".concat(diff, index)))}`;
+        return code;
+    }
 };
