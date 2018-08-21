@@ -1325,12 +1325,41 @@ module.exports = class PurchaseOrderExternalManager extends BaseManager {
                 {
                     $unwind: "$items"
                 }, 
+                // {
+                //     $lookup: {
+                //         from: POColl,
+                //         foreignField: "refNo",
+                //         localField: "items.prNo",
+                //         as: "PO"
+                //     },
+                // },
                 {
                     $lookup: {
                         from: POColl,
-                        foreignField: "refNo",
-                        localField: "items.prNo",
-                        as: "PO"
+                        // foreignField: "refNo",
+                        // localField: "items.prNo",
+                        let: {
+                            prNo: "$items.prNo"
+                        },
+                        pipeline: [
+                            { $match:
+                                { $expr:
+                                    { $and:
+                                        [
+                                            { $eq: [ "$refNo",  "$$prNo" ] },
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    buyer: 1,
+                                    unit: 1,
+                                    artikel: 1,
+                                }
+                            }
+                        ],
+                        as: "PO",
                     },
                 },
                 {
