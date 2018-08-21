@@ -1,16 +1,18 @@
 language: node_js
 node_js:
   - "6"
-services:
-- mongodb
 addons: 
   code_climate:
       repo_token: 5c8399361dc0a0b0d65378b2c11675be17857c55bfc62e1460b4739083ee7f18
-  apt:
-    sources:
-    - mongodb-3.6-trusty
-    packages:
-    - mongodb-org-server
+env:
+  global:
+    - MONGODB=4.0.1
+before_script:
+  - wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-${MONGODB}.tgz -O /tmp/mongodb.tgz
+  - tar -xvf /tmp/mongodb.tgz
+  - mkdir /tmp/data
+  - ${PWD}/mongodb-linux-x86_64-${MONGODB}/bin/mongod --dbpath /tmp/data --bind_ip 127.0.0.1 --auth &> /dev/null &
+  - sudo service mongod start
 after_success:
 - mongo admin --eval "db.dropDatabase()"
 - npm run coveralls
