@@ -8,7 +8,7 @@ addons:
       repo_token: 5c8399361dc0a0b0d65378b2c11675be17857c55bfc62e1460b4739083ee7f18
   apt:
     sources:
-    - mongodb-3.2-precise
+    - mongodb-3.6-precise
     packages:
     - mongodb-org-server
 after_success:
