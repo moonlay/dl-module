@@ -122,7 +122,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     return id.toString() === searchId.toString();
                                 });
                                 if (!poId) {
-                                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s %s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request"), `${_purchaseRequest.no} - ${prItem.refNo}`); //"purchaseRequest tidak boleh sudah dipakai";
+                                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s %s is already used or double", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request"), `${_purchaseRequest.no} - ${prItem.refNo}`); //"purchaseRequest tidak boleh sudah dipakai";
                                 }
                             }
                         }
