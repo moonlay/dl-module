@@ -122,7 +122,7 @@ module.exports = class PurchaseOrderManager extends BaseManager {
                                     return id.toString() === searchId.toString();
                                 });
                                 if (!poId) {
-                                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s %s is already used", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request"), `${_purchaseRequest.no} - ${prItem.refNo}`); //"purchaseRequest tidak boleh sudah dipakai";
+                                    errors["purchaseRequestId"] = i18n.__("PurchaseOrder.purchaseRequest.isUsed:%s %s is already used or double", i18n.__("PurchaseOrder.purchaseRequest._:Purchase Request"), `${_purchaseRequest.no} - ${prItem.refNo}`); //"purchaseRequest tidak boleh sudah dipakai";
                                 }
                             }
                         }
@@ -614,59 +614,75 @@ module.exports = class PurchaseOrderManager extends BaseManager {
             })
     }
 
+    updateNoPre(validData) {
+        return this._beforeUpdate(validData)
+            .then((processedData) => {
+                return this.collection.update(processedData);
+            })
+            .then((id) => {
+                return this._afterUpdate(id);
+            }); 
+    }
+
     split(splittedPurchaseOrder) {
         return new Promise((resolve, reject) => {
             this.getSingleById(splittedPurchaseOrder.sourcePurchaseOrderId)
-                .then(sourcePurchaseOrder => {
-                    delete splittedPurchaseOrder._id;
-                    delete splittedPurchaseOrder.no;
-
-                    splittedPurchaseOrder.no = generateCode();
-                    splittedPurchaseOrder.sourcePurchaseOrder = sourcePurchaseOrder;
-                    splittedPurchaseOrder.sourcePurchaseOrderId = sourcePurchaseOrder._id;
-                    this.create(splittedPurchaseOrder)
-                        .then((purchaseOrderId) => {
-                            return this.getSingleById(purchaseOrderId, ["_id", "purchaseRequestId", "items.product._id", "items.id_po"])
-                                .then((purchaseOrder) => {
-                                    return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
-                                        .then(purchaseRequest => {
-                                            for (var item of purchaseOrder.items) {
-                                                var prItem = purchaseRequest.items.find(prItem => prItem.productId.toString() === item.product._id.toString() && prItem.id_po.toString() === item.id_po.toString());
-                                                if (prItem) {
-                                                    prItem.purchaseOrderIds = prItem.purchaseOrderIds || []
-                                                    prItem.purchaseOrderIds.push(purchaseOrder._id);
-                                                    prItem.isUsed = true;
+                .then(preSourcePurchaseOrder => {
+                    this._pre(preSourcePurchaseOrder)
+                        .then((sourcePurchaseOrder) => {
+                            delete splittedPurchaseOrder._id;
+                            delete splittedPurchaseOrder.no;
+        
+                            splittedPurchaseOrder.no = generateCode();
+                            splittedPurchaseOrder.sourcePurchaseOrder = sourcePurchaseOrder;
+                            splittedPurchaseOrder.sourcePurchaseOrderId = sourcePurchaseOrder._id;
+                            this.create(splittedPurchaseOrder)
+                                .then((purchaseOrderId) => {
+                                    return this.getSingleById(purchaseOrderId, ["_id", "purchaseRequestId", "items.product._id", "items.id_po"])
+                                        .then((purchaseOrder) => {
+                                            return this.purchaseRequestManager.getSingleById(purchaseOrder.purchaseRequestId)
+                                                .then(purchaseRequest => {
+                                                    for (var item of purchaseOrder.items) {
+                                                        var prItem = purchaseRequest.items.find(prItem => prItem.productId.toString() === item.product._id.toString() && prItem.id_po.toString() === item.id_po.toString());
+                                                        if (prItem) {
+                                                            prItem.purchaseOrderIds = prItem.purchaseOrderIds || []
+                                                            prItem.purchaseOrderIds.push(purchaseOrder._id);
+                                                            prItem.isUsed = true;
+                                                        }
+                                                    }
+                                                    purchaseRequest.isUsed = purchaseRequest.items
+                                                        .map((item) => item.isUsed)
+                                                        .reduce((prev, curr, index) => {
+                                                            return prev && curr
+                                                        }, true);
+                                                    purchaseRequest.status = prStatusEnum.PROCESSING;
+                                                    return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
+                                                })
+                                        })
+                                        .then(result => {
+                                            for (var item of splittedPurchaseOrder.items) {
+                                                var sourceItem = sourcePurchaseOrder.items.find((_sourceItem) => item.product._id.toString() === _sourceItem.product._id.toString());
+                                                if (sourceItem) {
+                                                    sourceItem.defaultQuantity = parseFloat((sourceItem.defaultQuantity - item.defaultQuantity).toFixed(2));
                                                 }
                                             }
-                                            purchaseRequest.isUsed = purchaseRequest.items
-                                                .map((item) => item.isUsed)
-                                                .reduce((prev, curr, index) => {
-                                                    return prev && curr
-                                                }, true);
-                                            purchaseRequest.status = prStatusEnum.PROCESSING;
-                                            return this.purchaseRequestManager.updateCollectionPR(purchaseRequest)
+                                            sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
+                                                return !item.isPosted && item.defaultQuantity > 0;
+                                            })
+                                            sourcePurchaseOrder.isSplit = true;
+                                            this.updateNoPre(sourcePurchaseOrder)
+                                                .then(results => {
+                                                    resolve(purchaseOrderId);
+                                                })
+                                                .catch(e => {
+                                                    reject(e);
+                                                });
                                         })
                                 })
-                                .then(result => {
-                                    for (var item of splittedPurchaseOrder.items) {
-                                        var sourceItem = sourcePurchaseOrder.items.find((_sourceItem) => item.product._id.toString() === _sourceItem.product._id.toString());
-                                        if (sourceItem) {
-                                            sourceItem.defaultQuantity = parseFloat((sourceItem.defaultQuantity - item.defaultQuantity).toFixed(2));
-                                        }
-                                    }
-                                    sourcePurchaseOrder.items = sourcePurchaseOrder.items.filter((item, index) => {
-                                        return !item.isPosted && item.defaultQuantity > 0;
-                                    })
-                                    sourcePurchaseOrder.isSplit = true;
-                                    this.update(sourcePurchaseOrder)
-                                        .then(results => {
-                                            resolve(purchaseOrderId);
-                                        })
-                                        .catch(e => {
-                                            reject(e);
-                                        });
+                                .catch(e => {
+                                    reject(e);
+                                });
                                 })
-                        })
                         .catch(e => {
                             reject(e);
                         });
