@@ -43,5 +43,19 @@ class BuyerDataUtil {
         };
         return this.getSert(data);
     }
+
+    getTestDataBuyerInternal() {        
+        var data = {
+            code: "UT/BUY/02",
+            name: "Buyer 02",
+            address: "Jalan Lingkar Luar",
+            country: "ID",
+            city: "solo",
+            contact: "Paijo",
+            tempo: "30",
+            type: "Internal",
+        };
+        return this.getSert(data);
+    }
 }
 module.exports = new BuyerDataUtil();
