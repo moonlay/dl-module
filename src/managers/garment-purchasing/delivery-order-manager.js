@@ -320,6 +320,10 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             .then(() => {
                 return Promise.resolve(id)
             })
+            .catch(e => {
+                e.errors = e.message;
+                return Promise.reject(e);
+            })
     }
 
     _beforeUpdate(deliveryOrder) {
@@ -345,6 +349,10 @@ module.exports = class DeliveryOrderManager extends BaseManager {
             })
             .then(() => {
                 return Promise.resolve(id)
+            })
+            .catch(e => {
+                e.errors = e.message;
+                return Promise.reject(e);
             })
     }
 
@@ -1017,6 +1025,10 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                             .then(() => {
                                 return Promise.resolve(deliveryOrder._id)
                             })
+                            .catch(e => {
+                                e.errors = e.message;
+                                return Promise.reject(e);
+                            });
                     })
             });
     }
