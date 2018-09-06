@@ -963,18 +963,15 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
     updatePurchaseOrderExternalDeleteDO(realizations) {
         var map = new Map();
-        for (var purchaseOrderId of realizations) {
-            var key = purchaseOrderId.purchaseOrderExternalId.toString();
+        for (var realization of realizations) {
+            var key = realization.purchaseOrderExternalId.toString();
             if (!map.has(key))
                 map.set(key, [])
-
-            var purchaseOrderId = purchaseOrderId.purchaseOrderId.toString()
-            if (map.get(key).indexOf(purchaseOrderId) < 0)
-                map.get(key).push(purchaseOrderId);
+            map.get(key).push(realization);
         }
 
         var jobs = [];
-        map.forEach((purchaseOrderIds, purchaseOrderExternalId) => {
+        map.forEach((realizations, purchaseOrderExternalId) => {
             var job = this.purchaseOrderExternalManager.getSingleById(purchaseOrderExternalId)
                 .then((purchaseOrderExternal) => {
                     for (var realization of realizations) {
@@ -986,7 +983,7 @@ module.exports = class DeliveryOrderManager extends BaseManager {
                         item.isClosed = item.realizations.map(item => item.deliveredQuantity)
                             .reduce((prev, curr, index) => {
                                 return prev + curr;
-                            }, 0) >= item.dealQuantity
+                            }, 0) >= item.dealQuantity;
                     }
 
                     purchaseOrderExternal.isClosed = purchaseOrderExternal.items
