@@ -141,3 +141,42 @@ it('#08. should success when generate data to Excel Report with date', function 
             done(e);
         });
 })
+
+it('#08-1. should success when generate data to Excel Report with startdate and enddate', function (done) {
+    var startdate = new Date();
+    var enddate   = new Date();
+    var offset=7;
+    instanceManager.getAllData(startdate, enddate, offset)
+    .then(result => {
+        result.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+})
+
+it('#08-2. should success when generate data to Excel Report with startdate', function (done) {
+    var startdate = new Date();
+    var enddate   = null;
+    var offset=7;
+    instanceManager.getAllData(startdate, enddate, offset)
+    .then(result => {
+        result.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+})
+
+it('#08-3. should success when generate data to Excel Report with enddate', function (done) {
+    var startdate = null;
+    var enddate   = new Date();
+    var offset=7;
+    instanceManager.getAllData(startdate, enddate, offset)
+    .then(result => {
+        result.should.instanceof(Array);
+        done();
+    }).catch(e => {
+            done(e);
+        });
+})
