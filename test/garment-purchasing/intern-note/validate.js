@@ -198,7 +198,7 @@ it('#9. should success when generate pdf intern note', function (done) {
 });
 
 it("#10. should success when search data with filter", function (done) {
-    manager.read({
+    internNoteManager.read({
         keyword: createdData.no
     })
         .then((documents) => {
