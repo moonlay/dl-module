@@ -174,3 +174,20 @@ it('#8. should success when generate pdf intern note', function (done) {
             done(e);
         });
 });
+
+it("#09. should error when create new data with duplicate invoice", function (done) {
+    var data = Object.assign({}, interNoteData);
+    data.items[1]=data.items[0];
+    internNoteManager.create(data)
+        .then((id) => {
+            done("should error when create new data with  duplicate invoice");
+        })
+        .catch((e) => {
+            e.name.should.equal("ValidationError");
+            e.should.have.property("errors");
+            e.errors.should.instanceof(Object);
+            e.errors.should.have.property('invoiceId');
+            done();
+        });
+
+});
