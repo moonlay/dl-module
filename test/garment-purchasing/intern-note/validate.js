@@ -171,13 +171,15 @@ it("#07. should error when create new data with duplicate invoice note", functio
             done();
         });
 });
-var createdId = {}
+var createdId = {};
+var createdData={};
 it("#8. should success when create new data", function (done) {
     var data = Object.assign({}, interNoteData);
     interNoteDataUtil.getNewTestData()
         .then((data) => {
             data.should.be.Object();
             createdId = data._id;
+            createdData=data;
             done();
         })
         .catch((e) => {
@@ -195,3 +197,18 @@ it('#9. should success when generate pdf intern note', function (done) {
         });
 });
 
+it("#10. should success when search data with filter", function (done) {
+    manager.read({
+        keyword: createdData.no
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
