@@ -150,14 +150,36 @@ it("#06. should error when create new data with different useIncomeTax on items"
             done(e);
         });
 });
-
-var createdId = {}
-it("#7. should success when create new data", function (done) {
+it("#07. should error when create new data with duplicate invoice note", function (done) {
+    var data = Object.assign({}, interNoteData);
+    var tamp = [];
+    for (var varitem of data.items) {
+        tamp.push(varitem);
+        tamp.push(varitem);
+    }
+    data.items = tamp;
+    internNoteManager.create(data)
+        .then((id) => {
+            done("should error when create new data with duplicate invoice note");
+        })
+        .catch((e) => {
+            e.name.should.equal("ValidationError");
+            e.should.have.property("errors");
+            e.errors.should.instanceof(Object);
+            e.errors.should.have.property('items');
+            e.errors.items.should.instanceof(Array);
+            done();
+        });
+});
+var createdId = {};
+var createdData={};
+it("#8. should success when create new data", function (done) {
     var data = Object.assign({}, interNoteData);
     interNoteDataUtil.getNewTestData()
         .then((data) => {
             data.should.be.Object();
             createdId = data._id;
+            createdData=data;
             done();
         })
         .catch((e) => {
@@ -165,12 +187,28 @@ it("#7. should success when create new data", function (done) {
         });
 });
 
-it('#8. should success when generate pdf intern note', function (done) {
+it('#9. should success when generate pdf intern note', function (done) {
     internNoteManager.pdf(createdId, 7)
         .then(results => {
             done();
         })
         .catch(e => {
+            done(e);
+        });
+});
+
+it("#10. should success when search data with filter", function (done) {
+    internNoteManager.read({
+        keyword: createdData.no
+    })
+        .then((documents) => {
+            //process documents
+            documents.should.have.property("data");
+            documents.data.should.be.instanceof(Array);
+            documents.data.length.should.not.equal(0);
+            done();
+        })
+        .catch((e) => {
             done(e);
         });
 });

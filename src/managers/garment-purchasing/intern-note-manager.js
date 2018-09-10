@@ -175,11 +175,21 @@ module.exports = class InternNoteManager extends BaseManager {
                         itemVatType = itemVatType.filter(function (elem, index, self) {
                             return index == self.indexOf(elem);
                         })
-
+                        var invoiceNos=[];
                         for (var item of valid.items) {
                             var errItem = {};
                             if (item._id) {
                                 var _invoiceNote = _invoiceNotes.find(invoiceNote => invoiceNote._id.toString() === item._id.toString());
+                                
+                                if(_invoiceNote){
+                                    if(invoiceNos.length>0){
+                                        var dup= invoiceNos.find(inv=> inv.toString()===item._id.toString());
+                                        if(dup){
+                                            errItem = { "InvoiceNoteId": i18n.__("InternNote.InvoiceNoteId.InvoiceNoduplicate:%s is already used", i18n.__("InternNote.InvoiceNoteId._:Invoice Note")) }
+                                        }
+                                    }
+                                }
+                                
                                 if (!_invoiceNote) {
                                     errItem = { "InvoiceNoteId": i18n.__("InternNote.InvoiceNoteId.isRequired:%s is required", i18n.__("InternNote.InvoiceNoteId._:Invoice Note")) }
                                 } else if (itemUseIncomeTax.length > 1) {
@@ -197,6 +207,8 @@ module.exports = class InternNoteManager extends BaseManager {
                                         errItem = { "InvoiceNoteId": i18n.__("InternNote.InvoiceNoteId.differentPaymentMethod:%s must same with all items", i18n.__("InternNote.InvoiceNoteId._:Payment Method")) }
                                     }
                                 }
+                                
+                                invoiceNos.push(item._id);
                             }
                             errItems.push(errItem);
                         }
