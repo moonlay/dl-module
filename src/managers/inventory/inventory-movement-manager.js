@@ -90,8 +90,8 @@ module.exports = class InventoryMovementManager extends BaseManager {
                     .then(results => {
                         var sum = results[0];
                         var summary = results[1];
-                        summary.quantity = parseFloat(sum.quantity.toFixed(2));
-                        summary.stockPlanning = parseFloat(sum.stockPlanning.toFixed(2));
+                        summary.quantity = sum.quantity;
+                        summary.stockPlanning = sum.stockPlanning;
                         return this.inventorySummaryManager.update(summary)
                     })
                     .then(sumId => id)
