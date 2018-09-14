@@ -1,5 +1,6 @@
 require("should");
 var SpinningSalesContract = require("../../data-util/sales/spinning-sales-contract-data-util");
+var BuyerDataUtil = require("../../data-util/master/buyer-data-util");
 var helper = require("../../helper");
 var validate = require("dl-models").validator.sales.spinningSalesContract;
 var moment = require('moment');
@@ -43,6 +44,33 @@ it('#02. should success when create pdf', function (done) {
         }).catch(e => {
             done(e);
         });
+});
+
+it('#02-1. should success when create pdf Internal Buyer', function (done) {
+    spinningSalesContractManager.getSingleById(createdId)
+        .then(dataSpinningSalesContract => {
+            BuyerDataUtil.getTestDataBuyerInternal()
+                .then(dataBuyer => {
+                    dataSpinningSalesContract.buyerId = dataBuyer._id;
+                    dataSpinningSalesContract.buyer = dataBuyer;
+                    spinningSalesContractManager.collection.update(dataSpinningSalesContract)
+                        .then(id => {
+                            spinningSalesContractManager.pdf(createdId, 7)
+                                .then(pdfData => {
+                                    done();
+                                }).catch(e => {
+                                    done(e);
+                                });
+                        }).catch(e => {
+                            done(e);
+                        });
+                }).catch(e => {
+                    done(e);
+                });
+        }).catch(e => {
+            done(e);
+        });
+
 });
 
 it("#03. should success when destroy all unit test data", function (done) {

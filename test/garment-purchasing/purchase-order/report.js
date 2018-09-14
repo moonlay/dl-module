@@ -88,6 +88,55 @@ it('#04. should success when get data for Excel Report', function (done) {
         });
 });
 
+it('#04-1. should success when get data for Excel Report with dateFrom', function (done) {
+    var query = {
+        dateFrom: new Date()
+    };
+
+    manager.getXls(resultForExcelTest, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#04-2. should success when get data for Excel Report with dateTo', function (done) {
+    var query = {
+        dateTo: new Date()
+    };
+
+    manager.getXls(resultForExcelTest, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
+it('#04-3. should success when get data for Excel Report with dateFrom and dateTo', function (done) {
+    var query = {
+        dateFrom: new Date(),
+        dateTo: new Date()
+    };
+
+    manager.getXls(resultForExcelTest, query)
+        .then(xlsData => {
+            xlsData.should.have.property('data');
+            xlsData.should.have.property('options');
+            xlsData.should.have.property('name');
+            done();
+        }).catch(e => {
+            done(e);
+        });
+});
+
 
 it("#05. should success when destroy all unit test data", function (done) {
     manager.destroy(createdData._id)
