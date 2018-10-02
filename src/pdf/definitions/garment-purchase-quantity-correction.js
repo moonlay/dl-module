@@ -8,6 +8,7 @@ module.exports = function (purchaseQuantityCorrection, offset) {
         var deliveryOrderFulfillment = deliveryOrderItem.fulfillments.find((deliveryOrderFulfillment) => deliveryOrderFulfillment.purchaseOrderId.toString() === item.purchaseOrderInternalId.toString() && deliveryOrderFulfillment.purchaseRequestId.toString() === item.purchaseRequestId.toString() && deliveryOrderFulfillment.productId.toString() === item.productId.toString());
         return {
             refNo: item.purchaseOrderInternal.refNo,
+            prRefNo: item.purchaseRequestRefNo,
             artikel: item.purchaseOrderInternal.artikel,
             productCode: item.product.code,
             productName: item.product.name,
@@ -203,7 +204,8 @@ module.exports = function (purchaseQuantityCorrection, offset) {
         }
 
         return [{
-            text: item.refNo,
+            //text: item.refNo,
+            text: item.prRefNo,
             style: ['size08', 'left']
         }, {
             text: item.artikel,

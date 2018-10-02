@@ -200,7 +200,8 @@ module.exports = function (data, offset) {
         item.purchaseOrderInternal = item.purchaseOrderInternal || {};
 
         return [{
-            text: item.purchaseOrderInternal.refNo,
+            //text: item.purchaseOrderInternal.refNo,
+            text: item.purchaseRequestRefNo,
             style: ['size08', 'left']
         }, {
             text: item.purchaseOrderInternal.artikel,

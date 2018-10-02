@@ -1147,22 +1147,22 @@ module.exports = class DeliveryOrderManager extends BaseManager {
 
             var now = new Date();
             var deleted = {
-                _deleted: false
+                _deleted: false, hasCustoms: true, useCustoms: true
             };
 
             var query = [deleted];
 
-            var hasCustoms = {
-                "hasCustoms":true
-            };
+            // var hasCustoms = {
+            //     "hasCustoms":true
+            // };
 
-            var query = [hasCustoms];
+            // var query = [hasCustoms];
             
-            var useCustoms = {
-                "useCustoms":true
-            };
+            // var useCustoms = {
+            //     "useCustoms":true
+            // };
 
-            var query = [useCustoms];
+            // var query = [useCustoms];
             
             var validStartDate = new Date(startdate);
             var validEndDate = new Date(enddate);
