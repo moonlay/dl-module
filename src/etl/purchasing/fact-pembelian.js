@@ -4,6 +4,7 @@
 var ObjectId = require("mongodb").ObjectId;
 var BaseManager = require("module-toolkit").BaseManager;
 var moment = require("moment");
+const minimumDateString = "1753-01-01";
 
 // internal deps 
 require("mongodb-toolkit");
@@ -244,6 +245,18 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
         }
     }
 
+    validateDate(date) {
+        let minimumDate = new Date(minimumDateString);
+        let dateToValidate = new Date(date);
+        let dateNow = new Date();
+
+        if (dateToValidate < minimumDate) {
+            dateToValidate = new Date(dateToValidate.setFullYear(dateNow.getFullYear()))
+        }
+
+        return dateToValidate;
+    }
+
     transform(data) {
         var result = data.map((item) => {
             var purchaseRequest = item.purchaseRequest;
@@ -257,20 +270,20 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                     if (poItem.fulfillments.length > 0) {
 
                         return poItem.fulfillments.map((poFulfillment) => {
-                            var prPoExtDays = (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? moment(moment(purchaseOrder.purchaseOrderExternal._createdDate).startOf("day")).diff(moment(moment(purchaseRequest._createdDate).startOf("day")), "days") : null;
-                            var poIntDays = purchaseOrder._createdDate ? moment(moment(purchaseOrder._createdDate).startOf("day")).diff(moment(moment(purchaseRequest._createdDate).startOf("day")), "days") : null;
-                            var poExtDays = (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? moment(moment(purchaseOrder.purchaseOrderExternal._createdDate).startOf("day")).diff(moment(moment(purchaseOrder._createdDate).startOf("day")), "days") : null;
-                            var doDays = (poFulfillment.deliveryOrderDate && purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? moment(moment(poFulfillment.deliveryOrderDate).startOf("day")).diff(moment(moment(purchaseOrder.purchaseOrderExternal._createdDate).startOf("day")), "days") : null;
-                            var urnDays = poFulfillment.unitReceiptNoteDate ? moment(moment(poFulfillment.unitReceiptNoteDate).startOf("day")).diff(moment(moment(poFulfillment.deliveryOrderDate).startOf("day")), "days") : null;
-                            var upoDays = poFulfillment.interNoteDate ? moment(moment(poFulfillment.interNoteDate).startOf("day")).diff(moment(moment(poFulfillment.unitReceiptNoteDate).startOf("day")), "days") : null;
-                            var poDays = poFulfillment.interNoteDate ? moment(moment(poFulfillment.interNoteDate).startOf("day")).diff(moment(moment(purchaseOrder._createdDate).startOf("day")), "days") : null;
+                            var prPoExtDays = (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? moment(moment(this.validateDate(purchaseOrder.purchaseOrderExternal._createdDate)).startOf("day")).diff(moment(moment(this.validateDate(purchaseRequest._createdDate)).startOf("day")), "days") : null;
+                            var poIntDays = purchaseOrder._createdDate ? moment(moment(this.validateDate(purchaseOrder._createdDate)).startOf("day")).diff(moment(moment(this.validateDate(purchaseRequest._createdDate)).startOf("day")), "days") : null;
+                            var poExtDays = (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? moment(moment(this.validateDate(purchaseOrder.purchaseOrderExternal._createdDate)).startOf("day")).diff(moment(moment(this.validateDate(purchaseOrder._createdDate)).startOf("day")), "days") : null;
+                            var doDays = (poFulfillment.deliveryOrderDate && purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? moment(moment(this.validateDate(poFulfillment.deliveryOrderDate)).startOf("day")).diff(moment(moment(this.validateDate(purchaseOrder.purchaseOrderExternal._createdDate)).startOf("day")), "days") : null;
+                            var urnDays = poFulfillment.unitReceiptNoteDate ? moment(moment(this.validateDate(poFulfillment.unitReceiptNoteDate)).startOf("day")).diff(moment(moment(this.validateDate(poFulfillment.deliveryOrderDate)).startOf("day")), "days") : null;
+                            var upoDays = poFulfillment.interNoteDate ? moment(moment(this.validateDate(poFulfillment.interNoteDate)).startOf("day")).diff(moment(moment(this.validateDate(poFulfillment.unitReceiptNoteDate)).startOf("day")), "days") : null;
+                            var poDays = poFulfillment.interNoteDate ? moment(moment(this.validateDate(poFulfillment.interNoteDate)).startOf("day")).diff(moment(moment(this.validateDate(purchaseOrder._createdDate)).startOf("day")), "days") : null;
                             var lastDeliveredDate = poFulfillment.deliveryOrderDate ? poItem.fulfillments[poItem.fulfillments.length - 1].deliveryOrderDate : null;
                             var catType = (purchaseRequest.category && purchaseRequest.category.name) ? purchaseRequest.category.name : null;
 
                             return {
                                 purchaseRequestNo: purchaseRequest.no ? `'${purchaseRequest.no}'` : null,
-                                purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(purchaseRequest._createdDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
-                                expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(purchaseRequest.expectedDeliveryDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                                purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(this.validateDate(purchaseRequest._createdDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                                expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(this.validateDate(purchaseRequest.expectedDeliveryDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                                 budgetCode: (purchaseRequest.budget && purchaseRequest.budget.code) ? `'${purchaseRequest.budget.code}'` : null,
                                 budgetName: (purchaseRequest.budget && purchaseRequest.budget.name) ? `'${purchaseRequest.budget.name}'` : null,
                                 unitCode: (purchaseRequest.unit && purchaseRequest.unit.code) ? `'${purchaseRequest.unit.code}'` : null,
@@ -288,14 +301,14 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                                 prPurchaseOrderExternalDaysRange: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? `'${this.getRangeWeek(prPoExtDays)}'` : null,
 
                                 purchaseOrderNo: purchaseOrder.no ? `'${purchaseOrder.no}'` : null,
-                                purchaseOrderDate: purchaseOrder._createdDate ? `'${moment(purchaseOrder._createdDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                                purchaseOrderDate: purchaseOrder._createdDate ? `'${moment(this.validateDate(purchaseOrder._createdDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                                 purchaseOrderExternalDays: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? `${poExtDays}` : null,
                                 purchaseOrderExternalDaysRange: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? `'${this.getRangeWeek(poExtDays)}'` : null,
                                 purchasingStaffName: purchaseOrder._createdBy ? `'${purchaseOrder._createdBy}'` : null,
                                 prNoAtPo: purchaseRequest.no ? `'${purchaseRequest.no}'` : null,
 
                                 purchaseOrderExternalNo: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal.no) ? `'${purchaseOrder.purchaseOrderExternal.no}'` : null,
-                                purchaseOrderExternalDate: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? `'${moment(purchaseOrder.purchaseOrderExternal._createdDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                                purchaseOrderExternalDate: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? `'${moment(this.validateDate(purchaseOrder.purchaseOrderExternal._createdDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                                 deliveryOrderDays: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate && poFulfillment.deliveryOrderDate) ? `${doDays}` : null,
                                 deliveryOrderDaysRange: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate && poFulfillment.deliveryOrderDate) ? `'${this.getRangeMonth(doDays)}'` : null,
                                 supplierCode: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal.supplier && purchaseOrder.purchaseOrderExternal.supplier.code) ? `'${purchaseOrder.purchaseOrderExternal.supplier.code}'` : null,
@@ -308,23 +321,23 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                                 uom: (poItem.dealUom && poItem.dealUom.unit) ? `'${poItem.dealUom.unit}'` : null,
                                 pricePerUnit: poItem.pricePerDealUnit ? `${poItem.pricePerDealUnit}` : null,
                                 totalPrice: (purchaseOrder.purchaseOrderExternal && poItem.pricePerDealUnit && poItem.dealQuantity) ? `${poItem.dealQuantity * poItem.pricePerDealUnit * purchaseOrder.purchaseOrderExternal.currencyRate}` : null,
-                                expectedDeliveryDate: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal.expectedDeliveryDate) ? `'${moment(purchaseOrder.purchaseOrderExternal.expectedDeliveryDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                                expectedDeliveryDate: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal.expectedDeliveryDate) ? `'${moment(this.validateDate(purchaseOrder.purchaseOrderExternal.expectedDeliveryDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                                 prNoAtPoExt: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal.no) ? `'${purchaseRequest.no}'` : null,
 
                                 deliveryOrderNo: poFulfillment.deliveryOrderNo ? `'${poFulfillment.deliveryOrderNo}'` : null,
-                                deliveryOrderDate: poFulfillment.deliveryOrderDate ? `'${moment(poFulfillment.deliveryOrderDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                                deliveryOrderDate: poFulfillment.deliveryOrderDate ? `'${moment(this.validateDate(poFulfillment.deliveryOrderDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                                 unitReceiptNoteDays: poFulfillment.unitReceiptNoteDate ? `${urnDays}` : null,
                                 unitReceiptNoteDaysRange: poFulfillment.unitReceiptNoteDate ? `'${this.getRangeWeek(urnDays)}'` : null,
                                 status: poFulfillment.deliveryOrderDate ? `'${this.getStatus(purchaseOrder.purchaseOrderExternal.expectedDeliveryDate, lastDeliveredDate)}'` : null,
                                 prNoAtDo: poFulfillment.deliveryOrderNo ? `'${purchaseRequest.no}'` : null,
 
                                 unitReceiptNoteNo: poFulfillment.unitReceiptNoteNo ? `'${poFulfillment.unitReceiptNoteNo}'` : null,
-                                unitReceiptNoteDate: poFulfillment.unitReceiptNoteDate ? `'${moment(poFulfillment.unitReceiptNoteDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                                unitReceiptNoteDate: poFulfillment.unitReceiptNoteDate ? `'${moment(this.validateDate(poFulfillment.unitReceiptNoteDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                                 unitPaymentOrderDays: poFulfillment.interNoteDate ? `${upoDays}` : null,
                                 unitPaymentOrderDaysRange: poFulfillment.interNoteDate ? `'${this.getRangeWeek(upoDays)}'` : null,
 
                                 unitPaymentOrderNo: poFulfillment.interNoteNo ? `'${poFulfillment.interNoteNo}'` : null,
-                                unitPaymentOrderDate: poFulfillment.interNoteDate ? `'${moment(poFulfillment.interNoteDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                                unitPaymentOrderDate: poFulfillment.interNoteDate ? `'${moment(this.validateDate(poFulfillment.interNoteDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                                 purchaseOrderDays: poFulfillment.interNoteDate ? `${poDays}` : null,
                                 purchaseOrderDaysRange: poFulfillment.interNoteDate ? `'${this.getRangeMonth(poDays)}'` : null,
                                 invoicePrice: poFulfillment.interNoteDate ? `'${poItem.pricePerDealUnit}'` : null,
@@ -333,13 +346,13 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                             };
                         });
                     } else if (poItem.fulfillments.length === 0) {
-                        var prPoExtDays = (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? moment(moment(purchaseOrder.purchaseOrderExternal._createdDate).startOf("day")).diff(moment(moment(purchaseRequest._createdDate).startOf("day")), "days") : null;
-                        var poExtDays = (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? moment(moment(purchaseOrder.purchaseOrderExternal._createdDate).startOf("day")).diff(moment(moment(purchaseOrder._createdDate).startOf("day")), "days") : null;
-                        var poIntDays = purchaseOrder._createdDate ? moment(moment(purchaseOrder._createdDate).startOf("day")).diff(moment(moment(purchaseRequest._createdDate).startOf("day")), "days") : null;
+                        var prPoExtDays = (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? moment(moment(this.validateDate(purchaseOrder.purchaseOrderExternal._createdDate)).startOf("day")).diff(moment(moment(this.validateDate(purchaseRequest._createdDate)).startOf("day")), "days") : null;
+                        var poExtDays = (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? moment(moment(this.validateDate(purchaseOrder.purchaseOrderExternal._createdDate)).startOf("day")).diff(moment(moment(this.validateDate(purchaseOrder._createdDate)).startOf("day")), "days") : null;
+                        var poIntDays = purchaseOrder._createdDate ? moment(moment(this.validateDate(purchaseOrder._createdDate)).startOf("day")).diff(moment(moment(this.validateDate(purchaseRequest._createdDate)).startOf("day")), "days") : null;
                         return {
                             purchaseRequestNo: purchaseRequest.no ? `'${purchaseRequest.no}'` : null,
-                            purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(purchaseRequest._createdDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
-                            expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(purchaseRequest.expectedDeliveryDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                            purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(this.validateDate(purchaseRequest._createdDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                            expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(this.validateDate(purchaseRequest.expectedDeliveryDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                             budgetCode: (purchaseRequest.budget && purchaseRequest.budget.code) ? `'${purchaseRequest.budget.code}'` : null,
                             budgetName: (purchaseOrder.purchaseRequest && purchaseOrder.purchaseRequest.budget && purchaseOrder.purchaseRequest.budget.name) ? `'${purchaseOrder.purchaseRequest.budget.name}'` : null,
                             unitCode: (purchaseRequest.unit && purchaseRequest.unit.code) ? `'${purchaseRequest.unit.code}'` : null,
@@ -357,14 +370,14 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                             prPurchaseOrderExternalDaysRange: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? `'${this.getRangeWeek(prPoExtDays)}'` : null,
 
                             purchaseOrderNo: purchaseOrder.no ? `'${purchaseOrder.no}'` : null,
-                            purchaseOrderDate: purchaseOrder._createdDate ? `'${moment(purchaseOrder._createdDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                            purchaseOrderDate: purchaseOrder._createdDate ? `'${moment(this.validateDate(purchaseOrder._createdDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                             purchaseOrderExternalDays: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? `${poExtDays}` : null,
                             purchaseOrderExternalDaysRange: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? `'${this.getRangeWeek(poExtDays)}'` : null,
                             purchasingStaffName: purchaseOrder._createdBy ? `'${purchaseOrder._createdBy}'` : null,
                             prNoAtPo: purchaseOrder.no ? `'${purchaseRequest.no}'` : null,
 
                             purchaseOrderExternalNo: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal.no) ? `'${purchaseOrder.purchaseOrderExternal.no}'` : null,
-                            purchaseOrderExternalDate: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? `'${moment(purchaseOrder.purchaseOrderExternal._createdDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                            purchaseOrderExternalDate: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal._createdDate) ? `'${moment(this.validateDate(purchaseOrder.purchaseOrderExternal._createdDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                             deliveryOrderDays: null,
                             deliveryOrderDaysRange: null,
                             supplierCode: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal.supplier && purchaseOrder.purchaseOrderExternal.supplier.code) ? `'${purchaseOrder.purchaseOrderExternal.supplier.code}'` : null,
@@ -377,7 +390,7 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
                             uom: (poItem.defaultUom && poItem.defaultUom.unit) ? `'${poItem.defaultUom.unit}'` : null,
                             pricePerUnit: (purchaseOrder.purchaseOrderExternal.no && purchaseOrder.purchaseOrderExternal) ? `${poItem.pricePerDealUnit}` : null,
                             totalPrice: (purchaseOrder.purchaseOrderExternal.currencyRate && poItem.pricePerDealUnit && poItem.dealQuantity) ? `${poItem.dealQuantity * poItem.pricePerDealUnit * purchaseOrder.purchaseOrderExternal.currencyRate}` : null,
-                            expectedDeliveryDate: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal.expectedDeliveryDate) ? `'${moment(purchaseOrder.purchaseOrderExternal.expectedDeliveryDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                            expectedDeliveryDate: (purchaseOrder.purchaseOrderExternal && purchaseOrder.purchaseOrderExternal.expectedDeliveryDate) ? `'${moment(this.validateDate(purchaseOrder.purchaseOrderExternal.expectedDeliveryDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                             prNoAtPoExt: purchaseOrder.purchaseOrderExternal.no ? `'${purchaseRequest.no}'` : null,
 
                             deliveryOrderNo: null,
@@ -410,8 +423,8 @@ module.exports = class FactPurchasingEtlManager extends BaseManager {
 
                     return {
                         purchaseRequestNo: purchaseRequest.no ? `'${purchaseRequest.no}'` : null,
-                        purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(purchaseRequest._createdDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
-                        expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(purchaseRequest.expectedDeliveryDate).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                        purchaseRequestDate: purchaseRequest._createdDate ? `'${moment(this.validateDate(purchaseRequest._createdDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
+                        expectedPRDeliveryDate: purchaseRequest.expectedDeliveryDate ? `'${moment(this.validateDate(purchaseRequest.expectedDeliveryDate)).add(7, "hours").format('YYYY-MM-DD')}'` : null,
                         budgetCode: (purchaseRequest.budget && purchaseRequest.budget.code) ? `'${purchaseRequest.budget.code}'` : null,
                         budgetName: (purchaseRequest.budget && purchaseRequest.budget.name) ? `'${purchaseRequest.budget.name}'` : null,
                         unitCode: (purchaseRequest.unit && purchaseRequest.unit.code) ? `'${purchaseRequest.unit.code}'` : null,
