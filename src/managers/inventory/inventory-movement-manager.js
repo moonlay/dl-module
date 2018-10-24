@@ -66,31 +66,28 @@ module.exports = class InventoryMovementManager extends BaseManager {
     _afterInsert(id) {
         return this.getSingleById(id)
             .then((inventoryMovement) => {
-                // var getSum = this.collection.aggregate([{
-                //     '$match': {
-                //         storageId: inventoryMovement.storageId,
-                //         productId: inventoryMovement.productId,
-                //         uomId: inventoryMovement.uomId
-                //     }
-                // }, {
-                //     "$group": {
-                //         _id: null,
-                //         quantity: {
-                //             '$sum': '$quantity'
-                //         },
-                //         stockPlanning: {
-                //             '$sum': '$stockPlanning'
-                //         }
-                //     }
-                // }]).toArray().then(results => results[0]);
+                var getSum = this.collection.aggregate([{
+                    '$match': {
+                        storageId: inventoryMovement.storageId,
+                        productId: inventoryMovement.productId,
+                        uomId: inventoryMovement.uomId
+                    }
+                }, {
+                    "$group": {
+                        _id: null,
+                        quantity: {
+                            '$sum': '$quantity'
+                        }
+                    }
+                }]).toArray().then(results => results[0]);
 
                 var getSummary = this.inventorySummaryManager.getSert(inventoryMovement.productId, inventoryMovement.storageId, inventoryMovement.uomId);
 
-                return Promise.all([getSummary])
+                return Promise.all([getSum, getSummary])
                     .then(results => {
-                        var summary = results[0];
-                        summary.quantity = inventoryMovement.after;
-                        summary.stockPlanning = inventoryMovement.stockPlanning;
+                        var sum = results[0];
+                        var summary = results[1];
+                        summary.quantity = sum.quantity;
                         return this.inventorySummaryManager.update(summary)
                     })
                     .then(sumId => id)
