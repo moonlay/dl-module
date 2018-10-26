@@ -104,6 +104,7 @@ it('#04. should success when hapus sisa', function(done) {
         });
 });
 
+let createdExpiredBookingOrder;
 it("#05. should success when create new expired booking order", function (done) {
     dataUtil.getNewData()
         .then((newData) => {
@@ -128,6 +129,7 @@ it("#05. should success when create new expired booking order", function (done) 
                                             let itemsQuantity = updatedData.items.reduce((acc, cur) => acc + cur.quantity, 0);
                                             updatedData.orderQuantity.should.above(itemsQuantity);
 
+                                            createdExpiredBookingOrder = updatedData;
                                             done();
                                         })
                                         .catch((e) => {
@@ -151,13 +153,18 @@ it("#05. should success when create new expired booking order", function (done) 
         });
 });
 
-
 let createdExpiredBookingOrderList;
 it(`#06. should success when get expired booking order`, function (done) {
-    manager.getAllExpiredBookingOrder()
+    let paging = {
+        select: ["code"],
+        keyword: createdExpiredBookingOrder.code,
+        order: { _updatedDate: -1 }
+    };
+    manager.getAllExpiredBookingOrder(paging)
         .then((result) => {
             result.should.instanceof(Object);
             result.data.should.instanceof(Object);
+            result.data.length.should.above(0);
             createdExpiredBookingOrderList = result.data;
             done();
         })
@@ -183,5 +190,18 @@ it('#07. should success when delete remaining all expired booking order', functi
         })
         .catch(e => {
             done(e);
+        });
+});
+
+it('#07.1 should error when delete remaining all expired booking order with no data', function(done) {
+    manager.deleteRemainingAllExpiredBookingOrder([])
+        .then(() => {
+            done("should error when delete remaining all expired booking order with no data")
+        })
+        .catch(e => {
+            e.should.instanceof(Object);
+            e.should.have.property("errors");
+            e.errors.should.instanceof(Object);
+            done();
         });
 });

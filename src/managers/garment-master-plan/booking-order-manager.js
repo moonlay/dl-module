@@ -359,7 +359,7 @@ module.exports = class BookingOrderManager extends BaseManager {
                 }, 86400000]
             }, 45]
         };
-        var quantityRedactCondition = {
+        let quantityRedactCondition = {
             $gt: ["$orderQuantity", { $sum: "$items.quantity" }]
         };
         let redactQuery = {
