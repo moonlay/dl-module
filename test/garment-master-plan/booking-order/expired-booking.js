@@ -103,3 +103,85 @@ it('#04. should success when hapus sisa', function(done) {
             done(e);
         });
 });
+
+it("#05. should success when create new expired booking order", function (done) {
+    dataUtil.getNewData()
+        .then((newData) => {
+            newData.items = [];
+            newData.orderQuantity = 5000;
+            manager.create(newData)
+                .then((id) => {
+                    id.should.be.Object();
+                    manager.getSingleById(id)
+                        .then((createdData) => {
+                            createdData.deliveryDate.setDate(createdData.deliveryDate.getDate() - 45);
+                            manager.collection.update(createdData)
+                                .then((idCreatedData) => {
+                                    idCreatedData.should.instanceof(Object);
+                                    manager.getSingleById(idCreatedData)
+                                        .then((updatedData) => {
+                                            updatedData.should.instanceof(Object);
+
+                                            let duration = (updatedData.deliveryDate - new Date()) / 86400000;
+                                            duration.should.belowOrEqual(45);
+
+                                            let itemsQuantity = updatedData.items.reduce((acc, cur) => acc + cur.quantity, 0);
+                                            updatedData.orderQuantity.should.above(itemsQuantity);
+
+                                            done();
+                                        })
+                                        .catch((e) => {
+                                            done(e)
+                                        });
+                                })
+                                .catch((e) => {
+                                    done(e)
+                                });
+                        })
+                        .catch((e) => {
+                            done(e)
+                        });
+                })
+                .catch((e) => {
+                    done(e)
+                });
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+
+let createdExpiredBookingOrderList;
+it(`#06. should success when get expired booking order`, function (done) {
+    manager.getAllExpiredBookingOrder()
+        .then((result) => {
+            result.should.instanceof(Object);
+            result.data.should.instanceof(Object);
+            createdExpiredBookingOrderList = result.data;
+            done();
+        })
+        .catch((e) => {
+            done(e);
+        });
+});
+
+it('#07. should success when delete remaining all expired booking order', function(done) {
+    manager.deleteRemainingAllExpiredBookingOrder(createdExpiredBookingOrderList)
+        .then(idBookingOrderList => {
+            let jobGetBookingOrderList = idBookingOrderList.map(id => manager.getSingleById(id));
+            Promise.all(jobGetBookingOrderList)
+                .then(bookingOrderList => {
+                    for (const bookingOrder of bookingOrderList) {
+                        bookingOrder.expiredBookingOrder.should.not.equal(0);
+                    }
+                    done();
+                })
+                .catch(e => {
+                    done(e);
+                });
+        })
+        .catch(e => {
+            done(e);
+        });
+});
