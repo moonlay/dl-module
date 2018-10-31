@@ -94,7 +94,7 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
 
 
             return {
-                cartNumber: monitoringEvent.cartNumber ? `'${monitoringEvent.cartNumber}'` : null,
+                cartNumber: monitoringEvent.cartNumber ? `'${monitoringEvent.cartNumber.trim()}'` : null,
                 monitoringEventCode: monitoringEvent.code ? `'${monitoringEvent.code}'` : null,
                 monitoringEventStartedDate: monitoringEvent.dateStart ? `'${moment(monitoringEvent.dateStart).add(7, "hours").format("YYYY-MM-DD")}'` : null,
                 eventStartedTime: monitoringEvent.timeInMillisStart ? `'${moment(monitoringEvent.timeInMillisStart).add(7, "hours").format("HH:mm:ss")}'` : null,
@@ -131,7 +131,7 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
                 productionOrderOrderType: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.orderType.name}'` : null,
                 productionOrderOriginGreigeFabric: monitoringEvent.productionOrder && monitoringEvent.productionOrder.originGreigeFabric ? `'${monitoringEvent.productionOrder.originGreigeFabric}'` : null,
                 productionOrderProcessType: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.processType.name}'` : null,
-                productionOrderRemark: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.remark}'` : null,
+                productionOrderRemark: null,
                 productionOrderRollLength: monitoringEvent.productionOrder && monitoringEvent.productionOrder.rollLength ? `'${monitoringEvent.productionOrder.rollLength}'` : null,
                 productionOrderRun: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.RUN}'` : null,
                 productionOrderSalesContractNo: monitoringEvent.productionOrder ? `'${monitoringEvent.productionOrder.salesContractNo}'` : null,
@@ -206,6 +206,17 @@ module.exports = class FactMonitoringEventEtlManager extends BaseManager {
                             command.push(this.insertQuery(request, `${sqlQuery}`));
 
                         this.sql.multiple = true;
+
+                        // var fs = require("fs");
+                        // var path = "C:\\Users\\leslie.aula\\Desktop\\order.txt";
+
+                        // fs.writeFile(path, sqlQuery, function (error) {
+                        //     if (error) {
+                        //         console.log("write error:  " + error.message);
+                        //     } else {
+                        //         console.log("Successful Write to " + path);
+                        //     }
+                        // });
 
                         return Promise.all(command)
                             .then((results) => {
