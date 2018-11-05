@@ -620,7 +620,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             return Promise.resolve(unitReceiptNote);
         })
         .catch(function (err) {
-            return err;
+            return Promise.resolve(unitReceiptNote);
         });
     }
 
@@ -650,7 +650,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     return Promise.resolve(unitReceiptNote);
                 })
                 .catch(function (err) {
-                    return err;
+                    return Promise.resolve(unitReceiptNote);
                 });
             });
     }
@@ -671,7 +671,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     return Promise.resolve(unitReceiptNote);
                 })
                 .catch(function (err) {
-                    return err;
+                    return Promise.resolve(unitReceiptNote);
                 });
             });
     }
@@ -696,7 +696,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             return Promise.resolve(result.data);
         })
         .catch(function (err) {
-            return err;
+            return Promise.resolve(unitReceiptNote);
         });
     }
 

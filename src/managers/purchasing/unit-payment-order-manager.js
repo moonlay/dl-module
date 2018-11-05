@@ -528,7 +528,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             return Promise.resolve(unitPaymentOrder);
         })
         .catch(function (err) {
-            return err;
+            return Promise.resolve(unitPaymentOrder);
         });
     }
 
