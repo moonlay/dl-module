@@ -608,7 +608,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             Date: unitReceiptNote.date
         };
         return request({
-            url: process.env.FINANCE_CONNECTION_STRING + 'creditor-account/unit-receipt-note',
+            url: process.env.FINANCE_ENDPOINT + 'creditor-account/unit-receipt-note',
             method: "POST",
             json: true,
             body: creditorAccount,
@@ -638,7 +638,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 oldCreditorAccount.PPN = (useIncomeTaxFlag) ? dpp + (0.1 * dpp) : 0;
 
                 return request({
-                    url: process.env.FINANCE_CONNECTION_STRING + 'creditor-account/unit-receipt-note',
+                    url: process.env.FINANCE_ENDPOINT + 'creditor-account/unit-receipt-note',
                     method: "PUT",
                     json: true,
                     body: oldCreditorAccount,
@@ -659,7 +659,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         return this.getCreditorAccount(unitReceiptNote)
             .then((oldCreditorAccount) => {
                 return request({
-                    url: process.env.FINANCE_CONNECTION_STRING + 'creditor-account/unit-receipt-note/' + oldCreditorAccount.CreditorAccountId,
+                    url: process.env.FINANCE_ENDPOINT + 'creditor-account/unit-receipt-note/' + oldCreditorAccount.CreditorAccountId,
                     method: "DELETE",
                     json: true,
                     headers: {
@@ -683,7 +683,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
         };
 
         return request({
-            url: process.env.FINANCE_CONNECTION_STRING + 'creditor-account/unit-receipt-note',
+            url: process.env.FINANCE_ENDPOINT + 'creditor-account/unit-receipt-note',
             method: "GET",
             json: true,
             qs: queryString,

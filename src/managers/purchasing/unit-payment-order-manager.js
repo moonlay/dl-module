@@ -516,7 +516,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
             CreditorAccounts: creditorAccounts
         };
         return request({
-            url: process.env.FINANCE_CONNECTION_STRING + 'creditor-account/unit-payment-order',
+            url: process.env.FINANCE_ENDPOINT + 'creditor-account/unit-payment-order',
             method: "PUT",
             json: true,
             body: creditorAccountWrapper,
