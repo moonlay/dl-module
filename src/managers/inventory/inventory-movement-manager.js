@@ -77,6 +77,12 @@ module.exports = class InventoryMovementManager extends BaseManager {
                         _id: null,
                         quantity: {
                             '$sum': '$quantity'
+
+                        },
+                        stockPlanning: {
+                            '$sum': '$stockPlanning'
+
+
                         }
                     }
                 }]).toArray().then(results => results[0]);
@@ -88,6 +94,9 @@ module.exports = class InventoryMovementManager extends BaseManager {
                         var sum = results[0];
                         var summary = results[1];
                         summary.quantity = sum.quantity;
+
+                        summary.stockPlanning = sum.stockPlanning;
+
                         return this.inventorySummaryManager.update(summary)
                     })
                     .then(sumId => id)
