@@ -13,6 +13,7 @@ var BaseManager = require('module-toolkit').BaseManager;
 var generateCode = require('../../utils/code-generator');
 var poStatusEnum = DLModels.purchasing.enum.PurchaseOrderStatus;
 var moment = require('moment');
+var request = require('request-promise');
 
 const NUMBER_DESCRIPTION = "Surat Perintah Bayar";
 
@@ -250,7 +251,7 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
         });
     }
 
-   getDataMonitorSpb(unitId, supplierId, dateFrom, dateTo, offset) {
+    getDataMonitorSpb(unitId, supplierId, dateFrom, dateTo, offset) {
         return new Promise((resolve, reject) => {
             var qryMatch = {};
             var nilai = {};
@@ -258,10 +259,10 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                 { "_deleted": false }];
 
 
-           if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
+            if (dateFrom !== "undefined" && dateFrom !== "" && dateFrom !== "null" && dateTo !== "undefined" && dateTo !== "" && dateTo !== "null") {
                 var validStartDate = new Date(dateFrom);
                 var validEndDate = new Date(dateTo);
-                 validStartDate.setHours(validStartDate.getHours() - offset);
+                validStartDate.setHours(validStartDate.getHours() - offset);
                 validEndDate.setHours(validEndDate.getHours() - offset);
                 qryMatch["$and"].push(
                     {
@@ -275,17 +276,17 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                 )
             }
 
-         
+
 
             if (supplierId !== "undefined" && supplierId !== "") {
                 qryMatch["$and"].push({
-             supplierId: new ObjectId(supplierId)
+                    supplierId: new ObjectId(supplierId)
                 })
             }
 
-       
-            var nilai={};
-if (unitId !== undefined && unitId !== "") {
+
+            var nilai = {};
+            if (unitId !== undefined && unitId !== "") {
                 nilai = { "pr_docs.unitId": new ObjectId(unitId) };
             }
             this.collection.aggregate(
@@ -302,18 +303,18 @@ if (unitId !== undefined && unitId !== "") {
 
                     {
                         $lookup:
-                            {
-                                from: "purchase-requests",
-                                localField: "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
-                                foreignField: "no",
-                                as: "pr_docs"
-                            }
+                        {
+                            from: "purchase-requests",
+                            localField: "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.no",
+                            foreignField: "no",
+                            as: "pr_docs"
+                        }
                     },
                     {
                         $unwind: "$pr_docs"
                     },
-                     { $match: nilai },
-                  
+                    { $match: nilai },
+
                     {
                         $project: {
                             no: "$no",
@@ -335,12 +336,12 @@ if (unitId !== undefined && unitId !== "") {
                             "items.unitReceiptNote.items.purchaseOrder.purchaseRequest.date": "$pr_docs.date",
                             "items.unitReceiptNote.no": "$items.unitReceiptNote.no",
                             "items.unitReceiptNote.date": "$items.unitReceiptNote.date",
-                             "codesupplier": "$supplier.code",
+                            "codesupplier": "$supplier.code",
                             "satuan": "$items.unitReceiptNote.items.deliveredUom.unit",
                             "matauang": "$items.unitReceiptNote.items.currency.code",
                             "kdkategori": "$category.code",
                             "kategori": "$category.name",
-                              "tgltambah": "$items.unitReceiptNote.items.purchaseOrder.purchaseOrderExternal.paymentDueDays",
+                            "tgltambah": "$items.unitReceiptNote.items.purchaseOrder.purchaseOrderExternal.paymentDueDays",
                             "noserippn": "$incomeTaxNo",
                         }
                     },
@@ -398,24 +399,24 @@ if (unitId !== undefined && unitId !== "") {
     }
 
     _beforeInsert(unitPaymentOrder) {
-        var date= moment(unitPaymentOrder.date.setHours(unitPaymentOrder.date.getHours() +7));
+        var date = moment(unitPaymentOrder.date.setHours(unitPaymentOrder.date.getHours() + 7));
         var monthNow = date.format("MM");
         var yearNow = parseInt(date.format("YY"));
-        var code="";
+        var code = "";
         // var unitCode=unitPaymentOrder.division ? unitPaymentOrder.division.code : "";
-        if(unitPaymentOrder && unitPaymentOrder.supplier){
-            code= unitPaymentOrder.supplier.import ? "NKI" : "NKL";
+        if (unitPaymentOrder && unitPaymentOrder.supplier) {
+            code = unitPaymentOrder.supplier.import ? "NKI" : "NKL";
         }
-        var division="";
-        if(unitPaymentOrder && unitPaymentOrder.division){
-            if(unitPaymentOrder.division.name=="GARMENT"){
-                division="-G";
+        var division = "";
+        if (unitPaymentOrder && unitPaymentOrder.division) {
+            if (unitPaymentOrder.division.name == "GARMENT") {
+                division = "-G";
             }
-            else if(unitPaymentOrder.division.name=="UMUM" || unitPaymentOrder.division.name=="SPINNING" || unitPaymentOrder.division.name=="FINISHING & PRINTING" || unitPaymentOrder.division.name=="UTILITY"|| unitPaymentOrder.division.name=="WEAVING"){
-                division="-T";
+            else if (unitPaymentOrder.division.name == "UMUM" || unitPaymentOrder.division.name == "SPINNING" || unitPaymentOrder.division.name == "FINISHING & PRINTING" || unitPaymentOrder.division.name == "UTILITY" || unitPaymentOrder.division.name == "WEAVING") {
+                division = "-T";
             }
         }
-        var type = code+monthNow+yearNow+division;
+        var type = code + monthNow + yearNow + division;
         var query = { "type": type, "description": NUMBER_DESCRIPTION };
         var fields = { "number": 1, "year": 1 };
 
@@ -429,14 +430,14 @@ if (unitId !== undefined && unitId !== "") {
                     if (previousDocumentNumber) {
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
-                        if(code=="NKL")
+                        if (code == "NKL")
                             unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 4)}`;
-                        else if(code=="NKI")
+                        else if (code == "NKI")
                             unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 3)}`;
                     } else {
-                        if(code=="NKL")
+                        if (code == "NKL")
                             unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-0001`;
-                        else if(code=="NKI")
+                        else if (code == "NKI")
                             unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-001`;
                     }
                 }
@@ -471,6 +472,7 @@ if (unitId !== undefined && unitId !== "") {
 
     _afterInsert(id) {
         return this.getSingleById(id)
+            .then((unitPaymentOrder) => this.updateCreditorAccount(unitPaymentOrder, unitPaymentOrder.invoceNo))
             .then((unitPaymentOrder) => this.getRealization(unitPaymentOrder))
             .then((realizations) => this.updatePurchaseOrder(realizations))
             .then((realizations) => this.updateUnitReceiptNote(realizations))
@@ -490,6 +492,7 @@ if (unitId !== undefined && unitId !== "") {
 
     _afterUpdate(id) {
         return this.getSingleById(id)
+            .then((unitPaymentOrder) => this.updateCreditorAccount(unitPaymentOrder, unitPaymentOrder.invoceNo))
             .then((unitPaymentOrder) => this.getRealization(unitPaymentOrder))
             .then((realizations) => this.updatePurchaseOrderUpdateUnitPaymentOrder(realizations))
             .then((realizations) => this.updateUnitReceiptNote(realizations))
@@ -498,6 +501,38 @@ if (unitId !== undefined && unitId !== "") {
             })
     }
 
+    updateCreditorAccount(unitPaymentOrder, currentInvoiceNo) {
+        var creditorAccounts = [];
+
+        for (var item of unitPaymentOrder.items) {
+            var creditorAccount = {
+                SupplierCode: unitPaymentOrder.supplier.code,
+                Code: item.unitReceiptNote.no
+            };
+            creditorAccounts.push(creditorAccount);
+        }
+        var creditorAccountWrapper = {
+            InvoiceNo: currentInvoiceNo,
+            CreditorAccounts: creditorAccounts
+        };
+        return request({
+            url: process.env.FINANCE_ENDPOINT + 'creditor-account/unit-payment-order',
+            method: "PUT",
+            json: true,
+            body: creditorAccountWrapper,
+            headers: {
+                'Authorization': this.user.token
+            }
+        }).then(function (result) {
+            console.log(result);
+            return Promise.resolve(unitPaymentOrder);
+        })
+        .catch(function (err) {
+            return Promise.resolve(unitPaymentOrder);
+        });
+    }
+
+    
     getRealization(unitPaymentOrder) {
         var realizations = unitPaymentOrder.items.map((unitPaymentOrderItem) => {
             return unitPaymentOrderItem.unitReceiptNote.items.map((item) => {
@@ -926,6 +961,7 @@ if (unitId !== undefined && unitId !== "") {
                             _id: ObjectId.isValid(id) ? new ObjectId(id) : {}
                         };
                         return this.getSingleByQuery(query)
+                            .then((unitPaymentOrder) => this.updateCreditorAccount(unitPaymentOrder, null))
                             .then((unitPaymentOrder) => this.getRealization(unitPaymentOrder))
                             .then((realizations) => this.updatePurchaseOrderDeleteUnitPaymentOrder(realizations))
                             .then((realizations) => this.updateUnitReceiptNoteDeleteUnitPaymentOrder(realizations))
@@ -964,8 +1000,8 @@ if (unitId !== undefined && unitId !== "") {
                             .updateOne({
                                 _id: unitPaymentOrder._id
                             }, {
-                                $set: unitPaymentOrder
-                            })
+                                    $set: unitPaymentOrder
+                                })
                             .then((result) => Promise.resolve(unitPaymentOrder._id));
                     })
             })
@@ -1087,7 +1123,7 @@ if (unitId !== undefined && unitId !== "") {
 
         if (filter.supplierCode)
             filterApply['supplier.code'] = filter.supplierCode;
-        
+
         if (filter.divisionCode)
             filterApply['division.code'] = filter.divisionCode;
 
@@ -1100,7 +1136,7 @@ if (unitId !== undefined && unitId !== "") {
             validStartDate.setHours(validStartDate.getHours() - offset);
             validEndDate.setHours(23, 59, 59);
             validEndDate.setHours(validEndDate.getHours() - offset);
-            
+
             filterApply.date = {
                 $gte: validStartDate,
                 $lte: validEndDate,
