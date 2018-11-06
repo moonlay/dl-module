@@ -128,6 +128,16 @@ module.exports = {
             MasterPlanComodityManager: require('./src/managers/garment-master-plan/master-plan-comodity-manager'),
             SewingBlockingPlanManager: require('./src/managers/garment-master-plan/sewing-blocking-plan-manager'),
             GarmentSectionManager: require('./src/managers/garment-master-plan/garment-section-manager'),
+        },
+        spMasterPlan: {
+            WeeklyPlanManager: require("./src/managers/sp-master-plan/weekly-plan-manager"),
+            WorkingCapacitiesStandardManager: require('./src/managers/sp-master-plan/working-capacities-standard-manager'),
+            StyleManager: require('./src/managers/sp-master-plan/style-manager'),
+            StandardCapacityManager: require('./src/managers/sp-master-plan/standard-capacity-manager'),
+            BookingOrderManager: require('./src/managers/sp-master-plan/booking-order-manager'),
+            MasterPlanComodityManager: require('./src/managers/sp-master-plan/master-plan-comodity-manager'),
+            SpBlockingPlanManager: require('./src/managers/sp-master-plan/sp-blocking-plan-manager'),
+            SpSectionManager: require('./src/managers/sp-master-plan/sp-section-manager'),
         }
     },
     test: {
@@ -246,6 +256,16 @@ module.exports = {
                 masterPlanComodity: require("./test/data-util/garment-master-plan/master-plan-comodity-data-util"),
                 sewingBlockingPlan: require("./test/data-util/garment-master-plan/sewing-blocking-plan-data-util"),
                 garmentSection: require("./test/data-util/garment-master-plan/garment-section-data-util")
+            },
+            spMasterPlan: {
+                weeklyPlan: require("./test/data-util/sp-master-plan/weekly-plan-data-util"),
+                workingCapacitiesStandard: require("./test/data-util/sp-master-plan/working-capacities-standard-data-util"),
+                style: require("./test/data-util/sp-master-plan/style-data-util"),
+                standardCapacity: require("./test/data-util/sp-master-plan/standard-capacity-data-util"),
+                bookingOrder: require("./test/data-util/sp-master-plan/booking-order-data-util"),
+                masterPlanComodity: require("./test/data-util/sp-master-plan/master-plan-comodity-data-util"),
+                spBlockingPlan: require("./test/data-util/sp-master-plan/sp-blocking-plan-data-util"),
+                spSection: require("./test/data-util/sp-master-plan/sp-section-data-util")
             }
         }
     },
