@@ -301,9 +301,13 @@ module.exports = function (data, offset) {
         .reduce(function (prev, curr, index, arr) {
             return prev + curr;
         }, 0);
-    var incomeTaxTotal = usePayTax ? (useIncomeTax ? sumByCurrency * 0.1 : 0) : 0;
-    var vatTotal = usePayTax ? (useVat ? sumByCurrency * vatRate / 100 : 0) : 0;
-    var sumTotal = sumByCurrency - vatTotal + incomeTaxTotal + sumKoreksi;
+    // var incomeTaxTotal = usePayTax ? (useIncomeTax ? sumByCurrency * 0.1 : 0) : 0;
+    // var vatTotal = usePayTax ? (useVat ? sumByCurrency * vatRate / 100 : 0) : 0;
+    // var sumTotal = sumByCurrency - vatTotal + incomeTaxTotal + sumKoreksi;
+
+     var incomeTaxTotal = usePayTax ? (useIncomeTax ? sum * 0.1 : 0) : 0;
+    var vatTotal = usePayTax ? (useVat ? sum * vatRate / 100 : 0) : 0;
+    var sumTotal = sum - vatTotal + incomeTaxTotal + sumKoreksi;
 
     var subFooter = [
         {
