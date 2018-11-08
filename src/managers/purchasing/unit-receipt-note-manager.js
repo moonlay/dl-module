@@ -594,9 +594,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
     createCreditorAccount(unitReceiptNote) {
         var dpp = 0;
         var useIncomeTaxFlag = false;
+        var currency = '';
         for (var item of unitReceiptNote.items) {
             dpp = dpp + (item.deliveredQuantity * item.pricePerDealUnit);
             useIncomeTaxFlag = useIncomeTaxFlag || item.purchaseOrder.useIncomeTax;
+            currency = item.currency.code;
         }
 
         var creditorAccount = {
@@ -605,7 +607,8 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             SupplierCode: unitReceiptNote.supplier.code,
             SupplierName: unitReceiptNote.supplier.name,
             Code: unitReceiptNote.no,
-            Date: unitReceiptNote.date
+            Date: unitReceiptNote.date,
+            Currency : currency
         };
         return request({
             url: process.env.FINANCE_ENDPOINT + 'creditor-account/unit-receipt-note',
