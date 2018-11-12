@@ -603,7 +603,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
 
         var creditorAccount = {
             DPP: dpp,
-            PPN: (useIncomeTaxFlag) ? dpp + (0.1 * dpp) : 0,
+            PPN: (useIncomeTaxFlag && useIncomeTaxFlag == true) ? 0.1 * dpp : 0,
             SupplierCode: unitReceiptNote.supplier.code,
             SupplierName: unitReceiptNote.supplier.name,
             Code: unitReceiptNote.no,
@@ -638,7 +638,7 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 }
 
                 oldCreditorAccount.DPP = dpp;
-                oldCreditorAccount.PPN = (useIncomeTaxFlag) ? dpp + (0.1 * dpp) : 0;
+                oldCreditorAccount.PPN = (useIncomeTaxFlag && useIncomeTaxFlag == true) ? 0.1 * dpp: 0;
 
                 return request({
                     url: process.env.FINANCE_ENDPOINT + 'creditor-account/unit-receipt-note',
