@@ -601,14 +601,17 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             currency = item.currency.code;
         }
 
+        var productList = unitReceiptNote.items.map((item) => item.product.name);
+
         var creditorAccount = {
             DPP: dpp,
+            Products: productList.join("\n"),
             PPN: (useIncomeTaxFlag && useIncomeTaxFlag == true) ? 0.1 * dpp : 0,
             SupplierCode: unitReceiptNote.supplier.code,
             SupplierName: unitReceiptNote.supplier.name,
             Code: unitReceiptNote.no,
             Date: unitReceiptNote.date,
-            Currency : currency
+            Currency: currency
         };
         return request({
             url: process.env.FINANCE_ENDPOINT + 'creditor-account/unit-receipt-note',
@@ -618,13 +621,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
             headers: {
                 'Authorization': this.user.token
             }
-        }).then(function (result) {
+        }).then((result) => {
             console.log(result);
             return Promise.resolve(unitReceiptNote);
         })
-        .catch(function (err) {
-            return Promise.resolve(unitReceiptNote);
-        });
+            .catch((err) => {
+                return Promise.resolve(unitReceiptNote);
+            });
     }
 
     updateCreditorAccount(unitReceiptNote) {
@@ -637,8 +640,11 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     useIncomeTaxFlag = useIncomeTaxFlag || item.purchaseOrder.useIncomeTax;
                 }
 
+                var productList = unitReceiptNote.items.map((item) => item.product.name);
+                oldCreditorAccount.Products = productList.join("\n");
+
                 oldCreditorAccount.DPP = dpp;
-                oldCreditorAccount.PPN = (useIncomeTaxFlag && useIncomeTaxFlag == true) ? 0.1 * dpp: 0;
+                oldCreditorAccount.PPN = (useIncomeTaxFlag && useIncomeTaxFlag == true) ? 0.1 * dpp : 0;
 
                 return request({
                     url: process.env.FINANCE_ENDPOINT + 'creditor-account/unit-receipt-note',
@@ -652,13 +658,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                     console.log(result);
                     return Promise.resolve(unitReceiptNote);
                 })
-                .catch(function (err) {
-                    return Promise.resolve(unitReceiptNote);
-                });
+                    .catch(function (err) {
+                        return Promise.resolve(unitReceiptNote);
+                    });
             });
     }
 
-    deleteCreditorAccount(unitReceiptNote){
+    deleteCreditorAccount(unitReceiptNote) {
         return this.getCreditorAccount(unitReceiptNote)
             .then((oldCreditorAccount) => {
                 return request({
@@ -669,13 +675,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         'Authorization': this.user.token
                     }
                 })
-                .then(function (result) {
-                    console.log(result);
-                    return Promise.resolve(unitReceiptNote);
-                })
-                .catch(function (err) {
-                    return Promise.resolve(unitReceiptNote);
-                });
+                    .then(function (result) {
+                        console.log(result);
+                        return Promise.resolve(unitReceiptNote);
+                    })
+                    .catch(function (err) {
+                        return Promise.resolve(unitReceiptNote);
+                    });
             });
     }
 
@@ -694,13 +700,13 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                 'Authorization': this.user.token
             }
         })
-        .then(function (result) {
-            console.log(result);
-            return Promise.resolve(result.data);
-        })
-        .catch(function (err) {
-            return Promise.resolve(unitReceiptNote);
-        });
+            .then(function (result) {
+                console.log(result);
+                return Promise.resolve(result.data);
+            })
+            .catch(function (err) {
+                return Promise.resolve(unitReceiptNote);
+            });
     }
 
     updatePurchaseOrder(unitReceiptNote) {
