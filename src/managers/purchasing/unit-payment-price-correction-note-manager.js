@@ -400,9 +400,9 @@ getDataKoreksiHarga(query){
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 4)}`;
+                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 4)}-L`;
                     } else {
-                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-0001`;
+                        unitPaymentPriceCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-0001-L`;
                     }
                 }
 

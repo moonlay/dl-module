@@ -431,14 +431,14 @@ module.exports = class UnitPaymentOrderManager extends BaseManager {
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
                         if (code == "NKL")
-                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 4)}`;
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 4)}-L`;
                         else if (code == "NKI")
-                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 3)}`;
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 3)}-L`;
                     } else {
                         if (code == "NKL")
-                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-0001`;
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-0001-L`;
                         else if (code == "NKI")
-                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-001`;
+                            unitPaymentOrder.no = `${yearNow}-${monthNow}${division}-${code}-001-L`;
                     }
                 }
 
