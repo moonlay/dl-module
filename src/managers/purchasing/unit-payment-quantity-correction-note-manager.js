@@ -331,9 +331,9 @@ module.exports = class UnitPaymentQuantityCorrectionNoteManager extends BaseMana
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 4)}`;
+                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-${this.pad(number, 4)}-L`;
                     } else {
-                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-0001`;
+                        unitPaymentQuantityCorrectionNote.no = `${yearNow}-${monthNow}${division}-${code}-0001-L`;
                     }
                 }
 
