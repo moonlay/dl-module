@@ -366,9 +366,9 @@ module.exports = class UnitReceiptNoteManager extends BaseManager {
                         var oldYear = previousDocumentNumber.year;
                         number = yearNow > oldYear ? number : previousDocumentNumber.number + 1;
 
-                        unitReceiptNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-${this.pad(number, 3)}`;
+                        unitReceiptNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-${this.pad(number, 3)}-L`;
                     } else {
-                        unitReceiptNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-001`;
+                        unitReceiptNote.no = `${yearNow}-${monthNow}-${code}-${unitCode}-001-L`;
                     }
                 }
 
