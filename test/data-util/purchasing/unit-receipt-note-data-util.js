@@ -42,7 +42,7 @@ class UnitReceiptNoteDataUtil {
 
                         doItems = [].concat.apply([], doItems);
                         var data = {
-                            no: `UT/URN/${codeGenerator()}`,
+                            // no: `UT/URN/${codeGenerator()}`,
                             unitId: dataUnit._id,
                             unit: dataUnit,
                             date: new Date(),
