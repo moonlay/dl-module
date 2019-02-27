@@ -873,7 +873,7 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                             item["Satuan"] = packingReceiptItem.uomUnit ? packingReceiptItem.uomUnit : '';
                             item["Kuantiti Satuan"] = packingReceiptItem.quantity ? packingReceiptItem.quantity : 0;
                             item["Panjang Total"] = packingReceiptItem.length ? (packingReceiptItem.length * packingReceiptItem.quantity).toFixed(2) : 0;
-                            item["Berat Total"] = packingReceiptItem.weight ? (fielpackingReceiptItemd.weight * packingReceiptItem.quantity).toFixed(2) : 0;
+                            item["Berat Total"] = packingReceiptItem.weight ? (packingReceiptItem.weight * packingReceiptItem.quantity).toFixed(2) : 0;
 
                             xls.data.push(item);
                         }
