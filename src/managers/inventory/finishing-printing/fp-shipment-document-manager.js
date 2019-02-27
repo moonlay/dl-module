@@ -838,6 +838,19 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
         var index = 0;
         var dateFormat = "DD/MM/YYYY";
 
+        xls.options["No"] = "number";
+        xls.options["Tanggal"] = "string";
+        xls.options["Kode"] = "string";
+        xls.options["Kode Pengiriman"] = "string";
+        xls.options["Kode Delivery Order"] = "string";
+        xls.options["Nomor Order"] = "string";
+        xls.options["Buyer"] = "string";
+        xls.options["Nama Barang"] = "string";
+        xls.options["Satuan"] = "string";
+        xls.options["Kuantiti Satuan"] = "number";
+        xls.options["Panjang Total"] = "number";
+        xls.options["Berat Total"] = "number";
+
         for (var shipment of result.data) {
 
             for (var detail of shipment.details) {
@@ -860,8 +873,9 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                             item["Satuan"] = packingReceiptItem.uomUnit ? packingReceiptItem.uomUnit : '';
                             item["Kuantiti Satuan"] = packingReceiptItem.quantity ? packingReceiptItem.quantity : 0;
                             item["Panjang Total"] = packingReceiptItem.length ? (packingReceiptItem.length * packingReceiptItem.quantity).toFixed(2) : 0;
-                            item["Berat Total"] = packingReceiptItem.weight ? (fielpackingReceiptItemd.weight * packingReceiptItem.quantity).toFixed(2) : 0;
+                            item["Berat Total"] = packingReceiptItem.weight ? (packingReceiptItem.weight * packingReceiptItem.quantity).toFixed(2) : 0;
 
+                            xls.data.push(item);
                         }
                     } else {
 
@@ -880,22 +894,8 @@ module.exports = class FPPackingShipmentDocumentManager extends BaseManager {
                         item["Panjang Total"] = field.length ? (field.length * field.quantity).toFixed(2) : 0;
                         item["Berat Total"] = field.weight ? (field.weight * field.quantity).toFixed(2) : 0;
 
+                        xls.data.push(item);
                     }
-
-                    xls.options["No"] = "number";
-                    xls.options["Tanggal"] = "string";
-                    xls.options["Kode"] = "string";
-                    xls.options["Kode Pengiriman"] = "string";
-                    xls.options["Kode Delivery Order"] = "string";
-                    xls.options["Nomor Order"] = "string";
-                    xls.options["Buyer"] = "string";
-                    xls.options["Nama Barang"] = "string";
-                    xls.options["Satuan"] = "string";
-                    xls.options["Kuantiti Satuan"] = "number";
-                    xls.options["Panjang Total"] = "number";
-                    xls.options["Berat Total"] = "number";
-
-                    xls.data.push(item);
 
                 }
 
