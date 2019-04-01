@@ -483,53 +483,42 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
             output.push(this.weeklyPlanManager.getSingleById(data.details[i].weeklyPlanId));
         }
 
-        return this.bookingOrderManager.getSingleByIdOrDefault(data.bookingOrderId)
+        var query = {
+            _id: ObjectId.isValid(data.bookingOrderId) ? new ObjectId(data.bookingOrderId) : {},
+        };
+
+        return this.bookingOrderManager.collection.singleOrDefault(query)
         .then(booking =>{
-            if(booking){
-                booking.isMasterPlan = false;
-                return this.bookingOrderManager.collection.update(booking)
-                .then(idBooking=>{
-                    return Promise.all(output)
-                    .then(weeklyPlans=>{
-                        var updateWeek=[];
-                        for(var w of weeklyPlans){
-                            for(var mp of data.details){
-                                if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
-                                    w.items[mp.week.weekNumber-1].usedEH-=mp.ehBooking;
-                                    w.items[mp.week.weekNumber-1].remainingEH+=mp.ehBooking;
-                                }
-                            }
-                            updateWeek.push(this.weeklyPlanManager.collection.update(w));
-                        }
-                        
-                        
-                        return Promise.all(updateWeek).then(result=>{
-                            return this.collection.update(data);
-                        });
-                    })
-                })
-            }
-            else{
+            booking.isMasterPlan = false;
+            return this.bookingOrderManager.collection.update(booking)
+            .then(idBooking=>{
                 return Promise.all(output)
-                    .then(weeklyPlans=>{
-                        var updateWeek=[];
-                        for(var w of weeklyPlans){
-                            for(var mp of data.details){
-                                if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
-                                    w.items[mp.week.weekNumber-1].usedEH-=mp.ehBooking;
-                                    w.items[mp.week.weekNumber-1].remainingEH+=mp.ehBooking;
-                                }
+                .then(weeklyPlans=>{
+                    var updateWeek=[];
+                    for(var w of weeklyPlans){
+                        for(var mp of data.details){
+                            if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
+                                w.items[mp.week.weekNumber-1].usedEH-=mp.ehBooking;
+                                w.items[mp.week.weekNumber-1].remainingEH+=mp.ehBooking;
                             }
-                            updateWeek.push(this.weeklyPlanManager.collection.update(w));
+                        
+                    // for(var w of weeklyPlans){
+                    //     for(var mp of data.details){
+                    //         if(w._id.toString()===mp.weeklyPlanId.toString()){
+                    //             mp.week.remainingEH+=mp.ehBooking;
+                    //             mp.week.usedEH-=mp.ehBooking;
+                    //             w.items[mp.week.weekNumber-1]= mp.week;                                   
+                    //         }
                         }
-                        
-                        
-                        return Promise.all(updateWeek).then(result=>{
-                            return this.collection.update(data);
-                        });
-                    })
-            }
-            
+                        updateWeek.push(this.weeklyPlanManager.collection.update(w));
+                    }
+                    
+                    
+                    return Promise.all(updateWeek).then(result=>{
+                        return this.collection.update(data);
+                    });
+                })
+            })
         })
         .then(() => 
             Promise.resolve(masterPlanId));
