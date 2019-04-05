@@ -469,54 +469,59 @@ module.exports = class SewingBlockingPlanManager extends BaseManager {
     }
 
     delete(data) {
-        var tasks = [];
-        var masterPlanId = data._id;
-        data._deleted = true;
-        var weeks = [];
+        var tasks=[];
+        var masterPlanId=data._id;
+        data._deleted=true;
+        var weeks=[];
         // for(var detail of data.details){
         //     weeks.push(this.weeklyPlanManager.getSingleById(detail.weeklyPlanId));
         // }
-        var flags = [], output = [], l = data.details.length;
-        for (var i = 0; i < l; i++) {
-            if (flags[data.details[i].weeklyPlanId.toString()]) continue;
-            flags[data.details[i].weeklyPlanId.toString()] = true;
+        var flags=[], output=[], l=data.details.length;
+        for(var i=0;i<l;i++){
+            if(flags[data.details[i].weeklyPlanId.toString()])continue;
+            flags[data.details[i].weeklyPlanId.toString()]=true;
             output.push(this.weeklyPlanManager.getSingleById(data.details[i].weeklyPlanId));
         }
-        return this.bookingOrderManager.getSingleById(data.bookingOrderId)
-            .then(booking => {
-                booking.isMasterPlan = false;
-                return this.bookingOrderManager.collection.update(booking)
-                    .then(idBooking => {
-                        return Promise.all(output)
-                            .then(weeklyPlans => {
-                                var updateWeek = [];
-                                for (var w of weeklyPlans) {
-                                    for (var mp of data.details) {
-                                        if (w.unit.code === mp.unit.code && w.year == mp.weeklyPlanYear) {
-                                            w.items[mp.week.weekNumber - 1].usedEH -= mp.ehBooking;
-                                            w.items[mp.week.weekNumber - 1].remainingEH += mp.ehBooking;
-                                        }
 
-                                        // for(var w of weeklyPlans){
-                                        //     for(var mp of data.details){
-                                        //         if(w._id.toString()===mp.weeklyPlanId.toString()){
-                                        //             mp.week.remainingEH+=mp.ehBooking;
-                                        //             mp.week.usedEH-=mp.ehBooking;
-                                        //             w.items[mp.week.weekNumber-1]= mp.week;                                   
-                                        //         }
-                                    }
-                                    updateWeek.push(this.weeklyPlanManager.collection.update(w));
-                                }
+        var query = {
+            _id: ObjectId.isValid(data.bookingOrderId) ? new ObjectId(data.bookingOrderId) : {},
+        };
 
-
-                                return Promise.all(updateWeek).then(result => {
-                                    return this.collection.update(data);
-                                });
-                            })
-                    })
+        return this.bookingOrderManager.collection.singleOrDefault(query)
+        .then(booking =>{
+            booking.isMasterPlan = false;
+            return this.bookingOrderManager.collection.update(booking)
+            .then(idBooking=>{
+                return Promise.all(output)
+                .then(weeklyPlans=>{
+                    var updateWeek=[];
+                    for(var w of weeklyPlans){
+                        for(var mp of data.details){
+                            if(w.unit.code===mp.unit.code && w.year==mp.weeklyPlanYear){
+                                w.items[mp.week.weekNumber-1].usedEH-=mp.ehBooking;
+                                w.items[mp.week.weekNumber-1].remainingEH+=mp.ehBooking;
+                            }
+                        
+                    // for(var w of weeklyPlans){
+                    //     for(var mp of data.details){
+                    //         if(w._id.toString()===mp.weeklyPlanId.toString()){
+                    //             mp.week.remainingEH+=mp.ehBooking;
+                    //             mp.week.usedEH-=mp.ehBooking;
+                    //             w.items[mp.week.weekNumber-1]= mp.week;                                   
+                    //         }
+                        }
+                        updateWeek.push(this.weeklyPlanManager.collection.update(w));
+                    }
+                    
+                    
+                    return Promise.all(updateWeek).then(result=>{
+                        return this.collection.update(data);
+                    });
+                })
             })
-            .then(() =>
-                Promise.resolve(masterPlanId));
+        })
+        .then(() => 
+            Promise.resolve(masterPlanId));
     }
 
 
