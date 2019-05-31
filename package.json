@@ -1,28 +1,68 @@
 {
-  "name": "dl-module",
-  "version": "1.1.0",
-  "description": "Dan Liris Modules",
-  "main": "index.js",
-  "scripts": {
-    "test": "mocha test/index.js",
-    "cover": "istanbul cover _mocha",
-    "coveralls": "npm run cover -- --report lcovonly && cat ./coverage/lcov.info | coveralls",
-    "codeclimate": "codeclimate-test-reporter < ./coverage/lcov.info"
+  "_args": [
+    [
+      {
+        "raw": "dl-module@git+https://github.com/danliris/dl-module.git#dev",
+        "scope": null,
+        "escapedName": "dl-module",
+        "name": "dl-module",
+        "rawSpec": "git+https://github.com/danliris/dl-module.git#dev",
+        "spec": "git+https://github.com/danliris/dl-module.git#dev",
+        "type": "hosted",
+        "hosted": {
+          "type": "github",
+          "ssh": "git@github.com:danliris/dl-module.git#dev",
+          "sshUrl": "git+ssh://git@github.com/danliris/dl-module.git#dev",
+          "httpsUrl": "git+https://github.com/danliris/dl-module.git#dev",
+          "gitUrl": "git://github.com/danliris/dl-module.git#dev",
+          "shortcut": "github:danliris/dl-module#dev",
+          "directUrl": "https://raw.githubusercontent.com/danliris/dl-module/dev/package.json"
+        }
+      },
+      "E:\\GITHUB\\MasterPlanGmt\\dl-sp-master-plan-webapi"
+    ]
+  ],
+  "_from": "git+https://github.com/danliris/dl-module.git#dev",
+  "_id": "dl-module@1.1.0",
+  "_inCache": true,
+  "_location": "/dl-module",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "dl-module@git+https://github.com/danliris/dl-module.git#dev",
+    "scope": null,
+    "escapedName": "dl-module",
+    "name": "dl-module",
+    "rawSpec": "git+https://github.com/danliris/dl-module.git#dev",
+    "spec": "git+https://github.com/danliris/dl-module.git#dev",
+    "type": "hosted",
+    "hosted": {
+      "type": "github",
+      "ssh": "git@github.com:danliris/dl-module.git#dev",
+      "sshUrl": "git+ssh://git@github.com/danliris/dl-module.git#dev",
+      "httpsUrl": "git+https://github.com/danliris/dl-module.git#dev",
+      "gitUrl": "git://github.com/danliris/dl-module.git#dev",
+      "shortcut": "github:danliris/dl-module#dev",
+      "directUrl": "https://raw.githubusercontent.com/danliris/dl-module/dev/package.json"
+    }
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/danliris/dl-module.git"
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "git+https://github.com/danliris/dl-module.git#17cdc5019802066513635682259a656bc230f8f6",
+  "_shasum": "bfe14358c481d6e0a0b7755278d277fe76c62de7",
+  "_shrinkwrap": null,
+  "_spec": "dl-module@git+https://github.com/danliris/dl-module.git#dev",
+  "_where": "E:\\GITHUB\\MasterPlanGmt\\dl-sp-master-plan-webapi",
+  "author": {
+    "name": "Moonlay"
   },
-  "author": "Moonlay",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/danliris/dl-module/issues"
   },
-  "homepage": "https://github.com/danliris/dl-module#readme",
   "dependencies": {
     "assert": "^1.4.1",
     "dl-i18n": "git+https://github.com/danliris/dl-i18n.git",
-    "dl-models": "https://github.com/danliris/dl-models#dev",
+    "dl-models": "git+https://github.com/danliris/dl-models.git#dev",
     "hashids": "^1.1.0",
     "module-toolkit": "git+https://github.com/pinkgorilla/module-toolkit.git",
     "moment": "2.17.1",
@@ -35,9 +75,10 @@
     "request-promise": "^4.2.2",
     "sha1": "^1.1.1"
   },
+  "description": "Dan Liris Modules",
   "devDependencies": {
-    "coveralls": "^2.11.15",
     "codeclimate-test-reporter": "^0.4.0",
+    "coveralls": "^2.11.15",
     "istanbul": "^0.4.5",
     "mocha": "^3.0.0",
     "mocha-lcov-reporter": "^1.2.0",
@@ -45,5 +86,24 @@
   },
   "directories": {
     "test": "test"
-  }
+  },
+  "gitHead": "17cdc5019802066513635682259a656bc230f8f6",
+  "homepage": "https://github.com/danliris/dl-module#readme",
+  "license": "MIT",
+  "main": "index.js",
+  "name": "dl-module",
+  "optionalDependencies": {},
+  "readme": "\r\n[![Build Status](https://travis-ci.org/danliris/dl-module.svg?branch=uat)](https://travis-ci.org/danliris/dl-module)\r\n[![Code Climate](https://codeclimate.com/github/danliris/dl-module/badges/gpa.svg)](https://codeclimate.com/github/danliris/dl-module)\r\n[![Issue Count](https://codeclimate.com/github/danliris/dl-module/badges/issue_count.svg)](https://codeclimate.com/github/danliris/dl-module) \r\n[![Coverage Status](https://coveralls.io/repos/github/danliris/dl-module/badge.svg?branch=uat)](https://coveralls.io/github/danliris/dl-module?branch=uat)\r\n\r\n# dl-module\r\nDan Liris Modules\r\n",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danliris/dl-module.git"
+  },
+  "scripts": {
+    "codeclimate": "codeclimate-test-reporter < ./coverage/lcov.info",
+    "cover": "istanbul cover _mocha",
+    "coveralls": "npm run cover -- --report lcovonly && cat ./coverage/lcov.info | coveralls",
+    "test": "mocha test/index.js"
+  },
+  "version": "1.1.0"
 }

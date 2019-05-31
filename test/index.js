@@ -138,6 +138,16 @@ describe('#dl-module', function (done) {
      test('@GARMENT MASTER PLAN/SEWING-BLOCKING-PLAN', './garment-master-plan/sewing-blocking-plan');
     test('@GARMENT MASTER PLAN/GARMENT SECTION', './garment-master-plan/garment-section');
 
+    //Spinning Master Plan
+    // test('@GARMENT MASTER PLAN/BOOKING-ORDER', './garment-master-plan/booking-order');
+    // test('@GARMENT MASTER PLAN/WEEKLY-PLAN', './garment-master-plan/weekly-plan');
+    // test('@GARMENT MASTER PLAN/WORKING-HOURS-STANDARD', './garment-master-plan/working-hours-standard');
+    // test('@GARMENT MASTER PLAN/STYLE', './garment-master-plan/style');
+    test('@GARMENT MASTER PLAN/STANDARD-CAPACITY', './sp-master-plan/standard-capacity');
+    // test('@GARMENT MASTER PLAN/MASTER PLAN COMODITY', './garment-master-plan/master-plan-comodity');
+    //  test('@GARMENT MASTER PLAN/SEWING-BLOCKING-PLAN', './garment-master-plan/sewing-blocking-plan');
+    // test('@GARMENT MASTER PLAN/GARMENT SECTION', './garment-master-plan/garment-section');
+
      //Etl
      test('@ETL/DIM-BUYER', './etl/dim/dim-buyer');
      test('@ETL/DIM-CATEGORY', './etl/dim/dim-category');
